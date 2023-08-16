@@ -3,19 +3,19 @@ package sdk
 import "errors"
 
 var (
-	_ validatableOpts = new(createDatabaseRoleOptions)
-	_ validatableOpts = new(alterDatabaseRoleOptions)
-	_ validatableOpts = new(dropDatabaseRoleOptions)
-	_ validatableOpts = new(showDatabaseRoleOptions)
-	_ validatableOpts = new(grantDatabaseRoleOptions)
-	_ validatableOpts = new(revokeDatabaseRoleOptions)
-	_ validatableOpts = new(grantDatabaseRoleToShareOptions)
-	_ validatableOpts = new(revokeDatabaseRoleFromShareOptions)
+	_ validatable = new(createDatabaseRoleOptions)
+	_ validatable = new(alterDatabaseRoleOptions)
+	_ validatable = new(dropDatabaseRoleOptions)
+	_ validatable = new(showDatabaseRoleOptions)
+	_ validatable = new(grantDatabaseRoleOptions)
+	_ validatable = new(revokeDatabaseRoleOptions)
+	_ validatable = new(grantDatabaseRoleToShareOptions)
+	_ validatable = new(revokeDatabaseRoleFromShareOptions)
 )
 
 var errDifferentDatabase = errors.New("database must be the same")
 
-func (opts *createDatabaseRoleOptions) validateProp() error {
+func (opts *createDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -29,7 +29,7 @@ func (opts *createDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *alterDatabaseRoleOptions) validateProp() error {
+func (opts *alterDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -60,7 +60,7 @@ func (opts *alterDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *dropDatabaseRoleOptions) validateProp() error {
+func (opts *dropDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -71,7 +71,7 @@ func (opts *dropDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *showDatabaseRoleOptions) validateProp() error {
+func (opts *showDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -85,7 +85,7 @@ func (opts *showDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *grantDatabaseRoleOptions) validateProp() error {
+func (opts *grantDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -99,7 +99,7 @@ func (opts *grantDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *revokeDatabaseRoleOptions) validateProp() error {
+func (opts *revokeDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -113,7 +113,7 @@ func (opts *revokeDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *grantDatabaseRoleToShareOptions) validateProp() error {
+func (opts *grantDatabaseRoleToShareOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -127,7 +127,7 @@ func (opts *grantDatabaseRoleToShareOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *revokeDatabaseRoleFromShareOptions) validateProp() error {
+func (opts *revokeDatabaseRoleFromShareOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
