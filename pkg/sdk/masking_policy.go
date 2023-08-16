@@ -36,9 +36,9 @@ type maskingPolicies struct {
 }
 
 type CreateMaskingPolicyOptions struct {
-	create        bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create        bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace     *bool                  `ddl:"keyword" sql:"OR REPLACE"`
-	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
 	IfNotExists   *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 
@@ -80,8 +80,8 @@ func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 }
 
 type AlterMaskingPolicyOptions struct {
-	alter         bool                   `ddl:"static" sql:"ALTER"`          //lint:ignore U1000 This is used in the ddl tag
-	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	alter         bool                   `ddl:"static" sql:"ALTER"`
+	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
 	IfExists      *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 	NewName       SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
@@ -161,8 +161,8 @@ func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, 
 }
 
 type DropMaskingPolicyOptions struct {
-	drop          bool                   `ddl:"static" sql:"DROP"`           //lint:ignore U1000 This is used in the ddl tag
-	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	drop          bool                   `ddl:"static" sql:"DROP"`
+	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
@@ -194,8 +194,8 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) e
 
 // ShowMaskingPolicyOptions represents the options for listing masking policies.
 type ShowMaskingPolicyOptions struct {
-	show            bool  `ddl:"static" sql:"SHOW"`             //lint:ignore U1000 This is used in the ddl tag
-	maskingPolicies bool  `ddl:"static" sql:"MASKING POLICIES"` //lint:ignore U1000 This is used in the ddl tag
+	show            bool  `ddl:"static" sql:"SHOW"`
+	maskingPolicies bool  `ddl:"static" sql:"MASKING POLICIES"`
 	Like            *Like `ddl:"keyword" sql:"LIKE"`
 	In              *In   `ddl:"keyword" sql:"IN"`
 	Limit           *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
@@ -303,8 +303,8 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 }
 
 type describeMaskingPolicyOptions struct {
-	describe      bool                   `ddl:"static" sql:"DESCRIBE"`       //lint:ignore U1000 This is used in the ddl tag
-	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	describe      bool                   `ddl:"static" sql:"DESCRIBE"`
+	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 

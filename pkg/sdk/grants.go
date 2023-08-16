@@ -80,7 +80,7 @@ func (row *grantRow) toGrant() (*Grant, error) {
 }
 
 type GrantPrivilegesToAccountRoleOptions struct {
-	grant           bool                        `ddl:"static" sql:"GRANT"` //lint:ignore U1000 This is used in the ddl tag
+	grant           bool                        `ddl:"static" sql:"GRANT"`
 	privileges      *AccountRoleGrantPrivileges `ddl:"-"`
 	on              *AccountRoleGrantOn         `ddl:"keyword" sql:"ON"`
 	accountRole     AccountObjectIdentifier     `ddl:"identifier" sql:"TO ROLE"`
@@ -225,7 +225,7 @@ func (v *grants) GrantPrivilegesToAccountRole(ctx context.Context, privileges *A
 }
 
 type RevokePrivilegesFromAccountRoleOptions struct {
-	revoke         bool                        `ddl:"static" sql:"REVOKE"` //lint:ignore U1000 This is used in the ddl tag
+	revoke         bool                        `ddl:"static" sql:"REVOKE"`
 	GrantOptionFor *bool                       `ddl:"keyword" sql:"GRANT OPTION FOR"`
 	privileges     *AccountRoleGrantPrivileges `ddl:"-"`
 	on             *AccountRoleGrantOn         `ddl:"keyword" sql:"ON"`
@@ -278,7 +278,7 @@ func (v *grants) RevokePrivilegesFromAccountRole(ctx context.Context, privileges
 }
 
 type grantPrivilegeToShareOptions struct {
-	grant     bool                     `ddl:"static" sql:"GRANT"` //lint:ignore U1000 This is used in the ddl tag
+	grant     bool                     `ddl:"static" sql:"GRANT"`
 	privilege ObjectPrivilege          `ddl:"keyword"`
 	On        *GrantPrivilegeToShareOn `ddl:"keyword" sql:"ON"`
 	to        AccountObjectIdentifier  `ddl:"identifier" sql:"TO SHARE"`
@@ -347,7 +347,7 @@ func (v *grants) GrantPrivilegeToShare(ctx context.Context, privilege ObjectPriv
 }
 
 type revokePrivilegeFromShareOptions struct {
-	revoke    bool                        `ddl:"static" sql:"REVOKE"` //lint:ignore U1000 This is used in the ddl tag
+	revoke    bool                        `ddl:"static" sql:"REVOKE"`
 	privilege ObjectPrivilege             `ddl:"keyword"`
 	On        *RevokePrivilegeFromShareOn `ddl:"keyword" sql:"ON"`
 	from      AccountObjectIdentifier     `ddl:"identifier" sql:"FROM SHARE"`
@@ -421,9 +421,9 @@ func (v *grants) RevokePrivilegeFromShare(ctx context.Context, privilege ObjectP
 }
 
 type ShowGrantOptions struct {
-	show   bool          `ddl:"static" sql:"SHOW"` //lint:ignore U1000 This is used in the ddl tag
+	show   bool          `ddl:"static" sql:"SHOW"`
 	Future *bool         `ddl:"keyword" sql:"FUTURE"`
-	grants bool          `ddl:"static" sql:"GRANTS"` //lint:ignore U1000 This is used in the ddl tag
+	grants bool          `ddl:"static" sql:"GRANTS"`
 	On     *ShowGrantsOn `ddl:"keyword" sql:"ON"`
 	To     *ShowGrantsTo `ddl:"keyword" sql:"TO"`
 	Of     *ShowGrantsOf `ddl:"keyword" sql:"OF"`

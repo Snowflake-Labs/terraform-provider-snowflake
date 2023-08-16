@@ -25,9 +25,9 @@ type Pipes interface {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/create-pipe.
 type PipeCreateOptions struct {
-	create      bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
-	pipe        bool                   `ddl:"static" sql:"PIPE"` //lint:ignore U1000 This is used in the ddl tag
+	pipe        bool                   `ddl:"static" sql:"PIPE"`
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
 
@@ -37,7 +37,7 @@ type PipeCreateOptions struct {
 	Integration      *string `ddl:"parameter,single_quotes" sql:"INTEGRATION"`
 	Comment          *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 
-	as            bool   `ddl:"static" sql:"AS"` //lint:ignore U1000 This is used in the ddl tag
+	as            bool   `ddl:"static" sql:"AS"`
 	copyStatement string `ddl:"keyword,no_quotes"`
 }
 
@@ -45,8 +45,8 @@ type PipeCreateOptions struct {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/alter-pipe.
 type PipeAlterOptions struct {
-	alter    bool                   `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	role     bool                   `ddl:"static" sql:"PIPE"`  //lint:ignore U1000 This is used in the ddl tag
+	alter    bool                   `ddl:"static" sql:"ALTER"`
+	role     bool                   `ddl:"static" sql:"PIPE"`
 	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 
@@ -86,8 +86,8 @@ type PipeRefresh struct {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/drop-pipe.
 type PipeDropOptions struct {
-	drop     bool                   `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
-	pipe     bool                   `ddl:"static" sql:"PIPE"` //lint:ignore U1000 This is used in the ddl tag
+	drop     bool                   `ddl:"static" sql:"DROP"`
+	pipe     bool                   `ddl:"static" sql:"PIPE"`
 	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
@@ -96,8 +96,8 @@ type PipeDropOptions struct {
 //
 // https://docs.snowflake.com/en/sql-reference/sql/show-pipes
 type PipeShowOptions struct {
-	show  bool  `ddl:"static" sql:"SHOW"`  //lint:ignore U1000 This is used in the ddl tag
-	pipes bool  `ddl:"static" sql:"PIPES"` //lint:ignore U1000 This is used in the ddl tag
+	show  bool  `ddl:"static" sql:"SHOW"`
+	pipes bool  `ddl:"static" sql:"PIPES"`
 	Like  *Like `ddl:"keyword" sql:"LIKE"`
 	In    *In   `ddl:"keyword" sql:"IN"`
 }
@@ -183,7 +183,7 @@ func (row pipeDBRow) toPipe() *Pipe {
 //
 // Based on https://docs.snowflake.com/en/sql-reference/sql/desc-pipe.
 type describePipeOptions struct {
-	describe bool                   `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
-	pipe     bool                   `ddl:"static" sql:"PIPE"`     //lint:ignore U1000 This is used in the ddl tag
+	describe bool                   `ddl:"static" sql:"DESCRIBE"`
+	pipe     bool                   `ddl:"static" sql:"PIPE"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }

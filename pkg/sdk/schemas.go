@@ -89,10 +89,10 @@ func (row schemaDBRow) toSchema() Schema {
 
 // CreateSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-schema
 type CreateSchemaOptions struct {
-	create                     bool             `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create                     bool             `ddl:"static" sql:"CREATE"`
 	OrReplace                  *bool            `ddl:"keyword" sql:"OR REPLACE"`
 	Transient                  *bool            `ddl:"keyword" sql:"TRANSIENT"`
-	schema                     bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
+	schema                     bool             `ddl:"static" sql:"SCHEMA"`
 	IfNotExists                *bool            `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                       SchemaIdentifier `ddl:"identifier"`
 	Clone                      *Clone           `ddl:"-"`
@@ -138,8 +138,8 @@ func (v *schemas) Create(ctx context.Context, id SchemaIdentifier, opts *CreateS
 
 // AlterSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-schema
 type AlterSchemaOptions struct {
-	alter    bool             `ddl:"static" sql:"ALTER"`  //lint:ignore U1000 This is used in the ddl tag
-	schema   bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
+	alter    bool             `ddl:"static" sql:"ALTER"`
+	schema   bool             `ddl:"static" sql:"SCHEMA"`
 	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaIdentifier `ddl:"identifier"`
 	NewName  SchemaIdentifier `ddl:"identifier" sql:"RENAME TO"`
@@ -220,7 +220,7 @@ func (v *schemas) Alter(ctx context.Context, id SchemaIdentifier, opts *AlterSch
 
 // DropSchemaOptions Based on https://docs.snowflake.com/en/sql-reference/sql/drop-schema
 type DropSchemaOptions struct {
-	drop     bool             `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
+	drop     bool             `ddl:"static" sql:"DROP"`
 	schema   bool             `ddl:"static" sql:"SCHEMA"`
 	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaIdentifier `ddl:"identifier"`
@@ -257,8 +257,8 @@ func (v *schemas) Drop(ctx context.Context, id SchemaIdentifier, opts *DropSchem
 }
 
 type undropSchemaOptions struct {
-	undrop bool             `ddl:"static" sql:"UNDROP"` //lint:ignore U1000 This is used in the ddl tag
-	schema bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
+	undrop bool             `ddl:"static" sql:"UNDROP"`
+	schema bool             `ddl:"static" sql:"SCHEMA"`
 	name   SchemaIdentifier `ddl:"identifier"`
 }
 
@@ -285,9 +285,9 @@ func (v *schemas) Undrop(ctx context.Context, id SchemaIdentifier) error {
 }
 
 type describeSchemaOptions struct {
-	describe bool             `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
-	database bool             `ddl:"static" sql:"SCHEMA"`   //lint:ignore U1000 This is used in the ddl tag
-	name     SchemaIdentifier `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
+	describe bool             `ddl:"static" sql:"DESCRIBE"`
+	database bool             `ddl:"static" sql:"SCHEMA"`
+	name     SchemaIdentifier `ddl:"identifier"`
 }
 
 func (opts *describeSchemaOptions) validate() error {
@@ -330,9 +330,9 @@ type SchemaIn struct {
 
 // ShowSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/show-schemas
 type ShowSchemaOptions struct {
-	show       bool       `ddl:"static" sql:"SHOW"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool       `ddl:"static" sql:"SHOW"`
 	Terse      *bool      `ddl:"keyword" sql:"TERSE"`
-	schemas    bool       `ddl:"static" sql:"SCHEMAS"` //lint:ignore U1000 This is used in the ddl tag
+	schemas    bool       `ddl:"static" sql:"SCHEMAS"`
 	History    *bool      `ddl:"keyword" sql:"HISTORY"`
 	Like       *Like      `ddl:"keyword" sql:"LIKE"`
 	In         *SchemaIn  `ddl:"keyword" sql:"IN"`
