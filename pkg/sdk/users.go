@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateUserOptions)
+	_ validatable = new(AlterUserOptions)
+	_ validatable = new(DropUserOptions)
+	_ validatable = new(describeUserOptions)
+	_ validatable = new(ShowUserOptions)
+)
+
 type Users interface {
 	// Create creates a user.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateUserOptions) error
@@ -151,9 +159,9 @@ func (v *User) ObjectType() ObjectType {
 // CreateUserOptions contains options for creating a user.
 // Based on https://docs.snowflake.com/en/sql-reference/sql/create-user.
 type CreateUserOptions struct {
-	create            bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create            bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace         *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	user              bool                    `ddl:"static" sql:"USER"` //lint:ignore U1000 This is used in the ddl tag
+	user              bool                    `ddl:"static" sql:"USER"`
 	IfNotExists       *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name              AccountObjectIdentifier `ddl:"identifier"`
 	ObjectProperties  *UserObjectProperties   `ddl:"keyword"`
@@ -214,10 +222,10 @@ type UserObjectProperties struct {
 }
 
 type SecondaryRoles struct {
-	equals     bool            `ddl:"static" sql:"="` //lint:ignore U1000 This is used in the ddl tag
-	leftParen  bool            `ddl:"static" sql:"("` //lint:ignore U1000 This is used in the ddl tag
+	equals     bool            `ddl:"static" sql:"="`
+	leftParen  bool            `ddl:"static" sql:"("`
 	Roles      []SecondaryRole `ddl:"list,no_parentheses"`
-	rightParen bool            `ddl:"static" sql:")"` //lint:ignore U1000 This is used in the ddl tag
+	rightParen bool            `ddl:"static" sql:")"`
 }
 
 type SecondaryRole struct {
@@ -257,8 +265,8 @@ type UserObjectParametersUnset struct {
 // AlterUserOptions contains options for altering a user.
 // Based on https://docs.snowflake.com/en/sql-reference/sql/alter-user.
 type AlterUserOptions struct {
-	alter    bool                    `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	user     bool                    `ddl:"static" sql:"USER"`  //lint:ignore U1000 This is used in the ddl tag
+	alter    bool                    `ddl:"static" sql:"ALTER"`
+	user     bool                    `ddl:"static" sql:"USER"`
 	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name     AccountObjectIdentifier `ddl:"identifier"`
 
@@ -387,8 +395,8 @@ func (opts *UserUnset) validate() error {
 // DropUserOptions contains options for dropping a user.
 // Based on https://docs.snowflake.com/en/sql-reference/sql/drop-user.
 type DropUserOptions struct {
-	drop bool                    `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
-	user bool                    `ddl:"static" sql:"USER"` //lint:ignore U1000 This is used in the ddl tag
+	drop bool                    `ddl:"static" sql:"DROP"`
+	user bool                    `ddl:"static" sql:"USER"`
 	name AccountObjectIdentifier `ddl:"identifier"`
 }
 
@@ -523,8 +531,8 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 // describeUserOptions contains options for describing the properties specified for users, as well as the default values of the properties.
 // Based on https://docs.snowflake.com/en/sql-reference/sql/desc-user.
 type describeUserOptions struct {
-	describe bool                    `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
-	user     bool                    `ddl:"static" sql:"USER"`     //lint:ignore U1000 This is used in the ddl tag
+	describe bool                    `ddl:"static" sql:"DESCRIBE"`
+	user     bool                    `ddl:"static" sql:"USER"`
 	name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
@@ -559,9 +567,9 @@ func (v *users) Describe(ctx context.Context, id AccountObjectIdentifier) (*User
 // ShowUserOptions contains options for listing users.
 // Based on https://docs.snowflake.com/en/sql-reference/sql/show-users.
 type ShowUserOptions struct {
-	show       bool    `ddl:"static" sql:"SHOW"`  //lint:ignore U1000 This is used in the ddl tag
-	Terse      *bool   `ddl:"static" sql:"TERSE"` //lint:ignore U1000 This is used in the ddl tag
-	users      bool    `ddl:"static" sql:"USERS"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool    `ddl:"static" sql:"SHOW"`
+	Terse      *bool   `ddl:"static" sql:"TERSE"`
+	users      bool    `ddl:"static" sql:"USERS"`
 	Like       *Like   `ddl:"keyword" sql:"LIKE"`
 	StartsWith *string `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
 	Limit      *int    `ddl:"parameter,no_equals" sql:"LIMIT"`

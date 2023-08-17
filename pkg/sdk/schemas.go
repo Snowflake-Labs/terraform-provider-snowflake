@@ -7,23 +7,32 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateSchemaOptions)
+	_ validatable = new(AlterSchemaOptions)
+	_ validatable = new(DropSchemaOptions)
+	_ validatable = new(undropSchemaOptions)
+	_ validatable = new(describeSchemaOptions)
+	_ validatable = new(ShowSchemaOptions)
+)
+
 type Schemas interface {
 	// Create creates a schema.
-	Create(ctx context.Context, id SchemaIdentifier, opts *CreateSchemaOptions) error
+	Create(ctx context.Context, id DatabaseObjectIdentifier, opts *CreateSchemaOptions) error
 	// Alter modifies an existing schema.
-	Alter(ctx context.Context, id SchemaIdentifier, opts *AlterSchemaOptions) error
+	Alter(ctx context.Context, id DatabaseObjectIdentifier, opts *AlterSchemaOptions) error
 	// Drop removes a schema.
-	Drop(ctx context.Context, id SchemaIdentifier, opts *DropSchemaOptions) error
+	Drop(ctx context.Context, id DatabaseObjectIdentifier, opts *DropSchemaOptions) error
 	// Undrop restores the most recent version of a dropped schema.
-	Undrop(ctx context.Context, id SchemaIdentifier) error
+	Undrop(ctx context.Context, id DatabaseObjectIdentifier) error
 	// Describe lists objects in the schema.
-	Describe(ctx context.Context, id SchemaIdentifier) ([]SchemaDetails, error)
+	Describe(ctx context.Context, id DatabaseObjectIdentifier) ([]SchemaDetails, error)
 	// Show returns a list of schemas.
 	Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, error)
 	// ShowByID returns a schema by ID.
-	ShowByID(ctx context.Context, id SchemaIdentifier) (*Schema, error)
+	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error)
 	// Use sets the active schema for the current session.
-	Use(ctx context.Context, id SchemaIdentifier) error
+	Use(ctx context.Context, id DatabaseObjectIdentifier) error
 }
 
 var _ Schemas = (*schemas)(nil)
@@ -45,8 +54,8 @@ type Schema struct {
 	OwnerRoleType string
 }
 
-func (v *Schema) ID() SchemaIdentifier {
-	return NewSchemaIdentifier(v.DatabaseName, v.Name)
+func (v *Schema) ID() DatabaseObjectIdentifier {
+	return NewDatabaseObjectIdentifier(v.DatabaseName, v.Name)
 }
 
 func (v *Schema) ObjectType() ObjectType {
@@ -89,19 +98,19 @@ func (row schemaDBRow) toSchema() Schema {
 
 // CreateSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-schema
 type CreateSchemaOptions struct {
-	create                     bool             `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
-	OrReplace                  *bool            `ddl:"keyword" sql:"OR REPLACE"`
-	Transient                  *bool            `ddl:"keyword" sql:"TRANSIENT"`
-	schema                     bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
-	IfNotExists                *bool            `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       SchemaIdentifier `ddl:"identifier"`
-	Clone                      *Clone           `ddl:"-"`
-	WithManagedAccess          *bool            `ddl:"keyword" sql:"WITH MANAGED ACCESS"`
-	DataRetentionTimeInDays    *int             `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int             `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	DefaultDDLCollation        *string          `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	Tag                        []TagAssociation `ddl:"keyword,parentheses" sql:"TAG"`
-	Comment                    *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                     bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	Transient                  *bool                    `ddl:"keyword" sql:"TRANSIENT"`
+	schema                     bool                     `ddl:"static" sql:"SCHEMA"`
+	IfNotExists                *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       DatabaseObjectIdentifier `ddl:"identifier"`
+	Clone                      *Clone                   `ddl:"-"`
+	WithManagedAccess          *bool                    `ddl:"keyword" sql:"WITH MANAGED ACCESS"`
+	DataRetentionTimeInDays    *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	DefaultDDLCollation        *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	Tag                        []TagAssociation         `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment                    *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateSchemaOptions) validate() error {
@@ -120,7 +129,7 @@ func (opts *CreateSchemaOptions) validate() error {
 	return errors.Join(errs...)
 }
 
-func (v *schemas) Create(ctx context.Context, id SchemaIdentifier, opts *CreateSchemaOptions) error {
+func (v *schemas) Create(ctx context.Context, id DatabaseObjectIdentifier, opts *CreateSchemaOptions) error {
 	if opts == nil {
 		opts = &CreateSchemaOptions{}
 	}
@@ -138,14 +147,14 @@ func (v *schemas) Create(ctx context.Context, id SchemaIdentifier, opts *CreateS
 
 // AlterSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-schema
 type AlterSchemaOptions struct {
-	alter    bool             `ddl:"static" sql:"ALTER"`  //lint:ignore U1000 This is used in the ddl tag
-	schema   bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
-	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
-	name     SchemaIdentifier `ddl:"identifier"`
-	NewName  SchemaIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	SwapWith SchemaIdentifier `ddl:"identifier" sql:"SWAP WITH"`
-	Set      *SchemaSet       `ddl:"list,no_parentheses" sql:"SET"`
-	Unset    *SchemaUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
+	alter    bool                     `ddl:"static" sql:"ALTER"`
+	schema   bool                     `ddl:"static" sql:"SCHEMA"`
+	IfExists *bool                    `ddl:"keyword" sql:"IF EXISTS"`
+	name     DatabaseObjectIdentifier `ddl:"identifier"`
+	NewName  DatabaseObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	SwapWith DatabaseObjectIdentifier `ddl:"identifier" sql:"SWAP WITH"`
+	Set      *SchemaSet               `ddl:"list,no_parentheses" sql:"SET"`
+	Unset    *SchemaUnset             `ddl:"list,no_parentheses" sql:"UNSET"`
 	// One of
 	EnableManagedAccess  *bool `ddl:"keyword" sql:"ENABLE MANAGED ACCESS"`
 	DisableManagedAccess *bool `ddl:"keyword" sql:"DISABLE MANAGED ACCESS"`
@@ -202,7 +211,7 @@ func (v *SchemaUnset) validate() error {
 	return nil
 }
 
-func (v *schemas) Alter(ctx context.Context, id SchemaIdentifier, opts *AlterSchemaOptions) error {
+func (v *schemas) Alter(ctx context.Context, id DatabaseObjectIdentifier, opts *AlterSchemaOptions) error {
 	if opts == nil {
 		opts = &AlterSchemaOptions{}
 	}
@@ -220,10 +229,10 @@ func (v *schemas) Alter(ctx context.Context, id SchemaIdentifier, opts *AlterSch
 
 // DropSchemaOptions Based on https://docs.snowflake.com/en/sql-reference/sql/drop-schema
 type DropSchemaOptions struct {
-	drop     bool             `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
-	schema   bool             `ddl:"static" sql:"SCHEMA"`
-	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
-	name     SchemaIdentifier `ddl:"identifier"`
+	drop     bool                     `ddl:"static" sql:"DROP"`
+	schema   bool                     `ddl:"static" sql:"SCHEMA"`
+	IfExists *bool                    `ddl:"keyword" sql:"IF EXISTS"`
+	name     DatabaseObjectIdentifier `ddl:"identifier"`
 	// one of
 	Cascade  *bool `ddl:"static" sql:"CASCADE"`
 	Restrict *bool `ddl:"static" sql:"RESTRICT"`
@@ -240,7 +249,7 @@ func (opts *DropSchemaOptions) validate() error {
 	return errors.Join(errs...)
 }
 
-func (v *schemas) Drop(ctx context.Context, id SchemaIdentifier, opts *DropSchemaOptions) error {
+func (v *schemas) Drop(ctx context.Context, id DatabaseObjectIdentifier, opts *DropSchemaOptions) error {
 	if opts == nil {
 		opts = &DropSchemaOptions{}
 	}
@@ -257,9 +266,9 @@ func (v *schemas) Drop(ctx context.Context, id SchemaIdentifier, opts *DropSchem
 }
 
 type undropSchemaOptions struct {
-	undrop bool             `ddl:"static" sql:"UNDROP"` //lint:ignore U1000 This is used in the ddl tag
-	schema bool             `ddl:"static" sql:"SCHEMA"` //lint:ignore U1000 This is used in the ddl tag
-	name   SchemaIdentifier `ddl:"identifier"`
+	undrop bool                     `ddl:"static" sql:"UNDROP"`
+	schema bool                     `ddl:"static" sql:"SCHEMA"`
+	name   DatabaseObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *undropSchemaOptions) validate() error {
@@ -269,7 +278,7 @@ func (opts *undropSchemaOptions) validate() error {
 	return nil
 }
 
-func (v *schemas) Undrop(ctx context.Context, id SchemaIdentifier) error {
+func (v *schemas) Undrop(ctx context.Context, id DatabaseObjectIdentifier) error {
 	opts := &undropSchemaOptions{
 		name: id,
 	}
@@ -285,9 +294,9 @@ func (v *schemas) Undrop(ctx context.Context, id SchemaIdentifier) error {
 }
 
 type describeSchemaOptions struct {
-	describe bool             `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
-	database bool             `ddl:"static" sql:"SCHEMA"`   //lint:ignore U1000 This is used in the ddl tag
-	name     SchemaIdentifier `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
+	describe bool                     `ddl:"static" sql:"DESCRIBE"`
+	database bool                     `ddl:"static" sql:"SCHEMA"`
+	name     DatabaseObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *describeSchemaOptions) validate() error {
@@ -303,7 +312,7 @@ type SchemaDetails struct {
 	Kind      string    `db:"kind"`
 }
 
-func (v *schemas) Describe(ctx context.Context, id SchemaIdentifier) ([]SchemaDetails, error) {
+func (v *schemas) Describe(ctx context.Context, id DatabaseObjectIdentifier) ([]SchemaDetails, error) {
 	opts := &describeSchemaOptions{
 		name: id,
 	}
@@ -330,9 +339,9 @@ type SchemaIn struct {
 
 // ShowSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/show-schemas
 type ShowSchemaOptions struct {
-	show       bool       `ddl:"static" sql:"SHOW"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool       `ddl:"static" sql:"SHOW"`
 	Terse      *bool      `ddl:"keyword" sql:"TERSE"`
-	schemas    bool       `ddl:"static" sql:"SCHEMAS"` //lint:ignore U1000 This is used in the ddl tag
+	schemas    bool       `ddl:"static" sql:"SCHEMAS"`
 	History    *bool      `ddl:"keyword" sql:"HISTORY"`
 	Like       *Like      `ddl:"keyword" sql:"LIKE"`
 	In         *SchemaIn  `ddl:"keyword" sql:"IN"`
@@ -364,7 +373,7 @@ func (v *schemas) Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, 
 	return schemas, err
 }
 
-func (v *schemas) ShowByID(ctx context.Context, id SchemaIdentifier) (*Schema, error) {
+func (v *schemas) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error) {
 	schemas, err := v.client.Schemas.Show(ctx, &ShowSchemaOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
@@ -381,6 +390,6 @@ func (v *schemas) ShowByID(ctx context.Context, id SchemaIdentifier) (*Schema, e
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
-func (v *schemas) Use(ctx context.Context, id SchemaIdentifier) error {
+func (v *schemas) Use(ctx context.Context, id DatabaseObjectIdentifier) error {
 	return v.client.Sessions.UseSchema(ctx, id)
 }

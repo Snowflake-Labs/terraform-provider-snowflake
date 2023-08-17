@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(TimeTravel)
+	_ validatable = new(Clone)
+)
+
 type TimeTravel struct {
 	Timestamp *time.Time `ddl:"parameter,single_quotes,arrow_equals" sql:"TIMESTAMP"`
 	Offset    *int       `ddl:"parameter,arrow_equals" sql:"OFFSET"`
@@ -44,9 +49,9 @@ type LimitFrom struct {
 }
 
 type In struct {
-	Account  *bool                   `ddl:"keyword" sql:"ACCOUNT"`
-	Database AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
-	Schema   SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
+	Account  *bool                    `ddl:"keyword" sql:"ACCOUNT"`
+	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
+	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
 }
 
 type Like struct {

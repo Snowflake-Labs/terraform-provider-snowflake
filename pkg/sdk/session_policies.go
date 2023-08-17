@@ -4,6 +4,13 @@ import (
 	"context"
 )
 
+var (
+	_ validatable = new(CreateSessionPolicyOptions)
+	_ validatable = new(AlterSessionPolicyOptions)
+	_ validatable = new(DropSessionPolicyOptions)
+	_ validatable = new(sessionPolicyShowOptions)
+)
+
 type SessionPolicies interface {
 	// Create creates a session policy.
 	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreateSessionPolicyOptions) error
@@ -55,8 +62,8 @@ func (v *SessionPolicy) ObjectType() ObjectType {
 
 // CreateSessionPolicyOptions contains options for creating a session policy.
 type CreateSessionPolicyOptions struct {
-	create        bool                   `ddl:"static" sql:"CREATE"`         //lint:ignore U1000 This is used in the ddl tag
-	sessionPolicy bool                   `ddl:"static" sql:"SESSION POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	create        bool                   `ddl:"static" sql:"CREATE"`
+	sessionPolicy bool                   `ddl:"static" sql:"SESSION POLICY"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
@@ -86,14 +93,18 @@ func (v *sessionPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 // AlterSessionPolicyOptions contains options for altering a session policy.
 type AlterSessionPolicyOptions struct{}
 
+func (opts *AlterSessionPolicyOptions) validate() error {
+	return nil
+}
+
 func (v *sessionPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterSessionPolicyOptions) error {
 	return nil
 }
 
 // DropSessionPolicyOptions contains options for dropping a session policy.
 type DropSessionPolicyOptions struct {
-	drop          bool                   `ddl:"static" sql:"DROP"`           //lint:ignore U1000 This is used in the ddl tag
-	sessionPolicy bool                   `ddl:"static" sql:"SESSION POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	drop          bool                   `ddl:"static" sql:"DROP"`
+	sessionPolicy bool                   `ddl:"static" sql:"SESSION POLICY"`
 	IfExists      *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
@@ -123,8 +134,8 @@ func (v *sessionPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, o
 
 // sessionPolicyShowOptions contains options for listing session policies.
 type sessionPolicyShowOptions struct {
-	show            bool `ddl:"static" sql:"SHOW"`             //lint:ignore U1000 This is used in the ddl tag
-	sessionPolicies bool `ddl:"static" sql:"SESSION POLICIES"` //lint:ignore U1000 This is used in the ddl tag
+	show            bool `ddl:"static" sql:"SHOW"`
+	sessionPolicies bool `ddl:"static" sql:"SESSION POLICIES"`
 }
 
 func (opts *sessionPolicyShowOptions) validate() error {

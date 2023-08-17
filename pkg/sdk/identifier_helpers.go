@@ -20,7 +20,7 @@ func NewObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) Object
 	case 1:
 		return NewAccountObjectIdentifier(fullyQualifiedName)
 	case 2:
-		return NewSchemaIdentifier(parts[0], parts[1])
+		return NewDatabaseObjectIdentifier(parts[0], parts[1])
 	case 3:
 		return NewSchemaObjectIdentifier(parts[0], parts[1], parts[2])
 	case 4:
@@ -130,39 +130,39 @@ func (i AccountObjectIdentifier) FullyQualifiedName() string {
 	return fmt.Sprintf(`"%v"`, i.name)
 }
 
-type SchemaIdentifier struct {
+type DatabaseObjectIdentifier struct {
 	databaseName string
-	schemaName   string
+	name         string
 }
 
-func NewSchemaIdentifier(databaseName, schemaName string) SchemaIdentifier {
-	return SchemaIdentifier{
+func NewDatabaseObjectIdentifier(databaseName, name string) DatabaseObjectIdentifier {
+	return DatabaseObjectIdentifier{
 		databaseName: strings.Trim(databaseName, `"`),
-		schemaName:   strings.Trim(schemaName, `"`),
+		name:         strings.Trim(name, `"`),
 	}
 }
 
-func NewSchemaIdentifierFromFullyQualifiedName(fullyQualifiedName string) SchemaIdentifier {
+func NewDatabaseObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) DatabaseObjectIdentifier {
 	parts := strings.Split(fullyQualifiedName, ".")
-	return SchemaIdentifier{
+	return DatabaseObjectIdentifier{
 		databaseName: strings.Trim(parts[0], `"`),
-		schemaName:   strings.Trim(parts[1], `"`),
+		name:         strings.Trim(parts[1], `"`),
 	}
 }
 
-func (i SchemaIdentifier) DatabaseName() string {
+func (i DatabaseObjectIdentifier) DatabaseName() string {
 	return i.databaseName
 }
 
-func (i SchemaIdentifier) Name() string {
-	return i.schemaName
+func (i DatabaseObjectIdentifier) Name() string {
+	return i.name
 }
 
-func (i SchemaIdentifier) FullyQualifiedName() string {
-	if i.schemaName == "" && i.databaseName == "" {
+func (i DatabaseObjectIdentifier) FullyQualifiedName() string {
+	if i.name == "" && i.databaseName == "" {
 		return ""
 	}
-	return fmt.Sprintf(`"%v"."%v"`, i.databaseName, i.schemaName)
+	return fmt.Sprintf(`"%v"."%v"`, i.databaseName, i.name)
 }
 
 type SchemaObjectIdentifier struct {
@@ -231,8 +231,8 @@ func (i SchemaObjectIdentifier) Arguments() []DataType {
 	return i.arguments
 }
 
-func (i SchemaObjectIdentifier) SchemaIdentifier() SchemaIdentifier {
-	return NewSchemaIdentifier(i.databaseName, i.schemaName)
+func (i SchemaObjectIdentifier) SchemaIdentifier() DatabaseObjectIdentifier {
+	return NewDatabaseObjectIdentifier(i.databaseName, i.schemaName)
 }
 
 func (i SchemaObjectIdentifier) FullyQualifiedName() string {

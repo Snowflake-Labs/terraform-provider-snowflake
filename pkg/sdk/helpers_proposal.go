@@ -4,16 +4,15 @@ import (
 	"context"
 )
 
-// validatableOpts is just a proposal how we can remove some of the boilerplate.
-type validatableOpts interface {
-	// validateProp will be renamed if accepted.
-	// Having the name `validate` now would make all other `...Opts` structs validatableOpts because of Go nature.
-	validateProp() error
+// validatable is our sdk interface for anything that can be validated (e.g. CreateXxxOptions).
+type validatable interface {
+	// validate is a method which should contain all rules for checking validity of the implementing type.
+	validate() error
 }
 
 // validateAndExec is just a proposal how we can remove some of the boilerplate.
-func validateAndExec(client *Client, ctx context.Context, opts validatableOpts) error {
-	if err := opts.validateProp(); err != nil {
+func validateAndExec(client *Client, ctx context.Context, opts validatable) error {
+	if err := opts.validate(); err != nil {
 		return err
 	}
 	sql, err := structToSQL(opts)
@@ -25,8 +24,8 @@ func validateAndExec(client *Client, ctx context.Context, opts validatableOpts) 
 }
 
 // validateAndQuery is just a proposal how we can remove some of the boilerplate.
-func validateAndQuery[T any](client *Client, ctx context.Context, opts validatableOpts) (*[]T, error) {
-	if err := opts.validateProp(); err != nil {
+func validateAndQuery[T any](client *Client, ctx context.Context, opts validatable) (*[]T, error) {
+	if err := opts.validate(); err != nil {
 		return nil, err
 	}
 	sql, err := structToSQL(opts)
@@ -43,8 +42,8 @@ func validateAndQuery[T any](client *Client, ctx context.Context, opts validatab
 }
 
 // validateAndQueryOne is just a proposal how we can remove some of the boilerplate.
-func validateAndQueryOne[T any](client *Client, ctx context.Context, opts validatableOpts) (*T, error) {
-	if err := opts.validateProp(); err != nil {
+func validateAndQueryOne[T any](client *Client, ctx context.Context, opts validatable) (*T, error) {
+	if err := opts.validate(); err != nil {
 		return nil, err
 	}
 	sql, err := structToSQL(opts)
@@ -65,4 +64,20 @@ func createIfNil[T any](t *T) *T {
 		return new(T)
 	}
 	return t
+}
+
+type convertibleRow[T any] interface {
+	convert() *T
+}
+
+func convertRows[T convertibleRow[U], U any](dbRows *[]T) []U {
+	resultList := make([]U, len(*dbRows))
+	for i, row := range *dbRows {
+		resultList[i] = *(row.convert())
+	}
+	return resultList
+}
+
+type optionsProvider[T any] interface {
+	toOpts() *T
 }

@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateWarehouseOptions)
+	_ validatable = new(AlterWarehouseOptions)
+	_ validatable = new(DropWarehouseOptions)
+	_ validatable = new(ShowWarehouseOptions)
+	_ validatable = new(warehouseDescribeOptions)
+)
+
 type Warehouses interface {
 	// Create creates a warehouse.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateWarehouseOptions) error
@@ -88,9 +96,9 @@ var (
 )
 
 type CreateWarehouseOptions struct {
-	create      bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create      bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	warehouse   bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	warehouse   bool                    `ddl:"static" sql:"WAREHOUSE"`
 	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        AccountObjectIdentifier `ddl:"identifier"`
 
@@ -145,8 +153,8 @@ func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opt
 }
 
 type AlterWarehouseOptions struct {
-	alter     bool                    `ddl:"static" sql:"ALTER"`     //lint:ignore U1000 This is used in the ddl tag
-	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	alter     bool                    `ddl:"static" sql:"ALTER"`
+	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 
@@ -286,8 +294,8 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 }
 
 type DropWarehouseOptions struct {
-	drop      bool                    `ddl:"static" sql:"DROP"`      //lint:ignore U1000 This is used in the ddl tag
-	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	drop      bool                    `ddl:"static" sql:"DROP"`
+	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 }
@@ -321,8 +329,8 @@ func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts 
 }
 
 type ShowWarehouseOptions struct {
-	show       bool  `ddl:"static" sql:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
-	warehouses bool  `ddl:"static" sql:"WAREHOUSES"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool  `ddl:"static" sql:"SHOW"`
+	warehouses bool  `ddl:"static" sql:"WAREHOUSES"`
 	Like       *Like `ddl:"keyword" sql:"LIKE"`
 }
 
@@ -488,8 +496,8 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 }
 
 type warehouseDescribeOptions struct {
-	describe  bool                    `ddl:"static" sql:"DESCRIBE"`  //lint:ignore U1000 This is used in the ddl tag
-	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	describe  bool                    `ddl:"static" sql:"DESCRIBE"`
+	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 }
 

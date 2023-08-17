@@ -9,6 +9,13 @@ import (
 	"strings"
 )
 
+var (
+	_ validatable = new(CreateResourceMonitorOptions)
+	_ validatable = new(AlterResourceMonitorOptions)
+	_ validatable = new(dropResourceMonitorOptions)
+	_ validatable = new(ShowResourceMonitorOptions)
+)
+
 type ResourceMonitors interface {
 	// Create creates a resource monitor.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error
@@ -177,9 +184,9 @@ func (v *ResourceMonitor) ObjectType() ObjectType {
 
 // CreateResourceMonitorOptions contains options for creating a resource monitor.
 type CreateResourceMonitorOptions struct {
-	create          bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create          bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
+	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	With            *ResourceMonitorWith    `ddl:"keyword" sql:"WITH"`
 }
@@ -269,8 +276,8 @@ const (
 
 // AlterResourceMonitorOptions contains options for altering a resource monitor.
 type AlterResourceMonitorOptions struct {
-	alter           bool                    `ddl:"static" sql:"ALTER"`            //lint:ignore U1000 This is used in the ddl tag
-	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
+	alter           bool                    `ddl:"static" sql:"ALTER"`
+	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
 	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	Set             *ResourceMonitorSet     `ddl:"keyword" sql:"SET"`
@@ -319,8 +326,8 @@ type ResourceMonitorSet struct {
 
 // resourceMonitorDropOptions contains options for dropping a resource monitor.
 type dropResourceMonitorOptions struct {
-	drop            bool                    `ddl:"static" sql:"DROP"`             //lint:ignore U1000 This is used in the ddl tag
-	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
+	drop            bool                    `ddl:"static" sql:"DROP"`
+	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 }
 
@@ -348,8 +355,8 @@ func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier)
 
 // ShowResourceMonitorOptions contains options for listing resource monitors.
 type ShowResourceMonitorOptions struct {
-	show             bool  `ddl:"static" sql:"SHOW"`              //lint:ignore U1000 This is used in the ddl tag
-	resourceMonitors bool  `ddl:"static" sql:"RESOURCE MONITORS"` //lint:ignore U1000 This is used in the ddl tag
+	show             bool  `ddl:"static" sql:"SHOW"`
+	resourceMonitors bool  `ddl:"static" sql:"RESOURCE MONITORS"`
 	Like             *Like `ddl:"keyword" sql:"LIKE"`
 }
 

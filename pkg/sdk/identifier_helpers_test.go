@@ -3,6 +3,7 @@ package sdk
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,4 +26,40 @@ func TestNewSchemaObjectIdentifierFromFullyQualifiedName(t *testing.T) {
 			require.Equal(t, tc.want, id)
 		})
 	}
+}
+
+func TestDatabaseObjectIdentifier(t *testing.T) {
+	t.Run("create from strings", func(t *testing.T) {
+		identifier := NewDatabaseObjectIdentifier("aaa", "bbb")
+
+		assert.Equal(t, "aaa", identifier.DatabaseName())
+		assert.Equal(t, "bbb", identifier.Name())
+	})
+
+	t.Run("create from quoted strings", func(t *testing.T) {
+		identifier := NewDatabaseObjectIdentifier(`"aaa"`, `"bbb"`)
+
+		assert.Equal(t, "aaa", identifier.DatabaseName())
+		assert.Equal(t, "bbb", identifier.Name())
+	})
+
+	t.Run("create from fully qualified name", func(t *testing.T) {
+		identifier := NewDatabaseObjectIdentifierFromFullyQualifiedName("aaa.bbb")
+
+		assert.Equal(t, "aaa", identifier.DatabaseName())
+		assert.Equal(t, "bbb", identifier.Name())
+	})
+
+	t.Run("create from quoted fully qualified name", func(t *testing.T) {
+		identifier := NewDatabaseObjectIdentifierFromFullyQualifiedName(`"aaa"."bbb"`)
+
+		assert.Equal(t, "aaa", identifier.DatabaseName())
+		assert.Equal(t, "bbb", identifier.Name())
+	})
+
+	t.Run("get fully qualified name", func(t *testing.T) {
+		identifier := DatabaseObjectIdentifier{"aaa", "bbb"}
+
+		assert.Equal(t, `"aaa"."bbb"`, identifier.FullyQualifiedName())
+	})
 }

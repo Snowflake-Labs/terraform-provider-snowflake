@@ -513,7 +513,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 				On: &sdk.ShowGrantsOn{
 					Object: &sdk.Object{
 						ObjectType: sdk.ObjectTypeSchema,
-						Name:       sdk.NewSchemaIdentifierFromFullyQualifiedName(resourceID.SchemaName),
+						Name:       sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(resourceID.SchemaName),
 					},
 				},
 			}
@@ -556,7 +556,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 				opts = sdk.ShowGrantOptions{
 					Future: sdk.Bool(true),
 					In: &sdk.ShowGrantsIn{
-						Schema: sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(resourceID.SchemaName)),
+						Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(resourceID.SchemaName)),
 					},
 				}
 			}
@@ -709,7 +709,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 		resourceID.OnSchema = true
 		if v, ok := onSchema["schema_name"]; ok && len(v.(string)) > 0 {
 			resourceID.SchemaName = v.(string)
-			on.Schema.Schema = sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(v.(string)))
+			on.Schema.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(v.(string)))
 		}
 		if v, ok := onSchema["all_schemas_in_database"]; ok && len(v.(string)) > 0 {
 			resourceID.All = true
@@ -757,7 +757,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			if v, ok := all["in_schema"]; ok && len(v.(string)) > 0 {
 				resourceID.InSchema = true
 				resourceID.SchemaName = v.(string)
-				on.SchemaObject.All.InSchema = sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(v.(string)))
+				on.SchemaObject.All.InSchema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(v.(string)))
 			}
 		}
 
@@ -776,7 +776,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			if v, ok := future["in_schema"]; ok && len(v.(string)) > 0 {
 				resourceID.InSchema = true
 				resourceID.SchemaName = v.(string)
-				on.SchemaObject.Future.InSchema = sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(v.(string)))
+				on.SchemaObject.Future.InSchema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(v.(string)))
 			}
 		}
 

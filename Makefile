@@ -81,12 +81,12 @@ lint-fix: ## Run static code analysis, check formatting and try to fix findings
 	./bin/golangci-lint run ./... -v --fix
 .PHONY: lint-fix
 
-pre-push: mod-check docs-check lint-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+pre-push: docs-check lint-check mod-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 .PHONY: pre-push
 
-generate-all-dto:
+generate-all-dto: ## Generate all DTOs for SDK interfaces
 	go generate ./pkg/sdk/*_dto.go
 .PHONY: generate-all
 
-generate-dto-%: ./pkg/sdk/%_dto.go
+generate-dto-%: ./pkg/sdk/%_dto.go ## Generate DTO for given SDK interface
 	go generate $<
