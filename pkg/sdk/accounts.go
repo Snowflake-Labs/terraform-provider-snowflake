@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateAccountOptions)
+	_ validatable = new(AlterAccountOptions)
+	_ validatable = new(ShowAccountOptions)
+)
+
 type Accounts interface {
 	// Create creates an account.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error

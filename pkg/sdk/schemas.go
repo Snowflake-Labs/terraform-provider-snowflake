@@ -7,6 +7,15 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateSchemaOptions)
+	_ validatable = new(AlterSchemaOptions)
+	_ validatable = new(DropSchemaOptions)
+	_ validatable = new(undropSchemaOptions)
+	_ validatable = new(describeSchemaOptions)
+	_ validatable = new(ShowSchemaOptions)
+)
+
 type Schemas interface {
 	// Create creates a schema.
 	Create(ctx context.Context, id DatabaseObjectIdentifier, opts *CreateSchemaOptions) error

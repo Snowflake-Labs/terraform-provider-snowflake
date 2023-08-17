@@ -13,6 +13,14 @@ import (
 // Compile-time proof of interface implementation.
 var _ MaskingPolicies = (*maskingPolicies)(nil)
 
+var (
+	_ validatable = new(CreateMaskingPolicyOptions)
+	_ validatable = new(AlterMaskingPolicyOptions)
+	_ validatable = new(DropMaskingPolicyOptions)
+	_ validatable = new(ShowMaskingPolicyOptions)
+	_ validatable = new(describeMaskingPolicyOptions)
+)
+
 // MaskingPolicies describes all the masking policy related methods that the
 // Snowflake API supports.
 type MaskingPolicies interface {

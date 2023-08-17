@@ -5,14 +5,14 @@ import (
 )
 
 var (
-	_ validatableOpts = &PipeCreateOptions{}
-	_ validatableOpts = &PipeAlterOptions{}
-	_ validatableOpts = &PipeDropOptions{}
-	_ validatableOpts = &PipeShowOptions{}
-	_ validatableOpts = &describePipeOptions{}
+	_ validatable = new(PipeCreateOptions)
+	_ validatable = new(PipeAlterOptions)
+	_ validatable = new(PipeDropOptions)
+	_ validatable = new(PipeShowOptions)
+	_ validatable = new(describePipeOptions)
 )
 
-func (opts *PipeCreateOptions) validateProp() error {
+func (opts *PipeCreateOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
@@ -25,7 +25,7 @@ func (opts *PipeCreateOptions) validateProp() error {
 	return nil
 }
 
-func (opts *PipeAlterOptions) validateProp() error {
+func (opts *PipeAlterOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
@@ -64,7 +64,7 @@ func (opts *PipeAlterOptions) validateProp() error {
 	return nil
 }
 
-func (opts *PipeDropOptions) validateProp() error {
+func (opts *PipeDropOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
@@ -74,7 +74,7 @@ func (opts *PipeDropOptions) validateProp() error {
 	return nil
 }
 
-func (opts *PipeShowOptions) validateProp() error {
+func (opts *PipeShowOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
@@ -87,7 +87,7 @@ func (opts *PipeShowOptions) validateProp() error {
 	return nil
 }
 
-func (opts *describePipeOptions) validateProp() error {
+func (opts *describePipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}

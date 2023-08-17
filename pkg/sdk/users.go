@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateUserOptions)
+	_ validatable = new(AlterUserOptions)
+	_ validatable = new(DropUserOptions)
+	_ validatable = new(describeUserOptions)
+	_ validatable = new(ShowUserOptions)
+)
+
 type Users interface {
 	// Create creates a user.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateUserOptions) error
