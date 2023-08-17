@@ -48,14 +48,14 @@ func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12), randomStringN(t, 12))
 }
 
-func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
+func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 	t.Helper()
-	return NewSchemaIdentifier(randomStringN(t, 12), randomStringN(t, 12))
+	return NewDatabaseObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12))
 }
 
-func alphanumericSchemaIdentifier(t *testing.T) SchemaIdentifier {
+func alphanumericDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 	t.Helper()
-	return NewSchemaIdentifier(randomAlphanumericN(t, 12), randomAlphanumericN(t, 12))
+	return NewDatabaseObjectIdentifier(randomAlphanumericN(t, 12), randomAlphanumericN(t, 12))
 }
 
 func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
@@ -76,7 +76,7 @@ func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifie
 	}
 }
 
-func useSchema(t *testing.T, client *Client, schemaID SchemaIdentifier) func() {
+func useSchema(t *testing.T, client *Client, schemaID DatabaseObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
@@ -86,7 +86,7 @@ func useSchema(t *testing.T, client *Client, schemaID SchemaIdentifier) func() {
 	err = client.Sessions.UseSchema(ctx, schemaID)
 	require.NoError(t, err)
 	return func() {
-		err := client.Sessions.UseSchema(ctx, NewSchemaIdentifier(orgDB, orgSchema))
+		err := client.Sessions.UseSchema(ctx, NewDatabaseObjectIdentifier(orgDB, orgSchema))
 		require.NoError(t, err)
 	}
 }
@@ -287,16 +287,16 @@ func createShareWithOptions(t *testing.T, client *Client, opts *CreateShareOptio
 	}
 }
 
-func createFileFormat(t *testing.T, client *Client, schema SchemaIdentifier) (*FileFormat, func()) {
+func createFileFormat(t *testing.T, client *Client, schema DatabaseObjectIdentifier) (*FileFormat, func()) {
 	t.Helper()
 	return createFileFormatWithOptions(t, client, schema, &CreateFileFormatOptions{
 		Type: FileFormatTypeCSV,
 	})
 }
 
-func createFileFormatWithOptions(t *testing.T, client *Client, schema SchemaIdentifier, opts *CreateFileFormatOptions) (*FileFormat, func()) {
+func createFileFormatWithOptions(t *testing.T, client *Client, schema DatabaseObjectIdentifier, opts *CreateFileFormatOptions) (*FileFormat, func()) {
 	t.Helper()
-	id := NewSchemaObjectIdentifier(schema.databaseName, schema.schemaName, randomString(t))
+	id := NewSchemaObjectIdentifier(schema.databaseName, schema.name, randomString(t))
 	ctx := context.Background()
 	err := client.FileFormats.Create(ctx, id, opts)
 	require.NoError(t, err)
@@ -359,10 +359,10 @@ func createSchema(t *testing.T, client *Client, database *Database) (*Schema, fu
 func createSchemaWithIdentifier(t *testing.T, client *Client, database *Database, name string) (*Schema, func()) {
 	t.Helper()
 	ctx := context.Background()
-	schemaID := NewSchemaIdentifier(database.Name, name)
+	schemaID := NewDatabaseObjectIdentifier(database.Name, name)
 	err := client.Schemas.Create(ctx, schemaID, nil)
 	require.NoError(t, err)
-	schema, err := client.Schemas.ShowByID(ctx, NewSchemaIdentifier(database.Name, name))
+	schema, err := client.Schemas.ShowByID(ctx, NewDatabaseObjectIdentifier(database.Name, name))
 	require.NoError(t, err)
 	return schema, func() {
 		err := client.Schemas.Drop(ctx, schemaID, nil)

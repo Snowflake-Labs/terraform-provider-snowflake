@@ -31,9 +31,9 @@ type alerts struct {
 }
 
 type CreateAlertOptions struct {
-	create      bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
-	alert       bool                   `ddl:"static" sql:"ALERT"` //lint:ignore U1000 This is used in the ddl tag
+	alert       bool                   `ddl:"static" sql:"ALERT"`
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
 
@@ -99,8 +99,8 @@ var (
 )
 
 type AlterAlertOptions struct {
-	alter    bool                   `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	alert    bool                   `ddl:"static" sql:"ALERT"` //lint:ignore U1000 This is used in the ddl tag
+	alter    bool                   `ddl:"static" sql:"ALTER"`
+	alert    bool                   `ddl:"static" sql:"ALERT"`
 	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 
@@ -166,8 +166,8 @@ func (v *alerts) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *Alt
 }
 
 type dropAlertOptions struct {
-	drop  bool                   `ddl:"static" sql:"DROP"`  //lint:ignore U1000 This is used in the ddl tag
-	alert bool                   `ddl:"static" sql:"ALERT"` //lint:ignore U1000 This is used in the ddl tag
+	drop  bool                   `ddl:"static" sql:"DROP"`
+	alert bool                   `ddl:"static" sql:"ALERT"`
 	name  SchemaObjectIdentifier `ddl:"identifier"`
 }
 
@@ -198,9 +198,9 @@ func (v *alerts) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
 }
 
 type ShowAlertOptions struct {
-	show   bool  `ddl:"static" sql:"SHOW"` //lint:ignore U1000 This is used in the ddl tag
+	show   bool  `ddl:"static" sql:"SHOW"`
 	Terse  *bool `ddl:"keyword" sql:"TERSE"`
-	alerts bool  `ddl:"static" sql:"ALERTS"` //lint:ignore U1000 This is used in the ddl tag
+	alerts bool  `ddl:"static" sql:"ALERTS"`
 
 	// optional
 	Like       *Like   `ddl:"keyword" sql:"LIKE"`
@@ -300,7 +300,7 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 			Pattern: String(id.Name()),
 		},
 		In: &In{
-			Schema: NewSchemaIdentifier(id.DatabaseName(), id.SchemaName()),
+			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
 		},
 	})
 	if err != nil {
@@ -316,8 +316,8 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 }
 
 type describeAlertOptions struct {
-	describe bool                   `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
-	alert    bool                   `ddl:"static" sql:"ALERT"`    //lint:ignore U1000 This is used in the ddl tag
+	describe bool                   `ddl:"static" sql:"DESCRIBE"`
+	alert    bool                   `ddl:"static" sql:"ALERT"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 

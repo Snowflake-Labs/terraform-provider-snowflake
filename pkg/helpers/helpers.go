@@ -88,7 +88,7 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 	case 1:
 		return sdk.NewAccountObjectIdentifier(parts[0])
 	case 2:
-		return sdk.NewSchemaIdentifier(parts[0], parts[1])
+		return sdk.NewDatabaseObjectIdentifier(parts[0], parts[1])
 	case 3:
 		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2])
 	case 4:

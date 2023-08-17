@@ -100,9 +100,9 @@ func (r *shareRow) toShare() *Share {
 }
 
 type CreateShareOptions struct {
-	create    bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create    bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	share     bool                    `ddl:"static" sql:"SHARE"` //lint:ignore U1000 This is used in the ddl tag
+	share     bool                    `ddl:"static" sql:"SHARE"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 	Comment   *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
@@ -131,7 +131,7 @@ func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *C
 }
 
 type shareDropOptions struct {
-	drop  bool                    `ddl:"static" sql:"DROP"` //lint:ignore U1000 This is used in the ddl tag
+	drop  bool                    `ddl:"static" sql:"DROP"`
 	share bool                    `ddl:"static" sql:"SHARE"`
 	name  AccountObjectIdentifier `ddl:"identifier"`
 }
@@ -149,8 +149,8 @@ func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
 }
 
 type AlterShareOptions struct {
-	alter    bool                    `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	share    bool                    `ddl:"static" sql:"SHARE"` //lint:ignore U1000 This is used in the ddl tag
+	alter    bool                    `ddl:"static" sql:"ALTER"`
+	share    bool                    `ddl:"static" sql:"SHARE"`
 	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name     AccountObjectIdentifier `ddl:"identifier"`
 	Add      *ShareAdd               `ddl:"keyword" sql:"ADD"`
@@ -254,8 +254,8 @@ func (v *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *Al
 }
 
 type ShowShareOptions struct {
-	show       bool       `ddl:"static" sql:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
-	shares     bool       `ddl:"static" sql:"SHARES"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool       `ddl:"static" sql:"SHOW"`
+	shares     bool       `ddl:"static" sql:"SHARES"`
 	Like       *Like      `ddl:"keyword" sql:"LIKE"`
 	StartsWith *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
 	Limit      *LimitFrom `ddl:"keyword" sql:"LIMIT"`
@@ -341,8 +341,8 @@ func shareDetailsFromRows(rows []shareDetailsRow) *ShareDetails {
 }
 
 type shareDescribeOptions struct {
-	describe bool             `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
-	share    bool             `ddl:"static" sql:"SHARE"`    //lint:ignore U1000 This is used in the ddl tag
+	describe bool             `ddl:"static" sql:"DESCRIBE"`
+	share    bool             `ddl:"static" sql:"SHARE"`
 	name     ObjectIdentifier `ddl:"identifier"`
 }
 

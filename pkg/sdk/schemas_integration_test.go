@@ -51,13 +51,13 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("clone", func(t *testing.T) {
 		comment := "some_comment"
-		schemaID := NewSchemaIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
+		schemaID := NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
 		err := client.Schemas.Create(ctx, schemaID, &CreateSchemaOptions{
 			Comment: String(comment),
 		})
 		require.NoError(t, err)
 
-		clonedSchemaID := NewSchemaIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
+		clonedSchemaID := NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
 		err = client.Schemas.Create(ctx, clonedSchemaID, &CreateSchemaOptions{
 			Comment: String(comment),
 			Clone: &Clone{
@@ -91,7 +91,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		schemaID := NewSchemaIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
+		schemaID := NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
 		tagValue := randomString(t)
 		err = client.Schemas.Create(ctx, schemaID, &CreateSchemaOptions{
 			Tag: []TagAssociation{
@@ -122,7 +122,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 	t.Run("rename to", func(t *testing.T) {
 		schema, _ := createSchema(t, client, db)
-		newID := NewSchemaIdentifier(db.Name, randomString(t))
+		newID := NewDatabaseObjectIdentifier(db.Name, randomString(t))
 		err := client.Schemas.Alter(ctx, schema.ID(), &AlterSchemaOptions{
 			NewName: newID,
 		})
@@ -182,7 +182,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("unset", func(t *testing.T) {
-		schemaID := NewSchemaIdentifier(db.Name, randomString(t))
+		schemaID := NewDatabaseObjectIdentifier(db.Name, randomString(t))
 		comment := randomComment(t)
 		err := client.Schemas.Create(ctx, schemaID, &CreateSchemaOptions{
 			Comment: String(comment),
@@ -207,7 +207,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("set tags", func(t *testing.T) {
-		schemaID := NewSchemaIdentifier(db.Name, randomString(t))
+		schemaID := NewDatabaseObjectIdentifier(db.Name, randomString(t))
 		err := client.Schemas.Create(ctx, schemaID, nil)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -249,7 +249,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		schemaID := NewSchemaIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
+		schemaID := NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
 		tagValue := randomString(t)
 		err = client.Schemas.Create(ctx, schemaID, &CreateSchemaOptions{
 			Tag: []TagAssociation{

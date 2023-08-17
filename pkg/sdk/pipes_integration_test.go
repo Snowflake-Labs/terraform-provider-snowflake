@@ -20,11 +20,11 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := NewSchemaIdentifier("TXR@=9,TBnLj", "tcK1>AJ+")
+	schemaIdentifier := NewDatabaseObjectIdentifier("TXR@=9,TBnLj", "tcK1>AJ+")
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -75,11 +75,11 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table1, table1Cleanup := createTable(t, client, database, schema)
@@ -107,8 +107,8 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(pipes))
-		assert.Contains(t, pipes, pipe1)
-		assert.Contains(t, pipes, pipe2)
+		assert.Contains(t, pipes, *pipe1)
+		assert.Contains(t, pipes, *pipe2)
 	})
 
 	t.Run("show: in schema", func(t *testing.T) {
@@ -121,8 +121,8 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(pipes))
-		assert.Contains(t, pipes, pipe1)
-		assert.Contains(t, pipes, pipe2)
+		assert.Contains(t, pipes, *pipe1)
+		assert.Contains(t, pipes, *pipe2)
 	})
 
 	t.Run("show: like", func(t *testing.T) {
@@ -135,7 +135,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(pipes))
-		assert.Contains(t, pipes, pipe1)
+		assert.Contains(t, pipes, *pipe1)
 	})
 
 	t.Run("show: non-existent pipe", func(t *testing.T) {
@@ -169,11 +169,11 @@ func TestInt_PipeCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -251,11 +251,11 @@ func TestInt_PipeDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
@@ -289,11 +289,11 @@ func TestInt_PipeAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	schemaIdentifier := alphanumericSchemaIdentifier(t)
+	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, client, AccountObjectIdentifier{schemaIdentifier.databaseName})
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.schemaName)
+	schema, schemaCleanup := createSchemaWithIdentifier(t, client, database, schemaIdentifier.name)
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, client, database, schema)
