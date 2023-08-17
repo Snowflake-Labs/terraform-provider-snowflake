@@ -76,6 +76,23 @@ func TestAcc_AccountGrantManageSupportCases(t *testing.T) {
 	})
 }
 
+func TestAcc_AccountGrantManageWarehouses(t *testing.T) {
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: accountGrantConfig(roleName, "MANAGE WAREHOUSES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", "MANAGE WAREHOUSES"),
+				),
+			},
+		},
+	})
+}
+
 func accountGrantConfig(role, privilege string) string {
 	return fmt.Sprintf(`
 
