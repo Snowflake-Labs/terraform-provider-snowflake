@@ -12,7 +12,7 @@ import (
 var databaseRolesSchema = map[string]*schema.Schema{
 	"database": {
 		Type:        schema.TypeString,
-		Optional:    true,
+		Required:    true,
 		Description: "The database from which to return the database roles from.",
 	},
 	"database_roles": {
