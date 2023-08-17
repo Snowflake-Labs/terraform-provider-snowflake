@@ -25,7 +25,6 @@ func TestInt_TableCreate(t *testing.T) {
 			Kind:  Pointer(TemporaryTableKind),
 			name:  id,
 		}
-		//przerób interfejsy też, żeby używaly tego buildera juz
 		client.Tables.Create(ctx, id, emptyColumns, options)
 	})
 }

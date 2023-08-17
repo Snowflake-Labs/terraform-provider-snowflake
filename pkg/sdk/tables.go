@@ -1,5 +1,6 @@
 package sdk
 
+//go:generate go run ./dto-builder-generator/main.go
 import (
 	"context"
 	"fmt"
@@ -25,17 +26,17 @@ type TableCreateDto struct {
 }
 
 type CreateTableOptions struct {
-	create                     bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create                     bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace                  *bool                  `ddl:"keyword" sql:"OR REPLACE"`
 	Scope                      *TableScope            `ddl:"keyword"`
 	Kind                       *TableKind             `ddl:"keyword"`
-	table                      bool                   `ddl:"static" sql:"TABLE"` //lint:ignore U1000 This is used in the ddl tag
+	table                      bool                   `ddl:"static" sql:"TABLE"` // required
 	IfNotExists                *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       SchemaObjectIdentifier `ddl:"identifier"`
-	leftParen                  bool                   `ddl:"static" sql:"("` //lint:ignore U1000 This is used in the ddl tag
-	Columns                    []TableColumn          `ddl:"keyword"`
+	name                       SchemaObjectIdentifier `ddl:"identifier"`     // required
+	leftParen                  bool                   `ddl:"static" sql:"("` // required
+	Columns                    []TableColumn          `ddl:"keyword"`        // required
 	OutOfLineConstraint        *OutOfLineConstraint   `ddl:"keyword"`
-	rightParen                 bool                   `ddl:"static" sql:")"` //lint:ignore U1000 This is used in the ddl tag
+	rightParen                 bool                   `ddl:"static" sql:")"` // required
 	ClusterBy                  []string               `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
 	EnableSchemaEvolution      *bool                  `ddl:"parameter" sql:"ENABLE_SCHEMA_EVOLUTION"`
 	StageFileFormat            []StageFileFormat      `ddl:"parameter,equals,parentheses" sql:"STAGE_FILE_FORMAT"`
@@ -51,8 +52,8 @@ type CreateTableOptions struct {
 }
 type RowAccessPolicy struct {
 	With            *bool                  `ddl:"keyword" sql:"WITH"`
-	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	Name            SchemaObjectIdentifier `ddl:"identifier"`
+	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"` // required
+	Name            SchemaObjectIdentifier `ddl:"identifier"`                     // required
 	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
 }
 
@@ -72,8 +73,8 @@ const (
 )
 
 type TableColumn struct {
-	Name             string                  `ddl:"keyword"`
-	Type             DataType                `ddl:"keyword"`
+	Name             string                  `ddl:"keyword"` // required
+	Type             DataType                `ddl:"keyword"` // required
 	Collate          *string                 `ddl:"parameter,no_equals,single_quotes" sql:"COLLATE"`
 	Comment          *string                 `ddl:"parameter,no_equals,single_quotes" sql:"COMMENT"`
 	DefaultValue     *ColumnDefaultValue     `ddl:"keyword"`
@@ -90,20 +91,20 @@ type ColumnDefaultValue struct {
 	Identity   *ColumnIdentity `ddl:"keyword" sql:"IDENTITY"`
 }
 type ColumnIdentity struct {
-	Start     int `ddl:"parameter,no_quotes,no_equals" sql:"START"`
-	Increment int `ddl:"parameter,no_quotes,no_equals" sql:"INCREMENT"`
+	Start     int `ddl:"parameter,no_quotes,no_equals" sql:"START"`     // required
+	Increment int `ddl:"parameter,no_quotes,no_equals" sql:"INCREMENT"` // required
 }
 
 type ColumnMaskingPolicy struct {
 	With          *bool                  `ddl:"keyword" sql:"WITH"`
-	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` //lint:ignore U1000 This is used in the ddl tag
-	Name          SchemaObjectIdentifier `ddl:"identifier"`
+	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"` // required
+	Name          SchemaObjectIdentifier `ddl:"identifier"`                  // required
 	Using         []string               `ddl:"keyword,parentheses" sql:"USING"`
 }
 
 type ColumnInlineConstraint struct {
-	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
-	Type       ColumnConstraintType `ddl:"keyword"`
+	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"` // required
+	Type       ColumnConstraintType `ddl:"keyword"`                              // required
 	ForeignKey *InlineForeignKey    `ddl:"keyword" sql:"FOREIGN KEY"`
 
 	//optional
@@ -151,7 +152,7 @@ const (
 )
 
 type InlineForeignKey struct {
-	TableName  string              `ddl:"keyword" sql:"REFERENCES"`
+	TableName  string              `ddl:"keyword" sql:"REFERENCES"` // required
 	ColumnName []string            `ddl:"keyword,parentheses"`
 	Match      *MatchType          `ddl:"keyword" sql:"MATCH"`
 	On         *ForeignKeyOnAction `ddl:"keyword" sql:"ON"`
@@ -188,7 +189,7 @@ const (
 )
 
 type StageFileFormat struct {
-	InnerValue StageFileFormatInnerValue `ddl:"keyword"`
+	InnerValue StageFileFormatInnerValue `ddl:"keyword"` // required
 }
 
 type StageFileFormatInnerValue struct {
@@ -200,10 +201,10 @@ type StageFileFormatInnerValue struct {
 }
 
 type StageCopyOptions struct {
-	InnerValue StageCopyOptionsInnerValue `ddl:"keyword"`
+	InnerValue StageCopyOptionsInnerValue `ddl:"keyword"` // required
 }
 type StageCopyOptionsInnerValue struct {
-	OnError           StageCopyOptionsOnError            `ddl:"parameter" sql:"ON_ERROR"`
+	OnError           StageCopyOptionsOnError            `ddl:"parameter" sql:"ON_ERROR"` // required
 	SizeLimit         *int                               `ddl:"parameter" sql:"SIZE_LIMIT"`
 	Purge             *bool                              `ddl:"parameter" sql:"PURGE"`
 	ReturnFailedOnly  *bool                              `ddl:"parameter" sql:"RETURN_FAILED_ONLY"`
