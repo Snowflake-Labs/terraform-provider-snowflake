@@ -45,6 +45,26 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 	return findOne(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
 }
 
+func (v *databaseRoles) Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *databaseRoles) Revoke(ctx context.Context, request *RevokeDatabaseRoleRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *databaseRoles) GrantToShare(ctx context.Context, request *GrantDatabaseRoleToShareRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *databaseRoles) RevokeFromShare(ctx context.Context, request *RevokeDatabaseRoleFromShareRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (s *CreateDatabaseRoleRequest) toOpts() *createDatabaseRoleOptions {
 	return &createDatabaseRoleOptions{
 		OrReplace:   Bool(s.orReplace),
@@ -82,5 +102,53 @@ func (s *ShowDatabaseRoleRequest) toOpts() *showDatabaseRoleOptions {
 	return &showDatabaseRoleOptions{
 		Like:     s.like,
 		Database: s.database,
+	}
+}
+
+func (s *GrantDatabaseRoleRequest) toOpts() *grantDatabaseRoleOptions {
+	opts := grantDatabaseRoleOptions{
+		name: s.name,
+	}
+
+	grantToRole := grantOrRevokeDatabaseRoleObject{}
+	if s.databaseRole != nil {
+		grantToRole.DatabaseRoleName = s.databaseRole
+	}
+	if s.accountRole != nil {
+		grantToRole.AccountRoleName = s.accountRole
+	}
+	opts.ParentRole = grantToRole
+
+	return &opts
+}
+
+func (s *RevokeDatabaseRoleRequest) toOpts() *revokeDatabaseRoleOptions {
+	opts := revokeDatabaseRoleOptions{
+		name: s.name,
+	}
+
+	revokeFromRole := grantOrRevokeDatabaseRoleObject{}
+	if s.databaseRole != nil {
+		revokeFromRole.DatabaseRoleName = s.databaseRole
+	}
+	if s.accountRole != nil {
+		revokeFromRole.AccountRoleName = s.accountRole
+	}
+	opts.ParentRole = revokeFromRole
+
+	return &opts
+}
+
+func (s *GrantDatabaseRoleToShareRequest) toOpts() *grantDatabaseRoleToShareOptions {
+	return &grantDatabaseRoleToShareOptions{
+		name:  s.name,
+		Share: s.share,
+	}
+}
+
+func (s *RevokeDatabaseRoleFromShareRequest) toOpts() *revokeDatabaseRoleFromShareOptions {
+	return &revokeDatabaseRoleFromShareOptions{
+		name:  s.name,
+		Share: s.share,
 	}
 }

@@ -98,3 +98,63 @@ func (s *ShowDatabaseRoleRequest) WithLike(pattern string) *ShowDatabaseRoleRequ
 	}
 	return s
 }
+
+func NewGrantDatabaseRoleRequest(
+	name DatabaseObjectIdentifier,
+) *GrantDatabaseRoleRequest {
+	s := GrantDatabaseRoleRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *GrantDatabaseRoleRequest) WithDatabaseRole(databaseRole DatabaseObjectIdentifier) *GrantDatabaseRoleRequest {
+	s.accountRole = nil
+	s.databaseRole = &databaseRole
+	return s
+}
+
+func (s *GrantDatabaseRoleRequest) WithAccountRole(accountRole AccountObjectIdentifier) *GrantDatabaseRoleRequest {
+	s.databaseRole = nil
+	s.accountRole = &accountRole
+	return s
+}
+
+func NewRevokeDatabaseRoleRequest(
+	name DatabaseObjectIdentifier,
+) *RevokeDatabaseRoleRequest {
+	s := RevokeDatabaseRoleRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *RevokeDatabaseRoleRequest) WithDatabaseRole(databaseRole DatabaseObjectIdentifier) *RevokeDatabaseRoleRequest {
+	s.accountRole = nil
+	s.databaseRole = &databaseRole
+	return s
+}
+
+func (s *RevokeDatabaseRoleRequest) WithAccountRole(accountRole AccountObjectIdentifier) *RevokeDatabaseRoleRequest {
+	s.databaseRole = nil
+	s.accountRole = &accountRole
+	return s
+}
+
+func NewGrantDatabaseRoleToShareRequest(
+	name DatabaseObjectIdentifier,
+	share AccountObjectIdentifier,
+) *GrantDatabaseRoleToShareRequest {
+	s := GrantDatabaseRoleToShareRequest{}
+	s.name = name
+	s.share = share
+	return &s
+}
+
+func NewRevokeDatabaseRoleFromShareRequest(
+	name DatabaseObjectIdentifier,
+	share AccountObjectIdentifier,
+) *RevokeDatabaseRoleFromShareRequest {
+	s := RevokeDatabaseRoleFromShareRequest{}
+	s.name = name
+	s.share = share
+	return &s
+}

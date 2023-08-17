@@ -7,6 +7,10 @@ var (
 	_ validatableOpts = new(alterDatabaseRoleOptions)
 	_ validatableOpts = new(dropDatabaseRoleOptions)
 	_ validatableOpts = new(showDatabaseRoleOptions)
+	_ validatableOpts = new(grantDatabaseRoleOptions)
+	_ validatableOpts = new(revokeDatabaseRoleOptions)
+	_ validatableOpts = new(grantDatabaseRoleToShareOptions)
+	_ validatableOpts = new(revokeDatabaseRoleFromShareOptions)
 )
 
 var errDifferentDatabase = errors.New("database must be the same")
@@ -77,6 +81,62 @@ func (opts *showDatabaseRoleOptions) validateProp() error {
 	}
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
 		errs = append(errs, errPatternRequiredForLikeKeyword)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *grantDatabaseRoleOptions) validateProp() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if ok := exactlyOneValueSet(opts.ParentRole.DatabaseRoleName, opts.ParentRole.AccountRoleName); !ok {
+		errs = append(errs, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *revokeDatabaseRoleOptions) validateProp() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if ok := exactlyOneValueSet(opts.ParentRole.DatabaseRoleName, opts.ParentRole.AccountRoleName); !ok {
+		errs = append(errs, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *grantDatabaseRoleToShareOptions) validateProp() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !validObjectidentifier(opts.Share) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *revokeDatabaseRoleFromShareOptions) validateProp() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !validObjectidentifier(opts.Share) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }

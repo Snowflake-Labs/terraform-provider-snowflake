@@ -224,3 +224,171 @@ func TestDatabaseRolesShow(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASE ROLES LIKE '%s' IN DATABASE %s`, id.Name(), id.FullyQualifiedName())
 	})
 }
+
+func TestDatabaseRoles_Grant(t *testing.T) {
+	id := randomDatabaseObjectIdentifier(t)
+	databaseRoleId := randomDatabaseObjectIdentifier(t)
+	accountRoleId := randomAccountObjectIdentifier(t)
+
+	setUpOpts := func() *grantDatabaseRoleOptions {
+		return &grantDatabaseRoleOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *grantDatabaseRoleOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: invalid identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.name = NewDatabaseObjectIdentifier("", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: no role", func(t *testing.T) {
+		opts := setUpOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	})
+
+	t.Run("validation: multiple roles", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.ParentRole.DatabaseRoleName = &databaseRoleId
+		opts.ParentRole.AccountRoleName = &accountRoleId
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	})
+
+	t.Run("grant to database role", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.ParentRole.DatabaseRoleName = &databaseRoleId
+
+		assertOptsValidAndSQLEquals(t, opts, `GRANT DATABASE ROLE %s TO DATABASE ROLE %s`, id.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
+	})
+
+	t.Run("grant to account role", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.ParentRole.AccountRoleName = &accountRoleId
+
+		assertOptsValidAndSQLEquals(t, opts, `GRANT DATABASE ROLE %s TO ROLE %s`, id.FullyQualifiedName(), accountRoleId.FullyQualifiedName())
+	})
+}
+
+func TestDatabaseRoles_Revoke(t *testing.T) {
+	id := randomDatabaseObjectIdentifier(t)
+	databaseRoleId := randomDatabaseObjectIdentifier(t)
+	accountRoleId := randomAccountObjectIdentifier(t)
+
+	setUpOpts := func() *revokeDatabaseRoleOptions {
+		return &revokeDatabaseRoleOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *revokeDatabaseRoleOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: invalid identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.name = NewDatabaseObjectIdentifier("", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: no role", func(t *testing.T) {
+		opts := setUpOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	})
+
+	t.Run("validation: multiple roles", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.ParentRole.DatabaseRoleName = &databaseRoleId
+		opts.ParentRole.AccountRoleName = &accountRoleId
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	})
+
+	t.Run("revoke from database role", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.ParentRole.DatabaseRoleName = &databaseRoleId
+
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE DATABASE ROLE %s FROM DATABASE ROLE %s`, id.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
+	})
+
+	t.Run("revoke from account role", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.ParentRole.AccountRoleName = &accountRoleId
+
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE DATABASE ROLE %s FROM ROLE %s`, id.FullyQualifiedName(), accountRoleId.FullyQualifiedName())
+	})
+}
+
+func TestDatabaseRoles_GrantToShare(t *testing.T) {
+	id := randomDatabaseObjectIdentifier(t)
+	share := randomAccountObjectIdentifier(t)
+
+	setUpOpts := func() *grantDatabaseRoleToShareOptions {
+		return &grantDatabaseRoleToShareOptions{
+			name:  id,
+			Share: share,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *grantDatabaseRoleToShareOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: invalid identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.name = NewDatabaseObjectIdentifier("", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: invalid share identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Share = NewAccountObjectIdentifier("")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("grant to share", func(t *testing.T) {
+		opts := setUpOpts()
+
+		assertOptsValidAndSQLEquals(t, opts, `GRANT DATABASE ROLE %s TO SHARE %s`, id.FullyQualifiedName(), share.FullyQualifiedName())
+	})
+}
+
+func TestDatabaseRoles_RevokeFromShare(t *testing.T) {
+	id := randomDatabaseObjectIdentifier(t)
+	share := randomAccountObjectIdentifier(t)
+
+	setUpOpts := func() *revokeDatabaseRoleFromShareOptions {
+		return &revokeDatabaseRoleFromShareOptions{
+			name:  id,
+			Share: share,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *revokeDatabaseRoleFromShareOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: invalid identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.name = NewDatabaseObjectIdentifier("", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: invalid share identifier", func(t *testing.T) {
+		opts := setUpOpts()
+		opts.Share = NewAccountObjectIdentifier("")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("revoke from share", func(t *testing.T) {
+		opts := setUpOpts()
+
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE DATABASE ROLE %s FROM SHARE %s`, id.FullyQualifiedName(), share.FullyQualifiedName())
+	})
+}

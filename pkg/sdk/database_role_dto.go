@@ -1,5 +1,7 @@
 package sdk
 
+//go:generate go run ./dto-builder-generator/main.go
+
 var (
 	_ optionsProvider[createDatabaseRoleOptions] = new(CreateDatabaseRoleRequest)
 	_ optionsProvider[alterDatabaseRoleOptions]  = new(AlterDatabaseRoleRequest)
@@ -42,4 +44,30 @@ type DropDatabaseRoleRequest struct {
 type ShowDatabaseRoleRequest struct {
 	like     *Like
 	database AccountObjectIdentifier // required
+}
+
+type GrantDatabaseRoleRequest struct {
+	name DatabaseObjectIdentifier // required
+
+	// One of
+	databaseRole *DatabaseObjectIdentifier
+	accountRole  *AccountObjectIdentifier
+}
+
+type RevokeDatabaseRoleRequest struct {
+	name DatabaseObjectIdentifier // required
+
+	// One of
+	databaseRole *DatabaseObjectIdentifier
+	accountRole  *AccountObjectIdentifier
+}
+
+type GrantDatabaseRoleToShareRequest struct {
+	name  DatabaseObjectIdentifier // required
+	share AccountObjectIdentifier  // required
+}
+
+type RevokeDatabaseRoleFromShareRequest struct {
+	name  DatabaseObjectIdentifier // required
+	share AccountObjectIdentifier  // required
 }
