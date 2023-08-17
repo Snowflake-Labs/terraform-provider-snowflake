@@ -6,6 +6,11 @@ import (
 	"fmt"
 )
 
+var (
+	_ validatable = new(AlterSessionOptions)
+	_ validatable = new(ShowParametersOptions)
+)
+
 type Sessions interface {
 	// Parameters
 	AlterSession(ctx context.Context, opts *AlterSessionOptions) error
