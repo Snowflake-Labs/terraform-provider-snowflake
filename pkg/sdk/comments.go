@@ -4,6 +4,11 @@ import (
 	"context"
 )
 
+var (
+	_ validatable = new(SetCommentOptions)
+	_ validatable = new(SetColumnCommentOptions)
+)
+
 type Comments interface {
 	Set(ctx context.Context, opts *SetCommentOptions) error
 	SetColumn(ctx context.Context, opts *SetColumnCommentOptions) error

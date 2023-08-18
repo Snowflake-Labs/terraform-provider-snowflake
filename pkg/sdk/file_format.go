@@ -12,6 +12,14 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+var (
+	_ validatable = new(CreateFileFormatOptions)
+	_ validatable = new(AlterFileFormatOptions)
+	_ validatable = new(DropFileFormatOptions)
+	_ validatable = new(ShowFileFormatsOptions)
+	_ validatable = new(describeFileFormatOptions)
+)
+
 type FileFormats interface {
 	// Create creates a FileFormat.
 	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreateFileFormatOptions) error

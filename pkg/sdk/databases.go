@@ -9,6 +9,19 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateDatabaseOptions)
+	_ validatable = new(CreateSharedDatabaseOptions)
+	_ validatable = new(CreateSecondaryDatabaseOptions)
+	_ validatable = new(AlterDatabaseOptions)
+	_ validatable = new(AlterDatabaseReplicationOptions)
+	_ validatable = new(AlterDatabaseFailoverOptions)
+	_ validatable = new(DropDatabaseOptions)
+	_ validatable = new(undropDatabaseOptions)
+	_ validatable = new(ShowDatabasesOptions)
+	_ validatable = new(describeDatabaseOptions)
+)
+
 type Databases interface {
 	// Create creates a database.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateDatabaseOptions) error

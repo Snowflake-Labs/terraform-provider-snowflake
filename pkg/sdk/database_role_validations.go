@@ -3,15 +3,19 @@ package sdk
 import "errors"
 
 var (
-	_ validatableOpts = new(createDatabaseRoleOptions)
-	_ validatableOpts = new(alterDatabaseRoleOptions)
-	_ validatableOpts = new(dropDatabaseRoleOptions)
-	_ validatableOpts = new(showDatabaseRoleOptions)
+	_ validatable = new(createDatabaseRoleOptions)
+	_ validatable = new(alterDatabaseRoleOptions)
+	_ validatable = new(dropDatabaseRoleOptions)
+	_ validatable = new(showDatabaseRoleOptions)
+	_ validatable = new(grantDatabaseRoleOptions)
+	_ validatable = new(revokeDatabaseRoleOptions)
+	_ validatable = new(grantDatabaseRoleToShareOptions)
+	_ validatable = new(revokeDatabaseRoleFromShareOptions)
 )
 
 var errDifferentDatabase = errors.New("database must be the same")
 
-func (opts *createDatabaseRoleOptions) validateProp() error {
+func (opts *createDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -25,7 +29,7 @@ func (opts *createDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *alterDatabaseRoleOptions) validateProp() error {
+func (opts *alterDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -56,7 +60,7 @@ func (opts *alterDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *dropDatabaseRoleOptions) validateProp() error {
+func (opts *dropDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -67,7 +71,7 @@ func (opts *dropDatabaseRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *showDatabaseRoleOptions) validateProp() error {
+func (opts *showDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -77,6 +81,62 @@ func (opts *showDatabaseRoleOptions) validateProp() error {
 	}
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
 		errs = append(errs, errPatternRequiredForLikeKeyword)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *grantDatabaseRoleOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if ok := exactlyOneValueSet(opts.ParentRole.DatabaseRoleName, opts.ParentRole.AccountRoleName); !ok {
+		errs = append(errs, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *revokeDatabaseRoleOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if ok := exactlyOneValueSet(opts.ParentRole.DatabaseRoleName, opts.ParentRole.AccountRoleName); !ok {
+		errs = append(errs, errOneOf("DatabaseRoleName", "AccountRoleName"))
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *grantDatabaseRoleToShareOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !validObjectidentifier(opts.Share) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *revokeDatabaseRoleFromShareOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !validObjectidentifier(opts.Share) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }

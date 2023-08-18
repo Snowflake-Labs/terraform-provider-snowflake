@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateShareOptions)
+	_ validatable = new(AlterShareOptions)
+	_ validatable = new(shareDropOptions)
+	_ validatable = new(ShowShareOptions)
+	_ validatable = new(shareDescribeOptions)
+)
+
 type Shares interface {
 	// Create creates a share.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error
@@ -136,9 +144,16 @@ type shareDropOptions struct {
 	name  AccountObjectIdentifier `ddl:"identifier"`
 }
 
+func (opts *shareDropOptions) validate() error {
+	return nil
+}
+
 func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
 	opts := &shareDropOptions{
 		name: id,
+	}
+	if err := opts.validate(); err != nil {
+		return err
 	}
 	sql, err := structToSQL(opts)
 	if err != nil {

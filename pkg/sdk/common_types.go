@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(TimeTravel)
+	_ validatable = new(Clone)
+)
+
 type TimeTravel struct {
 	Timestamp *time.Time `ddl:"parameter,single_quotes,arrow_equals" sql:"TIMESTAMP"`
 	Offset    *int       `ddl:"parameter,arrow_equals" sql:"OFFSET"`

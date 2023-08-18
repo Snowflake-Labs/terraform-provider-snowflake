@@ -4,6 +4,13 @@ import (
 	"context"
 )
 
+var (
+	_ validatable = new(CreateSessionPolicyOptions)
+	_ validatable = new(AlterSessionPolicyOptions)
+	_ validatable = new(DropSessionPolicyOptions)
+	_ validatable = new(sessionPolicyShowOptions)
+)
+
 type SessionPolicies interface {
 	// Create creates a session policy.
 	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreateSessionPolicyOptions) error
@@ -85,6 +92,10 @@ func (v *sessionPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 
 // AlterSessionPolicyOptions contains options for altering a session policy.
 type AlterSessionPolicyOptions struct{}
+
+func (opts *AlterSessionPolicyOptions) validate() error {
+	return nil
+}
 
 func (v *sessionPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterSessionPolicyOptions) error {
 	return nil

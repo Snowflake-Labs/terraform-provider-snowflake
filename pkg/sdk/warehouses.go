@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateWarehouseOptions)
+	_ validatable = new(AlterWarehouseOptions)
+	_ validatable = new(DropWarehouseOptions)
+	_ validatable = new(ShowWarehouseOptions)
+	_ validatable = new(warehouseDescribeOptions)
+)
+
 type Warehouses interface {
 	// Create creates a warehouse.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateWarehouseOptions) error
