@@ -370,6 +370,7 @@ func DeleteAlert(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 	return nil
 }
+
 func waitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
 	opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionResume}
 	// try to resume the alert, and verify that it was resumed.
