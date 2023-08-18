@@ -1,11 +1,11 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -82,27 +82,32 @@ func Alerts() *schema.Resource {
 // ReadAlerts Reads the database metadata information.
 func ReadAlerts(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
 	d.SetId("alerts_read")
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	alertPattern := d.Get("pattern").(string)
-
-	listAlerts, err := snowflake.ListAlerts(databaseName, schemaName, alertPattern, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("[DEBUG] no alerts found in account (%s)", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Println("[DEBUG] failed to list alerts")
-		d.SetId("")
-		return nil
+	var like sdk.Like
+	if alertPattern != "" {
+		like = sdk.Like{Pattern: &alertPattern}
 	}
-
+	listAlerts, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+		In: &sdk.In{
+			Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
+		},
+		Like: &like,
+	})
+	if err != nil {
+		log.Printf("[DEBUG] failed to list alerts in schema (%s)", d.Id())
+		d.SetId("")
+		return err
+	}
 	log.Printf("[DEBUG] list alerts: %v", listAlerts)
-
-	alerts := []map[string]interface{}{}
+	alerts := make([]map[string]any, 0, len(listAlerts))
 	for _, alert := range listAlerts {
-		alertMap := map[string]interface{}{}
+		alertMap := map[string]any{}
 		alertMap["name"] = alert.Name
 		alertMap["comment"] = alert.Comment
 		alertMap["owner"] = alert.Owner
