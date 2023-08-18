@@ -7,10 +7,10 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -282,7 +282,7 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 
 	enabled := d.Get("enabled").(bool)
 	if d.HasChanges("enabled", "warehouse", "alert_schedule", "condition", "action", "comment") {
-		if err := snowflake.WaitSuspendAlert(ctx, client, objectIdentifier); err != nil {
+		if err := waitSuspendAlert(ctx, client, objectIdentifier); err != nil {
 			log.Printf("[WARN] failed to suspend alert %s", objectIdentifier.Name())
 		}
 	}
@@ -344,11 +344,11 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if enabled {
-		if err := snowflake.WaitResumeAlert(ctx, client, objectIdentifier); err != nil {
+		if err := waitResumeAlert(ctx, client, objectIdentifier); err != nil {
 			log.Printf("[WARN] failed to resume alert %s", objectIdentifier.Name())
 		}
 	} else {
-		if err := snowflake.WaitSuspendAlert(ctx, client, objectIdentifier); err != nil {
+		if err := waitSuspendAlert(ctx, client, objectIdentifier); err != nil {
 			log.Printf("[WARN] failed to suspend alert %s", objectIdentifier.Name())
 		}
 	}
@@ -369,4 +369,48 @@ func DeleteAlert(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId("")
 	return nil
+}
+func waitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionResume}
+	// try to resume the alert, and verify that it was resumed.
+	// if it's not resumed then try again up until a maximum of 5 times
+	for i := 0; i < 5; i++ {
+		err := client.Alerts.Alter(ctx, id, &opts)
+		if err != nil {
+			return fmt.Errorf("error resuming alert %v err = %w", id.Name(), err)
+		}
+
+		alert, err := client.Alerts.ShowByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if alert.State == sdk.AlertStateStarted {
+			return nil
+		}
+		time.Sleep(10 * time.Second)
+	}
+	return fmt.Errorf("unable to resume alert %v after 5 attempts", id.Name())
+}
+
+func waitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionSuspend}
+
+	// try to suspend the alert, and verify that it was suspended.
+	// if it's not suspended then try again up until a maximum of 5 times
+	for i := 0; i < 5; i++ {
+		err := client.Alerts.Alter(ctx, id, &opts)
+		if err != nil {
+			return fmt.Errorf("error suspending alert %v err = %w", id.Name(), err)
+		}
+
+		alert, err := client.Alerts.ShowByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if alert.State == sdk.AlertStateSuspended {
+			return nil
+		}
+		time.Sleep(10 * time.Second)
+	}
+	return fmt.Errorf("unable to suspend alert %v after 5 attempts", id.Name())
 }
