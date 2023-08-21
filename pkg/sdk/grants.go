@@ -11,7 +11,7 @@ var _ convertibleRow[Grant] = new(grantRow)
 type Grants interface {
 	GrantPrivilegesToAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *GrantPrivilegesToAccountRoleOptions) error
 	RevokePrivilegesFromAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *RevokePrivilegesFromAccountRoleOptions) error
-	// todo: GrantPrivilegesToDatabaseRole and RevokePrivilegesFromDatabaseRole
+	GrantPrivilegesToDatabaseRole(ctx context.Context, privileges *DatabaseRoleGrantPrivileges, on *DatabaseRoleGrantOn, role DatabaseObjectIdentifier, opts *GrantPrivilegesToDatabaseRoleOptions) error
 	GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error
 	RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, from AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, error)
@@ -76,6 +76,27 @@ type RevokePrivilegesFromAccountRoleOptions struct {
 	accountRole    AccountObjectIdentifier     `ddl:"identifier" sql:"FROM ROLE"`
 	Restrict       *bool                       `ddl:"keyword" sql:"RESTRICT"`
 	Cascade        *bool                       `ddl:"keyword" sql:"CASCADE"`
+}
+
+type GrantPrivilegesToDatabaseRoleOptions struct {
+	grant           bool                         `ddl:"static" sql:"GRANT"`
+	privileges      *DatabaseRoleGrantPrivileges `ddl:"-"`
+	on              *AccountRoleGrantOn          `ddl:"keyword" sql:"ON"`
+	accountRole     DatabaseObjectIdentifier     `ddl:"identifier" sql:"TO DATABASE ROLE"`
+	WithGrantOption *bool                        `ddl:"keyword" sql:"WITH GRANT OPTION"`
+}
+
+type DatabaseRoleGrantPrivileges struct {
+	// TODO: check other values (here only { CREATE SCHEMA| MODIFY | MONITOR | USAGE } [ , ... ] in doc)
+	DatabasePrivileges     []AccountObjectPrivilege `ddl:"-"`
+	SchemaPrivileges       []SchemaPrivilege        `ddl:"-"`
+	SchemaObjectPrivileges []SchemaObjectPrivilege  `ddl:"-"`
+}
+
+type DatabaseRoleGrantOn struct {
+	Database     *AccountObjectIdentifier `ddl:"identifier" sql:"ON DATABASE"`
+	Schema       *GrantOnSchema           `ddl:"-"`
+	SchemaObject *GrantOnSchemaObject     `ddl:"-"`
 }
 
 type grantPrivilegeToShareOptions struct {
