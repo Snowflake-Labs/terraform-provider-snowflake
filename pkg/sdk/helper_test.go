@@ -504,6 +504,29 @@ func createRole(t *testing.T, client *Client) (*Role, func()) {
 		}
 }
 
+func createDatabaseRole(t *testing.T, client *Client, database *Database) (*DatabaseRole, func()) {
+	t.Helper()
+	name := randomString(t)
+	id := NewDatabaseObjectIdentifier(database.Name, name)
+	ctx := context.Background()
+
+	err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
+	require.NoError(t, err)
+
+	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return databaseRole, cleanupDatabaseRoleProvider(t, ctx, client, id)
+}
+
+func cleanupDatabaseRoleProvider(t *testing.T, ctx context.Context, client *Client, id DatabaseObjectIdentifier) func() {
+	t.Helper()
+	return func() {
+		err := client.DatabaseRoles.Drop(ctx, NewDropDatabaseRoleRequest(id))
+		require.NoError(t, err)
+	}
+}
+
 func createMaskingPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*MaskingPolicy, func()) {
 	t.Helper()
 	signature := []TableColumnSignature{

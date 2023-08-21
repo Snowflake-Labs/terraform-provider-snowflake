@@ -159,9 +159,10 @@ type ShowGrantsOn struct {
 }
 
 type ShowGrantsTo struct {
-	Role  AccountObjectIdentifier `ddl:"identifier" sql:"ROLE"`
-	User  AccountObjectIdentifier `ddl:"identifier" sql:"USER"`
-	Share AccountObjectIdentifier `ddl:"identifier" sql:"SHARE"`
+	Role         AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
+	User         AccountObjectIdentifier  `ddl:"identifier" sql:"USER"`
+	Share        AccountObjectIdentifier  `ddl:"identifier" sql:"SHARE"`
+	DatabaseRole DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
 }
 
 type ShowGrantsOf struct {
@@ -176,6 +177,7 @@ type grantRow struct {
 	GrantOn     string    `db:"grant_on"`
 	Name        string    `db:"name"`
 	GrantedTo   string    `db:"granted_to"`
+	GrantTo     string    `db:"grant_to"`
 	GranteeName string    `db:"grantee_name"`
 	GrantOption bool      `db:"grant_option"`
 	GrantedBy   string    `db:"granted_by"`
@@ -188,6 +190,7 @@ type Grant struct {
 	GrantOn     ObjectType
 	Name        ObjectIdentifier
 	GrantedTo   ObjectType
+	GrantTo     ObjectType
 	GranteeName AccountObjectIdentifier
 	GrantOption bool
 	GrantedBy   AccountObjectIdentifier
@@ -199,6 +202,7 @@ func (v *Grant) ID() ObjectIdentifier {
 
 func (row grantRow) convert() *Grant {
 	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
+	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
 	granteeName := NewAccountObjectIdentifier(row.GranteeName)
 	if grantedTo == ObjectTypeShare {
 		parts := strings.Split(row.GranteeName, ".")
@@ -209,6 +213,7 @@ func (row grantRow) convert() *Grant {
 		CreatedOn:   row.CreatedOn,
 		Privilege:   row.Privilege,
 		GrantedTo:   grantedTo,
+		GrantTo:     grantTo,
 		Name:        NewAccountObjectIdentifier(strings.Trim(row.Name, "\"")),
 		GranteeName: granteeName,
 		GrantOption: row.GrantOption,

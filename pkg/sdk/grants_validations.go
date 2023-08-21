@@ -228,6 +228,7 @@ func (v *OnView) validate() error {
 	return nil
 }
 
+// TODO: add better validations
 func (opts *ShowGrantOptions) validate() error {
 	if everyValueNil(opts.On, opts.To, opts.Of, opts.In) {
 		return nil
