@@ -8,6 +8,7 @@ var (
 	_ validatable = new(GrantPrivilegesToAccountRoleOptions)
 	_ validatable = new(RevokePrivilegesFromAccountRoleOptions)
 	_ validatable = new(GrantPrivilegesToDatabaseRoleOptions)
+	_ validatable = new(RevokePrivilegesFromDatabaseRoleOptions)
 	_ validatable = new(grantPrivilegeToShareOptions)
 	_ validatable = new(revokePrivilegeFromShareOptions)
 	_ validatable = new(ShowGrantOptions)
@@ -154,6 +155,28 @@ func (v *DatabaseRoleGrantOn) validate() error {
 		if err := v.SchemaObject.validate(); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (opts *RevokePrivilegesFromDatabaseRoleOptions) validate() error {
+	if !valueSet(opts.privileges) {
+		return fmt.Errorf("privileges must be set")
+	}
+	if err := opts.privileges.validate(); err != nil {
+		return err
+	}
+	if !valueSet(opts.on) {
+		return fmt.Errorf("on must be set")
+	}
+	if err := opts.on.validate(); err != nil {
+		return err
+	}
+	if !validObjectidentifier(opts.databaseRole) {
+		return ErrInvalidObjectIdentifier
+	}
+	if everyValueSet(opts.Restrict, opts.Cascade) {
+		return fmt.Errorf("either Restrict or Cascade can be set, or neither but not both")
 	}
 	return nil
 }

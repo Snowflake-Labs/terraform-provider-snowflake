@@ -12,11 +12,13 @@ type Grants interface {
 	GrantPrivilegesToAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *GrantPrivilegesToAccountRoleOptions) error
 	RevokePrivilegesFromAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *RevokePrivilegesFromAccountRoleOptions) error
 	GrantPrivilegesToDatabaseRole(ctx context.Context, privileges *DatabaseRoleGrantPrivileges, on *DatabaseRoleGrantOn, role DatabaseObjectIdentifier, opts *GrantPrivilegesToDatabaseRoleOptions) error
+	RevokePrivilegesFromDatabaseRole(ctx context.Context, privileges *DatabaseRoleGrantPrivileges, on *DatabaseRoleGrantOn, role DatabaseObjectIdentifier, opts *RevokePrivilegesFromDatabaseRoleOptions) error
 	GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error
 	RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, from AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, error)
 }
 
+// GrantPrivilegesToAccountRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#syntax.
 type GrantPrivilegesToAccountRoleOptions struct {
 	grant           bool                        `ddl:"static" sql:"GRANT"`
 	privileges      *AccountRoleGrantPrivileges `ddl:"-"`
@@ -68,6 +70,7 @@ type GrantOnSchemaObjectIn struct {
 	InSchema         *DatabaseObjectIdentifier `ddl:"identifier" sql:"IN SCHEMA"`
 }
 
+// RevokePrivilegesFromAccountRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/revoke-privilege#syntax.
 type RevokePrivilegesFromAccountRoleOptions struct {
 	revoke         bool                        `ddl:"static" sql:"REVOKE"`
 	GrantOptionFor *bool                       `ddl:"keyword" sql:"GRANT OPTION FOR"`
@@ -78,6 +81,7 @@ type RevokePrivilegesFromAccountRoleOptions struct {
 	Cascade        *bool                       `ddl:"keyword" sql:"CASCADE"`
 }
 
+// GrantPrivilegesToDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#syntax.
 type GrantPrivilegesToDatabaseRoleOptions struct {
 	grant           bool                         `ddl:"static" sql:"GRANT"`
 	privileges      *DatabaseRoleGrantPrivileges `ddl:"-"`
@@ -97,6 +101,17 @@ type DatabaseRoleGrantOn struct {
 	Database     *AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
 	Schema       *GrantOnSchema           `ddl:"-"`
 	SchemaObject *GrantOnSchemaObject     `ddl:"-"`
+}
+
+// RevokePrivilegesFromDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/revoke-privilege#syntax.
+type RevokePrivilegesFromDatabaseRoleOptions struct {
+	revoke         bool                         `ddl:"static" sql:"REVOKE"`
+	GrantOptionFor *bool                        `ddl:"keyword" sql:"GRANT OPTION FOR"`
+	privileges     *DatabaseRoleGrantPrivileges `ddl:"-"`
+	on             *DatabaseRoleGrantOn         `ddl:"keyword" sql:"ON"`
+	databaseRole   DatabaseObjectIdentifier     `ddl:"identifier" sql:"FROM DATABASE ROLE"`
+	Restrict       *bool                        `ddl:"keyword" sql:"RESTRICT"`
+	Cascade        *bool                        `ddl:"keyword" sql:"CASCADE"`
 }
 
 type grantPrivilegeToShareOptions struct {

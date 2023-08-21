@@ -243,6 +243,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+		// Expecting two grants because database rol has usage on database by default
 		require.Equal(t, 2, len(returnedGrants))
 
 		usagePrivilege, err := findOne[Grant](returnedGrants, func(g Grant) bool { return g.Privilege == AccountObjectPrivilegeUsage.String() })
@@ -254,16 +255,18 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		assert.Equal(t, ObjectTypeDatabase, createSchemaPrivilege.GrantedOn)
 		assert.Equal(t, ObjectTypeDatabaseRole, createSchemaPrivilege.GrantedTo)
 
-		// TODO: revoke and verify that the grant(s) are gone
-		//err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
-		//require.NoError(t, err)
-		//grants, err = client.Grants.Show(ctx, &ShowGrantOptions{
-		//	To: &ShowGrantsTo{
-		//		Role: roleTest.ID(),
-		//	},
-		//})
-		//require.NoError(t, err)
-		//assert.Equal(t, 0, len(grants))
+		// now revoke and verify that the new grant is gone
+		err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
+		require.NoError(t, err)
+
+		returnedGrants, err = client.Grants.Show(ctx, &ShowGrantOptions{
+			To: &ShowGrantsTo{
+				DatabaseRole: databaseRoleId,
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(returnedGrants))
+		assert.Equal(t, AccountObjectPrivilegeUsage.String(), returnedGrants[0].Privilege)
 	})
 
 	t.Run("on schema", func(t *testing.T) {
@@ -289,6 +292,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+		// Expecting two grants because database rol has usage on database by default
 		require.Equal(t, 2, len(returnedGrants))
 
 		usagePrivilege, err := findOne[Grant](returnedGrants, func(g Grant) bool { return g.Privilege == AccountObjectPrivilegeUsage.String() })
@@ -300,16 +304,18 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		assert.Equal(t, ObjectTypeSchema, createAlertPrivilege.GrantedOn)
 		assert.Equal(t, ObjectTypeDatabaseRole, createAlertPrivilege.GrantedTo)
 
-		// TODO: revoke and verify that the grant(s) are gone
-		//err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
-		//require.NoError(t, err)
-		//grants, err = client.Grants.Show(ctx, &ShowGrantOptions{
-		//	To: &ShowGrantsTo{
-		//		Role: roleTest.ID(),
-		//	},
-		//})
-		//require.NoError(t, err)
-		//assert.Equal(t, 0, len(grants))
+		// now revoke and verify that the new grant is gone
+		err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
+		require.NoError(t, err)
+
+		returnedGrants, err = client.Grants.Show(ctx, &ShowGrantOptions{
+			To: &ShowGrantsTo{
+				DatabaseRole: databaseRoleId,
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(returnedGrants))
+		assert.Equal(t, AccountObjectPrivilegeUsage.String(), returnedGrants[0].Privilege)
 	})
 
 	t.Run("on schema object", func(t *testing.T) {
@@ -339,6 +345,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+		// Expecting two grants because database rol has usage on database by default
 		require.Equal(t, 2, len(returnedGrants))
 
 		usagePrivilege, err := findOne[Grant](returnedGrants, func(g Grant) bool { return g.Privilege == AccountObjectPrivilegeUsage.String() })
@@ -351,16 +358,18 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		assert.Equal(t, ObjectTypeDatabaseRole, selectPrivilege.GrantedTo)
 		assert.Equal(t, table.ID().FullyQualifiedName(), selectPrivilege.Name.FullyQualifiedName())
 
-		// TODO: revoke
-		//err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
-		//require.NoError(t, err)
-		//grants, err = client.Grants.Show(ctx, &ShowGrantOptions{
-		//	To: &ShowGrantsTo{
-		//		Role: roleTest.ID(),
-		//	},
-		//})
-		//require.NoError(t, err)
-		//assert.Equal(t, 0, len(grants))
+		// now revoke and verify that the new grant is gone
+		err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
+		require.NoError(t, err)
+
+		returnedGrants, err = client.Grants.Show(ctx, &ShowGrantOptions{
+			To: &ShowGrantsTo{
+				DatabaseRole: databaseRoleId,
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(returnedGrants))
+		assert.Equal(t, AccountObjectPrivilegeUsage.String(), returnedGrants[0].Privilege)
 	})
 
 	t.Run("on future schema object", func(t *testing.T) {
@@ -394,16 +403,18 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		assert.Equal(t, ObjectTypeExternalTable, returnedGrants[0].GrantOn)
 		assert.Equal(t, ObjectTypeDatabaseRole, returnedGrants[0].GrantTo)
 
-		// TODO: revoke
-		//err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
-		//require.NoError(t, err)
-		//returnedGrants, err = client.Grants.Show(ctx, &ShowGrantOptions{
-		//	To: &ShowGrantsTo{
-		//		Role: roleTest.ID(),
-		//	},
-		//})
-		//require.NoError(t, err)
-		//assert.Equal(t, 0, len(returnedGrants))
+		// now revoke and verify that the new grant is gone
+		err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
+		require.NoError(t, err)
+
+		returnedGrants, err = client.Grants.Show(ctx, &ShowGrantOptions{
+			Future: Bool(true),
+			To: &ShowGrantsTo{
+				DatabaseRole: databaseRoleId,
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 0, len(returnedGrants))
 	})
 }
 

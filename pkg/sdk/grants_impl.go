@@ -38,6 +38,16 @@ func (v *grants) GrantPrivilegesToDatabaseRole(ctx context.Context, privileges *
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *grants) RevokePrivilegesFromDatabaseRole(ctx context.Context, privileges *DatabaseRoleGrantPrivileges, on *DatabaseRoleGrantOn, role DatabaseObjectIdentifier, opts *RevokePrivilegesFromDatabaseRoleOptions) error {
+	if opts == nil {
+		opts = &RevokePrivilegesFromDatabaseRoleOptions{}
+	}
+	opts.privileges = privileges
+	opts.on = on
+	opts.databaseRole = role
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *grants) GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error {
 	opts := &grantPrivilegeToShareOptions{
 		privilege: privilege,

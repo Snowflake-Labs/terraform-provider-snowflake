@@ -395,6 +395,125 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 	})
 }
 
+func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
+	// TODO: validation tests
+
+	t.Run("on database", func(t *testing.T) {
+		dbId := NewAccountObjectIdentifier("db1")
+		opts := &RevokePrivilegesFromDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
+			},
+			on: &DatabaseRoleGrantOn{
+				Database: &dbId,
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE CREATE SCHEMA ON DATABASE "db1" FROM DATABASE ROLE "db1"."role1"`)
+	})
+
+	t.Run("on schema", func(t *testing.T) {
+		opts := &RevokePrivilegesFromDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert, SchemaPrivilegeAddSearchOptimization},
+			},
+			on: &DatabaseRoleGrantOn{
+				Schema: &GrantOnSchema{
+					Schema: Pointer(NewDatabaseObjectIdentifier("db1", "schema1")),
+				},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE CREATE ALERT, ADD SEARCH OPTIMIZATION ON SCHEMA "db1"."schema1" FROM DATABASE ROLE "db1"."role1"`)
+	})
+
+	t.Run("on all schemas in database + restrict", func(t *testing.T) {
+		opts := &RevokePrivilegesFromDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert, SchemaPrivilegeAddSearchOptimization},
+			},
+			on: &DatabaseRoleGrantOn{
+				Schema: &GrantOnSchema{
+					AllSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
+				},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+			Restrict:     Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE CREATE ALERT, ADD SEARCH OPTIMIZATION ON ALL SCHEMAS IN DATABASE "db1" FROM DATABASE ROLE "db1"."role1" RESTRICT`)
+	})
+
+	t.Run("on all future schemas in database + cascade", func(t *testing.T) {
+		opts := &RevokePrivilegesFromDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert, SchemaPrivilegeAddSearchOptimization},
+			},
+			on: &DatabaseRoleGrantOn{
+				Schema: &GrantOnSchema{
+					FutureSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
+				},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+			Cascade:      Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE CREATE ALERT, ADD SEARCH OPTIMIZATION ON FUTURE SCHEMAS IN DATABASE "db1" FROM DATABASE ROLE "db1"."role1" CASCADE`)
+	})
+
+	t.Run("on schema object", func(t *testing.T) {
+		opts := &RevokePrivilegesFromDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeSelect, SchemaObjectPrivilegeUpdate},
+			},
+			on: &DatabaseRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					SchemaObject: &Object{
+						ObjectType: ObjectTypeTable,
+						Name:       NewSchemaObjectIdentifier("db1", "schema1", "table1"),
+					},
+				},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE SELECT, UPDATE ON TABLE "db1"."schema1"."table1" FROM DATABASE ROLE "db1"."role1"`)
+	})
+
+	t.Run("on future schema object in database", func(t *testing.T) {
+		opts := &RevokePrivilegesFromDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeSelect, SchemaObjectPrivilegeUpdate},
+			},
+			on: &DatabaseRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					Future: &GrantOnSchemaObjectIn{
+						PluralObjectType: PluralObjectTypeTables,
+						InDatabase:       Pointer(NewAccountObjectIdentifier("db1")),
+					},
+				},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE SELECT, UPDATE ON FUTURE TABLES IN DATABASE "db1" FROM DATABASE ROLE "db1"."role1"`)
+	})
+
+	t.Run("on future schema object in schema", func(t *testing.T) {
+		opts := &RevokePrivilegesFromDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeSelect, SchemaObjectPrivilegeUpdate},
+			},
+			on: &DatabaseRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					Future: &GrantOnSchemaObjectIn{
+						PluralObjectType: PluralObjectTypeTables,
+						InSchema:         Pointer(NewDatabaseObjectIdentifier("db1", "schema1")),
+					},
+				},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE SELECT, UPDATE ON FUTURE TABLES IN SCHEMA "db1"."schema1" FROM DATABASE ROLE "db1"."role1"`)
+	})
+}
+
 func TestGrantPrivilegeToShare(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 	t.Run("on database", func(t *testing.T) {
