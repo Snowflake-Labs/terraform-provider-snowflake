@@ -267,7 +267,7 @@ func (v *OnView) validate() error {
 	return nil
 }
 
-// TODO: add better validations
+// TODO: add validations for ShowGrantsOn, ShowGrantsTo, ShowGrantsOf and ShowGrantsIn
 func (opts *ShowGrantOptions) validate() error {
 	if everyValueNil(opts.On, opts.To, opts.Of, opts.In) {
 		return nil
