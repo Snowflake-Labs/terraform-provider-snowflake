@@ -388,6 +388,7 @@ func waitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjec
 		if alert.State == sdk.AlertStateStarted {
 			return nil
 		}
+		log.Println("[INFO] alert is not resumed yet, retrying in 10 seconds")
 		time.Sleep(10 * time.Second)
 	}
 	return fmt.Errorf("unable to resume alert %v after 5 attempts", id.Name())
@@ -411,6 +412,7 @@ func waitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 		if alert.State == sdk.AlertStateSuspended {
 			return nil
 		}
+		fmt.Println("[INFO] alert is not suspended yet, retrying in 10 seconds")
 		time.Sleep(10 * time.Second)
 	}
 	return fmt.Errorf("unable to suspend alert %v after 5 attempts", id.Name())
