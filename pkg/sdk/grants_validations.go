@@ -2,6 +2,9 @@ package sdk
 
 import (
 	"fmt"
+
+	// TODO: change to slices with go 1.21
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -138,6 +141,19 @@ func (opts *GrantPrivilegesToDatabaseRoleOptions) validate() error {
 func (v *DatabaseRoleGrantPrivileges) validate() error {
 	if !exactlyOneValueSet(v.DatabasePrivileges, v.SchemaPrivileges, v.SchemaObjectPrivileges) {
 		return fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set")
+	}
+	if valueSet(v.DatabasePrivileges) {
+		allowedPrivileges := []AccountObjectPrivilege{
+			AccountObjectPrivilegeCreateSchema,
+			AccountObjectPrivilegeModify,
+			AccountObjectPrivilegeMonitor,
+			AccountObjectPrivilegeUsage,
+		}
+		for _, p := range v.DatabasePrivileges {
+			if !slices.Contains(allowedPrivileges, p) {
+				return fmt.Errorf("privilege %s is not allowed", p.String())
+			}
+		}
 	}
 	return nil
 }

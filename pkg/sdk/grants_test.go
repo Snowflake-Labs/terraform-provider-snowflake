@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -281,6 +282,20 @@ func TestRevokePrivilegesFromAccountRole(t *testing.T) {
 func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 	// TODO: validation tests
 
+	t.Run("validation: unsupported database privilege", func(t *testing.T) {
+		dbId := NewAccountObjectIdentifier("db1")
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateDatabaseRole},
+			},
+			on: &DatabaseRoleGrantOn{
+				Database: &dbId,
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, errors.New("privilege CREATE DATABASE ROLE is not allowed"))
+	})
+
 	t.Run("on database", func(t *testing.T) {
 		dbId := NewAccountObjectIdentifier("db1")
 		opts := &GrantPrivilegesToDatabaseRoleOptions{
@@ -397,6 +412,20 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 
 func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 	// TODO: validation tests
+
+	t.Run("validation: unsupported database privilege", func(t *testing.T) {
+		dbId := NewAccountObjectIdentifier("db1")
+		opts := &RevokePrivilegesFromDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateDatabaseRole},
+			},
+			on: &DatabaseRoleGrantOn{
+				Database: &dbId,
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, errors.New("privilege CREATE DATABASE ROLE is not allowed"))
+	})
 
 	t.Run("on database", func(t *testing.T) {
 		dbId := NewAccountObjectIdentifier("db1")

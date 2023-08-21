@@ -91,7 +91,6 @@ type GrantPrivilegesToDatabaseRoleOptions struct {
 }
 
 type DatabaseRoleGrantPrivileges struct {
-	// TODO: check other values (here only { CREATE SCHEMA| MODIFY | MONITOR | USAGE } [ , ... ] in doc)
 	DatabasePrivileges     []AccountObjectPrivilege `ddl:"-"`
 	SchemaPrivileges       []SchemaPrivilege        `ddl:"-"`
 	SchemaObjectPrivileges []SchemaObjectPrivilege  `ddl:"-"`
