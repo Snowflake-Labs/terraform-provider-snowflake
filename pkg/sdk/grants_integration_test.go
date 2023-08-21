@@ -245,7 +245,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		var shareGrant *Grant
 		for _, grant := range grants {
 			if grant.GranteeName.Name() == shareTest.ID().Name() {
-				shareGrant = grant
+				shareGrant = &grant
 				break
 			}
 		}

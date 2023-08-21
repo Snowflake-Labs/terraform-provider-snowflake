@@ -89,8 +89,8 @@ func (v *GrantOnSchemaObject) validate() error {
 }
 
 func (v *GrantOnSchemaObjectIn) validate() error {
-	if !exactlyOneValueSet(v.PluralObjectType, v.InDatabase, v.InSchema) {
-		return fmt.Errorf("exactly one of PluralObjectType, InDatabase, or InSchema must be set")
+	if !exactlyOneValueSet(v.InDatabase, v.InSchema) {
+		return fmt.Errorf("exactly one of InDatabase, or InSchema must be set")
 	}
 	return nil
 }

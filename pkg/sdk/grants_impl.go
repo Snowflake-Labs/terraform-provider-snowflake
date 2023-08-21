@@ -15,18 +15,7 @@ func (v *grants) GrantPrivilegesToAccountRole(ctx context.Context, privileges *A
 	opts.privileges = privileges
 	opts.on = on
 	opts.accountRole = role
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	if err != nil {
-		return err
-	}
-	return nil
+	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *grants) RevokePrivilegesFromAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *RevokePrivilegesFromAccountRoleOptions) error {
@@ -36,18 +25,7 @@ func (v *grants) RevokePrivilegesFromAccountRole(ctx context.Context, privileges
 	opts.privileges = privileges
 	opts.on = on
 	opts.accountRole = role
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	if err != nil {
-		return err
-	}
-	return nil
+	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *grants) GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error {
@@ -56,15 +34,7 @@ func (v *grants) GrantPrivilegeToShare(ctx context.Context, privilege ObjectPriv
 		On:        on,
 		to:        to,
 	}
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
+	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *grants) RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, id AccountObjectIdentifier) error {
@@ -73,37 +43,18 @@ func (v *grants) RevokePrivilegeFromShare(ctx context.Context, privilege ObjectP
 		On:        on,
 		from:      id,
 	}
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = v.client.exec(ctx, sql)
-	return err
+	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]*Grant, error) {
+func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, error) {
 	if opts == nil {
 		opts = &ShowGrantOptions{}
 	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+
+	dbRows, err := validateAndQuery[grantRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []grantRow
-	err = v.client.query(ctx, &rows, sql)
-	if err != nil {
-		return nil, err
-	}
-	grants := make([]*Grant, 0, len(rows))
-	for _, row := range rows {
-		grant := row.convert()
-		grants = append(grants, grant)
-	}
-	return grants, nil
+	resultList := convertRows[grantRow, Grant](dbRows)
+	return resultList, nil
 }

@@ -14,7 +14,7 @@ type Grants interface {
 	// todo: GrantPrivilegesToDatabaseRole and RevokePrivilegesFromDatabaseRole
 	GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error
 	RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, from AccountObjectIdentifier) error
-	Show(ctx context.Context, opts *ShowGrantOptions) ([]*Grant, error)
+	Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, error)
 }
 
 type GrantPrivilegesToAccountRoleOptions struct {
@@ -176,7 +176,7 @@ func (v *Grant) ID() ObjectIdentifier {
 	return v.Name
 }
 
-func (row *grantRow) convert() *Grant {
+func (row grantRow) convert() *Grant {
 	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
 	granteeName := NewAccountObjectIdentifier(row.GranteeName)
 	if grantedTo == ObjectTypeShare {
