@@ -244,11 +244,15 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Equal(t, 2, len(returnedGrants))
-		assert.Equal(t, AccountObjectPrivilegeCreateSchema.String(), returnedGrants[0].Privilege)
-		assert.Equal(t, ObjectTypeDatabase, returnedGrants[0].GrantedOn)
-		assert.Equal(t, ObjectTypeDatabaseRole, returnedGrants[0].GrantedTo)
-		assert.Equal(t, AccountObjectPrivilegeUsage.String(), returnedGrants[1].Privilege)
-		assert.Equal(t, ObjectTypeDatabaseRole, returnedGrants[1].GrantedTo)
+
+		usagePrivilege, err := findOne[Grant](returnedGrants, func(g Grant) bool { return g.Privilege == AccountObjectPrivilegeUsage.String() })
+		require.NoError(t, err)
+		assert.Equal(t, ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)
+
+		createSchemaPrivilege, err := findOne[Grant](returnedGrants, func(g Grant) bool { return g.Privilege == AccountObjectPrivilegeCreateSchema.String() })
+		require.NoError(t, err)
+		assert.Equal(t, ObjectTypeDatabase, createSchemaPrivilege.GrantedOn)
+		assert.Equal(t, ObjectTypeDatabaseRole, createSchemaPrivilege.GrantedTo)
 
 		// TODO: revoke and verify that the grant(s) are gone
 		//err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
@@ -286,10 +290,15 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Equal(t, 2, len(returnedGrants))
-		assert.Equal(t, AccountObjectPrivilegeUsage.String(), returnedGrants[0].Privilege)
-		assert.Equal(t, ObjectTypeDatabaseRole, returnedGrants[0].GrantedTo)
-		assert.Equal(t, SchemaPrivilegeCreateAlert.String(), returnedGrants[1].Privilege)
-		assert.Equal(t, ObjectTypeDatabaseRole, returnedGrants[1].GrantedTo)
+
+		usagePrivilege, err := findOne[Grant](returnedGrants, func(g Grant) bool { return g.Privilege == AccountObjectPrivilegeUsage.String() })
+		require.NoError(t, err)
+		assert.Equal(t, ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)
+
+		createAlertPrivilege, err := findOne[Grant](returnedGrants, func(g Grant) bool { return g.Privilege == SchemaPrivilegeCreateAlert.String() })
+		require.NoError(t, err)
+		assert.Equal(t, ObjectTypeSchema, createAlertPrivilege.GrantedOn)
+		assert.Equal(t, ObjectTypeDatabaseRole, createAlertPrivilege.GrantedTo)
 
 		// TODO: revoke and verify that the grant(s) are gone
 		//err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
@@ -331,11 +340,16 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Equal(t, 2, len(returnedGrants))
-		assert.Equal(t, AccountObjectPrivilegeUsage.String(), returnedGrants[0].Privilege)
-		assert.Equal(t, ObjectTypeDatabaseRole, returnedGrants[0].GrantedTo)
-		assert.Equal(t, SchemaObjectPrivilegeSelect.String(), returnedGrants[1].Privilege)
-		assert.Equal(t, ObjectTypeDatabaseRole, returnedGrants[1].GrantedTo)
-		assert.Equal(t, table.ID().FullyQualifiedName(), returnedGrants[1].Name.FullyQualifiedName())
+
+		usagePrivilege, err := findOne[Grant](returnedGrants, func(g Grant) bool { return g.Privilege == AccountObjectPrivilegeUsage.String() })
+		require.NoError(t, err)
+		assert.Equal(t, ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)
+
+		selectPrivilege, err := findOne[Grant](returnedGrants, func(g Grant) bool { return g.Privilege == SchemaObjectPrivilegeSelect.String() })
+		require.NoError(t, err)
+		assert.Equal(t, ObjectTypeTable, selectPrivilege.GrantedOn)
+		assert.Equal(t, ObjectTypeDatabaseRole, selectPrivilege.GrantedTo)
+		assert.Equal(t, table.ID().FullyQualifiedName(), selectPrivilege.Name.FullyQualifiedName())
 
 		// TODO: revoke
 		//err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
@@ -375,6 +389,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Equal(t, 1, len(returnedGrants))
+
 		assert.Equal(t, SchemaObjectPrivilegeSelect.String(), returnedGrants[0].Privilege)
 		assert.Equal(t, ObjectTypeExternalTable, returnedGrants[0].GrantOn)
 		assert.Equal(t, ObjectTypeDatabaseRole, returnedGrants[0].GrantTo)
