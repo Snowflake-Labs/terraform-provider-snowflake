@@ -505,7 +505,7 @@ func TestInt_ShowGrants(t *testing.T) {
 	})
 	t.Run("without options", func(t *testing.T) {
 		_, err := client.Grants.Show(ctx, nil)
-		require.Error(t, err)
+		require.NoError(t, err)
 	})
 	t.Run("with options", func(t *testing.T) {
 		grants, err := client.Grants.Show(ctx, &ShowGrantOptions{
