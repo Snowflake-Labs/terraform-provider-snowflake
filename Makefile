@@ -26,9 +26,9 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	@echo "Are you sure? [y/n]" >&2
 	@read -r REPLY; \
-		if [[ $$REPLY =~ ^[yY]$$ ]]; then \
-		  echo "answered: $$REPLY"; \
-		  else echo "Aborting..."; \
+		if echo "$$REPLY" | grep -qG "^[yY]$$"; then \
+			echo "answered: $$REPLY"; \
+			else echo "Aborting..."; \
 		fi;
 .PHONY: sweep
 
