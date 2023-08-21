@@ -81,7 +81,7 @@ type RevokePrivilegesFromAccountRoleOptions struct {
 type GrantPrivilegesToDatabaseRoleOptions struct {
 	grant           bool                         `ddl:"static" sql:"GRANT"`
 	privileges      *DatabaseRoleGrantPrivileges `ddl:"-"`
-	on              *AccountRoleGrantOn          `ddl:"keyword" sql:"ON"`
+	on              *DatabaseRoleGrantOn         `ddl:"keyword" sql:"ON"`
 	accountRole     DatabaseObjectIdentifier     `ddl:"identifier" sql:"TO DATABASE ROLE"`
 	WithGrantOption *bool                        `ddl:"keyword" sql:"WITH GRANT OPTION"`
 }

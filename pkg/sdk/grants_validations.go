@@ -7,6 +7,7 @@ import (
 var (
 	_ validatable = new(GrantPrivilegesToAccountRoleOptions)
 	_ validatable = new(RevokePrivilegesFromAccountRoleOptions)
+	_ validatable = new(GrantPrivilegesToDatabaseRoleOptions)
 	_ validatable = new(grantPrivilegeToShareOptions)
 	_ validatable = new(revokePrivilegeFromShareOptions)
 	_ validatable = new(ShowGrantOptions)
@@ -113,6 +114,46 @@ func (opts *RevokePrivilegesFromAccountRoleOptions) validate() error {
 	}
 	if everyValueSet(opts.Restrict, opts.Cascade) {
 		return fmt.Errorf("either Restrict or Cascade can be set, or neither but not both")
+	}
+	return nil
+}
+
+func (opts *GrantPrivilegesToDatabaseRoleOptions) validate() error {
+	if !valueSet(opts.privileges) {
+		return fmt.Errorf("privileges must be set")
+	}
+	if err := opts.privileges.validate(); err != nil {
+		return err
+	}
+	if !valueSet(opts.on) {
+		return fmt.Errorf("on must be set")
+	}
+	if err := opts.on.validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (v *DatabaseRoleGrantPrivileges) validate() error {
+	if !exactlyOneValueSet(v.DatabasePrivileges, v.SchemaPrivileges, v.SchemaObjectPrivileges) {
+		return fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set")
+	}
+	return nil
+}
+
+func (v *DatabaseRoleGrantOn) validate() error {
+	if !exactlyOneValueSet(v.Database, v.Schema, v.SchemaObject) {
+		return fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set")
+	}
+	if valueSet(v.Schema) {
+		if err := v.Schema.validate(); err != nil {
+			return err
+		}
+	}
+	if valueSet(v.SchemaObject) {
+		if err := v.SchemaObject.validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
