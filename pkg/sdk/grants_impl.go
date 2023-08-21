@@ -102,10 +102,7 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]*Grant, er
 	}
 	grants := make([]*Grant, 0, len(rows))
 	for _, row := range rows {
-		grant, err := row.toGrant()
-		if err != nil {
-			return nil, err
-		}
+		grant := row.convert()
 		grants = append(grants, grant)
 	}
 	return grants, nil

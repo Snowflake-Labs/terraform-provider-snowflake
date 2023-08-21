@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+var _ convertibleRow[Grant] = new(grantRow)
+
 type Grants interface {
 	GrantPrivilegesToAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *GrantPrivilegesToAccountRoleOptions) error
 	RevokePrivilegesFromAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *RevokePrivilegesFromAccountRoleOptions) error
@@ -13,63 +15,6 @@ type Grants interface {
 	GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error
 	RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, from AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowGrantOptions) ([]*Grant, error)
-}
-
-type Grant struct {
-	CreatedOn   time.Time
-	Privilege   string
-	GrantedOn   ObjectType
-	GrantOn     ObjectType
-	Name        ObjectIdentifier
-	GrantedTo   ObjectType
-	GranteeName AccountObjectIdentifier
-	GrantOption bool
-	GrantedBy   AccountObjectIdentifier
-}
-
-func (v *Grant) ID() ObjectIdentifier {
-	return v.Name
-}
-
-type grantRow struct {
-	CreatedOn   time.Time `db:"created_on"`
-	Privilege   string    `db:"privilege"`
-	GrantedOn   string    `db:"granted_on"`
-	GrantOn     string    `db:"grant_on"`
-	Name        string    `db:"name"`
-	GrantedTo   string    `db:"granted_to"`
-	GranteeName string    `db:"grantee_name"`
-	GrantOption bool      `db:"grant_option"`
-	GrantedBy   string    `db:"granted_by"`
-}
-
-func (row *grantRow) toGrant() (*Grant, error) {
-	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
-	granteeName := NewAccountObjectIdentifier(row.GranteeName)
-	if grantedTo == ObjectTypeShare {
-		parts := strings.Split(row.GranteeName, ".")
-		name := strings.Join(parts[1:], ".")
-		granteeName = NewAccountObjectIdentifier(name)
-	}
-	grant := &Grant{
-		CreatedOn:   row.CreatedOn,
-		Privilege:   row.Privilege,
-		GrantedTo:   grantedTo,
-		Name:        NewAccountObjectIdentifier(strings.Trim(row.Name, "\"")),
-		GranteeName: granteeName,
-		GrantOption: row.GrantOption,
-		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
-	}
-
-	// true for current grants
-	if row.GrantedOn != "" {
-		grant.GrantedOn = ObjectType(strings.ReplaceAll(row.GrantedOn, "_", " "))
-	}
-	// true for future grants
-	if row.GrantOn != "" {
-		grant.GrantOn = ObjectType(strings.ReplaceAll(row.GrantOn, "_", " "))
-	}
-	return grant, nil
 }
 
 type GrantPrivilegesToAccountRoleOptions struct {
@@ -201,4 +146,61 @@ type ShowGrantsTo struct {
 type ShowGrantsOf struct {
 	Role  AccountObjectIdentifier `ddl:"identifier" sql:"ROLE"`
 	Share AccountObjectIdentifier `ddl:"identifier" sql:"SHARE"`
+}
+
+type grantRow struct {
+	CreatedOn   time.Time `db:"created_on"`
+	Privilege   string    `db:"privilege"`
+	GrantedOn   string    `db:"granted_on"`
+	GrantOn     string    `db:"grant_on"`
+	Name        string    `db:"name"`
+	GrantedTo   string    `db:"granted_to"`
+	GranteeName string    `db:"grantee_name"`
+	GrantOption bool      `db:"grant_option"`
+	GrantedBy   string    `db:"granted_by"`
+}
+
+type Grant struct {
+	CreatedOn   time.Time
+	Privilege   string
+	GrantedOn   ObjectType
+	GrantOn     ObjectType
+	Name        ObjectIdentifier
+	GrantedTo   ObjectType
+	GranteeName AccountObjectIdentifier
+	GrantOption bool
+	GrantedBy   AccountObjectIdentifier
+}
+
+func (v *Grant) ID() ObjectIdentifier {
+	return v.Name
+}
+
+func (row *grantRow) convert() *Grant {
+	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
+	granteeName := NewAccountObjectIdentifier(row.GranteeName)
+	if grantedTo == ObjectTypeShare {
+		parts := strings.Split(row.GranteeName, ".")
+		name := strings.Join(parts[1:], ".")
+		granteeName = NewAccountObjectIdentifier(name)
+	}
+	grant := &Grant{
+		CreatedOn:   row.CreatedOn,
+		Privilege:   row.Privilege,
+		GrantedTo:   grantedTo,
+		Name:        NewAccountObjectIdentifier(strings.Trim(row.Name, "\"")),
+		GranteeName: granteeName,
+		GrantOption: row.GrantOption,
+		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
+	}
+
+	// true for current grants
+	if row.GrantedOn != "" {
+		grant.GrantedOn = ObjectType(strings.ReplaceAll(row.GrantedOn, "_", " "))
+	}
+	// true for future grants
+	if row.GrantOn != "" {
+		grant.GrantOn = ObjectType(strings.ReplaceAll(row.GrantOn, "_", " "))
+	}
+	return grant
 }
