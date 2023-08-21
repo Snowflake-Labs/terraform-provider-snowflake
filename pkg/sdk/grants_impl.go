@@ -34,7 +34,7 @@ func (v *grants) GrantPrivilegesToDatabaseRole(ctx context.Context, privileges *
 	}
 	opts.privileges = privileges
 	opts.on = on
-	opts.accountRole = role
+	opts.databaseRole = role
 	return validateAndExec(v.client, ctx, opts)
 }
 

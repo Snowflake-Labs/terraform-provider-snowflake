@@ -82,7 +82,7 @@ type GrantPrivilegesToDatabaseRoleOptions struct {
 	grant           bool                         `ddl:"static" sql:"GRANT"`
 	privileges      *DatabaseRoleGrantPrivileges `ddl:"-"`
 	on              *DatabaseRoleGrantOn         `ddl:"keyword" sql:"ON"`
-	accountRole     DatabaseObjectIdentifier     `ddl:"identifier" sql:"TO DATABASE ROLE"`
+	databaseRole    DatabaseObjectIdentifier     `ddl:"identifier" sql:"TO DATABASE ROLE"`
 	WithGrantOption *bool                        `ddl:"keyword" sql:"WITH GRANT OPTION"`
 }
 
@@ -94,7 +94,7 @@ type DatabaseRoleGrantPrivileges struct {
 }
 
 type DatabaseRoleGrantOn struct {
-	Database     *AccountObjectIdentifier `ddl:"identifier" sql:"ON DATABASE"`
+	Database     *AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
 	Schema       *GrantOnSchema           `ddl:"-"`
 	SchemaObject *GrantOnSchemaObject     `ddl:"-"`
 }
