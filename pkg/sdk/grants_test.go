@@ -283,155 +283,8 @@ func TestRevokePrivilegesFromAccountRole(t *testing.T) {
 func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 	dbId := NewAccountObjectIdentifier("db1")
 
-	t.Run("validation: no privileges set", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: nil,
-			on: &DatabaseRoleGrantOn{
-				Database: &dbId,
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("privileges must be set"))
-	})
-
-	t.Run("validation: no privileges set", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{},
-			on: &DatabaseRoleGrantOn{
-				Database: &dbId,
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
-	})
-
-	t.Run("validation: too many privileges set", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
-				SchemaPrivileges:   []SchemaPrivilege{SchemaPrivilegeCreateAlert},
-			},
-			on: &DatabaseRoleGrantOn{
-				Database: &dbId,
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
-	})
-
-	t.Run("validation: no on set", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
-			},
-			on:           nil,
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("on must be set"))
-	})
-
-	t.Run("validation: no on set", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
-			},
-			on:           &DatabaseRoleGrantOn{},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
-	})
-
-	t.Run("validation: too many ons set", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
-			},
-			on: &DatabaseRoleGrantOn{
-				Database: &dbId,
-				Schema: &GrantOnSchema{
-					Schema: Pointer(NewDatabaseObjectIdentifier("db1", "schema1")),
-				},
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
-	})
-
-	t.Run("validation: grant on schema", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert},
-			},
-			on: &DatabaseRoleGrantOn{
-				Schema: &GrantOnSchema{},
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Schema, AllSchemasInDatabase, or FutureSchemasInDatabase must be set"))
-	})
-
-	t.Run("validation: grant on schema object", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
-			},
-			on: &DatabaseRoleGrantOn{
-				SchemaObject: &GrantOnSchemaObject{},
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Object, AllIn or Future must be set"))
-	})
-
-	t.Run("validation: grant on schema object - all", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
-			},
-			on: &DatabaseRoleGrantOn{
-				SchemaObject: &GrantOnSchemaObject{
-					All: &GrantOnSchemaObjectIn{
-						PluralObjectType: PluralObjectTypeTables,
-					},
-				},
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
-	})
-
-	t.Run("validation: grant on schema object - future", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
-			},
-			on: &DatabaseRoleGrantOn{
-				SchemaObject: &GrantOnSchemaObject{
-					Future: &GrantOnSchemaObjectIn{
-						PluralObjectType: PluralObjectTypeTables,
-					},
-				},
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
-	})
-
-	t.Run("validation: unsupported database privilege", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateDatabaseRole},
-			},
-			on: &DatabaseRoleGrantOn{
-				Database: &dbId,
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("privilege CREATE DATABASE ROLE is not allowed"))
-	})
-
-	t.Run("on database", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
+	defaultGrantsForDb := func() *GrantPrivilegesToDatabaseRoleOptions {
+		return &GrantPrivilegesToDatabaseRoleOptions{
 			privileges: &DatabaseRoleGrantPrivileges{
 				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
 			},
@@ -440,11 +293,10 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 			},
 			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `GRANT CREATE SCHEMA ON DATABASE "db1" TO DATABASE ROLE "db1"."role1"`)
-	})
+	}
 
-	t.Run("on schema", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
+	defaultGrantsForSchema := func() *GrantPrivilegesToDatabaseRoleOptions {
+		return &GrantPrivilegesToDatabaseRoleOptions{
 			privileges: &DatabaseRoleGrantPrivileges{
 				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert},
 			},
@@ -455,41 +307,10 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 			},
 			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `GRANT CREATE ALERT ON SCHEMA "db1"."schema1" TO DATABASE ROLE "db1"."role1"`)
-	})
+	}
 
-	t.Run("on all schemas in database", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert},
-			},
-			on: &DatabaseRoleGrantOn{
-				Schema: &GrantOnSchema{
-					AllSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
-				},
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsValidAndSQLEquals(t, opts, `GRANT CREATE ALERT ON ALL SCHEMAS IN DATABASE "db1" TO DATABASE ROLE "db1"."role1"`)
-	})
-
-	t.Run("on all future schemas in database", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert},
-			},
-			on: &DatabaseRoleGrantOn{
-				Schema: &GrantOnSchema{
-					FutureSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
-				},
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
-		}
-		assertOptsValidAndSQLEquals(t, opts, `GRANT CREATE ALERT ON FUTURE SCHEMAS IN DATABASE "db1" TO DATABASE ROLE "db1"."role1"`)
-	})
-
-	t.Run("on schema object", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
+	defaultGrantsForSchemaObject := func() *GrantPrivilegesToDatabaseRoleOptions {
+		return &GrantPrivilegesToDatabaseRoleOptions{
 			privileges: &DatabaseRoleGrantPrivileges{
 				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
 			},
@@ -503,41 +324,143 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 			},
 			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
 		}
+	}
+
+	t.Run("validation: no privileges set", func(t *testing.T) {
+		opts := defaultGrantsForDb()
+		opts.privileges = nil
+		assertOptsInvalid(t, opts, fmt.Errorf("privileges must be set"))
+	})
+
+	t.Run("validation: no privileges set", func(t *testing.T) {
+		opts := defaultGrantsForDb()
+		opts.privileges = &DatabaseRoleGrantPrivileges{}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
+	})
+
+	t.Run("validation: too many privileges set", func(t *testing.T) {
+		opts := defaultGrantsForDb()
+		opts.privileges = &DatabaseRoleGrantPrivileges{
+			DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
+			SchemaPrivileges:   []SchemaPrivilege{SchemaPrivilegeCreateAlert},
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
+	})
+
+	t.Run("validation: no on set", func(t *testing.T) {
+		opts := defaultGrantsForDb()
+		opts.on = nil
+		assertOptsInvalid(t, opts, fmt.Errorf("on must be set"))
+	})
+
+	t.Run("validation: no on set", func(t *testing.T) {
+		opts := defaultGrantsForDb()
+		opts.on = &DatabaseRoleGrantOn{}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
+	})
+
+	t.Run("validation: too many ons set", func(t *testing.T) {
+		opts := defaultGrantsForDb()
+		opts.on = &DatabaseRoleGrantOn{
+			Database: &dbId,
+			Schema: &GrantOnSchema{
+				Schema: Pointer(NewDatabaseObjectIdentifier("db1", "schema1")),
+			},
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
+	})
+
+	t.Run("validation: grant on schema", func(t *testing.T) {
+		opts := defaultGrantsForSchema()
+		opts.on.Schema = &GrantOnSchema{}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Schema, AllSchemasInDatabase, or FutureSchemasInDatabase must be set"))
+	})
+
+	t.Run("validation: grant on schema object", func(t *testing.T) {
+		opts := defaultGrantsForSchemaObject()
+		opts.on.SchemaObject = &GrantOnSchemaObject{}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Object, AllIn or Future must be set"))
+	})
+
+	t.Run("validation: grant on schema object - all", func(t *testing.T) {
+		opts := defaultGrantsForSchemaObject()
+		opts.on = &DatabaseRoleGrantOn{
+			SchemaObject: &GrantOnSchemaObject{
+				All: &GrantOnSchemaObjectIn{
+					PluralObjectType: PluralObjectTypeTables,
+				},
+			},
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+	})
+
+	t.Run("validation: grant on schema object - future", func(t *testing.T) {
+		opts := defaultGrantsForSchemaObject()
+		opts.on = &DatabaseRoleGrantOn{
+			SchemaObject: &GrantOnSchemaObject{
+				Future: &GrantOnSchemaObjectIn{
+					PluralObjectType: PluralObjectTypeTables,
+				},
+			},
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+	})
+
+	t.Run("validation: unsupported database privilege", func(t *testing.T) {
+		opts := defaultGrantsForDb()
+		opts.privileges.DatabasePrivileges = []AccountObjectPrivilege{AccountObjectPrivilegeCreateDatabaseRole}
+		assertOptsInvalid(t, opts, fmt.Errorf("privilege CREATE DATABASE ROLE is not allowed"))
+	})
+
+	t.Run("on database", func(t *testing.T) {
+		opts := defaultGrantsForDb()
+		assertOptsValidAndSQLEquals(t, opts, `GRANT CREATE SCHEMA ON DATABASE "db1" TO DATABASE ROLE "db1"."role1"`)
+	})
+
+	t.Run("on schema", func(t *testing.T) {
+		opts := defaultGrantsForSchema()
+		assertOptsValidAndSQLEquals(t, opts, `GRANT CREATE ALERT ON SCHEMA "db1"."schema1" TO DATABASE ROLE "db1"."role1"`)
+	})
+
+	t.Run("on all schemas in database", func(t *testing.T) {
+		opts := defaultGrantsForSchema()
+		opts.on.Schema = &GrantOnSchema{
+			AllSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `GRANT CREATE ALERT ON ALL SCHEMAS IN DATABASE "db1" TO DATABASE ROLE "db1"."role1"`)
+	})
+
+	t.Run("on all future schemas in database", func(t *testing.T) {
+		opts := defaultGrantsForSchema()
+		opts.on.Schema = &GrantOnSchema{
+			FutureSchemasInDatabase: Pointer(NewAccountObjectIdentifier("db1")),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `GRANT CREATE ALERT ON FUTURE SCHEMAS IN DATABASE "db1" TO DATABASE ROLE "db1"."role1"`)
+	})
+
+	t.Run("on schema object", func(t *testing.T) {
+		opts := defaultGrantsForSchemaObject()
 		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLY ON TABLE "db1"."schema1"."table1" TO DATABASE ROLE "db1"."role1"`)
 	})
 
 	t.Run("on future schema object in database", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
+		opts := defaultGrantsForSchemaObject()
+		opts.on.SchemaObject = &GrantOnSchemaObject{
+			Future: &GrantOnSchemaObjectIn{
+				PluralObjectType: PluralObjectTypeTables,
+				InDatabase:       Pointer(NewAccountObjectIdentifier("db1")),
 			},
-			on: &DatabaseRoleGrantOn{
-				SchemaObject: &GrantOnSchemaObject{
-					Future: &GrantOnSchemaObjectIn{
-						PluralObjectType: PluralObjectTypeTables,
-						InDatabase:       Pointer(NewAccountObjectIdentifier("db1")),
-					},
-				},
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLY ON FUTURE TABLES IN DATABASE "db1" TO DATABASE ROLE "db1"."role1"`)
 	})
 
 	t.Run("on future schema object in schema", func(t *testing.T) {
-		opts := &GrantPrivilegesToDatabaseRoleOptions{
-			privileges: &DatabaseRoleGrantPrivileges{
-				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
+		opts := defaultGrantsForSchemaObject()
+		opts.on.SchemaObject = &GrantOnSchemaObject{
+			Future: &GrantOnSchemaObjectIn{
+				PluralObjectType: PluralObjectTypeTables,
+				InSchema:         Pointer(NewDatabaseObjectIdentifier("db1", "schema1")),
 			},
-			on: &DatabaseRoleGrantOn{
-				SchemaObject: &GrantOnSchemaObject{
-					Future: &GrantOnSchemaObjectIn{
-						PluralObjectType: PluralObjectTypeTables,
-						InSchema:         Pointer(NewDatabaseObjectIdentifier("db1", "schema1")),
-					},
-				},
-			},
-			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLY ON FUTURE TABLES IN SCHEMA "db1"."schema1" TO DATABASE ROLE "db1"."role1"`)
 	})
