@@ -230,7 +230,7 @@ func (v *OnView) validate() error {
 
 func (opts *ShowGrantOptions) validate() error {
 	if everyValueNil(opts.On, opts.To, opts.Of, opts.In) {
-		return fmt.Errorf("at least one of on, to, of, or in is required")
+		return nil
 	}
 	if !exactlyOneValueSet(opts.On, opts.To, opts.Of, opts.In) {
 		return fmt.Errorf("only one of on, to, of, or in can be set")
