@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -280,10 +281,143 @@ func TestRevokePrivilegesFromAccountRole(t *testing.T) {
 }
 
 func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
-	// TODO: validation tests
+	dbId := NewAccountObjectIdentifier("db1")
+
+	t.Run("validation: no privileges set", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: nil,
+			on: &DatabaseRoleGrantOn{
+				Database: &dbId,
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("privileges must be set"))
+	})
+
+	t.Run("validation: no privileges set", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{},
+			on: &DatabaseRoleGrantOn{
+				Database: &dbId,
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
+	})
+
+	t.Run("validation: too many privileges set", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
+				SchemaPrivileges:   []SchemaPrivilege{SchemaPrivilegeCreateAlert},
+			},
+			on: &DatabaseRoleGrantOn{
+				Database: &dbId,
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
+	})
+
+	t.Run("validation: no on set", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
+			},
+			on:           nil,
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("on must be set"))
+	})
+
+	t.Run("validation: no on set", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
+			},
+			on:           &DatabaseRoleGrantOn{},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
+	})
+
+	t.Run("validation: too many ons set", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
+			},
+			on: &DatabaseRoleGrantOn{
+				Database: &dbId,
+				Schema: &GrantOnSchema{
+					Schema: Pointer(NewDatabaseObjectIdentifier("db1", "schema1")),
+				},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
+	})
+
+	t.Run("validation: grant on schema", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaPrivileges: []SchemaPrivilege{SchemaPrivilegeCreateAlert},
+			},
+			on: &DatabaseRoleGrantOn{
+				Schema: &GrantOnSchema{},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Schema, AllSchemasInDatabase, or FutureSchemasInDatabase must be set"))
+	})
+
+	t.Run("validation: grant on schema object", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
+			},
+			on: &DatabaseRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Object, AllIn or Future must be set"))
+	})
+
+	t.Run("validation: grant on schema object - all", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
+			},
+			on: &DatabaseRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					All: &GrantOnSchemaObjectIn{
+						PluralObjectType: PluralObjectTypeTables,
+					},
+				},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+	})
+
+	t.Run("validation: grant on schema object - future", func(t *testing.T) {
+		opts := &GrantPrivilegesToDatabaseRoleOptions{
+			privileges: &DatabaseRoleGrantPrivileges{
+				SchemaObjectPrivileges: []SchemaObjectPrivilege{SchemaObjectPrivilegeApply},
+			},
+			on: &DatabaseRoleGrantOn{
+				SchemaObject: &GrantOnSchemaObject{
+					Future: &GrantOnSchemaObjectIn{
+						PluralObjectType: PluralObjectTypeTables,
+					},
+				},
+			},
+			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+	})
 
 	t.Run("validation: unsupported database privilege", func(t *testing.T) {
-		dbId := NewAccountObjectIdentifier("db1")
 		opts := &GrantPrivilegesToDatabaseRoleOptions{
 			privileges: &DatabaseRoleGrantPrivileges{
 				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateDatabaseRole},
@@ -293,11 +427,10 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 			},
 			databaseRole: NewDatabaseObjectIdentifier("db1", "role1"),
 		}
-		assertOptsInvalid(t, opts, errors.New("privilege CREATE DATABASE ROLE is not allowed"))
+		assertOptsInvalid(t, opts, fmt.Errorf("privilege CREATE DATABASE ROLE is not allowed"))
 	})
 
 	t.Run("on database", func(t *testing.T) {
-		dbId := NewAccountObjectIdentifier("db1")
 		opts := &GrantPrivilegesToDatabaseRoleOptions{
 			privileges: &DatabaseRoleGrantPrivileges{
 				DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
