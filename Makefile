@@ -27,7 +27,7 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "Are you sure? [y/n]" >&2
 	@read -r REPLY; \
 		if echo "$$REPLY" | grep -qG "^[yY]$$"; then \
-			echo "answered: $$REPLY"; \
+			SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
 			else echo "Aborting..."; \
 		fi;
 .PHONY: sweep
