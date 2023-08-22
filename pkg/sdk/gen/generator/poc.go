@@ -37,7 +37,7 @@ func (o *Operation) OptsName() string {
 
 type Field struct {
 	parent *Field
-	fields []*Field
+	Fields []*Field
 
 	Name string
 	Kind string
@@ -50,4 +50,9 @@ func (f *Field) TagsPrintable() string {
 		tagParts = append(tagParts, fmt.Sprintf(`%s:"%s"`, k, strings.Join(v, ",")))
 	}
 	return fmt.Sprintf("`%s`", strings.Join(tagParts, " "))
+}
+
+func (f *Field) KindNoPtr() string {
+	kindWithoutPtr, _ := strings.CutPrefix(f.Kind, "*")
+	return kindWithoutPtr
 }

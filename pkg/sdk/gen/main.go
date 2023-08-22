@@ -17,9 +17,30 @@ func main() {
 	}
 
 	for _, o := range generator.DatabaseRoleInterface.Operations {
-		err := generator.OptionsTemplate.Execute(os.Stdout, o)
-		if err != nil {
-			panic(err)
+		generateOptionsStruct(o)
+	}
+}
+
+func generateOptionsStruct(operation *generator.Operation) {
+	err := generator.OptionsTemplate.Execute(os.Stdout, operation)
+	if err != nil {
+		panic(err)
+	}
+	for _, f := range operation.OptsStructFields {
+		if len(f.Fields) > 0 {
+			generateStruct(f)
+		}
+	}
+}
+
+func generateStruct(field *generator.Field) {
+	err := generator.StructTemplate.Execute(os.Stdout, field)
+	if err != nil {
+		panic(err)
+	}
+	for _, f := range field.Fields {
+		if len(f.Fields) > 0 {
+			generateStruct(f)
 		}
 	}
 }

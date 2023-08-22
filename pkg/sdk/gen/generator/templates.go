@@ -18,3 +18,11 @@ type {{.OptsName}} struct {
 	{{- end}}
 }
 `)
+
+var StructTemplate, _ = template.New("structTemplate").Parse(`
+type {{.KindNoPtr}} struct {
+	{{- range .Fields}}
+			{{.Name}} {{.Kind}} {{.TagsPrintable}}
+	{{- end}}
+}
+`)

@@ -101,6 +101,15 @@ var DatabaseRoleInterface = Interface{
 						"ddl": {"list,no_parentheses"},
 						"sql": {"RENAME TO"},
 					},
+					Fields: []*Field{
+						{
+							Name: "Name",
+							Kind: "DatabaseObjectIdentifier",
+							tags: map[string][]string{
+								"ddl": {"identifier"},
+							},
+						},
+					},
 				},
 				{
 					Name: "Set",
@@ -109,6 +118,16 @@ var DatabaseRoleInterface = Interface{
 						"ddl": {"list,no_parentheses"},
 						"sql": {"SET"},
 					},
+					Fields: []*Field{
+						{
+							Name: "Comment",
+							Kind: "string",
+							tags: map[string][]string{
+								"ddl": {"parameter", "single_quotes"},
+								"sql": {"COMMENT"},
+							},
+						},
+					},
 				},
 				{
 					Name: "Unset",
@@ -116,6 +135,16 @@ var DatabaseRoleInterface = Interface{
 					tags: map[string][]string{
 						"ddl": {"list,no_parentheses"},
 						"sql": {"UNSET"},
+					},
+					Fields: []*Field{
+						{
+							Name: "Comment",
+							Kind: "bool",
+							tags: map[string][]string{
+								"ddl": {"keyword"},
+								"sql": {"COMMENT"},
+							},
+						},
 					},
 				},
 			},
