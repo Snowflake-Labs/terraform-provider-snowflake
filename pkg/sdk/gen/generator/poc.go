@@ -64,11 +64,22 @@ type Field struct {
 	tags map[string][]string
 }
 
-func (f *Field) TagsPrintable() string {
+// TODO: handle case where validations are on a deeper level (not the immediate one)
+func (field *Field) AdditionalValidations() []*Field {
+	var fieldsWithValidations []*Field
+	for _, f := range field.Fields {
+		if len(f.Validations) > 0 {
+			fieldsWithValidations = append(fieldsWithValidations, f)
+		}
+	}
+	return fieldsWithValidations
+}
+
+func (field *Field) TagsPrintable() string {
 	var tagNames = []string{"ddl", "sql"}
 	var tagParts []string
 	for _, tagName := range tagNames {
-		var v, ok = f.tags[tagName]
+		var v, ok = field.tags[tagName]
 		if ok {
 			tagParts = append(tagParts, fmt.Sprintf(`%s:"%s"`, tagName, strings.Join(v, ",")))
 		}
@@ -76,13 +87,13 @@ func (f *Field) TagsPrintable() string {
 	return fmt.Sprintf("`%s`", strings.Join(tagParts, " "))
 }
 
-func (f *Field) KindNoPtr() string {
-	kindWithoutPtr, _ := strings.CutPrefix(f.Kind, "*")
+func (field *Field) KindNoPtr() string {
+	kindWithoutPtr, _ := strings.CutPrefix(field.Kind, "*")
 	return kindWithoutPtr
 }
 
-func (f *Field) NameLowerCased() string {
-	return startingWithLowerCase(f.Name)
+func (field *Field) NameLowerCased() string {
+	return startingWithLowerCase(field.Name)
 }
 
 // ValidationType contains all handled validation types. Below validations are marked to be contained here or not:

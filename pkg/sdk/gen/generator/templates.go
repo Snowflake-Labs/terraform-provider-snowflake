@@ -67,7 +67,7 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 	{{- end}}
 	{{- range .AdditionalValidations}}
 	if {{.NameLowerCased}} := {{.Name}}; valueSet({{.NameLowerCased}}) {
-		...
+		{{template "VALIDATIONS" .}}
 	}
 	{{- end}}
 {{end}}
