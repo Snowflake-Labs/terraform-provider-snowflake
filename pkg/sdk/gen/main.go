@@ -24,6 +24,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	for _, o := range generator.DatabaseRoleInterface.Operations {
+		generateTestFunc(o)
+	}
 }
 
 func generateOptionsStruct(operation *generator.Operation) {
@@ -47,5 +51,12 @@ func generateStruct(field *generator.Field) {
 		if len(f.Fields) > 0 {
 			generateStruct(f)
 		}
+	}
+}
+
+func generateTestFunc(operation *generator.Operation) {
+	err := generator.TestFuncTemplate.Execute(os.Stdout, operation)
+	if err != nil {
+		panic(err)
 	}
 }

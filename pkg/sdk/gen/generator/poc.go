@@ -13,6 +13,8 @@ type Interface struct {
 	nameSingular string
 	// Operations contains all operations for given interface
 	Operations []*Operation
+	// IdentifierKind keeps identifier of the underlying object (e.g. DatabaseObjectIdentifier)
+	IdentifierKind string
 }
 
 func (i *Interface) NameLowerCased() string {

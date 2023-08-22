@@ -41,3 +41,17 @@ func (v *{{$impl}}) {{.Name}}(ctx context.Context, opts *{{.OptsName}}) error {
 }
 {{end}}
 `)
+
+var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
+func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
+	id := random{{.ObjectInterface.IdentifierKind}}(t)
+
+	defaultOpts := func() *{{.OptsName}} {
+		return &{{.OptsName}}{
+			name: id,
+		}
+	}
+
+	// TODO: fill me
+}
+`)
