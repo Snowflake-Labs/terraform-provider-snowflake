@@ -43,6 +43,7 @@ func (v *{{$impl}}) {{.Name}}(ctx context.Context, opts *{{.OptsName}}) error {
 `)
 
 var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
+{{- range .Operations}}
 func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 	id := random{{.ObjectInterface.IdentifierKind}}(t)
 
@@ -54,4 +55,23 @@ func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 
 	// TODO: fill me
 }
+{{end}}
+`)
+
+var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
+var (
+{{- range .Operations}}
+	_ validatable = new({{.OptsName}})
+{{- end}}
+)
+{{range .Operations}}
+func (opts *{{.OptsName}}) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	// TODO: add validations
+	return errors.Join(errs...)
+}
+{{end}}
 `)
