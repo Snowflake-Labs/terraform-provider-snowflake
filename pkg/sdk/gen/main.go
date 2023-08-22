@@ -11,13 +11,18 @@ func main() {
 		o.ObjectInterface = &generator.DatabaseRoleInterface
 	}
 
-	err := generator.InterfaceTemplate.Execute(os.Stdout, generator.DatabaseRoleInterface)
+	err := generator.InterfaceTemplate.Execute(os.Stdout, &generator.DatabaseRoleInterface)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, o := range generator.DatabaseRoleInterface.Operations {
 		generateOptionsStruct(o)
+	}
+
+	err = generator.ImplementationTemplate.Execute(os.Stdout, &generator.DatabaseRoleInterface)
+	if err != nil {
+		panic(err)
 	}
 }
 

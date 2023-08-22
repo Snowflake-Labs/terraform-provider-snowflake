@@ -26,3 +26,18 @@ type {{.KindNoPtr}} struct {
 	{{- end}}
 }
 `)
+
+var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
+{{$impl := .NameLowerCased}}
+var _ {{.Name}} = (*{{$impl}})(nil)
+
+type {{$impl}} struct {
+	client *Client
+}
+{{range .Operations}}
+func (v *{{$impl}}) {{.Name}}(ctx context.Context, opts *{{.OptsName}}) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+{{end}}
+`)

@@ -15,6 +15,10 @@ type Interface struct {
 	Operations []*Operation
 }
 
+func (i *Interface) NameLowerCased() string {
+	return startingWithLowerCase(i.Name)
+}
+
 // Operation defines a single operation for given object or objects family (e.g. CREATE DATABASE ROLE)
 type Operation struct {
 	// Name is the operation's name, e.g. "Create"
