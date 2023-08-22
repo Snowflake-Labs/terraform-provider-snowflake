@@ -153,3 +153,17 @@ func (v *Validation) Error() string {
 	}
 	panic("condition for validation unknown")
 }
+
+func (v *Validation) TodoComment() string {
+	switch v.Type {
+	case ValidIdentifier:
+		return fmt.Sprintf("// TODO: validate valid identifier for %v", v.fieldNames)
+	case ConflictingFields:
+		return fmt.Sprintf("// TODO: validate conflicting fields for %v", v.fieldNames)
+	case ExactlyOneValueSet:
+		return fmt.Sprintf("// TODO: validate exactly one field from %v is present", v.fieldNames)
+	case AtLeastOneValueSet:
+		return fmt.Sprintf("// TODO: validate at least one of fields %v set", v.fieldNames)
+	}
+	panic("condition for validation unknown")
+}

@@ -43,6 +43,12 @@ func (v *{{$impl}}) {{.Name}}(ctx context.Context, opts *{{.OptsName}}) error {
 `)
 
 var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
+{{define "VALIDATION_TEST"}}
+	{{- range .Validations}}
+	{{.TodoComment}}
+	{{- end}}
+{{end}}
+
 {{- range .Operations}}
 func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 	id := random{{.ObjectInterface.IdentifierKind}}(t)
@@ -54,6 +60,7 @@ func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 	}
 
 	// TODO: fill me
+	{{template "VALIDATION_TEST" .}}
 }
 {{end}}
 `)
