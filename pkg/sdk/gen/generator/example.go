@@ -162,6 +162,12 @@ var DatabaseRoleInterface = Interface{
 							},
 						},
 					},
+					Validations: []*Validation{
+						{
+							Type:       AtLeastOneValueSet,
+							fieldNames: []string{"Comment"},
+						},
+					},
 				},
 			},
 			Validations: []*Validation{

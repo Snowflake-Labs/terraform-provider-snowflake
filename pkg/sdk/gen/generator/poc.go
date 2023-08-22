@@ -101,13 +101,15 @@ func (field *Field) NameLowerCased() string {
 // - valid identifier - present here, for now put on level containing given field
 // - conflicting fields - present here, put on level containing given fields
 // - exactly one value set - present here, put on level containing given fields
-// - TODO: nested validation conditionally - not present here, handled by putting validations on lower levels
+// - at least one value set - present here, put on level containing given fields
+// - nested validation conditionally - not present here, handled by putting validations on lower level fields
 type ValidationType int64
 
 const (
 	ValidIdentifier ValidationType = iota
 	ConflictingFields
 	ExactlyOneValueSet
+	AtLeastOneValueSet
 )
 
 type Validation struct {
@@ -132,6 +134,8 @@ func (v *Validation) Condition() string {
 		return fmt.Sprintf("everyValueSet(%s)", strings.Join(v.fieldNames, ","))
 	case ExactlyOneValueSet:
 		return fmt.Sprintf("ok := exactlyOneValueSet(%s); !ok", strings.Join(v.fieldNames, ","))
+	case AtLeastOneValueSet:
+		return fmt.Sprintf("ok := anyValueSet(%s); !ok", strings.Join(v.fieldNames, ","))
 	}
 	panic("condition for validation unknown")
 }
@@ -144,6 +148,8 @@ func (v *Validation) Error() string {
 		return fmt.Sprintf("errOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
 	case ExactlyOneValueSet:
 		return fmt.Sprintf("errExactlyOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
+	case AtLeastOneValueSet:
+		return fmt.Sprintf("errAtLeastOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
 	}
 	panic("condition for validation unknown")
 }
