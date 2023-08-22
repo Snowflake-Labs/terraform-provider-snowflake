@@ -70,7 +70,11 @@ func (opts *{{.OptsName}}) validate() error {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
-	// TODO: add validations
+	{{- range .Validations}}
+	if {{.Condition}} {
+		errs = append(errs, {{.Error}})
+	}
+	{{- end}}
 	return errors.Join(errs...)
 }
 {{end}}

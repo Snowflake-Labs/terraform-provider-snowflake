@@ -31,6 +31,8 @@ type Operation struct {
 	Doc string
 	// OptsStructFields defines opts used to create SQL for given operation
 	OptsStructFields []*Field
+	// Validations are top-level validations for given Opts
+	Validations []*Validation
 }
 
 // OptsName should create a name for opts in a form of OperationObjectOptions where:
@@ -65,4 +67,56 @@ func (f *Field) TagsPrintable() string {
 func (f *Field) KindNoPtr() string {
 	kindWithoutPtr, _ := strings.CutPrefix(f.Kind, "*")
 	return kindWithoutPtr
+}
+
+// ValidationType contains all handled validation types. Below validations are marked to be contained here or not:
+// - opts not nil - not present here, handled on template level
+// - valid identifier - present here, for now put on level containing given field
+// - conflicting fields - present here, put on level containing given fields
+// - exactly one value set - present here, put on level containing given fields
+// - TODO: nested validation conditionally - not present here, handled by putting validations on lower levels
+type ValidationType int64
+
+const (
+	ValidIdentifier ValidationType = iota
+	ConflictingFields
+	ExactlyOneValueSet
+)
+
+type Validation struct {
+	Type       ValidationType
+	fieldNames []string
+}
+
+func (v *Validation) paramsQuoted() []string {
+	var params = make([]string, len(v.fieldNames))
+	for i, s := range v.fieldNames {
+		params[i] = wrapWith(s, `"`)
+	}
+	return params
+}
+
+// TODO: handle path to field
+func (v *Validation) Condition() string {
+	switch v.Type {
+	case ValidIdentifier:
+		return fmt.Sprintf("!validObjectidentifier(%s)", strings.Join(v.fieldNames, ","))
+	case ConflictingFields:
+		return fmt.Sprintf("everyValueSet(%s)", strings.Join(v.fieldNames, ","))
+	case ExactlyOneValueSet:
+		return fmt.Sprintf("ok := exactlyOneValueSet(%s); !ok", strings.Join(v.fieldNames, ","))
+	}
+	panic("condition for validation unknown")
+}
+
+func (v *Validation) Error() string {
+	switch v.Type {
+	case ValidIdentifier:
+		return fmt.Sprintf("ErrInvalidObjectIdentifier")
+	case ConflictingFields:
+		return fmt.Sprintf("errOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
+	case ExactlyOneValueSet:
+		return fmt.Sprintf("errExactlyOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
+	}
+	panic("condition for validation unknown")
 }

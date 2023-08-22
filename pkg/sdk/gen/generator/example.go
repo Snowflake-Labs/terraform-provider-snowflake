@@ -57,6 +57,16 @@ var DatabaseRoleInterface = Interface{
 					},
 				},
 			},
+			Validations: []*Validation{
+				{
+					Type:       ValidIdentifier,
+					fieldNames: []string{"name"},
+				},
+				{
+					Type:       ConflictingFields,
+					fieldNames: []string{"OrReplace", "IfNotExists"},
+				},
+			},
 		},
 		{
 			Name:            "Alter",
@@ -146,6 +156,16 @@ var DatabaseRoleInterface = Interface{
 							},
 						},
 					},
+				},
+			},
+			Validations: []*Validation{
+				{
+					Type:       ValidIdentifier,
+					fieldNames: []string{"name"},
+				},
+				{
+					Type:       ExactlyOneValueSet,
+					fieldNames: []string{"Rename", "Set", "Unset"},
 				},
 			},
 		},
