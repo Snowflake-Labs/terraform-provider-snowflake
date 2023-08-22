@@ -45,9 +45,13 @@ type Field struct {
 }
 
 func (f *Field) TagsPrintable() string {
+	var tagNames = []string{"ddl", "sql"}
 	var tagParts []string
-	for k, v := range f.tags {
-		tagParts = append(tagParts, fmt.Sprintf(`%s:"%s"`, k, strings.Join(v, ",")))
+	for _, tagName := range tagNames {
+		var v, ok = f.tags[tagName]
+		if ok {
+			tagParts = append(tagParts, fmt.Sprintf(`%s:"%s"`, tagName, strings.Join(v, ",")))
+		}
 	}
 	return fmt.Sprintf("`%s`", strings.Join(tagParts, " "))
 }
