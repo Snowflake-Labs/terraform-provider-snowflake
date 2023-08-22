@@ -120,6 +120,12 @@ var DatabaseRoleInterface = Interface{
 							},
 						},
 					},
+					Validations: []*Validation{
+						{
+							Type:       ValidIdentifier,
+							fieldNames: []string{"Name"},
+						},
+					},
 				},
 				{
 					Name: "Set",

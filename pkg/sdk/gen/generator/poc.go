@@ -43,9 +43,21 @@ func (o *Operation) OptsName() string {
 	return fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.nameSingular)
 }
 
+// TODO: handle case where validations are on a deeper level (not the immediate one)
+func (o *Operation) AdditionalValidations() []*Field {
+	var fieldsWithValidations []*Field
+	for _, f := range o.OptsStructFields {
+		if len(f.Validations) > 0 {
+			fieldsWithValidations = append(fieldsWithValidations, f)
+		}
+	}
+	return fieldsWithValidations
+}
+
 type Field struct {
-	parent *Field
-	Fields []*Field
+	parent      *Field
+	Fields      []*Field
+	Validations []*Validation
 
 	Name string
 	Kind string
@@ -67,6 +79,10 @@ func (f *Field) TagsPrintable() string {
 func (f *Field) KindNoPtr() string {
 	kindWithoutPtr, _ := strings.CutPrefix(f.Kind, "*")
 	return kindWithoutPtr
+}
+
+func (f *Field) NameLowerCased() string {
+	return startingWithLowerCase(f.Name)
 }
 
 // ValidationType contains all handled validation types. Below validations are marked to be contained here or not:

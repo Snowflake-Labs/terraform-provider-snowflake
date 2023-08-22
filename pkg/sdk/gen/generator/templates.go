@@ -59,6 +59,19 @@ func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 `)
 
 var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
+{{define "VALIDATIONS"}}
+	{{- range .Validations}}
+	if {{.Condition}} {
+		errs = append(errs, {{.Error}})
+	}
+	{{- end}}
+	{{- range .AdditionalValidations}}
+	if {{.NameLowerCased}} := {{.Name}}; valueSet({{.NameLowerCased}}) {
+		...
+	}
+	{{- end}}
+{{end}}
+
 var (
 {{- range .Operations}}
 	_ validatable = new({{.OptsName}})
@@ -70,11 +83,7 @@ func (opts *{{.OptsName}}) validate() error {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
-	{{- range .Validations}}
-	if {{.Condition}} {
-		errs = append(errs, {{.Error}})
-	}
-	{{- end}}
+	{{template "VALIDATIONS" .}}
 	return errors.Join(errs...)
 }
 {{end}}
