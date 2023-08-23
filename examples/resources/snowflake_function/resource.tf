@@ -11,14 +11,14 @@ provider "snowflake" {
 // Create database
 resource "snowflake_database" "db" {
   name                = "MY_DB"
-  data_retention_days = 1
+  data_retention_time_in_days = 1
 }
 
 // Create schema
 resource "snowflake_schema" "schema" {
   database            = snowflake_database.db.name
   name                = "MY_SCHEMA"
-  data_retention_days = 1
+  data_retention_time_in_days = 1
 }
 
 // Example for Java language

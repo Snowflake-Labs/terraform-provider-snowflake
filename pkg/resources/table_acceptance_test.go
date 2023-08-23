@@ -25,7 +25,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
@@ -42,7 +42,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
@@ -61,7 +61,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
@@ -78,7 +78,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
@@ -94,7 +94,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
@@ -110,7 +110,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
@@ -129,7 +129,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
@@ -149,7 +149,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
@@ -170,7 +170,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
@@ -191,7 +191,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "2"),
@@ -212,7 +212,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Name),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "3"),
@@ -237,7 +237,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Name),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table3", "data_retention_days", "10"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table3", "data_retention_time_in_days", "10"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.#", "2"),
@@ -254,7 +254,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Name),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table3", "data_retention_days", "0"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table3", "data_retention_time_in_days", "0"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.#", "2"),
@@ -271,7 +271,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Name),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table3", "data_retention_days", "0"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table3", "data_retention_time_in_days", "0"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "change_tracking", "true"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "column.#", "2"),
@@ -288,7 +288,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "true"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
@@ -688,7 +688,7 @@ resource "snowflake_table" "test_table3" {
 	schema              = snowflake_schema.test_schema.name
 	name                = "%s"
 	comment             = "Terraform acceptance test"
-	data_retention_days = 10
+	data_retention_time_in_days = 10
 	column {
 		name = "column1"
 		type = "VARIANT"
@@ -720,7 +720,7 @@ resource "snowflake_table" "test_table3" {
 	schema              = snowflake_schema.test_schema.name
 	name                = "%s"
 	comment             = "Terraform acceptance test"
-	data_retention_days = 0
+	data_retention_time_in_days = 0
 	column {
 		name = "column1"
 		type = "VARIANT"
@@ -752,7 +752,7 @@ resource "snowflake_table" "test_table3" {
 	schema              = snowflake_schema.test_schema.name
 	name                = "%s"
 	comment             = "Terraform acceptance test"
-	data_retention_days = 0
+	data_retention_time_in_days = 0
 	change_tracking     = true
 	column {
 		name = "column1"
@@ -812,7 +812,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
@@ -840,7 +840,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
@@ -1057,7 +1057,7 @@ func TestAcc_TableIdentity(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
@@ -1084,7 +1084,7 @@ func TestAcc_TableIdentity(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
@@ -1215,7 +1215,7 @@ func TestAcc_TableRename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", oldTableName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
@@ -1229,7 +1229,7 @@ func TestAcc_TableRename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", newTableName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_days", "1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),

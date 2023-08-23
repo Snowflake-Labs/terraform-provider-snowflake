@@ -1,7 +1,7 @@
 resource "snowflake_schema" "schema" {
   database            = "database"
   name                = "schema"
-  data_retention_days = 1
+  data_retention_time_in_days = 1
 }
 
 resource "snowflake_sequence" "sequence" {
@@ -16,7 +16,7 @@ resource "snowflake_table" "table" {
   name                = "table"
   comment             = "A table."
   cluster_by          = ["to_date(DATE)"]
-  data_retention_days = snowflake_schema.schema.data_retention_days
+  data_retention_time_in_days = snowflake_schema.schema.data_retention_time_in_days
   change_tracking     = false
 
   column {

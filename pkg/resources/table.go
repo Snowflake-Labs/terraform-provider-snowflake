@@ -177,13 +177,11 @@ var tableSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-	"data_retention_days": {
+	"data_retention_time_in_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Default:      1,
 		Description:  "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.",
 		ValidateFunc: validation.IntBetween(0, 90),
-		Deprecated:   "Use snowflake_object_parameter instead",
 	},
 	"change_tracking": {
 		Type:        schema.TypeBool,
@@ -508,7 +506,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 		builder.WithPrimaryKey(pk.toSnowflakePrimaryKey())
 	}
 
-	if v, ok := d.GetOk("data_retention_days"); ok {
+	if v, ok := d.GetOk("data_retention_time_in_days"); ok {
 		builder.WithDataRetentionTimeInDays(v.(int))
 	}
 
@@ -594,9 +592,9 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		"column":     snowflake.NewColumns(tableDescription).Flatten(),
 		"cluster_by": snowflake.ClusterStatementToList(table.ClusterBy.String),
 		// "primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
-		"data_retention_days": table.RetentionTime.Int32,
-		"change_tracking":     (table.ChangeTracking.String == "ON"),
-		"qualified_name":      fmt.Sprintf(`"%s"."%s"."%s"`, tableID.DatabaseName, tableID.SchemaName, table.TableName.String),
+		"data_retention_time_in_days": table.RetentionTime.Int32,
+		"change_tracking":             (table.ChangeTracking.String == "ON"),
+		"qualified_name":              fmt.Sprintf(`"%s"."%s"."%s"`, tableID.DatabaseName, tableID.SchemaName, table.TableName.String),
 	}
 
 	for key, val := range toSet {
@@ -743,8 +741,8 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	if d.HasChange("data_retention_days") {
-		ndr := d.Get("data_retention_days")
+	if d.HasChange("data_retention_time_in_days") {
+		ndr := d.Get("data_retention_time_in_days")
 
 		q := builder.ChangeDataRetention(ndr.(int))
 		if err := snowflake.Exec(db, q); err != nil {
