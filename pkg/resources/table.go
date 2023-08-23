@@ -180,7 +180,7 @@ var tableSchema = map[string]*schema.Schema{
 	"data_retention_time_in_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Description:  "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.",
+		Description:  "Previously: data_retention_days. Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.",
 		ValidateFunc: validation.IntBetween(0, 90),
 	},
 	"change_tracking": {
