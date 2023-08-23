@@ -9,8 +9,8 @@ import (
 type Interface struct {
 	// Name is the interface's name, e.g. "DatabaseRoles"
 	Name string
-	// nameSingular is the prefix/suffix which can be used to create other structs and methods, e.g. "DatabaseRole"
-	nameSingular string
+	// NameSingular is the prefix/suffix which can be used to create other structs and methods, e.g. "DatabaseRole"
+	NameSingular string
 	// Operations contains all operations for given interface
 	Operations []*Operation
 	// IdentifierKind keeps identifier of the underlying object (e.g. DatabaseObjectIdentifier)
@@ -40,7 +40,7 @@ type Operation struct {
 // - Object is e.g. DatabaseRole (singular)
 // which together makes CreateDatabaseRoleOptions
 func (o *Operation) OptsName() string {
-	return fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.nameSingular)
+	return fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
 }
 
 // TODO: handle case where validations are on a deeper level (not the immediate one)
@@ -61,7 +61,7 @@ type Field struct {
 
 	Name string
 	Kind string
-	tags map[string][]string
+	Tags map[string][]string
 }
 
 // TODO: handle case where validations are on a deeper level (not the immediate one)
@@ -79,7 +79,7 @@ func (field *Field) TagsPrintable() string {
 	var tagNames = []string{"ddl", "sql"}
 	var tagParts []string
 	for _, tagName := range tagNames {
-		var v, ok = field.tags[tagName]
+		var v, ok = field.Tags[tagName]
 		if ok {
 			tagParts = append(tagParts, fmt.Sprintf(`%s:"%s"`, tagName, strings.Join(v, ",")))
 		}
@@ -114,12 +114,12 @@ const (
 
 type Validation struct {
 	Type       ValidationType
-	fieldNames []string
+	FieldNames []string
 }
 
 func (v *Validation) paramsQuoted() []string {
-	var params = make([]string, len(v.fieldNames))
-	for i, s := range v.fieldNames {
+	var params = make([]string, len(v.FieldNames))
+	for i, s := range v.FieldNames {
 		params[i] = wrapWith(s, `"`)
 	}
 	return params
@@ -129,13 +129,13 @@ func (v *Validation) paramsQuoted() []string {
 func (v *Validation) Condition() string {
 	switch v.Type {
 	case ValidIdentifier:
-		return fmt.Sprintf("!validObjectidentifier(%s)", strings.Join(v.fieldNames, ","))
+		return fmt.Sprintf("!validObjectidentifier(%s)", strings.Join(v.FieldNames, ","))
 	case ConflictingFields:
-		return fmt.Sprintf("everyValueSet(%s)", strings.Join(v.fieldNames, ","))
+		return fmt.Sprintf("everyValueSet(%s)", strings.Join(v.FieldNames, ","))
 	case ExactlyOneValueSet:
-		return fmt.Sprintf("ok := exactlyOneValueSet(%s); !ok", strings.Join(v.fieldNames, ","))
+		return fmt.Sprintf("ok := exactlyOneValueSet(%s); !ok", strings.Join(v.FieldNames, ","))
 	case AtLeastOneValueSet:
-		return fmt.Sprintf("ok := anyValueSet(%s); !ok", strings.Join(v.fieldNames, ","))
+		return fmt.Sprintf("ok := anyValueSet(%s); !ok", strings.Join(v.FieldNames, ","))
 	}
 	panic("condition for validation unknown")
 }
@@ -157,13 +157,13 @@ func (v *Validation) Error() string {
 func (v *Validation) TodoComment() string {
 	switch v.Type {
 	case ValidIdentifier:
-		return fmt.Sprintf("// TODO: validate valid identifier for %v", v.fieldNames)
+		return fmt.Sprintf("// TODO: validate valid identifier for %v", v.FieldNames)
 	case ConflictingFields:
-		return fmt.Sprintf("// TODO: validate conflicting fields for %v", v.fieldNames)
+		return fmt.Sprintf("// TODO: validate conflicting fields for %v", v.FieldNames)
 	case ExactlyOneValueSet:
-		return fmt.Sprintf("// TODO: validate exactly one field from %v is present", v.fieldNames)
+		return fmt.Sprintf("// TODO: validate exactly one field from %v is present", v.FieldNames)
 	case AtLeastOneValueSet:
-		return fmt.Sprintf("// TODO: validate at least one of fields %v set", v.fieldNames)
+		return fmt.Sprintf("// TODO: validate at least one of fields %v set", v.FieldNames)
 	}
 	panic("condition for validation unknown")
 }

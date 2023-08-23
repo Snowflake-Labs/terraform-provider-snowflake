@@ -8,12 +8,13 @@ import (
 	"os"
 	"text/template"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/gen/example"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/gen/generator"
 )
 
 func main() {
-	for _, o := range generator.DatabaseRoleInterface.Operations {
-		o.ObjectInterface = &generator.DatabaseRoleInterface
+	for _, o := range example.DatabaseRole.Operations {
+		o.ObjectInterface = &example.DatabaseRole
 	}
 
 	runAllTemplates(os.Stdout)
@@ -44,8 +45,8 @@ func runAllTemplates(writer io.Writer) {
 }
 
 func generateInterface(writer io.Writer) {
-	printTo(writer, generator.InterfaceTemplate, &generator.DatabaseRoleInterface)
-	for _, o := range generator.DatabaseRoleInterface.Operations {
+	printTo(writer, generator.InterfaceTemplate, &example.DatabaseRole)
+	for _, o := range example.DatabaseRole.Operations {
 		generateOptionsStruct(writer, o)
 	}
 }
@@ -71,15 +72,15 @@ func generateStruct(writer io.Writer, field *generator.Field) {
 }
 
 func generateImplementation(writer io.Writer) {
-	printTo(writer, generator.ImplementationTemplate, &generator.DatabaseRoleInterface)
+	printTo(writer, generator.ImplementationTemplate, &example.DatabaseRole)
 }
 
 func generateUnitTests(writer io.Writer) {
-	printTo(writer, generator.TestFuncTemplate, &generator.DatabaseRoleInterface)
+	printTo(writer, generator.TestFuncTemplate, &example.DatabaseRole)
 }
 
 func generateValidations(writer io.Writer) {
-	printTo(writer, generator.ValidationsImplTemplate, &generator.DatabaseRoleInterface)
+	printTo(writer, generator.ValidationsImplTemplate, &example.DatabaseRole)
 }
 
 // TODO: get rid of any

@@ -1,18 +1,20 @@
-package generator
+package example
 
-var DatabaseRoleInterface = Interface{
+import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/gen/generator"
+
+var DatabaseRole = generator.Interface{
 	Name:         "DatabaseRoles",
-	nameSingular: "DatabaseRole",
-	Operations: []*Operation{
+	NameSingular: "DatabaseRole",
+	Operations: []*generator.Operation{
 		{
 			Name:            "Create",
 			ObjectInterface: nil,
 			Doc:             "https://docs.snowflake.com/en/sql-reference/sql/create-database-role",
-			OptsStructFields: []*Field{
+			OptsStructFields: []*generator.Field{
 				{
 					Name: "create",
 					Kind: "bool",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"static"},
 						"sql": {"CREATE"},
 					},
@@ -20,7 +22,7 @@ var DatabaseRoleInterface = Interface{
 				{
 					Name: "OrReplace",
 					Kind: "*bool",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"keyword"},
 						"sql": {"OR REPLACE"},
 					},
@@ -28,7 +30,7 @@ var DatabaseRoleInterface = Interface{
 				{
 					Name: "databaseRole",
 					Kind: "bool",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"static"},
 						"sql": {"DATABASE ROLE"},
 					},
@@ -36,7 +38,7 @@ var DatabaseRoleInterface = Interface{
 				{
 					Name: "IfNotExists",
 					Kind: "*bool",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"keyword"},
 						"sql": {"IF NOT EXISTS"},
 					},
@@ -44,27 +46,27 @@ var DatabaseRoleInterface = Interface{
 				{
 					Name: "name",
 					Kind: "*bool",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"identifier"},
 					},
 				},
 				{
 					Name: "Comment",
 					Kind: "*string",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"parameter", "single_quotes"},
 						"sql": {"COMMENT"},
 					},
 				},
 			},
-			Validations: []*Validation{
+			Validations: []*generator.Validation{
 				{
-					Type:       ValidIdentifier,
-					fieldNames: []string{"name"},
+					Type:       generator.ValidIdentifier,
+					FieldNames: []string{"name"},
 				},
 				{
-					Type:       ConflictingFields,
-					fieldNames: []string{"OrReplace", "IfNotExists"},
+					Type:       generator.ConflictingFields,
+					FieldNames: []string{"OrReplace", "IfNotExists"},
 				},
 			},
 		},
@@ -72,11 +74,11 @@ var DatabaseRoleInterface = Interface{
 			Name:            "Alter",
 			ObjectInterface: nil,
 			Doc:             "https://docs.snowflake.com/en/sql-reference/sql/alter-database-role",
-			OptsStructFields: []*Field{
+			OptsStructFields: []*generator.Field{
 				{
 					Name: "alter",
 					Kind: "bool",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"static"},
 						"sql": {"ALTER"},
 					},
@@ -84,7 +86,7 @@ var DatabaseRoleInterface = Interface{
 				{
 					Name: "databaseRole",
 					Kind: "bool",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"static"},
 						"sql": {"DATABASE ROLE"},
 					},
@@ -92,7 +94,7 @@ var DatabaseRoleInterface = Interface{
 				{
 					Name: "IfExists",
 					Kind: "*bool",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"keyword"},
 						"sql": {"IF EXISTS"},
 					},
@@ -100,45 +102,45 @@ var DatabaseRoleInterface = Interface{
 				{
 					Name: "name",
 					Kind: "DatabaseObjectIdentifier",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"identifier"},
 					},
 				},
 				{
 					Name: "Rename",
 					Kind: "*DatabaseRoleRename",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"list,no_parentheses"},
 						"sql": {"RENAME TO"},
 					},
-					Fields: []*Field{
+					Fields: []*generator.Field{
 						{
 							Name: "Name",
 							Kind: "DatabaseObjectIdentifier",
-							tags: map[string][]string{
+							Tags: map[string][]string{
 								"ddl": {"identifier"},
 							},
 						},
 					},
-					Validations: []*Validation{
+					Validations: []*generator.Validation{
 						{
-							Type:       ValidIdentifier,
-							fieldNames: []string{"Name"},
+							Type:       generator.ValidIdentifier,
+							FieldNames: []string{"Name"},
 						},
 					},
 				},
 				{
 					Name: "Set",
 					Kind: "*DatabaseRoleSet",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"list,no_parentheses"},
 						"sql": {"SET"},
 					},
-					Fields: []*Field{
+					Fields: []*generator.Field{
 						{
 							Name: "Comment",
 							Kind: "string",
-							tags: map[string][]string{
+							Tags: map[string][]string{
 								"ddl": {"parameter", "single_quotes"},
 								"sql": {"COMMENT"},
 							},
@@ -148,36 +150,36 @@ var DatabaseRoleInterface = Interface{
 				{
 					Name: "Unset",
 					Kind: "*DatabaseRoleUnset",
-					tags: map[string][]string{
+					Tags: map[string][]string{
 						"ddl": {"list,no_parentheses"},
 						"sql": {"UNSET"},
 					},
-					Fields: []*Field{
+					Fields: []*generator.Field{
 						{
 							Name: "Comment",
 							Kind: "bool",
-							tags: map[string][]string{
+							Tags: map[string][]string{
 								"ddl": {"keyword"},
 								"sql": {"COMMENT"},
 							},
 						},
 					},
-					Validations: []*Validation{
+					Validations: []*generator.Validation{
 						{
-							Type:       AtLeastOneValueSet,
-							fieldNames: []string{"Comment"},
+							Type:       generator.AtLeastOneValueSet,
+							FieldNames: []string{"Comment"},
 						},
 					},
 				},
 			},
-			Validations: []*Validation{
+			Validations: []*generator.Validation{
 				{
-					Type:       ValidIdentifier,
-					fieldNames: []string{"name"},
+					Type:       generator.ValidIdentifier,
+					FieldNames: []string{"name"},
 				},
 				{
-					Type:       ExactlyOneValueSet,
-					fieldNames: []string{"Rename", "Set", "Unset"},
+					Type:       generator.ExactlyOneValueSet,
+					FieldNames: []string{"Rename", "Set", "Unset"},
 				},
 			},
 		},
