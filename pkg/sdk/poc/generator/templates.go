@@ -53,6 +53,13 @@ var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 	{{- end}}
 {{end}}
 
+{{define "VALIDATIONS"}}
+	{{template "VALIDATION_TEST" .}}
+	{{- range .AdditionalValidations}}
+		{{template "VALIDATION_TEST" .}}
+	{{- end}}
+{{end}}
+
 {{- range .Operations}}
 func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 	id := random{{.ObjectInterface.IdentifierKind}}(t)
@@ -64,7 +71,7 @@ func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 	}
 
 	// TODO: fill me
-	{{template "VALIDATION_TEST" .}}
+	{{template "VALIDATIONS" .}}
 }
 {{end}}
 `)

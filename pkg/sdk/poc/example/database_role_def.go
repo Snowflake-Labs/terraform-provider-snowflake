@@ -4,6 +4,8 @@ import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gener
 
 //go:generate go run ../main.go
 
+var _ = DatabaseRole
+
 var DatabaseRole = generator.Interface{
 	Name:         "DatabaseRoles",
 	NameSingular: "DatabaseRole",
