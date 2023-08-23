@@ -14,7 +14,7 @@ var DatabaseRole = generator.Interface{
 			Name:            "Create",
 			ObjectInterface: nil,
 			Doc:             "https://docs.snowflake.com/en/sql-reference/sql/create-database-role",
-			OptsStructFields: []*generator.Field{
+			Fields: []*generator.Field{
 				{
 					Name: "create",
 					Kind: "bool",
@@ -78,7 +78,7 @@ var DatabaseRole = generator.Interface{
 			Name:            "Alter",
 			ObjectInterface: nil,
 			Doc:             "https://docs.snowflake.com/en/sql-reference/sql/alter-database-role",
-			OptsStructFields: []*generator.Field{
+			Fields: []*generator.Field{
 				{
 					Name: "alter",
 					Kind: "bool",

@@ -31,6 +31,7 @@ func main() {
 	runAllTemplates(os.Stdout)
 
 	runTemplateAndSave(generateInterface, filenameFor(fileWithoutSuffix, ""))
+	runTemplateAndSave(generateDtos, filenameFor(fileWithoutSuffix, "_dto"))
 	runTemplateAndSave(generateImplementation, filenameFor(fileWithoutSuffix, "_impl"))
 	runTemplateAndSave(generateUnitTests, filename(fileWithoutSuffix, "_gen", "_test.go"))
 	runTemplateAndSave(generateValidations, filenameFor(fileWithoutSuffix, "_validations"))
@@ -76,7 +77,7 @@ func generateInterface(writer io.Writer) {
 func generateOptionsStruct(writer io.Writer, operation *generator.Operation) {
 	printTo(writer, generator.OptionsTemplate, operation)
 
-	for _, f := range operation.OptsStructFields {
+	for _, f := range operation.Fields {
 		if len(f.Fields) > 0 {
 			generateStruct(writer, f)
 		}
@@ -91,6 +92,11 @@ func generateStruct(writer io.Writer, field *generator.Field) {
 			generateStruct(writer, f)
 		}
 	}
+}
+
+func generateDtos(writer io.Writer) {
+	generatePackageDirective(writer)
+	printTo(writer, generator.DtoTemplate, &example.DatabaseRole)
 }
 
 func generateImplementation(writer io.Writer) {

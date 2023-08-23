@@ -3,6 +3,8 @@ package generator
 import (
 	"fmt"
 	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 // Interface groups operations for particular object or objects family (e.g. DATABASE ROLE)
@@ -29,8 +31,8 @@ type Operation struct {
 	ObjectInterface *Interface
 	// Doc is the URL for the doc used to create given operation, e.g. https://docs.snowflake.com/en/sql-reference/sql/create-database-role
 	Doc string
-	// OptsStructFields defines opts used to create SQL for given operation
-	OptsStructFields []*Field
+	// Fields defines opts used to create SQL for given operation
+	Fields []*Field
 	// Validations are top-level validations for given Opts
 	Validations []*Validation
 }
@@ -43,10 +45,18 @@ func (o *Operation) OptsName() string {
 	return fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
 }
 
+// DtoName should create a name for dto used for interaction with SDK interface in a form of OperationObjectRequest where:
+// - Operation is e.g. Create
+// - Object is e.g. DatabaseRole (singular)
+// which together makes CreateDatabaseRoleRequest
+func (o *Operation) DtoName() string {
+	return fmt.Sprintf("%s%sRequest", o.Name, o.ObjectInterface.NameSingular)
+}
+
 // TODO: handle case where validations are on a deeper level (not the immediate one)
 func (o *Operation) AdditionalValidations() []*Field {
 	var fieldsWithValidations []*Field
-	for _, f := range o.OptsStructFields {
+	for _, f := range o.Fields {
 		if len(f.Validations) > 0 {
 			fieldsWithValidations = append(fieldsWithValidations, f)
 		}
@@ -94,6 +104,26 @@ func (field *Field) KindNoPtr() string {
 
 func (field *Field) NameLowerCased() string {
 	return startingWithLowerCase(field.Name)
+}
+
+func (field *Field) IsStruct() bool {
+	return len(field.Fields) > 0
+}
+
+func (field *Field) DtoName() string {
+	return fmt.Sprintf("%sRequest", field.KindNoPtr())
+}
+
+func (field *Field) ShouldBeInDto() bool {
+	return !slices.Contains(field.Tags["ddl"], "static")
+}
+
+func (field *Field) KindDto() string {
+	if field.IsStruct() {
+		return field.DtoName()
+	} else {
+		return field.Kind
+	}
 }
 
 // ValidationType contains all handled validation types. Below validations are marked to be contained here or not:

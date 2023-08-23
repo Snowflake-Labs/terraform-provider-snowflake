@@ -17,7 +17,7 @@ type {{.Name}} interface {
 var OptionsTemplate, _ = template.New("optionsTemplate").Parse(`
 // {{.OptsName}} is based on {{.Doc}}.
 type {{.OptsName}} struct {
-	{{- range .OptsStructFields}}
+	{{- range .Fields}}
 			{{.Name}} {{.Kind}} {{.TagsPrintable}}
 	{{- end}}
 }
@@ -29,6 +29,33 @@ type {{.KindNoPtr}} struct {
 			{{.Name}} {{.Kind}} {{.TagsPrintable}}
 	{{- end}}
 }
+`)
+
+var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
+{{define "DTO_STRUCT"}}
+type {{.DtoName}} struct {
+	{{- range .Fields}}
+		{{- if .ShouldBeInDto}}
+		{{.Name}} {{.KindDto}}
+		{{- end}}
+	{{- end}}
+}
+{{end}}
+
+var (
+	{{- range .Operations}}
+	_ optionsProvider[{{.OptsName}}] = new({{.DtoName}})
+	{{- end}}
+)
+
+{{- range .Operations}}
+	{{template "DTO_STRUCT" .}}
+	{{- range .Fields}}
+		{{if .IsStruct}}
+		{{template "DTO_STRUCT" .}}
+		{{end}}
+	{{- end}}
+{{- end}}
 `)
 
 var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
