@@ -53,6 +53,11 @@ func (o *Operation) DtoName() string {
 	return fmt.Sprintf("%s%sRequest", o.Name, o.ObjectInterface.NameSingular)
 }
 
+// TODO: Try to fix with root level field
+func (o *Operation) KindNoPtr() string {
+	return o.OptsName()
+}
+
 // TODO: handle case where validations are on a deeper level (not the immediate one)
 func (o *Operation) AdditionalValidations() []*Field {
 	var fieldsWithValidations []*Field

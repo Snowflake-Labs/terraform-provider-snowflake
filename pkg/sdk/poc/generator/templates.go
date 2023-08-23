@@ -63,6 +63,24 @@ var (
 `)
 
 var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
+{{define "MAPPING" -}}
+	&{{.KindNoPtr}}{
+		{{- range .Fields}}
+			{{- if .ShouldBeInDto}}
+			{{if .IsStruct}}{{else}}{{.Name}}: r.{{.Name}},{{end}}
+			{{- end}}
+		{{- end}}
+	}
+	{{range .Fields}}
+		{{if .ShouldBeInDto}}
+			{{if .IsStruct}}
+				if r.{{.Name}} != nil {
+					opts.{{.Name}} = {{template "MAPPING" .}}
+				}
+			{{end}}
+		{{end}}
+	{{end}}
+{{end}}
 import "context"
 
 {{$impl := .NameLowerCased}}
@@ -80,23 +98,7 @@ func (v *{{$impl}}) {{.Name}}(ctx context.Context, request *{{.DtoName}}) error 
 
 {{range .Operations}}
 func (r *{{.DtoName}}) toOpts() *{{.OptsName}} {
-	opts := &{{.OptsName}}{
-		{{- range .Fields}}
-			{{- if .ShouldBeInDto}}
-			{{if .IsStruct}}{{else}}{{.Name}}: r.{{.Name}},{{end}}
-			{{- end}}
-		{{- end}}
-	}
-	// TODO: add recursion with path
-	{{range .Fields}}
-		{{if .ShouldBeInDto}}
-			{{if .IsStruct}}
-			if r.{{.Name}} != nil {
-				opts.{{.Name}} = &{{.KindNoPtr}}{}
-			}
-			{{end}}
-		{{end}}
-	{{end}}
+	opts := {{template "MAPPING" .}}
 	return opts
 }
 {{end}}
