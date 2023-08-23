@@ -17,17 +17,17 @@ func main() {
 }
 
 func runAllTemplates(writer io.Writer) {
-	printTo(writer, generator.InterfaceTemplate, &generator.DatabaseRoleInterface)
+	generateInterface(writer)
+	generateImplementation(writer)
+	generateUnitTests(writer)
+	generateValidations(writer)
+}
 
+func generateInterface(writer io.Writer) {
+	printTo(writer, generator.InterfaceTemplate, &generator.DatabaseRoleInterface)
 	for _, o := range generator.DatabaseRoleInterface.Operations {
 		generateOptionsStruct(writer, o)
 	}
-
-	printTo(writer, generator.ImplementationTemplate, &generator.DatabaseRoleInterface)
-
-	printTo(writer, generator.TestFuncTemplate, &generator.DatabaseRoleInterface)
-
-	printTo(writer, generator.ValidationsImplTemplate, &generator.DatabaseRoleInterface)
 }
 
 func generateOptionsStruct(writer io.Writer, operation *generator.Operation) {
@@ -48,6 +48,18 @@ func generateStruct(writer io.Writer, field *generator.Field) {
 			generateStruct(writer, f)
 		}
 	}
+}
+
+func generateImplementation(writer io.Writer) {
+	printTo(writer, generator.ImplementationTemplate, &generator.DatabaseRoleInterface)
+}
+
+func generateUnitTests(writer io.Writer) {
+	printTo(writer, generator.TestFuncTemplate, &generator.DatabaseRoleInterface)
+}
+
+func generateValidations(writer io.Writer) {
+	printTo(writer, generator.ValidationsImplTemplate, &generator.DatabaseRoleInterface)
 }
 
 // TODO: get rid of any
