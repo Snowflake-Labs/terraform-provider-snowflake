@@ -77,6 +77,14 @@ func (v *{{$impl}}) {{.Name}}(ctx context.Context, request *{{.DtoName}}) error 
 	return validateAndExec(v.client, ctx, opts)
 }
 {{end}}
+
+{{range .Operations}}
+func (r *{{.DtoName}}) toOpts() *{{.OptsName}} {
+	return &{{.OptsName}}{
+		// TODO: fill me
+	}
+}
+{{end}}
 `)
 
 var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
