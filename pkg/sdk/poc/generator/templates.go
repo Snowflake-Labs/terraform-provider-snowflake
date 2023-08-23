@@ -80,9 +80,11 @@ func (v *{{$impl}}) {{.Name}}(ctx context.Context, request *{{.DtoName}}) error 
 
 {{range .Operations}}
 func (r *{{.DtoName}}) toOpts() *{{.OptsName}} {
-	return &{{.OptsName}}{
-		// TODO: fill me
+	opts := &{{.OptsName}}{
+		// TODO: all non struct fields here
 	}
+	// TODO: for all struct fields: if != nil and if so, repeat
+	return opts
 }
 {{end}}
 `)
