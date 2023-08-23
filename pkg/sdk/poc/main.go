@@ -32,7 +32,7 @@ func main() {
 
 	runTemplateAndSave(generateInterface, filenameFor(fileWithoutSuffix, ""))
 	runTemplateAndSave(generateImplementation, filenameFor(fileWithoutSuffix, "_impl"))
-	runTemplateAndSave(generateUnitTests, filenameFor(fileWithoutSuffix, "_test"))
+	runTemplateAndSave(generateUnitTests, filename(fileWithoutSuffix, "_gen", "_test.go"))
 	runTemplateAndSave(generateValidations, filenameFor(fileWithoutSuffix, "_validations"))
 }
 
@@ -45,7 +45,10 @@ func getDefinition(fileWithoutSuffix string) generator.Interface {
 }
 
 func filenameFor(prefix string, part string) string {
-	suffix := "_gen.go"
+	return filename(prefix, part, "_gen.go")
+}
+
+func filename(prefix string, part string, suffix string) string {
 	return fmt.Sprintf("%s%s%s", prefix, part, suffix)
 }
 
