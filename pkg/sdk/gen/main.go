@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"text/template"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/gen/generator"
 )
@@ -11,36 +12,22 @@ func main() {
 		o.ObjectInterface = &generator.DatabaseRoleInterface
 	}
 
-	err := generator.InterfaceTemplate.Execute(os.Stdout, &generator.DatabaseRoleInterface)
-	if err != nil {
-		panic(err)
-	}
+	printToStdOut(generator.InterfaceTemplate, &generator.DatabaseRoleInterface)
 
 	for _, o := range generator.DatabaseRoleInterface.Operations {
 		generateOptionsStruct(o)
 	}
 
-	err = generator.ImplementationTemplate.Execute(os.Stdout, &generator.DatabaseRoleInterface)
-	if err != nil {
-		panic(err)
-	}
+	printToStdOut(generator.ImplementationTemplate, &generator.DatabaseRoleInterface)
 
-	err = generator.TestFuncTemplate.Execute(os.Stdout, &generator.DatabaseRoleInterface)
-	if err != nil {
-		panic(err)
-	}
+	printToStdOut(generator.TestFuncTemplate, &generator.DatabaseRoleInterface)
 
-	err = generator.ValidationsImplTemplate.Execute(os.Stdout, &generator.DatabaseRoleInterface)
-	if err != nil {
-		panic(err)
-	}
+	printToStdOut(generator.ValidationsImplTemplate, &generator.DatabaseRoleInterface)
 }
 
 func generateOptionsStruct(operation *generator.Operation) {
-	err := generator.OptionsTemplate.Execute(os.Stdout, operation)
-	if err != nil {
-		panic(err)
-	}
+	printToStdOut(generator.OptionsTemplate, operation)
+
 	for _, f := range operation.OptsStructFields {
 		if len(f.Fields) > 0 {
 			generateStruct(f)
@@ -49,13 +36,19 @@ func generateOptionsStruct(operation *generator.Operation) {
 }
 
 func generateStruct(field *generator.Field) {
-	err := generator.StructTemplate.Execute(os.Stdout, field)
-	if err != nil {
-		panic(err)
-	}
+	printToStdOut(generator.StructTemplate, field)
+
 	for _, f := range field.Fields {
 		if len(f.Fields) > 0 {
 			generateStruct(f)
 		}
+	}
+}
+
+// TODO: get rid of any
+func printToStdOut(template *template.Template, model any) {
+	err := template.Execute(os.Stdout, model)
+	if err != nil {
+		panic(err)
 	}
 }
