@@ -22,11 +22,25 @@ type validatable interface {
 type Client struct{}
 
 type ObjectIdentifier interface{}
+type AccountObjectIdentifier struct{}
 type DatabaseObjectIdentifier struct{}
+type ExternalObjectIdentifier struct{}
+type SchemaObjectIdentifier struct{}
+type TableColumnIdentifier struct{}
+
+func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
+	_ = t
+	return AccountObjectIdentifier{}
+}
 
 func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 	_ = t
 	return DatabaseObjectIdentifier{}
+}
+
+func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
+	_ = t
+	return SchemaObjectIdentifier{}
 }
 
 func validObjectidentifier(objectIdentifier ObjectIdentifier) bool {
