@@ -9,7 +9,7 @@ package {{.}}
 var InterfaceTemplate, _ = template.New("interfaceTemplate").Parse(`
 type {{.Name}} interface {
 	{{- range .Operations}}
-		{{.Name}}(ctx context.Context, opts *{{.OptsName}}) error
+		{{.Name}}(ctx context.Context, request *{{.DtoName}}) error
 	{{- end}}
 }
 `)
@@ -66,7 +66,7 @@ type {{$impl}} struct {
 	client *Client
 }
 {{range .Operations}}
-func (v *{{$impl}}) {{.Name}}(ctx context.Context, opts *{{.OptsName}}) error {
+func (v *{{$impl}}) {{.Name}}(ctx context.Context, request *{{.DtoName}}) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
