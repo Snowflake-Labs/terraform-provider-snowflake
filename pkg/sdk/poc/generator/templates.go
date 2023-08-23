@@ -166,3 +166,17 @@ func (opts *{{.OptsName}}) validate() error {
 }
 {{end}}
 `)
+
+var IntegrationTestsTemplate, _ = template.New("integrationTestsTemplate").Parse(`
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestInt_{{.Name}}(t *testing.T) {
+	// TODO: fill me
+}
+`)

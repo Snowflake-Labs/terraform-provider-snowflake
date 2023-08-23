@@ -35,6 +35,7 @@ func main() {
 	runTemplateAndSave(generateImplementation, filenameFor(fileWithoutSuffix, "_impl"))
 	runTemplateAndSave(generateUnitTests, filename(fileWithoutSuffix, "_gen", "_test.go"))
 	runTemplateAndSave(generateValidations, filenameFor(fileWithoutSuffix, "_validations"))
+	runTemplateAndSave(generateIntegrationTests, filename(fileWithoutSuffix, "_gen_integration", "_test.go"))
 }
 
 func getDefinition(fileWithoutSuffix string) generator.Interface {
@@ -112,6 +113,11 @@ func generateUnitTests(writer io.Writer) {
 func generateValidations(writer io.Writer) {
 	generatePackageDirective(writer)
 	printTo(writer, generator.ValidationsImplTemplate, &example.DatabaseRole)
+}
+
+func generateIntegrationTests(writer io.Writer) {
+	generatePackageDirective(writer)
+	printTo(writer, generator.IntegrationTestsTemplate, &example.DatabaseRole)
 }
 
 func generatePackageDirective(writer io.Writer) {
