@@ -7,8 +7,9 @@ import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gener
 var _ = DatabaseRole
 
 var DatabaseRole = generator.Interface{
-	Name:         "DatabaseRoles",
-	NameSingular: "DatabaseRole",
+	Name:           "DatabaseRoles",
+	NameSingular:   "DatabaseRole",
+	IdentifierKind: "DatabaseObjectIdentifier",
 	Operations: []*generator.Operation{
 		{
 			Name:            "Create",
@@ -49,7 +50,7 @@ var DatabaseRole = generator.Interface{
 				},
 				{
 					Name: "name",
-					Kind: "*bool",
+					Kind: "DatabaseObjectIdentifier",
 					Tags: map[string][]string{
 						"ddl": {"identifier"},
 					},

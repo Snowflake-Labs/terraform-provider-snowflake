@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
 )
 
 // This file's only purpose is to make generated objects compile (or close to compile).
@@ -18,10 +19,15 @@ type validatable interface {
 	validate() error
 }
 
+type Client struct{}
+
 type ObjectIdentifier interface{}
 type DatabaseObjectIdentifier struct{}
 
-type Client struct{}
+func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
+	_ = t
+	return DatabaseObjectIdentifier{}
+}
 
 func validObjectidentifier(objectIdentifier ObjectIdentifier) bool {
 	_ = objectIdentifier
