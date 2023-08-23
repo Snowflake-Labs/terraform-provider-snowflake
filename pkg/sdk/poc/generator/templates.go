@@ -42,6 +42,8 @@ type {{.DtoName}} struct {
 }
 {{end}}
 
+//go:generate go run ../../dto-builder-generator/main.go
+
 var (
 	{{- range .Operations}}
 	_ optionsProvider[{{.OptsName}}] = new({{.DtoName}})
