@@ -2,6 +2,10 @@ package generator
 
 import "text/template"
 
+var PackageTemplate, _ = template.New("packageTemplate").Parse(`
+package {{.}}
+`)
+
 var InterfaceTemplate, _ = template.New("interfaceTemplate").Parse(`
 type {{.Name}} interface {
 	{{- range .Operations}}

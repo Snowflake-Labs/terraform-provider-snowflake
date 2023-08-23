@@ -63,6 +63,7 @@ func runAllTemplates(writer io.Writer) {
 }
 
 func generateInterface(writer io.Writer) {
+	generatePackageDirective(writer)
 	printTo(writer, generator.InterfaceTemplate, &example.DatabaseRole)
 	for _, o := range example.DatabaseRole.Operations {
 		generateOptionsStruct(writer, o)
@@ -90,15 +91,22 @@ func generateStruct(writer io.Writer, field *generator.Field) {
 }
 
 func generateImplementation(writer io.Writer) {
+	generatePackageDirective(writer)
 	printTo(writer, generator.ImplementationTemplate, &example.DatabaseRole)
 }
 
 func generateUnitTests(writer io.Writer) {
+	generatePackageDirective(writer)
 	printTo(writer, generator.TestFuncTemplate, &example.DatabaseRole)
 }
 
 func generateValidations(writer io.Writer) {
+	generatePackageDirective(writer)
 	printTo(writer, generator.ValidationsImplTemplate, &example.DatabaseRole)
+}
+
+func generatePackageDirective(writer io.Writer) {
+	printTo(writer, generator.PackageTemplate, os.Getenv("GOPACKAGE"))
 }
 
 // TODO: get rid of any
