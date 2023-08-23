@@ -36,7 +36,7 @@ var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
 type {{.DtoName}} struct {
 	{{- range .Fields}}
 		{{- if .ShouldBeInDto}}
-		{{.Name}} {{.KindDto}}
+		{{.Name}} {{.KindDto}} {{if .Required}}// required{{end}}
 		{{- end}}
 	{{- end}}
 }

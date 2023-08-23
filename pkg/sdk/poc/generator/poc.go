@@ -69,9 +69,10 @@ type Field struct {
 	Fields      []*Field
 	Validations []*Validation
 
-	Name string
-	Kind string
-	Tags map[string][]string
+	Name     string
+	Kind     string
+	Tags     map[string][]string
+	Required bool
 }
 
 // TODO: handle case where validations are on a deeper level (not the immediate one)

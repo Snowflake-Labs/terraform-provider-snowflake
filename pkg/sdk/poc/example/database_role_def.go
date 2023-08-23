@@ -53,6 +53,7 @@ var DatabaseRole = generator.Interface{
 					Tags: map[string][]string{
 						"ddl": {"identifier"},
 					},
+					Required: true,
 				},
 				{
 					Name: "Comment",
@@ -109,6 +110,7 @@ var DatabaseRole = generator.Interface{
 					Tags: map[string][]string{
 						"ddl": {"identifier"},
 					},
+					Required: true,
 				},
 				{
 					Name: "Rename",
@@ -124,6 +126,7 @@ var DatabaseRole = generator.Interface{
 							Tags: map[string][]string{
 								"ddl": {"identifier"},
 							},
+							Required: true,
 						},
 					},
 					Validations: []*generator.Validation{
@@ -148,6 +151,7 @@ var DatabaseRole = generator.Interface{
 								"ddl": {"parameter", "single_quotes"},
 								"sql": {"COMMENT"},
 							},
+							Required: true,
 						},
 					},
 				},
@@ -166,6 +170,7 @@ var DatabaseRole = generator.Interface{
 								"ddl": {"keyword"},
 								"sql": {"COMMENT"},
 							},
+							Required: true,
 						},
 					},
 					Validations: []*generator.Validation{
