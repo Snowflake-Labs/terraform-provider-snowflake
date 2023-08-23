@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"io"
+	"log"
 	"os"
 	"text/template"
 
@@ -14,6 +17,23 @@ func main() {
 	}
 
 	runAllTemplates(os.Stdout)
+
+	prefix := "database_role"
+	runTemplateAndSave(generateInterface, filenameFor(prefix, ""))
+	runTemplateAndSave(generateImplementation, filenameFor(prefix, "_impl"))
+	runTemplateAndSave(generateUnitTests, filenameFor(prefix, "_test"))
+	runTemplateAndSave(generateValidations, filenameFor(prefix, "_validations"))
+}
+
+func filenameFor(prefix string, part string) string {
+	suffix := "_gen.go"
+	return fmt.Sprintf("%s%s%s", prefix, part, suffix)
+}
+
+func runTemplateAndSave(genFunc func(io.Writer), fileName string) {
+	buffer := bytes.Buffer{}
+	genFunc(&buffer)
+	generator.WriteCodeToFile(&buffer, fileName)
 }
 
 func runAllTemplates(writer io.Writer) {
@@ -66,6 +86,6 @@ func generateValidations(writer io.Writer) {
 func printTo(writer io.Writer, template *template.Template, model any) {
 	err := template.Execute(writer, model)
 	if err != nil {
-		panic(err)
+		log.Panicln(err)
 	}
 }
