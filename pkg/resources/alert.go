@@ -384,7 +384,7 @@ func waitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjec
 		}
 		return nil, alert.State == sdk.AlertStateStarted
 	}
-	return retry(5, 10*time.Second, resumeAlert)
+	return helpers.Retry(5, 10*time.Second, resumeAlert)
 }
 
 func waitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
@@ -400,21 +400,5 @@ func waitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 		}
 		return nil, alert.State == sdk.AlertStateSuspended
 	}
-	return retry(5, 10*time.Second, suspendAlert)
-}
-
-func retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) error {
-	for i := 0; i < attempts; i++ {
-		err, done := f()
-		if err != nil {
-			return err
-		}
-		if done {
-			return nil
-		} else {
-			log.Printf("[INFO] operation not finished yet, retrying in %v seconds\n", sleepDuration.Seconds())
-			time.Sleep(sleepDuration)
-		}
-	}
-	return fmt.Errorf("giving up after %v attempts", attempts)
+	return helpers.Retry(5, 10*time.Second, suspendAlert)
 }
