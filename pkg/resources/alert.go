@@ -372,48 +372,49 @@ func DeleteAlert(d *schema.ResourceData, meta interface{}) error {
 }
 
 func waitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionResume}
-	// try to resume the alert, and verify that it was resumed.
-	// if it's not resumed then try again up until a maximum of 5 times
-	for i := 0; i < 5; i++ {
+	resumeAlert := func() (error, bool) {
+		opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionResume}
 		err := client.Alerts.Alter(ctx, id, &opts)
 		if err != nil {
-			return fmt.Errorf("error resuming alert %v err = %w", id.Name(), err)
+			return fmt.Errorf("error resuming alert %v err = %w", id.Name(), err), false
 		}
-
 		alert, err := client.Alerts.ShowByID(ctx, id)
 		if err != nil {
-			return err
+			return err, false
 		}
-		if alert.State == sdk.AlertStateStarted {
-			return nil
-		}
-		log.Println("[INFO] alert is not resumed yet, retrying in 10 seconds")
-		time.Sleep(10 * time.Second)
+		return nil, alert.State == sdk.AlertStateStarted
 	}
-	return fmt.Errorf("unable to resume alert %v after 5 attempts", id.Name())
+	return retry(5, 10*time.Second, resumeAlert)
 }
 
 func waitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionSuspend}
-
-	// try to suspend the alert, and verify that it was suspended.
-	// if it's not suspended then try again up until a maximum of 5 times
-	for i := 0; i < 5; i++ {
+	suspendAlert := func() (error, bool) {
+		opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionSuspend}
 		err := client.Alerts.Alter(ctx, id, &opts)
 		if err != nil {
-			return fmt.Errorf("error suspending alert %v err = %w", id.Name(), err)
+			return fmt.Errorf("error suspending alert %v err = %w", id.Name(), err), false
 		}
-
 		alert, err := client.Alerts.ShowByID(ctx, id)
+		if err != nil {
+			return err, false
+		}
+		return nil, alert.State == sdk.AlertStateSuspended
+	}
+	return retry(5, 10*time.Second, suspendAlert)
+}
+
+func retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) error {
+	for i := 0; i < attempts; i++ {
+		err, done := f()
 		if err != nil {
 			return err
 		}
-		if alert.State == sdk.AlertStateSuspended {
+		if done {
 			return nil
+		} else {
+			log.Printf("[INFO] operation not finished yet, retrying in %v seconds\n", sleepDuration.Seconds())
+			time.Sleep(sleepDuration)
 		}
-		fmt.Println("[INFO] alert is not suspended yet, retrying in 10 seconds")
-		time.Sleep(10 * time.Second)
 	}
-	return fmt.Errorf("unable to suspend alert %v after 5 attempts", id.Name())
+	return fmt.Errorf("giving up after %v attempts", attempts)
 }

@@ -105,7 +105,6 @@ func ReadAlerts(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return err
 	}
-	log.Printf("[DEBUG] list alerts: %v", listAlerts)
 	alerts := make([]map[string]any, 0, len(listAlerts))
 	for _, alert := range listAlerts {
 		alertMap := map[string]any{}
