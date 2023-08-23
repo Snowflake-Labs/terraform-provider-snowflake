@@ -38,7 +38,7 @@ var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
 type {{.DtoName}} struct {
 	{{- range .Fields}}
 		{{- if .ShouldBeInDto}}
-		{{.Name}} {{.KindDto}} {{if .Required}}// required{{end}}
+		{{.Name}} {{.DtoKind}} {{if .Required}}// required{{end}}
 		{{- end}}
 	{{- end}}
 }
@@ -87,7 +87,16 @@ func (r *{{.DtoName}}) toOpts() *{{.OptsName}} {
 			{{- end}}
 		{{- end}}
 	}
-	// TODO: for all struct fields: if != nil and if so, repeat
+	// TODO: add recursion with path
+	{{range .Fields}}
+		{{if .ShouldBeInDto}}
+			{{if .IsStruct}}
+			if r.{{.Name}} != nil {
+				opts.{{.Name}} = &{{.KindNoPtr}}{}
+			}
+			{{end}}
+		{{end}}
+	{{end}}
 	return opts
 }
 {{end}}

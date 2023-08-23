@@ -119,9 +119,9 @@ func (field *Field) ShouldBeInDto() bool {
 	return !slices.Contains(field.Tags["ddl"], "static")
 }
 
-func (field *Field) KindDto() string {
+func (field *Field) DtoKind() string {
 	if field.IsStruct() {
-		return field.DtoName()
+		return fmt.Sprintf("%sRequest", field.Kind)
 	} else {
 		return field.Kind
 	}
