@@ -7,6 +7,8 @@ package {{.}}
 `)
 
 var InterfaceTemplate, _ = template.New("interfaceTemplate").Parse(`
+import "context"
+
 type {{.Name}} interface {
 	{{- range .Operations}}
 		{{.Name}}(ctx context.Context, request *{{.DtoName}}) error
@@ -61,6 +63,8 @@ var (
 `)
 
 var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
+import "context"
+
 {{$impl := .NameLowerCased}}
 var _ {{.Name}} = (*{{$impl}})(nil)
 
@@ -88,6 +92,8 @@ var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 		{{template "VALIDATION_TEST" .}}
 	{{- end}}
 {{end}}
+
+import "testing"
 
 {{- range .Operations}}
 func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
