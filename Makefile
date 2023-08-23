@@ -91,3 +91,7 @@ generate-all-dto: ## Generate all DTOs for SDK interfaces
 
 generate-dto-%: ./pkg/sdk/%_dto.go ## Generate DTO for given SDK interface
 	go generate $<
+
+run-generator-poc:
+	go generate ./pkg/sdk/poc/example/*_def.go
+.PHONY: run-generator-poc

@@ -1,3 +1,5 @@
+//go:build exclude
+
 package main
 
 import (
@@ -6,24 +8,40 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"text/template"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/gen/example"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/gen/generator"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/example"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
 
+var definitionMapping = map[string]generator.Interface{
+	"database_role": example.DatabaseRole,
+}
+
 func main() {
-	for _, o := range example.DatabaseRole.Operations {
-		o.ObjectInterface = &example.DatabaseRole
+	fmt.Printf("Running generator on %s with args %#v\n", os.Getenv("GOFILE"), os.Args[1:])
+	fileWithoutSuffix, _ := strings.CutSuffix(os.Getenv("GOFILE"), "_def.go")
+	definition := getDefinition(fileWithoutSuffix)
+
+	for _, o := range definition.Operations {
+		o.ObjectInterface = &definition
 	}
 
 	runAllTemplates(os.Stdout)
 
-	prefix := "database_role"
-	runTemplateAndSave(generateInterface, filenameFor(prefix, ""))
-	runTemplateAndSave(generateImplementation, filenameFor(prefix, "_impl"))
-	runTemplateAndSave(generateUnitTests, filenameFor(prefix, "_test"))
-	runTemplateAndSave(generateValidations, filenameFor(prefix, "_validations"))
+	runTemplateAndSave(generateInterface, filenameFor(fileWithoutSuffix, ""))
+	runTemplateAndSave(generateImplementation, filenameFor(fileWithoutSuffix, "_impl"))
+	runTemplateAndSave(generateUnitTests, filenameFor(fileWithoutSuffix, "_test"))
+	runTemplateAndSave(generateValidations, filenameFor(fileWithoutSuffix, "_validations"))
+}
+
+func getDefinition(fileWithoutSuffix string) generator.Interface {
+	def, ok := definitionMapping[fileWithoutSuffix]
+	if !ok {
+		log.Panicf("Definition for key %s not found", os.Getenv("GOFILE"))
+	}
+	return def
 }
 
 func filenameFor(prefix string, part string) string {

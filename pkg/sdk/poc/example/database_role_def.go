@@ -1,6 +1,8 @@
 package example
 
-import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/gen/generator"
+import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+
+//go:generate go run ../main.go
 
 var DatabaseRole = generator.Interface{
 	Name:         "DatabaseRoles",
