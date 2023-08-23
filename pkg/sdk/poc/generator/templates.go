@@ -81,7 +81,11 @@ func (v *{{$impl}}) {{.Name}}(ctx context.Context, request *{{.DtoName}}) error 
 {{range .Operations}}
 func (r *{{.DtoName}}) toOpts() *{{.OptsName}} {
 	opts := &{{.OptsName}}{
-		// TODO: all non struct fields here
+		{{- range .Fields}}
+			{{- if .ShouldBeInDto}}
+			{{if .IsStruct}}{{else}}{{.Name}}: r.{{.Name}},{{end}}
+			{{- end}}
+		{{- end}}
 	}
 	// TODO: for all struct fields: if != nil and if so, repeat
 	return opts
