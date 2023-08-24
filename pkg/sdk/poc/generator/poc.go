@@ -88,8 +88,12 @@ func (field *Field) ShouldBeInDto() bool {
 	return !slices.Contains(field.Tags["ddl"], "static")
 }
 
+func (field *Field) IsRoot() bool {
+	return field.Parent == nil
+}
+
 func (field *Field) DtoKind() string {
-	if field.Parent == nil {
+	if field.IsRoot() {
 		withoutSuffix, _ := strings.CutSuffix(field.Kind, "Options")
 		return fmt.Sprintf("%sRequest", withoutSuffix)
 	} else if field.IsStruct() {

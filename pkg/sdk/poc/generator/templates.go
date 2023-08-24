@@ -25,7 +25,7 @@ type {{.OptsField.KindNoPtr}} struct {
 }
 `)
 
-// TODO: merge with template above?
+// TODO: merge with template above? (requires moving Doc to field)
 var StructTemplate, _ = template.New("structTemplate").Parse(`
 type {{.KindNoPtr}} struct {
 	{{- range .Fields}}
