@@ -15,23 +15,22 @@ import (
 )
 
 var definitionMapping = map[string]*generator.Interface{
-	"database_role": example.DatabaseRole,
+	"database_role_def.go": example.DatabaseRole,
 }
 
 func main() {
-	fmt.Printf("Running generator on %s with args %#v\n", os.Getenv("GOFILE"), os.Args[1:])
-	fileWithoutSuffix, _ := strings.CutSuffix(os.Getenv("GOFILE"), "_def.go")
-	definition := getDefinition(fileWithoutSuffix)
+	file := os.Getenv("GOFILE")
+	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
+	definition := getDefinition(file)
 
 	runAllTemplatesToStdOut(definition)
-
-	runAllTemplatesAndSave(definition, fileWithoutSuffix)
+	runAllTemplatesAndSave(definition, file)
 }
 
-func getDefinition(fileWithoutSuffix string) *generator.Interface {
-	def, ok := definitionMapping[fileWithoutSuffix]
+func getDefinition(file string) *generator.Interface {
+	def, ok := definitionMapping[file]
 	if !ok {
-		log.Panicf("Definition for key %s not found", os.Getenv("GOFILE"))
+		log.Panicf("Definition for key %s not found", file)
 	}
 	preprocessDefinition(def)
 	return def
@@ -64,7 +63,8 @@ func runAllTemplatesToStdOut(definition *generator.Interface) {
 	generator.GenerateIntegrationTests(writer, definition)
 }
 
-func runAllTemplatesAndSave(definition *generator.Interface, fileWithoutSuffix string) {
+func runAllTemplatesAndSave(definition *generator.Interface, file string) {
+	fileWithoutSuffix, _ := strings.CutSuffix(file, "_def.go")
 	runTemplateAndSave(definition, generator.GenerateInterface, filenameFor(fileWithoutSuffix, ""))
 	runTemplateAndSave(definition, generator.GenerateDtos, filenameFor(fileWithoutSuffix, "_dto"))
 	runTemplateAndSave(definition, generator.GenerateImplementation, filenameFor(fileWithoutSuffix, "_impl"))
