@@ -11,20 +11,21 @@ import "context"
 
 type {{.Name}} interface {
 	{{- range .Operations}}
-		{{.Name}}(ctx context.Context, request *{{.DtoName}}) error
+		{{.Name}}(ctx context.Context, request *{{.OptsField.DtoDecl}}) error
 	{{- end}}
 }
 `)
 
 var OptionsTemplate, _ = template.New("optionsTemplate").Parse(`
-// {{.OptsName}} is based on {{.Doc}}.
-type {{.OptsName}} struct {
-	{{- range .Fields}}
+// {{.OptsField.KindNoPtr}} is based on {{.Doc}}.
+type {{.OptsField.KindNoPtr}} struct {
+	{{- range .OptsField.Fields}}
 			{{.Name}} {{.Kind}} {{.TagsPrintable}}
 	{{- end}}
 }
 `)
 
+// TODO: merge with template above?
 var StructTemplate, _ = template.New("structTemplate").Parse(`
 type {{.KindNoPtr}} struct {
 	{{- range .Fields}}
@@ -33,9 +34,10 @@ type {{.KindNoPtr}} struct {
 }
 `)
 
+// TODO: add more nesting levels to this generation
 var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
 {{define "DTO_STRUCT"}}
-type {{.DtoName}} struct {
+type {{.DtoDecl}} struct {
 	{{- range .Fields}}
 		{{- if .ShouldBeInDto}}
 		{{.Name}} {{.DtoKind}} {{if .Required}}// required{{end}}
@@ -48,13 +50,13 @@ type {{.DtoName}} struct {
 
 var (
 	{{- range .Operations}}
-	_ optionsProvider[{{.OptsName}}] = new({{.DtoName}})
+	_ optionsProvider[{{.OptsField.KindNoPtr}}] = new({{.OptsField.DtoDecl}})
 	{{- end}}
 )
 
 {{- range .Operations}}
-	{{template "DTO_STRUCT" .}}
-	{{- range .Fields}}
+	{{template "DTO_STRUCT" .OptsField}}
+	{{- range .OptsField.Fields}}
 		{{if .IsStruct}}
 		{{template "DTO_STRUCT" .}}
 		{{end}}
@@ -90,15 +92,15 @@ type {{$impl}} struct {
 	client *Client
 }
 {{range .Operations}}
-func (v *{{$impl}}) {{.Name}}(ctx context.Context, request *{{.DtoName}}) error {
+func (v *{{$impl}}) {{.Name}}(ctx context.Context, request *{{.OptsField.DtoDecl}}) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 {{end}}
 
 {{range .Operations}}
-func (r *{{.DtoName}}) toOpts() *{{.OptsName}} {
-	opts := {{template "MAPPING" .}}
+func (r *{{.OptsField.DtoDecl}}) toOpts() *{{.OptsField.KindNoPtr}} {
+	opts := {{template "MAPPING" .OptsField}}
 	return opts
 }
 {{end}}
@@ -124,14 +126,14 @@ import "testing"
 func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 	id := random{{.ObjectInterface.IdentifierKind}}(t)
 
-	defaultOpts := func() *{{.OptsName}} {
-		return &{{.OptsName}}{
+	defaultOpts := func() *{{.OptsField.KindNoPtr}} {
+		return &{{.OptsField.KindNoPtr}}{
 			name: id,
 		}
 	}
 
 	// TODO: fill me
-	{{template "VALIDATIONS" .}}
+	{{template "VALIDATIONS" .OptsField}}
 }
 {{end}}
 `)
@@ -152,16 +154,16 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 
 var (
 {{- range .Operations}}
-	_ validatable = new({{.OptsName}})
+	_ validatable = new({{.OptsField.KindNoPtr}})
 {{- end}}
 )
 {{range .Operations}}
-func (opts *{{.OptsName}}) validate() error {
+func (opts *{{.OptsField.KindNoPtr}}) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
-	{{template "VALIDATIONS" .}}
+	{{template "VALIDATIONS" .OptsField}}
 	return errors.Join(errs...)
 }
 {{end}}

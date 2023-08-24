@@ -31,46 +31,14 @@ type Operation struct {
 	ObjectInterface *Interface
 	// Doc is the URL for the doc used to create given operation, e.g. https://docs.snowflake.com/en/sql-reference/sql/create-database-role
 	Doc string
-	// Fields defines opts used to create SQL for given operation
-	Fields []*Field
 	// Validations are top-level validations for given Opts
 	Validations []*Validation
-}
-
-// OptsName should create a name for opts in a form of OperationObjectOptions where:
-// - Operation is e.g. Create
-// - Object is e.g. DatabaseRole (singular)
-// which together makes CreateDatabaseRoleOptions
-func (o *Operation) OptsName() string {
-	return fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
-}
-
-// DtoName should create a name for dto used for interaction with SDK interface in a form of OperationObjectRequest where:
-// - Operation is e.g. Create
-// - Object is e.g. DatabaseRole (singular)
-// which together makes CreateDatabaseRoleRequest
-func (o *Operation) DtoName() string {
-	return fmt.Sprintf("%s%sRequest", o.Name, o.ObjectInterface.NameSingular)
-}
-
-// TODO: Try to fix with root level field
-func (o *Operation) KindNoPtr() string {
-	return o.OptsName()
-}
-
-// TODO: handle case where validations are on a deeper level (not the immediate one)
-func (o *Operation) AdditionalValidations() []*Field {
-	var fieldsWithValidations []*Field
-	for _, f := range o.Fields {
-		if len(f.Validations) > 0 {
-			fieldsWithValidations = append(fieldsWithValidations, f)
-		}
-	}
-	return fieldsWithValidations
+	// OptsField defines opts used to create SQL for given operation
+	OptsField *Field
 }
 
 type Field struct {
-	parent      *Field
+	Parent      *Field
 	Fields      []*Field
 	Validations []*Validation
 
@@ -116,19 +84,29 @@ func (field *Field) IsStruct() bool {
 	return len(field.Fields) > 0
 }
 
-func (field *Field) DtoName() string {
-	return fmt.Sprintf("%sRequest", field.KindNoPtr())
-}
-
 func (field *Field) ShouldBeInDto() bool {
 	return !slices.Contains(field.Tags["ddl"], "static")
 }
 
 func (field *Field) DtoKind() string {
-	if field.IsStruct() {
+	if field.Parent == nil {
+		withoutSuffix, _ := strings.CutSuffix(field.Kind, "Options")
+		return fmt.Sprintf("%sRequest", withoutSuffix)
+	} else if field.IsStruct() {
 		return fmt.Sprintf("%sRequest", field.Kind)
 	} else {
 		return field.Kind
+	}
+}
+
+func (field *Field) DtoDecl() string {
+	if field.Parent == nil {
+		withoutSuffix, _ := strings.CutSuffix(field.KindNoPtr(), "Options")
+		return fmt.Sprintf("%sRequest", withoutSuffix)
+	} else if field.IsStruct() {
+		return fmt.Sprintf("%sRequest", field.KindNoPtr())
+	} else {
+		return field.KindNoPtr()
 	}
 }
 

@@ -26,6 +26,9 @@ func main() {
 
 	for _, o := range definition.Operations {
 		o.ObjectInterface = &definition
+		o.OptsField.Name = fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
+		o.OptsField.Kind = fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
+		setParent(o.OptsField)
 	}
 
 	runAllTemplates(os.Stdout)
@@ -36,6 +39,13 @@ func main() {
 	runTemplateAndSave(generateUnitTests, filename(fileWithoutSuffix, "_gen", "_test.go"))
 	runTemplateAndSave(generateValidations, filenameFor(fileWithoutSuffix, "_validations"))
 	runTemplateAndSave(generateIntegrationTests, filename(fileWithoutSuffix, "_gen_integration", "_test.go"))
+}
+
+func setParent(field *generator.Field) {
+	for _, f := range field.Fields {
+		f.Parent = field
+		setParent(f)
+	}
 }
 
 func getDefinition(fileWithoutSuffix string) generator.Interface {
@@ -78,7 +88,7 @@ func generateInterface(writer io.Writer) {
 func generateOptionsStruct(writer io.Writer, operation *generator.Operation) {
 	printTo(writer, generator.OptionsTemplate, operation)
 
-	for _, f := range operation.Fields {
+	for _, f := range operation.OptsField.Fields {
 		if len(f.Fields) > 0 {
 			generateStruct(writer, f)
 		}
