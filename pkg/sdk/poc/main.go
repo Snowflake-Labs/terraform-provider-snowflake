@@ -15,7 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
 
-var definitionMapping = map[string]generator.Interface{
+var definitionMapping = map[string]*generator.Interface{
 	"database_role": example.DatabaseRole,
 }
 
@@ -25,20 +25,20 @@ func main() {
 	definition := getDefinition(fileWithoutSuffix)
 
 	for _, o := range definition.Operations {
-		o.ObjectInterface = &definition
+		o.ObjectInterface = definition
 		o.OptsField.Name = fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
 		o.OptsField.Kind = fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
 		setParent(o.OptsField)
 	}
 
-	runAllTemplates(os.Stdout)
+	runAllTemplates(os.Stdout, definition)
 
-	runTemplateAndSave(generateInterface, filenameFor(fileWithoutSuffix, ""))
-	runTemplateAndSave(generateDtos, filenameFor(fileWithoutSuffix, "_dto"))
-	runTemplateAndSave(generateImplementation, filenameFor(fileWithoutSuffix, "_impl"))
-	runTemplateAndSave(generateUnitTests, filename(fileWithoutSuffix, "_gen", "_test.go"))
-	runTemplateAndSave(generateValidations, filenameFor(fileWithoutSuffix, "_validations"))
-	runTemplateAndSave(generateIntegrationTests, filename(fileWithoutSuffix, "_gen_integration", "_test.go"))
+	runTemplateAndSave(definition, generateInterface, filenameFor(fileWithoutSuffix, ""))
+	runTemplateAndSave(definition, generateDtos, filenameFor(fileWithoutSuffix, "_dto"))
+	runTemplateAndSave(definition, generateImplementation, filenameFor(fileWithoutSuffix, "_impl"))
+	runTemplateAndSave(definition, generateUnitTests, filename(fileWithoutSuffix, "_gen", "_test.go"))
+	runTemplateAndSave(definition, generateValidations, filenameFor(fileWithoutSuffix, "_validations"))
+	runTemplateAndSave(definition, generateIntegrationTests, filename(fileWithoutSuffix, "_gen_integration", "_test.go"))
 }
 
 func setParent(field *generator.Field) {
@@ -48,7 +48,7 @@ func setParent(field *generator.Field) {
 	}
 }
 
-func getDefinition(fileWithoutSuffix string) generator.Interface {
+func getDefinition(fileWithoutSuffix string) *generator.Interface {
 	def, ok := definitionMapping[fileWithoutSuffix]
 	if !ok {
 		log.Panicf("Definition for key %s not found", os.Getenv("GOFILE"))
@@ -64,23 +64,23 @@ func filename(prefix string, part string, suffix string) string {
 	return fmt.Sprintf("%s%s%s", prefix, part, suffix)
 }
 
-func runTemplateAndSave(genFunc func(io.Writer), fileName string) {
+func runTemplateAndSave(def *generator.Interface, genFunc func(io.Writer, *generator.Interface), fileName string) {
 	buffer := bytes.Buffer{}
-	genFunc(&buffer)
+	genFunc(&buffer, def)
 	generator.WriteCodeToFile(&buffer, fileName)
 }
 
-func runAllTemplates(writer io.Writer) {
-	generateInterface(writer)
-	generateImplementation(writer)
-	generateUnitTests(writer)
-	generateValidations(writer)
+func runAllTemplates(writer io.Writer, def *generator.Interface) {
+	generateInterface(writer, def)
+	generateImplementation(writer, def)
+	generateUnitTests(writer, def)
+	generateValidations(writer, def)
 }
 
-func generateInterface(writer io.Writer) {
+func generateInterface(writer io.Writer, def *generator.Interface) {
 	generatePackageDirective(writer)
-	printTo(writer, generator.InterfaceTemplate, &example.DatabaseRole)
-	for _, o := range example.DatabaseRole.Operations {
+	printTo(writer, generator.InterfaceTemplate, def)
+	for _, o := range def.Operations {
 		generateOptionsStruct(writer, o)
 	}
 }
@@ -105,29 +105,29 @@ func generateStruct(writer io.Writer, field *generator.Field) {
 	}
 }
 
-func generateDtos(writer io.Writer) {
+func generateDtos(writer io.Writer, def *generator.Interface) {
 	generatePackageDirective(writer)
-	printTo(writer, generator.DtoTemplate, &example.DatabaseRole)
+	printTo(writer, generator.DtoTemplate, def)
 }
 
-func generateImplementation(writer io.Writer) {
+func generateImplementation(writer io.Writer, def *generator.Interface) {
 	generatePackageDirective(writer)
-	printTo(writer, generator.ImplementationTemplate, &example.DatabaseRole)
+	printTo(writer, generator.ImplementationTemplate, def)
 }
 
-func generateUnitTests(writer io.Writer) {
+func generateUnitTests(writer io.Writer, def *generator.Interface) {
 	generatePackageDirective(writer)
-	printTo(writer, generator.TestFuncTemplate, &example.DatabaseRole)
+	printTo(writer, generator.TestFuncTemplate, def)
 }
 
-func generateValidations(writer io.Writer) {
+func generateValidations(writer io.Writer, def *generator.Interface) {
 	generatePackageDirective(writer)
-	printTo(writer, generator.ValidationsImplTemplate, &example.DatabaseRole)
+	printTo(writer, generator.ValidationsImplTemplate, def)
 }
 
-func generateIntegrationTests(writer io.Writer) {
+func generateIntegrationTests(writer io.Writer, def *generator.Interface) {
 	generatePackageDirective(writer)
-	printTo(writer, generator.IntegrationTestsTemplate, &example.DatabaseRole)
+	printTo(writer, generator.IntegrationTestsTemplate, def)
 }
 
 func generatePackageDirective(writer io.Writer) {

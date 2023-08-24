@@ -31,8 +31,6 @@ type Operation struct {
 	ObjectInterface *Interface
 	// Doc is the URL for the doc used to create given operation, e.g. https://docs.snowflake.com/en/sql-reference/sql/create-database-role
 	Doc string
-	// Validations are top-level validations for given Opts
-	Validations []*Validation
 	// OptsField defines opts used to create SQL for given operation
 	OptsField *Field
 }

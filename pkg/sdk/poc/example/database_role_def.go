@@ -1,205 +1,58 @@
 package example
 
-import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 
 //go:generate go run ../main.go
 
 var _ = DatabaseRole
 
-var DatabaseRole = generator.Interface{
-	Name:           "DatabaseRoles",
-	NameSingular:   "DatabaseRole",
-	IdentifierKind: "DatabaseObjectIdentifier",
-	Operations: []*generator.Operation{
-		{
-			Name:            "Create",
-			ObjectInterface: nil,
-			Doc:             "https://docs.snowflake.com/en/sql-reference/sql/create-database-role",
-			OptsField: &generator.Field{
-				Name: "<should be updated programmatically>",
-				Kind: "<should be updated programmatically>",
-				Fields: []*generator.Field{
-					{
-						Name: "create",
-						Kind: "bool",
-						Tags: map[string][]string{
-							"ddl": {"static"},
-							"sql": {"CREATE"},
-						},
-					},
-					{
-						Name: "OrReplace",
-						Kind: "*bool",
-						Tags: map[string][]string{
-							"ddl": {"keyword"},
-							"sql": {"OR REPLACE"},
-						},
-					},
-					{
-						Name: "databaseRole",
-						Kind: "bool",
-						Tags: map[string][]string{
-							"ddl": {"static"},
-							"sql": {"DATABASE ROLE"},
-						},
-					},
-					{
-						Name: "IfNotExists",
-						Kind: "*bool",
-						Tags: map[string][]string{
-							"ddl": {"keyword"},
-							"sql": {"IF NOT EXISTS"},
-						},
-					},
-					{
-						Name: "name",
-						Kind: "DatabaseObjectIdentifier",
-						Tags: map[string][]string{
-							"ddl": {"identifier"},
-						},
-						Required: true,
-					},
-					{
-						Name: "Comment",
-						Kind: "*string",
-						Tags: map[string][]string{
-							"ddl": {"parameter", "single_quotes"},
-							"sql": {"COMMENT"},
-						},
-					},
-				},
-				Validations: []*generator.Validation{
-					{
-						Type:       generator.ValidIdentifier,
-						FieldNames: []string{"name"},
-					},
-					{
-						Type:       generator.ConflictingFields,
-						FieldNames: []string{"OrReplace", "IfNotExists"},
-					},
-				},
-			},
-		},
-		{
-			Name:            "Alter",
-			ObjectInterface: nil,
-			Doc:             "https://docs.snowflake.com/en/sql-reference/sql/alter-database-role",
-			OptsField: &generator.Field{
-				Name: "<should be updated programmatically>",
-				Kind: "<should be updated programmatically>",
-				Fields: []*generator.Field{
-					{
-						Name: "alter",
-						Kind: "bool",
-						Tags: map[string][]string{
-							"ddl": {"static"},
-							"sql": {"ALTER"},
-						},
-					},
-					{
-						Name: "databaseRole",
-						Kind: "bool",
-						Tags: map[string][]string{
-							"ddl": {"static"},
-							"sql": {"DATABASE ROLE"},
-						},
-					},
-					{
-						Name: "IfExists",
-						Kind: "*bool",
-						Tags: map[string][]string{
-							"ddl": {"keyword"},
-							"sql": {"IF EXISTS"},
-						},
-					},
-					{
-						Name: "name",
-						Kind: "DatabaseObjectIdentifier",
-						Tags: map[string][]string{
-							"ddl": {"identifier"},
-						},
-						Required: true,
-					},
-					{
-						Name: "Rename",
-						Kind: "*DatabaseRoleRename",
-						Tags: map[string][]string{
-							"ddl": {"list,no_parentheses"},
-							"sql": {"RENAME TO"},
-						},
-						Fields: []*generator.Field{
-							{
-								Name: "Name",
-								Kind: "DatabaseObjectIdentifier",
-								Tags: map[string][]string{
-									"ddl": {"identifier"},
-								},
-								Required: true,
-							},
-						},
-						Validations: []*generator.Validation{
-							{
-								Type:       generator.ValidIdentifier,
-								FieldNames: []string{"Name"},
-							},
-						},
-					},
-					{
-						Name: "Set",
-						Kind: "*DatabaseRoleSet",
-						Tags: map[string][]string{
-							"ddl": {"list,no_parentheses"},
-							"sql": {"SET"},
-						},
-						Fields: []*generator.Field{
-							{
-								Name: "Comment",
-								Kind: "string",
-								Tags: map[string][]string{
-									"ddl": {"parameter", "single_quotes"},
-									"sql": {"COMMENT"},
-								},
-								Required: true,
-							},
-						},
-					},
-					{
-						Name: "Unset",
-						Kind: "*DatabaseRoleUnset",
-						Tags: map[string][]string{
-							"ddl": {"list,no_parentheses"},
-							"sql": {"UNSET"},
-						},
-						Fields: []*generator.Field{
-							{
-								Name: "Comment",
-								Kind: "bool",
-								Tags: map[string][]string{
-									"ddl": {"keyword"},
-									"sql": {"COMMENT"},
-								},
-								Required: true,
-							},
-						},
-						Validations: []*generator.Validation{
-							{
-								Type:       generator.AtLeastOneValueSet,
-								FieldNames: []string{"Comment"},
-							},
-						},
-					},
-				},
-				Validations: []*generator.Validation{
-					{
-						Type:       generator.ValidIdentifier,
-						FieldNames: []string{"name"},
-					},
-					{
-						Type:       generator.ExactlyOneValueSet,
-						FieldNames: []string{"Rename", "Set", "Unset"},
-					},
-				},
-			},
-		},
+var DatabaseRole = g.NewInterface("DatabaseRoles", "DatabaseRole", "DatabaseObjectIdentifier").WithOperations(
+	[]*g.Operation{
+		g.NewOperation("Create", "https://docs.snowflake.com/en/sql-reference/sql/create-database-role").WithOptsField(
+			g.NewField("<should be updated programmatically>", "<should be updated programmatically>", nil).
+				WithFields([]*g.Field{
+					g.NewField("create", "bool", map[string][]string{"ddl": {"static"}, "sql": {"CREATE"}}),
+					g.NewField("OrReplace", "*bool", map[string][]string{"ddl": {"keyword"}, "sql": {"OR REPLACE"}}),
+					g.NewField("databaseRole", "bool", map[string][]string{"ddl": {"static"}, "sql": {"DATABASE ROLE"}}),
+					g.NewField("IfNotExists", "*bool", map[string][]string{"ddl": {"keyword"}, "sql": {"IF NOT EXISTS"}}),
+					g.NewField("name", "DatabaseObjectIdentifier", map[string][]string{"ddl": {"identifier"}}).WithRequired(true),
+					g.NewField("Comment", "*string", map[string][]string{"ddl": {"parameter", "single_quotes"}, "sql": {"COMMENT"}}),
+				}).
+				WithValidations([]*g.Validation{
+					g.NewValidation(g.ValidIdentifier, []string{"name"}),
+					g.NewValidation(g.ConflictingFields, []string{"OrReplace", "IfNotExists"}),
+				}),
+		),
+		g.NewOperation("Alter", "https://docs.snowflake.com/en/sql-reference/sql/alter-database-role").WithOptsField(
+			g.NewField("<should be updated programmatically>", "<should be updated programmatically>", nil).
+				WithFields([]*g.Field{
+					g.NewField("alter", "bool", map[string][]string{"ddl": {"static"}, "sql": {"ALTER"}}),
+					g.NewField("databaseRole", "bool", map[string][]string{"ddl": {"static"}, "sql": {"DATABASE ROLE"}}),
+					g.NewField("IfExists", "*bool", map[string][]string{"ddl": {"keyword"}, "sql": {"IF EXISTS"}}),
+					g.NewField("name", "DatabaseObjectIdentifier", map[string][]string{"ddl": {"identifier"}}).WithRequired(true),
+					g.NewField("Rename", "*DatabaseRoleRename", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"RENAME TO"}}).
+						WithFields([]*g.Field{
+							g.NewField("Name", "DatabaseObjectIdentifier", map[string][]string{"ddl": {"identifier"}}).WithRequired(true),
+						}).
+						WithValidations([]*g.Validation{
+							g.NewValidation(g.ValidIdentifier, []string{"Name"}),
+						}),
+					g.NewField("Set", "*DatabaseRoleSet", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"SET"}}).
+						WithFields([]*g.Field{
+							g.NewField("Comment", "string", map[string][]string{"ddl": {"parameter", "single_quotes"}, "sql": {"COMMENT"}}).WithRequired(true),
+						}),
+					g.NewField("Unset", "*DatabaseRoleUnset", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"UNSET"}}).
+						WithFields([]*g.Field{
+							g.NewField("Comment", "bool", map[string][]string{"ddl": {"keyword"}, "sql": {"COMMENT"}}).WithRequired(true),
+						}).
+						WithValidations([]*g.Validation{
+							g.NewValidation(g.AtLeastOneValueSet, []string{"Comment"}),
+						}),
+				}).
+				WithValidations([]*g.Validation{
+					g.NewValidation(g.ValidIdentifier, []string{"name"}),
+					g.NewValidation(g.ExactlyOneValueSet, []string{"Rename", "Set", "Unset"}),
+				}),
+		),
 	},
-}
+)
