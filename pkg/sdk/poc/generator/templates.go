@@ -116,8 +116,10 @@ var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 
 {{define "VALIDATIONS"}}
 	{{template "VALIDATION_TEST" .}}
-	{{- range .AdditionalValidations}}
-		{{template "VALIDATION_TEST" .}}
+	{{- range .Fields}}
+		{{if .HasAnyValidationInSubtree}}
+			{{template "VALIDATIONS" .}}
+		{{end}}
 	{{- end}}
 {{end}}
 

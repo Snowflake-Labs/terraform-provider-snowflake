@@ -46,16 +46,6 @@ type Field struct {
 	Required bool
 }
 
-func (field *Field) AdditionalValidations() []*Field {
-	var fieldsWithValidations []*Field
-	for _, f := range field.Fields {
-		if len(f.Validations) > 0 {
-			fieldsWithValidations = append(fieldsWithValidations, f)
-		}
-	}
-	return fieldsWithValidations
-}
-
 func (field *Field) HasAnyValidationInSubtree() bool {
 	if len(field.Validations) > 0 {
 		return true
