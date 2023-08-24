@@ -19,6 +19,7 @@ type Interface struct {
 	IdentifierKind string
 }
 
+// NameLowerCased returns interface name starting with a lower case letter
 func (i *Interface) NameLowerCased() string {
 	return startingWithLowerCase(i.Name)
 }
@@ -35,17 +36,26 @@ type Operation struct {
 	OptsField *Field
 }
 
+// Field defines properties of a single field or struct (by defining Fields)
 type Field struct {
-	Parent      *Field
-	Fields      []*Field
+	// Parent allows to traverse fields hierarchy more easily, nil for root
+	Parent *Field
+	// Fields defines children, use for struct fields
+	Fields []*Field
+	// Validations defines validations on given field level (e.g. oneOf for children)
 	Validations []*Validation
 
-	Name     string
-	Kind     string
-	Tags     map[string][]string
+	// Name is how field is called in parent struct
+	Name string
+	// Kind is fields type (e.g. string, *bool)
+	Kind string
+	// Tags should contain ddl and sql tags used for SQL generation
+	Tags map[string][]string
+	// Required is used to mark fields which are essential (it's used e.g. for DTO builders generation)
 	Required bool
 }
 
+// HasAnyValidationInSubtree checks if any validations are present from current field level downwards
 func (field *Field) HasAnyValidationInSubtree() bool {
 	if len(field.Validations) > 0 {
 		return true
@@ -58,6 +68,7 @@ func (field *Field) HasAnyValidationInSubtree() bool {
 	return false
 }
 
+// TagsPrintable defines how tags are printed in options structs, it ensures the same order of tags for every field
 func (field *Field) TagsPrintable() string {
 	var tagNames = []string{"ddl", "sql"}
 	var tagParts []string
@@ -70,27 +81,29 @@ func (field *Field) TagsPrintable() string {
 	return fmt.Sprintf("`%s`", strings.Join(tagParts, " "))
 }
 
+// KindNoPtr return field's Kind but without pointer
 func (field *Field) KindNoPtr() string {
 	kindWithoutPtr, _ := strings.CutPrefix(field.Kind, "*")
 	return kindWithoutPtr
 }
 
-func (field *Field) NameLowerCased() string {
-	return startingWithLowerCase(field.Name)
-}
-
+// IsStruct checks if field is a struct
 func (field *Field) IsStruct() bool {
 	return len(field.Fields) > 0
 }
 
+// ShouldBeInDto checks if field is not some static SQL field which should not be interacted with by SDK user
+// TODO: this is a very naive implementation, consider fixing it with DSL builder connection
 func (field *Field) ShouldBeInDto() bool {
 	return !slices.Contains(field.Tags["ddl"], "static")
 }
 
+// IsRoot checks if field is at the top of field hierarchy, basically it is true for Option structs
 func (field *Field) IsRoot() bool {
 	return field.Parent == nil
 }
 
+// Path returns the way through the tree to the top, with dot separator (e.g. .SomeField.SomeChild)
 func (field *Field) Path() string {
 	if field.IsRoot() {
 		return ""
@@ -99,6 +112,7 @@ func (field *Field) Path() string {
 	}
 }
 
+// DtoKind returns what should be fields kind in generated DTO, because it may differ from Kind
 func (field *Field) DtoKind() string {
 	if field.IsRoot() {
 		withoutSuffix, _ := strings.CutSuffix(field.Kind, "Options")
@@ -110,6 +124,7 @@ func (field *Field) DtoKind() string {
 	}
 }
 
+// DtoDecl returns how struct should be declared in generated DTO (e.g. definition is without a pointer)
 func (field *Field) DtoDecl() string {
 	if field.Parent == nil {
 		withoutSuffix, _ := strings.CutSuffix(field.KindNoPtr(), "Options")
