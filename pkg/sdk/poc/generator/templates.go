@@ -152,6 +152,8 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 	{{- end}}
 {{end}}
 
+import "errors"
+
 var (
 {{- range .Operations}}
 	_ validatable = new({{.OptsField.KindNoPtr}})
