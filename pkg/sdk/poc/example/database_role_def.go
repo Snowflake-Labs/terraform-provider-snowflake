@@ -33,10 +33,6 @@ var DatabaseRole = g.NewInterface("DatabaseRoles", "DatabaseRole", "DatabaseObje
 					g.NewField("Rename", "*DatabaseRoleRename", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"RENAME TO"}}).
 						WithFields([]*g.Field{
 							g.NewField("Name", "DatabaseObjectIdentifier", map[string][]string{"ddl": {"identifier"}}).WithRequired(true),
-							g.NewField("NestedThirdLevel", "*NestedThirdLevel", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"NESTED"}}).
-								WithFields([]*g.Field{
-									g.NewField("Field", "DatabaseObjectIdentifier", map[string][]string{"ddl": {"identifier"}}).WithRequired(true),
-								}),
 						}).
 						WithValidations([]*g.Validation{
 							g.NewValidation(g.ValidIdentifier, []string{"Name"}),
@@ -44,6 +40,13 @@ var DatabaseRole = g.NewInterface("DatabaseRoles", "DatabaseRole", "DatabaseObje
 					g.NewField("Set", "*DatabaseRoleSet", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"SET"}}).
 						WithFields([]*g.Field{
 							g.NewField("Comment", "string", map[string][]string{"ddl": {"parameter", "single_quotes"}, "sql": {"COMMENT"}}).WithRequired(true),
+							g.NewField("NestedThirdLevel", "*NestedThirdLevel", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"NESTED"}}).
+								WithFields([]*g.Field{
+									g.NewField("Field", "DatabaseObjectIdentifier", map[string][]string{"ddl": {"identifier"}}).WithRequired(true),
+								}).
+								WithValidations([]*g.Validation{
+									g.NewValidation(g.AtLeastOneValueSet, []string{"Field"}),
+								}),
 						}),
 					g.NewField("Unset", "*DatabaseRoleUnset", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"UNSET"}}).
 						WithFields([]*g.Field{

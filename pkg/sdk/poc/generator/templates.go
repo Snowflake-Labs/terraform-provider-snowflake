@@ -149,10 +149,12 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 		errs = append(errs, {{.Error}})
 	}
 	{{- end}}
-	{{- range .AdditionalValidations}}
-	if valueSet(opts{{.Path}}) {
-		{{template "VALIDATIONS" .}}
-	}
+	{{- range .Fields}}
+		{{if .HasAnyValidationInSubtree}}
+			if valueSet(opts{{.Path}}) {
+				{{template "VALIDATIONS" .}}
+			}
+		{{end}}
 	{{- end}}
 {{end}}
 
@@ -176,13 +178,7 @@ func (opts *{{.OptsField.KindNoPtr}}) validate() error {
 `)
 
 var IntegrationTestsTemplate, _ = template.New("integrationTestsTemplate").Parse(`
-import (
-	"context"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-)
+import "testing"
 
 func TestInt_{{.Name}}(t *testing.T) {
 	// TODO: fill me

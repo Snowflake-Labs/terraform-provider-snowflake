@@ -46,7 +46,6 @@ type Field struct {
 	Required bool
 }
 
-// TODO: handle case where validations are on a deeper level (not the immediate one)
 func (field *Field) AdditionalValidations() []*Field {
 	var fieldsWithValidations []*Field
 	for _, f := range field.Fields {
@@ -55,6 +54,18 @@ func (field *Field) AdditionalValidations() []*Field {
 		}
 	}
 	return fieldsWithValidations
+}
+
+func (field *Field) HasAnyValidationInSubtree() bool {
+	if len(field.Validations) > 0 {
+		return true
+	}
+	for _, f := range field.Fields {
+		if f.HasAnyValidationInSubtree() {
+			return true
+		}
+	}
+	return false
 }
 
 func (field *Field) TagsPrintable() string {
