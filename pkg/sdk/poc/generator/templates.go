@@ -34,7 +34,6 @@ type {{.KindNoPtr}} struct {
 }
 `)
 
-// TODO: add more nesting levels to this generation
 var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
 {{define "DTO_STRUCT"}}
 type {{.DtoDecl}} struct {
@@ -44,6 +43,12 @@ type {{.DtoDecl}} struct {
 		{{- end}}
 	{{- end}}
 }
+
+{{- range .Fields}}
+	{{if .IsStruct}}
+	{{template "DTO_STRUCT" .}}
+	{{end}}
+{{- end}}
 {{end}}
 
 //go:generate go run ../../dto-builder-generator/main.go
@@ -56,11 +61,6 @@ var (
 
 {{- range .Operations}}
 	{{template "DTO_STRUCT" .OptsField}}
-	{{- range .OptsField.Fields}}
-		{{if .IsStruct}}
-		{{template "DTO_STRUCT" .}}
-		{{end}}
-	{{- end}}
 {{- end}}
 `)
 

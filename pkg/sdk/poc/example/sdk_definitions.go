@@ -9,7 +9,6 @@ import (
 
 // This file's only purpose is to make generated objects compile (or close to compile).
 // Later code will be generated inside sdk package, so the objects will be accessible there.
-// TODO: check if generating with package name + invoking format removes unnecessary qualifier
 
 type optionsProvider[T any] interface {
 	toOpts() *T

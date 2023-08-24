@@ -134,7 +134,6 @@ func generatePackageDirective(writer io.Writer) {
 	printTo(writer, generator.PackageTemplate, os.Getenv("GOPACKAGE"))
 }
 
-// TODO: get rid of any
 func printTo(writer io.Writer, template *template.Template, model any) {
 	err := template.Execute(writer, model)
 	if err != nil {

@@ -33,6 +33,10 @@ var DatabaseRole = g.NewInterface("DatabaseRoles", "DatabaseRole", "DatabaseObje
 					g.NewField("Rename", "*DatabaseRoleRename", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"RENAME TO"}}).
 						WithFields([]*g.Field{
 							g.NewField("Name", "DatabaseObjectIdentifier", map[string][]string{"ddl": {"identifier"}}).WithRequired(true),
+							g.NewField("NestedThirdLevel", "*NestedThirdLevel", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"NESTED"}}).
+								WithFields([]*g.Field{
+									g.NewField("Field", "DatabaseObjectIdentifier", map[string][]string{"ddl": {"identifier"}}).WithRequired(true),
+								}),
 						}).
 						WithValidations([]*g.Validation{
 							g.NewValidation(g.ValidIdentifier, []string{"Name"}),
