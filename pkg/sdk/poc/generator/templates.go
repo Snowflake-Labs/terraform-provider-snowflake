@@ -69,15 +69,15 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
 	&{{.KindNoPtr}}{
 		{{- range .Fields}}
 			{{- if .ShouldBeInDto}}
-			{{if .IsStruct}}{{else}}{{.Name}}: r.{{.Name}},{{end}}
+			{{if .IsStruct}}{{else}}{{.Name}}: r{{.Path}},{{end}}
 			{{- end}}
 		{{- end}}
 	}
 	{{range .Fields}}
 		{{if .ShouldBeInDto}}
 			{{if .IsStruct}}
-				if r.{{.Name}} != nil {
-					opts.{{.Name}} = {{template "MAPPING" .}}
+				if r{{.Path}} != nil {
+					opts{{.Path}} = {{template "MAPPING" .}}
 				}
 			{{end}}
 		{{end}}
@@ -108,8 +108,9 @@ func (r *{{.OptsField.DtoDecl}}) toOpts() *{{.OptsField.KindNoPtr}} {
 
 var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 {{define "VALIDATION_TEST"}}
+	{{$field := .}}
 	{{- range .Validations}}
-	{{.TodoComment}}
+	{{.TodoComment $field}}
 	{{- end}}
 {{end}}
 
@@ -131,6 +132,8 @@ func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 			name: id,
 		}
 	}
+	// TODO: remove me
+	_ = defaultOpts()
 
 	// TODO: fill me
 	{{template "VALIDATIONS" .OptsField}}
@@ -140,13 +143,14 @@ func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 
 var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 {{define "VALIDATIONS"}}
+	{{$field := .}}
 	{{- range .Validations}}
-	if {{.Condition}} {
+	if {{.Condition $field}} {
 		errs = append(errs, {{.Error}})
 	}
 	{{- end}}
 	{{- range .AdditionalValidations}}
-	if {{.NameLowerCased}} := {{.Name}}; valueSet({{.NameLowerCased}}) {
+	if valueSet(opts{{.Path}}) {
 		{{template "VALIDATIONS" .}}
 	}
 	{{- end}}

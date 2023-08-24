@@ -92,6 +92,14 @@ func (field *Field) IsRoot() bool {
 	return field.Parent == nil
 }
 
+func (field *Field) Path() string {
+	if field.IsRoot() {
+		return ""
+	} else {
+		return fmt.Sprintf("%s.%s", field.Parent.Path(), field.Name)
+	}
+}
+
 func (field *Field) DtoKind() string {
 	if field.IsRoot() {
 		withoutSuffix, _ := strings.CutSuffix(field.Kind, "Options")
@@ -143,17 +151,24 @@ func (v *Validation) paramsQuoted() []string {
 	return params
 }
 
-// TODO: handle path to field
-func (v *Validation) Condition() string {
+func (v *Validation) fieldsWithPath(field *Field) []string {
+	var params = make([]string, len(v.FieldNames))
+	for i, s := range v.FieldNames {
+		params[i] = fmt.Sprintf("opts%s.%s", field.Path(), s)
+	}
+	return params
+}
+
+func (v *Validation) Condition(field *Field) string {
 	switch v.Type {
 	case ValidIdentifier:
-		return fmt.Sprintf("!validObjectidentifier(%s)", strings.Join(v.FieldNames, ","))
+		return fmt.Sprintf("!validObjectidentifier(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ConflictingFields:
-		return fmt.Sprintf("everyValueSet(%s)", strings.Join(v.FieldNames, ","))
+		return fmt.Sprintf("everyValueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ExactlyOneValueSet:
-		return fmt.Sprintf("ok := exactlyOneValueSet(%s); !ok", strings.Join(v.FieldNames, ","))
+		return fmt.Sprintf("ok := exactlyOneValueSet(%s); !ok", strings.Join(v.fieldsWithPath(field), ","))
 	case AtLeastOneValueSet:
-		return fmt.Sprintf("ok := anyValueSet(%s); !ok", strings.Join(v.FieldNames, ","))
+		return fmt.Sprintf("ok := anyValueSet(%s); !ok", strings.Join(v.fieldsWithPath(field), ","))
 	}
 	panic("condition for validation unknown")
 }
@@ -172,16 +187,16 @@ func (v *Validation) Error() string {
 	panic("condition for validation unknown")
 }
 
-func (v *Validation) TodoComment() string {
+func (v *Validation) TodoComment(field *Field) string {
 	switch v.Type {
 	case ValidIdentifier:
-		return fmt.Sprintf("// TODO: validate valid identifier for %v", v.FieldNames)
+		return fmt.Sprintf("// TODO: validate valid identifier for %v", v.fieldsWithPath(field))
 	case ConflictingFields:
-		return fmt.Sprintf("// TODO: validate conflicting fields for %v", v.FieldNames)
+		return fmt.Sprintf("// TODO: validate conflicting fields for %v", v.fieldsWithPath(field))
 	case ExactlyOneValueSet:
-		return fmt.Sprintf("// TODO: validate exactly one field from %v is present", v.FieldNames)
+		return fmt.Sprintf("// TODO: validate exactly one field from %v is present", v.fieldsWithPath(field))
 	case AtLeastOneValueSet:
-		return fmt.Sprintf("// TODO: validate at least one of fields %v set", v.FieldNames)
+		return fmt.Sprintf("// TODO: validate at least one of fields %v set", v.fieldsWithPath(field))
 	}
 	panic("condition for validation unknown")
 }
