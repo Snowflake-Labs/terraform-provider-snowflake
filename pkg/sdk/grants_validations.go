@@ -273,7 +273,7 @@ func (opts *ShowGrantOptions) validate() error {
 		return nil
 	}
 	if !exactlyOneValueSet(opts.On, opts.To, opts.Of, opts.In) {
-		return fmt.Errorf("only one of on, to, of, or in can be set")
+		return fmt.Errorf("only one of [on, to, of, in] can be set")
 	}
 	return nil
 }

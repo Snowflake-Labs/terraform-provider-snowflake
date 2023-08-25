@@ -217,15 +217,31 @@ func (v *Grant) ID() ObjectIdentifier {
 func (row grantRow) convert() *Grant {
 	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
 	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
-	granteeName := NewAccountObjectIdentifier(row.GranteeName)
+	var granteeName AccountObjectIdentifier
 	if grantedTo == ObjectTypeShare {
 		parts := strings.Split(row.GranteeName, ".")
 		name := strings.Join(parts[1:], ".")
 		granteeName = NewAccountObjectIdentifier(name)
+	} else {
+		granteeName = NewAccountObjectIdentifier(row.GranteeName)
 	}
-	grant := &Grant{
+
+	var grantedOn ObjectType
+	// true for current grants
+	if row.GrantedOn != "" {
+		grantedOn = ObjectType(strings.ReplaceAll(row.GrantedOn, "_", " "))
+	}
+	var grantOn ObjectType
+	// true for future grants
+	if row.GrantOn != "" {
+		grantOn = ObjectType(strings.ReplaceAll(row.GrantOn, "_", " "))
+	}
+
+	return &Grant{
 		CreatedOn:   row.CreatedOn,
 		Privilege:   row.Privilege,
+		GrantedOn:   grantedOn,
+		GrantOn:     grantOn,
 		GrantedTo:   grantedTo,
 		GrantTo:     grantTo,
 		Name:        NewAccountObjectIdentifier(strings.Trim(row.Name, "\"")),
@@ -233,14 +249,4 @@ func (row grantRow) convert() *Grant {
 		GrantOption: row.GrantOption,
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
 	}
-
-	// true for current grants
-	if row.GrantedOn != "" {
-		grant.GrantedOn = ObjectType(strings.ReplaceAll(row.GrantedOn, "_", " "))
-	}
-	// true for future grants
-	if row.GrantOn != "" {
-		grant.GrantOn = ObjectType(strings.ReplaceAll(row.GrantOn, "_", " "))
-	}
-	return grant
 }
