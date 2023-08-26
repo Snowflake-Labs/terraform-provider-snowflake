@@ -111,11 +111,11 @@ func ReadSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	var p *sdk.Parameter
 	if onAccount {
-		p, err = client.Sessions.ShowAccountParameter(ctx, sdk.AccountParameter(parameter))
+		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(parameter))
 	} else {
 		user := d.Get("user").(string)
 		userId := sdk.NewAccountObjectIdentifier(user)
-		p, err = client.Sessions.ShowUserParameter(ctx, sdk.UserParameter(parameter), userId)
+		p, err = client.Parameters.ShowUserParameter(ctx, sdk.UserParameter(parameter), userId)
 	}
 	if err != nil {
 		return fmt.Errorf("error reading session parameter err = %w", err)
