@@ -42,7 +42,7 @@ var pipeGrantSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "The privilege to grant on the current or future pipe. To grant all privileges, use the value `ALL PRIVILEGES`",
-		Default:      "USAGE",
+		Default:      "OPERATE",
 		ValidateFunc: validation.StringInSlice(validPipePrivileges.ToList(), true),
 		ForceNew:     true,
 	},
@@ -88,12 +88,12 @@ var pipeGrantSchema = map[string]*schema.Schema{
 func PipeGrant() *TerraformGrantResource {
 	return &TerraformGrantResource{
 		Resource: &schema.Resource{
-			Create: CreatePipeGrant,
-			Read:   ReadPipeGrant,
-			Delete: DeletePipeGrant,
-			Update: UpdatePipeGrant,
-
-			Schema: pipeGrantSchema,
+			Create:             CreatePipeGrant,
+			Read:               ReadPipeGrant,
+			Delete:             DeletePipeGrant,
+			Update:             UpdatePipeGrant,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			Schema:             pipeGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)

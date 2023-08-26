@@ -64,7 +64,7 @@ resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
 	credit_quota    = 100
 	set_for_account = false
-  	notify_triggers = [40]
+ 	notify_triggers = [40]
 	suspend_trigger = 80
 	suspend_immediate_trigger = 90
 	warehouses      = [snowflake_warehouse.warehouse.id]
