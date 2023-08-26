@@ -1,12 +1,12 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -63,31 +63,32 @@ func Pipes() *schema.Resource {
 
 func ReadPipes(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentPipes, err := snowflake.ListPipes(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] pipes in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
+	extractedPipes, err := client.Pipes.Show(ctx, &sdk.PipeShowOptions{
+		In: &sdk.In{
+			Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
+		},
+	})
+	if err != nil {
 		log.Printf("[DEBUG] unable to parse pipes in schema (%s)", d.Id())
 		d.SetId("")
-		return nil
+		return err
 	}
 
-	pipes := []map[string]interface{}{}
-
-	for _, pipe := range currentPipes {
-		pipeMap := map[string]interface{}{}
+	pipes := make([]map[string]any, 0, len(extractedPipes))
+	for _, pipe := range extractedPipes {
+		pipeMap := map[string]any{}
 
 		pipeMap["name"] = pipe.Name
 		pipeMap["database"] = pipe.DatabaseName
 		pipeMap["schema"] = pipe.SchemaName
 		pipeMap["comment"] = pipe.Comment
-		pipeMap["integration"] = pipe.Integration.String
+		pipeMap["integration"] = pipe.Integration
 
 		pipes = append(pipes, pipeMap)
 	}

@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateAccountOptions)
+	_ validatable = new(AlterAccountOptions)
+	_ validatable = new(ShowAccountOptions)
+)
+
 type Accounts interface {
 	// Create creates an account.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error
@@ -33,8 +39,8 @@ var (
 )
 
 type CreateAccountOptions struct {
-	create  bool                    `ddl:"static" sql:"CREATE"`  //lint:ignore U1000 This is used in the ddl tag
-	account bool                    `ddl:"static" sql:"ACCOUNT"` //lint:ignore U1000 This is used in the ddl tag
+	create  bool                    `ddl:"static" sql:"CREATE"`
+	account bool                    `ddl:"static" sql:"ACCOUNT"`
 	name    AccountObjectIdentifier `ddl:"identifier"`
 
 	// Object properties
@@ -84,8 +90,8 @@ func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts 
 }
 
 type AlterAccountOptions struct {
-	alter   bool `ddl:"static" sql:"ALTER"`   //lint:ignore U1000 This is used in the ddl tag
-	account bool `ddl:"static" sql:"ACCOUNT"` //lint:ignore U1000 This is used in the ddl tag
+	alter   bool `ddl:"static" sql:"ALTER"`
+	account bool `ddl:"static" sql:"ACCOUNT"`
 
 	Set    *AccountSet    `ddl:"keyword" sql:"SET"`
 	Unset  *AccountUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
@@ -283,8 +289,8 @@ func (c *accounts) Alter(ctx context.Context, opts *AlterAccountOptions) error {
 }
 
 type ShowAccountOptions struct {
-	show     bool  `ddl:"static" sql:"SHOW"`                  //lint:ignore U1000 This is used in the ddl tag
-	accounts bool  `ddl:"static" sql:"ORGANIZATION ACCOUNTS"` //lint:ignore U1000 This is used in the ddl tag
+	show     bool  `ddl:"static" sql:"SHOW"`
+	accounts bool  `ddl:"static" sql:"ORGANIZATION ACCOUNTS"`
 	Like     *Like `ddl:"keyword" sql:"LIKE"`
 }
 

@@ -198,6 +198,10 @@ func (sb *StageBuilder) ChangeStorageIntegration(s string) string {
 	return fmt.Sprintf(`ALTER STAGE %v SET STORAGE_INTEGRATION = "%v"`, sb.QualifiedName(), s)
 }
 
+func (sb *StageBuilder) ChangeStorageIntegrationAndUrl(s string, url string) string {
+	return fmt.Sprintf(`ALTER STAGE %v SET STORAGE_INTEGRATION = "%v" URL = '%v'`, sb.QualifiedName(), s, url)
+}
+
 // ChangeEncryption returns the SQL query that will update the encryption on the stage.
 func (sb *StageBuilder) ChangeEncryption(e string) string {
 	return fmt.Sprintf(`ALTER STAGE %v SET ENCRYPTION = (%v)`, sb.QualifiedName(), e)

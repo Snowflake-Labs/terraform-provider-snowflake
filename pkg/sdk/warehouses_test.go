@@ -61,6 +61,45 @@ func TestWarehouseCreate(t *testing.T) {
 	})
 }
 
+func TestWarehouseSizing(t *testing.T) {
+	t.Run("Min bigger than Max", func(t *testing.T) {
+		opts := &CreateWarehouseOptions{
+			name:            NewAccountObjectIdentifier("mywarehouse"),
+			MaxClusterCount: Int(1),
+			MinClusterCount: Int(2),
+		}
+		err := opts.validate()
+		require.Error(t, err)
+	})
+	t.Run("Max equal Min", func(t *testing.T) {
+		opts := &CreateWarehouseOptions{
+			name:            NewAccountObjectIdentifier("mywarehouse"),
+			MaxClusterCount: Int(2),
+			MinClusterCount: Int(2),
+		}
+		lerr := opts.validate()
+		require.NoError(t, lerr)
+	})
+	t.Run("Max greater than Min", func(t *testing.T) {
+		opts := &CreateWarehouseOptions{
+			name:            NewAccountObjectIdentifier("mywarehouse"),
+			MaxClusterCount: Int(2),
+			MinClusterCount: Int(1),
+		}
+		err := opts.validate()
+		require.NoError(t, err)
+	})
+	t.Run("Allow large Min Max Values", func(t *testing.T) {
+		opts := &CreateWarehouseOptions{
+			name:            NewAccountObjectIdentifier("mywarehouse"),
+			MaxClusterCount: Int(100),
+			MinClusterCount: Int(11),
+		}
+		err := opts.validate()
+		require.NoError(t, err)
+	})
+}
+
 func TestWarehouseAlter(t *testing.T) {
 	t.Run("with set params", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{

@@ -30,17 +30,21 @@ type Client struct {
 	Alerts           Alerts
 	Comments         Comments
 	Databases        Databases
+	DatabaseRoles    DatabaseRoles
 	FailoverGroups   FailoverGroups
 	FileFormats      FileFormats
 	Grants           Grants
 	MaskingPolicies  MaskingPolicies
 	Parameters       Parameters
 	PasswordPolicies PasswordPolicies
+	Pipes            Pipes
 	ResourceMonitors ResourceMonitors
 	Roles            Roles
 	SessionPolicies  SessionPolicies
 	Sessions         Sessions
 	Shares           Shares
+	Users            Users
+	Schemas          Schemas
 	Warehouses       Warehouses
 }
 
@@ -123,19 +127,23 @@ func (c *Client) initialize() {
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
 	c.Databases = &databases{client: c}
+	c.DatabaseRoles = &databaseRoles{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
 	c.FileFormats = &fileFormats{client: c}
 	c.Grants = &grants{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
 	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
+	c.Pipes = &pipes{client: c}
 	c.ReplicationFunctions = &replicationFunctions{client: c}
 	c.ResourceMonitors = &resourceMonitors{client: c}
 	c.Roles = &roles{client: c}
 	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}
+	c.Schemas = &schemas{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
+	c.Users = &users{client: c}
 	c.Warehouses = &warehouses{client: c}
 }
 

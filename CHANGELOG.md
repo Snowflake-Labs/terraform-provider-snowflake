@@ -1,5 +1,50 @@
 # Changelog
 
+## [0.70.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.69.0...v0.70.0) (2023-08-21)
+
+
+### Features
+
+* Add database role to SDK ([#2009](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2009)) ([f5efc09](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f5efc09ea60bd2d66c65c9e07cb84321f95531f0))
+* Add missing database role operations to SDK ([#2014](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2014)) ([d2ea67d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d2ea67d7fee00b15e1222fe37efe8e7a1cddecb5))
+* Add Pipes to SDK ([#1968](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1968)) ([69a543f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/69a543fd729b64bdd8964dc34626dee83b3f96a7))
+* Generate constructor and builder methods for DTOs ([#2001](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2001)) ([79d9c9c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/79d9c9ce77e85dc9bd0889da30155cef0a74c293))
+* Schemas sdk v2 ([#1975](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1975)) ([289ad8a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/289ad8a8d61cf217d4548a65cf4843e416baa1da))
+* Use database role from SDK ([#2012](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2012)) ([294075a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/294075a4d145dc08071c11f067afaecb78fe8ef7))
+* Use pipes from SDK ([#2003](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2003)) ([079d47d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/079d47d22af22edba6c6c499409b264c4c5f5945))
+* Users sdk v2 ([#1945](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1945)) ([d644b63](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d644b63e673223b67f7092563a0bfc8c826fc38b))
+
+
+### Misc
+
+* Makefile cleanup ([#1995](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1995)) ([5c6fdbe](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5c6fdbe48aadab9d56bfb7cf5d5ea30ca5a2b356))
+* Remove lint ignore comments - test ([#2011](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2011)) ([8f81a42](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8f81a42544a668b03e0bb5d4d3199e6879d2f937))
+* Rename and reuse validatableOpts interface ([#2016](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2016)) ([4b42848](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4b428480a3f8fb9aa38da7a311f8a04f8d294882))
+
+
+### BugFixes
+
+* unable to alter stage if url and si have changes  ([#1982](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1982)) ([#1983](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1983)) ([3813aaa](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3813aaac52a3ec5186e285066e4db72c2046531a))
+
+## [0.69.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.2...v0.69.0) (2023-07-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* mark snowflake_user.login_name as non sensitive
+
+### Features
+
+* mark snowflake_user.login_name as non sensitive ([71c0a9c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/71c0a9c2897e07b2251680d619cbbcaeba5779b2))
+* resource monitor sdk v2 ([#1892](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1892)) ([707d723](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/707d7233bd867d60e13c8785d1c0adef558a5853))
+
+
+### BugFixes
+
+* 1969  change default privilege to OPERATE ([#1970](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1970)) ([e8721f0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e8721f07dd27ce7a903c8c4d2b19fee77ce72cdc))
+* add external table grant to snowflake_grant_privileges_to_role resource ([#1967](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1967)) ([8c84c4a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8c84c4a5f6eee7cf35b5ec2d77fac1c7fcee05df))
+* future ownership task grant ([#1954](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1954)) ([#1955](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1955)) ([81ac1a3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/81ac1a396bba713b0a5ec808d72b880d59e17d47))
+
 ## [0.68.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.68.1...v0.68.2) (2023-07-17)
 
 

@@ -70,7 +70,7 @@ func ReadFileFormats(d *schema.ResourceData, meta interface{}) error {
 
 	result, err := client.FileFormats.Show(ctx, &sdk.ShowFileFormatsOptions{
 		In: &sdk.In{
-			Schema: sdk.NewSchemaIdentifier(databaseName, schemaName),
+			Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
 		},
 	})
 	if err != nil {

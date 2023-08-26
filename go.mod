@@ -1,17 +1,20 @@
 module github.com/Snowflake-Labs/terraform-provider-snowflake
 
-go 1.19
+go 1.20
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Pallinder/go-randomdata v1.2.0
+	github.com/avast/retry-go v3.0.0+incompatible
+	github.com/brianvoe/gofakeit/v6 v6.21.0
 	github.com/buger/jsonparser v1.1.1
+	github.com/google/uuid v1.3.0
+	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/terraform-plugin-docs v0.14.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/rs/xid v1.4.0
+	github.com/pelletier/go-toml/v2 v2.0.7
 	github.com/snowflakedb/gosnowflake v1.6.19
 	github.com/stretchr/testify v1.8.2
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
@@ -35,7 +38,6 @@ require (
 	github.com/apache/thrift v0.16.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/aws/aws-sdk-go-v2 v1.17.6 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.17 // indirect
@@ -50,7 +52,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.30.6 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
-	github.com/brianvoe/gofakeit/v6 v6.21.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
@@ -63,7 +64,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v23.3.3+incompatible // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
@@ -72,7 +72,6 @@ require (
 	github.com/hashicorp/go-hclog v1.4.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.9 // indirect
-	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hc-install v0.5.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.16.2 // indirect
@@ -102,7 +101,6 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

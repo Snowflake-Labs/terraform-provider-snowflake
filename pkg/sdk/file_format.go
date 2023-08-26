@@ -4,11 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/exp/slices"
+)
+
+var (
+	_ validatable = new(CreateFileFormatOptions)
+	_ validatable = new(AlterFileFormatOptions)
+	_ validatable = new(DropFileFormatOptions)
+	_ validatable = new(ShowFileFormatsOptions)
+	_ validatable = new(describeFileFormatOptions)
 )
 
 type FileFormats interface {
@@ -318,10 +327,10 @@ type NullString struct {
 }
 
 type CreateFileFormatOptions struct {
-	create      bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
 	Temporary   *bool                  `ddl:"keyword" sql:"TEMPORARY"`
-	fileFormat  bool                   `ddl:"static" sql:"FILE FORMAT"` //lint:ignore U1000 This is used in the ddl tag
+	fileFormat  bool                   `ddl:"static" sql:"FILE FORMAT"`
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
 	Type        FileFormatType         `ddl:"parameter" sql:"TYPE"`
@@ -366,8 +375,8 @@ func (v *fileFormats) Create(ctx context.Context, id SchemaObjectIdentifier, opt
 }
 
 type AlterFileFormatOptions struct {
-	alter      bool                   `ddl:"static" sql:"ALTER"`       //lint:ignore U1000 This is used in the ddl tag
-	fileFormat bool                   `ddl:"static" sql:"FILE FORMAT"` //lint:ignore U1000 This is used in the ddl tag
+	alter      bool                   `ddl:"static" sql:"ALTER"`
+	fileFormat bool                   `ddl:"static" sql:"FILE FORMAT"`
 	IfExists   *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name       SchemaObjectIdentifier `ddl:"identifier"`
 
@@ -592,8 +601,8 @@ func (v *fileFormats) Alter(ctx context.Context, id SchemaObjectIdentifier, opts
 }
 
 type DropFileFormatOptions struct {
-	drop       bool                   `ddl:"static" sql:"DROP"`        //lint:ignore U1000 This is used in the ddl tag
-	fileFormat string                 `ddl:"static" sql:"FILE FORMAT"` //lint:ignore U1000 This is used in the ddl tag
+	drop       bool                   `ddl:"static" sql:"DROP"`
+	fileFormat string                 `ddl:"static" sql:"FILE FORMAT"`
 	IfExists   *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name       SchemaObjectIdentifier `ddl:"identifier"`
 }
@@ -619,8 +628,8 @@ func (v *fileFormats) Drop(ctx context.Context, id SchemaObjectIdentifier, opts 
 }
 
 type ShowFileFormatsOptions struct {
-	show        bool  `ddl:"static" sql:"SHOW"`         //lint:ignore U1000 This is used in the ddl tag
-	fileFormats bool  `ddl:"static" sql:"FILE FORMATS"` //lint:ignore U1000 This is used in the ddl tag
+	show        bool  `ddl:"static" sql:"SHOW"`
+	fileFormats bool  `ddl:"static" sql:"FILE FORMATS"`
 	Like        *Like `ddl:"keyword" sql:"LIKE"`
 	In          *In   `ddl:"keyword" sql:"IN"`
 }
@@ -655,14 +664,14 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 			Pattern: String(id.Name()),
 		},
 		In: &In{
-			Schema: NewSchemaIdentifier(id.databaseName, id.schemaName),
+			Schema: NewDatabaseObjectIdentifier(id.databaseName, id.schemaName),
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
 	for _, FileFormat := range fileFormats {
-		if FileFormat.ID() == id {
+		if reflect.DeepEqual(FileFormat.ID(), id) {
 			return FileFormat, nil
 		}
 	}
@@ -682,8 +691,8 @@ type FileFormatDetailsRow struct {
 }
 
 type describeFileFormatOptions struct {
-	describe   bool                   `ddl:"static" sql:"DESCRIBE"`    //lint:ignore U1000 This is used in the ddl tag
-	fileFormat string                 `ddl:"static" sql:"FILE FORMAT"` //lint:ignore U1000 This is used in the ddl tag
+	describe   bool                   `ddl:"static" sql:"DESCRIBE"`
+	fileFormat string                 `ddl:"static" sql:"FILE FORMAT"`
 	name       SchemaObjectIdentifier `ddl:"identifier"`
 }
 

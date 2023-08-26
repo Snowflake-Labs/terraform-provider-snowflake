@@ -13,6 +13,19 @@ import (
 // Compile-time proof of interface implementation.
 var _ FailoverGroups = (*failoverGroups)(nil)
 
+var (
+	_ validatable = new(CreateDatabaseOptions)
+	_ validatable = new(CreateSharedDatabaseOptions)
+	_ validatable = new(CreateSecondaryDatabaseOptions)
+	_ validatable = new(AlterDatabaseOptions)
+	_ validatable = new(AlterDatabaseReplicationOptions)
+	_ validatable = new(AlterDatabaseFailoverOptions)
+	_ validatable = new(DropDatabaseOptions)
+	_ validatable = new(undropDatabaseOptions)
+	_ validatable = new(ShowDatabasesOptions)
+	_ validatable = new(describeDatabaseOptions)
+)
+
 // FailoverGroups describes all the failover group related methods that the
 // Snowflake API supports.
 type FailoverGroups interface {
@@ -51,8 +64,8 @@ const (
 )
 
 type CreateFailoverGroupOptions struct {
-	create        bool                    `ddl:"static" sql:"CREATE"`         //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	create        bool                    `ddl:"static" sql:"CREATE"`
+	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"`
 	IfNotExists   *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
 
@@ -91,8 +104,8 @@ func (v *failoverGroups) Create(ctx context.Context, id AccountObjectIdentifier,
 }
 
 type CreateSecondaryReplicationGroupOptions struct {
-	create               bool                     `ddl:"static" sql:"CREATE"`         //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup        bool                     `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	create               bool                     `ddl:"static" sql:"CREATE"`
+	failoverGroup        bool                     `ddl:"static" sql:"FAILOVER GROUP"`
 	IfNotExists          *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                 AccountObjectIdentifier  `ddl:"identifier"`
 	primaryFailoverGroup ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
@@ -126,8 +139,8 @@ func (v *failoverGroups) CreateSecondaryReplicationGroup(ctx context.Context, id
 }
 
 type AlterSourceFailoverGroupOptions struct {
-	alter         bool                    `ddl:"static" sql:"ALTER"`          //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	alter         bool                    `ddl:"static" sql:"ALTER"`
+	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"`
 	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
 	NewName       AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
@@ -232,8 +245,8 @@ func (v *failoverGroups) AlterSource(ctx context.Context, id AccountObjectIdenti
 }
 
 type AlterTargetFailoverGroupOptions struct {
-	alter         bool                    `ddl:"static" sql:"ALTER"`          //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	alter         bool                    `ddl:"static" sql:"ALTER"`
+	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"`
 	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
 	Refresh       *bool                   `ddl:"keyword" sql:"REFRESH"`
@@ -269,8 +282,8 @@ func (v *failoverGroups) AlterTarget(ctx context.Context, id AccountObjectIdenti
 }
 
 type DropFailoverGroupOptions struct {
-	drop          bool                    `ddl:"static" sql:"DROP"`           //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	drop          bool                    `ddl:"static" sql:"DROP"`
+	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"`
 	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
 }
@@ -303,8 +316,8 @@ func (v *failoverGroups) Drop(ctx context.Context, id AccountObjectIdentifier, o
 
 // ShowFailoverGroupOptions represents the options for listing failover groups.
 type ShowFailoverGroupOptions struct {
-	show           bool              `ddl:"static" sql:"SHOW"`            //lint:ignore U1000 This is used in the ddl tag
-	failoverGroups bool              `ddl:"static" sql:"FAILOVER GROUPS"` //lint:ignore U1000 This is used in the ddl tag
+	show           bool              `ddl:"static" sql:"SHOW"`
+	failoverGroups bool              `ddl:"static" sql:"FAILOVER GROUPS"`
 	InAccount      AccountIdentifier `ddl:"identifier" sql:"IN ACCOUNT"`
 }
 
@@ -489,8 +502,8 @@ func (v *failoverGroups) ShowByID(ctx context.Context, id AccountObjectIdentifie
 }
 
 type showFailoverGroupDatabasesOptions struct {
-	show      bool                    `ddl:"static" sql:"SHOW"`      //lint:ignore U1000 This is used in the ddl tag
-	databases bool                    `ddl:"static" sql:"DATABASES"` //lint:ignore U1000 This is used in the ddl tag
+	show      bool                    `ddl:"static" sql:"SHOW"`
+	databases bool                    `ddl:"static" sql:"DATABASES"`
 	in        AccountObjectIdentifier `ddl:"identifier" sql:"IN FAILOVER GROUP"`
 }
 
@@ -527,8 +540,8 @@ func (v *failoverGroups) ShowDatabases(ctx context.Context, id AccountObjectIden
 }
 
 type showFailoverGroupSharesOptions struct {
-	show      bool                    `ddl:"static" sql:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
-	databases bool                    `ddl:"static" sql:"SHARES"` //lint:ignore U1000 This is used in the ddl tag
+	show      bool                    `ddl:"static" sql:"SHOW"`
+	databases bool                    `ddl:"static" sql:"SHARES"`
 	in        AccountObjectIdentifier `ddl:"identifier" sql:"IN FAILOVER GROUP"`
 }
 

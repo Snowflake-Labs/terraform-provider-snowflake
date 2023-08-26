@@ -2,7 +2,13 @@ package sdk
 
 import (
 	"errors"
+	"strconv"
 	"time"
+)
+
+var (
+	_ validatable = new(TimeTravel)
+	_ validatable = new(Clone)
 )
 
 type TimeTravel struct {
@@ -43,9 +49,9 @@ type LimitFrom struct {
 }
 
 type In struct {
-	Account  *bool                   `ddl:"keyword" sql:"ACCOUNT"`
-	Database AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
-	Schema   SchemaIdentifier        `ddl:"identifier" sql:"SCHEMA"`
+	Account  *bool                    `ddl:"keyword" sql:"ACCOUNT"`
+	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
+	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
 }
 
 type Like struct {
@@ -69,8 +75,14 @@ type StringProperty struct {
 }
 
 type IntProperty struct {
-	Value        int
-	DefaultValue int
+	Value        *int
+	DefaultValue *int
+	Description  string
+}
+
+type BoolProperty struct {
+	Value        bool
+	DefaultValue bool
 	Description  string
 }
 
@@ -96,9 +108,43 @@ func (row *propertyRow) toStringProperty() *StringProperty {
 }
 
 func (row *propertyRow) toIntProperty() *IntProperty {
+	var value *int
+	var defaultValue *int
+	v, err := strconv.Atoi(row.Value)
+	if err == nil {
+		value = &v
+	} else {
+		value = nil
+	}
+	dv, err := strconv.Atoi(row.DefaultValue)
+	if err == nil {
+		defaultValue = &dv
+	} else {
+		defaultValue = nil
+	}
 	return &IntProperty{
-		Value:        toInt(row.Value),
-		DefaultValue: toInt(row.DefaultValue),
+		Value:        value,
+		DefaultValue: defaultValue,
+		Description:  row.Description,
+	}
+}
+
+func (row *propertyRow) toBoolProperty() *BoolProperty {
+	var value bool
+	if row.Value != "" && row.Value != "null" {
+		value = toBool(row.Value)
+	} else {
+		value = false
+	}
+	var defaultValue bool
+	if row.DefaultValue != "" && row.Value != "null" {
+		defaultValue = toBool(row.DefaultValue)
+	} else {
+		defaultValue = false
+	}
+	return &BoolProperty{
+		Value:        value,
+		DefaultValue: defaultValue,
 		Description:  row.Description,
 	}
 }

@@ -4,6 +4,11 @@ import (
 	"context"
 )
 
+var (
+	_ validatable = new(SetCommentOptions)
+	_ validatable = new(SetColumnCommentOptions)
+)
+
 type Comments interface {
 	Set(ctx context.Context, opts *SetCommentOptions) error
 	SetColumn(ctx context.Context, opts *SetColumnCommentOptions) error
@@ -62,7 +67,7 @@ func (c *comments) SetColumn(ctx context.Context, opts *SetColumnCommentOptions)
 	}
 	// We only want to render table.column, not the fully qualified name with database and schema.
 	if v, ok := opts.Column.(TableColumnIdentifier); ok {
-		opts.Column = NewSchemaIdentifier(v.tableName, v.columnName)
+		opts.Column = NewDatabaseObjectIdentifier(v.tableName, v.columnName)
 	}
 	if err := opts.validate(); err != nil {
 		return err

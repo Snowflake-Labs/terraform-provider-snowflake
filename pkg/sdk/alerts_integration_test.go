@@ -206,11 +206,11 @@ func TestInt_AlertCreate(t *testing.T) {
 		condition := "SELECT 1"
 		action := `
 			select
-				case 
-					when true then 
-						1 
-					else 
-						2 
+				case
+					when true then
+						1
+					else
+						2
 				end
 		`
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
