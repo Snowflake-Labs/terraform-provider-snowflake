@@ -52,7 +52,7 @@ var schemaSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.",
 	},
-	"data_retention_time_in_days": {
+	"data_retention_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
 		Default:      1,
@@ -141,7 +141,7 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 		builder.Managed()
 	}
 
-	if v, ok := d.GetOk("data_retention_time_in_days"); ok {
+	if v, ok := d.GetOk("data_retention_days"); ok {
 		builder.WithDataRetentionDays(v.(int))
 	}
 
@@ -225,7 +225,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		if err := d.Set("data_retention_time_in_days", i); err != nil {
+		if err := d.Set("data_retention_days", i); err != nil {
 			return err
 		}
 	}
@@ -310,8 +310,8 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("data_retention_time_in_days") {
-		days := d.Get("data_retention_time_in_days")
+	if d.HasChange("data_retention_days") {
+		days := d.Get("data_retention_days")
 
 		q := builder.ChangeDataRetentionDays(days.(int))
 		if err := snowflake.Exec(db, q); err != nil {

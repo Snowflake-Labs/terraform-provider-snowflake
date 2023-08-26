@@ -29,13 +29,13 @@ resource "snowflake_database" "test2" {
 resource "snowflake_schema" "test2" {
   database            = snowflake_database.test2.name
   name                = "FOOBAR2"
-  data_retention_time_in_days = snowflake_database.test2.data_retention_time_in_days
+  data_retention_days = snowflake_database.test2.data_retention_time_in_days
 }
 
 resource "snowflake_schema" "test" {
   database            = snowflake_database.test.name
   name                = "FOOBAR"
-  data_retention_time_in_days = snowflake_database.test.data_retention_time_in_days
+  data_retention_days = snowflake_database.test.data_retention_time_in_days
 }
 
 resource "snowflake_tag" "this" {

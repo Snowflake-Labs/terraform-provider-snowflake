@@ -1,7 +1,7 @@
 resource "snowflake_schema" "schema" {
   database            = "database"
   name                = "schema"
-  data_retention_time_in_days = 1
+  data_retention_days = 1
 }
 
 resource "snowflake_sequence" "sequence" {

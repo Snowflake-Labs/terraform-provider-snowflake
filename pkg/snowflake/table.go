@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"sort"
 	"strconv"
@@ -305,7 +306,7 @@ type TableBuilder struct {
 	comment                 string
 	clusterBy               []string
 	primaryKey              PrimaryKey
-	dataRetentionTimeInDays int
+	dataRetentionTimeInDays *int
 	changeTracking          bool
 	tags                    []TagValue
 }
@@ -357,7 +358,7 @@ func (tb *TableBuilder) WithPrimaryKey(pk PrimaryKey) *TableBuilder {
 
 // WithDataRetentionTimeInDays sets the data retention time on the TableBuilder.
 func (tb *TableBuilder) WithDataRetentionTimeInDays(days int) *TableBuilder {
-	tb.dataRetentionTimeInDays = days
+	tb.dataRetentionTimeInDays = sdk.Int(days)
 	return tb
 }
 
@@ -507,7 +508,9 @@ func (tb *TableBuilder) Create() string {
 		q.WriteString(fmt.Sprintf(` CLUSTER BY LINEAR(%v)`, tb.GetClusterKeyString()))
 	}
 
-	q.WriteString(fmt.Sprintf(` DATA_RETENTION_TIME_IN_DAYS = %d`, tb.dataRetentionTimeInDays))
+	if tb.dataRetentionTimeInDays != nil {
+		q.WriteString(fmt.Sprintf(` DATA_RETENTION_TIME_IN_DAYS = %d`, *tb.dataRetentionTimeInDays))
+	}
 	q.WriteString(fmt.Sprintf(` CHANGE_TRACKING = %t`, tb.changeTracking))
 
 	if tb.tags != nil {

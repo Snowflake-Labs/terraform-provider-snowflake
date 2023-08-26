@@ -20,7 +20,7 @@ resource "snowflake_schema" "schema" {
 
   is_transient        = false
   is_managed          = false
-  data_retention_time_in_days = 1
+  data_retention_days = 1
 }
 ```
 
@@ -35,7 +35,7 @@ resource "snowflake_schema" "schema" {
 ### Optional
 
 - `comment` (String) Specifies a comment for the schema.
-- `data_retention_time_in_days` (Number) Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.
+- `data_retention_days` (Number) Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.
 - `is_managed` (Boolean) Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.
 - `is_transient` (Boolean) Specifies a schema as transient. Transient schemas do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))

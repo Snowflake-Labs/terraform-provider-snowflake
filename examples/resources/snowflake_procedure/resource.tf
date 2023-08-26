@@ -1,12 +1,12 @@
 resource "snowflake_database" "db" {
   name                = "MYDB"
-  data_retention_time_in_days = 1
+  data_retention_days = 1
 }
 
 resource "snowflake_schema" "schema" {
   database            = snowflake_database.db.name
   name                = "MYSCHEMA"
-  data_retention_time_in_days = 1
+  data_retention_days = 1
 }
 
 resource "snowflake_procedure" "proc" {

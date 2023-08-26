@@ -5,5 +5,5 @@ resource "snowflake_schema" "schema" {
 
   is_transient        = false
   is_managed          = false
-  data_retention_time_in_days = 1
+  data_retention_days = 1
 }
