@@ -4,10 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"reflect"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/exp/maps"
@@ -19,7 +16,7 @@ var sessionParameterSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		Description:  "Name of session parameter. Valid values are those in [session parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#session-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)), false),
+		ValidateFunc: validation.StringInSlice(maps.Keys(sdk.GetParameterDefaults(sdk.ParameterTypeSession)), false),
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -61,7 +58,7 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)[key]
+	parameterDefault := sdk.GetParameterDefaults(sdk.ParameterTypeSession)[key]
 	if parameterDefault.Validate != nil {
 		if err := parameterDefault.Validate(value); err != nil {
 			return err
@@ -82,14 +79,8 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 		if user == "" {
 			return fmt.Errorf("user is required if on_account is false")
 		}
-		// add quotes to value if it is a string
-		typeString := reflect.TypeOf("")
-		if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
-			value = fmt.Sprintf("'%s'", snowflake.EscapeString(value))
-		}
-		builder := snowflake.NewSessionParameter(key, value, db)
-		builder.SetUser(user)
-		err = builder.SetParameter()
+		userId := sdk.NewAccountObjectIdentifier(user)
+		err = client.Parameters.SetSessionParameterForUser(ctx, userId, parameter, value)
 		if err != nil {
 			return fmt.Errorf("error creating session parameter err = %w", err)
 		}
@@ -144,7 +135,7 @@ func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
 
 	var err error
 	if onAccount {
-		defaultParameter, err := client.Sessions.ShowAccountParameter(ctx, sdk.AccountParameter(key))
+		defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
 		if err != nil {
 			return err
 		}
@@ -158,16 +149,11 @@ func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
 		if user == "" {
 			return fmt.Errorf("user is required if on_account is false")
 		}
-		parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)[key]
+		userId := sdk.NewAccountObjectIdentifier(user)
+		parameterDefault := sdk.GetParameterDefaults(sdk.ParameterTypeSession)[key]
 		defaultValue := parameterDefault.DefaultValue
 		value := fmt.Sprintf("%v", defaultValue)
-		typeString := reflect.TypeOf("")
-		if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
-			value = fmt.Sprintf("'%s'", value)
-		}
-		builder := snowflake.NewSessionParameter(key, value, db)
-		builder.SetUser(user)
-		err = builder.SetParameter()
+		err = client.Parameters.SetSessionParameterForUser(ctx, userId, parameter, value)
 		if err != nil {
 			return fmt.Errorf("error deleting session parameter err = %w", err)
 		}

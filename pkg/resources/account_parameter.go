@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"golang.org/x/exp/maps"
@@ -18,7 +17,7 @@ var accountParameterSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		Description:  "Name of account parameter. Valid values are those in [account parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#account-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameterDefaults(snowflake.ParameterTypeAccount)), false),
+		ValidateFunc: validation.StringInSlice(maps.Keys(sdk.GetParameterDefaults(sdk.ParameterTypeAccount)), false),
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -50,7 +49,7 @@ func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	parameter := sdk.AccountParameter(key)
 
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)[key]
+	parameterDefault := sdk.GetParameterDefaults(sdk.ParameterTypeSession)[key]
 	if parameterDefault.Validate != nil {
 		if err := parameterDefault.Validate(value); err != nil {
 			return err
@@ -71,7 +70,7 @@ func ReadAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	parameterName := d.Id()
-	parameter, err := client.Sessions.ShowAccountParameter(ctx, sdk.AccountParameter(parameterName))
+	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(parameterName))
 	if err != nil {
 		return fmt.Errorf("error reading account parameter err = %w", err)
 	}
@@ -95,7 +94,7 @@ func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	parameter := sdk.AccountParameter(key)
 
-	defaultParameter, err := client.Sessions.ShowAccountParameter(ctx, sdk.AccountParameter(key))
+	defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
 	if err != nil {
 		return err
 	}

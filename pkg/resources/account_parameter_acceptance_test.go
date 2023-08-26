@@ -48,3 +48,19 @@ func TestAcc_AccountParameter_PREVENT_LOAD_FROM_INLINE_URL(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_AccountParameter_REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: accountParameterBasic("REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"),
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "true"),
+				),
+			},
+		},
+	})
+}

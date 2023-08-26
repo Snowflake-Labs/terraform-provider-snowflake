@@ -22,7 +22,7 @@ var objectParameterSchema = map[string]*schema.Schema{
 		Required:     true,
 		ForceNew:     true,
 		Description:  "Name of object parameter. Valid values are those in [object parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#object-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)), false),
+		ValidateFunc: validation.StringInSlice(maps.Keys(sdk.GetParameterDefaults(sdk.ParameterTypeObject)), false),
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -41,7 +41,7 @@ var objectParameterSchema = map[string]*schema.Schema{
 		ForceNew:     true,
 		Description:  "Type of object to which the parameter applies. Valid values are those in [object types](https://docs.snowflake.com/en/sql-reference/parameters.html#object-types). If no value is provided, then the resource will default to setting the object parameter at account level.",
 		RequiredWith: []string{"object_identifier"},
-		ValidateFunc: validation.StringInSlice(snowflake.GetParameterObjectTypeSetAsStrings(), false),
+		ValidateFunc: validation.StringInSlice(sdk.GetParameterObjectTypeSetAsStrings(), false),
 	},
 	"object_identifier": {
 		Type:         schema.TypeList,
@@ -97,7 +97,7 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	parameter := sdk.ObjectParameter(key)
 
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)[key]
+	parameterDefault := sdk.GetParameterDefaults(sdk.ParameterTypeObject)[key]
 	if parameterDefault.Validate != nil {
 		if err := parameterDefault.Validate(value); err != nil {
 			return err
@@ -118,9 +118,9 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		builder.WithObjectIdentifier(fullyQualifierObjectIdentifier)
 	}
 
-	var objectType snowflake.ObjectType
+	var objectType sdk.ObjectType
 	if v, ok := d.GetOk("object_type"); ok {
-		objectType = snowflake.ObjectType(v.(string))
+		objectType = sdk.ObjectType(v.(string))
 		if ok := slices.Contains(parameterDefault.AllowedObjectTypes, objectType); !ok {
 			return fmt.Errorf("object_type '%v' is not allowed for parameter '%v'", objectType, key)
 		}
@@ -176,7 +176,7 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	if parts[1] == "" {
 		p, err = snowflake.ShowAccountParameter(db, key)
 	} else {
-		objectType := snowflake.ObjectType(parts[1])
+		objectType := sdk.ObjectType(parts[1])
 		objectIdentifier := parts[2]
 		p, err = snowflake.ShowObjectParameter(db, key, objectType, objectIdentifier)
 	}
@@ -198,7 +198,7 @@ func UpdateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)[key]
+	parameterDefault := sdk.GetParameterDefaults(sdk.ParameterTypeObject)[key]
 	defaultValue := parameterDefault.DefaultValue
 	value := fmt.Sprintf("%v", defaultValue)
 
@@ -221,9 +221,9 @@ func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		builder.WithObjectIdentifier(fullyQualifierObjectIdentifier)
 	}
 
-	var objectType snowflake.ObjectType
+	var objectType sdk.ObjectType
 	if v, ok := d.GetOk("object_type"); ok {
-		objectType = snowflake.ObjectType(v.(string))
+		objectType = sdk.ObjectType(v.(string))
 		if ok := slices.Contains(parameterDefault.AllowedObjectTypes, objectType); !ok {
 			return fmt.Errorf("object_type '%v' is not allowed for parameter '%v'", objectType, key)
 		}

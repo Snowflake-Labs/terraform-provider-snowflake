@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -100,7 +101,7 @@ var functionGrantSchema = map[string]*schema.Schema{
 		Default:     "",
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 		},
 	},
 }

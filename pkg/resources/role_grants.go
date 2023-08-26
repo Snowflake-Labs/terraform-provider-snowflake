@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"strings"
 
@@ -31,7 +32,7 @@ func RoleGrants() *schema.Resource {
 				ForceNew:    true,
 				ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 					additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-					return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+					return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 				},
 			},
 			"roles": {

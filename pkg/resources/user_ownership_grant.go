@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"strings"
 
@@ -24,7 +25,7 @@ var userOwnershipGrantSchema = map[string]*schema.Schema{
 		Description: "The name of the role to grant ownership. Please ensure that the role that terraform is using is granted access.",
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 		},
 	},
 	"current_grants": {
@@ -44,7 +45,7 @@ var userOwnershipGrantSchema = map[string]*schema.Schema{
 		Default:     "ACCOUNTADMIN",
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 		},
 	},
 }

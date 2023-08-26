@@ -1,9 +1,8 @@
-package snowflake_test
+package sdk_test
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
 
 // TODO write a test for a candidate that's not castable to a string.
@@ -26,7 +25,7 @@ func TestValidateIdentifier(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.candidate, func(t *testing.T) {
-			_, errs := snowflake.ValidateIdentifier(tc.candidate, []string{})
+			_, errs := sdk.ValidateIdentifier(tc.candidate, []string{})
 			actual := len(errs) == 0
 
 			if actual == tc.valid {

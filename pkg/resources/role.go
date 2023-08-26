@@ -3,6 +3,7 @@ package resources
 import (
 	"database/sql"
 	"errors"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -15,7 +16,7 @@ var roleSchema = map[string]*schema.Schema{
 		Required: true,
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 		},
 	},
 	"comment": {

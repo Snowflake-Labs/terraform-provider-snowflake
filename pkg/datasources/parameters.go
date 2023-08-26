@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"strings"
 
@@ -34,7 +35,7 @@ var parametersSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Description:  "If parameter_type is set to \"OBJECT\" then object_type is the type of object to display object parameters for. Valid values are any object supported by the IN clause of the [SHOW PARAMETERS](https://docs.snowflake.com/en/sql-reference/sql/show-parameters.html#parameters) statement, including: WAREHOUSE | DATABASE | SCHEMA | TASK | TABLE",
-		ValidateFunc: validation.StringInSlice(snowflake.GetParameterObjectTypeSetAsStrings(), false),
+		ValidateFunc: validation.StringInSlice(sdk.GetParameterObjectTypeSetAsStrings(), false),
 	},
 	"object_name": {
 		Type:        schema.TypeString,
@@ -110,7 +111,7 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 		parameters, err = snowflake.ListSessionParameters(db, pattern, user)
 	case snowflake.ParameterTypeObject:
 		oType := d.Get("object_type").(string)
-		objectType := snowflake.ObjectType(oType)
+		objectType := sdk.ObjectType(oType)
 		objectName := d.Get("object_name").(string)
 		parameters, err = snowflake.ListObjectParameters(db, objectType, objectName, pattern)
 	}
