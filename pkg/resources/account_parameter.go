@@ -101,7 +101,7 @@ func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	defaultValue := defaultParameter.Default
 	err = client.Parameters.SetAccountParameter(ctx, parameter, defaultValue)
 	if err != nil {
-		return fmt.Errorf("error creating account parameter err = %w", err)
+		return fmt.Errorf("error resetting account parameter err = %w", err)
 	}
 
 	d.SetId("")

@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"

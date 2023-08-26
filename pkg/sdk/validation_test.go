@@ -1,8 +1,9 @@
 package sdk_test
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 // TODO write a test for a candidate that's not castable to a string.

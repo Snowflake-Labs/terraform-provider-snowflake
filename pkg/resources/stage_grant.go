@@ -3,8 +3,9 @@ package resources
 import (
 	"context"
 	"errors"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
