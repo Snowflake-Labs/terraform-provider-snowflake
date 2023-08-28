@@ -142,7 +142,7 @@ func (c *Client) initialize() {
 	c.Shares = &shares{client: c}
 	c.Schemas = &schemas{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
-	c.Tables = &tables{client: c}
+	//c.Tables = &tables{client: c}
 	c.Users = &users{client: c}
 	c.Warehouses = &warehouses{client: c}
 }
