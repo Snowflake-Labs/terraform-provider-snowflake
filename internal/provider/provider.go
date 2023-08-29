@@ -41,24 +41,28 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"account": schema.StringAttribute{
-				Description:         "An account identifier which uniquely identifies a Snowflake account within your organization, as well as throughout the global network of Snowflake-supported cloud platforms and cloud regions. Can also be set with the SNOWFLAKE_ACCOUNT environment variable. Required unless using profile.",
-				MarkdownDescription: "An [account identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier) which uniquely identifies a Snowflake account within your organization, as well as throughout the global network of Snowflake-supported cloud platforms and cloud regions. Can also be set with the `SNOWFLAKE_ACCOUNT` environment variable. Required unless using `profile`.",
+				Description: "",
+				//Description:         "An account identifier which uniquely identifies a Snowflake account within your organization, as well as throughout the global network of Snowflake-supported cloud platforms and cloud regions. Can also be set with the SNOWFLAKE_ACCOUNT environment variable. Required unless using profile.",
+				//MarkdownDescription: "An [account identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier) which uniquely identifies a Snowflake account within your organization, as well as throughout the global network of Snowflake-supported cloud platforms and cloud regions. Can also be set with the `SNOWFLAKE_ACCOUNT` environment variable. Required unless using `profile`.",
 				Optional:            true,
 			},
 			"user": schema.StringAttribute{
-				Description:         "The username to use to authenticate with Snowflake. Can also be set with the SNOWFLAKE_USER environment variable. Required unless using profile.",
-				MarkdownDescription: "The username to use to authenticate with Snowflake. Can also be set with the `SNOWFLAKE_USER` environment variable. Required unless using `profile`.",
+				Description: "",
+				//Description:         "The username to use to authenticate with Snowflake. Can also be set with the SNOWFLAKE_USER environment variable. Required unless using profile.",
+				//MarkdownDescription: "The username to use to authenticate with Snowflake. Can also be set with the `SNOWFLAKE_USER` environment variable. Required unless using `profile`.",
 				Optional:            true,
 			},
 			"password": schema.StringAttribute{
-				Description:         "The password to use to authenticate with Snowflake. Can also be set with the SNOWFLAKE_PASSWORD environment variable. Required unless using profile.",
-				MarkdownDescription: "The password to use to authenticate with Snowflake. Can also be set with the `SNOWFLAKE_PASSWORD` environment variable. Required unless using `profile`.",
+				Description: "",
+				//Description:         "The password to use to authenticate with Snowflake. Can also be set with the SNOWFLAKE_PASSWORD environment variable. Required unless using profile.",
+				//MarkdownDescription: "The password to use to authenticate with Snowflake. Can also be set with the `SNOWFLAKE_PASSWORD` environment variable. Required unless using `profile`.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"role": schema.StringAttribute{
-				Description:         "The role to use to authenticate with Snowflake. Can also be set with the SNOWFLAKE_ROLE environment variable. Required unless using profile.",
-				MarkdownDescription: "The role to use to authenticate with Snowflake. Can also be set with the `SNOWFLAKE_ROLE` environment variable. Required unless using `profile`.",
+				Description: "",
+				//Description:         "The role to use to authenticate with Snowflake. Can also be set with the SNOWFLAKE_ROLE environment variable. Required unless using profile.",
+				//MarkdownDescription: "The role to use to authenticate with Snowflake. Can also be set with the `SNOWFLAKE_ROLE` environment variable. Required unless using `profile`.",
 				Optional:            true,
 			},
 		},

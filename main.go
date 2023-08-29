@@ -8,16 +8,14 @@ import (
 	"flag"
 	"log"
 
+	oldprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/internal/oldprovider/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/internal/provider"
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-    "github.com/hashicorp/terraform-plugin-go/tfprotov6"
-    "github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
-    "github.com/hashicorp/terraform-plugin-mux/tf5to6server"
-    "github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 
-    "example.com/terraform-provider-examplecloud/internal/provider"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -44,27 +42,38 @@ func main() {
 	flag.Parse()
 
 	upgradedSdkServer, err := tf5to6server.UpgradeServer(
-        ctx,
-        provider.Provider().GRPCProvider, // Example terraform-plugin-sdk provider
-    )
-
-    if err != nil {
-        log.Fatal(err)
-    }
-
-
-	opts := providerserver.ServeOpts{
-		// TODO: Update this string with the published name of your provider.
-		Address: "registry.terraform.io/Snowflake-Labs/snowflake",
-		Debug:   debug,
-	}
-	tflog.Info(ctx, "Hello!")
-
-	defer func() {
-		tflog.Info(ctx, "Goodbye!")
-	}()
-	err := providerserver.Serve(ctx, provider.New(version), opts)
+		ctx,
+		oldprovider.Provider().GRPCProvider, // Example terraform-plugin-sdk provider
+	)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal(err)
+	}
+
+	providers := []func() tfprotov6.ProviderServer{
+		providerserver.NewProtocol6(provider.New(version)()), // Example terraform-plugin-framework provider
+		func() tfprotov6.ProviderServer {
+            return upgradedSdkServer
+        },
+	}
+
+	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var serveOpts []tf6server.ServeOpt
+
+	if debug {
+		serveOpts = append(serveOpts, tf6server.WithManagedDebug())
+	}
+
+	err = tf6server.Serve(
+		"registry.terraform.io/Snowflake-Labs/snowflake",
+		muxServer.ProviderServer,
+		serveOpts...,
+	)
+
+	if err != nil {
+		log.Fatal(err)
 	}
 }
