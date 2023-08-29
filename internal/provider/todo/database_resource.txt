@@ -1,0 +1,615 @@
+package provider
+/*
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/sdk"
+	"github.com/gookit/color"
+	"github.com/gookit/goutil/dump"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+)
+
+// Ensure provider defined types fully satisfy framework interfaces.
+var (
+	_ resource.Resource                = &DatabaseResource{}
+	_ resource.ResourceWithImportState = &DatabaseResource{}
+)
+
+func NewDatabaseResource() resource.Resource {
+	return &DatabaseResource{}
+}
+
+// DatabaseResource defines the resource implementation.
+type DatabaseResource struct {
+	client              *sdk.Client
+	sensitiveAttributes []string
+}
+
+// DatabaseResourceModel describes the resource data model.
+type DatabaseResourceModel struct {
+	OrReplace                  types.Bool                `tfsdk:"or_replace"`
+	Transient                  types.Bool                `tfsdk:"transient"`
+	Name                       types.String              `tfsdk:"name"`
+	FromAShare                 *DatabaseFromAShareModel  `tfsdk:"from_a_share"`
+	AsReplicaOf                *DatabaseAsReplicaOfModel `tfsdk:"as_replica_of"`
+	Clone                      *DatabaseCloneModel       `tfsdk:"clone"`
+	DataRetentionTimeInDays    types.Int64               `tfsdk:"data_retention_time_in_days"`
+	MaxDataExtensionTimeInDays types.Int64               `tfsdk:"max_data_extension_time_in_days"`
+	DefaultDDLCollation        types.String              `tfsdk:"default_ddl_collation"`
+	Tags                       []TagModel                `tfsdk:"tags"`
+	Comment                    types.String              `tfsdk:"comment"`
+	Id                         types.String              `tfsdk:"id"`
+	/*CreatedOn                  types.String              `tfsdk:"created_on"`
+	IsDefault                  types.Bool                `tfsdk:"is_default"`
+	IsCurrent                  types.Bool                `tfsdk:"is_current"`
+	Origin                     types.String              `tfsdk:"origin"`
+	Owner                      types.String              `tfsdk:"owner"`*/
+}
+
+type DatabaseFromAShareModel struct {
+	ProviderAccount types.String `tfsdk:"provider_account"`
+	ShareName       types.String `tfsdk:"share_name"`
+}
+
+type DatabaseAsReplicaOfModel struct {
+	ProviderAccount types.String `tfsdk:"provider_account"`
+	ShareName       types.String `tfsdk:"share_name"`
+}
+
+type DatabaseReplicationModel struct {
+	Accounts           types.List `tfsdk:"accounts"`
+	IgnoreEditionCheck types.Bool `tfsdk:"ignore_edition_check"`
+}
+
+type DatabaseFailoverModel struct {
+	Accounts types.List `tfsdk:"accounts"`
+	Primary  types.Bool `tfsdk:"primary"`
+}
+
+type DatabaseCloneModel struct {
+	At             types.Object `tfsdk:"at"`
+	Before         types.Object `tfsdk:"before"`
+	SourceDatabase types.String `tfsdk:"source_database"`
+}
+
+type TimeTravelModel struct {
+	Timestamp types.String `tfsdk:"timestamp"`
+	Offset    types.Int64  `tfsdk:"offset"`
+	Statement types.String `tfsdk:"statement"`
+}
+
+type TagModel struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
+}
+
+func (r *DatabaseResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_database"
+}
+
+func (r *DatabaseResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Description: "Snowflake database resource",
+		Blocks: map[string]schema.Block{
+			"from_a_share": schema.SingleNestedBlock{
+				Description: "Specifies to create a shared database.",
+				Attributes: map[string]schema.Attribute{
+					"provider_account": schema.StringAttribute{
+						Description: "Specifies the identifier for the provider account",
+						Optional:    true,
+					},
+					"share_name": schema.StringAttribute{
+						Description: "Specifies the name of the share",
+						Optional:    true,
+					},
+				},
+			},
+			"as_replica_of": schema.SingleNestedBlock{
+				Description: "Specifies to create a replica of the specified source database.",
+				Attributes: map[string]schema.Attribute{
+					"provider_account": schema.StringAttribute{
+						Description: "Specifies the identifier for the provider account",
+						Optional:    true,
+					},
+					"primary_db_name": schema.StringAttribute{
+						Description: "Specifies the name of the primary database",
+						Optional:    true,
+					},
+				},
+			},
+			/*"database_replication": schema.SingleNestedBlock{
+				Description: "Specifies the replication configuration for the database.",
+				Attributes: map[string]schema.Attribute{
+					"accounts": schema.ListAttribute{
+						Description: "Specifies the list of accounts to replicate the database to.",
+						Optional:    true,
+						ElementType: basetypes.StringType{},
+					},
+					"ignore_edition_check": schema.BoolAttribute{
+						Description: "Specifies whether to ignore the edition check when replicating the database.",
+						Optional:    true,
+					},
+				},
+			},
+			"database_failover": schema.SingleNestedBlock{
+				Description: "Specifies the failover configuration for the database.",
+				Attributes: map[string]schema.Attribute{
+					"accounts": schema.ListAttribute{
+						Description: "Specifies the list of accounts to failover the database to.",
+						Optional:    true,
+						ElementType: basetypes.StringType{},
+					},
+					"primary": schema.BoolAttribute{
+						Description: "Specifies whether the database is the primary database.",
+						Optional:    true,
+					},
+				},
+			},*/
+			"clone": schema.SingleNestedBlock{
+				Description: "Specifies to create a clone of the specified source database.",
+				Blocks: map[string]schema.Block{
+					"at": schema.SingleNestedBlock{
+						Description: "Specifies the point in time of the source database to clone.",
+						Attributes: map[string]schema.Attribute{
+							"timestamp": schema.StringAttribute{
+								Description: "Specifies the timestamp of the source database to clone",
+								Optional:    true,
+							},
+							"offset": schema.Int64Attribute{
+								Description: "Specifies the offset of the source database to clone",
+								Optional:    true,
+							},
+							"statement": schema.StringAttribute{
+								Description: "Specifies the statement of the source database to clone",
+								Optional:    true,
+							},
+						},
+					},
+					"before": schema.SingleNestedBlock{
+						Description: "Specifies the point in time of the source database to clone.",
+						Attributes: map[string]schema.Attribute{
+							"timestamp": schema.StringAttribute{
+								Description: "Specifies the timestamp of the source database to clone",
+								Optional:    true,
+							},
+							"offset": schema.Int64Attribute{
+								Description: "Specifies the offset of the source database to clone",
+								Optional:    true,
+							},
+							"statement": schema.StringAttribute{
+								Description: "Specifies the statement of the source database to clone",
+								Optional:    true,
+							},
+						},
+					},
+				},
+				Attributes: map[string]schema.Attribute{
+					"source_database": schema.StringAttribute{
+						Description: "Specifies the identifier for the database to clone",
+						Optional:    true,
+					},
+				},
+				Validators: []validator.Object{
+					// objectvalidator.ConflictsWith
+				},
+			},
+		},
+		Attributes: map[string]schema.Attribute{
+			"or_replace": schema.BoolAttribute{
+				Description: "Specifies whether to replace the database if it exists and has the same name as the one being created",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"transient": schema.BoolAttribute{
+				Description: "Specifies whether the database is transient",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{},
+			},
+			"name": schema.StringAttribute{
+				Description: "Specifies the object identifier for the database",
+				Required:    true,
+			},
+			"data_retention_time_in_days": schema.Int64Attribute{
+				Description: "Specifies the number of days to retain data in the Fail-safe storage for the database",
+				Optional:    true,
+				Validators: []validator.Int64{
+					int64validator.Between(0, 90),
+				},
+			},
+			"max_data_extension_time_in_days": schema.Int64Attribute{
+				Description: "Specifies the maximum number of days to extend the Fail-safe storage retention period for the database",
+				Optional:    true,
+				// Sensitive:   r.sensitive,
+				Validators: []validator.Int64{
+					int64validator.Between(0, 90),
+				},
+			},
+			"default_ddl_collation": schema.StringAttribute{
+				Description: "Specifies the default collation for the database",
+				Optional:    true,
+			},
+			"comment": schema.StringAttribute{
+				Description: "Specifies the comment for the database",
+				Optional:    true,
+			},
+			"tags": schema.SetNestedAttribute{
+				Description: "Specifies the tags for the database",
+				Optional:    true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Description: "The fully qualified name of the tag",
+							Required:    true,
+						},
+						"value": schema.StringAttribute{
+							Description: "The value of the tag",
+							Required:    true,
+						},
+					},
+				},
+			},
+			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "ID of the database",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			/* todo: add these
+			"created_on": schema.StringAttribute{
+				Computed:    true,
+				Description: "Specifies the date and time when the database was created",
+			},
+			"is_default": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Specifies whether the database is the default database",
+			},
+			"is_current": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Specifies whether the database is the current database",
+			},
+			"origin": schema.StringAttribute{
+				Computed:    true,
+				Description: "Specifies the origin of the database",
+			},
+			"owner": schema.StringAttribute{
+				Computed:    true,
+				Description: "Specifies the owner of the database",
+			},*/
+		},
+	}
+}
+
+func (r *DatabaseResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*sdk.Client)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *sdk.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.client = client
+}
+
+type tfOperation string
+
+const (
+	CreateOperation tfOperation = "CREATE"
+	ReadOperation   tfOperation = "READ"
+	UpdateOperation tfOperation = "UPDATE"
+	DeleteOperation tfOperation = "DELETE"
+)
+
+func formatSQLPreview(operation tfOperation, resourceName string, id string, commands []string) string {
+	var c color.Color
+	switch operation {
+	case CreateOperation:
+		c = color.HiGreen
+	case ReadOperation:
+		c = color.HiBlue
+	case UpdateOperation:
+		c = color.HiYellow
+	case DeleteOperation:
+		c = color.HiRed
+	}
+	var sb strings.Builder
+	sb.WriteString(c.Sprintf("\n[ %s %s %s ]", operation, resourceName, id))
+	for _, command := range commands {
+		sb.WriteString(c.Sprintf("\n  - %s", command))
+	}
+	sb.WriteString("\n")
+	return sb.String()
+}
+
+func (r *DatabaseResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	resp.Plan = req.Plan // we aren't really modifying the plan, just logging what the plan intends to do
+	//tflog.Debug(ctx, dump.Format(req.Plan))
+	var data *DatabaseResourceModel
+
+	// true for DELETE
+	if req.Plan.Raw.IsNull() {
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		_, logs, _ := r.delete(ctx, data, true)
+		tflog.Debug(ctx, formatSQLPreview(DeleteOperation, "snowflake_database", data.Id.ValueString(), logs))
+		return
+	}
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// true for CREATE
+	if data.Id.IsUnknown() {
+		_, logs, _ := r.create(ctx, data, true)
+		tflog.Debug(ctx, formatSQLPreview(CreateOperation, "snowflake_database", "", logs))
+		return
+	}
+
+	// what to do for READ or UPDATE?
+
+	_, logs, _ := r.update(ctx,data,true)
+	resp.Plan = req.Plan
+
+}
+
+func (r *DatabaseResource) create(ctx context.Context, data *DatabaseResourceModel, dryRun bool) (*DatabaseResourceModel, []string, diag.Diagnostics) {
+	client := r.client
+	if dryRun {
+		client = sdk.NewDryRunClient()
+	}
+
+	name := data.Name.ValueString()
+
+	id := sdk.NewAccountObjectIdentifier(name)
+	opts := &sdk.CreateDatabaseOptions{
+		OrReplace: data.OrReplace.ValueBoolPointer(),
+		Transient: data.Transient.ValueBoolPointer(),
+	}
+	err := client.Databases.Create(ctx, id, opts)
+	diags := diag.Diagnostics{}
+	if err != nil {
+		diags.AddError("Client Error", fmt.Sprintf("Unable to create database, got error: %s", err))
+	}
+
+	/*
+
+		if !data.Clone.SourceDatabase.IsNull() {
+			var cloneModel CloneModel
+			resp.Diagnostics.Append(data.Clone.As(ctx, cloneModel, basetypes.ObjectAsOptions{
+				UnhandledNullAsEmpty: true,
+			})...)
+			opts.Clone = &sdk.Clone{
+				SourceObject: sdk.NewAccountObjectIdentifier(data.Clone.SourceDatabase.ValueStringPointer()),
+			}
+			if !cloneModel.At.IsNull() {
+				opts.Clone.At = &sdk.TimeTravel{}
+				var atModel TimeTravelModel
+				resp.Diagnostics.Append(cloneModel.At.As(ctx, atModel, basetypes.ObjectAsOptions{
+					UnhandledNullAsEmpty: true,
+				})...)
+				if !atModel.Timestamp.IsNull() {
+					// TODO: parse time
+					//opts.Clone.At.Timestamp = time.Parse(atModel.Timestamp.ValueString())
+				}
+				if !atModel.Offset.IsNull() {
+					opts.Clone.At.Offset = sdk.Int(int(atModel.Offset.ValueInt64()))
+				}
+				if !atModel.Statement.IsNull() {
+					opts.Clone.At.Statement = atModel.Statement.ValueStringPointer()
+				}
+			}
+			if !cloneModel.Before.IsNull() {
+				opts.Clone.Before = &sdk.TimeTravel{}
+				var beforeModel TimeTravelModel
+				resp.Diagnostics.Append(cloneModel.Before.As(ctx, beforeModel, basetypes.ObjectAsOptions{
+					UnhandledNullAsEmpty: true,
+				})...)
+				if !beforeModel.Timestamp.IsNull() {
+					// TODO: parse time
+					//opts.Clone.Before.Timestamp = time.Parse(beforeModel.Timestamp.ValueString())
+				}
+				if !beforeModel.Offset.IsNull() {
+					opts.Clone.Before.Offset = sdk.Int(int(beforeModel.Offset.ValueInt64()))
+				}
+				if !beforeModel.Statement.IsNull() {
+					opts.Clone.Before.Statement = beforeModel.Statement.ValueStringPointer()
+				}
+			}
+		}
+
+		if !data.DataRetentionTimeInDays.IsNull() {
+			opts.DataRetentionTimeInDays = sdk.Int(int(data.DataRetentionTimeInDays.ValueInt64()))
+		}
+		if !data.MaxDataExtensionTimeInDays.IsNull() {
+			opts.MaxDataExtensionTimeInDays = sdk.Int(int(data.MaxDataExtensionTimeInDays.ValueInt64()))
+		}
+		if !data.DefaultDDLCollation.IsNull() {
+			// todo: add default ddl collation to opts
+			//opts. = data.DefaultDDLCollation.ValueStringPointer()
+		}
+		if !data.Comment.IsNull() {
+			opts.Comment = data.Comment.ValueStringPointer()
+		}
+		if len(data.Tags) > 0 {
+			tagAssociations := make([]sdk.TagAssociation, len(data.Tags))
+			for _, tag := range data.Tags {
+				tagAssociations = append(tagAssociations, sdk.TagAssociation{
+					Name:  sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(tag.Name.ValueString()),
+					Value: tag.Value.ValueString(),
+				})
+			}
+			opts.Tag = tagAssociations
+		}
+
+		err := r.client.Databases.Create(ctx, id, opts)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create database, got error: %s", err))
+		}
+
+	*/
+
+	data.Id = types.StringValue(id.FullyQualifiedName())
+
+	logs := client.TraceLogs()
+	return data, logs, diags
+}
+
+func (r *DatabaseResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data *DatabaseResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	data, _, diags := r.create(ctx, data, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+}
+
+func (r *DatabaseResource) read(ctx context.Context, data *DatabaseResourceModel, dryRun bool) (*DatabaseResourceModel, []string, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+	client := r.client
+	if dryRun {
+		client = sdk.NewDryRunClient()
+	}
+
+	id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(data.Id.ValueString())
+	database, err := client.Databases.ShowByID(ctx, id)
+	if err != nil {
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read database, got error: %s", err))
+		return data, nil, diags
+	}
+
+	if dryRun {
+		return data, client.TraceLogs(), diags
+	}
+
+	data.Transient = types.BoolValue(database.Transient)
+	data.Name = types.StringValue(database.Name)
+	// data.FromAShare
+	// data.AsReplicaOf
+	// data.Clone
+	data.DataRetentionTimeInDays = types.Int64Value(int64(database.RetentionTime))
+	// data.MaxDataExtensionTimeInDays = types.Int64Value(int64(database.MaxExtensionTime))
+	// data.DefaultDDLCollation
+	// data.Tags
+	data.Comment = types.StringValue(database.Comment)
+	data.Id = types.StringValue(database.ID().FullyQualifiedName())
+	/*data.CreatedOn = types.StringValue(database.CreatedOn.String())
+	data.IsDefault = types.BoolValue(database.IsDefault)
+	data.IsCurrent = types.BoolValue(database.IsCurrent)
+	data.Origin = types.StringValue(database.Origin)
+	data.Owner = types.StringValue(database.Owner)*/
+
+
+}
+
+func (r *DatabaseResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data *DatabaseResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data, _, diags := r.read(ctx, data, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Save updated data into Terraform state
+	diags.Append(resp.State.Set(ctx, &data)...)
+
+}
+
+func (r *DatabaseResource) update(ctx context.Context, data *DatabaseResourceModel, )
+func (r *DatabaseResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state DatabaseResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(state.Id.ValueString())
+	opts := &sdk.AlterDatabaseOptions{}
+	r.client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
+
+	})
+	if !plan.Transient.Equal(state.Transient){
+
+	}
+	var data *DatabaseResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *DatabaseResource) delete(ctx context.Context, data *DatabaseResourceModel, dryRun bool) (*DatabaseResourceModel, []string, diag.Diagnostics) {
+	client := r.client
+	if dryRun {
+		client = sdk.NewDryRunClient()
+	}
+
+	diags := diag.Diagnostics{}
+	id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(data.Id.ValueString())
+	err := client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)})
+	if err != nil {
+		diags.AddError("Client Error", fmt.Sprintf("Unable to delete database, got error: %s", err))
+		return data, nil, diags
+	}
+	return data, r.client.TraceLogs(), diags
+}
+
+func (r *DatabaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data *DatabaseResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	_, _, diags := r.delete(ctx, data, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+func (r *DatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}

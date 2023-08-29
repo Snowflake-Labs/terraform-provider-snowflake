@@ -1,1 +1,0 @@
-terraform import snowflake_email_notification_integration.example name
