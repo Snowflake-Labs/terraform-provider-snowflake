@@ -22,9 +22,9 @@ type Roles interface {
 	// Revoke revokes privileges on a role.
 	Revoke(ctx context.Context, req *RevokeRoleRequest) error
 	// Use sets the active role for the current session.
-	Use(ctx context.Context, req UseRoleRequest) error
+	Use(ctx context.Context, req *UseRoleRequest) error
 	// UseSecondary specifies the active/current secondary roles for the session.
-	UseSecondary(ctx context.Context, req UseSecondaryRolesRequest) error
+	UseSecondary(ctx context.Context, req *UseSecondaryRolesRequest) error
 }
 
 type Role struct {
@@ -130,7 +130,7 @@ type ShowRoleOptions struct {
 }
 
 type RolesInClass struct {
-	Class *AccountObjectIdentifier `ddl:"identifier"`
+	Class ObjectIdentifier `ddl:"identifier"`
 }
 
 // GrantRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/grant-role
@@ -156,6 +156,7 @@ type RevokeRoleOptions struct {
 }
 
 type RevokeRole struct {
+	// one of
 	User *AccountObjectIdentifier `ddl:"identifier" sql:"USER"`
 	Role *AccountObjectIdentifier `ddl:"identifier" sql:"ROLE"`
 }

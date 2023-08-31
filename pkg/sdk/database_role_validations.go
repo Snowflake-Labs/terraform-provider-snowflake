@@ -17,7 +17,7 @@ var errDifferentDatabase = errors.New("database must be the same")
 
 func (opts *createDatabaseRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
@@ -31,7 +31,7 @@ func (opts *createDatabaseRoleOptions) validate() error {
 
 func (opts *alterDatabaseRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
@@ -62,7 +62,7 @@ func (opts *alterDatabaseRoleOptions) validate() error {
 
 func (opts *dropDatabaseRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
@@ -73,21 +73,21 @@ func (opts *dropDatabaseRoleOptions) validate() error {
 
 func (opts *showDatabaseRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.Database) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		errs = append(errs, errPatternRequiredForLikeKeyword)
+		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *grantDatabaseRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
@@ -101,7 +101,7 @@ func (opts *grantDatabaseRoleOptions) validate() error {
 
 func (opts *revokeDatabaseRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
@@ -115,7 +115,7 @@ func (opts *revokeDatabaseRoleOptions) validate() error {
 
 func (opts *grantDatabaseRoleToShareOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
@@ -129,7 +129,7 @@ func (opts *grantDatabaseRoleToShareOptions) validate() error {
 
 func (opts *revokeDatabaseRoleFromShareOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {

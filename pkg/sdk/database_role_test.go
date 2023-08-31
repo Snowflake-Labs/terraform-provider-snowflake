@@ -15,7 +15,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *createDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -64,7 +64,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *alterDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -164,7 +164,7 @@ func TestDatabaseRoleDrop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *dropDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -196,7 +196,7 @@ func TestDatabaseRolesShow(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *PipeShowOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -208,7 +208,7 @@ func TestDatabaseRolesShow(t *testing.T) {
 	t.Run("validation: empty like", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Like = &Like{}
-		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
+		assertOptsInvalidJoinedErrors(t, opts, ErrPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("show", func(t *testing.T) {
@@ -238,7 +238,7 @@ func TestDatabaseRoles_Grant(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *grantDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
@@ -287,7 +287,7 @@ func TestDatabaseRoles_Revoke(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *revokeDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
@@ -336,7 +336,7 @@ func TestDatabaseRoles_GrantToShare(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *grantDatabaseRoleToShareOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
@@ -371,7 +371,7 @@ func TestDatabaseRoles_RevokeFromShare(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *revokeDatabaseRoleFromShareOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {

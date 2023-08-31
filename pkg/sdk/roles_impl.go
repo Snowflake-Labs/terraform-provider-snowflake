@@ -10,27 +10,20 @@ type roles struct {
 	client *Client
 }
 
-func (v *roles) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateRoleOptions) error {
-	opts = createIfNil(opts)
-	opts.name = id
-	return validateAndExec(v.client, ctx, opts)
+func (v *roles) Create(ctx context.Context, req *CreateRoleRequest) error {
+	return validateAndExec(v.client, ctx, req.ToOpts())
 }
 
-func (v *roles) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterRoleOptions) error {
-	opts = createIfNil(opts)
-	opts.name = id
-	return validateAndExec(v.client, ctx, opts)
+func (v *roles) Alter(ctx context.Context, req *AlterRoleRequest) error {
+	return validateAndExec(v.client, ctx, req.ToOpts())
 }
 
-func (v *roles) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropRoleOptions) error {
-	opts = createIfNil(opts)
-	opts.name = id
-	return validateAndExec(v.client, ctx, opts)
+func (v *roles) Drop(ctx context.Context, req *DropRoleRequest) error {
+	return validateAndExec(v.client, ctx, req.ToOpts())
 }
 
-func (v *roles) Show(ctx context.Context, opts *ShowRoleOptions) ([]Role, error) {
-	opts = createIfNil(opts)
-	rows, err := validateAndQuery[roleDBRow](v.client, ctx, opts)
+func (v *roles) Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error) {
+	rows, err := validateAndQuery[roleDBRow](v.client, ctx, req.ToOpts())
 	if err != nil {
 		return nil, err
 	}
@@ -56,22 +49,18 @@ func (v *roles) ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, 
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
-func (v *roles) Grant(ctx context.Context, id AccountObjectIdentifier, opts *GrantRoleOptions) error {
-	opts = createIfNil(opts)
-	opts.name = id
-	return validateAndExec(v.client, ctx, opts)
+func (v *roles) Grant(ctx context.Context, req *GrantRoleRequest) error {
+	return validateAndExec(v.client, ctx, req.ToOpts())
 }
 
-func (v *roles) Revoke(ctx context.Context, id AccountObjectIdentifier, opts *RevokeRoleOptions) error {
-	opts = createIfNil(opts)
-	opts.name = id
-	return validateAndExec(v.client, ctx, opts)
+func (v *roles) Revoke(ctx context.Context, req *RevokeRoleRequest) error {
+	return validateAndExec(v.client, ctx, req.ToOpts())
 }
 
-func (v *roles) Use(ctx context.Context, id AccountObjectIdentifier) error {
-	return v.client.Sessions.UseRole(ctx, id)
+func (v *roles) Use(ctx context.Context, req *UseRoleRequest) error {
+	return v.client.Sessions.UseRole(ctx, req.id)
 }
 
-func (v *roles) UseSecondary(ctx context.Context, opt SecondaryRoleOption) error {
-	return v.client.Sessions.UseSecondaryRoles(ctx, opt)
+func (v *roles) UseSecondary(ctx context.Context, req *UseSecondaryRolesRequest) error {
+	return v.client.Sessions.UseSecondaryRoles(ctx, req.option)
 }

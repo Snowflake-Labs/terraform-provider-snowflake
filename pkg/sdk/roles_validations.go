@@ -2,7 +2,7 @@ package sdk
 
 import "errors"
 
-func (opts *CreateRoleOptions) validateProp() error {
+func (opts *CreateRoleOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -16,7 +16,7 @@ func (opts *CreateRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *AlterRoleOptions) validateProp() error {
+func (opts *AlterRoleOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -34,7 +34,7 @@ func (opts *AlterRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *DropRoleOptions) validateProp() error {
+func (opts *DropRoleOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -44,7 +44,7 @@ func (opts *DropRoleOptions) validateProp() error {
 	return nil
 }
 
-func (opts *ShowRoleOptions) validateProp() error {
+func (opts *ShowRoleOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -58,7 +58,7 @@ func (opts *ShowRoleOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *GrantRoleOptions) validateProp() error {
+func (opts *GrantRoleOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -66,19 +66,19 @@ func (opts *GrantRoleOptions) validateProp() error {
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Grant.Role, opts.Grant.User) {
+	if (opts.Grant.Role != nil && opts.Grant.User != nil) || (opts.Grant.Role == nil && opts.Grant.User == nil) {
 		errs = append(errs, errors.New("only one grant option can be set [TO ROLE or TO USER]"))
 	}
-	if valueSet(opts.Grant.Role) && !validObjectidentifier(opts.Grant.Role) {
+	if opts.Grant.Role != nil && !validObjectidentifier(opts.Grant.Role) {
 		errs = append(errs, errors.New("invalid object identifier for granted role"))
 	}
-	if valueSet(opts.Grant.User) && !validObjectidentifier(opts.Grant.User) {
+	if opts.Grant.User != nil && !validObjectidentifier(opts.Grant.User) {
 		errs = append(errs, errors.New("invalid object identifier for granted user"))
 	}
 	return errors.Join(errs...)
 }
 
-func (opts *RevokeRoleOptions) validateProp() error {
+func (opts *RevokeRoleOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -86,7 +86,7 @@ func (opts *RevokeRoleOptions) validateProp() error {
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Revoke.Role, opts.Revoke.User) {
+	if (opts.Revoke.Role != nil && opts.Revoke.User != nil) || (opts.Revoke.Role == nil && opts.Revoke.User == nil) {
 		errs = append(errs, errors.New("only one revoke option can be set [FROM ROLE or FROM USER]"))
 	}
 	return errors.Join(errs...)

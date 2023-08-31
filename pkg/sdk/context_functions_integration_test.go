@@ -110,11 +110,7 @@ func TestInt_RolesUse(t *testing.T) {
 	t.Cleanup(cleanup)
 	require.NotEqual(t, currentRole, role.Name)
 
-	err = client.Roles.Grant(ctx, role.ID(), &GrantRoleOptions{
-		Grant: GrantRole{
-			Role: &currentRoleID,
-		},
-	})
+	err = client.Roles.Grant(ctx, NewGrantRoleRequest(role.ID(), GrantRole{Role: &currentRoleID}))
 	require.NoError(t, err)
 
 	err = client.Sessions.UseRole(ctx, role.ID())
@@ -143,11 +139,7 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 	require.NoError(t, err)
 	userID := NewAccountObjectIdentifier(user)
 
-	err = client.Roles.Grant(ctx, role.ID(), &GrantRoleOptions{
-		Grant: GrantRole{
-			User: &userID,
-		},
-	})
+	err = client.Roles.Grant(ctx, NewGrantRoleRequest(role.ID(), GrantRole{User: &userID}))
 	require.NoError(t, err)
 
 	err = client.Sessions.UseRole(ctx, role.ID())

@@ -14,24 +14,34 @@ func NewCreateRoleRequest(name AccountObjectIdentifier) *CreateRoleRequest {
 	}
 }
 
-func (s *CreateRoleRequest) WithOrReplace(OrReplace bool) *CreateRoleRequest {
-	s.OrReplace = Bool(OrReplace)
+func (s *CreateRoleRequest) WithOrReplace(orReplace bool) *CreateRoleRequest {
+	s.OrReplace = Bool(orReplace)
 	return s
 }
 
-func (s *CreateRoleRequest) WithIfNotExists(IfNotExists bool) *CreateRoleRequest {
-	s.IfNotExists = Bool(IfNotExists)
+func (s *CreateRoleRequest) WithIfNotExists(ifNotExists bool) *CreateRoleRequest {
+	s.IfNotExists = Bool(ifNotExists)
 	return s
 }
 
-func (s *CreateRoleRequest) WithComment(Comment string) *CreateRoleRequest {
-	s.Comment = String(Comment)
+func (s *CreateRoleRequest) WithComment(comment string) *CreateRoleRequest {
+	s.Comment = String(comment)
 	return s
 }
 
-func (s *CreateRoleRequest) WithTag(Tag []TagAssociation) *CreateRoleRequest {
-	s.Tag = Tag
+func (s *CreateRoleRequest) WithTag(tag []TagAssociation) *CreateRoleRequest {
+	s.Tag = tag
 	return s
+}
+
+func (s *CreateRoleRequest) ToOpts() *CreateRoleOptions {
+	return &CreateRoleOptions{
+		OrReplace:   s.OrReplace,
+		IfNotExists: s.IfNotExists,
+		name:        s.name,
+		Comment:     s.Comment,
+		Tag:         s.Tag,
+	}
 }
 
 type AlterRoleRequest struct {
@@ -50,34 +60,46 @@ func NewAlterRoleRequest(name AccountObjectIdentifier) *AlterRoleRequest {
 	}
 }
 
-func (s *AlterRoleRequest) WithIfExists(IfExists bool) *AlterRoleRequest {
-	s.IfExists = Bool(IfExists)
+func (s *AlterRoleRequest) WithIfExists(ifExists bool) *AlterRoleRequest {
+	s.IfExists = Bool(ifExists)
 	return s
 }
 
-func (s *AlterRoleRequest) WithRenameTo(RenameTo AccountObjectIdentifier) *AlterRoleRequest {
-	s.RenameTo = &RenameTo
+func (s *AlterRoleRequest) WithRenameTo(renameTo AccountObjectIdentifier) *AlterRoleRequest {
+	s.RenameTo = &renameTo
 	return s
 }
 
-func (s *AlterRoleRequest) WithSetComment(SetComment string) *AlterRoleRequest {
-	s.SetComment = String(SetComment)
+func (s *AlterRoleRequest) WithSetComment(setComment string) *AlterRoleRequest {
+	s.SetComment = String(setComment)
 	return s
 }
 
-func (s *AlterRoleRequest) WithSetTags(SetTags []TagAssociation) *AlterRoleRequest {
-	s.SetTags = SetTags
+func (s *AlterRoleRequest) WithSetTags(setTags []TagAssociation) *AlterRoleRequest {
+	s.SetTags = setTags
 	return s
 }
 
-func (s *AlterRoleRequest) WithUnsetComment(UnsetComment bool) *AlterRoleRequest {
-	s.UnsetComment = Bool(UnsetComment)
+func (s *AlterRoleRequest) WithUnsetComment(unsetComment bool) *AlterRoleRequest {
+	s.UnsetComment = Bool(unsetComment)
 	return s
 }
 
-func (s *AlterRoleRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterRoleRequest {
-	s.UnsetTags = UnsetTags
+func (s *AlterRoleRequest) WithUnsetTags(unsetTags []ObjectIdentifier) *AlterRoleRequest {
+	s.UnsetTags = unsetTags
 	return s
+}
+
+func (s *AlterRoleRequest) ToOpts() *AlterRoleOptions {
+	return &AlterRoleOptions{
+		IfExists:     s.IfExists,
+		name:         s.name,
+		RenameTo:     s.RenameTo,
+		SetComment:   s.SetComment,
+		SetTags:      s.SetTags,
+		UnsetComment: s.UnsetComment,
+		UnsetTags:    s.UnsetTags,
+	}
 }
 
 type DropRoleRequest struct {
@@ -91,9 +113,16 @@ func NewDropRoleRequest(name AccountObjectIdentifier) *DropRoleRequest {
 	}
 }
 
-func (s *DropRoleRequest) WithIfExists(IfExists bool) *DropRoleRequest {
-	s.IfExists = Bool(IfExists)
+func (s *DropRoleRequest) WithIfExists(ifExists bool) *DropRoleRequest {
+	s.IfExists = Bool(ifExists)
 	return s
+}
+
+func (s *DropRoleRequest) ToOpts() *DropRoleOptions {
+	return &DropRoleOptions{
+		IfExists: s.IfExists,
+		name:     s.name,
+	}
 }
 
 type ShowRoleRequest struct {
@@ -127,6 +156,13 @@ func NewLikeRequest(pattern string) *LikeRequest {
 	}
 }
 
+func (s *ShowRoleRequest) ToOpts() *ShowRoleOptions {
+	return &ShowRoleOptions{
+		Like:    s.Like,
+		InClass: s.InClass,
+	}
+}
+
 type ShowRoleByIdRequest struct {
 	id AccountObjectIdentifier // required
 }
@@ -142,10 +178,17 @@ type GrantRoleRequest struct {
 	Grant GrantRole               // required
 }
 
-func NewGrantRoleRequest(name AccountObjectIdentifier, Grant GrantRole) *GrantRoleRequest {
+func NewGrantRoleRequest(name AccountObjectIdentifier, grant GrantRole) *GrantRoleRequest {
 	return &GrantRoleRequest{
 		name:  name,
-		Grant: Grant,
+		Grant: grant,
+	}
+}
+
+func (s *GrantRoleRequest) ToOpts() *GrantRoleOptions {
+	return &GrantRoleOptions{
+		name:  s.name,
+		Grant: s.Grant,
 	}
 }
 
@@ -154,10 +197,17 @@ type RevokeRoleRequest struct {
 	Revoke RevokeRole              // required
 }
 
-func NewRevokeRoleRequest(name AccountObjectIdentifier, Revoke RevokeRole) *RevokeRoleRequest {
+func NewRevokeRoleRequest(name AccountObjectIdentifier, revoke RevokeRole) *RevokeRoleRequest {
 	return &RevokeRoleRequest{
 		name:   name,
-		Revoke: Revoke,
+		Revoke: revoke,
+	}
+}
+
+func (s *RevokeRoleRequest) ToOpts() *RevokeRoleOptions {
+	return &RevokeRoleOptions{
+		name:   s.name,
+		Revoke: s.Revoke,
 	}
 }
 

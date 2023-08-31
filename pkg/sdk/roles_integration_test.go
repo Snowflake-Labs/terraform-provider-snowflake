@@ -20,14 +20,14 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("create no options", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)
-		err := client.Roles.Create(ctx, roleID, nil)
+		err := client.Roles.Create(ctx, NewCreateRoleRequest(roleID))
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Roles.Drop(ctx, roleID, nil)
+			err := client.Roles.Drop(ctx, NewDropRoleRequest(roleID))
 			require.NoError(t, err)
 		})
 
-		role, err := client.Roles.ShowByID(ctx, roleID)
+		role, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(roleID))
 		require.NoError(t, err)
 
 		assert.Equal(t, roleID.Name(), role.Name)
@@ -35,16 +35,14 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("create if not exists", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)
-		err := client.Roles.Create(ctx, roleID, &CreateRoleOptions{
-			IfNotExists: Bool(true),
-		})
+		err := client.Roles.Create(ctx, NewCreateRoleRequest(roleID).WithIfNotExists(true))
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Roles.Drop(ctx, roleID, nil)
+			err := client.Roles.Drop(ctx, NewDropRoleRequest(roleID))
 			require.NoError(t, err)
 		})
 
-		role, err := client.Roles.ShowByID(ctx, roleID)
+		role, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(roleID))
 		require.NoError(t, err)
 		assert.Equal(t, roleID.Name(), role.Name)
 	})
@@ -52,9 +50,9 @@ func TestInt_Roles(t *testing.T) {
 	t.Run("create complete", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)
 		comment := randomComment(t)
-		err := client.Roles.Create(ctx, roleID, &CreateRoleOptions{
-			OrReplace: Bool(true),
-			Tag: []TagAssociation{
+		createReq := NewCreateRoleRequest(roleID).
+			WithOrReplace(true).
+			WithTag([]TagAssociation{
 				{
 					Name:  tag.ID(),
 					Value: "v1",
@@ -63,16 +61,16 @@ func TestInt_Roles(t *testing.T) {
 					Name:  tag2.ID(),
 					Value: "v2",
 				},
-			},
-			Comment: String(comment),
-		})
+			}).
+			WithComment(comment)
+		err := client.Roles.Create(ctx, createReq)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Roles.Drop(ctx, roleID, nil)
+			err := client.Roles.Drop(ctx, NewDropRoleRequest(roleID))
 			require.NoError(t, err)
 		})
 
-		role, err := client.Roles.ShowByID(ctx, roleID)
+		role, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(roleID))
 		require.NoError(t, err)
 		assert.Equal(t, roleID.Name(), role.Name)
 		assert.Equal(t, comment, role.Comment)
@@ -91,19 +89,17 @@ func TestInt_Roles(t *testing.T) {
 		role, _ := createRole(t, client)
 		newName := randomAccountObjectIdentifier(t)
 		t.Cleanup(func() {
-			err := client.Roles.Drop(ctx, newName, nil)
+			err := client.Roles.Drop(ctx, NewDropRoleRequest(newName))
 			if err != nil {
-				err = client.Roles.Drop(ctx, role.ID(), nil)
+				err = client.Roles.Drop(ctx, NewDropRoleRequest(role.ID()))
 				require.NoError(t, err)
 			}
 		})
 
-		err := client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
-			RenameTo: newName,
-		})
+		err := client.Roles.Alter(ctx, NewAlterRoleRequest(role.ID()).WithRenameTo(newName))
 		require.NoError(t, err)
 
-		r, err := client.Roles.ShowByID(ctx, newName)
+		r, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(newName))
 		require.NoError(t, err)
 		assert.Equal(t, newName.Name(), r.Name)
 	})
@@ -116,14 +112,12 @@ func TestInt_Roles(t *testing.T) {
 		require.Error(t, err)
 
 		tagValue := "new-tag-value"
-		err = client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
-			SetTags: []TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: tagValue,
-				},
+		err = client.Roles.Alter(ctx, NewAlterRoleRequest(role.ID()).WithSetTags([]TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
 			},
-		})
+		}))
 		require.NoError(t, err)
 
 		addedTag, err := client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), ObjectTypeRole)
@@ -133,23 +127,21 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("alter unset tags", func(t *testing.T) {
 		tagValue := "tag-value"
-		role, cleanup := createRoleWithOptions(t, client, &CreateRoleOptions{
-			Tag: []TagAssociation{
+		id := randomAccountObjectIdentifier(t)
+		role, cleanup := createRoleWithRequest(t, client, NewCreateRoleRequest(id).
+			WithTag([]TagAssociation{
 				{
 					Name:  tag.ID(),
 					Value: tagValue,
 				},
-			},
-		})
+			}))
 		t.Cleanup(cleanup)
 
 		value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), ObjectTypeRole)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, value)
 
-		err = client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
-			UnsetTags: []ObjectIdentifier{tag.ID()},
-		})
+		err = client.Roles.Alter(ctx, NewAlterRoleRequest(role.ID()).WithUnsetTags([]ObjectIdentifier{tag.ID()}))
 		require.NoError(t, err)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), ObjectTypeRole)
@@ -161,39 +153,34 @@ func TestInt_Roles(t *testing.T) {
 		t.Cleanup(cleanupRole)
 
 		comment := randomComment(t)
-		err := client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
-			SetComment: &comment,
-		})
+		err := client.Roles.Alter(ctx, NewAlterRoleRequest(role.ID()).WithSetComment(comment))
 		require.NoError(t, err)
 
-		r, err := client.Roles.ShowByID(ctx, role.ID())
+		r, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(role.ID()))
 		require.NoError(t, err)
 		assert.Equal(t, comment, r.Comment)
 	})
 
 	t.Run("alter unset comment", func(t *testing.T) {
 		comment := randomComment(t)
-		role, cleanup := createRoleWithOptions(t, client, &CreateRoleOptions{
-			Comment: &comment,
-		})
+		id := randomAccountObjectIdentifier(t)
+		role, cleanup := createRoleWithRequest(t, client, NewCreateRoleRequest(id).WithComment(comment))
 		t.Cleanup(cleanup)
 
-		err := client.Roles.Alter(ctx, role.ID(), &AlterRoleOptions{
-			UnsetComment: Bool(true),
-		})
+		err := client.Roles.Alter(ctx, NewAlterRoleRequest(role.ID()).WithUnsetComment(true))
 		require.NoError(t, err)
 
-		r, err := client.Roles.ShowByID(ctx, role.ID())
+		r, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(role.ID()))
 		require.NoError(t, err)
 		assert.Equal(t, "", r.Comment)
 	})
 
 	t.Run("drop no options", func(t *testing.T) {
 		role, _ := createRole(t, client)
-		err := client.Roles.Drop(ctx, role.ID(), nil)
+		err := client.Roles.Drop(ctx, NewDropRoleRequest(role.ID()))
 		require.NoError(t, err)
 
-		r, err := client.Roles.ShowByID(ctx, role.ID())
+		r, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(role.ID()))
 		require.Nil(t, r)
 		require.Error(t, err)
 	})
@@ -205,7 +192,7 @@ func TestInt_Roles(t *testing.T) {
 		role2, cleanup2 := createRole(t, client)
 		t.Cleanup(cleanup2)
 
-		roles, err := client.Roles.Show(ctx, nil)
+		roles, err := client.Roles.Show(ctx, NewShowRoleRequest())
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(roles), 2)
 
@@ -221,38 +208,26 @@ func TestInt_Roles(t *testing.T) {
 		role, cleanup := createRole(t, client)
 		t.Cleanup(cleanup)
 
-		roles, err := client.Roles.Show(ctx, &ShowRoleOptions{
-			Like: &Like{
-				Pattern: String(role.Name),
-			},
-		})
+		roles, err := client.Roles.Show(ctx, NewShowRoleRequest().WithLike(NewLikeRequest(role.Name)))
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(roles))
 		assert.Equal(t, role.Name, roles[0].Name)
 	})
 
-	// TODO Test class
-	//t.Run("in class", func(t *testing.T) {
-	//	// TODO Add to class
-	//	role, cleanup := createRole(t, client)
-	//	t.Cleanup(cleanup)
-	//
-	//	class, cleanup := createClass()
-	//	t.Cleanup(cleanup)
-	//
-	//	roles, err := client.Roles.Show(ctx, &ShowRoleOptions{
-	//		InClass: String(class.ID().Name()),
-	//	})
-	//	require.NoError(t, err)
-	//	assert.Equal(t, 1, len(roles))
-	//	assert.Equal(t, role.Name, roles[0].Name)
-	//})
+	t.Run("in class", func(t *testing.T) {
+		roles, err := client.Roles.Show(ctx, NewShowRoleRequest().WithInClass(RolesInClass{
+			Class: NewSchemaObjectIdentifier("SNOWFLAKE", "ML", "ANOMALY_DETECTION"),
+		}))
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(roles))
+		assert.Equal(t, "USER", roles[0].Name)
+	})
 
 	t.Run("show by id", func(t *testing.T) {
 		role, cleanup := createRole(t, client)
 		t.Cleanup(cleanup)
 
-		r, err := client.Roles.ShowByID(ctx, role.ID())
+		r, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(role.ID()))
 		require.NoError(t, err)
 		require.NotNil(t, r)
 		assert.Equal(t, role.Name, r.Name)
@@ -266,25 +241,17 @@ func TestInt_Roles(t *testing.T) {
 		t.Cleanup(cleanupUser)
 
 		userID := user.ID()
-		err := client.Roles.Grant(ctx, role.ID(), &GrantRoleOptions{
-			Grant: GrantRole{
-				User: &userID,
-			},
-		})
+		err := client.Roles.Grant(ctx, NewGrantRoleRequest(role.ID(), GrantRole{User: &userID}))
 		require.NoError(t, err)
 
-		roleBefore, err := client.Roles.ShowByID(ctx, role.ID())
+		roleBefore, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(role.ID()))
 		require.NoError(t, err)
 		assert.Equal(t, 1, roleBefore.AssignedToUsers)
 
-		err = client.Roles.Revoke(ctx, role.ID(), &RevokeRoleOptions{
-			Revoke: RevokeRole{
-				User: &userID,
-			},
-		})
+		err = client.Roles.Revoke(ctx, NewRevokeRoleRequest(role.ID(), RevokeRole{User: &userID}))
 		require.NoError(t, err)
 
-		roleAfter, err := client.Roles.ShowByID(ctx, role.ID())
+		roleAfter, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(role.ID()))
 		require.NoError(t, err)
 		assert.Equal(t, 0, roleAfter.AssignedToUsers)
 	})
@@ -297,33 +264,25 @@ func TestInt_Roles(t *testing.T) {
 		t.Cleanup(cleanup)
 
 		parentRoleID := parentRole.ID()
-		err := client.Roles.Grant(ctx, role.ID(), &GrantRoleOptions{
-			Grant: GrantRole{
-				Role: &parentRoleID,
-			},
-		})
+		err := client.Roles.Grant(ctx, NewGrantRoleRequest(role.ID(), GrantRole{Role: &parentRoleID}))
 		require.NoError(t, err)
 
-		roleBefore, err := client.Roles.ShowByID(ctx, role.ID())
+		roleBefore, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(role.ID()))
 		require.NoError(t, err)
 
-		parentRoleBefore, err := client.Roles.ShowByID(ctx, parentRole.ID())
+		parentRoleBefore, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(parentRole.ID()))
 		require.NoError(t, err)
 
 		require.Equal(t, 1, roleBefore.GrantedToRoles)
 		require.Equal(t, 1, parentRoleBefore.GrantedRoles)
 
-		err = client.Roles.Revoke(ctx, role.ID(), &RevokeRoleOptions{
-			Revoke: RevokeRole{
-				Role: &parentRoleID,
-			},
-		})
+		err = client.Roles.Revoke(ctx, NewRevokeRoleRequest(role.ID(), RevokeRole{Role: &parentRoleID}))
 		require.NoError(t, err)
 
-		roleAfter, err := client.Roles.ShowByID(ctx, role.ID())
+		roleAfter, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(role.ID()))
 		require.NoError(t, err)
 
-		parentRoleAfter, err := client.Roles.ShowByID(ctx, parentRole.ID())
+		parentRoleAfter, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(parentRole.ID()))
 		require.NoError(t, err)
 
 		assert.Equal(t, 0, roleAfter.GrantedToRoles)
