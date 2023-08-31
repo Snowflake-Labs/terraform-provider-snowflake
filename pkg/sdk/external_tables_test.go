@@ -110,7 +110,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 				},
 			},
 		},
-		CloudProviderParams: CloudProviderParams{
+		CloudProviderParams: &CloudProviderParams{
 			GoogleCloudStorage: &GoogleCloudStorageParams{
 				Integration: String("123"),
 			},
@@ -157,7 +157,7 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 				InlineConstraint: nil,
 			},
 		},
-		CloudProviderParams: CloudProviderParams{
+		CloudProviderParams: &CloudProviderParams{
 			MicrosoftAzure: &MicrosoftAzureParams{
 				Integration: String("123"),
 			},
@@ -395,7 +395,7 @@ func TestExternalTablesShow(t *testing.T) {
 		opts := &ShowExternalTableOptions{
 			Terse: Bool(true),
 			In: &In{
-				Schema: NewSchemaIdentifier("database_name", "schema_name"),
+				Schema: NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			},
 		}
 		actual, err := structToSQL(opts)

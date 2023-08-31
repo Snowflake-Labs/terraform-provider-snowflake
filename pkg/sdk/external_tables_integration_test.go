@@ -139,6 +139,10 @@ func TestInt_ExternalTables(t *testing.T) {
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
 
+	t.Run("Create: infer schema", func(t *testing.T) {
+		// TODO
+	})
+
 	t.Run("Create with manual partitioning: complete", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
 		opts := createExternalTableWithManualPartitioning
@@ -350,8 +354,6 @@ func TestInt_ExternalTables(t *testing.T) {
 			Location:      "2019/06",
 		})
 		require.NoError(t, err)
-
-		// TODO Would be nice to check if partition was added / removed...
 	})
 
 	t.Run("Drop", func(t *testing.T) {
@@ -436,9 +438,5 @@ func TestInt_ExternalTables(t *testing.T) {
 			PropertyValue:   "AUTO",
 			PropertyDefault: "AUTO",
 		})
-	})
-
-	t.Run("Create: infer schema", func(t *testing.T) {
-		// TODO
 	})
 }

@@ -6,19 +6,19 @@ import (
 )
 
 var (
-	_ validatableOpts = (*CreateExternalTableOpts)(nil)
-	_ validatableOpts = (*CreateWithManualPartitioningExternalTableOpts)(nil)
-	_ validatableOpts = (*CreateDeltaLakeExternalTableOpts)(nil)
-	_ validatableOpts = (*AlterExternalTableOptions)(nil)
-	_ validatableOpts = (*AlterExternalTablePartitionOptions)(nil)
-	_ validatableOpts = (*DropExternalTableOptions)(nil)
-	_ validatableOpts = (*ShowExternalTableOptions)(nil)
-	_ validatableOpts = (*describeExternalTableColumns)(nil)
-	_ validatableOpts = (*describeExternalTableStage)(nil)
+	_ validatable = (*CreateExternalTableOpts)(nil)
+	_ validatable = (*CreateWithManualPartitioningExternalTableOpts)(nil)
+	_ validatable = (*CreateDeltaLakeExternalTableOpts)(nil)
+	_ validatable = (*AlterExternalTableOptions)(nil)
+	_ validatable = (*AlterExternalTablePartitionOptions)(nil)
+	_ validatable = (*DropExternalTableOptions)(nil)
+	_ validatable = (*ShowExternalTableOptions)(nil)
+	_ validatable = (*describeExternalTableColumns)(nil)
+	_ validatable = (*describeExternalTableStage)(nil)
 )
 
 // +-OK
-func (opts *CreateExternalTableOpts) validateProp() error {
+func (opts *CreateExternalTableOpts) validate() error {
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateDeltaLakeExternalTableOpts", "OrReplace", "IfNotExists"))
@@ -37,7 +37,7 @@ func (opts *CreateExternalTableOpts) validateProp() error {
 }
 
 // +-OK
-func (opts *CreateWithManualPartitioningExternalTableOpts) validateProp() error {
+func (opts *CreateWithManualPartitioningExternalTableOpts) validate() error {
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateDeltaLakeExternalTableOpts", "OrReplace", "IfNotExists"))
@@ -56,7 +56,7 @@ func (opts *CreateWithManualPartitioningExternalTableOpts) validateProp() error 
 }
 
 // +-OK
-func (opts *CreateDeltaLakeExternalTableOpts) validateProp() error {
+func (opts *CreateDeltaLakeExternalTableOpts) validate() error {
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateDeltaLakeExternalTableOpts", "OrReplace", "IfNotExists"))
@@ -75,7 +75,7 @@ func (opts *CreateDeltaLakeExternalTableOpts) validateProp() error {
 }
 
 // +-OK
-func (opts *AlterExternalTableOptions) validateProp() error {
+func (opts *AlterExternalTableOptions) validate() error {
 	var errs []error
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
@@ -90,7 +90,7 @@ func (opts *AlterExternalTableOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *AlterExternalTablePartitionOptions) validateProp() error {
+func (opts *AlterExternalTablePartitionOptions) validate() error {
 	var errs []error
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
@@ -101,7 +101,7 @@ func (opts *AlterExternalTablePartitionOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *DropExternalTableOptions) validateProp() error {
+func (opts *DropExternalTableOptions) validate() error {
 	var errs []error
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
@@ -114,18 +114,18 @@ func (opts *DropExternalTableOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *ShowExternalTableOptions) validateProp() error {
+func (opts *ShowExternalTableOptions) validate() error {
 	return nil
 }
 
-func (v *describeExternalTableColumns) validateProp() error {
+func (v *describeExternalTableColumns) validate() error {
 	if !validObjectidentifier(v.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
 
-func (v *describeExternalTableStage) validateProp() error {
+func (v *describeExternalTableStage) validate() error {
 	if !validObjectidentifier(v.name) {
 		return ErrInvalidObjectIdentifier
 	}
