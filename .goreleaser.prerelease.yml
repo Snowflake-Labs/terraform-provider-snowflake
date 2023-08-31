@@ -9,6 +9,7 @@ builds:
   goarch:
     - amd64
     - arm64
+    - '386'
   ignore:
   binary: '{{ .ProjectName }}_v{{ .Version }}'
 
