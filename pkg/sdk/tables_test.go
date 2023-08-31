@@ -72,7 +72,7 @@ func TestTableCreate(t *testing.T) {
 	})
 	t.Run("validation: outOfLineConstraint's foreign key incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.OutOfLineConstraint = &OutOfLineConstraint{
+		opts.OutOfLineConstraint = &CreateOutOfLineConstraint{
 			ForeignKey: &OutOfLineForeignKey{
 				TableName: NewSchemaObjectIdentifier("", "", ""),
 			},
@@ -156,7 +156,7 @@ func TestTableCreate(t *testing.T) {
 			Type: ColumnConstraintTypePrimaryKey,
 		}
 		require.NoError(t, err)
-		outOfLineConstraint := OutOfLineConstraint{
+		outOfLineConstraint := CreateOutOfLineConstraint{
 			Name:    "OUT_OF_LINE_CONSTRAINT",
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},
@@ -211,7 +211,7 @@ func TestTableCreate(t *testing.T) {
 			StageFileFormat:            stageFileFormat,
 			StageCopyOptions:           stageCopyOptions,
 			DataRetentionTimeInDays:    Int(10),
-			MaxDataRetentionTimeInDays: Int(100),
+			MaxDataExtentionTimeInDays: Int(100),
 			ChangeTracking:             Bool(true),
 			DefaultDDLCollation:        String("en"),
 			CopyGrants:                 Bool(true),
@@ -222,7 +222,7 @@ func TestTableCreate(t *testing.T) {
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf(
-			`CREATE TABLE %s ( %s %s COLLATE 'de' COMMENT '%s' IDENTITY START 10 INCREMENT 1 NOT NULL MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT ) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_10) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_RETENTION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
+			`CREATE TABLE %s ( %s %s COLLATE 'de' COMMENT '%s' IDENTITY START 10 INCREMENT 1 NOT NULL MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT ) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_10) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
 			id.FullyQualifiedName(),
 			columnName,
 			columnType,
@@ -323,7 +323,7 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 			OrReplace:  Bool(true),
 			name:       id,
 			CopyGrants: Bool(true),
-			Query:      "sample_data",
+			Query:      []string{"sample_data"},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
@@ -557,7 +557,7 @@ func TestTableAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("rename table", func(t *testing.T) {
+	t.Run("table with name", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
 		}
@@ -623,7 +623,7 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			ClusteringAction: &TableClusteringAction{
 				ChangeReclusterState: &TableReclusterChangeState{
-					State: ReclusterStateSuspend,
+					State: Pointer(ReclusterStateSuspend),
 				},
 			},
 		}
@@ -768,8 +768,7 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			ColumnAction: &TableColumnAction{
 				UnsetMaskingPolicy: &TableColumnAlterUnsetMaskingPolicyAction{
-					ColumnName:        "COLUMN_1",
-					MaskingPolicyName: maskingPolicyName,
+					ColumnName: "COLUMN_1",
 				},
 			},
 		}
@@ -838,7 +837,7 @@ func TestTableAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("alter constraint: add", func(t *testing.T) {
-		outOfLineConstraint := OutOfLineConstraint{
+		outOfLineConstraint := AlterOutOfLineConstraint{
 			Name:    "OUT_OF_LINE_CONSTRAINT",
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},
@@ -1029,7 +1028,7 @@ func TestTableAlter(t *testing.T) {
 					},
 				},
 				DataRetentionTimeInDays:    Int(30),
-				MaxDataRetentionTimeInDays: Int(90),
+				MaxDataExtensionTimeInDays: Int(90),
 				ChangeTracking:             Bool(false),
 				DefaultDDLCollation:        String("us"),
 				Comment:                    &comment,
@@ -1037,7 +1036,7 @@ func TestTableAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf(`ALTER TABLE %s SET ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%') DATA_RETENTION_TIME_IN_DAYS = 30 MAX_DATA_RETENTION_TIME_IN_DAYS = 90 CHANGE_TRACKING = false DEFAULT_DDL_COLLATION = 'us' COMMENT = '%s'`, id.FullyQualifiedName(), comment)
+		expected := fmt.Sprintf(`ALTER TABLE %s SET ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%') DATA_RETENTION_TIME_IN_DAYS = 30 MAX_DATA_EXTENSION_TIME_IN_DAYS = 90 CHANGE_TRACKING = false DEFAULT_DDL_COLLATION = 'us' COMMENT = '%s'`, id.FullyQualifiedName(), comment)
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("set tags", func(t *testing.T) {
@@ -1077,7 +1076,7 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			Unset: &TableUnset{
 				DataRetentionTimeInDays:    Bool(true),
-				MaxDataRetentionTimeInDays: Bool(true),
+				MaxDataExtensionTimeInDays: Bool(true),
 				ChangeTracking:             Bool(true),
 				DefaultDDLCollation:        Bool(true),
 				EnableSchemaEvolution:      Bool(true),
@@ -1086,7 +1085,7 @@ func TestTableAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf(`ALTER TABLE %s UNSET DATA_RETENTION_TIME_IN_DAYS MAX_DATA_RETENTION_TIME_IN_DAYS CHANGE_TRACKING DEFAULT_DDL_COLLATION ENABLE_SCHEMA_EVOLUTION COMMENT`, id.FullyQualifiedName())
+		expected := fmt.Sprintf(`ALTER TABLE %s UNSET DATA_RETENTION_TIME_IN_DAYS MAX_DATA_EXTENSION_TIME_IN_DAYS CHANGE_TRACKING DEFAULT_DDL_COLLATION ENABLE_SCHEMA_EVOLUTION COMMENT`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("add row access policy", func(t *testing.T) {
@@ -1117,7 +1116,7 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			DropAndAddRowAccessPolicy: &DropAndAddRowAccessPolicy{
 				DroppedPolicyName: "ROW_ACCESS_POLICY_1",
-				AddedPolicy: AddRowAccessPolicy{
+				AddedPolicy: &AddRowAccessPolicy{
 					PolicyName:  "ROW_ACCESS_POLICY_2",
 					ColumnNames: []string{"FIRST_COLUMN"},
 				},
@@ -1141,7 +1140,7 @@ func TestTableAlter(t *testing.T) {
 }
 
 func TestTableDrop(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t)
 
 	defaultOpts := func() *dropTableOptions {
 		return &dropTableOptions{
@@ -1156,7 +1155,7 @@ func TestTableDrop(t *testing.T) {
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewDatabaseObjectIdentifier("", "")
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

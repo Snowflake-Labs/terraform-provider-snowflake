@@ -19,7 +19,7 @@ func (opts *createTableOptions) validateProp() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier2())
 	}
 	if len(opts.Columns) == 0 {
 		errs = append(errs, errTableNeedsAtLeastOneColumn)
@@ -35,12 +35,12 @@ func (opts *createTableOptions) validateProp() error {
 		}
 		if column.MaskingPolicy != nil {
 			if !validObjectidentifier(column.MaskingPolicy.Name) {
-				errs = append(errs, ErrInvalidObjectIdentifier)
+				errs = append(errs, ErrInvalidObjectIdentifier2())
 			}
 		}
 		for _, tag := range column.Tags {
 			if !validObjectidentifier(tag.Name) {
-				errs = append(errs, ErrInvalidObjectIdentifier)
+				errs = append(errs, ErrInvalidObjectIdentifier2())
 			}
 
 		}
@@ -48,7 +48,7 @@ func (opts *createTableOptions) validateProp() error {
 	if outOfLineConstraint := opts.OutOfLineConstraint; valueSet(outOfLineConstraint) {
 		if foreignKey := outOfLineConstraint.ForeignKey; valueSet(foreignKey) {
 			if !validObjectidentifier(foreignKey.TableName) {
-				errs = append(errs, ErrInvalidObjectIdentifier)
+				errs = append(errs, ErrInvalidObjectIdentifier2())
 			}
 		}
 	}
@@ -63,7 +63,7 @@ func (opts *createTableOptions) validateProp() error {
 
 	if opts.RowAccessPolicy != nil {
 		if !validObjectidentifier(opts.RowAccessPolicy.Name) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
+			errs = append(errs, ErrInvalidObjectIdentifier2())
 		}
 	}
 
@@ -76,7 +76,7 @@ func (opts *createTableAsSelectOptions) validateProp() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier2())
 	}
 	if len(opts.Columns) == 0 {
 		errs = append(errs, errTableNeedsAtLeastOneColumn)
@@ -89,10 +89,10 @@ func (opts *createTableLikeOptions) validateProp() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier2())
 	}
 	if !validObjectidentifier(opts.SourceTable) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier2())
 	}
 	return errors.Join(errs...)
 }
@@ -102,7 +102,7 @@ func (opts *createTableUsingTemplateOptions) validateProp() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier2())
 	}
 	return errors.Join(errs...)
 }
@@ -112,10 +112,10 @@ func (opts *createTableCloneOptions) validateProp() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier2())
 	}
 	if !validObjectidentifier(opts.SourceTable) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier2())
 	}
 	return errors.Join(errs...)
 }
@@ -126,7 +126,7 @@ func (opts *alterTableOptions) validateProp() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier2())
 	}
 	if ok := exactlyOneValueSet(
 		opts.NewName,
@@ -149,12 +149,12 @@ func (opts *alterTableOptions) validateProp() error {
 	}
 	if opts.NewName != nil {
 		if !validObjectidentifier(*opts.NewName) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
+			errs = append(errs, ErrInvalidObjectIdentifier2())
 		}
 	}
 	if opts.SwapWith != nil {
 		if !validObjectidentifier(*opts.SwapWith) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
+			errs = append(errs, ErrInvalidObjectIdentifier2())
 		}
 	}
 	if clusteringAction := opts.ClusteringAction; valueSet(clusteringAction) {
@@ -243,7 +243,7 @@ func (opts *dropTableOptions) validateProp() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier2())
 	}
 	return errors.Join(errs...)
 }

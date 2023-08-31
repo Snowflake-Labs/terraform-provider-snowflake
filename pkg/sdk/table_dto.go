@@ -5,38 +5,38 @@ import "time"
 //go:generate go run ./dto-builder-generator/main.go
 
 type CreateTableAsSelectRequest struct {
-	orReplace bool
+	orReplace *bool
 	name      SchemaObjectIdentifier       // required
 	columns   []TableAsSelectColumnRequest // required
 }
 
 type TableAsSelectColumnRequest struct {
-	orReplace         bool
+	orReplace         *bool
 	name              string // required
 	type_             *DataType
 	maskingPolicyName *SchemaObjectIdentifier
 	clusterBy         []string
-	copyGrants        bool
+	copyGrants        *bool
 }
 
 type CreateTableUsingTemplateRequest struct {
-	orReplace  bool
+	orReplace  *bool
 	name       SchemaObjectIdentifier // required
-	copyGrants bool
+	copyGrants *bool
 	Query      string // required
 }
 type CreateTableLikeRequest struct {
-	orReplace   bool
+	orReplace   *bool
 	name        SchemaObjectIdentifier // required
 	sourceTable SchemaObjectIdentifier // required
 	clusterBy   []string
-	copyGrants  bool
+	copyGrants  *bool
 }
 type CreateTableCloneRequest struct {
-	orReplace   bool
+	orReplace   *bool
 	name        SchemaObjectIdentifier // required
 	sourceTable SchemaObjectIdentifier // required
-	copyGrants  bool
+	copyGrants  *bool
 	ClonePoint  *ClonePointRequest
 }
 type ClonePointRequest struct {
@@ -50,24 +50,25 @@ type TimeTravelRequest struct {
 }
 
 type CreateTableRequest struct {
-	orReplace                  bool
-	ifNotExists                bool
+	orReplace                  *bool
+	ifNotExists                *bool
 	scope                      *TableScope
 	kind                       *TableKind
 	name                       SchemaObjectIdentifier // required
 	columns                    []TableColumnRequest   // required
+	OutOfLineConstraint        *OutOfLineConstraintRequest
 	clusterBy                  []string
 	enableSchemaEvolution      *bool
 	stageFileFormat            []StageFileFormatRequest
 	stageCopyOptions           []StageCopyOptionsRequest
 	DataRetentionTimeInDays    *int
-	MaxDataRetentionTimeInDays *int
-	ChangeTracking             bool
+	MaxDataExtensionTimeInDays *int
+	ChangeTracking             *bool
 	DefaultDDLCollation        *string
-	CopyGrants                 bool
+	CopyGrants                 *bool
 	RowAccessPolicy            *RowAccessPolicyRequest
 	Tags                       []TagAssociationRequest
-	Comment                    string
+	Comment                    *string
 }
 type RowAccessPolicyRequest struct {
 	Name SchemaObjectIdentifier // request
@@ -80,9 +81,9 @@ type TableColumnRequest struct {
 	collate          *string
 	comment          *string
 	defaultValue     *ColumnDefaultValueRequest
-	notNull          bool
+	notNull          *bool
 	maskingPolicy    *ColumnMaskingPolicyRequest
-	with             bool
+	with             *bool
 	tags             []TagAssociation
 	inlineConstraint *ColumnInlineConstraintRequest
 }
@@ -90,7 +91,7 @@ type TableColumnRequest struct {
 type ColumnDefaultValueRequest struct {
 	// One of
 	expression *string
-	identity   *ColumnIdentity
+	identity   *ColumnIdentityRequest
 }
 
 type ColumnIdentityRequest struct {
@@ -106,18 +107,18 @@ type ColumnInlineConstraintRequest struct {
 	Name               string               // required
 	type_              ColumnConstraintType // required
 	foreignKey         *InlineForeignKeyRequest
-	enforced           bool
-	notEnforced        bool
-	deferrable         bool
-	notDeferrable      bool
-	initiallyDeferred  bool
-	initiallyImmediate bool
-	enable             bool
-	disable            bool
-	validate           bool
-	noValidate         bool
-	rely               bool
-	noRely             bool
+	enforced           *bool
+	notEnforced        *bool
+	deferrable         *bool
+	notDeferrable      *bool
+	initiallyDeferred  *bool
+	initiallyImmediate *bool
+	enable             *bool
+	disable            *bool
+	validate           *bool
+	noValidate         *bool
+	rely               *bool
+	noRely             *bool
 }
 type OutOfLineConstraintRequest struct {
 	Name       string               // required
@@ -126,18 +127,18 @@ type OutOfLineConstraintRequest struct {
 	ForeignKey *OutOfLineForeignKeyRequest
 
 	// Optional
-	Enforced           bool
-	NotEnforced        bool
-	Deferrable         bool
-	NotDeferrable      bool
-	InitiallyDeferred  bool
-	InitiallyImmediate bool
-	Enable             bool
-	Disable            bool
-	Validate           bool
-	NoValidate         bool
-	Rely               bool
-	NoRely             bool
+	Enforced           *bool
+	NotEnforced        *bool
+	Deferrable         *bool
+	NotDeferrable      *bool
+	InitiallyDeferred  *bool
+	InitiallyImmediate *bool
+	Enable             *bool
+	Disable            *bool
+	Validate           *bool
+	NoValidate         *bool
+	Rely               *bool
+	NoRely             *bool
 }
 type InlineForeignKeyRequest struct {
 	TableName  string // required
@@ -168,16 +169,16 @@ type StageFileFormatRequest struct {
 type StageCopyOptionsRequest struct {
 	OnError           StageCopyOptionsOnError // required
 	SizeLimit         *int
-	Purge             bool
-	ReturnFailedOnly  bool
+	Purge             *bool
+	ReturnFailedOnly  *bool
 	MatchByColumnName *StageCopyOptionsMatchByColumnName
-	EnforceLength     bool
-	TruncateColumns   bool
-	Force             bool
+	EnforceLength     *bool
+	TruncateColumns   *bool
+	Force             *bool
 }
 
 type AlterTableRequest struct {
-	IfExists                  bool
+	IfExists                  *bool
 	name                      SchemaObjectIdentifier // required
 	NewName                   *SchemaObjectIdentifier
 	SwapWith                  *SchemaObjectIdentifier
@@ -193,13 +194,45 @@ type AlterTableRequest struct {
 	AddRowAccessPolicy        *AddRowAccessPolicyRequest
 	DropRowAccessPolicy       *string
 	DropAndAddRowAccessPolicy *DropAndAddRowAccessPolicyRequest
-	DropAllAccessRowPolicies  bool
+	DropAllAccessRowPolicies  *bool
 }
 type DropTableRequest struct {
+	IfExists *bool
+	Name     SchemaObjectIdentifier // required
+	// One of
+	Cascade  *bool
+	Restrict *bool
 }
 
 func (s *DropTableRequest) toOpts() *dropTableOptions {
-	return nil
+	return &dropTableOptions{
+		IfExists: s.IfExists,
+		name:     s.Name,
+		Cascade:  s.Cascade,
+		Restrict: s.Restrict,
+	}
+}
+func (s *ShowTableRequest) toOpts() *showTableOptions {
+	var like *Like
+	if s.LikePattern != "" {
+		like = &Like{
+			Pattern: &s.LikePattern,
+		}
+	}
+	var limitFrom *LimitFrom
+	if s.LimitFrom != nil {
+		limitFrom = &LimitFrom{
+			Rows: s.LimitFrom.Rows,
+			From: s.LimitFrom.From,
+		}
+	}
+	return &showTableOptions{
+		Terse:      s.Terse,
+		History:    s.History,
+		Like:       like,
+		StartsWith: s.StartsWith,
+		LimitFrom:  limitFrom,
+	}
 }
 
 type DropAndAddRowAccessPolicyRequest struct {
@@ -209,7 +242,7 @@ type DropAndAddRowAccessPolicyRequest struct {
 
 type TableUnsetRequest struct {
 	DataRetentionTimeInDays    bool
-	MaxDataRetentionTimeInDays bool
+	MaxDataExtensionTimeInDays bool
 	ChangeTracking             bool
 	DefaultDDLCollation        bool
 	EnableSchemaEvolution      bool
@@ -231,22 +264,22 @@ type FileFormatTypeOptionsRequest struct {
 	CSVRecordDelimiter            *string
 	CSVFieldDelimiter             *string
 	CSVFileExtension              *string
-	CSVParseHeader                bool
+	CSVParseHeader                *bool
 	CSVSkipHeader                 *int
-	CSVSkipBlankLines             bool
+	CSVSkipBlankLines             *bool
 	CSVDateFormat                 *string
 	CSVTimeFormat                 *string
 	CSVTimestampFormat            *string
 	CSVBinaryFormat               *BinaryFormat
 	CSVEscape                     *string
 	CSVEscapeUnenclosedField      *string
-	CSVTrimSpace                  bool
+	CSVTrimSpace                  *bool
 	CSVFieldOptionallyEnclosedBy  *string
 	CSVNullIf                     *[]NullString
-	CSVErrorOnColumnCountMismatch bool
-	CSVReplaceInvalidCharacters   bool
-	CSVEmptyFieldAsNull           bool
-	CSVSkipByteOrderMark          bool
+	CSVErrorOnColumnCountMismatch *bool
+	CSVReplaceInvalidCharacters   *bool
+	CSVEmptyFieldAsNull           *bool
+	CSVSkipByteOrderMark          *bool
 	CSVEncoding                   *CSVEncoding
 
 	// JSON type options
@@ -255,45 +288,45 @@ type FileFormatTypeOptionsRequest struct {
 	JSONTimeFormat               *string
 	JSONTimestampFormat          *string
 	JSONBinaryFormat             *BinaryFormat
-	JSONTrimSpace                bool
+	JSONTrimSpace                *bool
 	JSONNullIf                   *[]NullString
 	JSONFileExtension            *string
-	JSONEnableOctal              bool
-	JSONAllowDuplicate           bool
-	JSONStripOuterArray          bool
-	JSONStripNullValues          bool
-	JSONReplaceInvalidCharacters bool
-	JSONIgnoreUTF8Errors         bool
-	JSONSkipByteOrderMark        bool
+	JSONEnableOctal              *bool
+	JSONAllowDuplicate           *bool
+	JSONStripOuterArray          *bool
+	JSONStripNullValues          *bool
+	JSONReplaceInvalidCharacters *bool
+	JSONIgnoreUTF8Errors         *bool
+	JSONSkipByteOrderMark        *bool
 
 	// AVRO type options
 	AvroCompression              *AvroCompression
-	AvroTrimSpace                bool
-	AvroReplaceInvalidCharacters bool
+	AvroTrimSpace                *bool
+	AvroReplaceInvalidCharacters *bool
 	AvroNullIf                   *[]NullString
 
 	// ORC type options
-	ORCTrimSpace                bool
-	ORCReplaceInvalidCharacters bool
+	ORCTrimSpace                *bool
+	ORCReplaceInvalidCharacters *bool
 	ORCNullIf                   *[]NullString
 
 	// PARQUET type options
 	ParquetCompression              *ParquetCompression
-	ParquetSnappyCompression        bool
-	ParquetBinaryAsText             bool
-	ParquetTrimSpace                bool
-	ParquetReplaceInvalidCharacters bool
+	ParquetSnappyCompression        *bool
+	ParquetBinaryAsText             *bool
+	ParquetTrimSpace                *bool
+	ParquetReplaceInvalidCharacters *bool
 	ParquetNullIf                   *[]NullString
 
 	// XML type options
 	XMLCompression              *XMLCompression
-	XMLIgnoreUTF8Errors         bool
-	XMLPreserveSpace            bool
-	XMLStripOuterElement        bool
-	XMLDisableSnowflakeData     bool
-	XMLDisableAutoConvert       bool
-	XMLReplaceInvalidCharacters bool
-	XMLSkipByteOrderMark        bool
+	XMLIgnoreUTF8Errors         *bool
+	XMLPreserveSpace            *bool
+	XMLStripOuterElement        *bool
+	XMLDisableSnowflakeData     *bool
+	XMLDisableAutoConvert       *bool
+	XMLReplaceInvalidCharacters *bool
+	XMLSkipByteOrderMark        *bool
 
 	Comment *string
 }
@@ -302,8 +335,8 @@ type TableClusteringActionRequest struct {
 	// One of
 	ClusterBy            []string
 	Recluster            *TableReclusterActionRequest
-	ChangeReclusterState ReclusterState
-	DropClusteringKey    bool
+	ChangeReclusterState *ReclusterState
+	DropClusteringKey    *bool
 }
 type TableReclusterActionRequest struct {
 	MaxSize   *int
@@ -326,18 +359,18 @@ type TableColumnActionRequest struct {
 }
 
 type TableColumnAddActionRequest struct {
-	Column           bool
+	Column           *bool
 	Name             string   // required
 	Type             DataType // required
 	DefaultValue     *ColumnDefaultValueRequest
 	InlineConstraint *TableColumnAddInlineConstraintRequest
 	MaskingPolicy    *ColumnMaskingPolicyRequest
-	With             bool
+	With             *bool
 	Tags             []TagAssociation
 }
 
 type TableColumnAddInlineConstraintRequest struct {
-	NotNull    bool
+	NotNull    *bool
 	Name       string
 	Type       ColumnConstraintType
 	ForeignKey *ColumnAddForeignKey
@@ -357,22 +390,21 @@ type TableColumnAlterActionRequest struct {
 	Name   string // required
 
 	//One of
-	DropDefault       bool
+	DropDefault       *bool
 	SetDefault        *SequenceName
 	NotNullConstraint *TableColumnNotNullConstraintRequest
 	Type              *DataType
 	Comment           *string
-	UnsetComment      bool
+	UnsetComment      *bool
 }
 type TableColumnAlterSetMaskingPolicyActionRequest struct {
 	ColumnName        string                 // required
 	MaskingPolicyName SchemaObjectIdentifier // required
 	Using             []string               // required
-	Force             bool
+	Force             *bool
 }
 type TableColumnAlterUnsetMaskingPolicyActionRequest struct {
-	ColumnName        string                 // required
-	MaskingPolicyName SchemaObjectIdentifier // required
+	ColumnName string // required
 }
 type TableColumnAlterSetTagsActionRequest struct {
 	ColumnName string           // required
@@ -385,8 +417,8 @@ type TableColumnAlterUnsetTagsActionRequest struct {
 }
 
 type TableColumnNotNullConstraintRequest struct {
-	Set  bool
-	Drop bool
+	Set  *bool
+	Drop *bool
 }
 type TableConstraintActionRequest struct {
 	Add    *OutOfLineConstraintRequest
@@ -401,31 +433,31 @@ type TableConstraintRenameActionRequest struct {
 type TableConstraintAlterActionRequest struct {
 	// One of
 	ConstraintName *string
-	PrimaryKey     bool
-	Unique         bool
-	ForeignKey     bool
+	PrimaryKey     *bool
+	Unique         *bool
+	ForeignKey     *bool
 
 	Columns []string
 	// Optional
-	Enforced    bool
-	NotEnforced bool
-	Valiate     bool
-	NoValidate  bool
-	Rely        bool
-	NoRely      bool
+	Enforced    *bool
+	NotEnforced *bool
+	Valiate     *bool
+	NoValidate  *bool
+	Rely        *bool
+	NoRely      *bool
 }
 type TableConstraintDropActionRequest struct {
 	// One of
 	ConstraintName *string
-	PrimaryKey     bool
-	Unique         bool
-	ForeignKey     bool
+	PrimaryKey     *bool
+	Unique         *bool
+	ForeignKey     *bool
 
 	Columns []string
 
 	// Optional
-	Cascade  bool
-	Restrict bool
+	Cascade  *bool
+	Restrict *bool
 }
 
 type TableExternalTableActionRequest struct {
@@ -442,12 +474,12 @@ type TableSearchOptimizationActionRequest struct {
 }
 
 type TableSetRequest struct {
-	EnableSchemaEvolution      bool
+	EnableSchemaEvolution      *bool
 	StageFileFormat            []StageFileFormatRequest
 	StageCopyOptions           []StageCopyOptionsRequest
 	DataRetentionTimeInDays    *int
-	MaxDataRetentionTimeInDays *int
-	ChangeTracking             bool
+	MaxDataExtensionTimeInDays *int
+	ChangeTracking             *bool
 	DefaultDDLCollation        *string
 	Comment                    *string
 }
@@ -464,4 +496,21 @@ type TableExternalTableColumnRenameActionRequest struct {
 
 type TableExternalTableColumnDropActionRequest struct {
 	Columns []string
+}
+type ShowTableRequest struct {
+	Terse       *bool
+	History     *bool
+	LikePattern string
+	In          *ShowTableInRequest
+	StartsWith  *string
+	LimitFrom   *LimitFrom
+}
+type ShowTableInRequest struct {
+	Account  *bool
+	Database AccountObjectIdentifier
+	Schema   DatabaseObjectIdentifier
+}
+type LimitFromRequest struct {
+	Rows int // required
+	From string
 }

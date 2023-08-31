@@ -2,7 +2,7 @@ package sdk
 
 import "context"
 
-//var _ Tables = (*tables)(nil)
+var _ Tables = (*tables)(nil)
 
 type tables struct {
 	client *Client
@@ -35,125 +35,137 @@ func (v *tables) Alter(ctx context.Context, request *AlterTableRequest) error {
 }
 
 func (v *tables) Drop(ctx context.Context, request *DropTableRequest) error {
-	return nil
-	//opts := request.toOpts()
-	//return validateAndExec(v.client, ctx, opts)
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *tables) Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]DatabaseRole, error) {
+func (v *tables) Show(ctx context.Context, request *ShowTableRequest) ([]Table, error) {
 	opts := request.toOpts()
-	dbRows, err := validateAndQuery[databaseRoleDBRow](v.client, ctx, opts)
+	dbRows, err := validateAndQuery[tableDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	resultList := convertRows[databaseRoleDBRow, DatabaseRole](dbRows)
+	resultList := convertRows[tableDBRow, Table](dbRows)
 
 	return resultList, nil
 }
 
+func (v *tables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Table, error) {
+	request := NewShowTableRequest().WithLikePattern(id.Name())
+	tables, err := v.Show(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	return findOne(tables, func(r Table) bool { return r.Name == id.Name() })
+}
+
 func (s *AlterTableRequest) toOpts() *alterTableOptions {
-	var clusteringAction TableClusteringAction
+	var clusteringAction *TableClusteringAction
 	if s.ClusteringAction != nil {
-		var reclusterAction TableReclusterAction
+		var reclusterAction *TableReclusterAction
 		if s.ClusteringAction.Recluster != nil {
-			reclusterAction = TableReclusterAction{
+			reclusterAction = &TableReclusterAction{
 				MaxSize:   s.ClusteringAction.Recluster.MaxSize,
 				Condition: s.ClusteringAction.Recluster.Condition,
 			}
 		}
-		clusteringAction = TableClusteringAction{
+		var changeReclusterChange *TableReclusterChangeState
+		if s.ClusteringAction.ChangeReclusterState != nil {
+			changeReclusterChange = &TableReclusterChangeState{State: s.ClusteringAction.ChangeReclusterState}
+		}
+		clusteringAction = &TableClusteringAction{
 			ClusterBy:            s.ClusteringAction.ClusterBy,
-			Recluster:            &reclusterAction,
-			ChangeReclusterState: Pointer(TableReclusterChangeState{State: s.ClusteringAction.ChangeReclusterState}),
-			DropClusteringKey:    Bool(s.ClusteringAction.DropClusteringKey),
+			Recluster:            reclusterAction,
+			ChangeReclusterState: changeReclusterChange,
+			DropClusteringKey:    s.ClusteringAction.DropClusteringKey,
 		}
 	}
-	var columnAction TableColumnAction
+	var columnAction *TableColumnAction
 	if s.ColumnAction != nil {
-		columnAction = *convertTableColumnAction(*s.ColumnAction)
+		columnAction = convertTableColumnAction(*s.ColumnAction)
 	}
-	var constraintAction TableConstraintAction
+	var constraintAction *TableConstraintAction
 	if s.ConstraintAction != nil {
-		constraintAction = *convertTableConstraintAction(*s.ConstraintAction)
+		constraintAction = convertTableConstraintAction(*s.ConstraintAction)
 	}
-	var externalTableAction TableExternalTableAction
+	var externalTableAction *TableExternalTableAction
 	if s.ExternalTableAction != nil {
-		externalTableAction = *convertTableExternalAction(*s.ExternalTableAction)
+		externalTableAction = convertTableExternalAction(*s.ExternalTableAction)
 	}
-	var searchOptimizationAction TableSearchOptimizationAction
+	var searchOptimizationAction *TableSearchOptimizationAction
 	if s.SearchOptimizationAction != nil {
-		searchOptimizationAction = *convertSearchOptimizationAction(*s.SearchOptimizationAction)
+		searchOptimizationAction = convertSearchOptimizationAction(*s.SearchOptimizationAction)
 	}
-	var tableSet TableSet
+	var tableSet *TableSet
 	if s.Set != nil {
-		tableSet = *convertAlterTableSet(*s.Set)
+		tableSet = convertAlterTableSet(*s.Set)
 	}
+
 	var tagAssociations []TagAssociation
-	for _, tagRequest := range tagAssociations {
+	for _, tagRequest := range s.SetTags {
 		tagAssociations = append(tagAssociations, TagAssociation{
 			Name:  tagRequest.Name,
 			Value: tagRequest.Value,
 		})
 	}
-	var tableUnset TableUnset
+	var tableUnset *TableUnset
 	if s.Unset != nil {
-		tableUnset = TableUnset{
+		tableUnset = &TableUnset{
 			DataRetentionTimeInDays:    Bool(s.Unset.DataRetentionTimeInDays),
-			MaxDataRetentionTimeInDays: Bool(s.Unset.MaxDataRetentionTimeInDays),
+			MaxDataExtensionTimeInDays: Bool(s.Unset.MaxDataExtensionTimeInDays),
 			ChangeTracking:             Bool(s.Unset.ChangeTracking),
 			DefaultDDLCollation:        Bool(s.Unset.DefaultDDLCollation),
 			EnableSchemaEvolution:      Bool(s.Unset.EnableSchemaEvolution),
 			Comment:                    Bool(s.Unset.Comment),
 		}
 	}
-	var addRowAccessPolicy AddRowAccessPolicy
+	var addRowAccessPolicy *AddRowAccessPolicy
 	if s.AddRowAccessPolicy != nil {
-		addRowAccessPolicy = AddRowAccessPolicy{
+		addRowAccessPolicy = &AddRowAccessPolicy{
 			PolicyName:  s.AddRowAccessPolicy.PolicyName,
 			ColumnNames: s.AddRowAccessPolicy.ColumnName,
 		}
 	}
-	var dropAndAddRowAccessPolicy DropAndAddRowAccessPolicy
+	var dropAndAddRowAccessPolicy *DropAndAddRowAccessPolicy
 	if s.DropAndAddRowAccessPolicy != nil {
-		var addRowAccessPolicy AddRowAccessPolicy
-		if s.AddRowAccessPolicy != nil {
-			addRowAccessPolicy = AddRowAccessPolicy{
-				PolicyName:  s.AddRowAccessPolicy.PolicyName,
-				ColumnNames: s.AddRowAccessPolicy.ColumnName,
-			}
+		var addRowAccessPolicy *AddRowAccessPolicy
+		addRowAccessPolicy = &AddRowAccessPolicy{
+			PolicyName:  s.DropAndAddRowAccessPolicy.AddedPolicy.PolicyName,
+			ColumnNames: s.DropAndAddRowAccessPolicy.AddedPolicy.ColumnName,
 		}
-		dropAndAddRowAccessPolicy = DropAndAddRowAccessPolicy{
+		dropAndAddRowAccessPolicy = &DropAndAddRowAccessPolicy{
 			DroppedPolicyName: s.DropAndAddRowAccessPolicy.DroppedPolicyName,
 			AddedPolicy:       addRowAccessPolicy,
 		}
 	}
 
 	return &alterTableOptions{
-		IfExists:                  Bool(s.IfExists),
+		IfExists:                  s.IfExists,
 		name:                      s.name,
 		NewName:                   s.NewName,
 		SwapWith:                  s.SwapWith,
-		ClusteringAction:          &clusteringAction,
-		ColumnAction:              &columnAction,
-		ConstraintAction:          &constraintAction,
-		ExternalTableAction:       &externalTableAction,
-		SearchOptimizationAction:  &searchOptimizationAction,
-		Set:                       &tableSet,
+		ClusteringAction:          clusteringAction,
+		ColumnAction:              columnAction,
+		ConstraintAction:          constraintAction,
+		ExternalTableAction:       externalTableAction,
+		SearchOptimizationAction:  searchOptimizationAction,
+		Set:                       tableSet,
 		SetTags:                   tagAssociations,
 		UnsetTags:                 s.UnsetTags,
-		Unset:                     &tableUnset,
-		AddRowAccessPolicy:        &addRowAccessPolicy,
+		Unset:                     tableUnset,
+		AddRowAccessPolicy:        addRowAccessPolicy,
 		DropRowAccessPolicy:       s.DropRowAccessPolicy,
-		DropAndAddRowAccessPolicy: &dropAndAddRowAccessPolicy,
-		DropAllAccessRowPolicies:  Bool(s.DropAllAccessRowPolicies),
+		DropAndAddRowAccessPolicy: dropAndAddRowAccessPolicy,
+		DropAllAccessRowPolicies:  s.DropAllAccessRowPolicies,
 	}
 
 }
 func convertAlterTableSet(request TableSetRequest) *TableSet {
 	var stageFileFormats []StageFileFormat
 	for _, stageFileFormat := range request.StageFileFormat {
-		var options FileFormatTypeOptions
+		var options *FileFormatTypeOptions
 		if stageFileFormat.Options != nil {
 			options = convertFileFormatTypeOptions(*stageFileFormat.Options)
 		}
@@ -161,7 +173,7 @@ func convertAlterTableSet(request TableSetRequest) *TableSet {
 			InnerValue: StageFileFormatInnerValue{
 				FormatName: stageFileFormat.FormatName,
 				FormatType: stageFileFormat.FormatType,
-				Options:    &options,
+				Options:    options,
 			},
 		})
 	}
@@ -171,23 +183,23 @@ func convertAlterTableSet(request TableSetRequest) *TableSet {
 			InnerValue: StageCopyOptionsInnerValue{
 				OnError:           stageCopyOption.OnError,
 				SizeLimit:         stageCopyOption.SizeLimit,
-				Purge:             Bool(stageCopyOption.Purge),
-				ReturnFailedOnly:  Bool(stageCopyOption.ReturnFailedOnly),
+				Purge:             stageCopyOption.Purge,
+				ReturnFailedOnly:  stageCopyOption.ReturnFailedOnly,
 				MatchByColumnName: stageCopyOption.MatchByColumnName,
-				EnforceLength:     Bool(stageCopyOption.EnforceLength),
-				TruncateColumns:   Bool(stageCopyOption.TruncateColumns),
-				Force:             Bool(stageCopyOption.Force),
+				EnforceLength:     stageCopyOption.EnforceLength,
+				TruncateColumns:   stageCopyOption.TruncateColumns,
+				Force:             stageCopyOption.Force,
 			},
 		})
 	}
 
 	return &TableSet{
-		EnableSchemaEvolution:      Bool(request.EnableSchemaEvolution),
+		EnableSchemaEvolution:      request.EnableSchemaEvolution,
 		StageFileFormat:            stageFileFormats,
 		StageCopyOptions:           stageCopyOptions,
 		DataRetentionTimeInDays:    request.DataRetentionTimeInDays,
-		MaxDataRetentionTimeInDays: request.MaxDataRetentionTimeInDays,
-		ChangeTracking:             Bool(request.ChangeTracking),
+		MaxDataExtensionTimeInDays: request.MaxDataExtensionTimeInDays,
+		ChangeTracking:             request.ChangeTracking,
 		DefaultDDLCollation:        request.DefaultDDLCollation,
 		Comment:                    request.Comment,
 	}
@@ -241,39 +253,39 @@ func convertTableExternalAction(request TableExternalTableActionRequest) *TableE
 
 func convertTableConstraintAction(request TableConstraintActionRequest) *TableConstraintAction {
 	if request.Add != nil {
-		var foreignKey OutOfLineForeignKey
+		var foreignKey *OutOfLineForeignKey
 		if request.Add.ForeignKey != nil {
-			var foreignKeyOnAction ForeignKeyOnAction
+			var foreignKeyOnAction *ForeignKeyOnAction
 			if request.Add.ForeignKey.On != nil {
-				foreignKeyOnAction = ForeignKeyOnAction{
+				foreignKeyOnAction = &ForeignKeyOnAction{
 					OnUpdate: request.Add.ForeignKey.On.OnUpdate,
 					OnDelete: request.Add.ForeignKey.On.OnDelete,
 				}
 			}
-			foreignKey = OutOfLineForeignKey{
+			foreignKey = &OutOfLineForeignKey{
 				TableName:   request.Add.ForeignKey.TableName,
 				ColumnNames: request.Add.ForeignKey.ColumnNames,
 				Match:       request.Add.ForeignKey.Match,
-				On:          &foreignKeyOnAction,
+				On:          foreignKeyOnAction,
 			}
 		}
-		outOfLineConstrait := OutOfLineConstraint{
+		outOfLineConstrait := AlterOutOfLineConstraint{
 			Name:               request.Add.Name,
 			Type:               request.Add.Type,
 			Columns:            request.Add.Columns,
-			ForeignKey:         &foreignKey,
-			Enforced:           Bool(request.Add.Enforced),
-			NotEnforced:        Bool(request.Add.NotEnforced),
-			Deferrable:         Bool(request.Add.Deferrable),
-			NotDeferrable:      Bool(request.Add.NotDeferrable),
-			InitiallyDeferred:  Bool(request.Add.InitiallyDeferred),
-			InitiallyImmediate: Bool(request.Add.InitiallyImmediate),
-			Enable:             Bool(request.Add.Enable),
-			Disable:            Bool(request.Add.Disable),
-			Validate:           Bool(request.Add.Validate),
-			NoValidate:         Bool(request.Add.NoValidate),
-			Rely:               Bool(request.Add.Rely),
-			NoRely:             Bool(request.Add.NoRely),
+			ForeignKey:         foreignKey,
+			Enforced:           request.Add.Enforced,
+			NotEnforced:        request.Add.NotEnforced,
+			Deferrable:         request.Add.Deferrable,
+			NotDeferrable:      request.Add.NotDeferrable,
+			InitiallyDeferred:  request.Add.InitiallyDeferred,
+			InitiallyImmediate: request.Add.InitiallyImmediate,
+			Enable:             request.Add.Enable,
+			Disable:            request.Add.Disable,
+			Validate:           request.Add.Validate,
+			NoValidate:         request.Add.NoValidate,
+			Rely:               request.Add.Rely,
+			NoRely:             request.Add.NoRely,
 		}
 		return &TableConstraintAction{
 			Add: &outOfLineConstrait,
@@ -291,16 +303,16 @@ func convertTableConstraintAction(request TableConstraintActionRequest) *TableCo
 		return &TableConstraintAction{
 			Alter: &TableConstraintAlterAction{
 				ConstraintName: request.Alter.ConstraintName,
-				PrimaryKey:     Bool(request.Alter.PrimaryKey),
-				Unique:         Bool(request.Alter.Unique),
-				ForeignKey:     Bool(request.Alter.ForeignKey),
+				PrimaryKey:     request.Alter.PrimaryKey,
+				Unique:         request.Alter.Unique,
+				ForeignKey:     request.Alter.ForeignKey,
 				Columns:        request.Alter.Columns,
-				Enforced:       Bool(request.Alter.Enforced),
-				NotEnforced:    Bool(request.Alter.NotEnforced),
-				Validate:       Bool(request.Alter.Valiate),
-				NoValidate:     Bool(request.Alter.NoValidate),
-				Rely:           Bool(request.Alter.Rely),
-				NoRely:         Bool(request.Alter.NoRely),
+				Enforced:       request.Alter.Enforced,
+				NotEnforced:    request.Alter.NotEnforced,
+				Validate:       request.Alter.Valiate,
+				NoValidate:     request.Alter.NoValidate,
+				Rely:           request.Alter.Rely,
+				NoRely:         request.Alter.NoRely,
 			},
 		}
 	}
@@ -308,12 +320,12 @@ func convertTableConstraintAction(request TableConstraintActionRequest) *TableCo
 		return &TableConstraintAction{
 			Drop: &TableConstraintDropAction{
 				ConstraintName: request.Drop.ConstraintName,
-				PrimaryKey:     Bool(request.Drop.PrimaryKey),
-				Unique:         Bool(request.Drop.Unique),
-				ForeignKey:     Bool(request.Drop.ForeignKey),
+				PrimaryKey:     request.Drop.PrimaryKey,
+				Unique:         request.Drop.Unique,
+				ForeignKey:     request.Drop.ForeignKey,
 				Columns:        request.Drop.Columns,
-				Cascade:        Bool(request.Drop.Cascade),
-				Restrict:       Bool(request.Drop.Restrict),
+				Cascade:        request.Drop.Cascade,
+				Restrict:       request.Drop.Restrict,
 			},
 		}
 	}
@@ -321,36 +333,39 @@ func convertTableConstraintAction(request TableConstraintActionRequest) *TableCo
 }
 func convertTableColumnAction(request TableColumnActionRequest) *TableColumnAction {
 	if request.Add != nil {
-		var defaultValue ColumnDefaultValue
+		var defaultValue *ColumnDefaultValue
 		if request.Add.DefaultValue != nil {
-			defaultValue = ColumnDefaultValue{
+			defaultValue = &ColumnDefaultValue{
 				request.Add.DefaultValue.expression,
-				request.Add.DefaultValue.identity,
+				&ColumnIdentity{
+					Start:     request.Add.DefaultValue.identity.Start,
+					Increment: request.Add.DefaultValue.identity.Increment,
+				},
 			}
 		}
-		var inlineConstraint TableColumnAddInlineConstraint
+		var inlineConstraint *TableColumnAddInlineConstraint
 		if request.Add.InlineConstraint != nil {
-			var foreignKey ColumnAddForeignKey
+			var foreignKey *ColumnAddForeignKey
 			if request.Add.InlineConstraint.ForeignKey != nil {
-				foreignKey = ColumnAddForeignKey{
+				foreignKey = &ColumnAddForeignKey{
 					TableName:  request.Add.InlineConstraint.ForeignKey.TableName,
 					ColumnName: request.Add.InlineConstraint.ForeignKey.ColumnName,
 				}
 			}
-			inlineConstraint = TableColumnAddInlineConstraint{
-				NotNull:    Bool(request.Add.InlineConstraint.NotNull),
+			inlineConstraint = &TableColumnAddInlineConstraint{
+				NotNull:    request.Add.InlineConstraint.NotNull,
 				Name:       request.Add.InlineConstraint.Name,
 				Type:       request.Add.InlineConstraint.Type,
-				ForeignKey: &foreignKey,
+				ForeignKey: foreignKey,
 			}
 		}
 		return &TableColumnAction{
 			Add: &TableColumnAddAction{
-				Column:           Bool(request.Add.Column),
+				Column:           request.Add.Column,
 				Name:             request.Add.Name,
 				Type:             request.Add.Type,
-				DefaultValue:     &defaultValue,
-				InlineConstraint: &inlineConstraint,
+				DefaultValue:     defaultValue,
+				InlineConstraint: inlineConstraint,
 			},
 		}
 	}
@@ -365,22 +380,22 @@ func convertTableColumnAction(request TableColumnActionRequest) *TableColumnActi
 	if len(request.Alter) > 0 {
 		var alterActions []TableColumnAlterAction
 		for _, alterAction := range request.Alter {
-			var notNullConstraint TableColumnNotNullConstraint
+			var notNullConstraint *TableColumnNotNullConstraint
 			if alterAction.NotNullConstraint != nil {
-				notNullConstraint = TableColumnNotNullConstraint{
-					Set:  Bool(alterAction.NotNullConstraint.Set),
-					Drop: Bool(alterAction.NotNullConstraint.Drop),
+				notNullConstraint = &TableColumnNotNullConstraint{
+					Set:  alterAction.NotNullConstraint.Set,
+					Drop: alterAction.NotNullConstraint.Drop,
 				}
 			}
 			alterActions = append(alterActions, TableColumnAlterAction{
 				Column:            Bool(alterAction.Column),
 				Name:              alterAction.Name,
-				DropDefault:       Bool(alterAction.DropDefault),
+				DropDefault:       alterAction.DropDefault,
 				SetDefault:        alterAction.SetDefault,
-				NotNullConstraint: &notNullConstraint,
+				NotNullConstraint: notNullConstraint,
 				Type:              alterAction.Type,
 				Comment:           alterAction.Comment,
-				UnsetComment:      Bool(alterAction.UnsetComment),
+				UnsetComment:      alterAction.UnsetComment,
 			})
 		}
 		return &TableColumnAction{
@@ -393,15 +408,14 @@ func convertTableColumnAction(request TableColumnActionRequest) *TableColumnActi
 				ColumnName:        request.SetMaskingPolicy.ColumnName,
 				MaskingPolicyName: request.SetMaskingPolicy.MaskingPolicyName,
 				Using:             request.SetMaskingPolicy.Using,
-				Force:             Bool(request.SetMaskingPolicy.Force),
+				Force:             request.SetMaskingPolicy.Force,
 			},
 		}
 	}
 	if request.UnsetMaskingPolicy != nil {
 		return &TableColumnAction{
 			UnsetMaskingPolicy: &TableColumnAlterUnsetMaskingPolicyAction{
-				ColumnName:        request.UnsetMaskingPolicy.ColumnName,
-				MaskingPolicyName: request.UnsetMaskingPolicy.MaskingPolicyName,
+				ColumnName: request.UnsetMaskingPolicy.ColumnName,
 			},
 		}
 	}
@@ -439,53 +453,91 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 			Value: tagRequest.Value,
 		})
 	}
-	var rowAccessPolicy RowAccessPolicy
+	var rowAccessPolicy *RowAccessPolicy
 	if s.RowAccessPolicy != nil {
-		rowAccessPolicy = RowAccessPolicy{
+		rowAccessPolicy = &RowAccessPolicy{
 			Name: s.RowAccessPolicy.Name,
 			On:   s.RowAccessPolicy.On,
 		}
 	}
+	var outOfLineConstrait *CreateOutOfLineConstraint
+	if s.OutOfLineConstraint != nil {
+		var foreignKey *OutOfLineForeignKey
+		if s.OutOfLineConstraint.ForeignKey != nil {
+			var foreignKeyOnAction *ForeignKeyOnAction
+			if s.OutOfLineConstraint.ForeignKey.On != nil {
+				foreignKeyOnAction = &ForeignKeyOnAction{
+					OnUpdate: s.OutOfLineConstraint.ForeignKey.On.OnUpdate,
+					OnDelete: s.OutOfLineConstraint.ForeignKey.On.OnDelete,
+				}
+			}
+			foreignKey = &OutOfLineForeignKey{
+				TableName:   s.OutOfLineConstraint.ForeignKey.TableName,
+				ColumnNames: s.OutOfLineConstraint.ForeignKey.ColumnNames,
+				Match:       s.OutOfLineConstraint.ForeignKey.Match,
+				On:          foreignKeyOnAction,
+			}
+		}
+		outOfLineConstrait = &CreateOutOfLineConstraint{
+			Name:               s.OutOfLineConstraint.Name,
+			Type:               s.OutOfLineConstraint.Type,
+			Columns:            s.OutOfLineConstraint.Columns,
+			ForeignKey:         foreignKey,
+			Enforced:           s.OutOfLineConstraint.Enforced,
+			NotEnforced:        s.OutOfLineConstraint.NotEnforced,
+			Deferrable:         s.OutOfLineConstraint.Deferrable,
+			NotDeferrable:      s.OutOfLineConstraint.NotDeferrable,
+			InitiallyDeferred:  s.OutOfLineConstraint.InitiallyDeferred,
+			InitiallyImmediate: s.OutOfLineConstraint.InitiallyImmediate,
+			Enable:             s.OutOfLineConstraint.Enable,
+			Disable:            s.OutOfLineConstraint.Disable,
+			Validate:           s.OutOfLineConstraint.Validate,
+			NoValidate:         s.OutOfLineConstraint.NoValidate,
+			Rely:               s.OutOfLineConstraint.Rely,
+			NoRely:             s.OutOfLineConstraint.NoRely,
+		}
+	}
 
 	return &createTableOptions{
-		OrReplace:                  Bool(s.orReplace),
-		IfNotExists:                Bool(s.ifNotExists),
+		OrReplace:                  s.orReplace,
+		IfNotExists:                s.ifNotExists,
 		Scope:                      s.scope,
 		Kind:                       s.kind,
 		name:                       s.name,
 		Columns:                    convertColumns(s.columns),
 		ClusterBy:                  s.clusterBy,
+		OutOfLineConstraint:        outOfLineConstrait,
 		EnableSchemaEvolution:      s.enableSchemaEvolution,
 		StageCopyOptions:           convertStageCopyOptions(s.stageCopyOptions),
 		StageFileFormat:            convertStageFileFormatOptions(s.stageFileFormat),
 		DataRetentionTimeInDays:    s.DataRetentionTimeInDays,
-		MaxDataRetentionTimeInDays: s.DataRetentionTimeInDays,
-		ChangeTracking:             Bool(s.ChangeTracking),
+		MaxDataExtentionTimeInDays: s.MaxDataExtensionTimeInDays,
+		ChangeTracking:             s.ChangeTracking,
 		DefaultDDLCollation:        s.DefaultDDLCollation,
-		CopyGrants:                 Bool(s.CopyGrants),
+		CopyGrants:                 s.CopyGrants,
 		Tags:                       tagAssociations,
-		Comment:                    String(s.Comment),
-		RowAccessPolicy:            &rowAccessPolicy,
+		Comment:                    s.Comment,
+		RowAccessPolicy:            rowAccessPolicy,
 	}
 }
 
 func (s *CreateTableAsSelectRequest) toOpts() *createTableAsSelectOptions {
 	var columns []TableAsSelectColumn
 	for _, column := range s.columns {
-		var maskingPolicy TableAsSelectColumnMaskingPolicy
+		var maskingPolicy *TableAsSelectColumnMaskingPolicy
 		if column.maskingPolicyName != nil {
-			maskingPolicy = TableAsSelectColumnMaskingPolicy{
+			maskingPolicy = &TableAsSelectColumnMaskingPolicy{
 				Name: *column.maskingPolicyName,
 			}
 		}
 		columns = append(columns, TableAsSelectColumn{
 			Name:          column.name,
 			Type:          column.type_,
-			MaskingPolicy: &maskingPolicy,
+			MaskingPolicy: maskingPolicy,
 		})
 	}
 	return &createTableAsSelectOptions{
-		OrReplace: Bool(s.orReplace),
+		OrReplace: s.orReplace,
 		name:      s.name,
 		Columns:   columns,
 	}
@@ -493,27 +545,28 @@ func (s *CreateTableAsSelectRequest) toOpts() *createTableAsSelectOptions {
 
 func (s *CreateTableUsingTemplateRequest) toOpts() *createTableUsingTemplateOptions {
 	return &createTableUsingTemplateOptions{
-		OrReplace:  Bool(s.orReplace),
+		OrReplace:  s.orReplace,
 		name:       s.name,
-		CopyGrants: Bool(s.copyGrants),
-		Query:      s.Query,
+		CopyGrants: s.copyGrants,
+		Query:      []string{s.Query},
 	}
 }
 
 func (s *CreateTableLikeRequest) toOpts() *createTableLikeOptions {
 	return &createTableLikeOptions{
-		OrReplace:   Bool(s.orReplace),
+		OrReplace:   s.orReplace,
 		name:        s.name,
-		CopyGrants:  Bool(s.copyGrants),
+		CopyGrants:  s.copyGrants,
 		SourceTable: s.sourceTable,
 		ClusterBy:   s.clusterBy,
 	}
 }
 
 func (s *CreateTableCloneRequest) toOpts() *createTableCloneOptions {
-	var clonePoint ClonePoint
+	var clonePoint *ClonePoint
 	if s.ClonePoint != nil {
-		clonePoint = ClonePoint{
+		clonePoint = &ClonePoint{
+			Moment: s.ClonePoint.Moment,
 			At: TimeTravel{
 				Timestamp: s.ClonePoint.At.Timestamp,
 				Offset:    s.ClonePoint.At.Offset,
@@ -522,11 +575,11 @@ func (s *CreateTableCloneRequest) toOpts() *createTableCloneOptions {
 		}
 	}
 	return &createTableCloneOptions{
-		OrReplace:   Bool(s.orReplace),
+		OrReplace:   s.orReplace,
 		name:        s.name,
-		CopyGrants:  Bool(s.copyGrants),
+		CopyGrants:  s.copyGrants,
 		SourceTable: s.sourceTable,
-		ClonePoint:  &clonePoint,
+		ClonePoint:  clonePoint,
 	}
 }
 
@@ -536,12 +589,12 @@ func convertStageCopyOptions(copyOptionRequests []StageCopyOptionsRequest) []Sta
 		innerValue := StageCopyOptionsInnerValue{
 			OnError:           request.OnError,
 			SizeLimit:         request.SizeLimit,
-			Purge:             Bool(request.Purge),
-			ReturnFailedOnly:  Bool(request.ReturnFailedOnly),
+			Purge:             request.Purge,
+			ReturnFailedOnly:  request.ReturnFailedOnly,
 			MatchByColumnName: request.MatchByColumnName,
-			EnforceLength:     Bool(request.EnforceLength),
-			TruncateColumns:   Bool(request.TruncateColumns),
-			Force:             Bool(request.Force),
+			EnforceLength:     request.EnforceLength,
+			TruncateColumns:   request.TruncateColumns,
+			Force:             request.Force,
 		}
 		copyOptions = append(copyOptions, StageCopyOption{
 			InnerValue: innerValue,
@@ -552,130 +605,137 @@ func convertStageCopyOptions(copyOptionRequests []StageCopyOptionsRequest) []Sta
 func convertStageFileFormatOptions(stageFileFormatRequests []StageFileFormatRequest) []StageFileFormat {
 	var fileFormats []StageFileFormat
 	for _, request := range stageFileFormatRequests {
-		var options FileFormatTypeOptions
+		var options *FileFormatTypeOptions
 		if request.Options != nil {
 			options = convertFileFormatTypeOptions(*request.Options)
 		}
 		innerValue := StageFileFormatInnerValue{
 			FormatName: request.FormatName,
 			FormatType: request.FormatType,
-			Options:    &options,
+			Options:    options,
 		}
 		fileFormats = append(fileFormats, StageFileFormat{InnerValue: innerValue})
 	}
 	return fileFormats
 }
-func convertFileFormatTypeOptions(request FileFormatTypeOptionsRequest) FileFormatTypeOptions {
-	return FileFormatTypeOptions{
+func convertFileFormatTypeOptions(request FileFormatTypeOptionsRequest) *FileFormatTypeOptions {
+	return &FileFormatTypeOptions{
 		CSVCompression:                  request.CSVCompression,
 		CSVRecordDelimiter:              request.CSVRecordDelimiter,
 		CSVFieldDelimiter:               request.CSVFieldDelimiter,
 		CSVFileExtension:                request.CSVFileExtension,
-		CSVParseHeader:                  Bool(request.CSVParseHeader),
+		CSVParseHeader:                  request.CSVParseHeader,
 		CSVSkipHeader:                   request.CSVSkipHeader,
-		CSVSkipBlankLines:               Bool(request.CSVSkipBlankLines),
+		CSVSkipBlankLines:               request.CSVSkipBlankLines,
 		CSVDateFormat:                   request.CSVDateFormat,
 		CSVTimeFormat:                   request.CSVTimeFormat,
 		CSVTimestampFormat:              request.CSVTimestampFormat,
 		CSVBinaryFormat:                 request.CSVBinaryFormat,
 		CSVEscape:                       request.CSVEscape,
 		CSVEscapeUnenclosedField:        request.CSVEscapeUnenclosedField,
-		CSVTrimSpace:                    Bool(request.CSVTrimSpace),
+		CSVTrimSpace:                    request.CSVTrimSpace,
 		CSVFieldOptionallyEnclosedBy:    request.CSVFieldOptionallyEnclosedBy,
 		CSVNullIf:                       request.CSVNullIf,
-		CSVErrorOnColumnCountMismatch:   Bool(request.CSVErrorOnColumnCountMismatch),
-		CSVReplaceInvalidCharacters:     Bool(request.CSVReplaceInvalidCharacters),
-		CSVEmptyFieldAsNull:             Bool(request.CSVEmptyFieldAsNull),
-		CSVSkipByteOrderMark:            Bool(request.CSVSkipByteOrderMark),
+		CSVErrorOnColumnCountMismatch:   request.CSVErrorOnColumnCountMismatch,
+		CSVReplaceInvalidCharacters:     request.CSVReplaceInvalidCharacters,
+		CSVEmptyFieldAsNull:             request.CSVEmptyFieldAsNull,
+		CSVSkipByteOrderMark:            request.CSVSkipByteOrderMark,
 		CSVEncoding:                     request.CSVEncoding,
 		JSONCompression:                 request.JSONCompression,
 		JSONDateFormat:                  request.JSONDateFormat,
 		JSONTimeFormat:                  request.JSONTimeFormat,
 		JSONTimestampFormat:             request.JSONTimestampFormat,
 		JSONBinaryFormat:                request.JSONBinaryFormat,
-		JSONTrimSpace:                   Bool(request.JSONTrimSpace),
+		JSONTrimSpace:                   request.JSONTrimSpace,
 		JSONNullIf:                      request.JSONNullIf,
 		JSONFileExtension:               request.JSONFileExtension,
-		JSONEnableOctal:                 Bool(request.JSONEnableOctal),
-		JSONAllowDuplicate:              Bool(request.JSONAllowDuplicate),
-		JSONStripOuterArray:             Bool(request.JSONStripOuterArray),
-		JSONStripNullValues:             Bool(request.JSONStripNullValues),
-		JSONReplaceInvalidCharacters:    Bool(request.JSONReplaceInvalidCharacters),
-		JSONIgnoreUTF8Errors:            Bool(request.JSONIgnoreUTF8Errors),
-		JSONSkipByteOrderMark:           Bool(request.JSONSkipByteOrderMark),
+		JSONEnableOctal:                 request.JSONEnableOctal,
+		JSONAllowDuplicate:              request.JSONAllowDuplicate,
+		JSONStripOuterArray:             request.JSONStripOuterArray,
+		JSONStripNullValues:             request.JSONStripNullValues,
+		JSONReplaceInvalidCharacters:    request.JSONReplaceInvalidCharacters,
+		JSONIgnoreUTF8Errors:            request.JSONIgnoreUTF8Errors,
+		JSONSkipByteOrderMark:           request.JSONSkipByteOrderMark,
 		AvroCompression:                 request.AvroCompression,
-		AvroTrimSpace:                   Bool(request.AvroTrimSpace),
-		AvroReplaceInvalidCharacters:    Bool(request.AvroReplaceInvalidCharacters),
+		AvroTrimSpace:                   request.AvroTrimSpace,
+		AvroReplaceInvalidCharacters:    request.AvroReplaceInvalidCharacters,
 		AvroNullIf:                      request.AvroNullIf,
-		ORCTrimSpace:                    Bool(request.ORCTrimSpace),
-		ORCReplaceInvalidCharacters:     Bool(request.ORCReplaceInvalidCharacters),
+		ORCTrimSpace:                    request.ORCTrimSpace,
+		ORCReplaceInvalidCharacters:     request.ORCReplaceInvalidCharacters,
 		ORCNullIf:                       request.ORCNullIf,
 		ParquetCompression:              request.ParquetCompression,
-		ParquetSnappyCompression:        Bool(request.ParquetSnappyCompression),
-		ParquetBinaryAsText:             Bool(request.ParquetBinaryAsText),
-		ParquetTrimSpace:                Bool(request.ParquetTrimSpace),
-		ParquetReplaceInvalidCharacters: Bool(request.ParquetReplaceInvalidCharacters),
+		ParquetSnappyCompression:        request.ParquetSnappyCompression,
+		ParquetBinaryAsText:             request.ParquetBinaryAsText,
+		ParquetTrimSpace:                request.ParquetTrimSpace,
+		ParquetReplaceInvalidCharacters: request.ParquetReplaceInvalidCharacters,
 		ParquetNullIf:                   request.ParquetNullIf,
 		XMLCompression:                  request.XMLCompression,
-		XMLIgnoreUTF8Errors:             Bool(request.XMLIgnoreUTF8Errors),
-		XMLPreserveSpace:                Bool(request.XMLPreserveSpace),
-		XMLStripOuterElement:            Bool(request.XMLStripOuterElement),
-		XMLDisableSnowflakeData:         Bool(request.XMLDisableSnowflakeData),
-		XMLDisableAutoConvert:           Bool(request.XMLDisableAutoConvert),
-		XMLReplaceInvalidCharacters:     Bool(request.XMLReplaceInvalidCharacters),
-		XMLSkipByteOrderMark:            Bool(request.XMLSkipByteOrderMark),
+		XMLIgnoreUTF8Errors:             request.XMLIgnoreUTF8Errors,
+		XMLPreserveSpace:                request.XMLPreserveSpace,
+		XMLStripOuterElement:            request.XMLStripOuterElement,
+		XMLDisableSnowflakeData:         request.XMLDisableSnowflakeData,
+		XMLDisableAutoConvert:           request.XMLDisableAutoConvert,
+		XMLReplaceInvalidCharacters:     request.XMLReplaceInvalidCharacters,
+		XMLSkipByteOrderMark:            request.XMLSkipByteOrderMark,
 	}
 }
 
 func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 	var columns []TableColumn
 	for _, columnRequest := range columnRequests {
-		var defaultValue ColumnDefaultValue
+		var defaultValue *ColumnDefaultValue
 		if columnRequest.defaultValue != nil {
-			defaultValue = ColumnDefaultValue{
+			var columnIdentity *ColumnIdentity
+			if columnRequest.defaultValue.identity != nil {
+				columnIdentity = &ColumnIdentity{
+					Start:     columnRequest.defaultValue.identity.Start,
+					Increment: columnRequest.defaultValue.identity.Increment,
+				}
+			}
+			defaultValue = &ColumnDefaultValue{
 				columnRequest.defaultValue.expression,
-				columnRequest.defaultValue.identity,
+				columnIdentity,
 			}
 		}
-		var inlineConstraint ColumnInlineConstraint
+		var inlineConstraint *ColumnInlineConstraint
 		if columnRequest.inlineConstraint != nil {
-			var foreignKey InlineForeignKey
+			var foreignKey *InlineForeignKey
 			if columnRequest.inlineConstraint.foreignKey != nil {
-				var onActionRequest ForeignKeyOnAction
+				var onActionRequest *ForeignKeyOnAction
 				if columnRequest.inlineConstraint.foreignKey.On != nil {
-					onActionRequest = ForeignKeyOnAction{
+					onActionRequest = &ForeignKeyOnAction{
 						OnUpdate: columnRequest.inlineConstraint.foreignKey.On.OnUpdate,
 						OnDelete: columnRequest.inlineConstraint.foreignKey.On.OnDelete,
 					}
 				}
-				foreignKey = InlineForeignKey{
+				foreignKey = &InlineForeignKey{
 					TableName:  columnRequest.inlineConstraint.foreignKey.TableName,
 					ColumnName: columnRequest.inlineConstraint.foreignKey.ColumnName,
 					Match:      columnRequest.inlineConstraint.foreignKey.Match,
-					On:         &onActionRequest,
+					On:         onActionRequest,
 				}
 			}
-			inlineConstraint = ColumnInlineConstraint{
+			inlineConstraint = &ColumnInlineConstraint{
 				Name:               columnRequest.inlineConstraint.Name,
 				Type:               columnRequest.inlineConstraint.type_,
-				ForeignKey:         &foreignKey,
-				Enforced:           Bool(columnRequest.inlineConstraint.enforced),
-				NotEnforced:        Bool(columnRequest.inlineConstraint.notEnforced),
-				Deferrable:         Bool(columnRequest.inlineConstraint.deferrable),
-				NotDeferrable:      Bool(columnRequest.inlineConstraint.notDeferrable),
-				InitiallyDeferred:  Bool(columnRequest.inlineConstraint.initiallyDeferred),
-				InitiallyImmediate: Bool(columnRequest.inlineConstraint.initiallyImmediate),
-				Enable:             Bool(columnRequest.inlineConstraint.enable),
-				Disable:            Bool(columnRequest.inlineConstraint.disable),
-				Validate:           Bool(columnRequest.inlineConstraint.validate),
-				NoValidate:         Bool(columnRequest.inlineConstraint.noValidate),
-				Rely:               Bool(columnRequest.inlineConstraint.rely),
-				NoRely:             Bool(columnRequest.inlineConstraint.noRely),
+				ForeignKey:         foreignKey,
+				Enforced:           columnRequest.inlineConstraint.enforced,
+				NotEnforced:        columnRequest.inlineConstraint.notEnforced,
+				Deferrable:         columnRequest.inlineConstraint.deferrable,
+				NotDeferrable:      columnRequest.inlineConstraint.notDeferrable,
+				InitiallyDeferred:  columnRequest.inlineConstraint.initiallyDeferred,
+				InitiallyImmediate: columnRequest.inlineConstraint.initiallyImmediate,
+				Enable:             columnRequest.inlineConstraint.enable,
+				Disable:            columnRequest.inlineConstraint.disable,
+				Validate:           columnRequest.inlineConstraint.validate,
+				NoValidate:         columnRequest.inlineConstraint.noValidate,
+				Rely:               columnRequest.inlineConstraint.rely,
+				NoRely:             columnRequest.inlineConstraint.noRely,
 			}
 		}
-		var maskingPolicy ColumnMaskingPolicy
+		var maskingPolicy *ColumnMaskingPolicy
 		if columnRequest.maskingPolicy != nil {
-			maskingPolicy = ColumnMaskingPolicy{
+			maskingPolicy = &ColumnMaskingPolicy{
 				With:  columnRequest.maskingPolicy.with,
 				Name:  columnRequest.maskingPolicy.name,
 				Using: columnRequest.maskingPolicy.using,
@@ -686,12 +746,12 @@ func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 			Type:             columnRequest.type_,
 			Collate:          columnRequest.collate,
 			Comment:          columnRequest.comment,
-			DefaultValue:     &defaultValue,
-			MaskingPolicy:    &maskingPolicy,
-			NotNull:          Bool(columnRequest.notNull),
-			With:             Bool(columnRequest.with),
+			DefaultValue:     defaultValue,
+			MaskingPolicy:    maskingPolicy,
+			NotNull:          columnRequest.notNull,
+			With:             columnRequest.with,
 			Tags:             columnRequest.tags,
-			InlineConstraint: &inlineConstraint,
+			InlineConstraint: inlineConstraint,
 		})
 
 	}
