@@ -2,7 +2,6 @@ package resources
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -188,8 +187,6 @@ func readGenericGrant(
 			privileges.addString(grant.Privilege)
 			// Reassign set back
 			sharePrivileges[granteeNameStrippedAccount] = privileges
-		default:
-			return fmt.Errorf("unknown grantee type %s", grant.GranteeType)
 		}
 	}
 
