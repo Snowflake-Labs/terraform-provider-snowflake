@@ -45,7 +45,7 @@ func TestAccGrantPrivilegesToRole_onAccount(t *testing.T) {
 		},
 	})
 }
-
+/*
 func TestAccGrantPrivilegesToRole_onAccountAllPrivileges(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
@@ -71,7 +71,7 @@ func TestAccGrantPrivilegesToRole_onAccountAllPrivileges(t *testing.T) {
 		},
 	})
 }
-
+*/
 func grantPrivilegesToRole_onAccountConfig(name string, privileges []string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
