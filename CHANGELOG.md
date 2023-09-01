@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.70.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.70.0...v0.70.1) (2023-09-01)
+
+
+### Misc
+
+* Extract reviewdog job from integration workflow ([#2027](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2027)) ([243fc28](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/243fc285811de787328a7f3ca0d3a84193976b85))
+
+
+### BugFixes
+
+* add back in 386 build ([#2038](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2038)) ([5522504](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/55225041d7f4722adbd7b9445990f57c04a4adea))
+* external id for shares ([#2040](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2040)) ([f8357c0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f8357c06376feda2d9732f5046a408f9b82bc339))
+* Fix make sweep ([#2025](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2025)) ([beb2f98](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/beb2f9867ee501e630f75ace42dbef577563d593))
+
 ## [0.70.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.69.0...v0.70.0) (2023-08-21)
 
 
