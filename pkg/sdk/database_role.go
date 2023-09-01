@@ -13,6 +13,11 @@ type DatabaseRoles interface {
 	Drop(ctx context.Context, request *DropDatabaseRoleRequest) error
 	Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]DatabaseRole, error)
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error)
+
+	Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error
+	Revoke(ctx context.Context, request *RevokeDatabaseRoleRequest) error
+	GrantToShare(ctx context.Context, request *GrantDatabaseRoleToShareRequest) error
+	RevokeFromShare(ctx context.Context, request *RevokeDatabaseRoleFromShareRequest) error
 }
 
 // createDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database-role.
@@ -77,9 +82,9 @@ type databaseRoleDBRow struct {
 	IsDefault              sql.NullString `db:"is_default"`
 	IsCurrent              sql.NullString `db:"is_current"`
 	IsInherited            sql.NullString `db:"is_inherited"`
-	GrantedToRoles         sql.NullString `db:"granted_to_roles"`
-	GrantedToDatabaseRoles sql.NullString `db:"granted_to_database_roles"`
-	GrantedDatabaseRoles   sql.NullString `db:"granted_database_roles"`
+	GrantedToRoles         int            `db:"granted_to_roles"`
+	GrantedToDatabaseRoles int            `db:"granted_to_database_roles"`
+	GrantedDatabaseRoles   int            `db:"granted_database_roles"`
 	Owner                  string         `db:"owner"`
 	Comment                sql.NullString `db:"comment"`
 	OwnerRoleType          sql.NullString `db:"owner_role_type"`
@@ -93,9 +98,9 @@ type DatabaseRole struct {
 	IsDefault              bool
 	IsCurrent              bool
 	IsInherited            bool
-	GrantedToRoles         string
-	GrantedToDatabaseRoles string
-	GrantedDatabaseRoles   string
+	GrantedToRoles         int
+	GrantedToDatabaseRoles int
+	GrantedDatabaseRoles   int
 	Owner                  string
 	Comment                string
 	OwnerRoleType          string
@@ -103,9 +108,12 @@ type DatabaseRole struct {
 
 func (row databaseRoleDBRow) convert() *DatabaseRole {
 	databaseRole := DatabaseRole{
-		CreatedOn: row.CreatedOn,
-		Name:      row.Name,
-		Owner:     row.Owner,
+		CreatedOn:              row.CreatedOn,
+		Name:                   row.Name,
+		Owner:                  row.Owner,
+		GrantedToRoles:         row.GrantedToRoles,
+		GrantedToDatabaseRoles: row.GrantedToDatabaseRoles,
+		GrantedDatabaseRoles:   row.GrantedDatabaseRoles,
 	}
 	if row.IsDefault.Valid {
 		databaseRole.IsDefault = row.IsDefault.String == "Y"
@@ -116,15 +124,6 @@ func (row databaseRoleDBRow) convert() *DatabaseRole {
 	if row.IsInherited.Valid {
 		databaseRole.IsInherited = row.IsInherited.String == "Y"
 	}
-	if row.GrantedToRoles.Valid {
-		databaseRole.GrantedToRoles = row.GrantedToRoles.String
-	}
-	if row.GrantedToDatabaseRoles.Valid {
-		databaseRole.GrantedToDatabaseRoles = row.GrantedToDatabaseRoles.String
-	}
-	if row.GrantedDatabaseRoles.Valid {
-		databaseRole.GrantedDatabaseRoles = row.GrantedDatabaseRoles.String
-	}
 	if row.Comment.Valid {
 		databaseRole.Comment = row.Comment.String
 	}
@@ -132,4 +131,46 @@ func (row databaseRoleDBRow) convert() *DatabaseRole {
 		databaseRole.OwnerRoleType = row.OwnerRoleType.String
 	}
 	return &databaseRole
+}
+
+// grantDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-database-role.
+type grantDatabaseRoleOptions struct {
+	grant        bool                            `ddl:"static" sql:"GRANT"`
+	databaseRole bool                            `ddl:"static" sql:"DATABASE ROLE"`
+	name         DatabaseObjectIdentifier        `ddl:"identifier"`
+	to           bool                            `ddl:"static" sql:"TO"`
+	ParentRole   grantOrRevokeDatabaseRoleObject `ddl:"-"`
+}
+
+// revokeDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/revoke-database-role.
+type revokeDatabaseRoleOptions struct {
+	revoke       bool                            `ddl:"static" sql:"REVOKE"`
+	databaseRole bool                            `ddl:"static" sql:"DATABASE ROLE"`
+	name         DatabaseObjectIdentifier        `ddl:"identifier"`
+	from         bool                            `ddl:"static" sql:"FROM"`
+	ParentRole   grantOrRevokeDatabaseRoleObject `ddl:"-"`
+}
+
+type grantOrRevokeDatabaseRoleObject struct {
+	// One of
+	DatabaseRoleName *DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
+	AccountRoleName  *AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
+}
+
+// grantDatabaseRoleToShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-database-role-share.
+type grantDatabaseRoleToShareOptions struct {
+	grant        bool                     `ddl:"static" sql:"GRANT"`
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
+	name         DatabaseObjectIdentifier `ddl:"identifier"`
+	toShare      bool                     `ddl:"static" sql:"TO SHARE"`
+	Share        AccountObjectIdentifier  `ddl:"identifier"`
+}
+
+// revokeDatabaseRoleFromShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-database-role-share.
+type revokeDatabaseRoleFromShareOptions struct {
+	revoke       bool                     `ddl:"static" sql:"REVOKE"`
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
+	name         DatabaseObjectIdentifier `ddl:"identifier"`
+	fromShare    bool                     `ddl:"static" sql:"FROM SHARE"`
+	Share        AccountObjectIdentifier  `ddl:"identifier"`
 }

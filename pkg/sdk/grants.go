@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(GrantPrivilegesToAccountRoleOptions)
+	_ validatable = new(RevokePrivilegesFromAccountRoleOptions)
+	_ validatable = new(grantPrivilegeToShareOptions)
+	_ validatable = new(revokePrivilegeFromShareOptions)
+	_ validatable = new(ShowGrantOptions)
+)
+
 type Grants interface {
 	GrantPrivilegesToAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *GrantPrivilegesToAccountRoleOptions) error
 	RevokePrivilegesFromAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *RevokePrivilegesFromAccountRoleOptions) error

@@ -10,6 +10,13 @@ import (
 // Compile-time proof of interface implementation.
 var _ Alerts = (*alerts)(nil)
 
+var (
+	_ validatable = new(CreateAlertOptions)
+	_ validatable = new(AlterAlertOptions)
+	_ validatable = new(dropAlertOptions)
+	_ validatable = new(ShowAlertOptions)
+)
+
 type Alerts interface {
 	// Create creates a new alert.
 	Create(ctx context.Context, id SchemaObjectIdentifier, warehouse AccountObjectIdentifier, schedule string, condition string, action string, opts *CreateAlertOptions) error

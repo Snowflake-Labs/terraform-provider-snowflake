@@ -9,6 +9,13 @@ import (
 	"strings"
 )
 
+var (
+	_ validatable = new(CreateResourceMonitorOptions)
+	_ validatable = new(AlterResourceMonitorOptions)
+	_ validatable = new(dropResourceMonitorOptions)
+	_ validatable = new(ShowResourceMonitorOptions)
+)
+
 type ResourceMonitors interface {
 	// Create creates a resource monitor.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error

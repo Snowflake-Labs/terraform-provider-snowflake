@@ -2,6 +2,13 @@ package sdk
 
 import "fmt"
 
+var (
+	_ validatable = new(AccountParameters)
+	_ validatable = new(SessionParameters)
+	_ validatable = new(ObjectParameters)
+	_ validatable = new(UserParameters)
+)
+
 type AccountParameter string
 
 // There is a hierarchical relationship between the different parameter types. Account parameters can set any of account, user, session or object parameters

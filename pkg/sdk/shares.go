@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateShareOptions)
+	_ validatable = new(AlterShareOptions)
+	_ validatable = new(shareDropOptions)
+	_ validatable = new(ShowShareOptions)
+	_ validatable = new(shareDescribeOptions)
+)
+
 type Shares interface {
 	// Create creates a share.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error
@@ -62,6 +70,7 @@ func (v *Share) ObjectType() ObjectType {
 type shareRow struct {
 	CreatedOn    time.Time `db:"created_on"`
 	Kind         string    `db:"kind"`
+	OwnerAccount string    `db:"owner_account"`
 	Name         string    `db:"name"`
 	DatabaseName string    `db:"database_name"`
 	To           string    `db:"to"`
@@ -91,7 +100,7 @@ func (r *shareRow) toShare() *Share {
 	return &Share{
 		CreatedOn:    r.CreatedOn,
 		Kind:         ShareKind(r.Kind),
-		Name:         NewExternalObjectIdentifierFromFullyQualifiedName(r.Name),
+		Name:         NewExternalObjectIdentifier(NewAccountIdentifierFromFullyQualifiedName(r.OwnerAccount), NewAccountObjectIdentifier(r.Name)),
 		DatabaseName: NewAccountObjectIdentifier(r.DatabaseName),
 		To:           to,
 		Owner:        r.Owner,
@@ -136,9 +145,16 @@ type shareDropOptions struct {
 	name  AccountObjectIdentifier `ddl:"identifier"`
 }
 
+func (opts *shareDropOptions) validate() error {
+	return nil
+}
+
 func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
 	opts := &shareDropOptions{
 		name: id,
+	}
+	if err := opts.validate(); err != nil {
+		return err
 	}
 	sql, err := structToSQL(opts)
 	if err != nil {

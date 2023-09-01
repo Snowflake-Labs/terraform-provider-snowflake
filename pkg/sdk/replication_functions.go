@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var _ validatable = new(ShowRegionsOptions)
+
 type ReplicationFunctions interface {
 	ShowReplicationAcccounts(ctx context.Context) ([]*ReplicationAccount, error)
 	// todo: ShowReplicationDatabases(ctx context.Context, opts *ShowReplicationDatabasesOptions) ([]*ReplicationDatabase, error)

@@ -21,6 +21,9 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		assert.Equal(t, expectedName, databaseRole.Name)
 		assert.Equal(t, "ACCOUNTADMIN", databaseRole.Owner)
 		assert.Equal(t, expectedComment, databaseRole.Comment)
+		assert.Equal(t, 0, databaseRole.GrantedToRoles)
+		assert.Equal(t, 0, databaseRole.GrantedToDatabaseRoles)
+		assert.Equal(t, 0, databaseRole.GrantedDatabaseRoles)
 	}
 
 	cleanupDatabaseRoleProvider := func(id DatabaseObjectIdentifier) func() {
@@ -202,5 +205,73 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(returnedDatabaseRoles))
+	})
+
+	t.Run("grant and revoke database_role: to database role", func(t *testing.T) {
+		role1 := createDatabaseRole(t)
+		id1 := NewDatabaseObjectIdentifier(database.Name, role1.Name)
+		role2 := createDatabaseRole(t)
+		id2 := NewDatabaseObjectIdentifier(database.Name, role2.Name)
+
+		grantRequest := NewGrantDatabaseRoleRequest(id1).WithDatabaseRole(id2)
+		err := client.DatabaseRoles.Grant(ctx, grantRequest)
+		require.NoError(t, err)
+
+		extractedRole, err := client.DatabaseRoles.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		assert.Equal(t, 0, extractedRole.GrantedToRoles)
+		assert.Equal(t, 1, extractedRole.GrantedToDatabaseRoles)
+		assert.Equal(t, 0, extractedRole.GrantedDatabaseRoles)
+
+		extractedRole, err = client.DatabaseRoles.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		assert.Equal(t, 0, extractedRole.GrantedToRoles)
+		assert.Equal(t, 0, extractedRole.GrantedToDatabaseRoles)
+		assert.Equal(t, 1, extractedRole.GrantedDatabaseRoles)
+
+		revokeRequest := NewRevokeDatabaseRoleRequest(id1).WithDatabaseRole(id2)
+		err = client.DatabaseRoles.Revoke(ctx, revokeRequest)
+		require.NoError(t, err)
+	})
+
+	t.Run("grant and revoke database_role: to account role", func(t *testing.T) {
+		role := createDatabaseRole(t)
+		roleId := NewDatabaseObjectIdentifier(database.Name, role.Name)
+
+		accountRole, accountRoleCleanup := createRole(t, client)
+		t.Cleanup(accountRoleCleanup)
+
+		grantRequest := NewGrantDatabaseRoleRequest(roleId).WithAccountRole(accountRole.ID())
+		err := client.DatabaseRoles.Grant(ctx, grantRequest)
+		require.NoError(t, err)
+
+		extractedRole, err := client.DatabaseRoles.ShowByID(ctx, roleId)
+		require.NoError(t, err)
+		assert.Equal(t, 1, extractedRole.GrantedToRoles)
+		assert.Equal(t, 0, extractedRole.GrantedToDatabaseRoles)
+		assert.Equal(t, 0, extractedRole.GrantedDatabaseRoles)
+
+		revokeRequest := NewRevokeDatabaseRoleRequest(roleId).WithAccountRole(accountRole.ID())
+		err = client.DatabaseRoles.Revoke(ctx, revokeRequest)
+		require.NoError(t, err)
+	})
+
+	t.Run("grant and revoke database_role: to share", func(t *testing.T) {
+		role := createDatabaseRole(t)
+		roleId := NewDatabaseObjectIdentifier(database.Name, role.Name)
+
+		share, shareCleanup := createShare(t, client)
+		t.Cleanup(shareCleanup)
+
+		err := client.Grants.GrantPrivilegeToShare(ctx, ObjectPrivilegeUsage, &GrantPrivilegeToShareOn{Database: database.ID()}, share.ID())
+		require.NoError(t, err)
+
+		grantRequest := NewGrantDatabaseRoleToShareRequest(roleId, share.ID())
+		err = client.DatabaseRoles.GrantToShare(ctx, grantRequest)
+		require.NoError(t, err)
+
+		revokeRequest := NewRevokeDatabaseRoleFromShareRequest(roleId, share.ID())
+		err = client.DatabaseRoles.RevokeFromShare(ctx, revokeRequest)
+		require.NoError(t, err)
 	})
 }

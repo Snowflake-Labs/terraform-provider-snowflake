@@ -24,10 +24,11 @@ dev-cleanup: ## cleanup development dependencies
 
 sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	@read -p "Are you sure? [y/n]" -n 1 REPLY; echo; \
-		if [[ $$REPLY =~ ^[yY]$$ ]]; then \
-		  SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
-		  else echo "Aborting..."; \
+	@echo "Are you sure? [y/n]" >&2
+	@read -r REPLY; \
+		if echo "$$REPLY" | grep -qG "^[yY]$$"; then \
+			SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
+			else echo "Aborting..."; \
 		fi;
 .PHONY: sweep
 

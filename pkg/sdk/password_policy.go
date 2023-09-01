@@ -10,6 +10,14 @@ import (
 // Compile-time proof of interface implementation.
 var _ PasswordPolicies = (*passwordPolicies)(nil)
 
+var (
+	_ validatable = new(CreatePasswordPolicyOptions)
+	_ validatable = new(AlterPasswordPolicyOptions)
+	_ validatable = new(DropPasswordPolicyOptions)
+	_ validatable = new(PasswordPolicyShowOptions)
+	_ validatable = new(describePasswordPolicyOptions)
+)
+
 // PasswordPolicies describes all the password policy related methods that the
 // Snowflake API supports.
 type PasswordPolicies interface {
