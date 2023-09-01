@@ -12,18 +12,22 @@ func (v *tables) Create(ctx context.Context, request *CreateTableRequest) error 
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
+
 func (v *tables) CreateAsSelect(ctx context.Context, request *CreateTableAsSelectRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
+
 func (v *tables) CreateUsingTemplate(ctx context.Context, request *CreateTableUsingTemplateRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
+
 func (v *tables) CreateLike(ctx context.Context, request *CreateTableLikeRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
+
 func (v *tables) CreateClone(ctx context.Context, request *CreateTableCloneRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
@@ -52,8 +56,8 @@ func (v *tables) Show(ctx context.Context, request *ShowTableRequest) ([]Table, 
 }
 
 func (v *tables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Table, error) {
-	request := NewShowTableRequest().WithLikePattern(id.Name())
-	tables, err := v.Show(ctx, request)
+	requestWithName := NewShowTableRequest().WithLikePattern(id.Name())
+	tables, err := v.Show(ctx, requestWithName)
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +164,8 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 		DropAndAddRowAccessPolicy: dropAndAddRowAccessPolicy,
 		DropAllAccessRowPolicies:  s.DropAllAccessRowPolicies,
 	}
-
 }
+
 func convertAlterTableSet(request TableSetRequest) *TableSet {
 	var stageFileFormats []StageFileFormat
 	for _, stageFileFormat := range request.StageFileFormat {
@@ -203,8 +207,8 @@ func convertAlterTableSet(request TableSetRequest) *TableSet {
 		DefaultDDLCollation:        request.DefaultDDLCollation,
 		Comment:                    request.Comment,
 	}
-
 }
+
 func convertSearchOptimizationAction(request TableSearchOptimizationActionRequest) *TableSearchOptimizationAction {
 	if len(request.AddSearchOptimizationOn) > 0 {
 		return &TableSearchOptimizationAction{
@@ -331,6 +335,7 @@ func convertTableConstraintAction(request TableConstraintActionRequest) *TableCo
 	}
 	return nil
 }
+
 func convertTableColumnAction(request TableColumnActionRequest) *TableColumnAction {
 	if request.Add != nil {
 		var defaultValue *ColumnDefaultValue
@@ -444,8 +449,8 @@ func convertTableColumnAction(request TableColumnActionRequest) *TableColumnActi
 	}
 	return nil
 }
-func (s *CreateTableRequest) toOpts() *createTableOptions {
 
+func (s *CreateTableRequest) toOpts() *createTableOptions {
 	var tagAssociations []TagAssociation
 	for _, tagRequest := range tagAssociations {
 		tagAssociations = append(tagAssociations, TagAssociation{
@@ -602,6 +607,7 @@ func convertStageCopyOptions(copyOptionRequests []StageCopyOptionsRequest) []Sta
 	}
 	return copyOptions
 }
+
 func convertStageFileFormatOptions(stageFileFormatRequests []StageFileFormatRequest) []StageFileFormat {
 	var fileFormats []StageFileFormat
 	for _, request := range stageFileFormatRequests {
@@ -618,6 +624,7 @@ func convertStageFileFormatOptions(stageFileFormatRequests []StageFileFormatRequ
 	}
 	return fileFormats
 }
+
 func convertFileFormatTypeOptions(request FileFormatTypeOptionsRequest) *FileFormatTypeOptions {
 	return &FileFormatTypeOptions{
 		CSVCompression:                  request.CSVCompression,

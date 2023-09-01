@@ -99,4 +99,3 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 }
 
 const IDDelimiter = "|"
-

@@ -212,6 +212,7 @@ func (s *DropTableRequest) toOpts() *dropTableOptions {
 		Restrict: s.Restrict,
 	}
 }
+
 func (s *ShowTableRequest) toOpts() *showTableOptions {
 	var like *Like
 	if s.LikePattern != "" {
@@ -389,7 +390,7 @@ type TableColumnAlterActionRequest struct {
 	Column bool   // required
 	Name   string // required
 
-	//One of
+	// One of
 	DropDefault       *bool
 	SetDefault        *SequenceName
 	NotNullConstraint *TableColumnNotNullConstraintRequest
@@ -496,6 +497,14 @@ type TableExternalTableColumnRenameActionRequest struct {
 
 type TableExternalTableColumnDropActionRequest struct {
 	Columns []string
+}
+type ShowTableByIdRequest struct {
+	Terse      *bool
+	History    *bool
+	Id         SchemaObjectIdentifier // required
+	In         *ShowTableInRequest
+	StartsWith *string
+	LimitFrom  *LimitFrom
 }
 type ShowTableRequest struct {
 	Terse       *bool

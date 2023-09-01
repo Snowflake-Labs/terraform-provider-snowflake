@@ -42,7 +42,6 @@ func (opts *createTableOptions) validateProp() error {
 			if !validObjectidentifier(tag.Name) {
 				errs = append(errs, ErrInvalidObjectIdentifier2())
 			}
-
 		}
 	}
 	if outOfLineConstraint := opts.OutOfLineConstraint; valueSet(outOfLineConstraint) {
@@ -83,6 +82,7 @@ func (opts *createTableAsSelectOptions) validateProp() error {
 	}
 	return errors.Join(errs...)
 }
+
 func (opts *createTableLikeOptions) validateProp() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
@@ -96,6 +96,7 @@ func (opts *createTableLikeOptions) validateProp() error {
 	}
 	return errors.Join(errs...)
 }
+
 func (opts *createTableUsingTemplateOptions) validateProp() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
@@ -106,6 +107,7 @@ func (opts *createTableUsingTemplateOptions) validateProp() error {
 	}
 	return errors.Join(errs...)
 }
+
 func (opts *createTableCloneOptions) validateProp() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
@@ -247,6 +249,7 @@ func (opts *dropTableOptions) validateProp() error {
 	}
 	return errors.Join(errs...)
 }
+
 func (opts *showTableOptions) validateProp() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)

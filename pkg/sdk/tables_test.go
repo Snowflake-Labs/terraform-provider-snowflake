@@ -60,13 +60,16 @@ func TestTableCreate(t *testing.T) {
 	t.Run("validation: column tag association's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		opts.Columns = []TableColumn{{
-			Name: "",
-			Tags: []TagAssociation{{
-				Name:  NewSchemaObjectIdentifier("", "", ""),
-				Value: "v1",
+		opts.Columns = []TableColumn{
+			{
+				Name: "",
+				Tags: []TagAssociation{
+					{
+						Name:  NewSchemaObjectIdentifier("", "", ""),
+						Value: "v1",
+					},
+				},
 			},
-			}},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
@@ -178,10 +181,12 @@ func TestTableCreate(t *testing.T) {
 				},
 			},
 		}}
-		stageCopyOptions := []StageCopyOption{{
-			StageCopyOptionsInnerValue{
-				OnError: StageCopyOptionsOnErrorSkipFileNum{10},
-			}},
+		stageCopyOptions := []StageCopyOption{
+			{
+				StageCopyOptionsInnerValue{
+					OnError: StageCopyOptionsOnErrorSkipFileNum{10},
+				},
+			},
 		}
 		rowAccessPolicy := RowAccessPolicy{
 			Name: randomSchemaObjectIdentifier(t),
@@ -222,7 +227,7 @@ func TestTableCreate(t *testing.T) {
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf(
-			`CREATE TABLE %s ( %s %s COLLATE 'de' COMMENT '%s' IDENTITY START 10 INCREMENT 1 NOT NULL MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT ) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_10) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
+			`CREATE TABLE %s ( %s %s COLLATE 'de' COMMENT '%s' IDENTITY START 10 INCREMENT 1 NOT NULL MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY , CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT ) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_10) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
 			id.FullyQualifiedName(),
 			columnName,
 			columnType,
@@ -234,11 +239,9 @@ func TestTableCreate(t *testing.T) {
 		)
 		assert.Equal(t, expected, actual)
 	})
-
 }
 
 func TestTableCreateAsSelect(t *testing.T) {
-
 	t.Run("empty options", func(t *testing.T) {
 		opts := &createTableAsSelectOptions{}
 		actual, err := structToSQL(opts)
@@ -314,7 +317,7 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 		opts := &createTableUsingTemplateOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := "CREATE TABLE USING TEMPLATE"
+		expected := "CREATE TABLE"
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("with complete options", func(t *testing.T) {
@@ -327,7 +330,7 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf("CREATE OR REPLACE TABLE %s COPY GRANTS USING TEMPLATE sample_data",
+		expected := fmt.Sprintf("CREATE OR REPLACE TABLE %s COPY GRANTS USING TEMPLATE (sample_data)",
 			id.FullyQualifiedName(),
 		)
 		assert.Equal(t, expected, actual)
@@ -689,7 +692,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter column", func(t *testing.T) {
-		//column_1
+		// column_1
 		columnOneName := "COLUMN_1"
 		alterActionsForColumnOne := []TableColumnAlterAction{
 			{
@@ -972,7 +975,6 @@ func TestTableAlter(t *testing.T) {
 		require.NoError(t, err)
 		expected := fmt.Sprintf("ALTER TABLE %s ADD SEARCH OPTIMIZATION ON SUBSTRING(*), GEO(*)", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
-
 	})
 
 	t.Run("drop search optimiaztion", func(t *testing.T) {
@@ -988,7 +990,6 @@ func TestTableAlter(t *testing.T) {
 		require.NoError(t, err)
 		expected := fmt.Sprintf("ALTER TABLE %s DROP SEARCH OPTIMIZATION ON SUBSTRING(*), FOO", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
-
 	})
 
 	t.Run("drop search optimiaztion", func(t *testing.T) {
@@ -1004,7 +1005,6 @@ func TestTableAlter(t *testing.T) {
 		require.NoError(t, err)
 		expected := fmt.Sprintf("ALTER TABLE %s DROP SEARCH OPTIMIZATION ON SUBSTRING(*), FOO", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
-
 	})
 
 	t.Run("set: with complete options", func(t *testing.T) {

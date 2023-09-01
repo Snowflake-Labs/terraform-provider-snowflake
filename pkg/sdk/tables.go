@@ -9,14 +9,14 @@ import (
 var _ convertibleRow[Table] = new(tableDBRow)
 
 type Tables interface {
-	Create(ctx context.Context, opts *CreateTableRequest) error
-	CreateAsSelect(ctx context.Context, opts *CreateTableAsSelectRequest) error
-	CreateUsingTemplate(ctx context.Context, opts *CreateTableUsingTemplateRequest) error
-	CreateLike(ctx context.Context, opts *CreateTableLikeRequest) error
-	CreateClone(ctx context.Context, opts *CreateTableCloneRequest) error
-	Alter(ctx context.Context, opts *AlterTableRequest) error
-	Drop(ctx context.Context, opts *DropTableRequest) error
-	Show(ctx context.Context, opts *ShowTableRequest) ([]Table, error)
+	Create(ctx context.Context, req *CreateTableRequest) error
+	CreateAsSelect(ctx context.Context, req *CreateTableAsSelectRequest) error
+	CreateUsingTemplate(ctx context.Context, req *CreateTableUsingTemplateRequest) error
+	CreateLike(ctx context.Context, req *CreateTableLikeRequest) error
+	CreateClone(ctx context.Context, req *CreateTableCloneRequest) error
+	Alter(ctx context.Context, req *AlterTableRequest) error
+	Drop(ctx context.Context, req *DropTableRequest) error
+	Show(ctx context.Context, req *ShowTableRequest) ([]Table, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Table, error)
 }
 
@@ -188,7 +188,7 @@ type CreateOutOfLineConstraint struct {
 	Columns    []string             `ddl:"keyword,parentheses"`
 	ForeignKey *OutOfLineForeignKey `ddl:"keyword"`
 
-	//optional
+	// optional
 	Enforced           *bool `ddl:"keyword" sql:"ENFORCED"`
 	NotEnforced        *bool `ddl:"keyword" sql:"NOT ENFORCED"`
 	Deferrable         *bool `ddl:"keyword" sql:"DEFERRABLE"`
@@ -209,7 +209,7 @@ type AlterOutOfLineConstraint struct {
 	Columns    []string             `ddl:"keyword,parentheses"`
 	ForeignKey *OutOfLineForeignKey `ddl:"keyword"`
 
-	//optional
+	// optional
 	Enforced           *bool `ddl:"keyword" sql:"ENFORCED"`
 	NotEnforced        *bool `ddl:"keyword" sql:"NOT ENFORCED"`
 	Deferrable         *bool `ddl:"keyword" sql:"DEFERRABLE"`
@@ -377,7 +377,7 @@ type alterTableOptions struct {
 }
 
 type TableClusteringAction struct {
-	//one of
+	// one of
 	ClusterBy            []string                   `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
 	Recluster            *TableReclusterAction      `ddl:"keyword" sql:"RECLUSTER"`
 	ChangeReclusterState *TableReclusterChangeState `ddl:"keyword"`
@@ -443,7 +443,7 @@ type TableColumnAlterAction struct {
 	Column *bool  `ddl:"keyword" sql:"COLUMN"`
 	Name   string `ddl:"keyword"`
 
-	//One of
+	// One of
 	DropDefault       *bool         `ddl:"keyword" sql:"DROP DEFAULT"`
 	SetDefault        *SequenceName `ddl:"parameter,no_equals" sql:"SET DEFAULT"`
 	NotNullConstraint *TableColumnNotNullConstraint

@@ -642,6 +642,21 @@ func createPipe(t *testing.T, client *Client, database *Database, schema *Schema
 	return createdPipe, pipeCleanup
 }
 
+func createStageWithName(t *testing.T, client *Client, name string) (*string, func()) {
+	ctx := context.Background()
+
+	stageCleanup := func() {
+		_, err := client.exec(ctx, fmt.Sprintf("DROP STAGE %s", name))
+		require.NoError(t, err)
+	}
+	_, err := client.exec(ctx, fmt.Sprintf("CREATE STAGE %s", name))
+	if err != nil {
+		return nil, stageCleanup
+	}
+	require.NoError(t, err)
+	return &name, stageCleanup
+}
+
 func createStage(t *testing.T, client *Client, database *Database, schema *Schema, name string) (*Stage, func()) {
 	t.Helper()
 	require.NotNil(t, database, "database has to be created")
