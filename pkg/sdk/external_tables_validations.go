@@ -18,7 +18,6 @@ var (
 	_ validatable = (*describeExternalTableStage)(nil)
 )
 
-// +-OK
 func (opts *CreateExternalTableOpts) validate() error {
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
@@ -37,7 +36,6 @@ func (opts *CreateExternalTableOpts) validate() error {
 	return errors.Join(errs...)
 }
 
-// +-OK
 func (opts *CreateWithManualPartitioningExternalTableOpts) validate() error {
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
@@ -56,7 +54,6 @@ func (opts *CreateWithManualPartitioningExternalTableOpts) validate() error {
 	return errors.Join(errs...)
 }
 
-// +-OK
 func (opts *CreateDeltaLakeExternalTableOpts) validate() error {
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
@@ -90,7 +87,6 @@ func (opts *CreateExternalTableUsingTemplateOpts) validate() error {
 	return errors.Join(errs...)
 }
 
-// +-OK
 func (opts *AlterExternalTableOptions) validate() error {
 	var errs []error
 	if !validObjectidentifier(opts.name) {

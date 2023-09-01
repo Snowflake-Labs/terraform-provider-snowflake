@@ -1,10 +1,9 @@
 package sdk
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestExternalTablesCreate(t *testing.T) {
@@ -425,4 +424,29 @@ func TestExternalTablesDescribe(t *testing.T) {
 		expected := `DESCRIBE EXTERNAL TABLE "external_table" TYPE = STAGE`
 		assert.Equal(t, expected, actual)
 	})
+}
+
+// TODO Remove
+func TestT(t *testing.T) {
+	a := new(CreateExternalTableOpts)
+	b := NewCreateExternalTableRequest(
+		randomAccountObjectIdentifier(t),
+		"location",
+		[]ExternalTableFileFormat{
+			{
+				Name: String("Hello"),
+				Type: &ExternalTableFileFormatTypeJSON,
+			},
+		},
+	).WithRowAccessPolicy(
+		NewRowAccessPolicyRequest(randomSchemaObjectIdentifier(t)).
+			WithOn([]string{"policy"}),
+	)
+
+	copyByFieldNames(a, b)
+
+	printStruct(a)
+	//fmt.Printf("%#v", a)
+	//j, _ := json.MarshalIndent(*a, "", "  ")
+	//log.Println(string(j))
 }

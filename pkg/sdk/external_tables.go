@@ -7,20 +7,18 @@ import (
 )
 
 type ExternalTables interface {
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateExternalTableOpts) error
-	CreateWithManualPartitioning(ctx context.Context, id AccountObjectIdentifier, opts *CreateWithManualPartitioningExternalTableOpts) error
-	CreateDeltaLake(ctx context.Context, id AccountObjectIdentifier, opts *CreateDeltaLakeExternalTableOpts) error
-	CreateUsingTemplate(ctx context.Context, id AccountObjectIdentifier, opts *CreateExternalTableUsingTemplateOpts) error
-	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTableOptions) error
-	AlterPartitions(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTablePartitionOptions) error
-	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropExternalTableOptions) error
-	Show(ctx context.Context, opts *ShowExternalTableOptions) ([]ExternalTable, error)
-	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ExternalTable, error)
-	DescribeColumns(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableColumnDetails, error)
-	DescribeStage(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableStageDetails, error)
+	Create(ctx context.Context, req *CreateExternalTableRequest) error
+	CreateWithManualPartitioning(ctx context.Context, req *CreateWithManualPartitioningExternalTableRequest) error
+	CreateDeltaLake(ctx context.Context, req *CreateDeltaLakeExternalTableRequest) error
+	CreateUsingTemplate(ctx context.Context, req *CreateExternalTableUsingTemplateRequest) error
+	Alter(ctx context.Context, req *AlterExternalTableRequest) error
+	AlterPartitions(ctx context.Context, req *AlterExternalTablePartitionRequest) error
+	Drop(ctx context.Context, req *DropExternalTableRequest) error
+	Show(ctx context.Context, req *ShowExternalTableRequest) ([]ExternalTable, error)
+	ShowByID(ctx context.Context, req *ShowExternalTableByIDRequest) (*ExternalTable, error)
+	DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error)
+	DescribeStage(ctx context.Context, req *DescribeExternalTableStageRequest) ([]ExternalTableStageDetails, error)
 }
-
-// TODO Infer schema
 
 type ExternalTable struct {
 	CreatedOn           time.Time
@@ -204,8 +202,8 @@ type CreateWithManualPartitioningExternalTableOpts struct {
 	CloudProviderParams        *CloudProviderParams      `ddl:"keyword"`
 	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
-	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
-	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO same as normal
+	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"` // TODO optional field or static ?
+	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="`       // TODO same as normal
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
@@ -222,8 +220,8 @@ type CreateDeltaLakeExternalTableOpts struct {
 	CloudProviderParams        *CloudProviderParams      `ddl:"keyword"`
 	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
-	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
-	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO same as normal
+	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"` // TODO Is it an option or static field
+	FileFormat                 []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="`       // TODO same as normal
 	DeltaTableFormat           *bool                     `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -231,6 +229,7 @@ type CreateDeltaLakeExternalTableOpts struct {
 	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
+// TODO unit test
 type CreateExternalTableUsingTemplateOpts struct {
 	create              bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace           *bool                   `ddl:"keyword" sql:"OR REPLACE"`

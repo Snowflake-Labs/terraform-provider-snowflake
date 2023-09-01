@@ -8,50 +8,51 @@ type externalTables struct {
 	client *Client
 }
 
-func (v *externalTables) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateExternalTableOpts) error {
-	opts = createIfNil(opts)
-	opts.name = id
+func (v *externalTables) Create(ctx context.Context, req *CreateExternalTableRequest) error {
+	opts := new(CreateExternalTableOpts)
+	copyByFieldNames(opts, req)
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *externalTables) CreateWithManualPartitioning(ctx context.Context, id AccountObjectIdentifier, opts *CreateWithManualPartitioningExternalTableOpts) error {
-	opts = createIfNil(opts)
-	opts.name = id
+func (v *externalTables) CreateWithManualPartitioning(ctx context.Context, req *CreateWithManualPartitioningExternalTableRequest) error {
+	opts := new(CreateWithManualPartitioningExternalTableOpts)
+	copyByFieldNames(opts, req)
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *externalTables) CreateDeltaLake(ctx context.Context, id AccountObjectIdentifier, opts *CreateDeltaLakeExternalTableOpts) error {
-	opts = createIfNil(opts)
-	opts.name = id
+func (v *externalTables) CreateDeltaLake(ctx context.Context, req *CreateDeltaLakeExternalTableRequest) error {
+	opts := new(CreateDeltaLakeExternalTableOpts)
+	copyByFieldNames(opts, req)
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *externalTables) CreateUsingTemplate(ctx context.Context, id AccountObjectIdentifier, opts *CreateExternalTableUsingTemplateOpts) error {
-	opts = createIfNil(opts)
-	opts.name = id
+func (v *externalTables) CreateUsingTemplate(ctx context.Context, req *CreateExternalTableUsingTemplateRequest) error {
+	opts := new(CreateExternalTableUsingTemplateOpts)
+	copyByFieldNames(opts, req)
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *externalTables) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTableOptions) error {
-	opts = createIfNil(opts)
-	opts.name = id
+func (v *externalTables) Alter(ctx context.Context, req *AlterExternalTableRequest) error {
+	opts := new(AlterExternalTableOptions)
+	copyByFieldNames(opts, req)
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *externalTables) AlterPartitions(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTablePartitionOptions) error {
-	opts = createIfNil(opts)
-	opts.name = id
+func (v *externalTables) AlterPartitions(ctx context.Context, req *AlterExternalTablePartitionRequest) error {
+	opts := new(AlterExternalTablePartitionOptions)
+	copyByFieldNames(opts, req)
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *externalTables) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropExternalTableOptions) error {
-	opts = createIfNil(opts)
-	opts.name = id
+func (v *externalTables) Drop(ctx context.Context, req *DropExternalTableRequest) error {
+	opts := new(DropExternalTableOptions)
+	copyByFieldNames(opts, req)
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *externalTables) Show(ctx context.Context, opts *ShowExternalTableOptions) ([]ExternalTable, error) {
-	opts = createIfNil(opts)
+func (v *externalTables) Show(ctx context.Context, req *ShowExternalTableRequest) ([]ExternalTable, error) {
+	opts := new(ShowExternalTableOptions)
+	copyByFieldNames(opts, req)
 	rows, err := validateAndQuery[externalTableRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
@@ -65,22 +66,20 @@ func (v *externalTables) Show(ctx context.Context, opts *ShowExternalTableOption
 	return externalTables, err
 }
 
-func (v *externalTables) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ExternalTable, error) {
-	if !validObjectidentifier(id) {
+func (v *externalTables) ShowByID(ctx context.Context, req *ShowExternalTableByIDRequest) (*ExternalTable, error) {
+	if !validObjectidentifier(req.id) {
 		return nil, ErrInvalidObjectIdentifier
 	}
 
-	externalTables, err := v.client.ExternalTables.Show(ctx, &ShowExternalTableOptions{
-		Like: &Like{
-			Pattern: String(id.Name()),
-		},
-	})
+	externalTables, err := v.client.ExternalTables.Show(ctx, NewShowExternalTableRequest().WithLike(&Like{
+		Pattern: String(req.id.Name()),
+	}))
 	if err != nil {
 		return nil, err
 	}
 
 	for _, t := range externalTables {
-		if t.ID() == id {
+		if t.ID() == req.id {
 			return &t, nil
 		}
 	}
@@ -88,9 +87,9 @@ func (v *externalTables) ShowByID(ctx context.Context, id AccountObjectIdentifie
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
-func (v *externalTables) DescribeColumns(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableColumnDetails, error) {
+func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error) {
 	rows, err := validateAndQuery[externalTableColumnDetailsRow](v.client, ctx, &describeExternalTableColumns{
-		name: id,
+		name: req.id,
 	})
 	if err != nil {
 		return nil, err
@@ -103,9 +102,9 @@ func (v *externalTables) DescribeColumns(ctx context.Context, id AccountObjectId
 	return result, nil
 }
 
-func (v *externalTables) DescribeStage(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableStageDetails, error) {
+func (v *externalTables) DescribeStage(ctx context.Context, req *DescribeExternalTableStageRequest) ([]ExternalTableStageDetails, error) {
 	rows, err := validateAndQuery[externalTableStageDetailsRow](v.client, ctx, &describeExternalTableStage{
-		name: id,
+		name: req.id,
 	})
 	if err != nil {
 		return nil, err
