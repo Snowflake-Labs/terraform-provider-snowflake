@@ -643,8 +643,8 @@ func createPipe(t *testing.T, client *Client, database *Database, schema *Schema
 }
 
 func createStageWithName(t *testing.T, client *Client, name string) (*string, func()) {
+	t.Helper()
 	ctx := context.Background()
-
 	stageCleanup := func() {
 		_, err := client.exec(ctx, fmt.Sprintf("DROP STAGE %s", name))
 		require.NoError(t, err)

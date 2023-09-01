@@ -109,10 +109,7 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 
 	tagAssociations := []TagAssociation{}
 	for _, tagRequest := range s.SetTags {
-		tagAssociations = append(tagAssociations, TagAssociation{
-			Name:  tagRequest.Name,
-			Value: tagRequest.Value,
-		})
+		tagAssociations = append(tagAssociations, TagAssociation(tagRequest))
 	}
 	var tableUnset *TableUnset
 	if s.Unset != nil {
@@ -134,8 +131,7 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 	}
 	var dropAndAddRowAccessPolicy *DropAndAddRowAccessPolicy
 	if s.DropAndAddRowAccessPolicy != nil {
-		var addRowAccessPolicy *AddRowAccessPolicy
-		addRowAccessPolicy = &AddRowAccessPolicy{
+		addRowAccessPolicy := &AddRowAccessPolicy{
 			PolicyName:  s.DropAndAddRowAccessPolicy.AddedPolicy.PolicyName,
 			ColumnNames: s.DropAndAddRowAccessPolicy.AddedPolicy.ColumnName,
 		}
@@ -184,16 +180,7 @@ func convertAlterTableSet(request TableSetRequest) *TableSet {
 	stageCopyOptions := []StageCopyOption{}
 	for _, stageCopyOption := range request.StageCopyOptions {
 		stageCopyOptions = append(stageCopyOptions, StageCopyOption{
-			InnerValue: StageCopyOptionsInnerValue{
-				OnError:           stageCopyOption.OnError,
-				SizeLimit:         stageCopyOption.SizeLimit,
-				Purge:             stageCopyOption.Purge,
-				ReturnFailedOnly:  stageCopyOption.ReturnFailedOnly,
-				MatchByColumnName: stageCopyOption.MatchByColumnName,
-				EnforceLength:     stageCopyOption.EnforceLength,
-				TruncateColumns:   stageCopyOption.TruncateColumns,
-				Force:             stageCopyOption.Force,
-			},
+			InnerValue: StageCopyOptionsInnerValue(stageCopyOption),
 		})
 	}
 
@@ -751,7 +738,6 @@ func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 			Tags:             columnRequest.tags,
 			InlineConstraint: inlineConstraint,
 		})
-
 	}
 	return columns
 }
