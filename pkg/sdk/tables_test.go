@@ -253,6 +253,7 @@ func TestTableCreateAsSelect(t *testing.T) {
 		id := randomSchemaObjectIdentifier(t)
 		columnName := "FIRST_COLUMN"
 		columnType, err := ToDataType("VARCHAR")
+		require.NoError(t, err)
 		maskingPolicy := TableAsSelectColumnMaskingPolicy{
 			With: Bool(true),
 			Name: randomSchemaObjectIdentifier(t),

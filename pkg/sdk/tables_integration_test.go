@@ -214,6 +214,7 @@ func TestInt_Table(t *testing.T) {
 		t.Cleanup(cleanupTableProvider(id))
 		sourceTableColumns := tableColumns(t, ctx, client, schema.Name, sourceTable.Name)
 		cloneTable, err := client.Tables.ShowByID(ctx, id)
+		require.NoError(t, err)
 		cloneTableColumns := tableColumns(t, ctx, client, schema.Name, cloneTable.Name)
 		assert.Equal(t, len(sourceTableColumns), len(cloneTableColumns))
 		for i := range sourceTableColumns {
@@ -271,6 +272,7 @@ func TestInt_Table(t *testing.T) {
 		}
 		require.NoError(t, err)
 		table, err := client.Tables.ShowByID(ctx, secondTableId)
+		require.NoError(t, err)
 		assert.Equal(t, table.Name, secondTableName)
 		secondTable, err := client.Tables.ShowByID(ctx, id)
 		assert.Equal(t, secondTable.Name, name)
