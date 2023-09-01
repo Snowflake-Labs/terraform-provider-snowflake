@@ -107,7 +107,7 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 		tableSet = convertAlterTableSet(*s.Set)
 	}
 
-	var tagAssociations []TagAssociation
+	tagAssociations := []TagAssociation{}
 	for _, tagRequest := range s.SetTags {
 		tagAssociations = append(tagAssociations, TagAssociation{
 			Name:  tagRequest.Name,
@@ -167,7 +167,7 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 }
 
 func convertAlterTableSet(request TableSetRequest) *TableSet {
-	var stageFileFormats []StageFileFormat
+	stageFileFormats := []StageFileFormat{}
 	for _, stageFileFormat := range request.StageFileFormat {
 		var options *FileFormatTypeOptions
 		if stageFileFormat.Options != nil {
@@ -181,7 +181,7 @@ func convertAlterTableSet(request TableSetRequest) *TableSet {
 			},
 		})
 	}
-	var stageCopyOptions []StageCopyOption
+	stageCopyOptions := []StageCopyOption{}
 	for _, stageCopyOption := range request.StageCopyOptions {
 		stageCopyOptions = append(stageCopyOptions, StageCopyOption{
 			InnerValue: StageCopyOptionsInnerValue{
@@ -383,7 +383,7 @@ func convertTableColumnAction(request TableColumnActionRequest) *TableColumnActi
 		}
 	}
 	if len(request.Alter) > 0 {
-		var alterActions []TableColumnAlterAction
+		alterActions := []TableColumnAlterAction{}
 		for _, alterAction := range request.Alter {
 			var notNullConstraint *TableColumnNotNullConstraint
 			if alterAction.NotNullConstraint != nil {
@@ -451,7 +451,7 @@ func convertTableColumnAction(request TableColumnActionRequest) *TableColumnActi
 }
 
 func (s *CreateTableRequest) toOpts() *createTableOptions {
-	var tagAssociations []TagAssociation
+	tagAssociations := []TagAssociation{}
 	for _, tagRequest := range tagAssociations {
 		tagAssociations = append(tagAssociations, TagAssociation{
 			Name:  tagRequest.Name,
@@ -527,7 +527,7 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 }
 
 func (s *CreateTableAsSelectRequest) toOpts() *createTableAsSelectOptions {
-	var columns []TableAsSelectColumn
+	columns := []TableAsSelectColumn{}
 	for _, column := range s.columns {
 		var maskingPolicy *TableAsSelectColumnMaskingPolicy
 		if column.maskingPolicyName != nil {
@@ -589,18 +589,9 @@ func (s *CreateTableCloneRequest) toOpts() *createTableCloneOptions {
 }
 
 func convertStageCopyOptions(copyOptionRequests []StageCopyOptionsRequest) []StageCopyOption {
-	var copyOptions []StageCopyOption
+	copyOptions := []StageCopyOption{}
 	for _, request := range copyOptionRequests {
-		innerValue := StageCopyOptionsInnerValue{
-			OnError:           request.OnError,
-			SizeLimit:         request.SizeLimit,
-			Purge:             request.Purge,
-			ReturnFailedOnly:  request.ReturnFailedOnly,
-			MatchByColumnName: request.MatchByColumnName,
-			EnforceLength:     request.EnforceLength,
-			TruncateColumns:   request.TruncateColumns,
-			Force:             request.Force,
-		}
+		innerValue := StageCopyOptionsInnerValue(request)
 		copyOptions = append(copyOptions, StageCopyOption{
 			InnerValue: innerValue,
 		})
@@ -609,7 +600,7 @@ func convertStageCopyOptions(copyOptionRequests []StageCopyOptionsRequest) []Sta
 }
 
 func convertStageFileFormatOptions(stageFileFormatRequests []StageFileFormatRequest) []StageFileFormat {
-	var fileFormats []StageFileFormat
+	fileFormats := []StageFileFormat{}
 	for _, request := range stageFileFormatRequests {
 		var options *FileFormatTypeOptions
 		if request.Options != nil {
@@ -688,7 +679,7 @@ func convertFileFormatTypeOptions(request FileFormatTypeOptionsRequest) *FileFor
 }
 
 func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
-	var columns []TableColumn
+	columns := []TableColumn{}
 	for _, columnRequest := range columnRequests {
 		var defaultValue *ColumnDefaultValue
 		if columnRequest.defaultValue != nil {
