@@ -13,10 +13,7 @@ var (
 	ErrAccountIsEmpty             = errors.New("account is empty")
 
 	// snowflake-sdk errors.
-	ErrInvalidObjectIdentifier  = errors.New("invalid object identifier")
-	ErrInvalidObjectIdentifier2 = func() error {
-		return errors.New("invalid object identifier")
-	}
+	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
 )
 
 func errOneOf(fieldNames ...string) error {

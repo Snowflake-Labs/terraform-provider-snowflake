@@ -3,23 +3,23 @@ package sdk
 import "errors"
 
 var (
-	_ validatableOpts = new(createTableOptions)
-	_ validatableOpts = new(createTableAsSelectOptions)
-	_ validatableOpts = new(createTableLikeOptions)
-	_ validatableOpts = new(createTableCloneOptions)
-	_ validatableOpts = new(createTableUsingTemplateOptions)
-	_ validatableOpts = new(alterTableOptions)
-	_ validatableOpts = new(dropTableOptions)
-	_ validatableOpts = new(showTableOptions)
+	_ validatable = new(createTableOptions)
+	_ validatable = new(createTableAsSelectOptions)
+	_ validatable = new(createTableLikeOptions)
+	_ validatable = new(createTableCloneOptions)
+	_ validatable = new(createTableUsingTemplateOptions)
+	_ validatable = new(alterTableOptions)
+	_ validatable = new(dropTableOptions)
+	_ validatable = new(showTableOptions)
 )
 
-func (opts *createTableOptions) validateProp() error {
+func (opts *createTableOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier2())
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if len(opts.Columns) == 0 {
 		errs = append(errs, errTableNeedsAtLeastOneColumn)
@@ -35,19 +35,19 @@ func (opts *createTableOptions) validateProp() error {
 		}
 		if column.MaskingPolicy != nil {
 			if !validObjectidentifier(column.MaskingPolicy.Name) {
-				errs = append(errs, ErrInvalidObjectIdentifier2())
+				errs = append(errs, ErrInvalidObjectIdentifier)
 			}
 		}
 		for _, tag := range column.Tags {
 			if !validObjectidentifier(tag.Name) {
-				errs = append(errs, ErrInvalidObjectIdentifier2())
+				errs = append(errs, ErrInvalidObjectIdentifier)
 			}
 		}
 	}
 	if outOfLineConstraint := opts.OutOfLineConstraint; valueSet(outOfLineConstraint) {
 		if foreignKey := outOfLineConstraint.ForeignKey; valueSet(foreignKey) {
 			if !validObjectidentifier(foreignKey.TableName) {
-				errs = append(errs, ErrInvalidObjectIdentifier2())
+				errs = append(errs, ErrInvalidObjectIdentifier)
 			}
 		}
 	}
@@ -62,20 +62,20 @@ func (opts *createTableOptions) validateProp() error {
 
 	if opts.RowAccessPolicy != nil {
 		if !validObjectidentifier(opts.RowAccessPolicy.Name) {
-			errs = append(errs, ErrInvalidObjectIdentifier2())
+			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 	}
 
 	return errors.Join(errs...)
 }
 
-func (opts *createTableAsSelectOptions) validateProp() error {
+func (opts *createTableAsSelectOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier2())
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if len(opts.Columns) == 0 {
 		errs = append(errs, errTableNeedsAtLeastOneColumn)
@@ -83,52 +83,52 @@ func (opts *createTableAsSelectOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *createTableLikeOptions) validateProp() error {
+func (opts *createTableLikeOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier2())
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !validObjectidentifier(opts.SourceTable) {
-		errs = append(errs, ErrInvalidObjectIdentifier2())
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
-func (opts *createTableUsingTemplateOptions) validateProp() error {
+func (opts *createTableUsingTemplateOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier2())
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
-func (opts *createTableCloneOptions) validateProp() error {
+func (opts *createTableCloneOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier2())
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !validObjectidentifier(opts.SourceTable) {
-		errs = append(errs, ErrInvalidObjectIdentifier2())
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
-func (opts *alterTableOptions) validateProp() error {
+func (opts *alterTableOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier2())
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(
 		opts.NewName,
@@ -151,12 +151,12 @@ func (opts *alterTableOptions) validateProp() error {
 	}
 	if opts.NewName != nil {
 		if !validObjectidentifier(*opts.NewName) {
-			errs = append(errs, ErrInvalidObjectIdentifier2())
+			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 	}
 	if opts.SwapWith != nil {
 		if !validObjectidentifier(*opts.SwapWith) {
-			errs = append(errs, ErrInvalidObjectIdentifier2())
+			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 	}
 	if clusteringAction := opts.ClusteringAction; valueSet(clusteringAction) {
@@ -239,18 +239,18 @@ func (opts *alterTableOptions) validateProp() error {
 	return errors.Join(errs...)
 }
 
-func (opts *dropTableOptions) validateProp() error {
+func (opts *dropTableOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier2())
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
-func (opts *showTableOptions) validateProp() error {
+func (opts *showTableOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}

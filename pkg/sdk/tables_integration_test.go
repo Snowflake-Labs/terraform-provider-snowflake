@@ -839,6 +839,7 @@ func TestInt_Table(t *testing.T) {
 }
 
 func tableColumns(t *testing.T, ctx context.Context, client *Client, schemaName, tableName string) []string {
+	t.Helper()
 	warehouse, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 	err := client.Sessions.UseWarehouse(ctx, warehouse.ID())
