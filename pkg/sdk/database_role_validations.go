@@ -27,6 +27,46 @@ func (opts *createDatabaseRoleOptions) validate() error {
 	return errors.Join(errs...)
 }
 
+func (opts *createDatabaseRoleOptions) validate2() error {
+	if opts == nil {
+		return NewError("Nil options")
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, NewError("Invalid object identifier"))
+	}
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
+		errs = append(errs, NewError("One of IfNotExists / OrReplace"))
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *createDatabaseRoleOptions) validate3() error {
+	return validateAll(
+		opts,
+		validObjectIdentifier(opts.name),
+		oneOf(opts.OrReplace, opts.IfNotExists),
+	)
+}
+
+func validObjectIdentifier(objectIdentifier ObjectIdentifier) error {
+	if !validObjectidentifier(objectIdentifier) {
+		return NewError("Invalid object identifier")
+	}
+	return nil
+}
+
+func oneOf(fields ...any) error {
+	return nil
+}
+
+func validateAll(opts any, validations ...error) error {
+	if opts == nil {
+		return NewError("Nil options")
+	}
+	return errors.Join(validations...)
+}
+
 func (opts *alterDatabaseRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)

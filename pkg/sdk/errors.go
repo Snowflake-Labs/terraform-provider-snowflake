@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"runtime"
 	"strings"
 )
 
@@ -74,4 +75,36 @@ func decodeDriverError(err error) error {
 	}
 
 	return err
+}
+
+type errorSDK struct {
+	file         string
+	line         int
+	message      string
+	nestedErrors []error
+}
+
+func NewError(message string) error {
+	_, file, line, _ := runtime.Caller(1)
+	return &errorSDK{
+		file:         file,
+		line:         line,
+		message:      message,
+		nestedErrors: make([]error, 0),
+	}
+}
+
+func (e *errorSDK) Error() string {
+	errorMessage := fmt.Sprintf("[%s: line %d] %s", e.file, e.line, e.message)
+	if len(e.nestedErrors) > 0 {
+		var b []byte
+		for i, err := range e.nestedErrors {
+			if i > 0 {
+				b = append(b, '\n')
+			}
+			b = append(b, err.Error()...)
+		}
+		return fmt.Sprintf("%s\n%s", errorMessage, string(b))
+	}
+	return errorMessage
 }
