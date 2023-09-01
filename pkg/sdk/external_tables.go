@@ -7,25 +7,16 @@ import (
 )
 
 type ExternalTables interface {
-	// Create creates an external table with computed partitions.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateExternalTableOpts) error
-	// CreateWithManualPartitioning creates an external table where partitions are added and removed manually.
 	CreateWithManualPartitioning(ctx context.Context, id AccountObjectIdentifier, opts *CreateWithManualPartitioningExternalTableOpts) error
-	// CreateDeltaLake creates a delta lake external table.
 	CreateDeltaLake(ctx context.Context, id AccountObjectIdentifier, opts *CreateDeltaLakeExternalTableOpts) error
-	// Alter modifies an existing external table.
+	CreateUsingTemplate(ctx context.Context, id AccountObjectIdentifier, opts *CreateExternalTableUsingTemplateOpts) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTableOptions) error
-	// AlterPartitions modifies an existing external table's partitions.
 	AlterPartitions(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTablePartitionOptions) error
-	// Drop removes an external table.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropExternalTableOptions) error
-	// Show returns a list of external tables.
 	Show(ctx context.Context, opts *ShowExternalTableOptions) ([]ExternalTable, error)
-	// ShowByID returns an external table by ID.
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ExternalTable, error)
-	// DescribeColumns returns the details of the external table's columns.
 	DescribeColumns(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableColumnDetails, error)
-	// DescribeStage returns the details of the external table's stage.
 	DescribeStage(ctx context.Context, id AccountObjectIdentifier) ([]ExternalTableStageDetails, error)
 }
 
@@ -238,6 +229,26 @@ type CreateDeltaLakeExternalTableOpts struct {
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
 	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+}
+
+type CreateExternalTableUsingTemplateOpts struct {
+	create              bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable       bool                    `ddl:"static" sql:"EXTERNAL TABLE"`
+	name                AccountObjectIdentifier `ddl:"identifier"`
+	CopyGrants          *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
+	Query               string                  `ddl:"parameter,no_equals,parentheses" sql:"USING TEMPLATE"`
+	CloudProviderParams *CloudProviderParams
+	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location            string                    `ddl:"parameter,no_quotes" sql:"LOCATION"` // TODO change in others ?
+	RefreshOnCreate     *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
+	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
+	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
+	FileFormat          []ExternalTableFileFormat `ddl:"keyword,parentheses" sql:"FILE_FORMAT ="` // TODO make not array, could be parameter ?
+	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
+	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
+	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 type AlterExternalTableOptions struct {

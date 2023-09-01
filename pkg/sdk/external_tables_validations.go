@@ -9,6 +9,7 @@ var (
 	_ validatable = (*CreateExternalTableOpts)(nil)
 	_ validatable = (*CreateWithManualPartitioningExternalTableOpts)(nil)
 	_ validatable = (*CreateDeltaLakeExternalTableOpts)(nil)
+	_ validatable = (*CreateExternalTableUsingTemplateOpts)(nil)
 	_ validatable = (*AlterExternalTableOptions)(nil)
 	_ validatable = (*AlterExternalTablePartitionOptions)(nil)
 	_ validatable = (*DropExternalTableOptions)(nil)
@@ -61,6 +62,21 @@ func (opts *CreateDeltaLakeExternalTableOpts) validate() error {
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateDeltaLakeExternalTableOpts", "OrReplace", "IfNotExists"))
 	}
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !valueSet(opts.Location) {
+		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "Location"))
+	}
+	if !valueSet(opts.FileFormat) {
+		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "FileFormat"))
+	}
+	// TODO call validate() underlying props
+	return errors.Join(errs...)
+}
+
+func (opts *CreateExternalTableUsingTemplateOpts) validate() error {
+	var errs []error
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}

@@ -26,6 +26,12 @@ func (v *externalTables) CreateDeltaLake(ctx context.Context, id AccountObjectId
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *externalTables) CreateUsingTemplate(ctx context.Context, id AccountObjectIdentifier, opts *CreateExternalTableUsingTemplateOpts) error {
+	opts = createIfNil(opts)
+	opts.name = id
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *externalTables) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterExternalTableOptions) error {
 	opts = createIfNil(opts)
 	opts.name = id

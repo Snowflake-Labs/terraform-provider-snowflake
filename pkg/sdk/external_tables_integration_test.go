@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -140,7 +141,30 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Create: infer schema", func(t *testing.T) {
-		// TODO
+		fileFormat, _ := createFileFormat(t, client, schema.ID())
+		warehouse, warehouseCleanup := createWarehouse(t, client)
+		t.Cleanup(warehouseCleanup)
+
+		err = client.Sessions.UseWarehouse(ctx, warehouse.ID())
+		require.NoError(t, err)
+
+		id := randomAccountObjectIdentifier(t)
+		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '%s', FILE_FORMAT=>'%s', ignore_case => true))`, stageLocation, fileFormat.ID().FullyQualifiedName())
+		err = client.ExternalTables.CreateUsingTemplate(ctx, id, &CreateExternalTableUsingTemplateOpts{
+			name:     id,
+			Query:    query,
+			Location: stageLocation,
+			FileFormat: []ExternalTableFileFormat{
+				{
+					Name: String(fileFormat.ID().FullyQualifiedName()),
+				},
+			},
+			AutoRefresh: Bool(false),
+		})
+		require.NoError(t, err)
+
+		_, err = client.ExternalTables.ShowByID(ctx, id)
+		require.NoError(t, err)
 	})
 
 	t.Run("Create with manual partitioning: complete", func(t *testing.T) {
