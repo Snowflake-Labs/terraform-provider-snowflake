@@ -40,7 +40,7 @@ type FailoverGroups interface {
 	// Drop removes a failover group.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropFailoverGroupOptions) error
 	// Show returns a list of failover groups.
-	Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]*FailoverGroup, error)
+	Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error)
 	// ShowByID returns a failover group by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error)
 	// ShowDatabases returns a list of databases in a failover group.
@@ -393,7 +393,7 @@ type failoverGroupDBRow struct {
 	Owner                   sql.NullString `db:"owner"`
 }
 
-func (row failoverGroupDBRow) toFailoverGroup() *FailoverGroup {
+func (row failoverGroupDBRow) toFailoverGroup() FailoverGroup {
 	ots := strings.Split(row.ObjectTypes, ",")
 	pluralObjectTypes := make([]PluralObjectType, 0, len(ots))
 	for _, ot := range ots {
@@ -436,7 +436,7 @@ func (row failoverGroupDBRow) toFailoverGroup() *FailoverGroup {
 	if row.NextScheduledRefresh.Valid {
 		nextScheduledRefresh = row.NextScheduledRefresh.String
 	}
-	return &FailoverGroup{
+	return FailoverGroup{
 		RegionGroup:             row.RegionGroup,
 		SnowflakeRegion:         row.SnowflakeRegion,
 		CreatedOn:               row.CreatedOn,
@@ -459,7 +459,7 @@ func (row failoverGroupDBRow) toFailoverGroup() *FailoverGroup {
 }
 
 // List all the failover groups by pattern.
-func (v *failoverGroups) Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]*FailoverGroup, error) {
+func (v *failoverGroups) Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error) {
 	if opts == nil {
 		opts = &ShowFailoverGroupOptions{}
 	}
@@ -476,7 +476,7 @@ func (v *failoverGroups) Show(ctx context.Context, opts *ShowFailoverGroupOption
 	if err != nil {
 		return nil, err
 	}
-	resultList := make([]*FailoverGroup, len(dest))
+	resultList := make([]FailoverGroup, len(dest))
 	for i, row := range dest {
 		resultList[i] = row.toFailoverGroup()
 	}
@@ -495,7 +495,7 @@ func (v *failoverGroups) ShowByID(ctx context.Context, id AccountObjectIdentifie
 	}
 	for _, failoverGroup := range failoverGroups {
 		if failoverGroup.ID() == id && failoverGroup.AccountLocator == currentAccount {
-			return failoverGroup, nil
+			return &failoverGroup, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

@@ -175,7 +175,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = resourceMonitors[0]
+		resourceMonitor = &resourceMonitors[0]
 		var newNotifyTriggers []TriggerDefinition
 		for _, threshold := range resourceMonitor.NotifyTriggers {
 			newNotifyTriggers = append(newNotifyTriggers, TriggerDefinition{Threshold: threshold, TriggerAction: TriggerActionNotify})
@@ -205,7 +205,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = resourceMonitors[0]
+		resourceMonitor = &resourceMonitors[0]
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 	})
 	t.Run("when changing scheduling info", func(t *testing.T) {
@@ -232,7 +232,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = resourceMonitors[0]
+		resourceMonitor = &resourceMonitors[0]
 		assert.Equal(t, *frequency, resourceMonitor.Frequency)
 		startTime, err := ParseTimestampWithOffset(resourceMonitor.StartTime)
 		require.NoError(t, err)

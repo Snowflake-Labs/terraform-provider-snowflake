@@ -31,7 +31,7 @@ type MaskingPolicies interface {
 	// Drop removes a masking policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
 	// Show returns a list of masking policies.
-	Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]*MaskingPolicy, error)
+	Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error)
 	// ShowByID returns a masking policy by ID
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
 	// Describe returns the details of a masking policy.
@@ -246,12 +246,12 @@ type maskingPolicyDBRow struct {
 	Options       string    `db:"options"`
 }
 
-func (row maskingPolicyDBRow) toMaskingPolicy() *MaskingPolicy {
+func (row maskingPolicyDBRow) toMaskingPolicy() MaskingPolicy {
 	exemptOtherPolicies, err := jsonparser.GetBoolean([]byte(row.Options), "EXEMPT_OTHER_POLICIES")
 	if err != nil {
 		exemptOtherPolicies = false
 	}
-	return &MaskingPolicy{
+	return MaskingPolicy{
 		CreatedOn:           row.CreatedOn,
 		Name:                row.Name,
 		DatabaseName:        row.DatabaseName,
@@ -264,7 +264,7 @@ func (row maskingPolicyDBRow) toMaskingPolicy() *MaskingPolicy {
 }
 
 // List all the masking policies by pattern.
-func (v *maskingPolicies) Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]*MaskingPolicy, error) {
+func (v *maskingPolicies) Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error) {
 	if opts == nil {
 		opts = &ShowMaskingPolicyOptions{}
 	}
@@ -275,13 +275,12 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *ShowMaskingPolicyOptio
 	if err != nil {
 		return nil, err
 	}
-	dest := []maskingPolicyDBRow{}
-
+	var dest []maskingPolicyDBRow
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, err
 	}
-	resultList := make([]*MaskingPolicy, len(dest))
+	resultList := make([]MaskingPolicy, len(dest))
 	for i, row := range dest {
 		resultList[i] = row.toMaskingPolicy()
 	}
@@ -304,7 +303,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 
 	for _, maskingPolicy := range maskingPolicies {
 		if maskingPolicy.ID().name == id.Name() {
-			return maskingPolicy, nil
+			return &maskingPolicy, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

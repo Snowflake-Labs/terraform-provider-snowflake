@@ -26,7 +26,7 @@ type Users interface {
 	// Describe returns the details of a user.
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*UserDetails, error)
 	// Show returns a list of users.
-	Show(ctx context.Context, opts *ShowUserOptions) ([]*User, error)
+	Show(ctx context.Context, opts *ShowUserOptions) ([]User, error)
 	// ShowByID returns a user by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User, error)
 }
@@ -94,8 +94,8 @@ type userDBRow struct {
 	HasRsaPublicKey       bool           `db:"has_rsa_public_key"`
 }
 
-func (row userDBRow) toUser() *User {
-	user := &User{
+func (row userDBRow) toUser() User {
+	user := User{
 		Name:                  row.Name,
 		CreatedOn:             row.CreatedOn,
 		LoginName:             row.LoginName,
@@ -580,7 +580,7 @@ func (input *ShowUserOptions) validate() error {
 	return nil
 }
 
-func (v *users) Show(ctx context.Context, opts *ShowUserOptions) ([]*User, error) {
+func (v *users) Show(ctx context.Context, opts *ShowUserOptions) ([]User, error) {
 	if opts == nil {
 		opts = &ShowUserOptions{}
 	}
@@ -597,7 +597,7 @@ func (v *users) Show(ctx context.Context, opts *ShowUserOptions) ([]*User, error
 	if err != nil {
 		return nil, err
 	}
-	resultList := make([]*User, len(dest))
+	resultList := make([]User, len(dest))
 	for i, row := range dest {
 		resultList[i] = row.toUser()
 	}
@@ -617,7 +617,7 @@ func (v *users) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User
 
 	for _, user := range users {
 		if user.ID().name == id.Name() {
-			return user, nil
+			return &user, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

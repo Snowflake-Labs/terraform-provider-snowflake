@@ -25,7 +25,7 @@ type Alerts interface {
 	// Drop removes an alert.
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
 	// Show returns a list of alerts
-	Show(ctx context.Context, opts *ShowAlertOptions) ([]*Alert, error)
+	Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error)
 	// ShowByID returns an alert by ID
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Alert, error)
 	// Describe returns the details of an alert.
@@ -252,8 +252,8 @@ type alertDBRow struct {
 	Action       string    `db:"action"`
 }
 
-func (row alertDBRow) toAlert() (*Alert, error) {
-	return &Alert{
+func (row alertDBRow) toAlert() Alert {
+	return Alert{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
@@ -265,14 +265,14 @@ func (row alertDBRow) toAlert() (*Alert, error) {
 		State:        AlertState(row.State),
 		Condition:    row.Condition,
 		Action:       row.Action,
-	}, nil
+	}
 }
 
 func (opts *ShowAlertOptions) validate() error {
 	return nil
 }
 
-func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]*Alert, error) {
+func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error) {
 	if opts == nil {
 		opts = &ShowAlertOptions{}
 	}
@@ -283,19 +283,14 @@ func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]*Alert, er
 	if err != nil {
 		return nil, err
 	}
-	dest := []alertDBRow{}
-
+	var dest []alertDBRow
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, err
 	}
-	resultList := make([]*Alert, len(dest))
+	resultList := make([]Alert, len(dest))
 	for i, row := range dest {
-		alert, err := row.toAlert()
-		if err != nil {
-			return nil, err
-		}
-		resultList[i] = alert
+		resultList[i] = row.toAlert()
 	}
 
 	return resultList, nil
@@ -316,7 +311,7 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 
 	for _, alert := range alerts {
 		if alert.ID().name == id.Name() {
-			return alert, nil
+			return &alert, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

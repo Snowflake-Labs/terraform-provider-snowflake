@@ -23,7 +23,7 @@ type Shares interface {
 	// Drop removes a share.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
 	// Show returns a list of shares.
-	Show(ctx context.Context, opts *ShowShareOptions) ([]*Share, error)
+	Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error)
 	// ShowByID returns a share by ID.
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
 	// Describe returns the details of an outbound share.
@@ -78,7 +78,7 @@ type shareRow struct {
 	Comment      string    `db:"comment"`
 }
 
-func (r *shareRow) toShare() *Share {
+func (r *shareRow) toShare() Share {
 	toAccounts := strings.Split(r.To, ",")
 	var to []AccountIdentifier
 	if len(toAccounts) != 0 {
@@ -97,7 +97,7 @@ func (r *shareRow) toShare() *Share {
 			to = append(to, NewAccountIdentifier(orgName, accountName))
 		}
 	}
-	return &Share{
+	return Share{
 		CreatedOn:    r.CreatedOn,
 		Kind:         ShareKind(r.Kind),
 		Name:         NewExternalObjectIdentifier(NewAccountIdentifierFromFullyQualifiedName(r.OwnerAccount), NewAccountObjectIdentifier(r.Name)),
@@ -281,7 +281,7 @@ func (opts *ShowShareOptions) validate() error {
 	return nil
 }
 
-func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]*Share, error) {
+func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error) {
 	if opts == nil {
 		opts = &ShowShareOptions{}
 	}
@@ -297,7 +297,7 @@ func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]*Share, er
 	if err != nil {
 		return nil, err
 	}
-	shares := make([]*Share, 0, len(rows))
+	shares := make([]Share, 0, len(rows))
 	for _, row := range rows {
 		shares = append(shares, row.toShare())
 	}
@@ -315,7 +315,7 @@ func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Sha
 	}
 	for _, share := range shares {
 		if share.Name.Name() == id.Name() {
-			return share, nil
+			return &share, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

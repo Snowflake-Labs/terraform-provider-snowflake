@@ -19,7 +19,7 @@ type SessionPolicies interface {
 	// Drop removes a session policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropSessionPolicyOptions) error
 	// Show returns a list of session policy.
-	Show(ctx context.Context) ([]*SessionPolicy, error)
+	Show(ctx context.Context) ([]SessionPolicy, error)
 	// ShowByID returns a session policy by ID
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error)
 	// Describe returns the details of a session policy.
@@ -44,8 +44,8 @@ type sessionPolicyRow struct {
 	SchemaName   string `db:"schema_name"`
 }
 
-func (row *sessionPolicyRow) toSessionPolicy() *SessionPolicy {
-	return &SessionPolicy{
+func (row *sessionPolicyRow) toSessionPolicy() SessionPolicy {
+	return SessionPolicy{
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
 		SchemaName:   row.SchemaName,
@@ -142,7 +142,7 @@ func (opts *sessionPolicyShowOptions) validate() error {
 	return nil
 }
 
-func (v *sessionPolicies) Show(ctx context.Context) ([]*SessionPolicy, error) {
+func (v *sessionPolicies) Show(ctx context.Context) ([]SessionPolicy, error) {
 	opts := &sessionPolicyShowOptions{}
 	if err := opts.validate(); err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func (v *sessionPolicies) Show(ctx context.Context) ([]*SessionPolicy, error) {
 	if err != nil {
 		return nil, err
 	}
-	sessionPolicies := make([]*SessionPolicy, 0, len(rows))
+	sessionPolicies := make([]SessionPolicy, 0, len(rows))
 	for _, row := range rows {
 		sessionPolicies = append(sessionPolicies, row.toSessionPolicy())
 	}
@@ -170,7 +170,7 @@ func (v *sessionPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 	}
 	for _, sessionPolicy := range sessionPolicies {
 		if sessionPolicy.Name == id.Name() {
-			return sessionPolicy, nil
+			return &sessionPolicy, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

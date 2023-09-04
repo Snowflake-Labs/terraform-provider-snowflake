@@ -28,7 +28,7 @@ type PasswordPolicies interface {
 	// Drop removes a password policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPasswordPolicyOptions) error
 	// Show returns a list of password policies.
-	Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]*PasswordPolicy, error)
+	Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]PasswordPolicy, error)
 	// ShowByID returns a password policy by ID.
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
 	// Describe returns the details of a password policy.
@@ -287,8 +287,8 @@ type passwordPolicyDBRow struct {
 	Options       string    `db:"options"`
 }
 
-func (row passwordPolicyDBRow) toPasswordPolicy() *PasswordPolicy {
-	return &PasswordPolicy{
+func (row passwordPolicyDBRow) toPasswordPolicy() PasswordPolicy {
+	return PasswordPolicy{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
@@ -300,7 +300,7 @@ func (row passwordPolicyDBRow) toPasswordPolicy() *PasswordPolicy {
 }
 
 // List all the password policies by pattern.
-func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]*PasswordPolicy, error) {
+func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]PasswordPolicy, error) {
 	if opts == nil {
 		opts = &PasswordPolicyShowOptions{}
 	}
@@ -311,13 +311,12 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	if err != nil {
 		return nil, err
 	}
-	dest := []passwordPolicyDBRow{}
-
+	var dest []passwordPolicyDBRow
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, err
 	}
-	resultList := make([]*PasswordPolicy, len(dest))
+	resultList := make([]PasswordPolicy, len(dest))
 	for i, row := range dest {
 		resultList[i] = row.toPasswordPolicy()
 	}
@@ -340,7 +339,7 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 
 	for _, passwordPolicy := range passwordPolicies {
 		if passwordPolicy.ID().name == id.Name() {
-			return passwordPolicy, nil
+			return &passwordPolicy, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized
