@@ -725,16 +725,16 @@ func createStageWithURL(t *testing.T, client *Client, name AccountObjectIdentifi
 }
 
 // TODO Use stage interface when after migration to the new SDK
-func createExternalTableWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *Stage, opts *CreateExternalTableOpts) (*ExternalTable, func()) {
-	t.Helper()
-	id := randomAccountObjectIdentifier(t)
-	ctx := context.Background()
-	err := client.ExternalTables.Create(ctx, id, opts)
-	require.NoError(t, err)
-	externalTable, err := client.ExternalTables.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return externalTable, func() {
-		err := client.ExternalTables.Drop(ctx, id, nil)
-		require.NoError(t, err)
-	}
-}
+//func createExternalTableWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *Stage, opts *CreateExternalTableOpts) (*ExternalTable, func()) {
+//	t.Helper()
+//	id := randomAccountObjectIdentifier(t)
+//	ctx := context.Background()
+//	err := client.ExternalTables.Create(ctx, id, opts)
+//	require.NoError(t, err)
+//	externalTable, err := client.ExternalTables.ShowByID(ctx, id)
+//	require.NoError(t, err)
+//	return externalTable, func() {
+//		err := client.ExternalTables.Drop(ctx, id, nil)
+//		require.NoError(t, err)
+//	}
+//}

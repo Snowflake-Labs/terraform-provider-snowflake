@@ -33,8 +33,6 @@ func copyByFieldNamesImpl(outType reflect.Type, outValue reflect.Value, inType r
 			inFieldMeta := inElem.Type().Field(j)
 			inFieldValue := inElem.Field(j)
 			if strings.EqualFold(outFieldMeta.Name, inFieldMeta.Name) {
-				// this is a trick that lets us access inValue's unexported fields, otherwise we would get an error
-				inValuePtr := reflect.NewAt(inFieldMeta.Type, unsafe.Pointer(inFieldValue.UnsafeAddr())).Elem()
 				if inFieldMeta.Type != outFieldMeta.Type {
 					// by DTO conventions we have right now, this mean we've encountered nested request e.g.
 					// type Options {
@@ -50,12 +48,16 @@ func copyByFieldNamesImpl(outType reflect.Type, outValue reflect.Value, inType r
 					log.Printf("Setting nested request %s.%s from %s.%s\n", outType.String(), outFieldMeta.Name, inType.String(), inFieldMeta.Name)
 					// create instance of option's field type
 					outValueInstance := reflect.New(outFieldMeta.Type.Elem())
+					// this is a trick that lets us access inValue's unexported fields, otherwise we would get an error
+					inValuePtr := reflect.NewAt(inFieldMeta.Type.Elem(), unsafe.Pointer(inFieldValue.UnsafeAddr()))
 					// recursive call to copy all the request's fields into instance of option's field type
 					copyByFieldNamesImpl(outFieldMeta.Type, outValueInstance, inFieldMeta.Type, inValuePtr)
 					// set option's field with instance of field type with copied fields from request's field
 					outFieldValue.Set(outValueInstance)
 				} else {
 					log.Printf("Setting %s.%s from %s.%s\n", outType.String(), outFieldMeta.Name, inType.String(), inFieldMeta.Name)
+					// this is a trick that lets us access inValue's unexported fields, otherwise we would get an error
+					inValuePtr := reflect.NewAt(inFieldMeta.Type, unsafe.Pointer(inFieldValue.UnsafeAddr())).Elem()
 					// TODO: Copy (right now it might be referencing value from opts - not sure - have to check)
 					// set option's field with request's field - they have same type
 					reflect.NewAt(outFieldMeta.Type, unsafe.Pointer(outFieldValue.UnsafeAddr())).Elem().Set(inValuePtr)
@@ -104,3 +106,29 @@ func printStructImpl(value reflect.Value, indent int) {
 		}
 	}
 }
+
+//// TODO Remove
+//func TestT(t *testing.T) {
+//	a := new(CreateExternalTableOpts)
+//	b := NewCreateExternalTableRequest(
+//		randomAccountObjectIdentifier(t),
+//		"location",
+//		[]ExternalTableFileFormat{
+//			{
+//				Name: String("Hello"),
+//				Type: &ExternalTableFileFormatTypeJSON,
+//			},
+//		},
+//	).WithRowAccessPolicy(
+//		&RowAccessPolicy{
+//			On: []string{"policy"},
+//		},
+//	)
+//
+//	copyByFieldNames(a, b)
+//
+//	printStruct(a)
+//	//fmt.Printf("%#v", a)
+//	//j, _ := json.MarshalIndent(*a, "", "  ")
+//	//log.Println(string(j))
+//}

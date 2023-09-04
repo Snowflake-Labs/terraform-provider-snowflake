@@ -9,51 +9,35 @@ type externalTables struct {
 }
 
 func (v *externalTables) Create(ctx context.Context, req *CreateExternalTableRequest) error {
-	opts := new(CreateExternalTableOpts)
-	copyByFieldNames(opts, req)
-	return validateAndExec(v.client, ctx, opts)
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *externalTables) CreateWithManualPartitioning(ctx context.Context, req *CreateWithManualPartitioningExternalTableRequest) error {
-	opts := new(CreateWithManualPartitioningExternalTableOpts)
-	copyByFieldNames(opts, req)
-	return validateAndExec(v.client, ctx, opts)
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *externalTables) CreateDeltaLake(ctx context.Context, req *CreateDeltaLakeExternalTableRequest) error {
-	opts := new(CreateDeltaLakeExternalTableOpts)
-	copyByFieldNames(opts, req)
-	return validateAndExec(v.client, ctx, opts)
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *externalTables) CreateUsingTemplate(ctx context.Context, req *CreateExternalTableUsingTemplateRequest) error {
-	opts := new(CreateExternalTableUsingTemplateOpts)
-	copyByFieldNames(opts, req)
-	return validateAndExec(v.client, ctx, opts)
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *externalTables) Alter(ctx context.Context, req *AlterExternalTableRequest) error {
-	opts := new(AlterExternalTableOptions)
-	copyByFieldNames(opts, req)
-	return validateAndExec(v.client, ctx, opts)
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *externalTables) AlterPartitions(ctx context.Context, req *AlterExternalTablePartitionRequest) error {
-	opts := new(AlterExternalTablePartitionOptions)
-	copyByFieldNames(opts, req)
-	return validateAndExec(v.client, ctx, opts)
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *externalTables) Drop(ctx context.Context, req *DropExternalTableRequest) error {
-	opts := new(DropExternalTableOptions)
-	copyByFieldNames(opts, req)
-	return validateAndExec(v.client, ctx, opts)
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *externalTables) Show(ctx context.Context, req *ShowExternalTableRequest) ([]ExternalTable, error) {
-	opts := new(ShowExternalTableOptions)
-	copyByFieldNames(opts, req)
-	rows, err := validateAndQuery[externalTableRow](v.client, ctx, opts)
+	rows, err := validateAndQuery[externalTableRow](v.client, ctx, req.toOpts())
 	if err != nil {
 		return nil, err
 	}

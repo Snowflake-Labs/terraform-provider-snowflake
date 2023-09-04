@@ -88,7 +88,7 @@ func TestExternalTablesCreate(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) AWS_SNS_TOPIC = 'aws_sns_topic' COPY GRANTS ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2') COMMENT = 'some_comment'`
+		expected := `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) AWS_SNS_TOPIC = 'aws_sns_topic' COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -140,7 +140,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 	}
 	actual, err := structToSQL(opts)
 	require.NoError(t, err)
-	expected := `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (TYPE = JSON) COPY GRANTS ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2') COMMENT = 'some_comment'`
+	expected := `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (TYPE = JSON) COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`
 	assert.Equal(t, expected, actual)
 }
 
@@ -190,7 +190,7 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 	actual, err := structToSQL(opts)
 	require.NoError(t, err)
 	// TODO with line break to read / edit / review - write util to trim newline characters and double spaces
-	expected := `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar)) INTEGRATION = '123' PARTITION BY (column) LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (FORMAT_NAME = 'JSON') TABLE_FORMAT = DELTA COPY GRANTS ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2') COMMENT = 'some_comment'`
+	expected := `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar)) INTEGRATION = '123' PARTITION BY (column) LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (FORMAT_NAME = 'JSON') TABLE_FORMAT = DELTA COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`
 	assert.Equal(t, expected, actual)
 }
 
@@ -203,7 +203,7 @@ func TestExternalTablesAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER EXTERNAL TABLE IF EXISTS "external_table" REFRESH`
+		expected := `ALTER EXTERNAL TABLE IF EXISTS "external_table" REFRESH ''`
 		assert.Equal(t, expected, actual)
 	})
 
@@ -249,37 +249,43 @@ func TestExternalTablesAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("set", func(t *testing.T) {
+	t.Run("set auto refresh", func(t *testing.T) {
+		opts := &AlterExternalTableOptions{
+			name:        NewAccountObjectIdentifier("external_table"),
+			AutoRefresh: Bool(true),
+		}
+		actual, err := structToSQL(opts)
+		require.NoError(t, err)
+		expected := `ALTER EXTERNAL TABLE "external_table" SET AUTO_REFRESH = TRUE`
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("set tag", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
 			name: NewAccountObjectIdentifier("external_table"),
-			Set: &ExternalTableSet{
-				AutoRefresh: Bool(true),
-				Tag: []TagAssociation{
-					{
-						Name:  NewAccountObjectIdentifier("tag1"),
-						Value: "tag_value1",
-					},
-					{
-						Name:  NewAccountObjectIdentifier("tag2"),
-						Value: "tag_value2",
-					},
+			SetTag: []TagAssociation{
+				{
+					Name:  NewAccountObjectIdentifier("tag1"),
+					Value: "tag_value1",
+				},
+				{
+					Name:  NewAccountObjectIdentifier("tag2"),
+					Value: "tag_value2",
 				},
 			},
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER EXTERNAL TABLE "external_table" SET AUTO_REFRESH = TRUE TAG ("tag1" = 'tag_value1', "tag2" = 'tag_value2')`
+		expected := `ALTER EXTERNAL TABLE "external_table" SET TAG "tag1" = 'tag_value1', "tag2" = 'tag_value2'`
 		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("unset", func(t *testing.T) {
+	t.Run("unset tag", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
 			name: NewAccountObjectIdentifier("external_table"),
-			Unset: &ExternalTableUnset{
-				Tag: []ObjectIdentifier{
-					NewAccountObjectIdentifier("tag1"),
-					NewAccountObjectIdentifier("tag2"),
-				},
+			UnsetTag: []ObjectIdentifier{
+				NewAccountObjectIdentifier("tag1"),
+				NewAccountObjectIdentifier("tag2"),
 			},
 		}
 		actual, err := structToSQL(opts)
@@ -304,10 +310,11 @@ func TestExternalTablesAlterPartitions(t *testing.T) {
 					Value:      "two_value",
 				},
 			},
+			Location: "123",
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER EXTERNAL TABLE "external_table" IF EXISTS ADD PARTITION ("one" = 'one_value', "two" = 'two_value')`
+		expected := `ALTER EXTERNAL TABLE IF EXISTS "external_table" ADD PARTITION (one = 'one_value', two = 'two_value') LOCATION '123'`
 		assert.Equal(t, expected, actual)
 	})
 
@@ -320,7 +327,7 @@ func TestExternalTablesAlterPartitions(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER EXTERNAL TABLE "external_table" IF EXISTS DROP PARTITION LOCATION 'partition_location'`
+		expected := `ALTER EXTERNAL TABLE IF EXISTS "external_table" DROP PARTITION LOCATION 'partition_location'`
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -424,29 +431,4 @@ func TestExternalTablesDescribe(t *testing.T) {
 		expected := `DESCRIBE EXTERNAL TABLE "external_table" TYPE = STAGE`
 		assert.Equal(t, expected, actual)
 	})
-}
-
-// TODO Remove
-func TestT(t *testing.T) {
-	a := new(CreateExternalTableOpts)
-	b := NewCreateExternalTableRequest(
-		randomAccountObjectIdentifier(t),
-		"location",
-		[]ExternalTableFileFormat{
-			{
-				Name: String("Hello"),
-				Type: &ExternalTableFileFormatTypeJSON,
-			},
-		},
-	).WithRowAccessPolicy(
-		NewRowAccessPolicyRequest(randomSchemaObjectIdentifier(t)).
-			WithOn([]string{"policy"}),
-	)
-
-	copyByFieldNames(a, b)
-
-	printStruct(a)
-	//fmt.Printf("%#v", a)
-	//j, _ := json.MarshalIndent(*a, "", "  ")
-	//log.Println(string(j))
 }

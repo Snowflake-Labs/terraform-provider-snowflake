@@ -4,19 +4,6 @@ package sdk
 
 import ()
 
-func NewRowAccessPolicyRequest(
-	Name SchemaObjectIdentifier,
-) *RowAccessPolicyRequest {
-	s := RowAccessPolicyRequest{}
-	s.Name = Name
-	return &s
-}
-
-func (s *RowAccessPolicyRequest) WithOn(On []string) *RowAccessPolicyRequest {
-	s.On = On
-	return s
-}
-
 func NewCreateExternalTableRequest(
 	name AccountObjectIdentifier,
 	location string,
@@ -84,7 +71,7 @@ func (s *CreateExternalTableRequest) WithComment(comment *string) *CreateExterna
 	return s
 }
 
-func (s *CreateExternalTableRequest) WithRowAccessPolicy(rowAccessPolicy *RowAccessPolicyRequest) *CreateExternalTableRequest {
+func (s *CreateExternalTableRequest) WithRowAccessPolicy(rowAccessPolicy *RowAccessPolicy) *CreateExternalTableRequest {
 	s.rowAccessPolicy = rowAccessPolicy
 	return s
 }
@@ -323,13 +310,18 @@ func (s *AlterExternalTableRequest) WithRemoveFiles(removeFiles []ExternalTableF
 	return s
 }
 
-func (s *AlterExternalTableRequest) WithSet(set *ExternalTableSet) *AlterExternalTableRequest {
-	s.set = set
+func (s *AlterExternalTableRequest) WithAutoRefresh(autoRefresh *bool) *AlterExternalTableRequest {
+	s.autoRefresh = autoRefresh
 	return s
 }
 
-func (s *AlterExternalTableRequest) WithUnset(unset *ExternalTableUnset) *AlterExternalTableRequest {
-	s.unset = unset
+func (s *AlterExternalTableRequest) WithSetTag(setTag []TagAssociation) *AlterExternalTableRequest {
+	s.setTag = setTag
+	return s
+}
+
+func (s *AlterExternalTableRequest) WithUnsetTag(unsetTag []ObjectIdentifier) *AlterExternalTableRequest {
+	s.unsetTag = unsetTag
 	return s
 }
 
@@ -406,4 +398,28 @@ func (s *ShowExternalTableRequest) WithStartsWith(startsWith *string) *ShowExter
 func (s *ShowExternalTableRequest) WithLimitFrom(limitFrom *LimitFrom) *ShowExternalTableRequest {
 	s.limitFrom = limitFrom
 	return s
+}
+
+func NewShowExternalTableByIDRequest(
+	id AccountObjectIdentifier,
+) *ShowExternalTableByIDRequest {
+	s := ShowExternalTableByIDRequest{}
+	s.id = id
+	return &s
+}
+
+func NewDescribeExternalTableColumnsRequest(
+	id AccountObjectIdentifier,
+) *DescribeExternalTableColumnsRequest {
+	s := DescribeExternalTableColumnsRequest{}
+	s.id = id
+	return &s
+}
+
+func NewDescribeExternalTableStageRequest(
+	id AccountObjectIdentifier,
+) *DescribeExternalTableStageRequest {
+	s := DescribeExternalTableStageRequest{}
+	s.id = id
+	return &s
 }

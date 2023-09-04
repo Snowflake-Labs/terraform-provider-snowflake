@@ -64,6 +64,17 @@ func TestInt_ExternalTables(t *testing.T) {
 		},
 	}...)
 
+	minimalCreateExternalTableReq := func(id AccountObjectIdentifier) *CreateExternalTableRequest {
+		return NewCreateExternalTableRequest(
+			id,
+			stageLocation,
+			[]ExternalTableFileFormat{
+				{
+					Type: &ExternalTableFileFormatTypeJSON,
+				},
+			},
+		)
+	}
 	minimalCreateExternalTableOpts := CreateExternalTableOpts{
 		IfNotExists: Bool(true),
 		Columns:     columns,
@@ -75,67 +86,70 @@ func TestInt_ExternalTables(t *testing.T) {
 		},
 	}
 
-	createExternalTableWithManualPartitioning := CreateWithManualPartitioningExternalTableOpts{
-		OrReplace: Bool(true),
-		Columns:   columnsWithPartition,
-		// TODO Cloud provider params
-		PartitionBy:                []string{"part_date"},
-		Location:                   stageLocation,
-		UserSpecifiedPartitionType: Bool(true),
-		FileFormat: []ExternalTableFileFormat{
-			{
-				Type: &ExternalTableFileFormatTypeJSON,
+	createExternalTableWithManualPartitioningReq := func(id AccountObjectIdentifier) *CreateWithManualPartitioningExternalTableRequest {
+		return NewCreateWithManualPartitioningExternalTableRequest(
+			id,
+			stageLocation,
+			[]ExternalTableFileFormat{
+				{
+					Type: &ExternalTableFileFormatTypeJSON,
+				},
 			},
-		},
-		CopyGrants: Bool(true),
-		Comment:    String("some_comment"),
-		Tag: []TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: "tag-value",
-			},
-		},
+		).
+			WithOrReplace(Bool(true)).
+			WithColumns(columnsWithPartition).
+			WithPartitionBy([]string{"part_date"}).
+			WithUserSpecifiedPartitionType(Bool(true)).
+			WithCopyGrants(Bool(true)).
+			WithComment(String("some_comment")).
+			WithTag([]TagAssociation{
+				{
+					Name:  tag.ID(),
+					Value: "tag-value",
+				},
+			})
 	}
 
 	t.Run("Create: minimal", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
+		externalTable, err := client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
 		require.NoError(t, err)
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
 
 	t.Run("Create: complete", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		err := client.ExternalTables.Create(ctx, externalTableID, &CreateExternalTableOpts{
-			OrReplace:       Bool(true),
-			name:            externalTableID,
-			Columns:         columns,
-			PartitionBy:     []string{"filename"},
-			Location:        stageLocation,
-			RefreshOnCreate: Bool(false),
-			AutoRefresh:     Bool(false),
-			Pattern:         String("weather-nyc/weather_2_3_0.json.gz"),
-			FileFormat: []ExternalTableFileFormat{
-				{
-					Type: &ExternalTableFileFormatTypeJSON,
+		err := client.ExternalTables.Create(
+			ctx,
+			NewCreateExternalTableRequest(
+				externalTableID,
+				stageLocation,
+				[]ExternalTableFileFormat{
+					{
+						Type: &ExternalTableFileFormatTypeJSON,
+					},
 				},
-			},
-			CopyGrants: Bool(true),
-			Comment:    String("some_comment"),
-			Tag: []TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "tag-value",
-				},
-			},
-		})
+			).
+				WithOrReplace(Bool(true)).
+				WithColumns(columns).
+				WithPartitionBy([]string{"filename"}).
+				WithRefreshOnCreate(Bool(false)).
+				WithAutoRefresh(Bool(false)).
+				WithPattern(String("weather-nyc/weather_2_3_0.json.gz")).
+				WithCopyGrants(Bool(true)).
+				WithComment(String("some_comment")).
+				WithTag([]TagAssociation{
+					{
+						Name:  tag.ID(),
+						Value: "tag-value",
+					},
+				}))
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
+		externalTable, err := client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
 		require.NoError(t, err)
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
@@ -150,163 +164,170 @@ func TestInt_ExternalTables(t *testing.T) {
 
 		id := randomAccountObjectIdentifier(t)
 		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '%s', FILE_FORMAT=>'%s', ignore_case => true))`, stageLocation, fileFormat.ID().FullyQualifiedName())
-		err = client.ExternalTables.CreateUsingTemplate(ctx, id, &CreateExternalTableUsingTemplateOpts{
-			name:     id,
-			Query:    query,
-			Location: stageLocation,
-			FileFormat: []ExternalTableFileFormat{
-				{
-					Name: String(fileFormat.ID().FullyQualifiedName()),
-				},
-			},
-			AutoRefresh: Bool(false),
-		})
+		err = client.ExternalTables.CreateUsingTemplate(
+			ctx,
+			NewCreateExternalTableUsingTemplateRequest(
+				id,
+				stageLocation,
+				[]ExternalTableFileFormat{{Name: String(fileFormat.ID().FullyQualifiedName())}},
+			).
+				WithQuery(query).
+				WithAutoRefresh(Bool(false)))
 		require.NoError(t, err)
 
-		_, err = client.ExternalTables.ShowByID(ctx, id)
+		_, err = client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(id))
 		require.NoError(t, err)
 	})
 
 	t.Run("Create with manual partitioning: complete", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := createExternalTableWithManualPartitioning
-		err := client.ExternalTables.CreateWithManualPartitioning(ctx, externalTableID, &opts)
+		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(externalTableID))
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
+		externalTable, err := client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
 		require.NoError(t, err)
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
 
 	t.Run("Create delta lake: complete", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		err := client.ExternalTables.CreateDeltaLake(ctx, externalTableID, &CreateDeltaLakeExternalTableOpts{
-			OrReplace: Bool(true),
-			name:      externalTableID,
-			Columns:   columnsWithPartition,
-			// TODO Cloud provider params ?
-			PartitionBy: []string{"filename"},
-			Location:    stageLocation,
-			FileFormat: []ExternalTableFileFormat{
-				{
-					Type: &ExternalTableFileFormatTypeParquet,
+		err := client.ExternalTables.CreateDeltaLake(
+			ctx,
+			NewCreateDeltaLakeExternalTableRequest(
+				externalTableID,
+				stageLocation,
+				[]ExternalTableFileFormat{
+					{
+						Type: &ExternalTableFileFormatTypeParquet,
+					},
 				},
-			},
-			DeltaTableFormat: Bool(true),
-			CopyGrants:       Bool(true),
-			Comment:          String("some_comment"),
-			Tag: []TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "tag-value",
-				},
-			},
-		})
+			).
+				WithOrReplace(Bool(true)).
+				WithColumns(columnsWithPartition).
+				WithPartitionBy([]string{"filename"}).
+				WithDeltaTableFormat(Bool(true)).
+				WithCopyGrants(Bool(true)).
+				WithComment(String("some_comment")).
+				WithTag([]TagAssociation{
+					{
+						Name:  tag.ID(),
+						Value: "tag-value",
+					},
+				}),
+		)
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
+		externalTable, err := client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
 		require.NoError(t, err)
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
 
 	t.Run("Alter: refresh", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
-		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
-			IfExists: Bool(true),
-			Refresh: &RefreshExternalTable{
-				Path: "weather-nyc",
-			},
-		})
+		err = client.ExternalTables.Alter(
+			ctx,
+			NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithRefresh(&RefreshExternalTable{
+					Path: "weather-nyc",
+				}),
+		)
 		require.NoError(t, err)
 	})
 
 	t.Run("Alter: add files", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		opts.Pattern = String("weather-nyc/weather_2_3_0.json.gz")
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(
+			ctx,
+			minimalCreateExternalTableReq(externalTableID).
+				WithPattern(String("weather-nyc/weather_2_3_0.json.gz")),
+		)
 		require.NoError(t, err)
 
-		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
-			IfExists: Bool(true),
-			AddFiles: []ExternalTableFile{
-				{
-					Name: "weather-nyc/weather_0_0_0.json.gz",
-				},
-			},
-		})
+		err = client.ExternalTables.Alter(
+			ctx,
+			NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithAddFiles([]ExternalTableFile{
+					{
+						Name: "weather-nyc/weather_0_0_0.json.gz",
+					},
+				}),
+		)
 		require.NoError(t, err)
 	})
 
 	t.Run("Alter: remove files", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		opts.Pattern = String("weather-nyc/weather_2_3_0.json.gz")
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(
+			ctx,
+			minimalCreateExternalTableReq(externalTableID).
+				WithPattern(String("weather-nyc/weather_2_3_0.json.gz")),
+		)
 		require.NoError(t, err)
 
-		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
-			IfExists: Bool(true),
-			AddFiles: []ExternalTableFile{
-				{
-					Name: "weather-nyc/weather_0_0_0.json.gz",
-				},
-			},
-		})
+		err = client.ExternalTables.Alter(
+			ctx,
+			NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithAddFiles([]ExternalTableFile{
+					{
+						Name: "weather-nyc/weather_0_0_0.json.gz",
+					},
+				}),
+		)
 		require.NoError(t, err)
 
-		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
-			IfExists: Bool(true),
-			RemoveFiles: []ExternalTableFile{
-				{
-					Name: "weather-nyc/weather_0_0_0.json.gz",
-				},
-			},
-		})
+		err = client.ExternalTables.Alter(
+			ctx,
+			NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithRemoveFiles([]ExternalTableFile{
+					{
+						Name: "weather-nyc/weather_0_0_0.json.gz",
+					},
+				}),
+		)
 		require.NoError(t, err)
 	})
 
 	t.Run("Alter: set auto refresh", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
-		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
-			IfExists: Bool(true),
-			Set: &ExternalTableSet{
-				AutoRefresh: Bool(true),
-			},
-		})
+		err = client.ExternalTables.Alter(
+			ctx,
+			NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithAutoRefresh(Bool(true)),
+		)
 		require.NoError(t, err)
 	})
 
 	t.Run("Alter: set tags", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
 		tagValue := "tag-value"
-		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
-			IfExists: Bool(true),
-			Set: &ExternalTableSet{
-				Tag: []TagAssociation{
+		err = client.ExternalTables.Alter(
+			ctx,
+			NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithSetTag([]TagAssociation{
 					{
 						Name:  tag.ID(),
 						Value: tagValue,
 					},
-				},
-			},
-		})
+				}),
+		)
 		require.NoError(t, err)
 
 		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
-		// TODO: Add to the IntCreate tests
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, tv)
 	})
@@ -320,15 +341,29 @@ func TestInt_ExternalTables(t *testing.T) {
 				Value: "tag-value",
 			},
 		}
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(
+			ctx,
+			minimalCreateExternalTableReq(externalTableID).
+				WithTag([]TagAssociation{
+					{
+						Name:  tag.ID(),
+						Value: "tag-value",
+					},
+				}),
+		)
 		require.NoError(t, err)
+		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
+		require.NoError(t, err)
+		assert.Equal(t, "tag-value", tv)
 
-		err = client.ExternalTables.Alter(ctx, externalTableID, &AlterExternalTableOptions{
-			IfExists: Bool(true),
-			Unset: &ExternalTableUnset{
-				Tag: []ObjectIdentifier{NewAccountObjectIdentifier(tag.ID().Name())},
-			},
-		})
+		err = client.ExternalTables.Alter(
+			ctx,
+			NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithUnsetTag([]ObjectIdentifier{
+					NewAccountObjectIdentifier(tag.ID().Name()),
+				}),
+		)
 		require.NoError(t, err)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
@@ -337,85 +372,91 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Alter: add partitions", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := createExternalTableWithManualPartitioning
-		err := client.ExternalTables.CreateWithManualPartitioning(ctx, externalTableID, &opts)
+		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(externalTableID))
 		require.NoError(t, err)
 
-		err = client.ExternalTables.AlterPartitions(ctx, externalTableID, &AlterExternalTablePartitionOptions{
-			IfExists: Bool(true),
-			AddPartitions: []Partition{
-				{
-					ColumnName: "part_date",
-					Value:      "2019-06-25",
-				},
-			},
-			Location: "2019/06",
-		})
+		err = client.ExternalTables.AlterPartitions(
+			ctx,
+			NewAlterExternalTablePartitionRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithAddPartitions([]Partition{
+					{
+						ColumnName: "part_date",
+						Value:      "2019-06-25",
+					},
+				}).
+				WithLocation("2019/06"),
+		)
 		require.NoError(t, err)
 	})
 
 	t.Run("Alter: drop partitions", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := createExternalTableWithManualPartitioning
-		err := client.ExternalTables.CreateWithManualPartitioning(ctx, externalTableID, &opts)
+		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(externalTableID))
 		require.NoError(t, err)
 
-		err = client.ExternalTables.AlterPartitions(ctx, externalTableID, &AlterExternalTablePartitionOptions{
-			IfExists: Bool(true),
-			AddPartitions: []Partition{
-				{
-					ColumnName: "part_date",
-					Value:      "2019-06-25",
-				},
-			},
-			Location: "2019/06",
-		})
+		err = client.ExternalTables.AlterPartitions(
+			ctx,
+			NewAlterExternalTablePartitionRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithAddPartitions([]Partition{
+					{
+						ColumnName: "part_date",
+						Value:      "2019-06-25",
+					},
+				}).
+				WithLocation("2019/06"),
+		)
 		require.NoError(t, err)
 
-		err = client.ExternalTables.AlterPartitions(ctx, externalTableID, &AlterExternalTablePartitionOptions{
-			IfExists:      Bool(true),
-			DropPartition: Bool(true),
-			Location:      "2019/06",
-		})
+		err = client.ExternalTables.AlterPartitions(
+			ctx,
+			NewAlterExternalTablePartitionRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithDropPartition(Bool(true)).
+				WithLocation("2019/06"),
+		)
 		require.NoError(t, err)
 	})
 
 	t.Run("Drop", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
-		err = client.ExternalTables.Drop(ctx, externalTableID, &DropExternalTableOptions{
-			IfExists: Bool(true),
-			DropOption: &ExternalTableDropOption{
-				Cascade: Bool(true),
-			},
-		})
+		err = client.ExternalTables.Drop(
+			ctx,
+			NewDropExternalTableRequest(externalTableID).
+				WithIfExists(Bool(true)).
+				WithDropOption(&ExternalTableDropOption{
+					Cascade: Bool(true),
+				}),
+		)
 
-		_, err = client.ExternalTables.ShowByID(ctx, externalTableID)
+		_, err = client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
 		require.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("Show", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
-		et, err := client.ExternalTables.Show(ctx, &ShowExternalTableOptions{
-			Terse: Bool(true),
-			Like: &Like{
-				Pattern: String(externalTableID.Name()),
-			},
-			In: &In{
-				Database: db.ID(),
-			},
-			StartsWith: String(externalTableID.Name()),
-			LimitFrom: &LimitFrom{
-				Rows: Int(1),
-			},
-		})
+		et, err := client.ExternalTables.Show(
+			ctx,
+			NewShowExternalTableRequest().
+				WithTerse(Bool(true)).
+				WithLike(&Like{
+					Pattern: String(externalTableID.Name()),
+				}).
+				WithIn(&In{
+					Database: db.ID(),
+				}).
+				WithStartsWith(String(externalTableID.Name())).
+				WithLimitFrom(&LimitFrom{
+					Rows: Int(1),
+				}),
+		)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(et))
 		assert.Equal(t, externalTableID, et[0].ID())
@@ -423,14 +464,14 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Describe: columns", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		req := minimalCreateExternalTableReq(externalTableID)
+		err := client.ExternalTables.Create(ctx, req)
 		require.NoError(t, err)
 
-		d, err := client.ExternalTables.DescribeColumns(ctx, externalTableID)
+		d, err := client.ExternalTables.DescribeColumns(ctx, NewDescribeExternalTableColumnsRequest(externalTableID))
 		require.NoError(t, err)
 
-		assert.Equal(t, len(opts.Columns)+1, len(d)) // + 1 - because there's underlying Value column
+		assert.Equal(t, len(req.columns)+1, len(d)) // +1 because there's underlying Value column
 		assert.Contains(t, d, ExternalTableColumnDetails{
 			Name:       "VALUE",
 			Type:       "VARIANT",
@@ -448,11 +489,10 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Describe: stage", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		err := client.ExternalTables.Create(ctx, externalTableID, &opts)
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
-		d, err := client.ExternalTables.DescribeStage(ctx, externalTableID)
+		d, err := client.ExternalTables.DescribeStage(ctx, NewDescribeExternalTableStageRequest(externalTableID))
 		require.NoError(t, err)
 
 		assert.Contains(t, d, ExternalTableStageDetails{

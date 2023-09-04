@@ -239,7 +239,7 @@ type CreateExternalTableUsingTemplateOpts struct {
 	Query               string                  `ddl:"parameter,no_equals,parentheses" sql:"USING TEMPLATE"`
 	CloudProviderParams *CloudProviderParams
 	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
-	Location            string                    `ddl:"parameter,no_quotes" sql:"LOCATION"` // TODO change in others ?
+	Location            string                    `ddl:"parameter" sql:"LOCATION"`
 	RefreshOnCreate     *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
 	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
@@ -258,8 +258,9 @@ type AlterExternalTableOptions struct {
 	Refresh     *RefreshExternalTable `ddl:"keyword" sql:"REFRESH"`
 	AddFiles    []ExternalTableFile   `ddl:"keyword,no_quotes,parentheses" sql:"ADD FILES"`
 	RemoveFiles []ExternalTableFile   `ddl:"keyword,no_quotes,parentheses" sql:"REMOVE FILES"`
-	Set         *ExternalTableSet     `ddl:"keyword" sql:"SET"`
-	Unset       *ExternalTableUnset   `ddl:"keyword" sql:"UNSET"`
+	AutoRefresh *bool                 `ddl:"parameter" sql:"AUTO_REFRESH"`
+	SetTag      []TagAssociation      `ddl:"keyword" sql:"TAG"`
+	UnsetTag    []ObjectIdentifier    `ddl:"keyword" sql:"TAG"`
 }
 
 type RefreshExternalTable struct {
@@ -268,16 +269,6 @@ type RefreshExternalTable struct {
 
 type ExternalTableFile struct {
 	Name string `ddl:"keyword,single_quotes"`
-}
-
-// TODO Can set both ?
-type ExternalTableSet struct {
-	AutoRefresh *bool            `ddl:"parameter" sql:"AUTO_REFRESH"`
-	Tag         []TagAssociation `ddl:"keyword" sql:"TAG"`
-}
-
-type ExternalTableUnset struct {
-	Tag []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
 }
 
 type AlterExternalTablePartitionOptions struct {
@@ -399,7 +390,7 @@ type externalTableColumnDetailsRow struct {
 	Default    sql.NullString `db:"default"`
 	IsPrimary  string         `db:"primary key"`
 	IsUnique   string         `db:"unique key"`
-	Check      sql.NullBool   `db:"check"` // ? Bool / String ?
+	Check      sql.NullBool   `db:"check"` // TODO ? Bool / String ?
 	Expression sql.NullString `db:"expression"`
 	Comment    sql.NullString `db:"comment"`
 	PolicyName sql.NullString `db:"policy name"`
