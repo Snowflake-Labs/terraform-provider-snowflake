@@ -84,7 +84,7 @@ func TestAccountAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := `ALTER ACCOUNT SET CLIENT_ENCRYPTION_KEY_SIZE = 128, PREVENT_UNLOAD_TO_INTERNAL_STAGES = TRUE, JSON_INDENT = 16, MAX_DATA_EXTENSION_TIME_IN_DAYS = 30`
+		expected := `ALTER ACCOUNT SET CLIENT_ENCRYPTION_KEY_SIZE = 128, PREVENT_UNLOAD_TO_INTERNAL_STAGES = true, JSON_INDENT = 16, MAX_DATA_EXTENSION_TIME_IN_DAYS = 30`
 		assert.Equal(t, expected, actual)
 	})
 

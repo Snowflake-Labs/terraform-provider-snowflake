@@ -68,21 +68,17 @@ func TestInt_ExternalTables(t *testing.T) {
 		return NewCreateExternalTableRequest(
 			id,
 			stageLocation,
-			[]ExternalTableFileFormat{
-				{
-					Type: &ExternalTableFileFormatTypeJSON,
-				},
+			ExternalTableFileFormat{
+				Type: &ExternalTableFileFormatTypeJSON,
 			},
 		)
 	}
-	minimalCreateExternalTableOpts := CreateExternalTableOpts{
+	minimalCreateExternalTableOpts := CreateExternalTableOptions{
 		IfNotExists: Bool(true),
 		Columns:     columns,
 		Location:    stageLocation,
-		FileFormat: []ExternalTableFileFormat{
-			{
-				Type: &ExternalTableFileFormatTypeJSON,
-			},
+		FileFormat: ExternalTableFileFormat{
+			Type: &ExternalTableFileFormatTypeJSON,
 		},
 	}
 
@@ -90,16 +86,13 @@ func TestInt_ExternalTables(t *testing.T) {
 		return NewCreateWithManualPartitioningExternalTableRequest(
 			id,
 			stageLocation,
-			[]ExternalTableFileFormat{
-				{
-					Type: &ExternalTableFileFormatTypeJSON,
-				},
+			ExternalTableFileFormat{
+				Type: &ExternalTableFileFormatTypeJSON,
 			},
 		).
 			WithOrReplace(Bool(true)).
 			WithColumns(columnsWithPartition).
 			WithPartitionBy([]string{"part_date"}).
-			WithUserSpecifiedPartitionType(Bool(true)).
 			WithCopyGrants(Bool(true)).
 			WithComment(String("some_comment")).
 			WithTag([]TagAssociation{
@@ -127,10 +120,8 @@ func TestInt_ExternalTables(t *testing.T) {
 			NewCreateExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				[]ExternalTableFileFormat{
-					{
-						Type: &ExternalTableFileFormatTypeJSON,
-					},
+				ExternalTableFileFormat{
+					Type: &ExternalTableFileFormatTypeJSON,
 				},
 			).
 				WithOrReplace(Bool(true)).
@@ -169,7 +160,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			NewCreateExternalTableUsingTemplateRequest(
 				id,
 				stageLocation,
-				[]ExternalTableFileFormat{{Name: String(fileFormat.ID().FullyQualifiedName())}},
+				ExternalTableFileFormat{Name: String(fileFormat.ID().FullyQualifiedName())},
 			).
 				WithQuery(query).
 				WithAutoRefresh(Bool(false)))
@@ -196,10 +187,8 @@ func TestInt_ExternalTables(t *testing.T) {
 			NewCreateDeltaLakeExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				[]ExternalTableFileFormat{
-					{
-						Type: &ExternalTableFileFormatTypeParquet,
-					},
+				ExternalTableFileFormat{
+					Type: &ExternalTableFileFormatTypeParquet,
 				},
 			).
 				WithOrReplace(Bool(true)).

@@ -23,8 +23,8 @@ func errOneOf(structName string, fieldNames ...string) error {
 	return fmt.Errorf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames)
 }
 
-func errNotSet(structName string, fieldName string) error {
-	return fmt.Errorf("%v field: %v should be set", structName, fieldName)
+func errNotSet(structName string, fieldNames ...string) error {
+	return fmt.Errorf("%v fields: %v should be set", structName, fieldNames)
 }
 
 func errExactlyOneOf(fieldNames ...string) error {

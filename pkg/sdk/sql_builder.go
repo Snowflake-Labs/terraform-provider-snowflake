@@ -528,16 +528,6 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 		}
 	case "parameter":
-		if boolValue, ok := reflectedValue.(bool); ok {
-			return b.renderStaticClause(append(clauses, sqlParameterClause{
-				key:   sqlTag,
-				value: strings.ToUpper(fmt.Sprintf("%v", boolValue)),
-				em:    b.getModifier(field.Tag, "ddl", equalsModifierType, Equals).(equalsModifier),
-				qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
-				rm:    b.getModifier(field.Tag, "ddl", reverseModifierType, NoReverse).(reverseModifier),
-				pm:    b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
-			})...), nil
-		}
 		if _, ok := reflectedValue.(ObjectType); ok {
 			if reflectedValue.(ObjectType).String() == "" {
 				return nil, nil

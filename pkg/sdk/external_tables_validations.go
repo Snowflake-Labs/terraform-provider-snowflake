@@ -6,10 +6,10 @@ import (
 )
 
 var (
-	_ validatable = (*CreateExternalTableOpts)(nil)
-	_ validatable = (*CreateWithManualPartitioningExternalTableOpts)(nil)
-	_ validatable = (*CreateDeltaLakeExternalTableOpts)(nil)
-	_ validatable = (*CreateExternalTableUsingTemplateOpts)(nil)
+	_ validatable = (*CreateExternalTableOptions)(nil)
+	_ validatable = (*CreateWithManualPartitioningExternalTableOptions)(nil)
+	_ validatable = (*CreateDeltaLakeExternalTableOptions)(nil)
+	_ validatable = (*CreateExternalTableUsingTemplateOptions)(nil)
 	_ validatable = (*AlterExternalTableOptions)(nil)
 	_ validatable = (*AlterExternalTablePartitionOptions)(nil)
 	_ validatable = (*DropExternalTableOptions)(nil)
@@ -18,72 +18,83 @@ var (
 	_ validatable = (*describeExternalTableStage)(nil)
 )
 
-func (opts *CreateExternalTableOpts) validate() error {
+func (opts *CreateExternalTableOptions) validate() error {
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateDeltaLakeExternalTableOpts", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateExternalTableOptions", "OrReplace", "IfNotExists"))
 	}
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.Location) {
-		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "Location"))
+		errs = append(errs, errNotSet("CreateExternalTableOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat) {
-		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "FileFormat"))
+	if !valueSet(opts.FileFormat.Name) && !valueSet(opts.FileFormat.Type) {
+		errs = append(errs, errNotSet("FileFormat", "Name or Type"))
 	}
-	// TODO call validate() underlying props
+	if valueSet(opts.FileFormat.Name) && valueSet(opts.FileFormat.Type) {
+		errs = append(errs, errOneOf("FileFormat", "Name", "Type"))
+	}
 	return errors.Join(errs...)
 }
 
-func (opts *CreateWithManualPartitioningExternalTableOpts) validate() error {
+func (opts *CreateWithManualPartitioningExternalTableOptions) validate() error {
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateDeltaLakeExternalTableOpts", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateWithManualPartitioningExternalTableOptions", "OrReplace", "IfNotExists"))
 	}
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.Location) {
-		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "Location"))
+		errs = append(errs, errNotSet("CreateWithManualPartitioningExternalTableOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat) {
-		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "FileFormat"))
+	if !valueSet(opts.FileFormat.Name) && !valueSet(opts.FileFormat.Type) {
+		errs = append(errs, errNotSet("FileFormat", "Name or Type"))
 	}
-	// TODO call validate() underlying props
+	if valueSet(opts.FileFormat.Name) && valueSet(opts.FileFormat.Type) {
+		errs = append(errs, errOneOf("FileFormat", "Name", "Type"))
+	}
 	return errors.Join(errs...)
 }
 
-func (opts *CreateDeltaLakeExternalTableOpts) validate() error {
+func (opts *CreateDeltaLakeExternalTableOptions) validate() error {
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("CreateDeltaLakeExternalTableOpts", "OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateDeltaLakeExternalTableOptions", "OrReplace", "IfNotExists"))
 	}
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.Location) {
-		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "Location"))
+		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat) {
-		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "FileFormat"))
+	if !valueSet(opts.FileFormat.Name) && !valueSet(opts.FileFormat.Type) {
+		errs = append(errs, errNotSet("FileFormat", "Name or Type"))
 	}
-	// TODO call validate() underlying props
+	if valueSet(opts.FileFormat.Name) && valueSet(opts.FileFormat.Type) {
+		errs = append(errs, errOneOf("FileFormat", "Name", "Type"))
+	}
 	return errors.Join(errs...)
 }
 
-func (opts *CreateExternalTableUsingTemplateOpts) validate() error {
+func (opts *CreateExternalTableUsingTemplateOptions) validate() error {
 	var errs []error
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if !valueSet(opts.Query) {
+		errs = append(errs, errNotSet("CreateExternalTableUsingTemplateOptions", "Query"))
+	}
 	if !valueSet(opts.Location) {
-		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "Location"))
+		errs = append(errs, errNotSet("CreateExternalTableUsingTemplateOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat) {
-		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOpts", "FileFormat"))
+	if !valueSet(opts.FileFormat.Name) && !valueSet(opts.FileFormat.Type) {
+		errs = append(errs, errNotSet("FileFormat", "Name or Type"))
 	}
-	// TODO call validate() underlying props
+	if valueSet(opts.FileFormat.Name) && valueSet(opts.FileFormat.Type) {
+		errs = append(errs, errOneOf("FileFormat", "Name", "Type"))
+	}
 	return errors.Join(errs...)
 }
 
@@ -142,8 +153,8 @@ func (v *describeExternalTableStage) validate() error {
 }
 
 func (cpp *CloudProviderParams) validate() error {
-	if anyValueSet(cpp.GoogleCloudStorage, cpp.MicrosoftAzure) && exactlyOneValueSet(cpp.GoogleCloudStorage, cpp.MicrosoftAzure) {
-		return errOneOf("CloudProviderParams", "GoogleCloudStorage", "MicrosoftAzure")
+	if anyValueSet(cpp.GoogleCloudStorageIntegration, cpp.MicrosoftAzureIntegration) && exactlyOneValueSet(cpp.GoogleCloudStorageIntegration, cpp.MicrosoftAzureIntegration) {
+		return errOneOf("CloudProviderParams", "GoogleCloudStorageIntegration", "MicrosoftAzureIntegration")
 	}
 	return nil
 }

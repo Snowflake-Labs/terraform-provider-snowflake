@@ -7,7 +7,7 @@ import ()
 func NewCreateExternalTableRequest(
 	name AccountObjectIdentifier,
 	location string,
-	fileFormat []ExternalTableFileFormat,
+	fileFormat ExternalTableFileFormat,
 ) *CreateExternalTableRequest {
 	s := CreateExternalTableRequest{}
 	s.name = name
@@ -84,7 +84,7 @@ func (s *CreateExternalTableRequest) WithTag(tag []TagAssociation) *CreateExtern
 func NewCreateWithManualPartitioningExternalTableRequest(
 	name AccountObjectIdentifier,
 	location string,
-	fileFormat []ExternalTableFileFormat,
+	fileFormat ExternalTableFileFormat,
 ) *CreateWithManualPartitioningExternalTableRequest {
 	s := CreateWithManualPartitioningExternalTableRequest{}
 	s.name = name
@@ -118,11 +118,6 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithPartitionBy(parti
 	return s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateWithManualPartitioningExternalTableRequest {
-	s.userSpecifiedPartitionType = userSpecifiedPartitionType
-	return s
-}
-
 func (s *CreateWithManualPartitioningExternalTableRequest) WithCopyGrants(copyGrants *bool) *CreateWithManualPartitioningExternalTableRequest {
 	s.copyGrants = copyGrants
 	return s
@@ -146,7 +141,7 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithTag(tag []TagAsso
 func NewCreateDeltaLakeExternalTableRequest(
 	name AccountObjectIdentifier,
 	location string,
-	fileFormat []ExternalTableFileFormat,
+	fileFormat ExternalTableFileFormat,
 ) *CreateDeltaLakeExternalTableRequest {
 	s := CreateDeltaLakeExternalTableRequest{}
 	s.name = name
@@ -180,11 +175,6 @@ func (s *CreateDeltaLakeExternalTableRequest) WithPartitionBy(partitionBy []stri
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateDeltaLakeExternalTableRequest {
-	s.userSpecifiedPartitionType = userSpecifiedPartitionType
-	return s
-}
-
 func (s *CreateDeltaLakeExternalTableRequest) WithDeltaTableFormat(deltaTableFormat *bool) *CreateDeltaLakeExternalTableRequest {
 	s.deltaTableFormat = deltaTableFormat
 	return s
@@ -213,7 +203,7 @@ func (s *CreateDeltaLakeExternalTableRequest) WithTag(tag []TagAssociation) *Cre
 func NewCreateExternalTableUsingTemplateRequest(
 	name AccountObjectIdentifier,
 	location string,
-	fileFormat []ExternalTableFileFormat,
+	fileFormat ExternalTableFileFormat,
 ) *CreateExternalTableUsingTemplateRequest {
 	s := CreateExternalTableUsingTemplateRequest{}
 	s.name = name

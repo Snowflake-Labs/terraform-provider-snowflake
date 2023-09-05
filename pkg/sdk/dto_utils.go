@@ -109,7 +109,7 @@ func printStructImpl(value reflect.Value, indent int) {
 
 //// TODO Remove
 //func TestT(t *testing.T) {
-//	a := new(CreateExternalTableOpts)
+//	a := new(CreateExternalTableOptions)
 //	b := NewCreateExternalTableRequest(
 //		randomAccountObjectIdentifier(t),
 //		"location",

@@ -2,7 +2,7 @@ package sdk
 
 //go:generate go run ./dto-builder-generator/main.go
 
-// TODO Check subtypes
+// TODO Check subtypes (e.g. columns in create, etc.)
 // TODO Option types should be unexported
 
 type CreateExternalTableRequest struct {
@@ -16,7 +16,7 @@ type CreateExternalTableRequest struct {
 	refreshOnCreate     *bool
 	autoRefresh         *bool
 	pattern             *string
-	fileFormat          []ExternalTableFileFormat // required
+	fileFormat          ExternalTableFileFormat // required
 	awsSnsTopic         *string
 	copyGrants          *bool
 	comment             *string
@@ -24,8 +24,8 @@ type CreateExternalTableRequest struct {
 	tag                 []TagAssociation
 }
 
-func (v *CreateExternalTableRequest) toOpts() *CreateExternalTableOpts {
-	return &CreateExternalTableOpts{
+func (v *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
+	return &CreateExternalTableOptions{
 		OrReplace:           v.orReplace,
 		IfNotExists:         v.ifNotExists,
 		name:                v.name,
@@ -45,72 +45,68 @@ func (v *CreateExternalTableRequest) toOpts() *CreateExternalTableOpts {
 }
 
 type CreateWithManualPartitioningExternalTableRequest struct {
-	orReplace                  *bool
-	ifNotExists                *bool
-	name                       AccountObjectIdentifier // required
-	columns                    []ExternalTableColumn
-	cloudProviderParams        *CloudProviderParams
-	partitionBy                []string
-	location                   string // required
-	userSpecifiedPartitionType *bool
-	fileFormat                 []ExternalTableFileFormat // required
-	copyGrants                 *bool
-	comment                    *string
-	rowAccessPolicy            *RowAccessPolicy
-	tag                        []TagAssociation
+	orReplace           *bool
+	ifNotExists         *bool
+	name                AccountObjectIdentifier // required
+	columns             []ExternalTableColumn
+	cloudProviderParams *CloudProviderParams
+	partitionBy         []string
+	location            string                  // required
+	fileFormat          ExternalTableFileFormat // required
+	copyGrants          *bool
+	comment             *string
+	rowAccessPolicy     *RowAccessPolicy
+	tag                 []TagAssociation
 }
 
-func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithManualPartitioningExternalTableOpts {
-	return &CreateWithManualPartitioningExternalTableOpts{
-		OrReplace:                  v.orReplace,
-		IfNotExists:                v.ifNotExists,
-		name:                       v.name,
-		Columns:                    v.columns,
-		CloudProviderParams:        v.cloudProviderParams,
-		PartitionBy:                v.partitionBy,
-		Location:                   v.location,
-		UserSpecifiedPartitionType: v.userSpecifiedPartitionType,
-		FileFormat:                 v.fileFormat,
-		CopyGrants:                 v.copyGrants,
-		Comment:                    v.comment,
-		RowAccessPolicy:            v.rowAccessPolicy,
-		Tag:                        v.tag,
+func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithManualPartitioningExternalTableOptions {
+	return &CreateWithManualPartitioningExternalTableOptions{
+		OrReplace:           v.orReplace,
+		IfNotExists:         v.ifNotExists,
+		name:                v.name,
+		Columns:             v.columns,
+		CloudProviderParams: v.cloudProviderParams,
+		PartitionBy:         v.partitionBy,
+		Location:            v.location,
+		FileFormat:          v.fileFormat,
+		CopyGrants:          v.copyGrants,
+		Comment:             v.comment,
+		RowAccessPolicy:     v.rowAccessPolicy,
+		Tag:                 v.tag,
 	}
 }
 
 type CreateDeltaLakeExternalTableRequest struct {
-	orReplace                  *bool
-	ifNotExists                *bool
-	name                       AccountObjectIdentifier // required
-	columns                    []ExternalTableColumn
-	cloudProviderParams        *CloudProviderParams
-	partitionBy                []string
-	location                   string // required
-	userSpecifiedPartitionType *bool
-	fileFormat                 []ExternalTableFileFormat // required
-	deltaTableFormat           *bool
-	copyGrants                 *bool
-	comment                    *string
-	rowAccessPolicy            *RowAccessPolicy
-	tag                        []TagAssociation
+	orReplace           *bool
+	ifNotExists         *bool
+	name                AccountObjectIdentifier // required
+	columns             []ExternalTableColumn
+	cloudProviderParams *CloudProviderParams
+	partitionBy         []string
+	location            string                  // required
+	fileFormat          ExternalTableFileFormat // required
+	deltaTableFormat    *bool
+	copyGrants          *bool
+	comment             *string
+	rowAccessPolicy     *RowAccessPolicy
+	tag                 []TagAssociation
 }
 
-func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalTableOpts {
-	return &CreateDeltaLakeExternalTableOpts{
-		OrReplace:                  v.orReplace,
-		IfNotExists:                v.ifNotExists,
-		name:                       v.name,
-		Columns:                    v.columns,
-		CloudProviderParams:        v.cloudProviderParams,
-		PartitionBy:                v.partitionBy,
-		Location:                   v.location,
-		UserSpecifiedPartitionType: v.userSpecifiedPartitionType,
-		FileFormat:                 v.fileFormat,
-		DeltaTableFormat:           v.deltaTableFormat,
-		CopyGrants:                 v.copyGrants,
-		Comment:                    v.comment,
-		RowAccessPolicy:            v.rowAccessPolicy,
-		Tag:                        v.tag,
+func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalTableOptions {
+	return &CreateDeltaLakeExternalTableOptions{
+		OrReplace:           v.orReplace,
+		IfNotExists:         v.ifNotExists,
+		name:                v.name,
+		Columns:             v.columns,
+		CloudProviderParams: v.cloudProviderParams,
+		PartitionBy:         v.partitionBy,
+		Location:            v.location,
+		FileFormat:          v.fileFormat,
+		DeltaTableFormat:    v.deltaTableFormat,
+		CopyGrants:          v.copyGrants,
+		Comment:             v.comment,
+		RowAccessPolicy:     v.rowAccessPolicy,
+		Tag:                 v.tag,
 	}
 }
 
@@ -125,15 +121,15 @@ type CreateExternalTableUsingTemplateRequest struct {
 	refreshOnCreate     *bool
 	autoRefresh         *bool
 	pattern             *string
-	fileFormat          []ExternalTableFileFormat // required
+	fileFormat          ExternalTableFileFormat // required
 	awsSnsTopic         *string
 	comment             *string
 	rowAccessPolicy     *RowAccessPolicy
 	tag                 []TagAssociation
 }
 
-func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableUsingTemplateOpts {
-	return &CreateExternalTableUsingTemplateOpts{
+func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableUsingTemplateOptions {
+	return &CreateExternalTableUsingTemplateOptions{
 		OrReplace:           v.orReplace,
 		name:                v.name,
 		CopyGrants:          v.copyGrants,
