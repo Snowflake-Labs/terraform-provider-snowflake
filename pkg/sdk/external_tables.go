@@ -258,9 +258,9 @@ type AlterExternalTableOptions struct {
 	Refresh     *RefreshExternalTable `ddl:"keyword" sql:"REFRESH"`
 	AddFiles    []ExternalTableFile   `ddl:"keyword,no_quotes,parentheses" sql:"ADD FILES"`
 	RemoveFiles []ExternalTableFile   `ddl:"keyword,no_quotes,parentheses" sql:"REMOVE FILES"`
-	AutoRefresh *bool                 `ddl:"parameter" sql:"AUTO_REFRESH"`
-	SetTag      []TagAssociation      `ddl:"keyword" sql:"TAG"`
-	UnsetTag    []ObjectIdentifier    `ddl:"keyword" sql:"TAG"`
+	AutoRefresh *bool                 `ddl:"parameter" sql:"SET AUTO_REFRESH"`
+	SetTag      []TagAssociation      `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag    []ObjectIdentifier    `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 type RefreshExternalTable struct {

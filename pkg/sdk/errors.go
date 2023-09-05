@@ -20,7 +20,7 @@ var (
 )
 
 func errOneOf(structName string, fieldNames ...string) error {
-	return fmt.Errorf("%v fields: %v are incompatible and cannot be set at once", structName, fieldNames)
+	return fmt.Errorf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames)
 }
 
 func errNotSet(structName string, fieldName string) error {
