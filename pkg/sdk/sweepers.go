@@ -113,7 +113,7 @@ func getRoleSweeper(client *Client, prefix string) func() error {
 			log.Printf("[DEBUG] Sweeping all roles with prefix %s", prefix)
 		}
 		ctx := context.Background()
-		roles, err := client.Roles.Show(ctx, nil)
+		roles, err := client.Roles.Show(ctx, NewShowRoleRequest())
 		if err != nil {
 			return err
 		}

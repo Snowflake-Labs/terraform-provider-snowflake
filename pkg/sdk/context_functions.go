@@ -82,9 +82,17 @@ func (c *contextFunctions) CurrentSecondaryRoles(ctx context.Context) (*CurrentS
 			roles = append(roles, NewAccountObjectIdentifier(role))
 		}
 	}
+
+	var value SecondaryRoleOption
+	switch jsonRoles.Value {
+	case "ALL":
+		value = SecondaryRolesAll
+	default:
+		value = SecondaryRolesNone
+	}
 	secondaryRoles := &CurrentSecondaryRoles{
 		Roles: roles,
-		Value: SecondaryRoleOption(jsonRoles.Value),
+		Value: value,
 	}
 	return secondaryRoles, nil
 }

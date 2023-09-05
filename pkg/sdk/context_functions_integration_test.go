@@ -151,8 +151,12 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 	r, err := client.ContextFunctions.CurrentSecondaryRoles(ctx)
 	require.NoError(t, err)
 
-	assert.Equal(t, "ALL", r.Value)
-	assert.Contains(t, r.Roles, currentRole)
+	names := make([]string, len(r.Roles))
+	for i, v := range r.Roles {
+		names[i] = v.Name()
+	}
+	assert.Equal(t, SecondaryRolesAll, r.Value)
+	assert.Contains(t, names, currentRole)
 
 	err = client.Sessions.UseSecondaryRoles(ctx, SecondaryRolesNone)
 	require.NoError(t, err)
@@ -160,7 +164,7 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 	secondaryRolesAfter, err := client.ContextFunctions.CurrentSecondaryRoles(ctx)
 	require.NoError(t, err)
 
-	assert.Equal(t, "", secondaryRolesAfter.Value)
+	assert.Equal(t, SecondaryRolesNone, secondaryRolesAfter.Value)
 	assert.Equal(t, 0, len(secondaryRolesAfter.Roles))
 
 	t.Cleanup(func() {
