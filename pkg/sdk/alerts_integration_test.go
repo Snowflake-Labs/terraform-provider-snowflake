@@ -42,8 +42,8 @@ func TestInt_AlertsShow(t *testing.T) {
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, alerts, alertTest)
-		assert.Contains(t, alerts, alert2Test)
+		assert.Contains(t, alerts, *alertTest)
+		assert.Contains(t, alerts, *alert2Test)
 		assert.Equal(t, 2, len(alerts))
 	})
 
@@ -58,7 +58,7 @@ func TestInt_AlertsShow(t *testing.T) {
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, alerts, alertTest)
+		assert.Contains(t, alerts, *alertTest)
 		assert.Equal(t, 1, len(alerts))
 	})
 

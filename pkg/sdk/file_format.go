@@ -133,8 +133,8 @@ func (row *FileFormatRow) toFileFormat() FileFormat {
 	}
 
 	newNullIf := make([]NullString, len(inputOptions.NullIf))
-	for _, s := range inputOptions.NullIf {
-		newNullIf = append(newNullIf, NullString{s})
+	for i, s := range inputOptions.NullIf {
+		newNullIf[i] = NullString{s}
 	}
 
 	switch ff.Type {

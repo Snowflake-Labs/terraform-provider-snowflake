@@ -23,7 +23,7 @@ func TestInt_ResourceMonitorsShow(t *testing.T) {
 		}
 		resourceMonitors, err := client.ResourceMonitors.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, resourceMonitors, resourceMonitorTest)
+		assert.Contains(t, resourceMonitors, *resourceMonitorTest)
 		assert.Equal(t, 1, len(resourceMonitors))
 	})
 
