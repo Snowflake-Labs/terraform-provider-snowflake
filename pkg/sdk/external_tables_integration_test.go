@@ -3,9 +3,10 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInt_ExternalTables(t *testing.T) {
@@ -47,14 +48,6 @@ func TestInt_ExternalTables(t *testing.T) {
 			NewExternalTableFileFormatRequest().WithType(&ExternalTableFileFormatTypeJSON),
 		)
 	}
-	//minimalCreateExternalTableOpts := CreateExternalTableOptions{
-	//	IfNotExists: Bool(true),
-	//	Columns:     columns,
-	//	Location:    stageLocation,
-	//	FileFormat: ExternalTableFileFormat{
-	//		Type: &ExternalTableFileFormatTypeJSON,
-	//	},
-	//}
 
 	createExternalTableWithManualPartitioningReq := func(id AccountObjectIdentifier) *CreateWithManualPartitioningExternalTableRequest {
 		return NewCreateWithManualPartitioningExternalTableRequest(
@@ -331,6 +324,7 @@ func TestInt_ExternalTables(t *testing.T) {
 				WithIfExists(Bool(true)).
 				WithDropOption(NewExternalTableDropOptionRequest().WithCascade(Bool(true))),
 		)
+		require.NoError(t, err)
 
 		_, err = client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
 		require.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)

@@ -77,9 +77,9 @@ func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExter
 		return nil, err
 	}
 
-	var result []ExternalTableColumnDetails
-	for _, r := range rows {
-		result = append(result, r.toExternalTableColumnDetails())
+	result := make([]ExternalTableColumnDetails, len(rows))
+	for i, r := range rows {
+		result[i] = r.toExternalTableColumnDetails()
 	}
 	return result, nil
 }
@@ -92,9 +92,9 @@ func (v *externalTables) DescribeStage(ctx context.Context, req *DescribeExterna
 		return nil, err
 	}
 
-	var result []ExternalTableStageDetails
-	for _, r := range rows {
-		result = append(result, r.toExternalTableStageDetails())
+	result := make([]ExternalTableStageDetails, len(rows))
+	for i, r := range rows {
+		result[i] = r.toExternalTableStageDetails()
 	}
 
 	return result, nil
