@@ -55,9 +55,7 @@ func (v *externalTables) ShowByID(ctx context.Context, req *ShowExternalTableByI
 		return nil, ErrInvalidObjectIdentifier
 	}
 
-	externalTables, err := v.client.ExternalTables.Show(ctx, NewShowExternalTableRequest().WithLike(&Like{
-		Pattern: String(req.id.Name()),
-	}))
+	externalTables, err := v.client.ExternalTables.Show(ctx, NewShowExternalTableRequest().WithLike(String(req.id.Name())))
 	if err != nil {
 		return nil, err
 	}

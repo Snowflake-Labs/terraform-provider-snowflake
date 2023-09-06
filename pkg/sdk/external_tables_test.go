@@ -4,8 +4,6 @@ import (
 	"testing"
 )
 
-// TODO Test validation
-
 func TestExternalTablesCreate(t *testing.T) {
 	t.Run("basic options", func(t *testing.T) {
 		opts := &CreateExternalTableOptions{

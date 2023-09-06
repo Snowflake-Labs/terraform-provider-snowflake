@@ -404,7 +404,7 @@ type externalTableColumnDetailsRow struct {
 	Default    sql.NullString `db:"default"`
 	IsPrimary  string         `db:"primary key"`
 	IsUnique   string         `db:"unique key"`
-	Check      sql.NullBool   `db:"check"` // TODO ? Bool / String ?
+	Check      sql.NullString `db:"check"`
 	Expression sql.NullString `db:"expression"`
 	Comment    sql.NullString `db:"comment"`
 	PolicyName sql.NullString `db:"policy name"`
@@ -423,7 +423,7 @@ func (r *externalTableColumnDetailsRow) toExternalTableColumnDetails() ExternalT
 		details.Default = String(r.Default.String)
 	}
 	if r.Check.Valid {
-		details.Check = Bool(r.Check.Bool)
+		details.Check = Bool(r.Check.String == "Y")
 	}
 	if r.Expression.Valid {
 		details.Expression = String(r.Expression.String)

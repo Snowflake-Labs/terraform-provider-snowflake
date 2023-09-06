@@ -135,7 +135,6 @@ type RowAccessPolicy struct {
 	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
 }
 
-// TODO Validate
 type ColumnInlineConstraint struct {
 	NotNull    *bool                 `ddl:"keyword" sql:"NOT NULL"`
 	Name       *string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
@@ -165,7 +164,6 @@ var (
 	ColumnConstraintTypeForeignKey ColumnConstraintType = "FOREIGN KEY"
 )
 
-// TODO Complete + Validate
 type InlineForeignKey struct {
 	TableName  string              `ddl:"keyword" sql:"REFERENCES"`
 	ColumnName []string            `ddl:"keyword,parentheses"`

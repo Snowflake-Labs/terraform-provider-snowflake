@@ -28,79 +28,46 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	tag, _ := createTag(t, client, db, schema)
 
-	columns := []ExternalTableColumn{
-		{
-			Name:         "filename",
-			Type:         DataTypeString,
-			AsExpression: "metadata$filename::string",
-		},
-		{
-			Name:         "city",
-			Type:         DataTypeString,
-			AsExpression: "value:city:findname::string",
-		},
-		{
-			Name:         "time",
-			Type:         DataTypeTimestamp,
-			AsExpression: "to_timestamp(value:time::int)",
-		},
-		{
-			Name:         "weather",
-			Type:         DataTypeVariant,
-			AsExpression: "value:weather::variant",
-		},
+	columns := []*ExternalTableColumnRequest{
+		NewExternalTableColumnRequest("filename", DataTypeString, "metadata$filename::string"),
+		NewExternalTableColumnRequest("city", DataTypeString, "value:city:findname::string"),
+		NewExternalTableColumnRequest("time", DataTypeTimestamp, "to_timestamp(value:time::int)"),
+		NewExternalTableColumnRequest("weather", DataTypeVariant, "value:weather::variant"),
 	}
 
-	columnsWithPartition := append(columns, []ExternalTableColumn{
-		{
-			Name:         "weather_date",
-			Type:         DataTypeDate,
-			AsExpression: "to_date(to_timestamp(value:time::int))",
-		},
-		{
-			Name:         "part_date",
-			Type:         DataTypeDate,
-			AsExpression: "parse_json(metadata$external_table_partition):weather_date::date",
-		},
+	columnsWithPartition := append(columns, []*ExternalTableColumnRequest{
+		NewExternalTableColumnRequest("weather_date", DataTypeDate, "to_date(to_timestamp(value:time::int))"),
+		NewExternalTableColumnRequest("part_date", DataTypeDate, "parse_json(metadata$external_table_partition):weather_date::date"),
 	}...)
 
 	minimalCreateExternalTableReq := func(id AccountObjectIdentifier) *CreateExternalTableRequest {
 		return NewCreateExternalTableRequest(
 			id,
 			stageLocation,
-			ExternalTableFileFormat{
-				Type: &ExternalTableFileFormatTypeJSON,
-			},
+			NewExternalTableFileFormatRequest().WithType(&ExternalTableFileFormatTypeJSON),
 		)
 	}
-	minimalCreateExternalTableOpts := CreateExternalTableOptions{
-		IfNotExists: Bool(true),
-		Columns:     columns,
-		Location:    stageLocation,
-		FileFormat: ExternalTableFileFormat{
-			Type: &ExternalTableFileFormatTypeJSON,
-		},
-	}
+	//minimalCreateExternalTableOpts := CreateExternalTableOptions{
+	//	IfNotExists: Bool(true),
+	//	Columns:     columns,
+	//	Location:    stageLocation,
+	//	FileFormat: ExternalTableFileFormat{
+	//		Type: &ExternalTableFileFormatTypeJSON,
+	//	},
+	//}
 
 	createExternalTableWithManualPartitioningReq := func(id AccountObjectIdentifier) *CreateWithManualPartitioningExternalTableRequest {
 		return NewCreateWithManualPartitioningExternalTableRequest(
 			id,
 			stageLocation,
-			ExternalTableFileFormat{
-				Type: &ExternalTableFileFormatTypeJSON,
-			},
+			NewExternalTableFileFormatRequest().WithType(&ExternalTableFileFormatTypeJSON),
 		).
 			WithOrReplace(Bool(true)).
 			WithColumns(columnsWithPartition).
 			WithPartitionBy([]string{"part_date"}).
 			WithCopyGrants(Bool(true)).
 			WithComment(String("some_comment")).
-			WithTag([]TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "tag-value",
-				},
-			})
+			WithTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), "tag-value")})
 	}
 
 	t.Run("Create: minimal", func(t *testing.T) {
@@ -120,9 +87,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			NewCreateExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				ExternalTableFileFormat{
-					Type: &ExternalTableFileFormatTypeJSON,
-				},
+				NewExternalTableFileFormatRequest().WithType(&ExternalTableFileFormatTypeJSON),
 			).
 				WithOrReplace(Bool(true)).
 				WithColumns(columns).
@@ -132,12 +97,8 @@ func TestInt_ExternalTables(t *testing.T) {
 				WithPattern(String("weather-nyc/weather_2_3_0.json.gz")).
 				WithCopyGrants(Bool(true)).
 				WithComment(String("some_comment")).
-				WithTag([]TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: "tag-value",
-					},
-				}))
+				WithTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), "tag-value")}),
+		)
 		require.NoError(t, err)
 
 		externalTable, err := client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
@@ -160,7 +121,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			NewCreateExternalTableUsingTemplateRequest(
 				id,
 				stageLocation,
-				ExternalTableFileFormat{Name: String(fileFormat.ID().FullyQualifiedName())},
+				NewExternalTableFileFormatRequest().WithName(String(fileFormat.ID().FullyQualifiedName())),
 			).
 				WithQuery(query).
 				WithAutoRefresh(Bool(false)))
@@ -187,9 +148,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			NewCreateDeltaLakeExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				ExternalTableFileFormat{
-					Type: &ExternalTableFileFormatTypeParquet,
-				},
+				NewExternalTableFileFormatRequest().WithType(&ExternalTableFileFormatTypeParquet),
 			).
 				WithOrReplace(Bool(true)).
 				WithColumns(columnsWithPartition).
@@ -197,12 +156,7 @@ func TestInt_ExternalTables(t *testing.T) {
 				WithDeltaTableFormat(Bool(true)).
 				WithCopyGrants(Bool(true)).
 				WithComment(String("some_comment")).
-				WithTag([]TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: "tag-value",
-					},
-				}),
+				WithTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), "tag-value")}),
 		)
 		require.NoError(t, err)
 
@@ -220,9 +174,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			NewAlterExternalTableRequest(externalTableID).
 				WithIfExists(Bool(true)).
-				WithRefresh(&RefreshExternalTable{
-					Path: "weather-nyc",
-				}),
+				WithRefresh(NewRefreshExternalTableRequest("weather-nyc")),
 		)
 		require.NoError(t, err)
 	})
@@ -240,11 +192,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			NewAlterExternalTableRequest(externalTableID).
 				WithIfExists(Bool(true)).
-				WithAddFiles([]ExternalTableFile{
-					{
-						Name: "weather-nyc/weather_0_0_0.json.gz",
-					},
-				}),
+				WithAddFiles([]*ExternalTableFileRequest{NewExternalTableFileRequest("weather-nyc/weather_0_0_0.json.gz")}),
 		)
 		require.NoError(t, err)
 	})
@@ -262,11 +210,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			NewAlterExternalTableRequest(externalTableID).
 				WithIfExists(Bool(true)).
-				WithAddFiles([]ExternalTableFile{
-					{
-						Name: "weather-nyc/weather_0_0_0.json.gz",
-					},
-				}),
+				WithAddFiles([]*ExternalTableFileRequest{NewExternalTableFileRequest("weather-nyc/weather_0_0_0.json.gz")}),
 		)
 		require.NoError(t, err)
 
@@ -274,11 +218,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			NewAlterExternalTableRequest(externalTableID).
 				WithIfExists(Bool(true)).
-				WithRemoveFiles([]ExternalTableFile{
-					{
-						Name: "weather-nyc/weather_0_0_0.json.gz",
-					},
-				}),
+				WithRemoveFiles([]*ExternalTableFileRequest{NewExternalTableFileRequest("weather-nyc/weather_0_0_0.json.gz")}),
 		)
 		require.NoError(t, err)
 	})
@@ -307,13 +247,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			NewAlterExternalTableRequest(externalTableID).
 				WithIfExists(Bool(true)).
-				WithSetTag([]TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: tagValue,
-					},
-				}),
-		)
+				WithSetTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), tagValue)}))
 		require.NoError(t, err)
 
 		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
@@ -323,22 +257,10 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Alter: unset tags", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
-		opts := minimalCreateExternalTableOpts
-		opts.Tag = []TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: "tag-value",
-			},
-		}
 		err := client.ExternalTables.Create(
 			ctx,
 			minimalCreateExternalTableReq(externalTableID).
-				WithTag([]TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: "tag-value",
-					},
-				}),
+				WithTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), "tag-value")}),
 		)
 		require.NoError(t, err)
 		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
@@ -368,12 +290,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			NewAlterExternalTablePartitionRequest(externalTableID).
 				WithIfExists(Bool(true)).
-				WithAddPartitions([]Partition{
-					{
-						ColumnName: "part_date",
-						Value:      "2019-06-25",
-					},
-				}).
+				WithAddPartitions([]*PartitionRequest{NewPartitionRequest("part_date", "2019-06-25")}).
 				WithLocation("2019/06"),
 		)
 		require.NoError(t, err)
@@ -388,12 +305,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			NewAlterExternalTablePartitionRequest(externalTableID).
 				WithIfExists(Bool(true)).
-				WithAddPartitions([]Partition{
-					{
-						ColumnName: "part_date",
-						Value:      "2019-06-25",
-					},
-				}).
+				WithAddPartitions([]*PartitionRequest{NewPartitionRequest("part_date", "2019-06-25")}).
 				WithLocation("2019/06"),
 		)
 		require.NoError(t, err)
@@ -417,9 +329,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			NewDropExternalTableRequest(externalTableID).
 				WithIfExists(Bool(true)).
-				WithDropOption(&ExternalTableDropOption{
-					Cascade: Bool(true),
-				}),
+				WithDropOption(NewExternalTableDropOptionRequest().WithCascade(Bool(true))),
 		)
 
 		_, err = client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
@@ -435,16 +345,10 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			NewShowExternalTableRequest().
 				WithTerse(Bool(true)).
-				WithLike(&Like{
-					Pattern: String(externalTableID.Name()),
-				}).
-				WithIn(&In{
-					Database: db.ID(),
-				}).
+				WithLike(String(externalTableID.Name())).
+				WithIn(NewShowExternalTableInRequest().WithDatabase(db.ID())).
 				WithStartsWith(String(externalTableID.Name())).
-				WithLimitFrom(&LimitFrom{
-					Rows: Int(1),
-				}),
+				WithLimitFrom(NewLimitFromRequest().WithRows(Int(1))),
 		)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(et))
