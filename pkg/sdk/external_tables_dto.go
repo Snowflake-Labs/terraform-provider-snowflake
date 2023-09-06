@@ -22,188 +22,188 @@ type CreateExternalTableRequest struct {
 }
 
 type ExternalTableColumnRequest struct {
-	Name             string   // required
-	Type             DataType // required
-	AsExpression     string   // required
-	InlineConstraint *ColumnInlineConstraintRequest
+	name             string   // required
+	dataType         DataType // required
+	asExpression     string   // required
+	inlineConstraint *ColumnInlineConstraintRequest
 }
 
 func (v ExternalTableColumnRequest) toOpts() ExternalTableColumn {
 	var inlineConstraint *ColumnInlineConstraint
-	if v.InlineConstraint != nil {
-		inlineConstraint = v.InlineConstraint.toOpts()
+	if v.inlineConstraint != nil {
+		inlineConstraint = v.inlineConstraint.toOpts()
 	}
 
 	return ExternalTableColumn{
-		Name:             v.Name,
-		Type:             v.Type,
-		AsExpression:     v.AsExpression,
+		Name:             v.name,
+		Type:             v.dataType,
+		AsExpression:     v.asExpression,
 		InlineConstraint: inlineConstraint,
 	}
 }
 
 func (v *ColumnInlineConstraintRequest) toOpts() *ColumnInlineConstraint {
 	return &ColumnInlineConstraint{
-		NotNull:            v.NotNull,
-		Name:               &v.Name,
-		Type:               &v.Type,
-		ForeignKey:         v.ForeignKey,
-		Enforced:           v.Enforced,
-		NotEnforced:        v.NotEnforced,
-		Deferrable:         v.Deferrable,
-		NotDeferrable:      v.NotDeferrable,
-		InitiallyDeferred:  v.InitiallyDeferred,
-		InitiallyImmediate: v.InitiallyImmediate,
-		Enable:             v.Enable,
-		Disable:            v.Disable,
-		Validate:           v.Validate,
-		NoValidate:         v.NoValidate,
-		Rely:               v.Rely,
-		NoRely:             v.NoRely,
+		NotNull:            v.notNull,
+		Name:               &v.name,
+		Type:               &v.constraintType,
+		ForeignKey:         v.foreignKey,
+		Enforced:           v.enforced,
+		NotEnforced:        v.notEnforced,
+		Deferrable:         v.deferrable,
+		NotDeferrable:      v.notDeferrable,
+		InitiallyDeferred:  v.initiallyDeferred,
+		InitiallyImmediate: v.initiallyImmediate,
+		Enable:             v.enable,
+		Disable:            v.disable,
+		Validate:           v.validate,
+		NoValidate:         v.noValidate,
+		Rely:               v.rely,
+		NoRely:             v.noRely,
 	}
 }
 
 type ColumnInlineConstraintRequest struct {
-	NotNull    *bool
-	Name       string               // required
-	Type       ColumnConstraintType // required
-	ForeignKey *InlineForeignKey
+	notNull        *bool
+	name           string               // required
+	constraintType ColumnConstraintType // required
+	foreignKey     *InlineForeignKey
 
 	// optional
-	Enforced           *bool
-	NotEnforced        *bool
-	Deferrable         *bool
-	NotDeferrable      *bool
-	InitiallyDeferred  *bool
-	InitiallyImmediate *bool
-	Enable             *bool
-	Disable            *bool
-	Validate           *bool
-	NoValidate         *bool
-	Rely               *bool
-	NoRely             *bool
+	enforced           *bool
+	notEnforced        *bool
+	deferrable         *bool
+	notDeferrable      *bool
+	initiallyDeferred  *bool
+	initiallyImmediate *bool
+	enable             *bool
+	disable            *bool
+	validate           *bool
+	noValidate         *bool
+	rely               *bool
+	noRely             *bool
 }
 
 type InlineForeignKeyRequest struct {
-	TableName  string // required
-	ColumnName []string
-	Match      *MatchType
-	On         *ForeignKeyOnActionRequest
+	tableName  string // required
+	columnName []string
+	match      *MatchType
+	on         *ForeignKeyOnActionRequest
 }
 
 type ForeignKeyOnActionRequest struct {
-	OnUpdate *bool
-	OnDelete *bool
+	onUpdate *bool
+	onDelete *bool
 }
 
 type CloudProviderParamsRequest struct {
-	GoogleCloudStorageIntegration *string
-	MicrosoftAzureIntegration     *string
+	googleCloudStorageIntegration *string
+	microsoftAzureIntegration     *string
 }
 
 func (v *CloudProviderParamsRequest) toOpts() *CloudProviderParams {
 	return &CloudProviderParams{
-		GoogleCloudStorageIntegration: v.GoogleCloudStorageIntegration,
-		MicrosoftAzureIntegration:     v.MicrosoftAzureIntegration,
+		GoogleCloudStorageIntegration: v.googleCloudStorageIntegration,
+		MicrosoftAzureIntegration:     v.microsoftAzureIntegration,
 	}
 }
 
 type ExternalTableFileFormatRequest struct {
-	Name    *string
-	Type    *ExternalTableFileFormatType
-	Options *ExternalTableFileFormatTypeOptionsRequest
+	name           *string
+	fileFormatType *ExternalTableFileFormatType
+	options        *ExternalTableFileFormatTypeOptionsRequest
 }
 
 func (v *ExternalTableFileFormatTypeOptionsRequest) toOpts() *ExternalTableFileFormatTypeOptions {
 	var csvNullIf []NullString
-	if v.CSVNullIf != nil {
-		for _, n := range *v.CSVNullIf {
+	if v.csvNullIf != nil {
+		for _, n := range *v.csvNullIf {
 			csvNullIf = append(csvNullIf, n.toOpts())
 		}
 	}
 
 	var orcNullIf []NullString
-	if v.ORCNullIf != nil {
-		for _, n := range *v.ORCNullIf {
+	if v.orcNullIf != nil {
+		for _, n := range *v.orcNullIf {
 			orcNullIf = append(orcNullIf, n.toOpts())
 		}
 	}
 
 	return &ExternalTableFileFormatTypeOptions{
-		CSVCompression:                  v.CSVCompression,
-		CSVRecordDelimiter:              v.CSVRecordDelimiter,
-		CSVFieldDelimiter:               v.CSVFieldDelimiter,
-		CSVSkipHeader:                   v.CSVSkipHeader,
-		CSVSkipBlankLines:               v.CSVSkipBlankLines,
-		CSVEscapeUnenclosedField:        v.CSVEscapeUnenclosedField,
-		CSVTrimSpace:                    v.CSVTrimSpace,
-		CSVFieldOptionallyEnclosedBy:    v.CSVFieldOptionallyEnclosedBy,
+		CSVCompression:                  v.csvCompression,
+		CSVRecordDelimiter:              v.csvRecordDelimiter,
+		CSVFieldDelimiter:               v.csvFieldDelimiter,
+		CSVSkipHeader:                   v.csvSkipHeader,
+		CSVSkipBlankLines:               v.csvSkipBlankLines,
+		CSVEscapeUnenclosedField:        v.csvEscapeUnenclosedField,
+		CSVTrimSpace:                    v.csvTrimSpace,
+		CSVFieldOptionallyEnclosedBy:    v.csvFieldOptionallyEnclosedBy,
 		CSVNullIf:                       &csvNullIf,
-		CSVEmptyFieldAsNull:             v.CSVEmptyFieldAsNull,
-		CSVEncoding:                     v.CSVEncoding,
-		JSONCompression:                 v.JSONCompression,
-		JSONAllowDuplicate:              v.JSONAllowDuplicate,
-		JSONStripOuterArray:             v.JSONStripOuterArray,
-		JSONStripNullValues:             v.JSONStripNullValues,
-		JSONReplaceInvalidCharacters:    v.JSONReplaceInvalidCharacters,
-		AvroCompression:                 v.AvroCompression,
-		AvroReplaceInvalidCharacters:    v.AvroReplaceInvalidCharacters,
-		ORCTrimSpace:                    v.ORCTrimSpace,
-		ORCReplaceInvalidCharacters:     v.ORCReplaceInvalidCharacters,
+		CSVEmptyFieldAsNull:             v.csvEmptyFieldAsNull,
+		CSVEncoding:                     v.csvEncoding,
+		JSONCompression:                 v.jsonCompression,
+		JSONAllowDuplicate:              v.jsonAllowDuplicate,
+		JSONStripOuterArray:             v.jsonStripOuterArray,
+		JSONStripNullValues:             v.jsonStripNullValues,
+		JSONReplaceInvalidCharacters:    v.jsonReplaceInvalidCharacters,
+		AvroCompression:                 v.avroCompression,
+		AvroReplaceInvalidCharacters:    v.avroReplaceInvalidCharacters,
+		ORCTrimSpace:                    v.orcTrimSpace,
+		ORCReplaceInvalidCharacters:     v.orcReplaceInvalidCharacters,
 		ORCNullIf:                       &orcNullIf,
-		ParquetCompression:              v.ParquetCompression,
-		ParquetBinaryAsText:             v.ParquetBinaryAsText,
-		ParquetReplaceInvalidCharacters: v.ParquetReplaceInvalidCharacters,
+		ParquetCompression:              v.parquetCompression,
+		ParquetBinaryAsText:             v.parquetBinaryAsText,
+		ParquetReplaceInvalidCharacters: v.parquetReplaceInvalidCharacters,
 	}
 }
 
 func (v ExternalTableFileFormatRequest) toOpts() ExternalTableFileFormat {
 	var options *ExternalTableFileFormatTypeOptions
-	if v.Options != nil {
-		options = v.Options.toOpts()
+	if v.options != nil {
+		options = v.options.toOpts()
 	}
 
 	return ExternalTableFileFormat{
-		Name:    v.Name,
-		Type:    v.Type,
+		Name:    v.name,
+		Type:    v.fileFormatType,
 		Options: options,
 	}
 }
 
 type ExternalTableFileFormatTypeOptionsRequest struct {
 	// CSV type options
-	CSVCompression               *ExternalTableCsvCompression
-	CSVRecordDelimiter           *string
-	CSVFieldDelimiter            *string
-	CSVSkipHeader                *int
-	CSVSkipBlankLines            *bool
-	CSVEscapeUnenclosedField     *string
-	CSVTrimSpace                 *bool
-	CSVFieldOptionallyEnclosedBy *string
-	CSVNullIf                    *[]NullStringRequest
-	CSVEmptyFieldAsNull          *bool
-	CSVEncoding                  *CSVEncoding
+	csvCompression               *ExternalTableCsvCompression
+	csvRecordDelimiter           *string
+	csvFieldDelimiter            *string
+	csvSkipHeader                *int
+	csvSkipBlankLines            *bool
+	csvEscapeUnenclosedField     *string
+	csvTrimSpace                 *bool
+	csvFieldOptionallyEnclosedBy *string
+	csvNullIf                    *[]NullStringRequest
+	csvEmptyFieldAsNull          *bool
+	csvEncoding                  *CSVEncoding
 
 	// JSON type options
-	JSONCompression              *ExternalTableJsonCompression
-	JSONAllowDuplicate           *bool
-	JSONStripOuterArray          *bool
-	JSONStripNullValues          *bool
-	JSONReplaceInvalidCharacters *bool
+	jsonCompression              *ExternalTableJsonCompression
+	jsonAllowDuplicate           *bool
+	jsonStripOuterArray          *bool
+	jsonStripNullValues          *bool
+	jsonReplaceInvalidCharacters *bool
 
 	// AVRO type options
-	AvroCompression              *ExternalTableAvroCompression
-	AvroReplaceInvalidCharacters *bool
+	avroCompression              *ExternalTableAvroCompression
+	avroReplaceInvalidCharacters *bool
 
 	// ORC type options
-	ORCTrimSpace                *bool
-	ORCReplaceInvalidCharacters *bool
-	ORCNullIf                   *[]NullStringRequest
+	orcTrimSpace                *bool
+	orcReplaceInvalidCharacters *bool
+	orcNullIf                   *[]NullStringRequest
 
 	// PARQUET type options
-	ParquetCompression              *ExternalTableParquetCompression
-	ParquetBinaryAsText             *bool
-	ParquetReplaceInvalidCharacters *bool
+	parquetCompression              *ExternalTableParquetCompression
+	parquetBinaryAsText             *bool
+	parquetReplaceInvalidCharacters *bool
 }
 
 type NullStringRequest struct {
@@ -217,8 +217,8 @@ func (v NullStringRequest) toOpts() NullString {
 }
 
 type RowAccessPolicyRequest struct {
-	Name SchemaObjectIdentifier // required
-	On   []string               // required
+	name SchemaObjectIdentifier // required
+	on   []string               // required
 }
 
 func (v *RowAccessPolicyRequest) toOpts() *RowAccessPolicy {
@@ -226,14 +226,14 @@ func (v *RowAccessPolicyRequest) toOpts() *RowAccessPolicy {
 }
 
 type TagAssociationRequest struct {
-	Name  ObjectIdentifier // required
-	Value string           // required
+	name  ObjectIdentifier // required
+	value string           // required
 }
 
 func (v TagAssociationRequest) toOpts() TagAssociation {
 	return TagAssociation{
-		Name:  v.Name,
-		Value: v.Value,
+		Name:  v.name,
+		Value: v.value,
 	}
 }
 
@@ -477,18 +477,18 @@ type AlterExternalTableRequest struct {
 }
 
 type RefreshExternalTableRequest struct {
-	Path string // required
+	path string // required
 }
 
 type ExternalTableFileRequest struct {
-	Name string // required
+	name string // required
 }
 
 func (v *AlterExternalTableRequest) toOpts() *AlterExternalTableOptions {
 	var refresh *RefreshExternalTable
 	if v.refresh != nil {
 		refresh = &RefreshExternalTable{
-			Path: v.refresh.Path,
+			Path: v.refresh.path,
 		}
 	}
 
@@ -496,7 +496,7 @@ func (v *AlterExternalTableRequest) toOpts() *AlterExternalTableOptions {
 	if v.addFiles != nil {
 		for i, f := range v.addFiles {
 			addFiles[i] = ExternalTableFile{
-				Name: f.Name,
+				Name: f.name,
 			}
 		}
 	}
@@ -505,7 +505,7 @@ func (v *AlterExternalTableRequest) toOpts() *AlterExternalTableOptions {
 	if v.removeFiles != nil {
 		for i, f := range v.removeFiles {
 			removeFiles[i] = ExternalTableFile{
-				Name: f.Name,
+				Name: f.name,
 			}
 		}
 	}
@@ -538,8 +538,8 @@ type AlterExternalTablePartitionRequest struct {
 }
 
 type PartitionRequest struct {
-	ColumnName string // required
-	Value      string // required
+	columnName string // required
+	value      string // required
 }
 
 func (v *AlterExternalTablePartitionRequest) toOpts() *AlterExternalTablePartitionOptions {
@@ -547,8 +547,8 @@ func (v *AlterExternalTablePartitionRequest) toOpts() *AlterExternalTablePartiti
 	if v.addPartitions != nil {
 		for i, p := range v.addPartitions {
 			addPartitions[i] = Partition{
-				ColumnName: p.ColumnName,
-				Value:      p.Value,
+				ColumnName: p.columnName,
+				Value:      p.value,
 			}
 		}
 	}
@@ -569,14 +569,14 @@ type DropExternalTableRequest struct {
 }
 
 type ExternalTableDropOptionRequest struct {
-	Restrict *bool
-	Cascade  *bool
+	restrict *bool
+	cascade  *bool
 }
 
 func (v *ExternalTableDropOptionRequest) toOpts() *ExternalTableDropOption {
 	return &ExternalTableDropOption{
-		Restrict: v.Restrict,
-		Cascade:  v.Cascade,
+		Restrict: v.restrict,
+		Cascade:  v.cascade,
 	}
 }
 
@@ -602,28 +602,28 @@ type ShowExternalTableRequest struct {
 }
 
 type ShowExternalTableInRequest struct {
-	Account  *bool
-	Database AccountObjectIdentifier
-	Schema   DatabaseObjectIdentifier
+	account  *bool
+	database AccountObjectIdentifier
+	schema   DatabaseObjectIdentifier
 }
 
 func (v *ShowExternalTableInRequest) toOpts() *In {
 	return &In{
-		Account:  v.Account,
-		Database: v.Database,
-		Schema:   v.Schema,
+		Account:  v.account,
+		Database: v.database,
+		Schema:   v.schema,
 	}
 }
 
 type LimitFromRequest struct {
-	Rows *int
-	From *string
+	rows *int
+	from *string
 }
 
 func (v *LimitFromRequest) toOpts() *LimitFrom {
 	return &LimitFrom{
-		Rows: v.Rows,
-		From: v.From,
+		Rows: v.rows,
+		From: v.from,
 	}
 }
 
