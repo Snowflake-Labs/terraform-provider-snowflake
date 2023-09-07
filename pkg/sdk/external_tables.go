@@ -73,23 +73,23 @@ type CreateExternalTableOptions struct {
 	name                AccountObjectIdentifier `ddl:"identifier"`
 	Columns             []ExternalTableColumn   `ddl:"list,parentheses"`
 	CloudProviderParams *CloudProviderParams
-	PartitionBy         []string                `ddl:"keyword,parentheses" sql:"PARTITION BY"`
-	Location            string                  `ddl:"parameter" sql:"LOCATION"`
-	RefreshOnCreate     *bool                   `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
-	AutoRefresh         *bool                   `ddl:"parameter" sql:"AUTO_REFRESH"`
-	Pattern             *string                 `ddl:"parameter,single_quotes" sql:"PATTERN"`
-	FileFormat          ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	AwsSnsTopic         *string                 `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
-	CopyGrants          *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
-	Comment             *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy     *RowAccessPolicy        `ddl:"keyword"`
-	Tag                 []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
+	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location            string                    `ddl:"parameter" sql:"LOCATION"`
+	RefreshOnCreate     *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
+	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
+	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
+	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
+	CopyGrants          *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
+	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 type ExternalTableColumn struct {
 	Name             string   `ddl:"keyword"`
 	Type             DataType `ddl:"keyword"`
-	AsExpression     string   `ddl:"parameter,parentheses,no_equals" sql:"AS"`
+	AsExpression     []string `ddl:"keyword,parentheses" sql:"AS"`
 	InlineConstraint *ColumnInlineConstraint
 }
 
@@ -207,14 +207,14 @@ type CreateWithManualPartitioningExternalTableOptions struct {
 	name                       AccountObjectIdentifier `ddl:"identifier"`
 	Columns                    []ExternalTableColumn   `ddl:"list,parentheses"`
 	CloudProviderParams        *CloudProviderParams
-	PartitionBy                []string                `ddl:"keyword,parentheses" sql:"PARTITION BY"`
-	Location                   string                  `ddl:"parameter" sql:"LOCATION"`
-	userSpecifiedPartitionType bool                    `ddl:"static" sql:"PARTITION_TYPE = USER_SPECIFIED"`
-	FileFormat                 ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	CopyGrants                 *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
-	Comment                    *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy            *RowAccessPolicy        `ddl:"keyword"`
-	Tag                        []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
+	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
+	userSpecifiedPartitionType bool                      `ddl:"static" sql:"PARTITION_TYPE = USER_SPECIFIED"`
+	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
+	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // CreateDeltaLakeExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table
@@ -226,15 +226,15 @@ type CreateDeltaLakeExternalTableOptions struct {
 	name                       AccountObjectIdentifier `ddl:"identifier"`
 	Columns                    []ExternalTableColumn   `ddl:"list,parentheses"`
 	CloudProviderParams        *CloudProviderParams
-	PartitionBy                []string                `ddl:"keyword,parentheses" sql:"PARTITION BY"`
-	Location                   string                  `ddl:"parameter" sql:"LOCATION"`
-	userSpecifiedPartitionType bool                    `ddl:"static" sql:"PARTITION_TYPE = USER_SPECIFIED"`
-	FileFormat                 ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	DeltaTableFormat           *bool                   `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
-	CopyGrants                 *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
-	Comment                    *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy            *RowAccessPolicy        `ddl:"keyword"`
-	Tag                        []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
+	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
+	userSpecifiedPartitionType bool                      `ddl:"static" sql:"PARTITION_TYPE = USER_SPECIFIED"`
+	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	DeltaTableFormat           *bool                     `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
+	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
+	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // CreateExternalTableUsingTemplateOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table#variant-syntax
@@ -244,18 +244,18 @@ type CreateExternalTableUsingTemplateOptions struct {
 	externalTable       bool                    `ddl:"static" sql:"EXTERNAL TABLE"`
 	name                AccountObjectIdentifier `ddl:"identifier"`
 	CopyGrants          *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
-	Query               string                  `ddl:"parameter,no_equals,parentheses" sql:"USING TEMPLATE"`
+	Query               []string                `ddl:"parameter,no_equals,parentheses" sql:"USING TEMPLATE"`
 	CloudProviderParams *CloudProviderParams
-	PartitionBy         []string                `ddl:"keyword,parentheses" sql:"PARTITION BY"`
-	Location            string                  `ddl:"parameter" sql:"LOCATION"`
-	RefreshOnCreate     *bool                   `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
-	AutoRefresh         *bool                   `ddl:"parameter" sql:"AUTO_REFRESH"`
-	Pattern             *string                 `ddl:"parameter,single_quotes" sql:"PATTERN"`
-	FileFormat          ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	AwsSnsTopic         *string                 `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
-	Comment             *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy     *RowAccessPolicy        `ddl:"keyword"`
-	Tag                 []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
+	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location            string                    `ddl:"parameter" sql:"LOCATION"`
+	RefreshOnCreate     *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
+	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
+	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
+	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
+	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
+	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // AlterExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-external-table

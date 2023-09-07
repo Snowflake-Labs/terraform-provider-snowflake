@@ -29,11 +29,17 @@ func (opts *CreateExternalTableOptions) validate() error {
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateExternalTableOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat.Name) && !valueSet(opts.FileFormat.Type) {
-		errs = append(errs, errNotSet("FileFormat", "Name or Type"))
-	}
-	if valueSet(opts.FileFormat.Name) && valueSet(opts.FileFormat.Type) {
-		errs = append(errs, errOneOf("FileFormat", "Name", "Type"))
+	if !valueSet(opts.FileFormat) {
+		errs = append(errs, errNotSet("CreateExternalTableOptions", "FileFormat"))
+	} else {
+		for i, ff := range opts.FileFormat {
+			if !valueSet(ff.Name) && !valueSet(ff.Type) {
+				errs = append(errs, errNotSet(fmt.Sprintf("CreateExternalTableOptions.FileFormat[%d]", i), "Name or Type"))
+			}
+			if valueSet(ff.Name) && valueSet(ff.Type) {
+				errs = append(errs, errOneOf(fmt.Sprintf("CreateExternalTableOptions.FileFormat[%d]", i), "Name or Type"))
+			}
+		}
 	}
 	return errors.Join(errs...)
 }
@@ -49,11 +55,17 @@ func (opts *CreateWithManualPartitioningExternalTableOptions) validate() error {
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateWithManualPartitioningExternalTableOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat.Name) && !valueSet(opts.FileFormat.Type) {
-		errs = append(errs, errNotSet("FileFormat", "Name or Type"))
-	}
-	if valueSet(opts.FileFormat.Name) && valueSet(opts.FileFormat.Type) {
-		errs = append(errs, errOneOf("FileFormat", "Name", "Type"))
+	if !valueSet(opts.FileFormat) {
+		errs = append(errs, errNotSet("CreateWithManualPartitioningExternalTableOptions", "FileFormat"))
+	} else {
+		for i, ff := range opts.FileFormat {
+			if !valueSet(ff.Name) && !valueSet(ff.Type) {
+				errs = append(errs, errNotSet(fmt.Sprintf("CreateWithManualPartitioningExternalTableOptions.FileFormat[%d]", i), "Name or Type"))
+			}
+			if valueSet(ff.Name) && valueSet(ff.Type) {
+				errs = append(errs, errOneOf(fmt.Sprintf("CreateWithManualPartitioningExternalTableOptions.FileFormat[%d]", i), "Name or Type"))
+			}
+		}
 	}
 	return errors.Join(errs...)
 }
@@ -69,11 +81,17 @@ func (opts *CreateDeltaLakeExternalTableOptions) validate() error {
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat.Name) && !valueSet(opts.FileFormat.Type) {
-		errs = append(errs, errNotSet("FileFormat", "Name or Type"))
-	}
-	if valueSet(opts.FileFormat.Name) && valueSet(opts.FileFormat.Type) {
-		errs = append(errs, errOneOf("FileFormat", "Name", "Type"))
+	if !valueSet(opts.FileFormat) {
+		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOptions", "FileFormat"))
+	} else {
+		for i, ff := range opts.FileFormat {
+			if !valueSet(ff.Name) && !valueSet(ff.Type) {
+				errs = append(errs, errNotSet(fmt.Sprintf("CreateDeltaLakeExternalTableOptions.FileFormat[%d]", i), "Name or Type"))
+			}
+			if valueSet(ff.Name) && valueSet(ff.Type) {
+				errs = append(errs, errOneOf(fmt.Sprintf("CreateDeltaLakeExternalTableOptions.FileFormat[%d]", i), "Name or Type"))
+			}
+		}
 	}
 	return errors.Join(errs...)
 }
@@ -89,11 +107,17 @@ func (opts *CreateExternalTableUsingTemplateOptions) validate() error {
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateExternalTableUsingTemplateOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat.Name) && !valueSet(opts.FileFormat.Type) {
-		errs = append(errs, errNotSet("FileFormat", "Name or Type"))
-	}
-	if valueSet(opts.FileFormat.Name) && valueSet(opts.FileFormat.Type) {
-		errs = append(errs, errOneOf("FileFormat", "Name", "Type"))
+	if !valueSet(opts.FileFormat) {
+		errs = append(errs, errNotSet("CreateExternalTableUsingTemplateOptions", "FileFormat"))
+	} else {
+		for i, ff := range opts.FileFormat {
+			if !valueSet(ff.Name) && !valueSet(ff.Type) {
+				errs = append(errs, errNotSet(fmt.Sprintf("CreateExternalTableUsingTemplateOptions.FileFormat[%d]", i), "Name or Type"))
+			}
+			if valueSet(ff.Name) && valueSet(ff.Type) {
+				errs = append(errs, errOneOf(fmt.Sprintf("CreateExternalTableUsingTemplateOptions.FileFormat[%d]", i), "Name or Type"))
+			}
+		}
 	}
 	return errors.Join(errs...)
 }

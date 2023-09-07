@@ -13,7 +13,7 @@ func TestExternalTablesCreate(t *testing.T) {
 				{
 					Name:         "column",
 					Type:         "varchar",
-					AsExpression: "value::column::varchar",
+					AsExpression: []string{"value::column::varchar"},
 					InlineConstraint: &ColumnInlineConstraint{
 						Name:    String("my_constraint"),
 						NotNull: Bool(true),
@@ -25,8 +25,10 @@ func TestExternalTablesCreate(t *testing.T) {
 				GoogleCloudStorageIntegration: String("123"),
 			},
 			Location: "@s1/logs/",
-			FileFormat: ExternalTableFileFormat{
-				Type: &ExternalTableFileFormatTypeJSON,
+			FileFormat: []ExternalTableFileFormat{
+				{
+					Type: &ExternalTableFileFormatTypeJSON,
+				},
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE IF NOT EXISTS "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
@@ -40,7 +42,7 @@ func TestExternalTablesCreate(t *testing.T) {
 				{
 					Name:         "column",
 					Type:         "varchar",
-					AsExpression: "value::column::varchar",
+					AsExpression: []string{"value::column::varchar"},
 					InlineConstraint: &ColumnInlineConstraint{
 						Name:    String("my_constraint"),
 						NotNull: Bool(true),
@@ -52,8 +54,10 @@ func TestExternalTablesCreate(t *testing.T) {
 				GoogleCloudStorageIntegration: String("123"),
 			},
 			Location: "@s1/logs/",
-			FileFormat: ExternalTableFileFormat{
-				Type: &ExternalTableFileFormatTypeJSON,
+			FileFormat: []ExternalTableFileFormat{
+				{
+					Type: &ExternalTableFileFormatTypeJSON,
+				},
 			},
 			AwsSnsTopic: String("aws_sns_topic"),
 			CopyGrants:  Bool(true),
@@ -87,7 +91,7 @@ func TestExternalTablesCreate(t *testing.T) {
 			errOneOf("CreateExternalTableOptions", "OrReplace", "IfNotExists"),
 			ErrInvalidObjectIdentifier,
 			errNotSet("CreateExternalTableOptions", "Location"),
-			errNotSet("FileFormat", "Name or Type"),
+			errNotSet("CreateExternalTableOptions", "FileFormat"),
 		)
 	})
 }
@@ -101,7 +105,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 				{
 					Name:         "column",
 					Type:         "varchar",
-					AsExpression: "value::column::varchar",
+					AsExpression: []string{"value::column::varchar"},
 					InlineConstraint: &ColumnInlineConstraint{
 						Name:    String("my_constraint"),
 						NotNull: Bool(true),
@@ -113,8 +117,10 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 				GoogleCloudStorageIntegration: String("123"),
 			},
 			Location: "@s1/logs/",
-			FileFormat: ExternalTableFileFormat{
-				Type: &ExternalTableFileFormatTypeJSON,
+			FileFormat: []ExternalTableFileFormat{
+				{
+					Type: &ExternalTableFileFormatTypeJSON,
+				},
 			},
 			CopyGrants: Bool(true),
 			RowAccessPolicy: &RowAccessPolicy{
@@ -147,7 +153,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 			errOneOf("CreateWithManualPartitioningExternalTableOptions", "OrReplace", "IfNotExists"),
 			ErrInvalidObjectIdentifier,
 			errNotSet("CreateWithManualPartitioningExternalTableOptions", "Location"),
-			errNotSet("FileFormat", "Name or Type"),
+			errNotSet("CreateWithManualPartitioningExternalTableOptions", "FileFormat"),
 		)
 	})
 }
@@ -161,7 +167,7 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 				{
 					Name:             "column",
 					Type:             "varchar",
-					AsExpression:     "value::column::varchar",
+					AsExpression:     []string{"value::column::varchar"},
 					InlineConstraint: nil,
 				},
 			},
@@ -170,8 +176,10 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 			},
 			PartitionBy: []string{"column"},
 			Location:    "@s1/logs/",
-			FileFormat: ExternalTableFileFormat{
-				Name: String("JSON"),
+			FileFormat: []ExternalTableFileFormat{
+				{
+					Name: String("JSON"),
+				},
 			},
 			DeltaTableFormat: Bool(true),
 			CopyGrants:       Bool(true),
@@ -205,7 +213,7 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 			errOneOf("CreateDeltaLakeExternalTableOptions", "OrReplace", "IfNotExists"),
 			ErrInvalidObjectIdentifier,
 			errNotSet("CreateDeltaLakeExternalTableOptions", "Location"),
-			errNotSet("FileFormat", "Name or Type"),
+			errNotSet("CreateDeltaLakeExternalTableOptions", "FileFormat"),
 		)
 	})
 }
@@ -216,14 +224,16 @@ func TestExternalTableUsingTemplateOpts(t *testing.T) {
 			OrReplace:  Bool(true),
 			name:       NewAccountObjectIdentifier("external_table"),
 			CopyGrants: Bool(true),
-			Query:      "query statement",
+			Query:      []string{"query statement"},
 			CloudProviderParams: &CloudProviderParams{
 				MicrosoftAzureIntegration: String("123"),
 			},
 			PartitionBy: []string{"column"},
 			Location:    "@s1/logs/",
-			FileFormat: ExternalTableFileFormat{
-				Name: String("JSON"),
+			FileFormat: []ExternalTableFileFormat{
+				{
+					Name: String("JSON"),
+				},
 			},
 			Comment: String("some_comment"),
 			RowAccessPolicy: &RowAccessPolicy{
@@ -253,7 +263,7 @@ func TestExternalTableUsingTemplateOpts(t *testing.T) {
 			ErrInvalidObjectIdentifier,
 			errNotSet("CreateExternalTableUsingTemplateOptions", "Query"),
 			errNotSet("CreateExternalTableUsingTemplateOptions", "Location"),
-			errNotSet("FileFormat", "Name or Type"),
+			errNotSet("CreateExternalTableUsingTemplateOptions", "FileFormat"),
 		)
 	})
 }

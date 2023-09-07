@@ -3,10 +3,9 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestInt_ExternalTables(t *testing.T) {
@@ -45,7 +44,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		return NewCreateExternalTableRequest(
 			id,
 			stageLocation,
-			NewExternalTableFileFormatRequest().WithType(&ExternalTableFileFormatTypeJSON),
+			NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeJSON),
 		)
 	}
 
@@ -53,7 +52,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		return NewCreateWithManualPartitioningExternalTableRequest(
 			id,
 			stageLocation,
-			NewExternalTableFileFormatRequest().WithType(&ExternalTableFileFormatTypeJSON),
+			NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeJSON),
 		).
 			WithOrReplace(Bool(true)).
 			WithColumns(columnsWithPartition).
@@ -80,7 +79,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			NewCreateExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				NewExternalTableFileFormatRequest().WithType(&ExternalTableFileFormatTypeJSON),
+				NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeJSON),
 			).
 				WithOrReplace(Bool(true)).
 				WithColumns(columns).
@@ -141,7 +140,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			NewCreateDeltaLakeExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				NewExternalTableFileFormatRequest().WithType(&ExternalTableFileFormatTypeParquet),
+				NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeParquet),
 			).
 				WithOrReplace(Bool(true)).
 				WithColumns(columnsWithPartition).

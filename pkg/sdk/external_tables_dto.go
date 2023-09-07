@@ -37,7 +37,7 @@ func (v ExternalTableColumnRequest) toOpts() ExternalTableColumn {
 	return ExternalTableColumn{
 		Name:             v.name,
 		Type:             v.dataType,
-		AsExpression:     v.asExpression,
+		AsExpression:     []string{v.asExpression},
 		InlineConstraint: inlineConstraint,
 	}
 }
@@ -245,6 +245,11 @@ func (v *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
 		}
 	}
 
+	var fileFormat []ExternalTableFileFormat
+	if v.fileFormat != nil {
+		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
+	}
+
 	var cloudProviderParams *CloudProviderParams
 	if v.cloudProviderParams != nil {
 		cloudProviderParams = v.cloudProviderParams.toOpts()
@@ -272,7 +277,7 @@ func (v *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
 		RefreshOnCreate:     v.refreshOnCreate,
 		AutoRefresh:         v.autoRefresh,
 		Pattern:             v.pattern,
-		FileFormat:          v.fileFormat.toOpts(),
+		FileFormat:          fileFormat,
 		AwsSnsTopic:         v.awsSnsTopic,
 		CopyGrants:          v.copyGrants,
 		Comment:             v.comment,
@@ -309,9 +314,9 @@ func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithM
 		cloudProviderParams = v.cloudProviderParams.toOpts()
 	}
 
-	var fileFormat ExternalTableFileFormat
+	var fileFormat []ExternalTableFileFormat
 	if v.fileFormat != nil {
-		fileFormat = v.fileFormat.toOpts()
+		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
 	var rowAccessPolicy *RowAccessPolicy
@@ -371,9 +376,9 @@ func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalT
 		cloudProviderParams = v.cloudProviderParams.toOpts()
 	}
 
-	var fileFormat ExternalTableFileFormat
+	var fileFormat []ExternalTableFileFormat
 	if v.fileFormat != nil {
-		fileFormat = v.fileFormat.toOpts()
+		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
 	var rowAccessPolicy *RowAccessPolicy
@@ -429,9 +434,9 @@ func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableU
 		cloudProviderParams = v.cloudProviderParams.toOpts()
 	}
 
-	var fileFormat ExternalTableFileFormat
+	var fileFormat []ExternalTableFileFormat
 	if v.fileFormat != nil {
-		fileFormat = v.fileFormat.toOpts()
+		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
 	var rowAccessPolicy *RowAccessPolicy
@@ -450,7 +455,7 @@ func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableU
 		OrReplace:           v.orReplace,
 		name:                v.name,
 		CopyGrants:          v.copyGrants,
-		Query:               v.query,
+		Query:               []string{v.query},
 		CloudProviderParams: cloudProviderParams,
 		PartitionBy:         v.partitionBy,
 		Location:            v.location,
