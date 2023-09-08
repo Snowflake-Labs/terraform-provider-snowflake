@@ -4,10 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
+	"reflect"
 	"runtime"
 	"strings"
+	"unsafe"
 )
 
+// TODO change to predefined errors
 var (
 	ErrNilOptions                    = errors.New("options cannot be nil")
 	ErrPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
@@ -77,6 +81,44 @@ func decodeDriverError(err error) error {
 	return err
 }
 
+const ghIssueBodyTemplate = `
+<!-- 
+Please provide additional information, like: 
+- failing configuration - what caused an error
+- context - what you were trying to achieve
+-->
+
+<!-- 
+Please provide error messages if we missed any (see the errors below and compare it with your console output)
+-->
+
+Errors:
+%s
+`
+
+// NewTopLevelError wraps an error with "final" error message of sdk.
+// It should be placed in the highest place of call stack to catch as much error context as possible.
+// TODO It's possible to wrap errors multiple times, this function will try to keep only the one with most error context.
+func NewTopLevelError(err error) error {
+	// TODO if called multiple times, unwrap lower level errors and wrap err to have more context
+
+	return fmt.Errorf(`
+Snowflake Terraform Provider error!
+If you think you've encountered a bug, please report it with the link below.
+If any of the error information is missing in the issue body, please fill it up.
+Any additional information (or context what you were trying to achieve) would be helpful
+to provide the solution or fix as soon as possible. Thanks :)
+
+https://github.com//Snowflake-Labs/terraform-provider-snowflake/issues/new?labels=bug&title=%s&body=%s
+
+Errors:
+%v`,
+		url.QueryEscape("New issue"),
+		url.QueryEscape(fmt.Sprintf(ghIssueBodyTemplate, err.Error())),
+		err,
+	)
+}
+
 type sdkError struct {
 	file         string
 	line         int
@@ -84,8 +126,101 @@ type sdkError struct {
 	nestedErrors []error
 }
 
+func (e *sdkError) Error() string {
+	builder := new(strings.Builder)
+	writeTree(e, builder, 0)
+	return builder.String()
+}
+
+// NewError Creates new sdk.sdkError with information like filename or line number
+// depending on where NewError was called
 func NewError(message string) error {
-	_, file, line, _ := runtime.Caller(1)
+	return newSDKError(message, 2)
+}
+
+// NewPredefinedError Lets you predefine factory method for given sdk.sdkError which is convenient
+// when given error must be returned multiple times
+func NewPredefinedError(message string) func() error {
+	return func() error {
+		return newSDKError(message, 2)
+	}
+}
+
+func NewErrorOneOf(structPointer any, fields ...any) error {
+	structure := reflect.ValueOf(structPointer).Elem()
+	var fieldsBuilder strings.Builder
+
+	for fieldIndex := range fields {
+		fieldMeta := structure.Type().Field(fieldIndex)
+		fieldValue := structure.Field(fieldIndex)
+		fieldPointer := reflect.NewAt(fieldMeta.Type, unsafe.Pointer(fieldValue.UnsafeAddr()))
+		if fieldMeta.Type.Kind() == reflect.Pointer {
+			fieldPointer = fieldPointer.Elem()
+		}
+
+		fieldsBuilder.WriteString(fmt.Sprintf("%s %s(%v)", fieldMeta.Name, fieldMeta.Type, fieldPointer.Elem().Interface()))
+
+		if fieldIndex != len(fields)-1 {
+			fieldsBuilder.WriteString(", ")
+		}
+	}
+
+	return newSDKError(
+		fmt.Sprintf(
+			"fields of struct %s [%s] are incompatible and shouldn't be set at the same time",
+			structure.Type().Name(),
+			fieldsBuilder.String(),
+		),
+		2,
+	)
+}
+
+func NewErrorNotSet(structPointer any, fields ...any) error {
+	structure := reflect.ValueOf(structPointer).Elem()
+	var fieldsBuilder strings.Builder
+
+	for fieldIndex := range fields {
+		fieldMeta := structure.Type().Field(fieldIndex)
+		fieldsBuilder.WriteString(fmt.Sprintf("%s %s", fieldMeta.Name, fieldMeta.Type))
+
+		if fieldIndex != len(fields)-1 {
+			fieldsBuilder.WriteString(", ")
+		}
+	}
+
+	return newSDKError(
+		fmt.Sprintf(
+			"fields of struct %s: [%s] are required and should be set",
+			structure.Type().Name(),
+			fieldsBuilder.String(),
+		),
+		2,
+	)
+}
+
+// TODO We can force to use sdkError as wrapper
+// WrapErrors TODO
+func WrapErrors(wrapper error, errs ...error) error {
+	if err, ok := wrapper.(*sdkError); ok {
+		err.nestedErrors = append(err.nestedErrors, errs...)
+		return wrapper
+	} else {
+		return newSDKError(wrapper.Error(), 2, errs...)
+	}
+}
+
+func newSDKError(message string, skip int, nested ...error) error {
+	line, filename := getCallerInfo(skip)
+	return &sdkError{
+		file:         filename,
+		line:         line,
+		message:      message,
+		nestedErrors: nested,
+	}
+}
+
+func getCallerInfo(skip int) (int, string) {
+	_, file, line, _ := runtime.Caller(skip + 1)
 	fileSplit := strings.Split(file, "/")
 	var filename string
 	if len(fileSplit) > 1 {
@@ -93,76 +228,26 @@ func NewError(message string) error {
 	} else {
 		filename = fileSplit[0]
 	}
-	return &sdkError{
-		file:         filename,
-		line:         line,
-		message:      message,
-		nestedErrors: make([]error, 0),
-	}
+	return line, filename
 }
 
-// TODO We can force to use sdkError
-func WrapError(wrapper error, errs ...error) error {
-	if sdkErr, ok := wrapper.(*sdkError); ok {
-		sdkErr.nestedErrors = append(sdkErr.nestedErrors, errs...)
-		return sdkErr
-	} else {
-		joinedErrs := []error{wrapper}
-		joinedErrs = append(joinedErrs, errs...)
-		return errors.Join(joinedErrs...)
-	}
-}
-
-//func (e *sdkError) errorIndented(indent int) string {
-//	errorMessage := fmt.Sprintf("%s[%s:%d] %s", strings.Repeat(" ", indent), e.file, e.line, e.message)
-//	if len(e.nestedErrors) > 0 {
-//		var b []byte
-//		for i, err := range e.nestedErrors {
-//			if i > 0 {
-//				b = append(b, '\n')
-//			}
-//
-//			b = append(b, "├──"...)
-//
-//			var sdkErr *sdkError
-//			if errors.As(err, &sdkErr) {
-//				b = append(b, sdkErr.errorIndented(indent+2)...)
-//				continue
-//			}
-//
-//			if joinedErr, ok := err.(interface{ Unwrap() []error }); ok {
-//				errs := joinedErr.Unwrap()
-//				for j, e := range errs {
-//					if j > 0 {
-//						b = append(b, '\n')
-//					}
-//					b = append(b, strings.Repeat(" ", indent+2)...)
-//					b = append(b, e.Error()...)
-//				}
-//				continue
-//			}
-//
-//			b = append(b, strings.Repeat(" ", indent+2)...)
-//			b = append(b, err.Error()...)
-//		}
-//		return fmt.Sprintf("%s\n%s", errorMessage, string(b))
-//	}
-//	return errorMessage
-//}
-
-func (e *sdkError) writeTree(builder *strings.Builder, indent int) {
-	builder.WriteString(strings.Repeat("› ", indent) + fmt.Sprintf("[%s:%d] %s\n", e.file, e.line, e.message))
-
-	for _, err := range e.nestedErrors {
-		var sdkErr *sdkError
-		if errors.As(err, &sdkErr) {
-			sdkErr.writeTree(builder, indent+2)
+func writeTree(e error, builder *strings.Builder, indent int) {
+	var sdkErr *sdkError
+	if joinedErr, ok := e.(interface{ Unwrap() []error }); ok {
+		errs := joinedErr.Unwrap()
+		for i, err := range errs {
+			if i > 0 {
+				builder.WriteByte('\n')
+			}
+			writeTree(err, builder, indent)
 		}
+	} else if errors.As(e, &sdkErr) {
+		builder.WriteString(strings.Repeat("› ", indent) + fmt.Sprintf("[%s:%d] %s", sdkErr.file, sdkErr.line, sdkErr.message))
+		for _, err := range sdkErr.nestedErrors {
+			builder.WriteByte('\n')
+			writeTree(err, builder, indent+2)
+		}
+	} else {
+		builder.WriteString(strings.Repeat("› ", indent) + e.Error())
 	}
-}
-
-func (e *sdkError) Error() string {
-	builder := new(strings.Builder)
-	e.writeTree(builder, 0)
-	return builder.String()
 }
