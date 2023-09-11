@@ -4,24 +4,20 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ../main.go
 
-// TODO do we need this ?
-var _ = DatabaseRole
-
 var DatabaseRole = g.NewInterface(
 	"DatabaseRoles",
 	"DatabaseRole",
-	"DatabaseObjectIdentifier", // TODO do we need this
+	"DatabaseObjectIdentifier",
 	g.NewOperation("Create", "https://docs.snowflake.com/en/sql-reference/sql/create-database-role").
-		WithOptsField(
-			// TODO why do we need this thing vvv (Should this be NewOptsStruct ???) - Field represents Field or Struct ?
-			g.NewField("<should be updated programmatically>", "<should be updated programmatically>", nil).
+		WithOptionsStruct(
+			g.NewOptionsStruct().
 				WithFields(
 					g.Create(),
 					g.OrReplace(),
 					g.SQL("DATABASE ROLE"),
 					g.IfNotExists(),
 					g.DatabaseObjectIdentifier("name"),
-					g.OptionalTextAssignment("COMMENT", nil),
+					g.OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes(true)),
 				).
 				WithValidations(
 					g.NewValidation(g.ValidIdentifier, "name"),
@@ -29,8 +25,8 @@ var DatabaseRole = g.NewInterface(
 				),
 		),
 	g.NewOperation("Alter", "https://docs.snowflake.com/en/sql-reference/sql/alter-database-role").
-		WithOptsField(
-			g.NewField("<should be updated programmatically>", "<should be updated programmatically>", nil).
+		WithOptionsStruct(
+			g.NewOptionsStruct().
 				WithFields(
 					g.Alter(),
 					g.SQL("DATABASE ROLE"),
@@ -56,7 +52,7 @@ var DatabaseRole = g.NewInterface(
 						),
 					g.NewField("Unset", "*DatabaseRoleUnset", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"UNSET"}}).
 						WithFields(
-							g.OptionalSQL("COMMENT"),
+							g.OptionalSQL("COMMENT").WithRequired(true),
 						).
 						WithValidations(
 							g.NewValidation(g.AtLeastOneValueSet, "Comment"),

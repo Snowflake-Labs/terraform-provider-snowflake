@@ -36,5 +36,5 @@ type NestedThirdLevelRequest struct {
 }
 
 type DatabaseRoleUnsetRequest struct {
-	Comment bool // required
+	Comment *bool // required
 }

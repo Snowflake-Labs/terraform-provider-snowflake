@@ -27,9 +27,15 @@ func (s *Operation) WithObjectInterface(objectInterface *Interface) *Operation {
 	return s
 }
 
-func (s *Operation) WithOptsField(optsField *Field) *Operation {
+func (s *Operation) WithOptionsStruct(optsField *Field) *Operation {
+	optsField.Name = "" // TODO
+	optsField.Kind = "" // TODO
 	s.OptsField = optsField
 	return s
+}
+
+func NewOptionsStruct() *Field {
+	return NewField("", "", nil)
 }
 
 func NewField(name string, kind string, tags map[string][]string) *Field {
@@ -67,7 +73,6 @@ func NewValidation(validationType ValidationType, fieldNames ...string) *Validat
 	}
 }
 
-/// new
 // Static / SQL
 
 func queryTags(ddlTags []string, sqlTags []string) map[string][]string {
