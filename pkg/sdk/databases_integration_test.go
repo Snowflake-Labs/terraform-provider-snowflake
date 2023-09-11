@@ -164,22 +164,23 @@ func TestInt_DatabasesDrop(t *testing.T) {
 
 /*
 this test keeps failing need to fix.
-func TestInt_DatabasesUndrop(t *testing.T) {
-	client := testClient(t)
-	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	databaseID := databaseTest.ID()
-	err := client.Databases.Drop(ctx, databaseID, nil)
-	require.NoError(t, err)
-	_, err = client.Databases.ShowByID(ctx, databaseID)
-	require.Error(t, err)
-	err = client.Databases.Undrop(ctx, databaseID)
-	require.NoError(t, err)
-	database, err := client.Databases.ShowByID(ctx, databaseID)
-	require.NoError(t, err)
-	assert.Equal(t, databaseID.Name(), database.Name)
-}
+
+	func TestInt_DatabasesUndrop(t *testing.T) {
+		client := testClient(t)
+		ctx := context.Background()
+		databaseTest, databaseCleanup := createDatabase(t, client)
+		t.Cleanup(databaseCleanup)
+		databaseID := databaseTest.ID()
+		err := client.Databases.Drop(ctx, databaseID, nil)
+		require.NoError(t, err)
+		_, err = client.Databases.ShowByID(ctx, databaseID)
+		require.Error(t, err)
+		err = client.Databases.Undrop(ctx, databaseID)
+		require.NoError(t, err)
+		database, err := client.Databases.ShowByID(ctx, databaseID)
+		require.NoError(t, err)
+		assert.Equal(t, databaseID.Name(), database.Name)
+	}
 */
 func TestInt_DatabasesDescribe(t *testing.T) {
 	client := testClient(t)
