@@ -9,11 +9,6 @@ func NewInterface(name string, nameSingular string, identifierKind string, opera
 	}
 }
 
-func (i *Interface) WithOperations(operations ...*Operation) *Interface {
-	i.Operations = operations
-	return i
-}
-
 func NewOperation(opName string, doc string) *Operation {
 	return &Operation{
 		Name: opName,
@@ -21,34 +16,26 @@ func NewOperation(opName string, doc string) *Operation {
 	}
 }
 
-// TODO Do we need that ?
-func (s *Operation) WithObjectInterface(objectInterface *Interface) *Operation {
-	s.ObjectInterface = objectInterface
-	return s
-}
-
 func (s *Operation) WithOptionsStruct(optsField *Field) *Operation {
-	optsField.Name = "" // TODO
-	optsField.Kind = "" // TODO
 	s.OptsField = optsField
 	return s
 }
 
+// NewOptionsStruct factory method for creating top level fields (Option Structs)
 func NewOptionsStruct() *Field {
 	return NewField("", "", nil)
 }
 
-func NewField(name string, kind string, tags map[string][]string) *Field {
+func NewField(name string, kind string, tags *TagBuilder) *Field {
+	var tagsResult map[string][]string
+	if tags != nil {
+		tagsResult = tags.Build()
+	}
 	return &Field{
 		Name: name,
 		Kind: kind,
-		Tags: tags,
+		Tags: tagsResult,
 	}
-}
-
-func (field *Field) WithParent(parent *Field) *Field {
-	field.Parent = parent
-	return field
 }
 
 func (field *Field) WithFields(fields ...*Field) *Field {
@@ -73,21 +60,69 @@ func NewValidation(validationType ValidationType, fieldNames ...string) *Validat
 	}
 }
 
-// Static / SQL
-
-func queryTags(ddlTags []string, sqlTags []string) map[string][]string {
-	tags := make(map[string][]string)
-	if len(ddlTags) > 0 {
-		tags["ddl"] = ddlTags
-	}
-	if len(sqlTags) > 0 {
-		tags["sql"] = sqlTags
-	}
-	return tags
+type TagBuilder struct {
+	ddl []string
+	sql []string
 }
 
+func Tags() *TagBuilder {
+	return &TagBuilder{
+		ddl: make([]string, 0),
+		sql: make([]string, 0),
+	}
+}
+
+func (v *TagBuilder) Static() *TagBuilder {
+	v.ddl = append(v.ddl, "static")
+	return v
+}
+
+func (v *TagBuilder) Keyword() *TagBuilder {
+	v.ddl = append(v.ddl, "keyword")
+	return v
+}
+
+func (v *TagBuilder) Parameter() *TagBuilder {
+	v.ddl = append(v.ddl, "parameter")
+	return v
+}
+
+func (v *TagBuilder) Identifier() *TagBuilder {
+	v.ddl = append(v.ddl, "identifier")
+	return v
+}
+
+func (v *TagBuilder) List() *TagBuilder {
+	v.ddl = append(v.ddl, "list")
+	return v
+}
+
+func (v *TagBuilder) NoParentheses() *TagBuilder {
+	v.ddl = append(v.ddl, "no_parentheses")
+	return v
+}
+
+func (v *TagBuilder) DDL(ddl ...string) *TagBuilder {
+	v.ddl = append(v.ddl, ddl...)
+	return v
+}
+
+func (v *TagBuilder) SQL(sql ...string) *TagBuilder {
+	v.sql = append(v.sql, sql...)
+	return v
+}
+
+func (v *TagBuilder) Build() map[string][]string {
+	return map[string][]string{
+		"ddl": v.ddl,
+		"sql": v.sql,
+	}
+}
+
+// Static / SQL
+
 func SQL(sql string) *Field {
-	return NewField(sqlToFieldName(sql, false), "bool", queryTags([]string{"static"}, []string{sql}))
+	return NewField(sqlToFieldName(sql, false), "bool", Tags().Static().SQL(sql))
 }
 
 func Create() *Field {
@@ -113,7 +148,7 @@ func Describe() *Field {
 // Keyword / Value
 
 func OptionalSQL(sql string) *Field {
-	return NewField(sqlToFieldName(sql, true), "*bool", queryTags([]string{"keyword"}, []string{sql}))
+	return NewField(sqlToFieldName(sql, true), "*bool", Tags().Keyword().SQL(sql))
 }
 
 func OrReplace() *Field {
@@ -153,9 +188,9 @@ func (v *parameterOptions) toOptions() []string {
 
 func Assignment(sqlPrefix string, kind string, options *parameterOptions) *Field {
 	if options != nil {
-		return NewField(sqlToFieldName(sqlPrefix, true), kind, queryTags(append([]string{"parameter"}, options.toOptions()...), []string{sqlPrefix}))
+		return NewField(sqlToFieldName(sqlPrefix, true), kind, Tags().Parameter().DDL(options.toOptions()...).SQL(sqlPrefix))
 	}
-	return NewField(sqlToFieldName(sqlPrefix, true), kind, queryTags([]string{"parameter"}, []string{sqlPrefix}))
+	return NewField(sqlToFieldName(sqlPrefix, true), kind, Tags().Parameter().SQL(sqlPrefix))
 }
 
 func TextAssignment(sqlPrefix string, paramOptions *parameterOptions) *Field {
@@ -168,6 +203,10 @@ func OptionalTextAssignment(sqlPrefix string, paramOptions *parameterOptions) *F
 
 // Identifier
 
+func AccountObjectIdentifier(fieldName string) *Field {
+	return NewField(fieldName, "AccountObjectIdentifier", Tags().Identifier()).WithRequired(true)
+}
+
 func DatabaseObjectIdentifier(fieldName string) *Field {
-	return NewField(fieldName, "DatabaseObjectIdentifier", queryTags([]string{"identifier"}, nil)).WithRequired(true)
+	return NewField(fieldName, "DatabaseObjectIdentifier", Tags().Identifier()).WithRequired(true)
 }
