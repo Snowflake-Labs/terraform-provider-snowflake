@@ -108,7 +108,7 @@ func Describe() *Field {
 // Keyword / Value
 
 func OptionalSQL(sql string) *Field {
-	return NewField(sqlToFieldName(sql, false), "bool", queryTags([]string{"keyword"}, []string{sql}))
+	return NewField(sqlToFieldName(sql, true), "*bool", queryTags([]string{"keyword"}, []string{sql}))
 }
 
 func OrReplace() *Field {
@@ -146,11 +146,19 @@ func (v *parameterOptions) toOptions() []string {
 	return opts
 }
 
-func OptionalTextAssignment(sqlPrefix string, paramOptions *parameterOptions) *Field {
-	if paramOptions != nil {
-		return NewField(sqlToFieldName(sqlPrefix, true), "*string", queryTags(append([]string{"parameter"}, paramOptions.toOptions()...), []string{sqlPrefix}))
+func Assignment(sqlPrefix string, kind string, options *parameterOptions) *Field {
+	if options != nil {
+		return NewField(sqlToFieldName(sqlPrefix, true), kind, queryTags(append([]string{"parameter"}, options.toOptions()...), []string{sqlPrefix}))
 	}
-	return NewField(sqlToFieldName(sqlPrefix, true), "*string", queryTags([]string{"parameter"}, []string{sqlPrefix}))
+	return NewField(sqlToFieldName(sqlPrefix, true), kind, queryTags([]string{"parameter"}, []string{sqlPrefix}))
+}
+
+func TextAssignment(sqlPrefix string, paramOptions *parameterOptions) *Field {
+	return Assignment(sqlPrefix, "string", paramOptions)
+}
+
+func OptionalTextAssignment(sqlPrefix string, paramOptions *parameterOptions) *Field {
+	return Assignment(sqlPrefix, "*string", paramOptions)
 }
 
 // Identifier

@@ -45,8 +45,7 @@ var DatabaseRole = g.NewInterface(
 						),
 					g.NewField("Set", "*DatabaseRoleSet", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"SET"}}).
 						WithFields(
-							// TODO g.NewField("Comment", "string", map[string][]string{"ddl": {"parameter", "single_quotes"}, "sql": {"COMMENT"}}).WithRequired(true),
-							g.OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes(true)).WithRequired(true),
+							g.TextAssignment("COMMENT", g.ParameterOptions().SingleQuotes(true)).WithRequired(true),
 							g.NewField("NestedThirdLevel", "*NestedThirdLevel", map[string][]string{"ddl": {"list,no_parentheses"}, "sql": {"NESTED"}}).
 								WithFields(
 									g.DatabaseObjectIdentifier("Field"),
