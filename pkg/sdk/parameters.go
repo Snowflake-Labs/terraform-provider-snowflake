@@ -4,12 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"reflect"
 	"strconv"
-	"time"
-
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 var (
@@ -24,15 +19,15 @@ var _ Parameters = (*parameters)(nil)
 
 type Parameters interface {
 	SetAccountParameter(ctx context.Context, parameter AccountParameter, value string) error
-	SetSessionParameterForAccount(ctx context.Context, parameter SessionParameter, value string) error
-	SetSessionParameterForUser(ctx context.Context, id AccountObjectIdentifier, parameter SessionParameter, value string) error
-	SetObjectParameterForAccount(ctx context.Context, parameter ObjectParameter, value string) error
-	SetObjectParameterForUser(ctx context.Context, id AccountObjectIdentifier, parameter ObjectParameter, value string) error
+	SetSessionParameterOnAccount(ctx context.Context, parameter SessionParameter, value string) error
+	SetSessionParameterOnUser(ctx context.Context, userID AccountObjectIdentifier, parameter SessionParameter, value string) error
+	SetObjectParameterOnAccount(ctx context.Context, parameter ObjectParameter, value string) error
+	SetObjectParameterOnObject(ctx context.Context, object Object, parameter ObjectParameter, value string) error
 	ShowParameters(ctx context.Context, opts *ShowParametersOptions) ([]*Parameter, error)
 	ShowAccountParameter(ctx context.Context, parameter AccountParameter) (*Parameter, error)
 	ShowSessionParameter(ctx context.Context, parameter SessionParameter) (*Parameter, error)
 	ShowUserParameter(ctx context.Context, parameter UserParameter, user AccountObjectIdentifier) (*Parameter, error)
-	ShowObjectParameter(ctx context.Context, parameter ObjectParameter, objectType ObjectType, objectID Identifier) (*Parameter, error)
+	ShowObjectParameter(ctx context.Context, parameter ObjectParameter, object Object) (*Parameter, error)
 }
 
 type parameters struct {
@@ -152,7 +147,7 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 	return nil
 }
 
-func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context, parameter SessionParameter, value string) error {
+func (parameters *parameters) SetSessionParameterOnAccount(ctx context.Context, parameter SessionParameter, value string) error {
 	opts := AlterAccountOptions{Set: &AccountSet{Parameters: &AccountLevelParameters{SessionParameters: &SessionParameters{}}}}
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
@@ -316,7 +311,7 @@ func (parameters *parameters) SetSessionParameterForAccount(ctx context.Context,
 	return nil
 }
 
-func (parameters *parameters) SetSessionParameterForUser(ctx context.Context, id AccountObjectIdentifier, parameter SessionParameter, value string) error {
+func (parameters *parameters) SetSessionParameterOnUser(ctx context.Context, userId AccountObjectIdentifier, parameter SessionParameter, value string) error {
 	opts := AlterUserOptions{Set: &UserSet{SessionParameters: &SessionParameters{}}}
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
@@ -473,14 +468,14 @@ func (parameters *parameters) SetSessionParameterForUser(ctx context.Context, id
 	default:
 		return fmt.Errorf("Invalid session parameter: %v", string(parameter))
 	}
-	err := parameters.client.Users.Alter(ctx, id, &opts)
+	err := parameters.client.Users.Alter(ctx, userId, &opts)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (parameters *parameters) SetObjectParameterForAccount(ctx context.Context, parameter ObjectParameter, value string) error {
+func (parameters *parameters) SetObjectParameterOnAccount(ctx context.Context, parameter ObjectParameter, value string) error {
 	opts := AlterAccountOptions{Set: &AccountSet{Parameters: &AccountLevelParameters{ObjectParameters: &ObjectParameters{}}}}
 	switch parameter {
 	case ObjectParameterDataRetentionTimeInDays:
@@ -563,726 +558,29 @@ func (parameters *parameters) SetObjectParameterForAccount(ctx context.Context, 
 	return nil
 }
 
-func (parameters *parameters) SetObjectParameterForUser(ctx context.Context, id AccountObjectIdentifier, parameter ObjectParameter, value string) error {
-	opts := AlterUserOptions{Set: &UserSet{ObjectParameters: &UserObjectParameters{}}}
-	switch parameter {
-	case ObjectParameterNetworkPolicy:
-		opts.Set.ObjectParameters.NetworkPolicy = &value
-	case ObjectParameterEnableUnredactedQuerySyntaxError:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.ObjectParameters.EnableUnredactedQuerySyntaxError = b
-	default:
-		return fmt.Errorf("Invalid object parameter: %v", string(parameter))
+type setParameterOnObject struct {
+	alter            bool             `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
+	objectType       ObjectType       `ddl:"keyword"`
+	objectIdentifier ObjectIdentifier `ddl:"identifier"`
+	set              bool             `ddl:"static" sql:"SET"` //lint:ignore U1000 This is used in the ddl tag
+	parameterKey     ObjectParameter  `ddl:"keyword"`
+	equals           bool             `ddl:"static" sql:"="` //lint:ignore U1000 This is used in the ddl tag
+	parameterValue   string           `ddl:"keyword"`
+}
+
+func (parameters *parameters) SetObjectParameterOnObject(ctx context.Context, object Object, parameter ObjectParameter, value string) error {
+	opts := &setParameterOnObject{
+		objectType:       object.ObjectType,
+		objectIdentifier: object.Name,
+		parameterKey:     parameter,
+		parameterValue:   value,
 	}
-	err := parameters.client.Users.Alter(ctx, id, &opts)
+	sql, err := structToSQL(opts)
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-// ParameterDefault is a parameter that can be set on an account, session, or object.
-type ParameterDefault struct {
-	TypeSet            []ParameterType
-	DefaultValue       interface{}
-	ValueType          reflect.Type
-	Validate           func(string) error
-	AllowedObjectTypes []ObjectType
-}
-
-// ParameterDefaults returns a map of default values for all parameters.
-func ParameterDefaults() map[string]ParameterDefault {
-	validateBoolFunc := func(value string) (err error) {
-		_, err = strconv.ParseBool(value)
-		if err != nil {
-			return fmt.Errorf("%v is an invalid value. Boolean value (\"true\"/\"false\") expected", value)
-		}
-		return nil
-	}
-
-	return map[string]ParameterDefault{
-		"ALLOW_CLIENT_MFA_CACHING": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"ALLOW_ID_TOKEN": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"CLIENT_ENCRYPTION_KEY_SIZE": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: 128,
-			Validate: func(value string) (err error) {
-				v, err := strconv.ParseInt(value, 10, 64)
-				if err != nil {
-					return fmt.Errorf("%v cannot be cast to an integer", value)
-				}
-				if v != 128 && v != 256 {
-					return fmt.Errorf("%v is not a valid value for CLIENT_ENCRYPTION_KEY_SIZE", value)
-				}
-				return nil
-			},
-		},
-		"CLIENT_METADATA_USE_SESSION_DATABASE": {
-			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX": {
-			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"CLIENT_RESULT_COLUMN_CASE_INSENSITIVE": {
-			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"ENABLE_INTERNAL_STAGES_PRIVATELINK": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"ENFORCE_SESSION_POLICY": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: true,
-			Validate:     validateBoolFunc,
-		},
-		"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: 10.0,
-			Validate: func(value string) (err error) {
-				v, err := strconv.ParseFloat(value, 32)
-				if err != nil {
-					return fmt.Errorf("%v cannot be cast to a float", value)
-				}
-				if v < 0.0 || (v < 0.0 && v < 1.0) {
-					return fmt.Errorf("%v must be 0.0 and above with a scale of at least 1 (e.g. 20.5, 32.25, 33.333, etc.)", v)
-				}
-				return nil
-			},
-		},
-		"MIN_DATA_RETENTION_TIME_IN_DAYS": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: 0,
-			Validate: func(value string) (err error) {
-				v, err := strconv.ParseInt(value, 10, 64)
-				if err != nil {
-					return fmt.Errorf("%v cannot be cast to an integer", value)
-				}
-				if v < 0 || v > 90 {
-					return fmt.Errorf("%v must be 0 or 1 for Standard Edition, or between 0 and 90 for Enterprise Edition or higher", v)
-				}
-				return nil
-			},
-		},
-		"MULTI_STATEMENT_COUNT": {
-			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
-			DefaultValue: 1,
-			Validate: func(value string) (err error) {
-				v, err := strconv.ParseInt(value, 10, 64)
-				if err != nil {
-					return fmt.Errorf("%v cannot be cast to an integer", value)
-				}
-				if v < 0 {
-					return fmt.Errorf("%v must be a positive integer", v)
-				}
-				return nil
-			},
-		},
-		"NETWORK_POLICY": {
-			TypeSet:      []ParameterType{ParameterTypeAccount, ParameterTypeObject},
-			DefaultValue: "none",
-			Validate: func(value string) (err error) {
-				if len(value) == 0 {
-					return fmt.Errorf("NETWORK_POLICY cannot be empty")
-				}
-				_, errs := ValidateIdentifier(value, []string{})
-				if len(errs) > 0 {
-					return fmt.Errorf("NETWORK_POLICY %v is not a valid identifier", value)
-				}
-				return nil
-			},
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeUser,
-			},
-		},
-		"PERIODIC_DATA_REKEYING": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"PREVENT_UNLOAD_TO_INLINE_URL": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"PREVENT_LOAD_FROM_INLINE_URL": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"SSO_LOGIN_PAGE": {
-			TypeSet:      []ParameterType{ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"ABORT_DETACHED_QUERY": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"AUTOCOMMIT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: true,
-			Validate:     validateBoolFunc,
-		},
-		"BINARY_INPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "HEX",
-			Validate: func(value string) (err error) {
-				validFormats := []string{"HEX", "BASE64", "UTF8", "UTF-8"}
-				if !slices.Contains(validFormats, value) {
-					return fmt.Errorf("%v is not a valid value for BINARY_INPUT_FORMAT", value)
-				}
-				return nil
-			},
-		},
-		"BINARY_OUTPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "HEX",
-			Validate: func(value string) (err error) {
-				validFormats := []string{"HEX", "BASE64"}
-				if !slices.Contains(validFormats, value) {
-					return fmt.Errorf("%v is not a valid value for BINARY_OUTPUT_FORMAT", value)
-				}
-				return nil
-			},
-		},
-		"DATE_INPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "auto",
-			Validate: func(value string) (err error) {
-				validFormats := GetValidDateFormats(DateFormatAny, true)
-				if !slices.Contains(validFormats, value) {
-					return fmt.Errorf("%v is not a valid value for DATE_INPUT_FORMAT", value)
-				}
-				return nil
-			},
-		},
-		"DATE_OUTPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "YYYY-MM-DD",
-			Validate: func(value string) (err error) {
-				validFormats := GetValidDateFormats(DateFormatAny, false)
-				if !slices.Contains(validFormats, value) {
-					return fmt.Errorf("%v is not a valid value for DATE_INPUT_FORMAT", value)
-				}
-				return nil
-			},
-		},
-		"ERROR_ON_NONDETERMINISTIC_MERGE": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: true,
-			Validate:     validateBoolFunc,
-		},
-		"ERROR_ON_NONDETERMINISTIC_UPDATE": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"JSON_INDENT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: 2,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for JSON_INDENT, must be an integer between 0 and 16", value)
-				}
-				if v < 0 || v > 16 {
-					return fmt.Errorf("%v is not a valid value for JSON_INDENT, must be an integer between 0 and 16", value)
-				}
-				return nil
-			},
-		},
-		"LOCK_TIMEOUT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: 43200,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for LOCK_TIMEOUT, must be an integer", value)
-				}
-				if v < 0 {
-					return fmt.Errorf("%v is not a valid value for LOCK_TIMEOUT, must be an integer greater than 0", value)
-				}
-				return nil
-			},
-		},
-		"QUERY_TAG": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "",
-			Validate: func(value string) (err error) {
-				if len(value) > 2000 {
-					return fmt.Errorf("%v is not a valid value for QUERY_TAG, must be 2000 characters or less", value)
-				}
-				return nil
-			},
-		},
-		"QUOTED_IDENTIFIERS_IGNORE_CASE": {
-			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"ROWS_PER_RESULTSET": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: 0,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for LOCK_TIMEOUT, must be an integer", value)
-				}
-				if v < 0 {
-					return fmt.Errorf("%v is not a valid value for LOCK_TIMEOUT, must be an integer greater than 0", value)
-				}
-				return nil
-			},
-		},
-		"SIMULATED_DATA_SHARING_CONSUMER": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "",
-			Validate:     nil,
-		},
-		"STATEMENT_TIMEOUT_IN_SECONDS": {
-			TypeSet:      []ParameterType{ParameterTypeSession, ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: 172800,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for STATEMENT_TIMEOUT_IN_SECONDS, must be an integer", value)
-				}
-				if v < 0 || v > 604800 {
-					return fmt.Errorf("%v is not a valid value for STATEMENT_TIMEOUT_IN_SECONDS, must be an integer between 0 and 604800", value)
-				}
-				return nil
-			},
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeWarehouse,
-			},
-		},
-		"STRICT_JSON_OUTPUT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"TIMESTAMP_DAY_IS_ALWAYS_24H": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-		},
-		"TIMESTAMP_INPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "auto",
-			Validate: func(value string) (err error) {
-				formats := getValidTimeStampFormats(TimeStampFormatAny, true)
-				if !slices.Contains(formats, value) {
-					return fmt.Errorf("%v is not a valid value for TIMESTAMP_INPUT_FORMAT, must be one of %v", value, formats)
-				}
-				return nil
-			},
-		},
-		"TIMESTAMP_LTZ_OUTPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "YYYY-MM-DD HH24:MI:SS.FF3 TZHTZM",
-			Validate: func(value string) (err error) {
-				formats := getValidTimeStampFormats(TimeStampFormatAny, false)
-				if !slices.Contains(formats, value) {
-					return fmt.Errorf("%v is not a valid value for TIMESTAMP_LTZ_OUTPUT_FORMAT, must be one of %v", value, formats)
-				}
-				return nil
-			},
-		},
-		"TIMESTAMP_NTZ_OUTPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "YYYY-MM-DD HH24:MI:SS.FF3",
-			Validate: func(value string) (err error) {
-				formats := getValidTimeStampFormats(TimeStampFormatAny, false)
-				if !slices.Contains(formats, value) {
-					return fmt.Errorf("%v is not a valid value for TIMESTAMP_NTZ_OUTPUT_FORMAT, must be one of %v", value, formats)
-				}
-				return nil
-			},
-		},
-		"TIMESTAMP_OUTPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "YYYY-MM-DD HH24:MI:SS.FF3 TZHTZM",
-			Validate: func(value string) (err error) {
-				formats := getValidTimeStampFormats(TimeStampFormatAny, false)
-				if !slices.Contains(formats, value) {
-					return fmt.Errorf("%v is not a valid value for TIMESTAMP_OUTPUT_FORMAT, must be one of %v", value, formats)
-				}
-				return nil
-			},
-		},
-		"TIMESTAMP_TYPE_MAPPING": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "TIMESTAMP_NTZ",
-			Validate: func(value string) (err error) {
-				if !slices.Contains([]string{"TIMESTAMP_NTZ", "TIMESTAMP_LTZ", "TIMESTAMP_TZ"}, value) {
-					return fmt.Errorf("%v is not a valid value for TIMESTAMP_TYPE_MAPPING, must be one of TIMESTAMP_NTZ, TIMESTAMP_LTZ, TIMESTAMP_TZ", value)
-				}
-				return nil
-			},
-		},
-		"TIMESTAMP_TZ_OUTPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "",
-			Validate: func(value string) (err error) {
-				formats := getValidTimeStampFormats(TimeStampFormatAny, false)
-				if !slices.Contains(formats, value) {
-					return fmt.Errorf("%v is not a valid value for TIMESTAMP_TZ_OUTPUT_FORMAT, must be one of %v", value, formats)
-				}
-				return nil
-			},
-		},
-		"TIMEZONE": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "America/Los_Angeles",
-			Validate: func(value string) (err error) {
-				_, err = time.LoadLocation(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for TIMEZONE, must be a valid timezone", value)
-				}
-				return nil
-			},
-		},
-		"TIME_INPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "auto",
-			Validate: func(value string) (err error) {
-				formats := getValidTimeFormats(TimeFormatAny, true)
-				if !slices.Contains(formats, value) {
-					return fmt.Errorf("%v is not a valid value for TIME_INPUT_FORMAT, must be one of %v", value, formats)
-				}
-				return nil
-			},
-		},
-		"TIME_OUTPUT_FORMAT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "HH24:MI:SS",
-			Validate: func(value string) (err error) {
-				formats := getValidTimeFormats(TimeFormatAny, false)
-				if !slices.Contains(formats, value) {
-					return fmt.Errorf("%v is not a valid value for TIME_OUTPUT_FORMAT, must be one of %v", value, formats)
-				}
-				return nil
-			},
-		},
-		"TRANSACTION_DEFAULT_ISOLATION_LEVEL": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "READ_COMMITTED",
-			Validate: func(value string) (err error) {
-				if !slices.Contains([]string{"READ_COMMITTED"}, value) {
-					return fmt.Errorf("%v is not a valid value for TRANSACTION_DEFAULT_ISOLATION_LEVEL, must be one of READ_UNCOMMITTED, READ_COMMITTED, REPEATABLE_READ, SERIALIZABLE", value)
-				}
-				return nil
-			},
-		},
-		"TWO_DIGIT_CENTURY_START": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: 1970,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for TWO_DIGIT_CENTURY_START, must be an integer", value)
-				}
-				if v < 1900 || v > 2100 {
-					return fmt.Errorf("%v is not a valid value for TWO_DIGIT_CENTURY_START, must be between 1900 and 2100", value)
-				}
-				return nil
-			},
-		},
-		"UNSUPPORTED_DDL_ACTION": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: "IGNORE",
-			Validate: func(value string) (err error) {
-				if !slices.Contains([]string{"IGNORE", "FAIL"}, value) {
-					return fmt.Errorf("%v is not a valid value for UNSUPPORTED_DDL_ACTION, must be one of IGNORE, FAIL", value)
-				}
-				return nil
-			},
-		},
-		"USE_CACHED_RESULT": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: true,
-			Validate:     validateBoolFunc,
-		},
-		"WEEK_OF_YEAR_POLICY": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: 0,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for WEEK_OF_YEAR_POLICY, must be an integer", value)
-				}
-				if v < 0 || v > 1 {
-					return fmt.Errorf("%v is not a valid value for WEEK_OF_YEAR_POLICY, must be 0 or 1", value)
-				}
-				return nil
-			},
-		},
-		"WEEK_START": {
-			TypeSet:      []ParameterType{ParameterTypeSession},
-			DefaultValue: 0,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for WEEK_START, must be an integer", value)
-				}
-				if v < 0 || v > 7 {
-					return fmt.Errorf("%v is not a valid value for WEEK_START, must be between 0 and 7", value)
-				}
-				return nil
-			},
-		},
-		"DATA_RETENTION_TIME_IN_DAYS": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: 1,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for DATA_RETENTION_TIME_IN_DAYS, must be an integer", value)
-				}
-				if v < 0 || v > 90 {
-					return fmt.Errorf("%v is not a valid value for DATA_RETENTION_TIME_IN_DAYS, must be between 0 and 90", value)
-				}
-				return nil
-			},
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeDatabase,
-				ObjectTypeSchema,
-				ObjectTypeTable,
-			},
-		},
-		"DEFAULT_DDL_COLLATION": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: "",
-			Validate: func(value string) (err error) {
-				// todo: validate collation.
-				if len(value) < 1 {
-					return fmt.Errorf("%v is not a valid value for DEFAULT_DDL_COLLATION, must be a valid collation", value)
-				}
-				return nil
-			},
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeDatabase,
-				ObjectTypeSchema,
-				ObjectTypeTable,
-			},
-		},
-		"ENABLE_STREAM_TASK_REPLICATION": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeDatabase,
-				ObjectTypeReplicationGroup,
-				ObjectTypeFailoverGroup,
-			},
-		},
-		"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeUser,
-			},
-		},
-		"MAX_CONCURRENCY_LEVEL": {
-			TypeSet:      []ParameterType{ParameterTypeObject},
-			DefaultValue: 0,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for MAX_CONCURRENCY_LEVEL, must be an integer", value)
-				}
-				if v < 0 {
-					return fmt.Errorf("%v is not a valid value for MAX_CONCURRENCY_LEVEL, must be an integer greater than 0", value)
-				}
-				return nil
-			},
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeWarehouse,
-			},
-		},
-		"MAX_DATA_EXTENSION_TIME_IN_DAYS": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: 14,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for MAX_DATA_EXTENSION_TIME_IN_DAYS, must be an integer", value)
-				}
-				if v < 0 || v > 90 {
-					return fmt.Errorf("%v is not a valid value for MAX_DATA_EXTENSION_TIME_IN_DAYS, must be between 0 and 90", value)
-				}
-				return nil
-			},
-		},
-		"PIPE_EXECUTION_PAUSED": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeSchema,
-				ObjectTypePipe,
-			},
-		},
-		"PREVENT_UNLOAD_TO_INTERNAL_STAGES": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: false,
-			Validate:     validateBoolFunc,
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeUser,
-			},
-		},
-		"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: 0,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for STATEMENT_QUEUED_TIMEOUT_IN_SECONDS, must be an integer", value)
-				}
-				if v < 0 {
-					return fmt.Errorf("%v is not a valid value for STATEMENT_QUEUED_TIMEOUT_IN_SECONDS, must be an integer greater than 0", value)
-				}
-				return nil
-			},
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeWarehouse,
-			},
-		},
-		"SHARE_RESTRICTIONS": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: true,
-			Validate:     validateBoolFunc,
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeShare,
-			},
-		},
-		"SUSPEND_TASK_AFTER_NUM_FAILURES": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: 0,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for SUSPEND_TASK_AFTER_NUM_FAILURES, must be an integer", value)
-				}
-				if v < 0 {
-					return fmt.Errorf("%v is not a valid value for SUSPEND_TASK_AFTER_NUM_FAILURES, must be an integer greater than 0", value)
-				}
-				return nil
-			},
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeDatabase,
-				ObjectTypeSchema,
-				ObjectTypeTask,
-			},
-		},
-		"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: "MEDIUM",
-			Validate: func(value string) (err error) {
-				if !slices.Contains([]string{"X-SMALL", "SMALL", "MEDIUM", "LARGE", "X-LARGE", "2X-LARGE", "3X-LARGE", "4X-LARGE", "5X-LARGE", "6X-LARGE"}, value) {
-					return fmt.Errorf("%v is not a valid value for USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE, must be a valid warehouse size, such as \"SMALL\", \"MEDIUM\" or \"LARGE\"", value)
-				}
-				return nil
-			},
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeDatabase,
-				ObjectTypeSchema,
-				ObjectTypeTask,
-			},
-		},
-		"USER_TASK_TIMEOUT_MS": {
-			TypeSet:      []ParameterType{ParameterTypeObject, ParameterTypeAccount},
-			DefaultValue: 3600000,
-			Validate: func(value string) (err error) {
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return fmt.Errorf("%v is not a valid value for USER_TASK_TIMEOUT_MS, must be an integer", value)
-				}
-				if v < 0 || v > 86400000 {
-					return fmt.Errorf("%v is not a valid value for USER_TASK_TIMEOUT_MS, must be an integer greater than 0 and less than 86400000 (1 day)", value)
-				}
-				return nil
-			},
-			AllowedObjectTypes: []ObjectType{
-				ObjectTypeDatabase,
-				ObjectTypeSchema,
-				ObjectTypeTask,
-			},
-		},
-	}
-}
-
-// GetParameterObjectTypeSetAsStrings returns a slice of all object types that can have parameters.
-func GetParameterObjectTypeSetAsStrings() []string {
-	objectTypeSet := []ObjectType{
-		ObjectTypeDatabase,
-		ObjectTypeSchema,
-		ObjectTypePipe,
-		ObjectTypeUser,
-		ObjectTypeShare,
-		ObjectTypeWarehouse,
-		ObjectTypeTask,
-		ObjectTypeReplicationGroup,
-		ObjectTypeFailoverGroup,
-		ObjectTypeTable,
-	}
-	result := make([]string, 0, len(objectTypeSet))
-	for _, v := range objectTypeSet {
-		result = append(result, string(v))
-	}
-	return result
-}
-
-func GetParameterDefaults(t ParameterType) map[string]ParameterDefault {
-	parameters := ParameterDefaults()
-	keys := maps.Keys(parameters)
-	for _, key := range keys {
-		typeSet := parameters[key].TypeSet
-		if !slices.Contains(typeSet, t) {
-			delete(parameters, key)
-		}
-	}
-	return parameters
-}
-
-// GetParameter returns a parameter by key.
-func GetParameterDefault(key string) ParameterDefault {
-	return ParameterDefaults()[key]
+	_, err = parameters.client.exec(ctx, sql)
+	return err
 }
 
 func parseBooleanParameter(parameter, value string) (_ *bool, err error) {
@@ -1938,13 +1236,13 @@ func (v *parameters) ShowSessionParameter(ctx context.Context, parameter Session
 	return parameters[0], nil
 }
 
-func (v *parameters) ShowUserParameter(ctx context.Context, parameter UserParameter, user AccountObjectIdentifier) (*Parameter, error) {
+func (v *parameters) ShowUserParameter(ctx context.Context, parameter UserParameter, userId AccountObjectIdentifier) (*Parameter, error) {
 	opts := &ShowParametersOptions{
 		Like: &Like{
 			Pattern: String(string(parameter)),
 		},
 		In: &ParametersIn{
-			User: user,
+			User: userId,
 		},
 	}
 	parameters, err := v.ShowParameters(ctx, opts)
@@ -1957,33 +1255,33 @@ func (v *parameters) ShowUserParameter(ctx context.Context, parameter UserParame
 	return parameters[0], nil
 }
 
-func (v *parameters) ShowObjectParameter(ctx context.Context, key ObjectParameter, objectType ObjectType, objectID Identifier) (*Parameter, error) {
+func (v *parameters) ShowObjectParameter(ctx context.Context, parameter ObjectParameter, object Object) (*Parameter, error) {
 	opts := &ShowParametersOptions{
 		Like: &Like{
-			Pattern: String(string(key)),
+			Pattern: String(string(parameter)),
 		},
 		In: &ParametersIn{},
 	}
-	switch objectType {
+	switch object.ObjectType {
 	case ObjectTypeWarehouse:
-		opts.In.Warehouse = objectID.(AccountObjectIdentifier)
+		opts.In.Warehouse = object.Name.(AccountObjectIdentifier)
 	case ObjectTypeDatabase:
-		opts.In.Database = objectID.(AccountObjectIdentifier)
+		opts.In.Database = object.Name.(AccountObjectIdentifier)
 	case ObjectTypeSchema:
-		opts.In.Schema = objectID.(DatabaseObjectIdentifier)
+		opts.In.Schema = object.Name.(DatabaseObjectIdentifier)
 	case ObjectTypeTask:
-		opts.In.Task = objectID.(SchemaObjectIdentifier)
+		opts.In.Task = object.Name.(SchemaObjectIdentifier)
 	case ObjectTypeTable:
-		opts.In.Table = objectID.(SchemaObjectIdentifier)
+		opts.In.Table = object.Name.(SchemaObjectIdentifier)
 	default:
-		return nil, fmt.Errorf("unsupported object type %s", objectType)
+		return nil, fmt.Errorf("unsupported object type %s", object.Name)
 	}
 	parameters, err := v.ShowParameters(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
 	if len(parameters) == 0 {
-		return nil, fmt.Errorf("parameter %s not found", key)
+		return nil, fmt.Errorf("parameter %s not found", parameter)
 	}
 	return parameters[0], nil
 }

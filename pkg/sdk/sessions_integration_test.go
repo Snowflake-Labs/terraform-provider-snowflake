@@ -82,7 +82,7 @@ func TestInt_ShowObjectParameter(t *testing.T) {
 	ctx := context.Background()
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	parameter, err := client.Parameters.ShowObjectParameter(ctx, ObjectParameterDataRetentionTimeInDays, databaseTest.ObjectType(), databaseTest.ID())
+	parameter, err := client.Parameters.ShowObjectParameter(ctx, ObjectParameterDataRetentionTimeInDays, Object{ObjectType: databaseTest.ObjectType(), Name: databaseTest.ID()})
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }

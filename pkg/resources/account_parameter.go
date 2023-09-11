@@ -7,17 +7,14 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"golang.org/x/exp/maps"
 )
 
 var accountParameterSchema = map[string]*schema.Schema{
 	"key": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  "Name of account parameter. Valid values are those in [account parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#account-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(sdk.GetParameterDefaults(sdk.ParameterTypeAccount)), false),
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Name of account parameter. Valid values are those in [account parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#account-parameters).",
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -48,14 +45,6 @@ func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	parameter := sdk.AccountParameter(key)
-
-	parameterDefault := sdk.GetParameterDefaults(sdk.ParameterTypeSession)[key]
-	if parameterDefault.Validate != nil {
-		if err := parameterDefault.Validate(value); err != nil {
-			return err
-		}
-	}
-
 	err := client.Parameters.SetAccountParameter(ctx, parameter, value)
 	if err != nil {
 		return err
@@ -93,7 +82,6 @@ func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	parameter := sdk.AccountParameter(key)
-
 	defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
 	if err != nil {
 		return err
