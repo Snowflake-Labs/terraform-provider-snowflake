@@ -63,7 +63,8 @@ func setUpGenerator(astFile *ast.File) *Generator {
 
 	file := os.Getenv("GOFILE")
 	fileWithoutSuffix, _ := strings.CutSuffix(file, ".go")
-	baseName := fmt.Sprintf("%s_generated.go", fileWithoutSuffix)
+	fileWithoutSuffix, _ = strings.CutSuffix(fileWithoutSuffix, "_gen")
+	baseName := fmt.Sprintf("%s_builders_gen.go", fileWithoutSuffix)
 	outputName := filepath.Join(wd, baseName)
 
 	return &Generator{

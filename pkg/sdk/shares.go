@@ -70,6 +70,7 @@ func (v *Share) ObjectType() ObjectType {
 type shareRow struct {
 	CreatedOn    time.Time `db:"created_on"`
 	Kind         string    `db:"kind"`
+	OwnerAccount string    `db:"owner_account"`
 	Name         string    `db:"name"`
 	DatabaseName string    `db:"database_name"`
 	To           string    `db:"to"`
@@ -99,7 +100,7 @@ func (r *shareRow) toShare() *Share {
 	return &Share{
 		CreatedOn:    r.CreatedOn,
 		Kind:         ShareKind(r.Kind),
-		Name:         NewExternalObjectIdentifierFromFullyQualifiedName(r.Name),
+		Name:         NewExternalObjectIdentifier(NewAccountIdentifierFromFullyQualifiedName(r.OwnerAccount), NewAccountObjectIdentifier(r.Name)),
 		DatabaseName: NewAccountObjectIdentifier(r.DatabaseName),
 		To:           to,
 		Owner:        r.Owner,
