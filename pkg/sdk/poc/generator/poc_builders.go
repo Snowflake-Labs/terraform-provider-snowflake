@@ -27,9 +27,15 @@ func (s *Operation) WithObjectInterface(objectInterface *Interface) *Operation {
 	return s
 }
 
-func (s *Operation) WithOptsField(optsField *Field) *Operation {
+func (s *Operation) WithOptionsStruct(optsField *Field) *Operation {
 	s.OptsField = optsField
+	optsField.Name = s.Name + s.ObjectInterface.NameSingular + "Options"
+	optsField.Kind = "*" + optsField.Name
 	return s
+}
+
+func NewOptionsStruct() *Field {
+	return NewField("<updated by WithOptionsStruct>", "<updated by WithOptionsStruct>", nil)
 }
 
 func NewField(name string, kind string, tags map[string][]string) *Field {

@@ -12,9 +12,9 @@ var DatabaseRole = g.NewInterface(
 	"DatabaseRole",
 	"DatabaseObjectIdentifier", // TODO do we need this
 	g.NewOperation("Create", "https://docs.snowflake.com/en/sql-reference/sql/create-database-role").
-		WithOptsField(
+		WithOptionsStruct(
 			// TODO why do we need this thing vvv (Should this be NewOptsStruct ???) - Field represents Field or Struct ?
-			g.NewField("<should be updated programmatically>", "<should be updated programmatically>", nil).
+			g.NewOptionsStruct().
 				WithFields(
 					g.Create(),
 					g.OrReplace(),
@@ -29,8 +29,8 @@ var DatabaseRole = g.NewInterface(
 				),
 		),
 	g.NewOperation("Alter", "https://docs.snowflake.com/en/sql-reference/sql/alter-database-role").
-		WithOptsField(
-			g.NewField("<should be updated programmatically>", "<should be updated programmatically>", nil).
+		WithOptionsStruct(
+			g.NewOptionsStruct().
 				WithFields(
 					g.Alter(),
 					g.SQL("DATABASE ROLE"),
