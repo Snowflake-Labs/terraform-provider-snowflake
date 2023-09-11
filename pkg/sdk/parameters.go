@@ -139,7 +139,7 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 		}
 		opts.Set.Parameters.AccountParameters.SSOLoginPage = b
 	default:
-		return fmt.Errorf("Invalid account parameter: %v", string(parameter))
+		return parameters.SetSessionParameterOnAccount(ctx, SessionParameter(parameter), value)
 	}
 	if err := parameters.client.Accounts.Alter(ctx, &opts); err != nil {
 		return err
@@ -302,7 +302,7 @@ func (parameters *parameters) SetSessionParameterOnAccount(ctx context.Context, 
 		}
 		opts.Set.Parameters.SessionParameters.WeekStart = Pointer(v)
 	default:
-		return fmt.Errorf("Invalid session parameter: %v", string(parameter))
+		return parameters.SetObjectParameterOnAccount(ctx, ObjectParameter(parameter), value)
 	}
 	err := parameters.client.Accounts.Alter(ctx, &opts)
 	if err != nil {
