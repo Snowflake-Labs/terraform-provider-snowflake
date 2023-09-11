@@ -37,31 +37,23 @@ func (opts *AlterDatabaseRoleOptions) validate() error {
 	}
 
 	if valueSet(opts.Rename) {
-
 		if !validObjectidentifier(opts.Rename.Name) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
-
 	}
 
 	if valueSet(opts.Set) {
-
 		if valueSet(opts.Set.NestedThirdLevel) {
-
 			if ok := anyValueSet(opts.Set.NestedThirdLevel.Field); !ok {
 				errs = append(errs, errAtLeastOneOf("Field"))
 			}
-
 		}
-
 	}
 
 	if valueSet(opts.Unset) {
-
 		if ok := anyValueSet(opts.Unset.Comment); !ok {
 			errs = append(errs, errAtLeastOneOf("Comment"))
 		}
-
 	}
 
 	return errors.Join(errs...)

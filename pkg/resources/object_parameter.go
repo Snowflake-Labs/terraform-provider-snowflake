@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -91,7 +92,10 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 
 	o := sdk.Object{}
 	if v, ok := d.GetOk("object_identifier"); ok {
-		o.Name = sdk.NewObjectIdentifierFromFullyQualifiedName(v.(string))
+		objectDatabase, objectSchema, objectName := expandObjectIdentifier(v.([]interface{}))
+		fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+		fullyQualifierObjectIdentifier = strings.Trim(fullyQualifierObjectIdentifier, "\"")
+		o.Name = sdk.NewObjectIdentifierFromFullyQualifiedName(fullyQualifierObjectIdentifier)
 		o.ObjectType = sdk.ObjectType(d.Get("object_type").(string))
 	}
 
@@ -108,7 +112,13 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	id := fmt.Sprintf("%v|%v|%v", key, o.ObjectType, o.Name.FullyQualifiedName())
+	var id string
+	if onAccount {
+		id = fmt.Sprintf("%v||", key)
+	} else {
+		id = fmt.Sprintf("%v|%v|%v", key, o.ObjectType, o.Name.FullyQualifiedName())
+	}
+
 	d.SetId(id)
 	var err error
 	var p *sdk.Parameter
@@ -148,6 +158,7 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		objectType := sdk.ObjectType(parts[1])
 		objectIdentifier := parts[2]
+		objectIdentifier = strings.Trim(objectIdentifier, "\"")
 		p, err = client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameter(key), sdk.Object{
 			ObjectType: objectType,
 			Name:       sdk.NewObjectIdentifierFromFullyQualifiedName(objectIdentifier),
@@ -186,9 +197,13 @@ func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error resetting account parameter err = %w", err)
 		}
 	} else {
+		v := d.Get("object_identifier")
+		objectDatabase, objectSchema, objectName := expandObjectIdentifier(v.([]interface{}))
+		fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+		fullyQualifierObjectIdentifier = strings.Trim(fullyQualifierObjectIdentifier, "\"")
 		o := sdk.Object{
 			ObjectType: sdk.ObjectType(d.Get("object_type").(string)),
-			Name:       sdk.NewObjectIdentifierFromFullyQualifiedName(d.Get("object_identifier").(string)),
+			Name:       sdk.NewObjectIdentifierFromFullyQualifiedName(fullyQualifierObjectIdentifier),
 		}
 		objectParameter := sdk.ObjectParameter(key)
 		defaultParameter, err := client.Parameters.ShowObjectParameter(ctx, objectParameter, o)
