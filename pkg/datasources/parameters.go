@@ -95,10 +95,10 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 	var parameters []*sdk.Parameter
 	var err error
 	opts := sdk.ShowParametersOptions{
-		Like: &sdk.Like{
-			Pattern: sdk.String(pattern),
-		},
 		In: &sdk.ParametersIn{},
+	}
+	if pattern != "" {
+		opts.Like = &sdk.Like{Pattern: sdk.String(pattern)}
 	}
 	parameterType := strings.ToUpper(d.Get("parameter_type").(string))
 	switch parameterType {
@@ -127,9 +127,9 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 		default:
 			return fmt.Errorf("object_type %s is not supported", objectType)
 		}
-
-		parameters, err = client.Parameters.ShowParameters(ctx, &opts)
 	}
+	parameters, err = client.Parameters.ShowParameters(ctx, &opts)
+
 	if err != nil {
 		return fmt.Errorf("error listing parameters: %w", err)
 	}

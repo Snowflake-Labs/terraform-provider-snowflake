@@ -13,7 +13,7 @@ var (
 type Sessions interface {
 	// Parameters
 	AlterSession(ctx context.Context, opts *AlterSessionOptions) error
-
+	ShowParameters(ctx context.Context, opts *ShowParametersOptions) ([]*Parameter, error)
 	// Context
 	UseWarehouse(ctx context.Context, warehouse AccountObjectIdentifier) error
 	UseDatabase(ctx context.Context, database AccountObjectIdentifier) error
@@ -85,6 +85,10 @@ func (v *sessions) AlterSession(ctx context.Context, opts *AlterSessionOptions) 
 	}
 	_, err = v.client.exec(ctx, sql)
 	return err
+}
+
+func (v *sessions) ShowParameters(ctx context.Context, opts *ShowParametersOptions) ([]*Parameter, error) {
+	return v.client.Parameters.ShowParameters(ctx, opts)
 }
 
 // Context
