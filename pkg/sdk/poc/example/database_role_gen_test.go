@@ -17,7 +17,6 @@ func TestDatabaseRoles_Create(t *testing.T) {
 
 	// TODO: validate valid identifier for [opts.name]
 	// TODO: validate conflicting fields for [opts.OrReplace opts.IfNotExists]
-
 }
 
 func TestDatabaseRoles_Alter(t *testing.T) {
@@ -41,5 +40,4 @@ func TestDatabaseRoles_Alter(t *testing.T) {
 	// TODO: validate at least one of fields [opts.Set.NestedThirdLevel.Field] set
 
 	// TODO: validate at least one of fields [opts.Unset.Comment] set
-
 }
