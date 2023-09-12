@@ -33,3 +33,62 @@ func sqlToFieldName(sql string, shouldExport bool) string {
 	}
 	return strings.Join(sqlWords, "")
 }
+
+type TagBuilder struct {
+	ddl []string
+	sql []string
+}
+
+func Tags() *TagBuilder {
+	return &TagBuilder{
+		ddl: make([]string, 0),
+		sql: make([]string, 0),
+	}
+}
+
+func (v *TagBuilder) Static() *TagBuilder {
+	v.ddl = append(v.ddl, "static")
+	return v
+}
+
+func (v *TagBuilder) Keyword() *TagBuilder {
+	v.ddl = append(v.ddl, "keyword")
+	return v
+}
+
+func (v *TagBuilder) Parameter() *TagBuilder {
+	v.ddl = append(v.ddl, "parameter")
+	return v
+}
+
+func (v *TagBuilder) Identifier() *TagBuilder {
+	v.ddl = append(v.ddl, "identifier")
+	return v
+}
+
+func (v *TagBuilder) List() *TagBuilder {
+	v.ddl = append(v.ddl, "list")
+	return v
+}
+
+func (v *TagBuilder) NoParentheses() *TagBuilder {
+	v.ddl = append(v.ddl, "no_parentheses")
+	return v
+}
+
+func (v *TagBuilder) DDL(ddl ...string) *TagBuilder {
+	v.ddl = append(v.ddl, ddl...)
+	return v
+}
+
+func (v *TagBuilder) SQL(sql ...string) *TagBuilder {
+	v.sql = append(v.sql, sql...)
+	return v
+}
+
+func (v *TagBuilder) Build() map[string][]string {
+	return map[string][]string{
+		"ddl": v.ddl,
+		"sql": v.sql,
+	}
+}

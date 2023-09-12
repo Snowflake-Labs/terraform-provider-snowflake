@@ -10,6 +10,7 @@ type Struct struct {
 	Fields []*Field
 	// Validations defines validations on given field level (e.g. oneOf for children)
 	Validations []*Validation
+	// TODO Add path somewhere to keep track in validations, dtos, etc
 }
 
 func NewStruct(name string) *Struct {
@@ -20,13 +21,12 @@ func NewStruct(name string) *Struct {
 	}
 }
 
-func (s *Struct) WithFields(intoFields ...*Field) *Struct {
-	// TODO Can be converted to IntoField
-	//fields := make([]*Field, len(intoFields))
-	//for i, f := range intoFields {
-	//	fields[i] = f.IntoField()
-	//}
-	s.Fields = intoFields
+func (s *Struct) WithFields(into ...Into) *Struct {
+	fields := make([]*Field, len(into))
+	for i, f := range into {
+		fields[i] = f.IntoField()
+	}
+	s.Fields = append(s.Fields, fields...)
 	return s
 }
 
@@ -38,12 +38,4 @@ func (s *Struct) WithValidations(validations ...*Validation) *Struct {
 func (s *Struct) DtoDecl() string {
 	withoutSuffix, _ := strings.CutSuffix(s.Name, "Options")
 	return fmt.Sprintf("%sRequest", withoutSuffix)
-	//if field.Parent == nil {
-	//	withoutSuffix, _ := strings.CutSuffix(field.KindNoPtr(), "Options")
-	//	return fmt.Sprintf("%sRequest", withoutSuffix)
-	//} else if field.IsStruct() {
-	//	return fmt.Sprintf("%sRequest", field.KindNoPtr())
-	//} else {
-	//	return field.KindNoPtr()
-	//}
 }

@@ -18,8 +18,11 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 func generateOptionsStruct(writer io.Writer, operation *Operation) {
 	printTo(writer, OptionsTemplate, operation)
 
-	for _, s := range operation.UtilStructs {
-		printTo(writer, StructTemplate, s)
+	for _, f := range operation.Options.Fields {
+		s := f.IntoStruct()
+		if s != nil {
+			printTo(writer, StructTemplate, s)
+		}
 	}
 }
 
@@ -37,12 +40,12 @@ func GenerateImplementation(writer io.Writer, def *Interface) {
 //		generatePackageDirective(writer)
 //		printTo(writer, TestFuncTemplate, def)
 //	}
-//
-//	func GenerateValidations(writer io.Writer, def *Interface) {
-//		generatePackageDirective(writer)
-//		printTo(writer, ValidationsImplTemplate, def)
-//	}
-//
+
+func GenerateValidations(writer io.Writer, def *Interface) {
+	generatePackageDirective(writer)
+	printTo(writer, ValidationsImplTemplate, def)
+}
+
 //	func GenerateIntegrationTests(writer io.Writer, def *Interface) {
 //		generatePackageDirective(writer)
 //		printTo(writer, IntegrationTestsTemplate, def)

@@ -16,14 +16,12 @@ var definitionMapping = map[string]*generator2.Interface{
 func main() {
 	file := os.Getenv("GOFILE")
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
-	//definition := getDefinition(file)
 	if def, ok := definitionMapping[file]; ok {
 		runAllTemplatesToStdOut(def)
+		//runAllTemplatesAndSave(def, file)
 	} else {
-		panic("not ok")
+		panic("missing definition in definitionMapping")
 	}
-	//runAllTemplatesToStdOut(definition)
-	//runAllTemplatesAndSave(definition, file)
 }
 
 func runAllTemplatesToStdOut(definition *generator2.Interface) {
@@ -32,7 +30,7 @@ func runAllTemplatesToStdOut(definition *generator2.Interface) {
 	generator2.GenerateDtos(writer, definition)
 	generator2.GenerateImplementation(writer, definition)
 	//generator2.GenerateUnitTests(writer, definition)
-	//generator2.GenerateValidations(writer, definition)
+	generator2.GenerateValidations(writer, definition)
 	//generator2.GenerateIntegrationTests(writer, definition)
 }
 

@@ -10,15 +10,12 @@ type Operation struct {
 	Doc string
 	// Options TODO
 	Options *Struct
-	// UtilStructs used to form more complex queries in Options struct
-	UtilStructs []*Struct
 }
 
-func NewOperation(opName string, doc string, optionsStruct *Struct, utilStructs ...*Struct) *Operation {
+func NewOperation(opName string, doc string, optionsStruct *Struct) *Operation {
 	return &Operation{
-		Name:        opName,
-		Doc:         doc,
-		Options:     optionsStruct,
-		UtilStructs: utilStructs,
+		Name:    opName,
+		Doc:     doc,
+		Options: optionsStruct,
 	}
 }

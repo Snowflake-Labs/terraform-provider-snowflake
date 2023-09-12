@@ -16,6 +16,8 @@ type Field struct {
 	Tags map[string][]string
 	// Required is used to mark fields which are essential (it's used e.g. for DTO builders generation)
 	Required bool
+	// Struct is a struct this field refers to
+	Struct *Struct
 }
 
 func NewField(name string, kind Kind, tags map[string][]string) *Field {
@@ -29,6 +31,14 @@ func NewField(name string, kind Kind, tags map[string][]string) *Field {
 func (f *Field) WithRequired(required bool) *Field {
 	f.Required = required
 	return f
+}
+
+func (f *Field) IntoField() *Field {
+	return f
+}
+
+func (f *Field) IntoStruct() *Struct {
+	return f.Struct
 }
 
 // ShouldBeInDto checks if field is not some static SQL field which should not be interacted with by SDK user
@@ -61,9 +71,31 @@ func queryTags(ddlTags []string, sqlTags []string) map[string][]string {
 	return tags
 }
 
-func StructField(s *Struct, ddlTags []string, sqlTags []string) *Field {
-	return nil
+func NewStructField(s *Struct, fieldName string, kind Kind, tags map[string][]string) *Field {
+	return &Field{
+		Name:   fieldName,
+		Kind:   kind,
+		Tags:   tags,
+		Struct: s,
+	}
 }
+
+// Path returns the way through the tree to the top, with dot separator (e.g. .SomeField.SomeChild)
+//func (f *Field) Path() string {
+//	return fmt.Sprintf("%s.%s", field.Parent.Path(), field.Name)
+//}
+
+//func (field *Field) HasAnyValidationInSubtree() bool {
+//	if len(field.Validations) > 0 {
+//		return true
+//	}
+//	for _, f := range field.Fields {
+//		if f.HasAnyValidationInSubtree() {
+//			return true
+//		}
+//	}
+//	return false
+//}
 
 // Static / SQL
 
@@ -94,7 +126,7 @@ func Describe() *Field {
 // Keyword / Value
 
 func OptionalSQL(sql string) *Field {
-	return NewField(sqlToFieldName(sql, true), KindOf("bool"), queryTags([]string{"keyword"}, []string{sql}))
+	return NewField(sqlToFieldName(sql, true), KindOf("*bool"), queryTags([]string{"keyword"}, []string{sql}))
 }
 
 func OrReplace() *Field {

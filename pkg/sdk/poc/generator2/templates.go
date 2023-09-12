@@ -10,8 +10,8 @@ var InterfaceTemplate, _ = template.New("interfaceTemplate").Parse(`
 import "context"
 
 type {{ .Name }} interface {
-	{{- range .Operations}}
-		{{ .Name }}(ctx context.Context, request *{{ .Options.Name }}) error
+	{{- range .Operations }}
+		{{ .Name }}(ctx context.Context, request *{{ .Options.DtoDecl }}) error
 	{{- end }}
 }
 `)
@@ -35,7 +35,7 @@ type {{ .Name }} struct {
 `)
 
 var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
-{{define "DTO_STRUCT"}}
+{{ define "DTO_STRUCT" }}
 type {{ .DtoDecl }} struct {
 	{{- range .Fields }}
 		{{- if .ShouldBeInDto }}
@@ -43,6 +43,12 @@ type {{ .DtoDecl }} struct {
 		{{- end }}
 	{{- end }}
 }
+
+{{- range .Fields }}
+	{{ if .IntoStruct }}
+	{{ template "DTO_STRUCT" .IntoStruct }}
+	{{ end }}
+{{- end }}
 {{ end }}
 
 //go:generate go run ../../dto-builder-generator/main.go
@@ -55,29 +61,34 @@ var (
 
 {{- range .Operations }}
 	{{ template "DTO_STRUCT" .Options }}
-	{{- range .UtilStructs }}
-	{{ template "DTO_STRUCT" .}}
-	{{- end }}
 {{- end }}
 `)
 
-var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
+var ImplementationTemplate, _ = template.New("implementationTemplate").Funcs(template.FuncMap{
+	"arr": arr,
+}).Parse(`
 {{ define "MAPPING" -}}
-	&{{ .Name }}{
-		{{- range .Fields }}
-			{{- if .ShouldBeInDto }}
-			{{ .Name }}: r.{{ .Name }},
-			{{- end }}
+	{{- $struct := index . 0 }}
+	{{- $path := index . 1 -}}
+
+	&{{ $struct.Name }}{
+		{{- range $struct.Fields }}
+		{{- if .ShouldBeInDto }}
+		{{ .Name }}: r.{{ .Name }},
+		{{- end }}
 		{{- end }}
 	}
-	{{ range .Fields }}
-		{{ if .ShouldBeInDto }}
-			if r.{{ .Name }} != nil {
-				 opts.{{ .Name }} = {{ template "MAPPING" . }}
-			}
-		{{ end }}
-	{{ end }}
-{{ end }}
+	{{- range $struct.Fields }}
+		{{- if .ShouldBeInDto }}
+			{{- if .IntoStruct }}
+			{{- $pathWithName := printf "%s%s" $path .Name }}
+	if r.{{ $pathWithName }} != nil {
+		opts.{{ $pathWithName }} = {{ template "MAPPING" (arr .IntoStruct (printf "%s." .Name)) }}
+	}
+			{{- end }}
+		{{- end }}
+	{{- end }}
+{{- end }}
 import "context"
 
 {{ $impl := .NameLowerCased }}
@@ -96,37 +107,37 @@ func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .Options.DtoD
 
 {{ range .Operations }}
 func (r *{{ .Options.DtoDecl }}) toOpts() *{{ .Options.Name }} {
-	opts := {{ template "MAPPING" .Options }}
+	opts := {{ template "MAPPING" (arr .Options "") }}
 	return opts
 }
 {{ end }}
 `)
 
 var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
-{{define "VALIDATION_TEST"}}
-	{{$field := .}}
-	{{- range .Validations}}
-	{{.TodoComment $field}}
-	{{- end}}
-{{end}}
+{{ define "VALIDATION_TEST" }}
+	{{ $field := . }}
+	{{- range .Validations }}
+	{{ .TodoComment $field }}
+	{{- end }}
+{{ end }}
 
-{{define "VALIDATIONS"}}
-	{{template "VALIDATION_TEST" .}}
-	{{- range .Fields}}
-		{{if .HasAnyValidationInSubtree}}
-			{{template "VALIDATIONS" .}}
-		{{end}}
-	{{- end}}
-{{end}}
+{{ define "VALIDATIONS" }}
+	{{ template "VALIDATION_TEST" . }}
+	{{- range .Fields }}
+		{{ if .HasAnyValidationInSubtree }}
+			{{ template "VALIDATIONS" . }}
+		{{ end }}
+	{{- end }}
+{{ end }}
 
 import "testing"
 
-{{- range .Operations}}
-func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
-	id := random{{.ObjectInterface.IdentifierKind}}(t)
+{{- range .Operations }}
+func Test{{ .ObjectInterface.Name }}_{{ .Name }}(t *testing.T) {
+	id := random{{ .ObjectInterface.IdentifierKind }}(t)
 
-	defaultOpts := func() *{{.OptsField.KindNoPtr}} {
-		return &{{.OptsField.KindNoPtr}}{
+	defaultOpts := func() *{{ .OptsField.KindNoPtr }} {
+		return &{{ .OptsField.KindNoPtr }}{
 			name: id,
 		}
 	}
@@ -134,51 +145,60 @@ func Test{{.ObjectInterface.Name}}_{{.Name}}(t *testing.T) {
 	_ = defaultOpts()
 
 	// TODO: fill me
-	{{template "VALIDATIONS" .OptsField}}
+	{{ template "VALIDATIONS" .OptsField }}
 }
-{{end}}
+{{ end }}
 `)
 
-var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
-{{define "VALIDATIONS"}}
-	{{$field := .}}
-	{{- range .Validations}}
-	if {{.Condition $field}} {
-		errs = append(errs, {{.Error}})
+var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Funcs(template.FuncMap{
+	"arr": arr,
+}).Parse(`
+{{ define "VALIDATIONS" }}
+	{{- $struct := index . 0 }}
+	{{- $path := index . 1 -}}
+
+	{{- range $struct.Validations }}
+	if {{ .Condition $struct }} {
+		errs = append(errs, {{ .Error }})
 	}
-	{{- end}}
-	{{- range .Fields}}
-		{{if .HasAnyValidationInSubtree}}
-			if valueSet(opts{{.Path}}) {
-				{{template "VALIDATIONS" .}}
-			}
-		{{end}}
-	{{- end}}
-{{end}}
+	{{ end -}}
+	{{- range $struct.Fields }}
+	{{- if .IntoStruct }}
+	{{- $pathWithName := printf "%s%s" $path .Name }}
+	if valueSet(opts.{{ $pathWithName }}) {
+		{{- template "VALIDATIONS" (arr .IntoStruct (printf "%s." .Name)) -}}
+	}
+	{{ end -}}
+	{{ end -}}
+{{ end }}
 
 import "errors"
 
 var (
-{{- range .Operations}}
-	_ validatable = new({{.OptsField.KindNoPtr}})
-{{- end}}
+{{- range .Operations }}
+	_ validatable = new({{ .Options.Name }})
+{{- end }}
 )
-{{range .Operations}}
-func (opts *{{.OptsField.KindNoPtr}}) validate() error {
+{{ range .Operations }}
+func (opts *{{ .Options.Name }}) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
-	{{template "VALIDATIONS" .OptsField}}
+	{{ template "VALIDATIONS" (arr .Options "") }}
 	return errors.Join(errs...)
 }
-{{end}}
+{{ end }}
 `)
 
 var IntegrationTestsTemplate, _ = template.New("integrationTestsTemplate").Parse(`
 import "testing"
 
-func TestInt_{{.Name}}(t *testing.T) {
+func TestInt_{{ .Name }}(t *testing.T) {
 	// TODO: fill me
 }
 `)
+
+func arr(args ...any) []any {
+	return args
+}
