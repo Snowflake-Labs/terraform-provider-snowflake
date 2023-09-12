@@ -163,6 +163,10 @@ func IfExists() *Field {
 	return OptionalSQL("IF EXISTS")
 }
 
+func Text(name string, tags *TagBuilder) *Field {
+	return NewField(name, "string", tags)
+}
+
 // Parameters
 
 type parameterOptions struct {

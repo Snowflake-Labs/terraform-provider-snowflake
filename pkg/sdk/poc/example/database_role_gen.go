@@ -13,7 +13,7 @@ type CreateDatabaseRoleOptions struct {
 	OrReplace    *bool                    `ddl:"keyword" sql:"OR REPLACE"`
 	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
 	IfNotExists  *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name         DatabaseObjectIdentifier `ddl:"identifier"`
+	name         DatabaseObjectIdentifier `ddl:"identifier" sql:""`
 	Comment      *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -22,14 +22,14 @@ type AlterDatabaseRoleOptions struct {
 	alter        bool                     `ddl:"static" sql:"ALTER"`
 	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
 	IfExists     *bool                    `ddl:"keyword" sql:"IF EXISTS"`
-	name         DatabaseObjectIdentifier `ddl:"identifier"`
+	name         DatabaseObjectIdentifier `ddl:"identifier" sql:""`
 	Rename       *DatabaseRoleRename      `ddl:"list,no_parentheses" sql:"RENAME TO"`
 	Set          *DatabaseRoleSet         `ddl:"list,no_parentheses" sql:"SET"`
 	Unset        *DatabaseRoleUnset       `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type DatabaseRoleRename struct {
-	Name DatabaseObjectIdentifier `ddl:"identifier"`
+	Name DatabaseObjectIdentifier `ddl:"identifier" sql:""`
 }
 
 type DatabaseRoleSet struct {
@@ -38,9 +38,9 @@ type DatabaseRoleSet struct {
 }
 
 type NestedThirdLevel struct {
-	Field DatabaseObjectIdentifier `ddl:"identifier"`
+	Field DatabaseObjectIdentifier `ddl:"identifier" sql:""`
 }
 
 type DatabaseRoleUnset struct {
-	Comment *bool `ddl:"keyword" sql:"COMMENT"`
+	Comment string `ddl:"" sql:"COMMENT"`
 }

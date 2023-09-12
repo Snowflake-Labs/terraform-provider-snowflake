@@ -69,18 +69,18 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
 	&{{ .KindNoPtr }}{
 		{{- range .Fields }}
 			{{- if .ShouldBeInDto }}
-			{{ if .IsStruct }}{{ else }}{{ .Name }}: r{{ .Path }},{{ end }}
-			{{- end }}
+			{{ if .IsStruct }}{{ else }}{{ .Name }}: r{{ .Path }},{{ end -}}
+			{{- end -}}
 		{{- end }}
 	}
-	{{ range .Fields }}
-		{{ if .ShouldBeInDto }}
-			{{ if .IsStruct }}
+	{{- range .Fields }}
+		{{- if .ShouldBeInDto }}
+			{{- if .IsStruct }}
 				if r{{ .Path }} != nil {
-					opts{{ .Path }} = {{ template "MAPPING" . }}
+					opts{{ .Path }} = {{ template "MAPPING" . -}}
 				}
-			{{ end }}
-		{{ end }}
+			{{- end -}}
+		{{ end -}}
 	{{ end }}
 {{ end }}
 import "context"
@@ -108,19 +108,21 @@ func (r *{{ .OptsField.DtoDecl }}) toOpts() *{{ .OptsField.KindNoPtr }} {
 
 var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 {{ define "VALIDATION_TEST" }}
-	{{ $field := . }}
+	{{- $field := . }}
 	{{- range .Validations }}
-	{{ .TodoComment $field }}
-	{{- end }}
+	t.Run("{{ .TodoComment $field }}", func(t *testing.T) {
+		// TODO fill me
+	})
+	{{ end -}}
 {{ end }}
 
 {{ define "VALIDATIONS" }}
-	{{ template "VALIDATION_TEST" . }}
+	{{- template "VALIDATION_TEST" . }}
 	{{- range .Fields }}
-		{{ if .HasAnyValidationInSubtree }}
+		{{- if .HasAnyValidationInSubtree }}
 			{{ template "VALIDATIONS" . }}
-		{{ end }}
-	{{- end }}
+		{{ end -}}
+	{{ end -}}
 {{ end }}
 
 import "testing"
@@ -134,10 +136,10 @@ func Test{{ .ObjectInterface.Name }}_{{ .Name }}(t *testing.T) {
 			name: id,
 		}
 	}
+
 	// TODO: remove me
 	_ = defaultOpts()
 
-	// TODO: fill me
 	{{ template "VALIDATIONS" .OptsField }}
 }
 {{ end }}
@@ -145,19 +147,19 @@ func Test{{ .ObjectInterface.Name }}_{{ .Name }}(t *testing.T) {
 
 var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 {{ define "VALIDATIONS" }}
-	{{ $field := . }}
+	{{- $field := . -}}
 	{{- range .Validations }}
 	if {{ .Condition $field }} {
 		errs = append(errs, {{ .Error $field }})
 	}
-	{{- end }}
+	{{- end -}}
 	{{- range .Fields }}
-		{{ if .HasAnyValidationInSubtree }}
+		{{- if .HasAnyValidationInSubtree }}
 			if valueSet(opts{{ .Path }}) {
-				{{ template "VALIDATIONS" . }}
+				{{- template "VALIDATIONS" . }}
 			}
-		{{ end }}
-	{{- end }}
+		{{- end -}}
+	{{- end -}}
 {{ end }}
 
 import "errors"
@@ -173,7 +175,7 @@ func (opts *{{ .OptsField.KindNoPtr }}) validate() error {
 		return errors.Join(errNilOptions)
 	}
 	var errs []error
-	{{ template "VALIDATIONS" .OptsField }}
+	{{- template "VALIDATIONS" .OptsField }}
 	return errors.Join(errs...)
 }
 {{ end }}

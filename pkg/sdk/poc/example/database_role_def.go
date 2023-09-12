@@ -52,7 +52,7 @@ var DatabaseRole = g.NewInterface(
 						),
 					g.NewField("Unset", "*DatabaseRoleUnset", g.Tags().List().NoParentheses().SQL("UNSET")).
 						WithFields(
-							g.OptionalSQL("COMMENT").WithRequired(true),
+							g.Text("Comment", g.Tags().SQL("COMMENT")).WithRequired(true),
 						).
 						WithValidations(
 							g.NewValidation(g.AtLeastOneValueSet, "Comment"),
