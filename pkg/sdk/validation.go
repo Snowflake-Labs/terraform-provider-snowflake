@@ -1,4 +1,4 @@
-package snowflake
+package sdk
 
 import "fmt"
 
@@ -61,7 +61,7 @@ const (
 	DateFormatAny   DateFormat = "DateFormatAny"
 )
 
-func getValidDateFormats(f DateFormat, includeAuto bool) []string {
+func GetValidDateFormats(f DateFormat, includeAuto bool) []string {
 	ISODateFormats := []string{
 		"YYYY-MM-DD",
 	}

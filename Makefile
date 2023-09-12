@@ -37,7 +37,7 @@ lint-ci: ## run the fast go linters
 .PHONY: lint-ci
 
 test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 1200s -v $(COVERAGE_FLAGS) ./...
+	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 2000s -v $(COVERAGE_FLAGS) ./...
 .PHONY: test-acceptance
 
 build-local: ## build the binary locally

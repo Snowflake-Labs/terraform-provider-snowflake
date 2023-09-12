@@ -20,12 +20,14 @@ type validatable interface {
 
 type Client struct{}
 
-type ObjectIdentifier interface{}
-type AccountObjectIdentifier struct{}
-type DatabaseObjectIdentifier struct{}
-type ExternalObjectIdentifier struct{}
-type SchemaObjectIdentifier struct{}
-type TableColumnIdentifier struct{}
+type (
+	ObjectIdentifier         interface{}
+	AccountObjectIdentifier  struct{}
+	DatabaseObjectIdentifier struct{}
+	ExternalObjectIdentifier struct{}
+	SchemaObjectIdentifier   struct{}
+	TableColumnIdentifier    struct{}
+)
 
 func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	_ = t

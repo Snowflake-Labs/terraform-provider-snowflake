@@ -39,7 +39,6 @@ func (r *AlterDatabaseRoleRequest) toOpts() *AlterDatabaseRoleOptions {
 		opts.Rename = &DatabaseRoleRename{
 			Name: r.Rename.Name,
 		}
-
 	}
 
 	if r.Set != nil {
@@ -51,7 +50,6 @@ func (r *AlterDatabaseRoleRequest) toOpts() *AlterDatabaseRoleOptions {
 			opts.Set.NestedThirdLevel = &NestedThirdLevel{
 				Field: r.Set.NestedThirdLevel.Field,
 			}
-
 		}
 
 	}
@@ -60,7 +58,6 @@ func (r *AlterDatabaseRoleRequest) toOpts() *AlterDatabaseRoleOptions {
 		opts.Unset = &DatabaseRoleUnset{
 			Comment: r.Unset.Comment,
 		}
-
 	}
 
 	return opts

@@ -70,10 +70,10 @@ func (field *Field) HasAnyValidationInSubtree() bool {
 
 // TagsPrintable defines how tags are printed in options structs, it ensures the same order of tags for every field
 func (field *Field) TagsPrintable() string {
-	var tagNames = []string{"ddl", "sql"}
+	tagNames := []string{"ddl", "sql"}
 	var tagParts []string
 	for _, tagName := range tagNames {
-		var v, ok = field.Tags[tagName]
+		v, ok := field.Tags[tagName]
 		if ok {
 			tagParts = append(tagParts, fmt.Sprintf(`%s:"%s"`, tagName, strings.Join(v, ",")))
 		}
@@ -158,7 +158,7 @@ type Validation struct {
 }
 
 func (v *Validation) paramsQuoted() []string {
-	var params = make([]string, len(v.FieldNames))
+	params := make([]string, len(v.FieldNames))
 	for i, s := range v.FieldNames {
 		params[i] = wrapWith(s, `"`)
 	}
@@ -166,7 +166,7 @@ func (v *Validation) paramsQuoted() []string {
 }
 
 func (v *Validation) fieldsWithPath(field *Field) []string {
-	var params = make([]string, len(v.FieldNames))
+	params := make([]string, len(v.FieldNames))
 	for i, s := range v.FieldNames {
 		params[i] = fmt.Sprintf("opts%s.%s", field.Path(), s)
 	}
