@@ -21,12 +21,13 @@ func NewStruct(name string) *Struct {
 	}
 }
 
-func (s *Struct) WithFields(into ...Into) *Struct {
-	fields := make([]*Field, len(into))
-	for i, f := range into {
-		fields[i] = f.IntoField()
-	}
-	s.Fields = append(s.Fields, fields...)
+func (s *Struct) WithFields(fields ...*Field) *Struct {
+	//fields := make([]*Field, len(into))
+	//for i, f := range into {
+	//	fields[i] = f.IntoField()
+	//}
+	//s.Fields = append(s.Fields, fields...)
+	s.Fields = fields
 	return s
 }
 

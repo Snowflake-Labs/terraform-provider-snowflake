@@ -33,14 +33,6 @@ func (f *Field) WithRequired(required bool) *Field {
 	return f
 }
 
-func (f *Field) IntoField() *Field {
-	return f
-}
-
-func (f *Field) IntoStruct() *Struct {
-	return f.Struct
-}
-
 // ShouldBeInDto checks if field is not some static SQL field which should not be interacted with by SDK user
 // TODO: this is a very naive implementation, consider fixing it with DSL builder connection
 func (f *Field) ShouldBeInDto() bool {

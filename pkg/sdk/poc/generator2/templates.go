@@ -45,8 +45,8 @@ type {{ .DtoDecl }} struct {
 }
 
 {{- range .Fields }}
-	{{ if .IntoStruct }}
-	{{ template "DTO_STRUCT" .IntoStruct }}
+	{{ if .Struct }}
+	{{ template "DTO_STRUCT" .Struct }}
 	{{ end }}
 {{- end }}
 {{ end }}
@@ -80,10 +80,10 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").Funcs(tem
 	}
 	{{- range $struct.Fields }}
 		{{- if .ShouldBeInDto }}
-			{{- if .IntoStruct }}
+			{{- if .Struct }}
 			{{- $pathWithName := printf "%s%s" $path .Name }}
 	if r.{{ $pathWithName }} != nil {
-		opts.{{ $pathWithName }} = {{ template "MAPPING" (arr .IntoStruct (printf "%s." .Name)) }}
+		opts.{{ $pathWithName }} = {{ template "MAPPING" (arr .Struct (printf "%s." .Name)) }}
 	}
 			{{- end }}
 		{{- end }}
@@ -163,10 +163,10 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Funcs(t
 	}
 	{{ end -}}
 	{{- range $struct.Fields }}
-	{{- if .IntoStruct }}
+	{{- if .Struct }}
 	{{- $pathWithName := printf "%s%s" $path .Name }}
 	if valueSet(opts.{{ $pathWithName }}) {
-		{{- template "VALIDATIONS" (arr .IntoStruct (printf "%s." .Name)) -}}
+		{{- template "VALIDATIONS" (arr .Struct (printf "%s." .Name)) -}}
 	}
 	{{ end -}}
 	{{ end -}}

@@ -19,9 +19,8 @@ func generateOptionsStruct(writer io.Writer, operation *Operation) {
 	printTo(writer, OptionsTemplate, operation)
 
 	for _, f := range operation.Options.Fields {
-		s := f.IntoStruct()
-		if s != nil {
-			printTo(writer, StructTemplate, s)
+		if f.Struct != nil {
+			printTo(writer, StructTemplate, f.Struct)
 		}
 	}
 }

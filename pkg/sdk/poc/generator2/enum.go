@@ -24,7 +24,3 @@ func (e *Enum[T]) WithValue(variableName string, value T) *Enum[T] {
 	})
 	return e
 }
-
-func (e *Enum[T]) WithValue(variableName string, value T) *Enum[T] {
-
-}
