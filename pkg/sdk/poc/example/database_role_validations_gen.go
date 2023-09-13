@@ -48,11 +48,6 @@ func (opts *AlterDatabaseRoleOptions) validate() error {
 		if ok := anyValueSet(opts.Unset.Comment); !ok {
 			errs = append(errs, errAtLeastOneOf("Comment"))
 		}
-		if valueSet(opts.Unset.NestedThirdLevel) {
-			if ok := anyValueSet(opts.Unset.NestedThirdLevel.Field); !ok {
-				errs = append(errs, errAtLeastOneOf("Field"))
-			}
-		}
 	}
 	return errors.Join(errs...)
 }

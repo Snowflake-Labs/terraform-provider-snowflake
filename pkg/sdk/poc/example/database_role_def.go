@@ -27,7 +27,6 @@ var (
 	dbRoleUnset = g.QueryStruct("DatabaseRoleUnset").
 		// Fields
 		Text("Comment", g.KeywordOptions().SQL("COMMENT")). // TODO Required
-		QueryStructField(nestedThirdLevel, "NestedThirdLevel", g.KindOfPointer(nestedThirdLevel.Name), g.ListOptions().NoParens().SQL("NESTED")).
 		// Validations
 		WithValidation(g.AtLeastOneValueSet, "Comment")
 )

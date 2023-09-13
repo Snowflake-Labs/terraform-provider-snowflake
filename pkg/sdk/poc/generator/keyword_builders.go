@@ -18,6 +18,6 @@ func (f *Field) IfExists() *Field {
 }
 
 func (f *Field) Text(name string, transformer *KeywordTransformer) *Field {
-	f.Fields = append(f.Fields, NewField(name, "name", Tags().Keyword(), transformer))
+	f.Fields = append(f.Fields, NewField(name, "string", Tags().Keyword(), transformer))
 	return f
 }

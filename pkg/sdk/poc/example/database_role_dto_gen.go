@@ -36,10 +36,5 @@ type NestedThirdLevelRequest struct {
 }
 
 type DatabaseRoleUnsetRequest struct {
-	Comment          name
-	NestedThirdLevel *NestedThirdLevelRequest
-}
-
-type NestedThirdLevelRequest struct {
-	Field DatabaseObjectIdentifier
+	Comment string
 }

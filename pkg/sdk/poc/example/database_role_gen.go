@@ -38,10 +38,5 @@ type NestedThirdLevel struct {
 }
 
 type DatabaseRoleUnset struct {
-	Comment          name              `ddl:"keyword" sql:"COMMENT"`
-	NestedThirdLevel *NestedThirdLevel `ddl:"list,no_parentheses" sql:"NESTED"`
-}
-
-type NestedThirdLevel struct {
-	Field DatabaseObjectIdentifier `ddl:"identifier"`
+	Comment string `ddl:"keyword" sql:"COMMENT"`
 }

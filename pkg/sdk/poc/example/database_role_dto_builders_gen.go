@@ -93,21 +93,7 @@ func NewDatabaseRoleUnsetRequest() *DatabaseRoleUnsetRequest {
 	return &DatabaseRoleUnsetRequest{}
 }
 
-func (s *DatabaseRoleUnsetRequest) WithComment(Comment name) *DatabaseRoleUnsetRequest {
+func (s *DatabaseRoleUnsetRequest) WithComment(Comment string) *DatabaseRoleUnsetRequest {
 	s.Comment = Comment
-	return s
-}
-
-func (s *DatabaseRoleUnsetRequest) WithNestedThirdLevel(NestedThirdLevel *NestedThirdLevelRequest) *DatabaseRoleUnsetRequest {
-	s.NestedThirdLevel = NestedThirdLevel
-	return s
-}
-
-func NewNestedThirdLevelRequest() *NestedThirdLevelRequest {
-	return &NestedThirdLevelRequest{}
-}
-
-func (s *NestedThirdLevelRequest) WithField(Field DatabaseObjectIdentifier) *NestedThirdLevelRequest {
-	s.Field = Field
 	return s
 }
