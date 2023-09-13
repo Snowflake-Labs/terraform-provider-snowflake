@@ -51,7 +51,7 @@ var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
 	{{- end }}
 {{ end }}
 
-//go:generate go run ../../dto-builder-generator/main.go
+//go:generate go run ./dto-builder-generator/main.go
 
 var (
 	{{- range .Operations }}
@@ -92,10 +92,22 @@ type {{ $impl }} struct {
 	client *Client
 }
 {{ range .Operations }}
-	func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error {
-		opts := request.toOpts()
-		return validateAndExec(v.client, ctx, opts)
-	}
+	{{ if eq .Name "Show" }}
+		func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) (any, error) {
+			opts := request.toOpts()
+			dbRows, err := validateAndQuery[any](v.client, ctx, opts)
+			if err != nil {
+				return nil, err
+			}
+			resultList := convertRows[any, any](dbRows)
+			return resultList, nil
+		}
+	{{ else }}
+		func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error {
+			opts := request.toOpts()
+			return validateAndExec(v.client, ctx, opts)
+		}
+	{{ end }}
 {{ end }}
 
 {{ range .Operations }}

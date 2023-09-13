@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
@@ -28,14 +29,21 @@ func wrapWith(s string, with string) string {
 	return fmt.Sprintf("%s%s%s", with, s, with)
 }
 
+var (
+	// Split by empty space or underscore
+	splitSQLPattern   = regexp.MustCompile("\\s+|_")
+	englishLowerCaser = cases.Lower(language.English)
+	englishTitleCaser = cases.Title(language.English)
+)
+
 func sqlToFieldName(sql string, shouldExport bool) string {
-	sqlWords := strings.Split(sql, " ")
+	sqlWords := splitSQLPattern.Split(sql, -1)
 	for i, s := range sqlWords {
 		if !shouldExport && i == 0 {
-			sqlWords[i] = cases.Lower(language.English).String(s)
+			sqlWords[i] = englishLowerCaser.String(s)
 			continue
 		}
-		sqlWords[i] = cases.Title(language.English).String(s)
+		sqlWords[i] = englishTitleCaser.String(s)
 	}
 	return strings.Join(sqlWords, "")
 }
@@ -69,12 +77,14 @@ func KindOfSlice(kind string) string {
 }
 
 type TagBuilder struct {
+	db  []string
 	ddl []string
 	sql []string
 }
 
 func Tags() *TagBuilder {
 	return &TagBuilder{
+		db:  make([]string, 0),
 		ddl: make([]string, 0),
 		sql: make([]string, 0),
 	}
@@ -110,6 +120,11 @@ func (v *TagBuilder) NoParentheses() *TagBuilder {
 	return v
 }
 
+func (v *TagBuilder) DB(db ...string) *TagBuilder {
+	v.db = append(v.db, db...)
+	return v
+}
+
 func (v *TagBuilder) DDL(ddl ...string) *TagBuilder {
 	v.ddl = append(v.ddl, ddl...)
 	return v
@@ -122,6 +137,9 @@ func (v *TagBuilder) SQL(sql ...string) *TagBuilder {
 
 func (v *TagBuilder) Build() map[string][]string {
 	res := make(map[string][]string)
+	if len(v.db) > 0 {
+		res["db"] = v.db
+	}
 	if len(v.ddl) > 0 {
 		res["ddl"] = v.ddl
 	}

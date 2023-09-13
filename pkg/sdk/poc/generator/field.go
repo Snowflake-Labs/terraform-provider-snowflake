@@ -43,7 +43,7 @@ func NewField(name string, kind string, tagBuilder *TagBuilder, transformer Fiel
 	return f
 }
 
-// TODO
+// TODO can be of type querystruct and be converted into field under the hood
 func QueryStruct(name string) *Field {
 	return NewField(name, name, nil, nil)
 }
@@ -56,8 +56,13 @@ func (f *Field) QueryStructField(queryStruct *Field, name string, kind string, t
 	return f
 }
 
+func (f *Field) WithField(fields *Field) *Field {
+	f.Fields = append(f.Fields, fields)
+	return f
+}
+
 func (f *Field) WithFields(fields ...*Field) *Field {
-	f.Fields = fields
+	f.Fields = append(f.Fields, fields...)
 	return f
 }
 
@@ -87,7 +92,7 @@ func (f *Field) HasAnyValidationInSubtree() bool {
 
 // TagsPrintable defines how tags are printed in options structs, it ensures the same order of tags for every field
 func (f *Field) TagsPrintable() string {
-	var tagNames = []string{"ddl", "sql"}
+	var tagNames = []string{"ddl", "sql", "db"}
 	var tagParts []string
 	for _, tagName := range tagNames {
 		var v, ok = f.Tags[tagName]
@@ -95,7 +100,10 @@ func (f *Field) TagsPrintable() string {
 			tagParts = append(tagParts, fmt.Sprintf(`%s:"%s"`, tagName, strings.Join(v, ",")))
 		}
 	}
-	return fmt.Sprintf("`%s`", strings.Join(tagParts, " "))
+	if len(tagParts) > 0 {
+		return fmt.Sprintf("`%s`", strings.Join(tagParts, " "))
+	}
+	return ""
 }
 
 // KindNoPtr return field's Kind but without pointer

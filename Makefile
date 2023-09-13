@@ -101,3 +101,13 @@ clean-generator-poc:
 	rm -f ./pkg/sdk/poc/example/*_gen.go
 	rm -f ./pkg/sdk/poc/example/*_gen_test.go
 .PHONY: run-generator-poc
+
+clean-generator: ## TODO
+	rm -f ./pkg/sdk/${file}*_gen.go
+	rm -f ./pkg/sdk/${file}*_gen_test.go
+.PHONY: clean-generator
+
+run-generator: ## TODO
+	go generate ./pkg/sdk/${file}_def.go
+	go generate ./pkg/sdk/${file}_dto_gen.go
+.PHONY: run-generator

@@ -1,7 +1,7 @@
 package generator
 
 func (f *Field) SQL(sql string) *Field {
-	//f.Fields = append(f.Fields, NewField(sqlToFieldName(sql, false), "bool", Tags().Static().SQL(sql)))
+	f.Fields = append(f.Fields, NewField(sqlToFieldName(sql, false), "bool", Tags().Static().SQL(sql), nil))
 	return f
 }
 

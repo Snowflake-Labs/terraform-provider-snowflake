@@ -29,12 +29,6 @@ func (v *KeywordTransformer) DoubleQuotes() *KeywordTransformer {
 	return v
 }
 
-// TODO
-//func (v *KeywordTransformer) NoQuotes() *KeywordTransformer {
-//	v.quotes = "no_quotes"
-//	return v
-//}
-
 func (v *KeywordTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "keyword")
 	if len(v.sqlPrefix) != 0 {
@@ -47,12 +41,18 @@ func (v *KeywordTransformer) Transform(f *Field) *Field {
 }
 
 type ParameterTransformer struct {
-	sqlPrefix string
-	quotes    string
+	sqlPrefix   string
+	quotes      string
+	parentheses string
 }
 
 func ParameterOptions() *ParameterTransformer {
 	return new(ParameterTransformer)
+}
+
+func (v *ParameterTransformer) SQL(sqlPrefix string) *ParameterTransformer {
+	v.sqlPrefix = sqlPrefix
+	return v
 }
 
 func (v *ParameterTransformer) SingleQuotes() *ParameterTransformer {
@@ -65,6 +65,11 @@ func (v *ParameterTransformer) DoubleQuotes() *ParameterTransformer {
 	return v
 }
 
+func (v *ParameterTransformer) Parentheses() *ParameterTransformer {
+	v.quotes = "parentheses"
+	return v
+}
+
 func (v *ParameterTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "parameter")
 	if len(v.sqlPrefix) != 0 {
@@ -72,6 +77,9 @@ func (v *ParameterTransformer) Transform(f *Field) *Field {
 	}
 	if len(v.quotes) != 0 {
 		addTagIfMissing(f.Tags, "ddl", v.quotes)
+	}
+	if len(v.parentheses) != 0 {
+		addTagIfMissing(f.Tags, "ddl", v.parentheses)
 	}
 	return f
 }
