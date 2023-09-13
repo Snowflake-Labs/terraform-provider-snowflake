@@ -10,31 +10,36 @@ var (
 type CreateDatabaseRoleRequest struct {
 	OrReplace   *bool
 	IfNotExists *bool
-	name        DatabaseObjectIdentifier // required
+	name        DatabaseObjectIdentifier
 	Comment     *string
 }
 
 type AlterDatabaseRoleRequest struct {
 	IfExists *bool
-	name     DatabaseObjectIdentifier // required
+	name     DatabaseObjectIdentifier
 	Rename   *DatabaseRoleRenameRequest
 	Set      *DatabaseRoleSetRequest
 	Unset    *DatabaseRoleUnsetRequest
 }
 
 type DatabaseRoleRenameRequest struct {
-	Name DatabaseObjectIdentifier // required
+	Name DatabaseObjectIdentifier
 }
 
 type DatabaseRoleSetRequest struct {
-	Comment          string // required
+	Comment          *string
 	NestedThirdLevel *NestedThirdLevelRequest
 }
 
 type NestedThirdLevelRequest struct {
-	Field DatabaseObjectIdentifier // required
+	Field DatabaseObjectIdentifier
 }
 
 type DatabaseRoleUnsetRequest struct {
-	Comment string // required
+	Comment          name
+	NestedThirdLevel *NestedThirdLevelRequest
+}
+
+type NestedThirdLevelRequest struct {
+	Field DatabaseObjectIdentifier
 }

@@ -45,13 +45,18 @@ func (r *AlterDatabaseRoleRequest) toOpts() *AlterDatabaseRoleOptions {
 		}
 		if r.Set.NestedThirdLevel != nil {
 			opts.Set.NestedThirdLevel = &NestedThirdLevel{
-				Field: r.Set.NestedThirdLevel.Field,
+				Field: r.Unset.NestedThirdLevel.Field,
 			}
 		}
 	}
 	if r.Unset != nil {
 		opts.Unset = &DatabaseRoleUnset{
 			Comment: r.Unset.Comment,
+		}
+		if r.Unset.NestedThirdLevel != nil {
+			opts.Unset.NestedThirdLevel = &NestedThirdLevel{
+				Field: r.Unset.NestedThirdLevel.Field,
+			}
 		}
 	}
 
