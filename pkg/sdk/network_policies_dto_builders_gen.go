@@ -28,6 +28,29 @@ func (s *CreateNetworkPolicyRequest) WithComment(Comment *string) *CreateNetwork
 	return s
 }
 
+func NewDropNetworkPolicyRequest() *DropNetworkPolicyRequest {
+	return &DropNetworkPolicyRequest{}
+}
+
+func (s *DropNetworkPolicyRequest) WithIfExists(IfExists *bool) *DropNetworkPolicyRequest {
+	s.IfExists = IfExists
+	return s
+}
+
+func (s *DropNetworkPolicyRequest) WithName(name AccountObjectIdentifier) *DropNetworkPolicyRequest {
+	s.name = name
+	return s
+}
+
 func NewShowNetworkPolicyRequest() *ShowNetworkPolicyRequest {
 	return &ShowNetworkPolicyRequest{}
+}
+
+func NewDescribeNetworkPolicyRequest() *DescribeNetworkPolicyRequest {
+	return &DescribeNetworkPolicyRequest{}
+}
+
+func (s *DescribeNetworkPolicyRequest) WithName(name AccountObjectIdentifier) *DescribeNetworkPolicyRequest {
+	s.name = name
+	return s
 }

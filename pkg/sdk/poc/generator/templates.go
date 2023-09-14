@@ -97,7 +97,7 @@ type {{ $impl }} struct {
 }
 {{ range .Operations }}
 	{{ if and (eq .Name "Show") .ShowMapping }}
-		func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) (any, error) {
+		func (v *{{ $impl }}) Show(ctx context.Context, request *{{ .OptsField.DtoDecl }}) (*{{ .ShowMapping.To.Name }}, error) {
 			opts := request.toOpts()
 			dbRows, err := validateAndQuery[{{ .ShowMapping.From.Name }}](v.client, ctx, opts)
 			if err != nil {
@@ -105,6 +105,19 @@ type {{ $impl }} struct {
 			}
 			resultList := convertRows[{{ .ShowMapping.From.Name }}, {{ .ShowMapping.To.Name }}](dbRows)
 			return resultList, nil
+		}
+	{{ else if and (eq .Name "Describe") .DescribeMapping }}
+		// TODO Task interface identifier kind
+		func (v *{{ $impl }}) Describe(ctx context.Context, id SchemaObjectIdentifier) (*{{ .DescribeMapping.To.Name }}, error) {
+			opts := &{{ .OptsField.Name }}{
+				// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
+				name: id,
+			}
+			result, err := validateAndQueryOne[{{ .DescribeMapping.From.Name }}](v.client, ctx, opts)
+			if err != nil {
+				return nil, err
+			}
+			return result.convert(), nil
 		}
 	{{ else }}
 		func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error {

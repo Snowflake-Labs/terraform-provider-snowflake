@@ -22,8 +22,9 @@ type Operation struct {
 	// OptsField defines opts used to create SQL for given operation
 	OptsField *Field
 	// HelperStructs are struct definitions that are not tied to OptsField, but tied to the Operation itself, e.g. Show() return type
-	HelperStructs []*Field
-	ShowMapping   *Mapping
+	HelperStructs   []*Field
+	ShowMapping     *Mapping
+	DescribeMapping *Mapping
 	//CustomMappings []*Mapping
 }
 
@@ -33,7 +34,7 @@ type Mapping struct {
 	To              *Field
 }
 
-func NewOperation(kind OperationKind, doc string) *Operation {
+func newOperation(kind OperationKind, doc string) *Operation {
 	return &Operation{
 		Name:          kind,
 		Doc:           doc,
@@ -41,7 +42,7 @@ func NewOperation(kind OperationKind, doc string) *Operation {
 	}
 }
 
-func NewMapping(mappingFuncName string, from, to *Field) *Mapping {
+func newMapping(mappingFuncName string, from, to *Field) *Mapping {
 	return &Mapping{
 		MappingFuncName: mappingFuncName,
 		From:            from,
@@ -60,7 +61,12 @@ func (s *Operation) withHelperStruct(helperStruct *Field) *Operation {
 }
 
 func (s *Operation) withShowMapping(from, to *Field) *Operation {
-	s.ShowMapping = NewMapping("convert", from, to)
+	s.ShowMapping = newMapping("convert", from, to)
+	return s
+}
+
+func (s *Operation) withDescriptionMapping(from, to *Field) *Operation {
+	s.DescribeMapping = newMapping("convert", from, to)
 	return s
 }
 
@@ -69,16 +75,36 @@ func (s *Operation) withShowMapping(from, to *Field) *Operation {
 //	return s
 //}
 
-func CreateOperation(doc string, queryStruct *Field) *Operation {
-	return NewOperation(OperationKindCreate, doc).withOptionsStruct(queryStruct)
+// TODO Query struct should be it's own struct type
+
+func (i *Interface) CreateOperation(doc string, queryStruct *Field) *Interface {
+	i.Operations = append(i.Operations, newOperation(OperationKindCreate, doc).withOptionsStruct(queryStruct))
+	return i
 }
 
-func ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *Field) *Operation {
+func (i *Interface) DropOperation(doc string, queryStruct *Field) *Interface {
+	i.Operations = append(i.Operations, newOperation(OperationKindDrop, doc).withOptionsStruct(queryStruct))
+	return i
+}
+
+func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *Field) *Interface {
 	db := dbRepresentation.IntoField()
 	res := resourceRepresentation.IntoField()
-	return NewOperation(OperationKindShow, doc).
+	i.Operations = append(i.Operations, newOperation(OperationKindShow, doc).
 		withHelperStruct(db).
 		withHelperStruct(res).
 		withShowMapping(db, res).
-		withOptionsStruct(queryStruct)
+		withOptionsStruct(queryStruct))
+	return i
+}
+
+func (i *Interface) DescribeOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *Field) *Interface {
+	db := dbRepresentation.IntoField()
+	res := resourceRepresentation.IntoField()
+	i.Operations = append(i.Operations, newOperation(OperationKindDescribe, doc).
+		withHelperStruct(db).
+		withHelperStruct(res).
+		withDescriptionMapping(db, res).
+		withOptionsStruct(queryStruct))
+	return i
 }
