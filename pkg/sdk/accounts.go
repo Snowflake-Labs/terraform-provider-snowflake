@@ -345,7 +345,7 @@ type accountDBRow struct {
 	IsOrgAdmin                           bool           `db:"is_org_admin"`
 }
 
-func (row accountDBRow) toAccount() Account {
+func (row accountDBRow) convert() Account {
 	acc := Account{
 		OrganizationName:                     row.OrganizationName,
 		AccountName:                          row.AccountName,
@@ -394,7 +394,7 @@ func (c *accounts) Show(ctx context.Context, opts *ShowAccountOptions) ([]Accoun
 	}
 	resultList := make([]Account, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toAccount()
+		resultList[i] = row.convert()
 	}
 
 	return resultList, nil

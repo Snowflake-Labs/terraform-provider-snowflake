@@ -393,7 +393,7 @@ type failoverGroupDBRow struct {
 	Owner                   sql.NullString `db:"owner"`
 }
 
-func (row failoverGroupDBRow) toFailoverGroup() FailoverGroup {
+func (row failoverGroupDBRow) convert() FailoverGroup {
 	ots := strings.Split(row.ObjectTypes, ",")
 	pluralObjectTypes := make([]PluralObjectType, 0, len(ots))
 	for _, ot := range ots {
@@ -478,7 +478,7 @@ func (v *failoverGroups) Show(ctx context.Context, opts *ShowFailoverGroupOption
 	}
 	resultList := make([]FailoverGroup, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toFailoverGroup()
+		resultList[i] = row.convert()
 	}
 
 	return resultList, nil

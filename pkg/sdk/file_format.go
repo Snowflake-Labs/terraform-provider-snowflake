@@ -114,7 +114,7 @@ type showFileFormatsOptionsResult struct {
 	DisableAutoConvert   bool `json:"DISABLE_AUTO_CONVERT"`
 }
 
-func (row *FileFormatRow) toFileFormat() FileFormat {
+func (row *FileFormatRow) convert() FileFormat {
 	inputOptions := showFileFormatsOptionsResult{}
 	err := json.Unmarshal([]byte(row.FormatOptions), &inputOptions)
 	if err != nil {
@@ -653,7 +653,7 @@ func (v *fileFormats) Show(ctx context.Context, opts *ShowFileFormatsOptions) ([
 	err = v.client.query(ctx, &rows, sql)
 	fileFormats := make([]FileFormat, len(rows))
 	for i, row := range rows {
-		fileFormats[i] = row.toFileFormat()
+		fileFormats[i] = row.convert()
 	}
 	return fileFormats, err
 }

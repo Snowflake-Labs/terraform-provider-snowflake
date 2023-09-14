@@ -78,7 +78,7 @@ type shareRow struct {
 	Comment      string    `db:"comment"`
 }
 
-func (r *shareRow) toShare() Share {
+func (r *shareRow) convert() Share {
 	toAccounts := strings.Split(r.To, ",")
 	var to []AccountIdentifier
 	if len(toAccounts) != 0 {
@@ -299,7 +299,7 @@ func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]Share, err
 	}
 	shares := make([]Share, 0, len(rows))
 	for _, row := range rows {
-		shares = append(shares, row.toShare())
+		shares = append(shares, row.convert())
 	}
 	return shares, nil
 }

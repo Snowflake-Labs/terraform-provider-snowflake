@@ -287,7 +287,7 @@ type passwordPolicyDBRow struct {
 	Options       string    `db:"options"`
 }
 
-func (row passwordPolicyDBRow) toPasswordPolicy() PasswordPolicy {
+func (row passwordPolicyDBRow) convert() PasswordPolicy {
 	return PasswordPolicy{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
@@ -318,7 +318,7 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	}
 	resultList := make([]PasswordPolicy, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toPasswordPolicy()
+		resultList[i] = row.convert()
 	}
 
 	return resultList, nil

@@ -252,7 +252,7 @@ type alertDBRow struct {
 	Action       string    `db:"action"`
 }
 
-func (row alertDBRow) toAlert() Alert {
+func (row alertDBRow) convert() Alert {
 	return Alert{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
@@ -290,7 +290,7 @@ func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, err
 	}
 	resultList := make([]Alert, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toAlert()
+		resultList[i] = row.convert()
 	}
 
 	return resultList, nil

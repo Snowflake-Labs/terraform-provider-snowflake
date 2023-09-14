@@ -246,7 +246,7 @@ type maskingPolicyDBRow struct {
 	Options       string    `db:"options"`
 }
 
-func (row maskingPolicyDBRow) toMaskingPolicy() MaskingPolicy {
+func (row maskingPolicyDBRow) convert() MaskingPolicy {
 	exemptOtherPolicies, err := jsonparser.GetBoolean([]byte(row.Options), "EXEMPT_OTHER_POLICIES")
 	if err != nil {
 		exemptOtherPolicies = false
@@ -282,7 +282,7 @@ func (v *maskingPolicies) Show(ctx context.Context, opts *ShowMaskingPolicyOptio
 	}
 	resultList := make([]MaskingPolicy, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toMaskingPolicy()
+		resultList[i] = row.convert()
 	}
 
 	return resultList, nil

@@ -411,7 +411,7 @@ type warehouseDBRow struct {
 	ScalingPolicy                   string        `db:"scaling_policy"`
 }
 
-func (row warehouseDBRow) toWarehouse() Warehouse {
+func (row warehouseDBRow) convert() Warehouse {
 	wh := Warehouse{
 		Name:                            row.Name,
 		State:                           WarehouseState(row.State),
@@ -471,7 +471,7 @@ func (c *warehouses) Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Wa
 	}
 	resultList := make([]Warehouse, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toWarehouse()
+		resultList[i] = row.convert()
 	}
 
 	return resultList, nil

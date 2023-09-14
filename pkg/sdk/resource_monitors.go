@@ -68,7 +68,7 @@ type resourceMonitorRow struct {
 	NotifyUsers        sql.NullString `db:"notify_users"`
 }
 
-func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
+func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 	resourceMonitor := &ResourceMonitor{
 		Name: row.Name,
 	}
@@ -382,7 +382,7 @@ func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOp
 	}
 	resourceMonitors := make([]ResourceMonitor, 0, len(rows))
 	for _, row := range rows {
-		resourceMonitor, err := row.toResourceMonitor()
+		resourceMonitor, err := row.convert()
 		if err != nil {
 			return nil, err
 		}

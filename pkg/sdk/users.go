@@ -94,7 +94,7 @@ type userDBRow struct {
 	HasRsaPublicKey       bool           `db:"has_rsa_public_key"`
 }
 
-func (row userDBRow) toUser() User {
+func (row userDBRow) convert() User {
 	user := User{
 		Name:                  row.Name,
 		CreatedOn:             row.CreatedOn,
@@ -599,7 +599,7 @@ func (v *users) Show(ctx context.Context, opts *ShowUserOptions) ([]User, error)
 	}
 	resultList := make([]User, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toUser()
+		resultList[i] = row.convert()
 	}
 
 	return resultList, nil

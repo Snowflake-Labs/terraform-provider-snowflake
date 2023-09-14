@@ -44,7 +44,7 @@ type sessionPolicyRow struct {
 	SchemaName   string `db:"schema_name"`
 }
 
-func (row *sessionPolicyRow) toSessionPolicy() SessionPolicy {
+func (row *sessionPolicyRow) convert() SessionPolicy {
 	return SessionPolicy{
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
@@ -158,7 +158,7 @@ func (v *sessionPolicies) Show(ctx context.Context) ([]SessionPolicy, error) {
 	}
 	sessionPolicies := make([]SessionPolicy, 0, len(rows))
 	for _, row := range rows {
-		sessionPolicies = append(sessionPolicies, row.toSessionPolicy())
+		sessionPolicies = append(sessionPolicies, row.convert())
 	}
 	return sessionPolicies, nil
 }

@@ -94,7 +94,7 @@ type databaseRow struct {
 	Kind          sql.NullString `db:"kind"`
 }
 
-func (row *databaseRow) toDatabase() Database {
+func (row *databaseRow) convert() Database {
 	database := Database{
 		CreatedOn: row.CreatedOn,
 		Name:      row.Name,
@@ -557,7 +557,7 @@ func (v *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Dat
 	err = v.client.query(ctx, &rows, sql)
 	databases := make([]Database, len(rows))
 	for i, row := range rows {
-		databases[i] = row.toDatabase()
+		databases[i] = row.convert()
 	}
 	return databases, err
 }
