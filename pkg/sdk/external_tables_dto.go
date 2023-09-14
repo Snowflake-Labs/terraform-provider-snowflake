@@ -287,18 +287,19 @@ func (v *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
 }
 
 type CreateWithManualPartitioningExternalTableRequest struct {
-	orReplace           *bool
-	ifNotExists         *bool
-	name                AccountObjectIdentifier // required
-	columns             []*ExternalTableColumnRequest
-	cloudProviderParams *CloudProviderParamsRequest
-	partitionBy         []string
-	location            string                          // required
-	fileFormat          *ExternalTableFileFormatRequest // required
-	copyGrants          *bool
-	comment             *string
-	rowAccessPolicy     *RowAccessPolicyRequest
-	tag                 []*TagAssociationRequest
+	orReplace                  *bool
+	ifNotExists                *bool
+	name                       AccountObjectIdentifier // required
+	columns                    []*ExternalTableColumnRequest
+	cloudProviderParams        *CloudProviderParamsRequest
+	partitionBy                []string
+	location                   string // required
+	userSpecifiedPartitionType *bool
+	fileFormat                 *ExternalTableFileFormatRequest // required
+	copyGrants                 *bool
+	comment                    *string
+	rowAccessPolicy            *RowAccessPolicyRequest
+	tag                        []*TagAssociationRequest
 }
 
 func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithManualPartitioningExternalTableOptions {
@@ -332,35 +333,39 @@ func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithM
 	}
 
 	return &CreateWithManualPartitioningExternalTableOptions{
-		OrReplace:           v.orReplace,
-		IfNotExists:         v.ifNotExists,
-		name:                v.name,
-		Columns:             columns,
-		CloudProviderParams: cloudProviderParams,
-		PartitionBy:         v.partitionBy,
-		Location:            v.location,
-		FileFormat:          fileFormat,
-		CopyGrants:          v.copyGrants,
-		Comment:             v.comment,
-		RowAccessPolicy:     rowAccessPolicy,
-		Tag:                 tag,
+		OrReplace:                  v.orReplace,
+		IfNotExists:                v.ifNotExists,
+		name:                       v.name,
+		Columns:                    columns,
+		CloudProviderParams:        cloudProviderParams,
+		PartitionBy:                v.partitionBy,
+		Location:                   v.location,
+		UserSpecifiedPartitionType: v.userSpecifiedPartitionType,
+		FileFormat:                 fileFormat,
+		CopyGrants:                 v.copyGrants,
+		Comment:                    v.comment,
+		RowAccessPolicy:            rowAccessPolicy,
+		Tag:                        tag,
 	}
 }
 
 type CreateDeltaLakeExternalTableRequest struct {
-	orReplace           *bool
-	ifNotExists         *bool
-	name                AccountObjectIdentifier // required
-	columns             []*ExternalTableColumnRequest
-	cloudProviderParams *CloudProviderParamsRequest
-	partitionBy         []string
-	location            string                          // required
-	fileFormat          *ExternalTableFileFormatRequest // required
-	deltaTableFormat    *bool
-	copyGrants          *bool
-	comment             *string
-	rowAccessPolicy     *RowAccessPolicyRequest
-	tag                 []*TagAssociationRequest
+	orReplace                  *bool
+	ifNotExists                *bool
+	name                       AccountObjectIdentifier // required
+	columns                    []*ExternalTableColumnRequest
+	cloudProviderParams        *CloudProviderParamsRequest
+	partitionBy                []string
+	location                   string // required
+	userSpecifiedPartitionType *bool
+	refreshOnCreate            *bool
+	autoRefresh                *bool
+	fileFormat                 *ExternalTableFileFormatRequest // required
+	deltaTableFormat           *bool
+	copyGrants                 *bool
+	comment                    *string
+	rowAccessPolicy            *RowAccessPolicyRequest
+	tag                        []*TagAssociationRequest
 }
 
 func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalTableOptions {
@@ -394,19 +399,22 @@ func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalT
 	}
 
 	return &CreateDeltaLakeExternalTableOptions{
-		OrReplace:           v.orReplace,
-		IfNotExists:         v.ifNotExists,
-		name:                v.name,
-		Columns:             columns,
-		CloudProviderParams: cloudProviderParams,
-		PartitionBy:         v.partitionBy,
-		Location:            v.location,
-		FileFormat:          fileFormat,
-		DeltaTableFormat:    v.deltaTableFormat,
-		CopyGrants:          v.copyGrants,
-		Comment:             v.comment,
-		RowAccessPolicy:     rowAccessPolicy,
-		Tag:                 tag,
+		OrReplace:                  v.orReplace,
+		IfNotExists:                v.ifNotExists,
+		name:                       v.name,
+		Columns:                    columns,
+		CloudProviderParams:        cloudProviderParams,
+		PartitionBy:                v.partitionBy,
+		Location:                   v.location,
+		UserSpecifiedPartitionType: v.userSpecifiedPartitionType,
+		RefreshOnCreate:            v.refreshOnCreate,
+		AutoRefresh:                v.autoRefresh,
+		FileFormat:                 fileFormat,
+		DeltaTableFormat:           v.deltaTableFormat,
+		CopyGrants:                 v.copyGrants,
+		Comment:                    v.comment,
+		RowAccessPolicy:            rowAccessPolicy,
+		Tag:                        tag,
 	}
 }
 

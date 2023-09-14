@@ -3,9 +3,10 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInt_ExternalTables(t *testing.T) {
@@ -56,6 +57,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		).
 			WithOrReplace(Bool(true)).
 			WithColumns(columnsWithPartition).
+			WithUserSpecifiedPartitionType(Bool(true)).
 			WithPartitionBy([]string{"part_date"}).
 			WithCopyGrants(Bool(true)).
 			WithComment(String("some_comment")).
@@ -146,6 +148,8 @@ func TestInt_ExternalTables(t *testing.T) {
 				WithColumns(columnsWithPartition).
 				WithPartitionBy([]string{"filename"}).
 				WithDeltaTableFormat(Bool(true)).
+				WithAutoRefresh(Bool(false)).
+				WithRefreshOnCreate(Bool(false)).
 				WithCopyGrants(Bool(true)).
 				WithComment(String("some_comment")).
 				WithTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), "tag-value")}),

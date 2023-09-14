@@ -209,7 +209,7 @@ type CreateWithManualPartitioningExternalTableOptions struct {
 	CloudProviderParams        *CloudProviderParams
 	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
-	userSpecifiedPartitionType bool                      `ddl:"static" sql:"PARTITION_TYPE = USER_SPECIFIED"`
+	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
 	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -228,7 +228,9 @@ type CreateDeltaLakeExternalTableOptions struct {
 	CloudProviderParams        *CloudProviderParams
 	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
-	userSpecifiedPartitionType bool                      `ddl:"static" sql:"PARTITION_TYPE = USER_SPECIFIED"`
+	RefreshOnCreate            *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
+	AutoRefresh                *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
+	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
 	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
 	DeltaTableFormat           *bool                     `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`

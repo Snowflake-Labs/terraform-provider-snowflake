@@ -438,6 +438,11 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithPartitionBy(parti
 	return s
 }
 
+func (s *CreateWithManualPartitioningExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateWithManualPartitioningExternalTableRequest {
+	s.userSpecifiedPartitionType = userSpecifiedPartitionType
+	return s
+}
+
 func (s *CreateWithManualPartitioningExternalTableRequest) WithCopyGrants(copyGrants *bool) *CreateWithManualPartitioningExternalTableRequest {
 	s.copyGrants = copyGrants
 	return s
@@ -492,6 +497,21 @@ func (s *CreateDeltaLakeExternalTableRequest) WithCloudProviderParams(cloudProvi
 
 func (s *CreateDeltaLakeExternalTableRequest) WithPartitionBy(partitionBy []string) *CreateDeltaLakeExternalTableRequest {
 	s.partitionBy = partitionBy
+	return s
+}
+
+func (s *CreateDeltaLakeExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateDeltaLakeExternalTableRequest {
+	s.userSpecifiedPartitionType = userSpecifiedPartitionType
+	return s
+}
+
+func (s *CreateDeltaLakeExternalTableRequest) WithRefreshOnCreate(refreshOnCreate *bool) *CreateDeltaLakeExternalTableRequest {
+	s.refreshOnCreate = refreshOnCreate
+	return s
+}
+
+func (s *CreateDeltaLakeExternalTableRequest) WithAutoRefresh(autoRefresh *bool) *CreateDeltaLakeExternalTableRequest {
+	s.autoRefresh = autoRefresh
 	return s
 }
 
