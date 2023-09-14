@@ -4,7 +4,7 @@ import "context"
 
 type NetworkPolicies interface {
 	Create(ctx context.Context, request *CreateNetworkPolicyRequest) error
-	Show(ctx context.Context, request *ShowNetworkPolicyRequest) error
+	Show(ctx context.Context, request *ShowNetworkPolicyRequest) (any, error)
 }
 
 // CreateNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-network-policy.
@@ -23,7 +23,6 @@ type ShowNetworkPolicyOptions struct {
 	networkPolicies bool `ddl:"static" sql:"NETWORK POLICIES"`
 }
 
-// databaseNetworkPolicyDBRow is used to decode the result of a Show NetworkPolicies query.
 type databaseNetworkPolicyDBRow struct {
 	CreatedOn              string `db:"created_on"`
 	Name                   string `db:"name"`
@@ -32,7 +31,6 @@ type databaseNetworkPolicyDBRow struct {
 	EntriesInBlockedIpList int    `db:"entries_in_blocked_ip_list"`
 }
 
-// NetworkPolicy is used to decode the result of a Show NetworkPolicies query.
 type NetworkPolicy struct {
 	CreatedOn              string
 	Name                   string

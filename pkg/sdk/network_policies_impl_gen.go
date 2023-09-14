@@ -15,12 +15,17 @@ func (v *networkPolicies) Create(ctx context.Context, request *CreateNetworkPoli
 
 func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRequest) (any, error) {
 	opts := request.toOpts()
-	dbRows, err := validateAndQuery[any](v.client, ctx, opts)
+	dbRows, err := validateAndQuery[databaseNetworkPolicyDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	resultList := convertRows[any, any](dbRows)
+	resultList := convertRows[databaseNetworkPolicyDBRow, NetworkPolicy](dbRows)
 	return resultList, nil
+}
+
+func (v databaseNetworkPolicyDBRow) convert() *NetworkPolicy {
+	// TODO Generate (template at least)
+	return nil
 }
 
 func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {

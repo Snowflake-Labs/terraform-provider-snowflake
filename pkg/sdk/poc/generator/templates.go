@@ -11,8 +11,12 @@ import "context"
 
 type {{ .Name }} interface {
 	{{- range .Operations }}
-		{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error
-	{{- end }}
+		{{- if eq .Name "Show" }}
+			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) (any, error)
+		{{ else }}
+			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error
+		{{- end -}}
+	{{ end }}
 }
 `)
 

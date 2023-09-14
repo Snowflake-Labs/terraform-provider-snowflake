@@ -35,6 +35,7 @@ var NetworkPoliciesDef = g.NewInterface(
 			Field("Comment", "string").
 			Field("EntriesInAllowedIpList", "int").
 			Field("EntriesInBlockedIpList", "int"),
+		// TODO Mapping between DbStruct and PlainStruct
 		g.QueryStruct("ShowNetworkPolicies").
 			Show().
 			SQL("NETWORK POLICIES"),
