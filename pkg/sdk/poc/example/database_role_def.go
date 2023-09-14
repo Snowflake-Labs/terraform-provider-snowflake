@@ -6,7 +6,7 @@ import (
 
 //go:generate go run ../main.go
 
-//var (
+// var (
 //	dbRoleRename = g.QueryStruct("DatabaseRoleRename").
 //		// Fields
 //		Identifier("Name", g.KindOfT[DatabaseObjectIdentifier]()).

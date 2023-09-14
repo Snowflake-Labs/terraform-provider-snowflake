@@ -5,7 +5,7 @@ func (f *Field) Identifier(fieldName string, kind string) *Field {
 	return f
 }
 
-//func AccountObjectIdentifier(fieldName string) *Field {
+// func AccountObjectIdentifier(fieldName string) *Field {
 //	return NewField(fieldName, "AccountObjectIdentifier", Tags().Identifier()).WithRequired(true)
 //}
 //

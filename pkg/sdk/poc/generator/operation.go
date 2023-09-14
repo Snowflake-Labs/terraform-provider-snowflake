@@ -23,6 +23,14 @@ type Operation struct {
 	OptsField *Field
 	// HelperStructs are struct definitions that are not tied to OptsField, but tied to the Operation itself, e.g. Show() return type
 	HelperStructs []*Field
+	ShowMapping   *Mapping
+	//CustomMappings []*Mapping
+}
+
+type Mapping struct {
+	MappingFuncName string
+	From            *Field
+	To              *Field
 }
 
 func NewOperation(kind OperationKind, doc string) *Operation {
@@ -30,6 +38,14 @@ func NewOperation(kind OperationKind, doc string) *Operation {
 		Name:          kind,
 		Doc:           doc,
 		HelperStructs: make([]*Field, 0),
+	}
+}
+
+func NewMapping(mappingFuncName string, from, to *Field) *Mapping {
+	return &Mapping{
+		MappingFuncName: mappingFuncName,
+		From:            from,
+		To:              to,
 	}
 }
 
@@ -43,13 +59,26 @@ func (s *Operation) withHelperStruct(helperStruct *Field) *Operation {
 	return s
 }
 
+func (s *Operation) withShowMapping(from, to *Field) *Operation {
+	s.ShowMapping = NewMapping("convert", from, to)
+	return s
+}
+
+//func (s *Operation) withMapping(mappingFuncName string, from, to *Field) *Operation {
+//	s.CustomMappings = append(s.CustomMappings, NewMapping(mappingFuncName, from, to))
+//	return s
+//}
+
 func CreateOperation(doc string, queryStruct *Field) *Operation {
 	return NewOperation(OperationKindCreate, doc).withOptionsStruct(queryStruct)
 }
 
 func ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *Field) *Operation {
+	db := dbRepresentation.IntoField()
+	res := resourceRepresentation.IntoField()
 	return NewOperation(OperationKindShow, doc).
-		withHelperStruct(dbRepresentation.IntoField()).
-		withHelperStruct(resourceRepresentation.IntoField()).
+		withHelperStruct(db).
+		withHelperStruct(res).
+		withShowMapping(db, res).
 		withOptionsStruct(queryStruct)
 }

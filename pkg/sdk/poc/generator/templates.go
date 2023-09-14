@@ -96,14 +96,14 @@ type {{ $impl }} struct {
 	client *Client
 }
 {{ range .Operations }}
-	{{ if eq .Name "Show" }}
+	{{ if and (eq .Name "Show") .ShowMapping }}
 		func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) (any, error) {
 			opts := request.toOpts()
-			dbRows, err := validateAndQuery[any](v.client, ctx, opts)
+			dbRows, err := validateAndQuery[{{ .ShowMapping.From.Name }}](v.client, ctx, opts)
 			if err != nil {
 				return nil, err
 			}
-			resultList := convertRows[any, any](dbRows)
+			resultList := convertRows[{{ .ShowMapping.From.Name }}, {{ .ShowMapping.To.Name }}](dbRows)
 			return resultList, nil
 		}
 	{{ else }}
@@ -119,6 +119,14 @@ type {{ $impl }} struct {
 		opts := {{ template "MAPPING" .OptsField -}}
 		return opts
 	}
+	{{ if .ShowMapping }}
+		{{ with .ShowMapping }}
+			func (r {{ .From.Name }}) {{ .MappingFuncName }}() *{{ .To.KindNoPtr }} {
+				// TODO: Mapping
+				return &{{ .To.KindNoPtr }}{}
+			}
+		{{ end }}
+	{{ end }}
 {{ end }}
 `)
 

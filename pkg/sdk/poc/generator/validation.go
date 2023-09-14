@@ -39,7 +39,7 @@ func (f *Field) WithValidation(validationType ValidationType, fieldNames ...stri
 }
 
 func (v *Validation) paramsQuoted() []string {
-	var params = make([]string, len(v.FieldNames))
+	params := make([]string, len(v.FieldNames))
 	for i, s := range v.FieldNames {
 		params[i] = wrapWith(s, `"`)
 	}
@@ -47,7 +47,7 @@ func (v *Validation) paramsQuoted() []string {
 }
 
 func (v *Validation) fieldsWithPath(field *Field) []string {
-	var params = make([]string, len(v.FieldNames))
+	params := make([]string, len(v.FieldNames))
 	for i, s := range v.FieldNames {
 		params[i] = fmt.Sprintf("opts%s.%s", field.Path(), s)
 	}

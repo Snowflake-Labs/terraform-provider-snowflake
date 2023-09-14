@@ -23,11 +23,6 @@ func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRe
 	return resultList, nil
 }
 
-func (v databaseNetworkPolicyDBRow) convert() *NetworkPolicy {
-	// TODO Generate (template at least)
-	return nil
-}
-
 func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
 	opts := &CreateNetworkPolicyOptions{
 		OrReplace:     r.OrReplace,
@@ -41,4 +36,9 @@ func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
 func (r *ShowNetworkPolicyRequest) toOpts() *ShowNetworkPolicyOptions {
 	opts := &ShowNetworkPolicyOptions{}
 	return opts
+}
+
+func (r databaseNetworkPolicyDBRow) convert() *NetworkPolicy {
+	// TODO: Mapping
+	return &NetworkPolicy{}
 }

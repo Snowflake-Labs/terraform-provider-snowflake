@@ -72,7 +72,7 @@ func (f *Field) WithValidations(validations ...*Validation) *Field {
 }
 
 // TODO find a way to mark certain field as required
-//func (f *Field) WithRequired(required bool) *Field {
+// func (f *Field) WithRequired(required bool) *Field {
 //	f.Required = required
 //	return f
 //}
@@ -92,10 +92,10 @@ func (f *Field) HasAnyValidationInSubtree() bool {
 
 // TagsPrintable defines how tags are printed in options structs, it ensures the same order of tags for every field
 func (f *Field) TagsPrintable() string {
-	var tagNames = []string{"ddl", "sql", "db"}
+	tagNames := []string{"ddl", "sql", "db"}
 	var tagParts []string
 	for _, tagName := range tagNames {
-		var v, ok = f.Tags[tagName]
+		v, ok := f.Tags[tagName]
 		if ok {
 			tagParts = append(tagParts, fmt.Sprintf(`%s:"%s"`, tagName, strings.Join(v, ",")))
 		}

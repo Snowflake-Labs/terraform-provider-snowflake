@@ -19,6 +19,7 @@ func (v *KeywordTransformer) SQL(sqlPrefix string) *KeywordTransformer {
 	v.sqlPrefix = sqlPrefix
 	return v
 }
+
 func (v *KeywordTransformer) SingleQuotes() *KeywordTransformer {
 	v.quotes = "single_quotes"
 	return v

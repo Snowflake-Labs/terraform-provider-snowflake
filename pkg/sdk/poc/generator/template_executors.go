@@ -20,7 +20,7 @@ func generateOptionsStruct(writer io.Writer, operation *Operation) {
 
 	for _, f := range operation.HelperStructs {
 		// TODO Merge with OptionsTemplate, but abstract documentation (move doc to field, every field (struct) will have it's own doc)
-		//_, _ = writer.Write([]byte(fmt.Sprintf(
+		// _, _ = writer.Write([]byte(fmt.Sprintf(
 		//	"// %s is used to decode the result of a %s %s query.",
 		//	f.Name,
 		//	operation.Name,
