@@ -175,21 +175,31 @@ import "testing"
 	func Test{{ .ObjectInterface.Name }}_{{ .Name }}(t *testing.T) {
 		id := random{{ .ObjectInterface.IdentifierKind }}(t)
 
+		// Minimal valid {{ .OptsField.KindNoPtr }}
 		defaultOpts := func() *{{ .OptsField.KindNoPtr }} {
 			return &{{ .OptsField.KindNoPtr }}{
 				name: id,
 			}
 		}
 
-		// TODO: remove me
-		_ = defaultOpts()
-
 		t.Run("validation: nil options", func(t *testing.T) {
 			var opts *{{ .OptsField.KindNoPtr }} = nil
 			assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
 		})
 
-		{{- template "VALIDATIONS" .OptsField -}}
+		{{- template "VALIDATIONS" .OptsField }}
+
+		t.Run("basic", func(t *testing.T) {
+			opts := defaultOpts()
+			// TODO: fill me
+			assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		})
+
+		t.Run("all options", func(t *testing.T) {
+			opts := defaultOpts()
+			// TODO: fill me
+			assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		})
 	}
 {{ end }}
 `)
@@ -234,7 +244,7 @@ var IntegrationTestsTemplate, _ = template.New("integrationTestsTemplate").Parse
 import "testing"
 
 func TestInt_{{ .Name }}(t *testing.T) {
-	// TODO: prepare resources
+	// TODO: prepare common resources
 
 	{{ range .Operations }}
 	t.Run("{{ .Name }}", func(t *testing.T) {

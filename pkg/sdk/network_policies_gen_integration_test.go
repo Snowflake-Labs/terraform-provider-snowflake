@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestInt_NetworkPolicies(t *testing.T) {
-	// TODO: prepare resources
+	// TODO: prepare common resources
 
 	t.Run("Create", func(t *testing.T) {
 		// TODO: fill me

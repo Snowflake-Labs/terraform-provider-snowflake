@@ -48,6 +48,9 @@ var (
 					// Or we can have a convention of <resource name><type> and remove prefix
 					"Set",
 					g.QueryStruct("NetworkPolicySet").
+						// should we pass plain kinds or instead there should be interface with [Kind() string] func in it
+						// then we would force users to use g.KindOf... functions family, and it would look more consistent
+						// with places where we would use g.KindOfT[type]()
 						ListAssignment("ALLOWED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
 						ListAssignment("BLOCKED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
 						OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).

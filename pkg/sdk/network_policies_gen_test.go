@@ -5,14 +5,12 @@ import "testing"
 func TestNetworkPolicies_Create(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 
+	// Minimal valid CreateNetworkPolicyOptions
 	defaultOpts := func() *CreateNetworkPolicyOptions {
 		return &CreateNetworkPolicyOptions{
 			name: id,
 		}
 	}
-
-	// TODO: remove me
-	_ = defaultOpts()
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateNetworkPolicyOptions = nil
@@ -24,19 +22,29 @@ func TestNetworkPolicies_Create(t *testing.T) {
 		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
 }
 
 func TestNetworkPolicies_Alter(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 
+	// Minimal valid AlterNetworkPolicyOptions
 	defaultOpts := func() *AlterNetworkPolicyOptions {
 		return &AlterNetworkPolicyOptions{
 			name: id,
 		}
 	}
-
-	// TODO: remove me
-	_ = defaultOpts()
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterNetworkPolicyOptions = nil
@@ -66,19 +74,29 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AllowedIpList", "BlockedIpList", "Comment"))
 	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
 }
 
 func TestNetworkPolicies_Drop(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 
+	// Minimal valid DropNetworkPolicyOptions
 	defaultOpts := func() *DropNetworkPolicyOptions {
 		return &DropNetworkPolicyOptions{
 			name: id,
 		}
 	}
-
-	// TODO: remove me
-	_ = defaultOpts()
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DropNetworkPolicyOptions = nil
@@ -90,37 +108,57 @@ func TestNetworkPolicies_Drop(t *testing.T) {
 		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
 }
 
 func TestNetworkPolicies_Show(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 
+	// Minimal valid ShowNetworkPolicyOptions
 	defaultOpts := func() *ShowNetworkPolicyOptions {
 		return &ShowNetworkPolicyOptions{
 			name: id,
 		}
 	}
 
-	// TODO: remove me
-	_ = defaultOpts()
-
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ShowNetworkPolicyOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 }
 
 func TestNetworkPolicies_Describe(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 
+	// Minimal valid DescribeNetworkPolicyOptions
 	defaultOpts := func() *DescribeNetworkPolicyOptions {
 		return &DescribeNetworkPolicyOptions{
 			name: id,
 		}
 	}
-
-	// TODO: remove me
-	_ = defaultOpts()
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DescribeNetworkPolicyOptions = nil
@@ -131,5 +169,17 @@ func TestNetworkPolicies_Describe(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 }
