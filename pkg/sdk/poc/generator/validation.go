@@ -33,11 +33,6 @@ func NewValidation(validationType ValidationType, fieldNames ...string) *Validat
 	}
 }
 
-func (f *Field) WithValidation(validationType ValidationType, fieldNames ...string) *Field {
-	f.Validations = append(f.Validations, NewValidation(validationType, fieldNames...))
-	return f
-}
-
 func (v *Validation) paramsQuoted() []string {
 	params := make([]string, len(v.FieldNames))
 	for i, s := range v.FieldNames {

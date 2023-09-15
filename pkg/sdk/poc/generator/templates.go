@@ -87,6 +87,12 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
 		{{ end -}}
 	{{ end }}
 {{ end }}
+{{ define "MAPPING_FUNC" }}
+	func (r {{ .From.Name }}) {{ .MappingFuncName }}() *{{ .To.KindNoPtr }} {
+		// TODO: Mapping
+		return &{{ .To.KindNoPtr }}{}
+	}
+{{ end }}
 import "context"
 
 {{ $impl := .NameLowerCased }}
@@ -133,12 +139,10 @@ type {{ $impl }} struct {
 		return opts
 	}
 	{{ if .ShowMapping }}
-		{{ with .ShowMapping }}
-			func (r {{ .From.Name }}) {{ .MappingFuncName }}() *{{ .To.KindNoPtr }} {
-				// TODO: Mapping
-				return &{{ .To.KindNoPtr }}{}
-			}
-		{{ end }}
+		{{ template "MAPPING_FUNC" .ShowMapping }}
+	{{ end }}
+	{{ if .DescribeMapping }}
+		{{ template "MAPPING_FUNC" .DescribeMapping }}
 	{{ end }}
 {{ end }}
 `)

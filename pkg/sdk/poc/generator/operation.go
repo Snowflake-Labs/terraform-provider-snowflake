@@ -77,34 +77,34 @@ func (s *Operation) withDescriptionMapping(from, to *Field) *Operation {
 
 // TODO Query struct should be it's own struct type
 
-func (i *Interface) CreateOperation(doc string, queryStruct *Field) *Interface {
-	i.Operations = append(i.Operations, newOperation(OperationKindCreate, doc).withOptionsStruct(queryStruct))
+func (i *Interface) CreateOperation(doc string, queryStruct *queryStruct) *Interface {
+	i.Operations = append(i.Operations, newOperation(OperationKindCreate, doc).withOptionsStruct(queryStruct.IntoField()))
 	return i
 }
 
-func (i *Interface) DropOperation(doc string, queryStruct *Field) *Interface {
-	i.Operations = append(i.Operations, newOperation(OperationKindDrop, doc).withOptionsStruct(queryStruct))
+func (i *Interface) DropOperation(doc string, queryStruct *queryStruct) *Interface {
+	i.Operations = append(i.Operations, newOperation(OperationKindDrop, doc).withOptionsStruct(queryStruct.IntoField()))
 	return i
 }
 
-func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *Field) *Interface {
+func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
 	db := dbRepresentation.IntoField()
 	res := resourceRepresentation.IntoField()
 	i.Operations = append(i.Operations, newOperation(OperationKindShow, doc).
 		withHelperStruct(db).
 		withHelperStruct(res).
 		withShowMapping(db, res).
-		withOptionsStruct(queryStruct))
+		withOptionsStruct(queryStruct.IntoField()))
 	return i
 }
 
-func (i *Interface) DescribeOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *Field) *Interface {
+func (i *Interface) DescribeOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
 	db := dbRepresentation.IntoField()
 	res := resourceRepresentation.IntoField()
 	i.Operations = append(i.Operations, newOperation(OperationKindDescribe, doc).
 		withHelperStruct(db).
 		withHelperStruct(res).
 		withDescriptionMapping(db, res).
-		withOptionsStruct(queryStruct))
+		withOptionsStruct(queryStruct.IntoField()))
 	return i
 }

@@ -75,3 +75,8 @@ func (r *DescribeNetworkPolicyRequest) toOpts() *DescribeNetworkPolicyOptions {
 	}
 	return opts
 }
+
+func (r describeNetworkPolicyDBRow) convert() *NetworkPolicy {
+	// TODO: Mapping
+	return &NetworkPolicy{}
+}

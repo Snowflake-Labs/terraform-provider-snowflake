@@ -1,23 +1,23 @@
 package generator
 
-func (f *Field) OptionalSQL(sql string) *Field {
-	f.Fields = append(f.Fields, NewField(sqlToFieldName(sql, true), "*bool", Tags().Keyword().SQL(sql), nil))
-	return f
+func (v *queryStruct) OptionalSQL(sql string) *queryStruct {
+	v.fields = append(v.fields, NewField(sqlToFieldName(sql, true), "*bool", Tags().Keyword().SQL(sql), nil))
+	return v
 }
 
-func (f *Field) OrReplace() *Field {
-	return f.OptionalSQL("OR REPLACE")
+func (v *queryStruct) OrReplace() *queryStruct {
+	return v.OptionalSQL("OR REPLACE")
 }
 
-func (f *Field) IfNotExists() *Field {
-	return f.OptionalSQL("IF NOT EXISTS")
+func (v *queryStruct) IfNotExists() *queryStruct {
+	return v.OptionalSQL("IF NOT EXISTS")
 }
 
-func (f *Field) IfExists() *Field {
-	return f.OptionalSQL("IF EXISTS")
+func (v *queryStruct) IfExists() *queryStruct {
+	return v.OptionalSQL("IF EXISTS")
 }
 
-func (f *Field) Text(name string, transformer *KeywordTransformer) *Field {
-	f.Fields = append(f.Fields, NewField(name, "string", Tags().Keyword(), transformer))
-	return f
+func (v *queryStruct) Text(name string, transformer *KeywordTransformer) *queryStruct {
+	v.fields = append(v.fields, NewField(name, "string", Tags().Keyword(), transformer))
+	return v
 }

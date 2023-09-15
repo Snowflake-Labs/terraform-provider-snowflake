@@ -14,7 +14,6 @@ type Field struct {
 	Fields []*Field
 	// Validations defines validations on given field level (e.g. oneOf for children)
 	Validations []*Validation
-
 	// Name is how field is called in parent struct
 	Name string
 	// Kind is fields type (e.g. string, *bool)
@@ -43,30 +42,17 @@ func NewField(name string, kind string, tagBuilder *TagBuilder, transformer Fiel
 	return f
 }
 
-// TODO can be of type querystruct and be converted into field under the hood
-func QueryStruct(name string) *Field {
-	return NewField(name, name, nil, nil)
-}
-
-func (f *Field) QueryStructField(queryStruct *Field, name string, kind string, transformer FieldTransformer) *Field {
-	newField := NewField(name, kind, nil, transformer).
-		WithFields(queryStruct.Fields...).
-		WithValidations(queryStruct.Validations...)
-	f.Fields = append(f.Fields, newField)
-	return f
-}
-
-func (f *Field) WithField(fields *Field) *Field {
+func (f *Field) withField(fields *Field) *Field {
 	f.Fields = append(f.Fields, fields)
 	return f
 }
 
-func (f *Field) WithFields(fields ...*Field) *Field {
+func (f *Field) withFields(fields ...*Field) *Field {
 	f.Fields = append(f.Fields, fields...)
 	return f
 }
 
-func (f *Field) WithValidations(validations ...*Validation) *Field {
+func (f *Field) withValidations(validations ...*Validation) *Field {
 	f.Validations = validations
 	return f
 }

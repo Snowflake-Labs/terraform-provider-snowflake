@@ -1,8 +1,8 @@
 package generator
 
-func (f *Field) Identifier(fieldName string, kind string) *Field {
-	f.Fields = append(f.Fields, NewField(fieldName, kind, Tags().Identifier(), nil))
-	return f
+func (v *queryStruct) Identifier(fieldName string, kind string) *queryStruct {
+	v.fields = append(v.fields, NewField(fieldName, kind, Tags().Identifier(), nil))
+	return v
 }
 
 // func AccountObjectIdentifier(fieldName string) *Field {

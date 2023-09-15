@@ -28,7 +28,7 @@ func (v *plainStruct) Field(name string, kind string) *plainStruct {
 func (v *plainStruct) IntoField() *Field {
 	f := NewField(v.name, v.name, nil, nil)
 	for _, field := range v.fields {
-		f.WithField(NewField(field.name, field.kind, nil, nil))
+		f.withField(NewField(field.name, field.kind, nil, nil))
 	}
 	return f
 }

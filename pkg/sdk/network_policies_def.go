@@ -1,5 +1,6 @@
 package sdk
 
+// TODO expose only needed types (field, interface, operation could be not exposed - only building functions)
 import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 
 //go:generate go run ./poc/main.go
@@ -11,6 +12,7 @@ var (
 					Field("Comment", "string").
 					Field("EntriesInAllowedIpList", "int").
 					Field("EntriesInBlockedIpList", "int")
+
 	NetworkPoliciesDef = g.NewInterface(
 		"NetworkPolicies",
 		"NetworkPolicy",
@@ -57,7 +59,6 @@ var (
 			g.DbStruct("describeNetworkPolicyDBRow").
 				Field("name", "string").
 				Field("value", "string"),
-			// TODO because of that network policy will be generated twice
 			networkPolicyRepresentation,
 			g.QueryStruct("DescribeNetworkPolicy").
 				SQL("DESCRIBE NETWORK POLICY").

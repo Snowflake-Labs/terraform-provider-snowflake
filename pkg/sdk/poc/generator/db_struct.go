@@ -28,7 +28,7 @@ func (v *dbStruct) Field(dbName string, kind string) *dbStruct {
 func (v *dbStruct) IntoField() *Field {
 	f := NewField(v.name, v.name, nil, nil)
 	for _, field := range v.fields {
-		f.WithField(NewField(sqlToFieldName(field.name, true), field.kind, Tags().DB(field.name), nil))
+		f.withField(NewField(sqlToFieldName(field.name, true), field.kind, Tags().DB(field.name), nil))
 	}
 	return f
 }

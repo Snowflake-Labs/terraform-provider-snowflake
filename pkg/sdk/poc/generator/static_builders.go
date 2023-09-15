@@ -1,26 +1,26 @@
 package generator
 
-func (f *Field) SQL(sql string) *Field {
-	f.Fields = append(f.Fields, NewField(sqlToFieldName(sql, false), "bool", Tags().Static().SQL(sql), nil))
-	return f
+func (v *queryStruct) SQL(sql string) *queryStruct {
+	v.fields = append(v.fields, NewField(sqlToFieldName(sql, false), "bool", Tags().Static().SQL(sql), nil))
+	return v
 }
 
-func (f *Field) Create() *Field {
-	return f.SQL("CREATE")
+func (v *queryStruct) Create() *queryStruct {
+	return v.SQL("CREATE")
 }
 
-func (f *Field) Alter() *Field {
-	return f.SQL("ALTER")
+func (v *queryStruct) Alter() *queryStruct {
+	return v.SQL("ALTER")
 }
 
-func (f *Field) Drop() *Field {
-	return f.SQL("DROP")
+func (v *queryStruct) Drop() *queryStruct {
+	return v.SQL("DROP")
 }
 
-func (f *Field) Show() *Field {
-	return f.SQL("SHOW")
+func (v *queryStruct) Show() *queryStruct {
+	return v.SQL("SHOW")
 }
 
-func (f *Field) Describe() *Field {
-	return f.SQL("DESCRIBE")
+func (v *queryStruct) Describe() *queryStruct {
+	return v.SQL("DESCRIBE")
 }
