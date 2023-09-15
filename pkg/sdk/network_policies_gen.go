@@ -5,9 +5,8 @@ import "context"
 type NetworkPolicies interface {
 	Create(ctx context.Context, request *CreateNetworkPolicyRequest) error
 	Drop(ctx context.Context, request *DropNetworkPolicyRequest) error
-	Show(ctx context.Context, request *ShowNetworkPolicyRequest) (any, error)
-
-	Describe(ctx context.Context, request *DescribeNetworkPolicyRequest) error
+	Show(ctx context.Context, request *ShowNetworkPolicyRequest) ([]NetworkPolicy, error)
+	Describe(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error)
 }
 
 // CreateNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-network-policy.

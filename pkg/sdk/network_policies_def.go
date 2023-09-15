@@ -26,6 +26,7 @@ var (
 				Create().
 				OrReplace().
 				SQL("NETWORK POLICY").
+				// TODO use interface identifier ? and for other identifiers create separate building function
 				Identifier("name", g.KindOfT[AccountObjectIdentifier]()).
 				// TODO list assignment
 				ListAssignment("ALLOWED_IP_LIST", "string", g.ParameterOptions().Parentheses()).

@@ -1,6 +1,8 @@
 package sdk
 
-import "context"
+import (
+	"context"
+)
 
 var _ NetworkPolicies = (*networkPolicies)(nil)
 
@@ -18,7 +20,7 @@ func (v *networkPolicies) Drop(ctx context.Context, request *DropNetworkPolicyRe
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRequest) (*NetworkPolicy, error) {
+func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRequest) ([]NetworkPolicy, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showNetworkPolicyDBRow](v.client, ctx, opts)
 	if err != nil {
@@ -29,7 +31,7 @@ func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRe
 }
 
 // TODO Task interface identifier kind
-func (v *networkPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*NetworkPolicy, error) {
+func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error) {
 	opts := &DescribeNetworkPolicyOptions{
 		// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 		name: id,

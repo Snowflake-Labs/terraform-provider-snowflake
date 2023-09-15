@@ -11,8 +11,10 @@ import "context"
 
 type {{ .Name }} interface {
 	{{- range .Operations }}
-		{{- if eq .Name "Show" }}
-			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) (any, error)
+		{{- if and (eq .Name "Show") .ShowMapping }}
+			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) ([]{{ .ShowMapping.To.Name }}, error)
+		{{- else if and (eq .Name "Describe") .DescribeMapping }}
+			{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error)
 		{{ else }}
 			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error
 		{{- end -}}
@@ -103,7 +105,7 @@ type {{ $impl }} struct {
 }
 {{ range .Operations }}
 	{{ if and (eq .Name "Show") .ShowMapping }}
-		func (v *{{ $impl }}) Show(ctx context.Context, request *{{ .OptsField.DtoDecl }}) (*{{ .ShowMapping.To.Name }}, error) {
+		func (v *{{ $impl }}) Show(ctx context.Context, request *{{ .OptsField.DtoDecl }}) ([]{{ .ShowMapping.To.Name }}, error) {
 			opts := request.toOpts()
 			dbRows, err := validateAndQuery[{{ .ShowMapping.From.Name }}](v.client, ctx, opts)
 			if err != nil {
@@ -114,7 +116,7 @@ type {{ $impl }} struct {
 		}
 	{{ else if and (eq .Name "Describe") .DescribeMapping }}
 		// TODO Task interface identifier kind
-		func (v *{{ $impl }}) Describe(ctx context.Context, id SchemaObjectIdentifier) (*{{ .DescribeMapping.To.Name }}, error) {
+		func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error) {
 			opts := &{{ .OptsField.Name }}{
 				// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 				name: id,
