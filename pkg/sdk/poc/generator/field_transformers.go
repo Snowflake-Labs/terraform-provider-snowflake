@@ -7,12 +7,18 @@ type FieldTransformer interface {
 }
 
 type KeywordTransformer struct {
+	required  bool
 	sqlPrefix string
 	quotes    string
 }
 
 func KeywordOptions() *KeywordTransformer {
 	return new(KeywordTransformer)
+}
+
+func (v *KeywordTransformer) Required() *KeywordTransformer {
+	v.required = true
+	return v
 }
 
 func (v *KeywordTransformer) SQL(sqlPrefix string) *KeywordTransformer {
@@ -32,6 +38,9 @@ func (v *KeywordTransformer) DoubleQuotes() *KeywordTransformer {
 
 func (v *KeywordTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "keyword")
+	if v.required {
+		f.Required = true
+	}
 	if len(v.sqlPrefix) != 0 {
 		addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	}
@@ -42,6 +51,7 @@ func (v *KeywordTransformer) Transform(f *Field) *Field {
 }
 
 type ParameterTransformer struct {
+	required    bool
 	sqlPrefix   string
 	quotes      string
 	parentheses string
@@ -49,6 +59,11 @@ type ParameterTransformer struct {
 
 func ParameterOptions() *ParameterTransformer {
 	return new(ParameterTransformer)
+}
+
+func (v *ParameterTransformer) Required() *ParameterTransformer {
+	v.required = true
+	return v
 }
 
 func (v *ParameterTransformer) SQL(sqlPrefix string) *ParameterTransformer {
@@ -73,6 +88,9 @@ func (v *ParameterTransformer) Parentheses() *ParameterTransformer {
 
 func (v *ParameterTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "parameter")
+	if v.required {
+		f.Required = true
+	}
 	if len(v.sqlPrefix) != 0 {
 		addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	}
@@ -86,12 +104,18 @@ func (v *ParameterTransformer) Transform(f *Field) *Field {
 }
 
 type ListTransformer struct {
+	required    bool
 	sqlPrefix   string
 	parentheses string
 }
 
 func ListOptions() *ListTransformer {
 	return new(ListTransformer)
+}
+
+func (v *ListTransformer) Required() *ListTransformer {
+	v.required = true
+	return v
 }
 
 func (v *ListTransformer) NoParens() *ListTransformer {
@@ -106,11 +130,44 @@ func (v *ListTransformer) SQL(sqlPrefix string) *ListTransformer {
 
 func (v *ListTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "list")
+	if v.required {
+		f.Required = true
+	}
 	if len(v.sqlPrefix) != 0 {
 		addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	}
 	if len(v.parentheses) != 0 {
 		addTagIfMissing(f.Tags, "ddl", v.parentheses)
+	}
+	return f
+}
+
+type IdentifierTransformer struct {
+	required  bool
+	sqlPrefix string
+}
+
+func IdentifierOptions() *IdentifierTransformer {
+	return new(IdentifierTransformer)
+}
+
+func (v *IdentifierTransformer) SQL(sqlPrefix string) *IdentifierTransformer {
+	v.sqlPrefix = sqlPrefix
+	return v
+}
+
+func (v *IdentifierTransformer) Required() *IdentifierTransformer {
+	v.required = true
+	return v
+}
+
+func (v *IdentifierTransformer) Transform(f *Field) *Field {
+	addTagIfMissing(f.Tags, "ddl", "identifier")
+	if v.required {
+		f.Required = true
+	}
+	if len(v.sqlPrefix) != 0 {
+		addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	}
 	return f
 }

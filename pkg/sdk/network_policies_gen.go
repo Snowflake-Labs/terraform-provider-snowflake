@@ -4,6 +4,7 @@ import "context"
 
 type NetworkPolicies interface {
 	Create(ctx context.Context, request *CreateNetworkPolicyRequest) error
+	Alter(ctx context.Context, request *AlterNetworkPolicyRequest) error
 	Drop(ctx context.Context, request *DropNetworkPolicyRequest) error
 	Show(ctx context.Context, request *ShowNetworkPolicyRequest) ([]NetworkPolicy, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error)
@@ -15,16 +16,34 @@ type CreateNetworkPolicyOptions struct {
 	OrReplace     *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	networkPolicy bool                    `ddl:"static" sql:"NETWORK POLICY"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
-	AllowedIpList []string                `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
+	AllowedIpList []string                `ddl:"parameter,single_quotes" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList []string                `ddl:"parameter,single_quotes" sql:"BLOCKED_IP_LIST"`
 	Comment       *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+// AlterNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-network-policy.
+type AlterNetworkPolicyOptions struct {
+	alter         bool                    `ddl:"static" sql:"ALTER"`
+	networkPolicy bool                    `ddl:"static" sql:"NETWORK POLICY"`
+	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name          AccountObjectIdentifier `ddl:"identifier"`
+	Set           *NetworkPolicySet       `ddl:"keyword" sql:"SET"`
+	UnsetComment  *bool                   `ddl:"keyword" sql:"UNSET COMMENT"`
+	RenameTo      AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+}
+
+type NetworkPolicySet struct {
+	AllowedIpList []string `ddl:"parameter,single_quotes" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList []string `ddl:"parameter,single_quotes" sql:"BLOCKED_IP_LIST"`
+	Comment       *string  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // DropNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-network-policy.
 type DropNetworkPolicyOptions struct {
-	drop        bool                    `ddl:"static" sql:"DROP"`
-	networkRule bool                    `ddl:"static" sql:"NETWORK RULE"`
-	IfExists    *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name        AccountObjectIdentifier `ddl:"identifier"`
+	drop          bool                    `ddl:"static" sql:"DROP"`
+	networkPolicy bool                    `ddl:"static" sql:"NETWORK POLICY"`
+	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name          AccountObjectIdentifier `ddl:"identifier"`
 }
 
 // ShowNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-network-policies.
@@ -51,8 +70,9 @@ type NetworkPolicy struct {
 
 // DescribeNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy.
 type DescribeNetworkPolicyOptions struct {
-	describeNetworkPolicy bool                    `ddl:"static" sql:"DESCRIBE NETWORK POLICY"`
-	name                  AccountObjectIdentifier `ddl:"identifier"`
+	describe      bool                    `ddl:"static" sql:"DESCRIBE"`
+	networkPolicy bool                    `ddl:"static" sql:"NETWORK POLICY"`
+	name          AccountObjectIdentifier `ddl:"identifier"`
 }
 
 type describeNetworkPolicyDBRow struct {

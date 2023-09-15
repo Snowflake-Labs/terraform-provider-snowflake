@@ -16,30 +16,59 @@ var (
 	NetworkPoliciesDef = g.NewInterface(
 		"NetworkPolicies",
 		"NetworkPolicy",
-		g.KindOfT[AccountObjectIdentifier](), // TODO Do we need this ?
-		// We can use identifier kind above if we'll create fluent api for interface .CreateOperation().AlterOperation()...
+		g.KindOfT[AccountObjectIdentifier](),
 	).
 		CreateOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/create-network-policy",
-			// TODO Could be type of Query struct that is converted into Field under the hood
+			// top level QueryStruct name doesn't matter because it's created from op name + interface field
 			g.QueryStruct("CreateNetworkPolicies").
 				Create().
 				OrReplace().
 				SQL("NETWORK POLICY").
-				// TODO use interface identifier ? and for other identifiers create separate building function
-				Identifier("name", g.KindOfT[AccountObjectIdentifier]()).
-				// TODO list assignment
-				ListAssignment("ALLOWED_IP_LIST", "string", g.ParameterOptions().Parentheses()).
+				// by convention field is named "name" and type is derived from interface field
+				SelfIdentifier().
+				// for those cases better to pass name and sql prefix in Options ?
+				// ListAssignment is Optional in its nature, because it's a slice which can be null,
+				// thus should it be ListAssignment or OptionalListAssignment ?
+				ListAssignment("ALLOWED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes().Required()).
+				ListAssignment("BLOCKED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
+				// for those cases better to pass name and sql prefix in Options ? prefix could be empty
 				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 				WithValidation(g.ValidIdentifier, "name"),
+		).
+		AlterOperation(
+			"https://docs.snowflake.com/en/sql-reference/sql/alter-network-policy",
+			g.QueryStruct("AlterNetworkPolicy").
+				Alter().
+				SQL("NETWORK POLICY").
+				IfExists().
+				SelfIdentifier().
+				OptionalQueryStructField(
+					// We can omit name and derive it from type, in this case field could be NetworkPolicySet
+					// Or we can have a convention of <resource name><type> and remove prefix
+					"Set",
+					g.QueryStruct("NetworkPolicySet").
+						ListAssignment("ALLOWED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
+						ListAssignment("BLOCKED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
+						OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
+						WithValidation(g.AtLeastOneValueSet, "AllowedIpList", "BlockedIpList", "Comment"),
+					g.KeywordOptions().SQL("SET"),
+				).
+				OptionalSQL("UNSET COMMENT").
+				Identifier("RenameTo", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+				// generator.ValidIdentifier validation can be implicit (we can add it when calling SelfIdentifier)
+				WithValidation(g.ValidIdentifier, "name").
+				WithValidation(g.AtLeastOneValueSet, "Set", "UnsetComment", "RenameTo").
+				WithValidation(g.ValidIdentifierIfSet, "RenameTo"),
 		).
 		DropOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/drop-network-policy",
 			g.QueryStruct("DropNetworkPolicy").
 				Drop().
-				SQL("NETWORK RULE").
+				SQL("NETWORK POLICY").
 				IfExists().
-				Identifier("name", g.KindOfT[AccountObjectIdentifier]()),
+				SelfIdentifier().
+				WithValidation(g.ValidIdentifier, "name"),
 		).
 		ShowOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/show-network-policies",
@@ -50,11 +79,12 @@ var (
 				Field("entries_in_allowed_ip_list", "int").
 				Field("entries_in_blocked_ip_list", "int"),
 			networkPolicyRepresentation,
-			// TODO Mapping between DbStruct and PlainStruct
 			g.QueryStruct("ShowNetworkPolicies").
 				Show().
 				SQL("NETWORK POLICIES"),
 		).
+		// Should describe be always Describe(context, id) or Describe(context, request) ? or we support both ?
+		//	e.g. external tables are expecting more inputs than id
 		DescribeOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy",
 			g.DbStruct("describeNetworkPolicyDBRow").
@@ -62,7 +92,9 @@ var (
 				Field("value", "string"),
 			networkPolicyRepresentation,
 			g.QueryStruct("DescribeNetworkPolicy").
-				SQL("DESCRIBE NETWORK POLICY").
-				Identifier("name", g.KindOfT[AccountObjectIdentifier]()),
+				Describe().
+				SQL("NETWORK POLICY").
+				SelfIdentifier().
+				WithValidation(g.ValidIdentifier, "name"),
 		)
 )

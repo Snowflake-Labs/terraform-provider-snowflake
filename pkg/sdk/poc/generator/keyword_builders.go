@@ -21,3 +21,8 @@ func (v *queryStruct) Text(name string, transformer *KeywordTransformer) *queryS
 	v.fields = append(v.fields, NewField(name, "string", Tags().Keyword(), transformer))
 	return v
 }
+
+func (v *queryStruct) OptionalText(name string, transformer *KeywordTransformer) *queryStruct {
+	v.fields = append(v.fields, NewField(name, "*string", Tags().Keyword(), transformer))
+	return v
+}

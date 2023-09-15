@@ -4,8 +4,14 @@ package sdk
 
 import ()
 
-func NewCreateNetworkPolicyRequest() *CreateNetworkPolicyRequest {
-	return &CreateNetworkPolicyRequest{}
+func NewCreateNetworkPolicyRequest(
+	name AccountObjectIdentifier,
+	AllowedIpList []string,
+) *CreateNetworkPolicyRequest {
+	s := CreateNetworkPolicyRequest{}
+	s.name = name
+	s.AllowedIpList = AllowedIpList
+	return &s
 }
 
 func (s *CreateNetworkPolicyRequest) WithOrReplace(OrReplace *bool) *CreateNetworkPolicyRequest {
@@ -13,13 +19,8 @@ func (s *CreateNetworkPolicyRequest) WithOrReplace(OrReplace *bool) *CreateNetwo
 	return s
 }
 
-func (s *CreateNetworkPolicyRequest) WithName(name AccountObjectIdentifier) *CreateNetworkPolicyRequest {
-	s.name = name
-	return s
-}
-
-func (s *CreateNetworkPolicyRequest) WithAllowedIpList(AllowedIpList []string) *CreateNetworkPolicyRequest {
-	s.AllowedIpList = AllowedIpList
+func (s *CreateNetworkPolicyRequest) WithBlockedIpList(BlockedIpList []string) *CreateNetworkPolicyRequest {
+	s.BlockedIpList = BlockedIpList
 	return s
 }
 
@@ -28,8 +29,59 @@ func (s *CreateNetworkPolicyRequest) WithComment(Comment *string) *CreateNetwork
 	return s
 }
 
-func NewDropNetworkPolicyRequest() *DropNetworkPolicyRequest {
-	return &DropNetworkPolicyRequest{}
+func NewAlterNetworkPolicyRequest(
+	name AccountObjectIdentifier,
+) *AlterNetworkPolicyRequest {
+	s := AlterNetworkPolicyRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *AlterNetworkPolicyRequest) WithIfExists(IfExists *bool) *AlterNetworkPolicyRequest {
+	s.IfExists = IfExists
+	return s
+}
+
+func (s *AlterNetworkPolicyRequest) WithSet(Set *NetworkPolicySetRequest) *AlterNetworkPolicyRequest {
+	s.Set = Set
+	return s
+}
+
+func (s *AlterNetworkPolicyRequest) WithUnsetComment(UnsetComment *bool) *AlterNetworkPolicyRequest {
+	s.UnsetComment = UnsetComment
+	return s
+}
+
+func (s *AlterNetworkPolicyRequest) WithRenameTo(RenameTo AccountObjectIdentifier) *AlterNetworkPolicyRequest {
+	s.RenameTo = RenameTo
+	return s
+}
+
+func NewNetworkPolicySetRequest() *NetworkPolicySetRequest {
+	return &NetworkPolicySetRequest{}
+}
+
+func (s *NetworkPolicySetRequest) WithAllowedIpList(AllowedIpList []string) *NetworkPolicySetRequest {
+	s.AllowedIpList = AllowedIpList
+	return s
+}
+
+func (s *NetworkPolicySetRequest) WithBlockedIpList(BlockedIpList []string) *NetworkPolicySetRequest {
+	s.BlockedIpList = BlockedIpList
+	return s
+}
+
+func (s *NetworkPolicySetRequest) WithComment(Comment *string) *NetworkPolicySetRequest {
+	s.Comment = Comment
+	return s
+}
+
+func NewDropNetworkPolicyRequest(
+	name AccountObjectIdentifier,
+) *DropNetworkPolicyRequest {
+	s := DropNetworkPolicyRequest{}
+	s.name = name
+	return &s
 }
 
 func (s *DropNetworkPolicyRequest) WithIfExists(IfExists *bool) *DropNetworkPolicyRequest {
@@ -37,20 +89,14 @@ func (s *DropNetworkPolicyRequest) WithIfExists(IfExists *bool) *DropNetworkPoli
 	return s
 }
 
-func (s *DropNetworkPolicyRequest) WithName(name AccountObjectIdentifier) *DropNetworkPolicyRequest {
-	s.name = name
-	return s
-}
-
 func NewShowNetworkPolicyRequest() *ShowNetworkPolicyRequest {
 	return &ShowNetworkPolicyRequest{}
 }
 
-func NewDescribeNetworkPolicyRequest() *DescribeNetworkPolicyRequest {
-	return &DescribeNetworkPolicyRequest{}
-}
-
-func (s *DescribeNetworkPolicyRequest) WithName(name AccountObjectIdentifier) *DescribeNetworkPolicyRequest {
+func NewDescribeNetworkPolicyRequest(
+	name AccountObjectIdentifier,
+) *DescribeNetworkPolicyRequest {
+	s := DescribeNetworkPolicyRequest{}
 	s.name = name
-	return s
+	return &s
 }

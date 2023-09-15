@@ -1,8 +1,6 @@
 package sdk
 
-import (
-	"context"
-)
+import "context"
 
 var _ NetworkPolicies = (*networkPolicies)(nil)
 
@@ -11,6 +9,11 @@ type networkPolicies struct {
 }
 
 func (v *networkPolicies) Create(ctx context.Context, request *CreateNetworkPolicyRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *networkPolicies) Alter(ctx context.Context, request *AlterNetworkPolicyRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -30,7 +33,6 @@ func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRe
 	return resultList, nil
 }
 
-// TODO Task interface identifier kind
 func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error) {
 	opts := &DescribeNetworkPolicyOptions{
 		// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
@@ -48,7 +50,26 @@ func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
 		OrReplace:     r.OrReplace,
 		name:          r.name,
 		AllowedIpList: r.AllowedIpList,
+		BlockedIpList: r.BlockedIpList,
 		Comment:       r.Comment,
+	}
+	return opts
+}
+
+func (r *AlterNetworkPolicyRequest) toOpts() *AlterNetworkPolicyOptions {
+	opts := &AlterNetworkPolicyOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+
+		UnsetComment: r.UnsetComment,
+		RenameTo:     r.RenameTo,
+	}
+	if r.Set != nil {
+		opts.Set = &NetworkPolicySet{
+			AllowedIpList: r.Set.AllowedIpList,
+			BlockedIpList: r.Set.BlockedIpList,
+			Comment:       r.Set.Comment,
+		}
 	}
 	return opts
 }

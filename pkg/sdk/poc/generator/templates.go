@@ -115,7 +115,6 @@ type {{ $impl }} struct {
 			return resultList, nil
 		}
 	{{ else if and (eq .Name "Describe") .DescribeMapping }}
-		// TODO Task interface identifier kind
 		func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error) {
 			opts := &{{ .OptsField.Name }}{
 				// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
@@ -152,20 +151,22 @@ type {{ $impl }} struct {
 var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 {{ define "VALIDATION_TEST" }}
 	{{ $field := . }}
-	{{ range .Validations }}
+	{{- range .Validations }}
 		t.Run("{{ .TodoComment $field }}", func(t *testing.T) {
+			opts := defaultOpts()
 			// TODO: fill me
+			assertOptsInvalidJoinedErrors(t, opts, {{ .Error }})
 		})
-	{{ end }}
+	{{ end -}}
 {{ end }}
 
 {{ define "VALIDATIONS" }}
-	{{ template "VALIDATION_TEST" . }}
+	{{- template "VALIDATION_TEST" . -}}
 	{{ range .Fields }}
-		{{ if .HasAnyValidationInSubtree }}
-			{{ template "VALIDATIONS" . }}
-		{{ end }}
-	{{ end }}
+		{{- if .HasAnyValidationInSubtree }}
+			{{- template "VALIDATIONS" . -}}
+		{{ end -}}
+	{{- end -}}
 {{ end }}
 
 import "testing"
@@ -183,7 +184,12 @@ import "testing"
 		// TODO: remove me
 		_ = defaultOpts()
 
-		{{ template "VALIDATIONS" .OptsField }}
+		t.Run("validation: nil options", func(t *testing.T) {
+			var opts *{{ .OptsField.KindNoPtr }} = nil
+			assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		})
+
+		{{- template "VALIDATIONS" .OptsField -}}
 	}
 {{ end }}
 `)
@@ -228,6 +234,12 @@ var IntegrationTestsTemplate, _ = template.New("integrationTestsTemplate").Parse
 import "testing"
 
 func TestInt_{{ .Name }}(t *testing.T) {
-	// TODO: fill me
+	// TODO: prepare resources
+
+	{{ range .Operations }}
+	t.Run("{{ .Name }}", func(t *testing.T) {
+		// TODO: fill me
+	})
+	{{ end -}}
 }
 `)

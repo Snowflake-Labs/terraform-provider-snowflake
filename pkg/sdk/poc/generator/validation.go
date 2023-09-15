@@ -16,6 +16,7 @@ type ValidationType int64
 
 const (
 	ValidIdentifier ValidationType = iota
+	ValidIdentifierIfSet
 	ConflictingFields
 	ExactlyOneValueSet
 	AtLeastOneValueSet
@@ -53,6 +54,8 @@ func (v *Validation) Condition(field *Field) string {
 	switch v.Type {
 	case ValidIdentifier:
 		return fmt.Sprintf("!validObjectidentifier(%s)", strings.Join(v.fieldsWithPath(field), ","))
+	case ValidIdentifierIfSet:
+		return fmt.Sprintf("valueSet(%s) && !validObjectidentifier(%s)", strings.Join(v.fieldsWithPath(field), ","), strings.Join(v.fieldsWithPath(field), ","))
 	case ConflictingFields:
 		return fmt.Sprintf("everyValueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ExactlyOneValueSet:
@@ -67,6 +70,8 @@ func (v *Validation) Error() string {
 	switch v.Type {
 	case ValidIdentifier:
 		return fmt.Sprintf("ErrInvalidObjectIdentifier")
+	case ValidIdentifierIfSet:
+		return fmt.Sprintf("ErrInvalidObjectIdentifier")
 	case ConflictingFields:
 		return fmt.Sprintf("errOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
 	case ExactlyOneValueSet:
@@ -80,13 +85,15 @@ func (v *Validation) Error() string {
 func (v *Validation) TodoComment(field *Field) string {
 	switch v.Type {
 	case ValidIdentifier:
-		return fmt.Sprintf("validate valid identifier for %v", v.fieldsWithPath(field))
+		return fmt.Sprintf("validation: valid identifier for %v", v.fieldsWithPath(field))
+	case ValidIdentifierIfSet:
+		return fmt.Sprintf("validation: valid identifier for %v if set", v.fieldsWithPath(field))
 	case ConflictingFields:
-		return fmt.Sprintf("validate conflicting fields for %v", v.fieldsWithPath(field))
+		return fmt.Sprintf("validation: conflicting fields for %v", v.fieldsWithPath(field))
 	case ExactlyOneValueSet:
-		return fmt.Sprintf("validate exactly one field from %v is present", v.fieldsWithPath(field))
+		return fmt.Sprintf("validation: exactly one field from %v should be present", v.fieldsWithPath(field))
 	case AtLeastOneValueSet:
-		return fmt.Sprintf("validate at least one of fields %v set", v.fieldsWithPath(field))
+		return fmt.Sprintf("validation: at least one of the fields %v should be set", v.fieldsWithPath(field))
 	}
 	panic("condition for validation unknown")
 }

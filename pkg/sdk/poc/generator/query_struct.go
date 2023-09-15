@@ -1,9 +1,10 @@
 package generator
 
 type queryStruct struct {
-	name        string
-	fields      []*Field
-	validations []*Validation
+	name            string
+	fields          []*Field
+	identifierField *Field
+	validations     []*Validation
 }
 
 func QueryStruct(name string) *queryStruct {
@@ -25,7 +26,19 @@ func (v *queryStruct) WithValidation(validationType ValidationType, fieldNames .
 	return v
 }
 
-func (v *queryStruct) QueryStructField(queryStruct *queryStruct) *queryStruct {
-	v.fields = append(v.fields, queryStruct.IntoField())
+func (v *queryStruct) QueryStructField(name string, queryStruct *queryStruct, transformer FieldTransformer) *queryStruct {
+	qs := queryStruct.IntoField()
+	qs.Name = name
+	qs = transformer.Transform(qs)
+	v.fields = append(v.fields, qs)
+	return v
+}
+
+func (v *queryStruct) OptionalQueryStructField(name string, queryStruct *queryStruct, transformer FieldTransformer) *queryStruct {
+	qs := queryStruct.IntoField()
+	qs.Name = name
+	qs.Kind = "*" + qs.Kind
+	qs = transformer.Transform(qs)
+	v.fields = append(v.fields, qs)
 	return v
 }
