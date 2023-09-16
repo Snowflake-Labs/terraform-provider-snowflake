@@ -1,23 +1,20 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"reflect"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"golang.org/x/exp/maps"
 )
 
 var accountParameterSchema = map[string]*schema.Schema{
 	"key": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  "Name of account parameter. Valid values are those in [account parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#account-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameterDefaults(snowflake.ParameterTypeAccount)), false),
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Name of account parameter. Valid values are those in [account parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#account-parameters).",
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -45,49 +42,30 @@ func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
-
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeAccount)[key]
-	if parameterDefault.Validate != nil {
-		if err := parameterDefault.Validate(value); err != nil {
-			return err
-		}
-	}
-
-	// add quotes to value if it is a string
-	typeString := reflect.TypeOf("")
-	if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
-		value = fmt.Sprintf("'%s'", snowflake.EscapeString(value))
-	}
-
-	builder := snowflake.NewAccountParameter(key, value, db)
-	err := builder.SetParameter()
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	parameter := sdk.AccountParameter(key)
+	err := client.Parameters.SetAccountParameter(ctx, parameter, value)
 	if err != nil {
-		return fmt.Errorf("error creating account parameter err = %w", err)
+		return err
 	}
-
 	d.SetId(key)
-	p, err := snowflake.ShowAccountParameter(db, key)
-	if err != nil {
-		return fmt.Errorf("error reading account parameter err = %w", err)
-	}
-	err = d.Set("value", p.Value.String)
-	if err != nil {
-		return fmt.Errorf("error setting account parameter value err = %w", err)
-	}
-	return nil
+	return ReadAccountParameter(d, meta)
 }
 
 // ReadAccountParameter implements schema.ReadFunc.
 func ReadAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	key := d.Id()
-	p, err := snowflake.ShowAccountParameter(db, key)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	parameterName := d.Id()
+	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(parameterName))
 	if err != nil {
 		return fmt.Errorf("error reading account parameter err = %w", err)
 	}
-	err = d.Set("value", p.Value.String)
+	err = d.Set("value", parameter.Value)
 	if err != nil {
-		return fmt.Errorf("error setting account parameter value err = %w", err)
+		return fmt.Errorf("error setting account parameter err = %w", err)
 	}
 	return nil
 }
@@ -101,24 +79,17 @@ func UpdateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
-
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeAccount)[key]
-	defaultValue := parameterDefault.DefaultValue
-	value := fmt.Sprintf("%v", defaultValue)
-
-	// add quotes to value if it is a string
-	typeString := reflect.TypeOf("")
-	if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
-		value = fmt.Sprintf("'%s'", value)
-	}
-	builder := snowflake.NewAccountParameter(key, value, db)
-	err := builder.SetParameter()
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	parameter := sdk.AccountParameter(key)
+	defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
 	if err != nil {
-		return fmt.Errorf("error creating account parameter err = %w", err)
+		return err
 	}
-	_, err = snowflake.ShowAccountParameter(db, key)
+	defaultValue := defaultParameter.Default
+	err = client.Parameters.SetAccountParameter(ctx, parameter, defaultValue)
 	if err != nil {
-		return fmt.Errorf("error reading account parameter err = %w", err)
+		return fmt.Errorf("error resetting account parameter err = %w", err)
 	}
 
 	d.SetId("")

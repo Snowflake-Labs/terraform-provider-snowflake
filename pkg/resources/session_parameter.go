@@ -1,23 +1,20 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"reflect"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"golang.org/x/exp/maps"
 )
 
 var sessionParameterSchema = map[string]*schema.Schema{
 	"key": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  "Name of session parameter. Valid values are those in [session parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#session-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)), false),
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Name of session parameter. Valid values are those in [session parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#session-parameters).",
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -56,78 +53,55 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
-
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)[key]
-	if parameterDefault.Validate != nil {
-		if err := parameterDefault.Validate(value); err != nil {
-			return err
-		}
-	}
-
-	// add quotes to value if it is a string
-	typeString := reflect.TypeOf("")
-	if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
-		value = fmt.Sprintf("'%s'", snowflake.EscapeString(value))
-	}
-
-	builder := snowflake.NewSessionParameter(key, value, db)
-
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	onAccount := d.Get("on_account").(bool)
 	user := d.Get("user").(string)
+	parameter := sdk.SessionParameter(key)
 
+	var err error
 	if onAccount {
-		builder.SetOnAccount(onAccount)
+		err := client.Parameters.SetSessionParameterOnAccount(ctx, parameter, value)
+		if err != nil {
+			return err
+		}
 	} else {
 		if user == "" {
 			return fmt.Errorf("user is required if on_account is false")
 		}
-		builder.SetUser(user)
-	}
-
-	err := builder.SetParameter()
-	if err != nil {
-		return fmt.Errorf("error creating session parameter err = %w", err)
+		userId := sdk.NewAccountObjectIdentifier(user)
+		err = client.Parameters.SetSessionParameterOnUser(ctx, userId, parameter, value)
+		if err != nil {
+			return fmt.Errorf("error creating session parameter err = %w", err)
+		}
 	}
 
 	d.SetId(key)
 
-	var p *snowflake.Parameter
-	if onAccount {
-		p, err = snowflake.ShowAccountParameter(db, key)
-	} else {
-		p, err = snowflake.ShowSessionParameter(db, key, user)
-	}
-	if err != nil {
-		return fmt.Errorf("error reading session parameter err = %w", err)
-	}
-	err = d.Set("value", p.Value.String)
-	if err != nil {
-		return fmt.Errorf("error setting session parameter err = %w", err)
-	}
-	return nil
+	return ReadSessionParameter(d, meta)
 }
 
 // ReadSessionParameter implements schema.ReadFunc.
 func ReadSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	key := d.Id()
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	parameter := d.Id()
 
 	onAccount := d.Get("on_account").(bool)
-	var p *snowflake.Parameter
 	var err error
+	var p *sdk.Parameter
 	if onAccount {
-		p, err = snowflake.ShowAccountParameter(db, key)
-		if err != nil {
-			return fmt.Errorf("error reading session parameter err = %w", err)
-		}
+		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(parameter))
 	} else {
 		user := d.Get("user").(string)
-		p, err = snowflake.ShowSessionParameter(db, key, user)
-		if err != nil {
-			return fmt.Errorf("error reading session parameter err = %w", err)
-		}
+		userId := sdk.NewAccountObjectIdentifier(user)
+		p, err = client.Parameters.ShowUserParameter(ctx, sdk.UserParameter(parameter), userId)
 	}
-	err = d.Set("value", p.Value.String)
+	if err != nil {
+		return fmt.Errorf("error reading session parameter err = %w", err)
+	}
+	err = d.Set("value", p.Value)
 	if err != nil {
 		return fmt.Errorf("error setting session parameter err = %w", err)
 	}
@@ -143,28 +117,39 @@ func UpdateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeSession)[key]
-	defaultValue := parameterDefault.DefaultValue
-	value := fmt.Sprintf("%v", defaultValue)
-
-	// add quotes to value if it is a string
-	typeString := reflect.TypeOf("")
-	if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
-		value = fmt.Sprintf("'%s'", value)
-	}
-	builder := snowflake.NewSessionParameter(key, value, db)
 	onAccount := d.Get("on_account").(bool)
+	parameter := sdk.SessionParameter(key)
+
 	if onAccount {
-		builder.SetOnAccount(onAccount)
+		defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
+		if err != nil {
+			return err
+		}
+		defaultValue := defaultParameter.Default
+		err = client.Parameters.SetSessionParameterOnAccount(ctx, parameter, defaultValue)
+		if err != nil {
+			return fmt.Errorf("error creating session parameter err = %w", err)
+		}
 	} else {
 		user := d.Get("user").(string)
-		builder.SetUser(user)
+		if user == "" {
+			return fmt.Errorf("user is required if on_account is false")
+		}
+		userId := sdk.NewAccountObjectIdentifier(user)
+		defaultParameter, err := client.Parameters.ShowSessionParameter(ctx, sdk.SessionParameter(key))
+		if err != nil {
+			return err
+		}
+		defaultValue := defaultParameter.Default
+		err = client.Parameters.SetSessionParameterOnUser(ctx, userId, parameter, defaultValue)
+		if err != nil {
+			return fmt.Errorf("error deleting session parameter err = %w", err)
+		}
 	}
-	err := builder.SetParameter()
-	if err != nil {
-		return fmt.Errorf("error resetting session parameter err = %w", err)
-	}
-	d.SetId("")
+
+	d.SetId(key)
 	return nil
 }
