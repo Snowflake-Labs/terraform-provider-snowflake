@@ -159,6 +159,11 @@ const (
 	// OPERATE [ , ... ]
 	SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE"
 
+	// -- FOR DYNAMIC TABLE
+	//  OPERATE, SELECT [ , ...]
+	// SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE" (duplicate)
+	// SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT" (duplicate)
+
 	// -- For EVENT TABLE
 	// { SELECT | INSERT } [ , ... ]
 	SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT"
