@@ -112,6 +112,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 		},
 	})
 }
+
 func TestAcc_Table(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
@@ -447,6 +448,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 `
 	return fmt.Sprintf(s, name, name, name, name, name, name)
 }
+
 func tableAndDataRetentionParameterConfigWithLifecycle(name string) string {
 	s := `
 resource "snowflake_database" "test_database" {
@@ -493,6 +495,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 `
 	return fmt.Sprintf(s, name, name, name, name, name, name)
 }
+
 func updatedTableAndDataRetentionParameterConfigWithLifecycle(name string) string {
 	s := `
 resource "snowflake_database" "test_database" {

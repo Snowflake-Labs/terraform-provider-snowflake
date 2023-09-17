@@ -761,7 +761,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	var updateDataRetention = func(key string) error {
+	updateDataRetention := func(key string) error {
 		if d.HasChange(key) {
 			ndr := d.Get(key)
 			q := builder.ChangeDataRetention(ndr.(int))
