@@ -117,11 +117,11 @@ func (field *Field) DtoKind() string {
 	if field.IsRoot() {
 		withoutSuffix, _ := strings.CutSuffix(field.Kind, "Options")
 		return fmt.Sprintf("%sRequest", withoutSuffix)
-	} else if field.IsStruct() {
-		return fmt.Sprintf("%sRequest", field.Kind)
-	} else {
-		return field.Kind
 	}
+	if field.IsStruct() {
+		return fmt.Sprintf("%sRequest", field.Kind)
+	}
+	return field.Kind
 }
 
 // DtoDecl returns how struct should be declared in generated DTO (e.g. definition is without a pointer)
@@ -129,11 +129,11 @@ func (field *Field) DtoDecl() string {
 	if field.Parent == nil {
 		withoutSuffix, _ := strings.CutSuffix(field.KindNoPtr(), "Options")
 		return fmt.Sprintf("%sRequest", withoutSuffix)
-	} else if field.IsStruct() {
-		return fmt.Sprintf("%sRequest", field.KindNoPtr())
-	} else {
-		return field.KindNoPtr()
 	}
+	if field.IsStruct() {
+		return fmt.Sprintf("%sRequest", field.KindNoPtr())
+	}
+	return field.KindNoPtr()
 }
 
 // ValidationType contains all handled validation types. Below validations are marked to be contained here or not:
@@ -152,7 +152,7 @@ const (
 	AtLeastOneValueSet
 )
 
-type Validation struct {
+type Validation struct { //nolint
 	Type       ValidationType
 	FieldNames []string
 }
@@ -190,7 +190,7 @@ func (v *Validation) Condition(field *Field) string {
 func (v *Validation) Error() string {
 	switch v.Type {
 	case ValidIdentifier:
-		return fmt.Sprintf("ErrInvalidObjectIdentifier")
+		return fmt.Sprintf("ErrInvalidObjectIdentifier") //nolint
 	case ConflictingFields:
 		return fmt.Sprintf("errOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
 	case ExactlyOneValueSet:
