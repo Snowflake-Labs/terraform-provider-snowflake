@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"fmt"
 	"golang.org/x/exp/slices"
 	"io"
 	"log"
@@ -20,7 +21,10 @@ import (
 //			it will create *Field if missing or return already existing instance pointing to the same memory address
 // 			which we could filter here with generatedStructs []*Field
 
-var generatedStructs []string
+var (
+	generatedStructs []string
+	generatedDtos    []string
+)
 
 func GenerateInterface(writer io.Writer, def *Interface) {
 	generatePackageDirective(writer)
@@ -55,6 +59,7 @@ func generateOptionsStruct(writer io.Writer, operation *Operation) {
 
 func generateStruct(writer io.Writer, field *Field) {
 	if !slices.Contains(generatedStructs, field.KindNoPtr()) {
+		fmt.Println("Generating: " + field.KindNoPtr())
 		printTo(writer, StructTemplate, field)
 		generatedStructs = append(generatedStructs, field.KindNoPtr())
 	}
@@ -69,6 +74,22 @@ func generateStruct(writer io.Writer, field *Field) {
 func GenerateDtos(writer io.Writer, def *Interface) {
 	generatePackageDirective(writer)
 	printTo(writer, DtoTemplate, def)
+	for _, o := range def.Operations {
+		generateDtoDecls(writer, o.OptsField)
+	}
+}
+
+func generateDtoDecls(writer io.Writer, field *Field) {
+	if !slices.Contains(generatedDtos, field.DtoDecl()) {
+		printTo(writer, DtoDeclTemplate, field)
+		generatedDtos = append(generatedDtos, field.DtoDecl())
+
+		for _, f := range field.Fields {
+			if f.IsStruct() {
+				generateDtoDecls(writer, f)
+			}
+		}
+	}
 }
 
 func GenerateImplementation(writer io.Writer, def *Interface) {

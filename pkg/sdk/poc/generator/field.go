@@ -36,7 +36,7 @@ func NewField(name string, kind string, tagBuilder *TagBuilder, transformer Fiel
 		Kind: kind,
 		Tags: tags,
 	}
-	if transformer != nil {
+	if !IsNil(transformer) {
 		return transformer.Transform(f)
 	}
 	return f
@@ -92,9 +92,11 @@ func (f *Field) TagsPrintable() string {
 	return ""
 }
 
+// TODO Rename KindNoPrefix or smth
 // KindNoPtr return field's Kind but without pointer
 func (f *Field) KindNoPtr() string {
 	kindWithoutPtr, _ := strings.CutPrefix(f.Kind, "*")
+	kindWithoutPtr, _ = strings.CutPrefix(kindWithoutPtr, "[]")
 	return kindWithoutPtr
 }
 

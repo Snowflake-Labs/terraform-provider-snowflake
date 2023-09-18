@@ -16,9 +16,13 @@ type CreateNetworkPolicyOptions struct {
 	OrReplace     *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	networkPolicy bool                    `ddl:"static" sql:"NETWORK POLICY"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
-	AllowedIpList []string                `ddl:"parameter,single_quotes" sql:"ALLOWED_IP_LIST"`
-	BlockedIpList []string                `ddl:"parameter,single_quotes" sql:"BLOCKED_IP_LIST"`
+	AllowedIpList []IP                    `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList []IP                    `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
 	Comment       *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type IP struct {
+	IP string `ddl:"keyword"`
 }
 
 // AlterNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-network-policy.

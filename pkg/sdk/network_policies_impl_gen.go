@@ -47,11 +47,20 @@ func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifi
 
 func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
 	opts := &CreateNetworkPolicyOptions{
-		OrReplace:     r.OrReplace,
-		name:          r.name,
-		AllowedIpList: r.AllowedIpList,
-		BlockedIpList: r.BlockedIpList,
-		Comment:       r.Comment,
+		OrReplace: r.OrReplace,
+		name:      r.name,
+
+		Comment: r.Comment,
+	}
+	if r.AllowedIpList != nil {
+		opts.AllowedIpList = &IP{
+			IP: r.BlockedIpList.IP,
+		}
+	}
+	if r.BlockedIpList != nil {
+		opts.BlockedIpList = &IP{
+			IP: r.BlockedIpList.IP,
+		}
 	}
 	return opts
 }

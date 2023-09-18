@@ -60,6 +60,11 @@ func (s *Operation) withHelperStruct(helperStruct *Field) *Operation {
 	return s
 }
 
+func (s *Operation) withHelperStructs(helperStructs ...*Field) *Operation {
+	s.HelperStructs = append(s.HelperStructs, helperStructs...)
+	return s
+}
+
 func addShowMapping(op *Operation, from, to *Field) {
 	op.ShowMapping = newMapping("convert", from, to)
 }
@@ -68,11 +73,20 @@ func addDescriptionMapping(op *Operation, from, to *Field) {
 	op.DescribeMapping = newMapping("convert", from, to)
 }
 
-func (i *Interface) newSimpleOperation(kind OperationKind, doc string, queryStruct *queryStruct) *Interface {
+func (i *Interface) newSimpleOperation(kind OperationKind, doc string, queryStruct *queryStruct, helperStructs ...IntoField) *Interface {
 	if queryStruct.identifierField != nil {
 		queryStruct.identifierField.Kind = i.IdentifierKind
 	}
-	i.Operations = append(i.Operations, newOperation(kind, doc).withOptionsStruct(queryStruct.IntoField()))
+	f := make([]*Field, len(helperStructs))
+	if len(f) > 0 {
+		for i, hs := range helperStructs {
+			f[i] = hs.IntoField()
+		}
+	}
+	operation := newOperation(kind, doc).
+		withOptionsStruct(queryStruct.IntoField()).
+		withHelperStructs(f...)
+	i.Operations = append(i.Operations, operation)
 	return i
 }
 
@@ -98,8 +112,13 @@ func (i *Interface) newOperationWithDBMapping(
 	return i
 }
 
-func (i *Interface) CreateOperation(doc string, queryStruct *queryStruct) *Interface {
-	return i.newSimpleOperation(OperationKindCreate, doc, queryStruct)
+type IntoField interface {
+	IntoField() *Field
+}
+
+// TODO helper structs for other operations or cache for not duplicating structs
+func (i *Interface) CreateOperation(doc string, queryStruct *queryStruct, helperStructs ...IntoField) *Interface {
+	return i.newSimpleOperation(OperationKindCreate, doc, queryStruct, helperStructs...)
 }
 
 func (i *Interface) AlterOperation(doc string, queryStruct *queryStruct) *Interface {

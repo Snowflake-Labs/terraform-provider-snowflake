@@ -13,9 +13,13 @@ var (
 type CreateNetworkPolicyRequest struct {
 	OrReplace     *bool
 	name          AccountObjectIdentifier // required
-	AllowedIpList []string                // required
-	BlockedIpList []string
+	AllowedIpList []IPRequest
+	BlockedIpList []IPRequest
 	Comment       *string
+}
+
+type IPRequest struct {
+	IP string
 }
 
 type AlterNetworkPolicyRequest struct {

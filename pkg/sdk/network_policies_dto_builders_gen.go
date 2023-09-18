@@ -6,11 +6,9 @@ import ()
 
 func NewCreateNetworkPolicyRequest(
 	name AccountObjectIdentifier,
-	AllowedIpList []string,
 ) *CreateNetworkPolicyRequest {
 	s := CreateNetworkPolicyRequest{}
 	s.name = name
-	s.AllowedIpList = AllowedIpList
 	return &s
 }
 
@@ -19,13 +17,27 @@ func (s *CreateNetworkPolicyRequest) WithOrReplace(OrReplace *bool) *CreateNetwo
 	return s
 }
 
-func (s *CreateNetworkPolicyRequest) WithBlockedIpList(BlockedIpList []string) *CreateNetworkPolicyRequest {
+func (s *CreateNetworkPolicyRequest) WithAllowedIpList(AllowedIpList []IPRequest) *CreateNetworkPolicyRequest {
+	s.AllowedIpList = AllowedIpList
+	return s
+}
+
+func (s *CreateNetworkPolicyRequest) WithBlockedIpList(BlockedIpList []IPRequest) *CreateNetworkPolicyRequest {
 	s.BlockedIpList = BlockedIpList
 	return s
 }
 
 func (s *CreateNetworkPolicyRequest) WithComment(Comment *string) *CreateNetworkPolicyRequest {
 	s.Comment = Comment
+	return s
+}
+
+func NewIPRequest() *IPRequest {
+	return &IPRequest{}
+}
+
+func (s *IPRequest) WithIP(IP string) *IPRequest {
+	s.IP = IP
 	return s
 }
 

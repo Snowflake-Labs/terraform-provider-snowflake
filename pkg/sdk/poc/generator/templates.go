@@ -41,22 +41,6 @@ type {{ .KindNoPtr }} struct {
 `)
 
 var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
-{{ define "DTO_STRUCT" }}
-	type {{ .DtoDecl }} struct {
-		{{- range .Fields }}
-			{{- if .ShouldBeInDto }}
-			{{ .Name }} {{ .DtoKind }} {{ if .Required }}// required{{ end }}
-			{{- end }}
-		{{- end }}
-	}
-
-	{{- range .Fields }}
-		{{ if .IsStruct }}
-		{{ template "DTO_STRUCT" . }}
-		{{ end }}
-	{{- end }}
-{{ end }}
-
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
@@ -64,10 +48,16 @@ var (
 	_ optionsProvider[{{ .OptsField.KindNoPtr }}] = new({{ .OptsField.DtoDecl }})
 	{{- end }}
 )
+`)
 
-{{- range .Operations }}
-	{{ template "DTO_STRUCT" .OptsField }}
-{{- end }}
+var DtoDeclTemplate, _ = template.New("dtoTemplate").Parse(`
+type {{ .DtoDecl }} struct {
+	{{- range .Fields }}
+		{{- if .ShouldBeInDto }}
+		{{ .Name }} {{ .DtoKind }} {{ if .Required }}// required{{ end }}
+		{{- end }}
+	{{- end }}
+}
 `)
 
 var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`

@@ -13,6 +13,9 @@ var (
 					Field("EntriesInAllowedIpList", "int").
 					Field("EntriesInBlockedIpList", "int")
 
+	ip = g.QueryStruct("IP").
+		Text("IP", nil)
+
 	NetworkPoliciesDef = g.NewInterface(
 		"NetworkPolicies",
 		"NetworkPolicy",
@@ -27,11 +30,13 @@ var (
 				SQL("NETWORK POLICY").
 				// by convention field is named "name" and type is derived from interface field
 				SelfIdentifier().
+				ListQueryStructField("AllowedIpList", ip, g.ParameterOptions().SQL("ALLOWED_IP_LIST").Parentheses()).
+				ListQueryStructField("BlockedIpList", ip, g.ParameterOptions().SQL("BLOCKED_IP_LIST").Parentheses()).
 				// for those cases better to pass name and sql prefix in Options ?
 				// ListAssignment is Optional in its nature, because it's a slice which can be null,
 				// thus should it be ListAssignment or OptionalListAssignment ?
-				ListAssignment("ALLOWED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes().Required()).
-				ListAssignment("BLOCKED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
+				//ListAssignment("ALLOWED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes().Required()).
+				//ListAssignment("BLOCKED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
 				// for those cases better to pass name and sql prefix in Options ? prefix could be empty
 				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 				WithValidation(g.ValidIdentifier, "name"),

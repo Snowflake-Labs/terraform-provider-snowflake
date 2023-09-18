@@ -16,6 +16,23 @@ import (
 	"golang.org/x/text/language"
 )
 
+// IsNil is used for special cases where x != nil might not work (e.g. passing nil instead of interface implementation)
+func IsNil(val any) bool {
+	if val == nil {
+		return true
+	}
+
+	v := reflect.ValueOf(val)
+	k := v.Kind()
+	switch k {
+	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer,
+		reflect.UnsafePointer, reflect.Interface, reflect.Slice:
+		return v.IsNil()
+	}
+
+	return false
+}
+
 func startingWithLowerCase(s string) string {
 	firstLetter, _ := utf8.DecodeRuneInString(s)
 	return strings.ToLower(string(firstLetter)) + s[1:]

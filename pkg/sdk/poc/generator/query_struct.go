@@ -34,6 +34,15 @@ func (v *queryStruct) QueryStructField(name string, queryStruct *queryStruct, tr
 	return v
 }
 
+func (v *queryStruct) ListQueryStructField(name string, queryStruct *queryStruct, transformer FieldTransformer) *queryStruct {
+	qs := queryStruct.IntoField()
+	qs.Name = name
+	qs.Kind = "[]" + qs.Kind
+	qs = transformer.Transform(qs)
+	v.fields = append(v.fields, qs)
+	return v
+}
+
 func (v *queryStruct) OptionalQueryStructField(name string, queryStruct *queryStruct, transformer FieldTransformer) *queryStruct {
 	qs := queryStruct.IntoField()
 	qs.Name = name
