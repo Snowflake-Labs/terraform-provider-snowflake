@@ -19,7 +19,7 @@ type CreateNetworkPolicyRequest struct {
 }
 
 type IPRequest struct {
-	IP string
+	IP string // required
 }
 
 type AlterNetworkPolicyRequest struct {
@@ -27,7 +27,7 @@ type AlterNetworkPolicyRequest struct {
 	name         AccountObjectIdentifier // required
 	Set          *NetworkPolicySetRequest
 	UnsetComment *bool
-	RenameTo     AccountObjectIdentifier
+	RenameTo     *AccountObjectIdentifier
 }
 
 type NetworkPolicySetRequest struct {

@@ -27,13 +27,13 @@ type IP struct {
 
 // AlterNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-network-policy.
 type AlterNetworkPolicyOptions struct {
-	alter         bool                    `ddl:"static" sql:"ALTER"`
-	networkPolicy bool                    `ddl:"static" sql:"NETWORK POLICY"`
-	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name          AccountObjectIdentifier `ddl:"identifier"`
-	Set           *NetworkPolicySet       `ddl:"keyword" sql:"SET"`
-	UnsetComment  *bool                   `ddl:"keyword" sql:"UNSET COMMENT"`
-	RenameTo      AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	alter         bool                     `ddl:"static" sql:"ALTER"`
+	networkPolicy bool                     `ddl:"static" sql:"NETWORK POLICY"`
+	IfExists      *bool                    `ddl:"keyword" sql:"IF EXISTS"`
+	name          AccountObjectIdentifier  `ddl:"identifier"`
+	Set           *NetworkPolicySet        `ddl:"keyword" sql:"SET"`
+	UnsetComment  *bool                    `ddl:"keyword" sql:"UNSET COMMENT"`
+	RenameTo      *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 }
 
 type NetworkPolicySet struct {

@@ -32,13 +32,12 @@ func (s *CreateNetworkPolicyRequest) WithComment(Comment *string) *CreateNetwork
 	return s
 }
 
-func NewIPRequest() *IPRequest {
-	return &IPRequest{}
-}
-
-func (s *IPRequest) WithIP(IP string) *IPRequest {
+func NewIPRequest(
+	IP string,
+) *IPRequest {
+	s := IPRequest{}
 	s.IP = IP
-	return s
+	return &s
 }
 
 func NewAlterNetworkPolicyRequest(
@@ -64,7 +63,7 @@ func (s *AlterNetworkPolicyRequest) WithUnsetComment(UnsetComment *bool) *AlterN
 	return s
 }
 
-func (s *AlterNetworkPolicyRequest) WithRenameTo(RenameTo AccountObjectIdentifier) *AlterNetworkPolicyRequest {
+func (s *AlterNetworkPolicyRequest) WithRenameTo(RenameTo *AccountObjectIdentifier) *AlterNetworkPolicyRequest {
 	s.RenameTo = RenameTo
 	return s
 }

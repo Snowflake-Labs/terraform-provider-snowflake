@@ -63,7 +63,7 @@ var (
 					g.KeywordOptions().SQL("SET"),
 				).
 				OptionalSQL("UNSET COMMENT").
-				Identifier("RenameTo", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+				Identifier("RenameTo", g.KindOfT[*AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 				// generator.ValidIdentifier validation can be implicit (we can add it when calling SelfIdentifier)
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.AtLeastOneValueSet, "Set", "UnsetComment", "RenameTo").
