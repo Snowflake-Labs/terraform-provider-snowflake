@@ -6,13 +6,6 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var (
-	networkPolicyRepresentation = g.PlainStruct("NetworkPolicy").
-					Field("CreatedOn", "string").
-					Field("Name", "string").
-					Field("Comment", "string").
-					Field("EntriesInAllowedIpList", "int").
-					Field("EntriesInBlockedIpList", "int")
-
 	ip = g.QueryStruct("IP").
 		Text("IP", g.KeywordOptions().SingleQuotes())
 
@@ -86,19 +79,29 @@ var (
 				Field("comment", "string").
 				Field("entries_in_allowed_ip_list", "int").
 				Field("entries_in_blocked_ip_list", "int"),
-			networkPolicyRepresentation,
+			g.PlainStruct("NetworkPolicy").
+				Field("CreatedOn", "string").
+				Field("Name", "string").
+				Field("Comment", "string").
+				Field("EntriesInAllowedIpList", "int").
+				Field("EntriesInBlockedIpList", "int"),
 			g.QueryStruct("ShowNetworkPolicies").
 				Show().
 				SQL("NETWORK POLICIES"),
 		).
 		// Should describe be always Describe(context, id) or Describe(context, request) ? or we support both ?
 		//	e.g. external tables are expecting more inputs than id
+		// TODO Support key / value descriptions - should be an option in desc operation
+		// 	normal 		- Description(ctx, req) (*Desc, error)
+		// 	key / value - Description(ctx, req) ([]Desc, error)
 		DescribeOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy",
 			g.DbStruct("describeNetworkPolicyDBRow").
 				Field("name", "string").
 				Field("value", "string"),
-			networkPolicyRepresentation,
+			g.PlainStruct("NetworkPolicyDescription").
+				Field("Name", "string").
+				Field("Value", "string"),
 			g.QueryStruct("DescribeNetworkPolicy").
 				Describe().
 				SQL("NETWORK POLICY").
