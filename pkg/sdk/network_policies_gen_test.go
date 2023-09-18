@@ -123,13 +123,9 @@ func TestNetworkPolicies_Drop(t *testing.T) {
 }
 
 func TestNetworkPolicies_Show(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
-
 	// Minimal valid ShowNetworkPolicyOptions
 	defaultOpts := func() *ShowNetworkPolicyOptions {
-		return &ShowNetworkPolicyOptions{
-			name: id,
-		}
+		return &ShowNetworkPolicyOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {

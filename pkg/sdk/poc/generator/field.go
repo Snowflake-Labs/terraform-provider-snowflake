@@ -100,9 +100,22 @@ func (f *Field) KindNoPtr() string {
 	return kindWithoutPtr
 }
 
+func (f *Field) KindNoSlice() string {
+	kindWithoutSlice, _ := strings.CutPrefix(f.Kind, "[]")
+	return kindWithoutSlice
+}
+
 // IsStruct checks if field is a struct
 func (f *Field) IsStruct() bool {
 	return len(f.Fields) > 0
+}
+
+func (f *Field) IsPointer() bool {
+	return strings.HasPrefix(f.Kind, "*")
+}
+
+func (f *Field) IsSlice() bool {
+	return strings.HasPrefix(f.Kind, "[]")
 }
 
 // ShouldBeInDto checks if field is not some static SQL field which should not be interacted with by SDK user

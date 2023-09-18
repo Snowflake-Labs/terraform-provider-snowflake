@@ -14,7 +14,7 @@ var (
 					Field("EntriesInBlockedIpList", "int")
 
 	ip = g.QueryStruct("IP").
-		Text("IP", nil)
+		Text("IP", g.KeywordOptions().SingleQuotes())
 
 	NetworkPoliciesDef = g.NewInterface(
 		"NetworkPolicies",
@@ -56,8 +56,8 @@ var (
 						// should we pass plain kinds or instead there should be interface with [Kind() string] func in it
 						// then we would force users to use g.KindOf... functions family, and it would look more consistent
 						// with places where we would use g.KindOfT[type]()
-						ListAssignment("ALLOWED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
-						ListAssignment("BLOCKED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
+						ListQueryStructField("AllowedIpList", ip, g.ParameterOptions().SQL("ALLOWED_IP_LIST").Parentheses()).
+						ListQueryStructField("BlockedIpList", ip, g.ParameterOptions().SQL("BLOCKED_IP_LIST").Parentheses()).
 						OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 						WithValidation(g.AtLeastOneValueSet, "AllowedIpList", "BlockedIpList", "Comment"),
 					g.KeywordOptions().SQL("SET"),

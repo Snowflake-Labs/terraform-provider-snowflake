@@ -22,7 +22,7 @@ type CreateNetworkPolicyOptions struct {
 }
 
 type IP struct {
-	IP string `ddl:"keyword"`
+	IP string `ddl:"keyword,single_quotes"`
 }
 
 // AlterNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-network-policy.
@@ -37,9 +37,9 @@ type AlterNetworkPolicyOptions struct {
 }
 
 type NetworkPolicySet struct {
-	AllowedIpList []string `ddl:"parameter,single_quotes" sql:"ALLOWED_IP_LIST"`
-	BlockedIpList []string `ddl:"parameter,single_quotes" sql:"BLOCKED_IP_LIST"`
-	Comment       *string  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	AllowedIpList []IP    `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList []IP    `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
+	Comment       *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // DropNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-network-policy.

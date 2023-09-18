@@ -31,8 +31,8 @@ type AlterNetworkPolicyRequest struct {
 }
 
 type NetworkPolicySetRequest struct {
-	AllowedIpList []string
-	BlockedIpList []string
+	AllowedIpList []IPRequest
+	BlockedIpList []IPRequest
 	Comment       *string
 }
 

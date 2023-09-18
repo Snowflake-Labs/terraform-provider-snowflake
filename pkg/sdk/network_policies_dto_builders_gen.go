@@ -73,12 +73,12 @@ func NewNetworkPolicySetRequest() *NetworkPolicySetRequest {
 	return &NetworkPolicySetRequest{}
 }
 
-func (s *NetworkPolicySetRequest) WithAllowedIpList(AllowedIpList []string) *NetworkPolicySetRequest {
+func (s *NetworkPolicySetRequest) WithAllowedIpList(AllowedIpList []IPRequest) *NetworkPolicySetRequest {
 	s.AllowedIpList = AllowedIpList
 	return s
 }
 
-func (s *NetworkPolicySetRequest) WithBlockedIpList(BlockedIpList []string) *NetworkPolicySetRequest {
+func (s *NetworkPolicySetRequest) WithBlockedIpList(BlockedIpList []IPRequest) *NetworkPolicySetRequest {
 	s.BlockedIpList = BlockedIpList
 	return s
 }

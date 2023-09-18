@@ -60,6 +60,17 @@ type {{ .DtoDecl }} struct {
 }
 `)
 
+// TODO Support slices that have requests inside them, e.g.
+// TODO Better solution for {{ if .IsSlice }}{{ else }} impl if possible
+//
+//	type FooRequest struct {
+//		b []BarRequest
+//	}
+//
+//	type BarRequest {
+//		value1 string 		  // that's supported
+//		value1 AnotherRequest // that is not supported
+//	}
 var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
 {{ define "MAPPING" -}}
 	&{{ .KindNoPtr }}{
@@ -73,7 +84,18 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
 		{{- if .ShouldBeInDto }}
 			{{- if .IsStruct }}
 				if r{{ .Path }} != nil {
-					opts{{ .Path }} = {{ template "MAPPING" . -}}
+					{{- if not .IsSlice }}
+						opts{{ .Path }} = {{ template "MAPPING" . -}}
+					{{- else }}
+						s := make({{ .Kind }}, len(r{{ .Path }}))
+						for i, v := range r{{ .Path }} {
+							s[i] = {{ .KindNoSlice }}{
+							  {{- range .Fields }}
+								   {{ .Name }}: v.{{ .Name }},
+							  {{- end }}
+							}
+						}
+					{{ end -}}
 				}
 			{{- end -}}
 		{{ end -}}
