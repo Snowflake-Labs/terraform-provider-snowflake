@@ -2,13 +2,22 @@ package sdk
 
 import "errors"
 
+var (
+	_ validatable = (*CreateRoleOptions)(nil)
+	_ validatable = (*AlterRoleOptions)(nil)
+	_ validatable = (*DropRoleOptions)(nil)
+	_ validatable = (*ShowRoleOptions)(nil)
+	_ validatable = (*GrantRoleOptions)(nil)
+	_ validatable = (*RevokeRoleOptions)(nil)
+)
+
 func (opts *CreateRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("OrReplace", "IfNotExists"))
@@ -18,11 +27,11 @@ func (opts *CreateRoleOptions) validate() error {
 
 func (opts *AlterRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	if everyValueNil(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetTags, opts.UnsetTags) {
 		errs = append(errs, errors.New("no alter action specified"))
@@ -36,35 +45,35 @@ func (opts *AlterRoleOptions) validate() error {
 
 func (opts *DropRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
 
 func (opts *ShowRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	var errs []error
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		errs = append(errs, ErrPatternRequiredForLikeKeyword)
+		errs = append(errs, errPatternRequiredForLikeKeyword)
 	}
 	if valueSet(opts.InClass) && !validObjectidentifier(opts.InClass.Class) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *GrantRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	if (opts.Grant.Role != nil && opts.Grant.User != nil) || (opts.Grant.Role == nil && opts.Grant.User == nil) {
 		errs = append(errs, errors.New("only one grant option can be set [TO ROLE or TO USER]"))
@@ -80,11 +89,11 @@ func (opts *GrantRoleOptions) validate() error {
 
 func (opts *RevokeRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	if (opts.Revoke.Role != nil && opts.Revoke.User != nil) || (opts.Revoke.Role == nil && opts.Revoke.User == nil) {
 		errs = append(errs, errors.New("only one revoke option can be set [FROM ROLE or FROM USER]"))

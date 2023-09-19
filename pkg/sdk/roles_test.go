@@ -33,7 +33,7 @@ func TestRolesCreate(t *testing.T) {
 		opts := &CreateRoleOptions{
 			name: NewAccountObjectIdentifier(""),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: one of OrReplace, IfNotExists", func(t *testing.T) {
@@ -66,7 +66,7 @@ func TestRolesDrop(t *testing.T) {
 		opts := &DropRoleOptions{
 			name: NewAccountObjectIdentifier(""),
 		}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
 	})
 }
 
@@ -129,7 +129,7 @@ func TestRolesAlter(t *testing.T) {
 			name:         NewAccountObjectIdentifier(""),
 			UnsetComment: Bool(true),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: no alter action specified", func(t *testing.T) {
@@ -177,7 +177,7 @@ func TestRolesShow(t *testing.T) {
 		opts := &ShowRoleOptions{
 			Like: &Like{},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrPatternRequiredForLikeKeyword)
+		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("validation: invalid class name", func(t *testing.T) {
@@ -187,7 +187,7 @@ func TestRolesShow(t *testing.T) {
 				Class: &class,
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 }
 
@@ -216,7 +216,7 @@ func TestRolesGrant(t *testing.T) {
 		opts := &GrantRoleOptions{
 			name: NewAccountObjectIdentifier(""),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errors.New("only one grant option can be set [TO ROLE or TO USER]"))
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier, errors.New("only one grant option can be set [TO ROLE or TO USER]"))
 	})
 
 	t.Run("validation: invalid object identifier for granted role", func(t *testing.T) {
@@ -267,6 +267,6 @@ func TestRolesRevoke(t *testing.T) {
 		opts := &RevokeRoleOptions{
 			name: NewAccountObjectIdentifier(""),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errors.New("only one revoke option can be set [FROM ROLE or FROM USER]"))
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier, errors.New("only one revoke option can be set [FROM ROLE or FROM USER]"))
 	})
 }

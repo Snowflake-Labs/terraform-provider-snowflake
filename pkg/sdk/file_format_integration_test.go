@@ -380,7 +380,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.FileFormats.ShowByID(ctx, oldId)
-		require.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 
 		result, err := client.FileFormats.ShowByID(ctx, newId)
 		require.NoError(t, err)
@@ -434,7 +434,7 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.FileFormats.ShowByID(ctx, fileFormat.ID())
-		require.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("with IfExists", func(t *testing.T) {
@@ -445,7 +445,7 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.FileFormats.ShowByID(ctx, fileFormat.ID())
-		require.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 

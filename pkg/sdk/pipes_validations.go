@@ -14,10 +14,10 @@ var (
 
 func (opts *PipeCreateOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if opts.copyStatement == "" {
 		return errCopyStatementRequired
@@ -27,10 +27,10 @@ func (opts *PipeCreateOptions) validate() error {
 
 func (opts *PipeAlterOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if ok := exactlyOneValueSet(
 		opts.Set,
@@ -66,20 +66,20 @@ func (opts *PipeAlterOptions) validate() error {
 
 func (opts *PipeDropOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
 
 func (opts *PipeShowOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		return ErrPatternRequiredForLikeKeyword
+		return errPatternRequiredForLikeKeyword
 	}
 	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
 		return errScopeRequiredForInKeyword
@@ -89,10 +89,10 @@ func (opts *PipeShowOptions) validate() error {
 
 func (opts *describePipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }

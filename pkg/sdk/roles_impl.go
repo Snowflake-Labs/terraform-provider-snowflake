@@ -4,7 +4,10 @@ import (
 	"context"
 )
 
-var _ Roles = (*roles)(nil)
+var (
+	_ Roles                = (*roles)(nil)
+	_ convertibleRow[Role] = (*roleDBRow)(nil)
+)
 
 type roles struct {
 	client *Client
@@ -23,30 +26,20 @@ func (v *roles) Drop(ctx context.Context, req *DropRoleRequest) error {
 }
 
 func (v *roles) Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error) {
-	rows, err := validateAndQuery[roleDBRow](v.client, ctx, req.ToOpts())
+	dbRows, err := validateAndQuery[roleDBRow](v.client, ctx, req.ToOpts())
 	if err != nil {
 		return nil, err
 	}
-
-	roles := make([]Role, len(rows))
-	for i, row := range rows {
-		roles[i] = row.toRole()
-	}
-
-	return roles, nil
+	resultList := convertRows[roleDBRow, Role](dbRows)
+	return resultList, nil
 }
 
 func (v *roles) ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, error) {
-	roles, err := v.client.Roles.Show(ctx, NewShowRoleRequest().WithLike(NewLikeRequest(req.id.Name())))
+	roleList, err := v.client.Roles.Show(ctx, NewShowRoleRequest().WithLike(NewLikeRequest(req.id.Name())))
 	if err != nil {
 		return nil, err
 	}
-	for _, role := range roles {
-		if role.ID() == req.id {
-			return &role, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return findOne(roleList, func(r Role) bool { return r.ID().name == req.id.Name() })
 }
 
 func (v *roles) Grant(ctx context.Context, req *GrantRoleRequest) error {

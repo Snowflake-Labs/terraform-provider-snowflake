@@ -61,8 +61,8 @@ type roleDBRow struct {
 	Comment         sql.NullString `db:"comment"`
 }
 
-func (row *roleDBRow) toRole() Role {
-	role := Role{
+func (row roleDBRow) convert() *Role {
+	role := &Role{
 		CreatedOn:       row.CreatedOn,
 		Name:            row.Name,
 		AssignedToUsers: row.AssignedToUsers,

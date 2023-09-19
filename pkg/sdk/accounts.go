@@ -415,5 +415,5 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 			return account, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }

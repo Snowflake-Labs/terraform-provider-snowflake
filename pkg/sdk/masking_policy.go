@@ -104,7 +104,7 @@ func (opts *AlterMaskingPolicyOptions) validate() error {
 
 	if everyValueNil(opts.Set, opts.Unset) {
 		if !validObjectidentifier(opts.NewName) {
-			return ErrInvalidObjectIdentifier
+			return errInvalidObjectIdentifier
 		}
 	}
 
@@ -176,7 +176,7 @@ type DropMaskingPolicyOptions struct {
 
 func (opts *DropMaskingPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -307,7 +307,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 			return maskingPolicy, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type describeMaskingPolicyOptions struct {
@@ -318,7 +318,7 @@ type describeMaskingPolicyOptions struct {
 
 func (v *describeMaskingPolicyOptions) validate() error {
 	if !validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
