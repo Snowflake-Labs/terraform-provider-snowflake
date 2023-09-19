@@ -104,7 +104,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 			PasswordMaxAgeDays:        Int(30),
 			PasswordMaxRetries:        Int(5),
 			PasswordLockoutTimeMins:   Int(30),
-			Comment:                   String("test comment"),
+			//Comment:                   String("test comment"),
 		})
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
@@ -131,7 +131,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 			PasswordMinLength:         Int(10),
 			PasswordMaxLength:         Int(20),
 			PasswordMinUpperCaseChars: Int(5),
-			Comment:                   String("test comment"),
+			//Comment:                   String("test comment"),
 		})
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)

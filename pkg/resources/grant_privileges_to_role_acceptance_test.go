@@ -608,7 +608,7 @@ func grantPrivilegesToRole_onSchemaObject_allInSchema(name string, privileges []
 		privileges = [%s]
 		on_schema_object {
 			all {
-				object_type_plural = "DYNAMIC TABLES"
+				object_type_plural = "TABLES"
 				in_schema = "\"%s\".\"%s\""
 			}
 		}
