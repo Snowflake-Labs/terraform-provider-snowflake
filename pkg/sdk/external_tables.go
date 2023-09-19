@@ -343,8 +343,8 @@ type externalTableRow struct {
 	OwnerRoleType       string
 }
 
-func (e externalTableRow) ToExternalTable() ExternalTable {
-	et := ExternalTable{
+func (e externalTableRow) convert() *ExternalTable {
+	et := &ExternalTable{
 		CreatedOn:      e.CreatedOn,
 		Name:           e.Name,
 		DatabaseName:   e.DatabaseName,

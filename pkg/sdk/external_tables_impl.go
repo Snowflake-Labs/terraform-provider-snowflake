@@ -2,7 +2,10 @@ package sdk
 
 import "context"
 
-var _ ExternalTables = (*externalTables)(nil)
+var (
+	_ ExternalTables                = (*externalTables)(nil)
+	_ convertibleRow[ExternalTable] = (*externalTableRow)(nil)
+)
 
 type externalTables struct {
 	client *Client
@@ -37,17 +40,12 @@ func (v *externalTables) Drop(ctx context.Context, req *DropExternalTableRequest
 }
 
 func (v *externalTables) Show(ctx context.Context, req *ShowExternalTableRequest) ([]ExternalTable, error) {
-	rows, err := validateAndQuery[externalTableRow](v.client, ctx, req.toOpts())
+	dbRows, err := validateAndQuery[externalTableRow](v.client, ctx, req.toOpts())
 	if err != nil {
 		return nil, err
 	}
-
-	externalTables := make([]ExternalTable, len(rows))
-	for i, row := range rows {
-		externalTables[i] = row.ToExternalTable()
-	}
-
-	return externalTables, err
+	resultList := convertRows[externalTableRow, ExternalTable](dbRows)
+	return resultList, nil
 }
 
 func (v *externalTables) ShowByID(ctx context.Context, req *ShowExternalTableByIDRequest) (*ExternalTable, error) {
