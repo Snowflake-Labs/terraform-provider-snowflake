@@ -95,6 +95,7 @@ var (
 		// 	normal 		- Description(ctx, req) (*Desc, error)
 		// 	key / value - Description(ctx, req) ([]Desc, error)
 		DescribeOperation(
+			g.DescriptionMappingKindSlice,
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy",
 			g.DbStruct("describeNetworkPolicyDBRow").
 				Field("name", "string").

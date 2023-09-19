@@ -126,8 +126,20 @@ type {{ $impl }} struct {
 			resultList := convertRows[{{ .ShowMapping.From.Name }}, {{ .ShowMapping.To.Name }}](dbRows)
 			return resultList, nil
 		}
-	{{ else if and (eq .Name "Describe") .DescribeMapping }}
+	{{ else if and (and (eq .Name "Describe") .DescribeMapping) (eq .DescribeMapping "single_value") }}
 		func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error) {
+			opts := &{{ .OptsField.Name }}{
+				// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
+				name: id,
+			}
+			result, err := validateAndQueryOne[{{ .DescribeMapping.From.Name }}](v.client, ctx, opts)
+			if err != nil {
+				return nil, err
+			}
+			return result.convert(), nil
+		}
+	{{ else if and (and (eq .Name "Describe") .DescribeMapping) (eq .DescribeMapping "single_value") }}
+		func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error) {
 			opts := &{{ .OptsField.Name }}{
 				// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 				name: id,

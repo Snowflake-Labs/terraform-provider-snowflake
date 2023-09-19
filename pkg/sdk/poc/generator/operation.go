@@ -11,6 +11,13 @@ const (
 	OperationKindDescribe OperationKind = "Describe"
 )
 
+type DescriptionMappingKind string
+
+const (
+	DescriptionMappingKindSingleValue DescriptionMappingKind = "single_value"
+	DescriptionMappingKindSlice       DescriptionMappingKind = "slice"
+)
+
 // Operation defines a single operation for given object or objects family (e.g. CREATE DATABASE ROLE)
 type Operation struct {
 	// Name is the operation's name, e.g. "Create"
@@ -24,8 +31,8 @@ type Operation struct {
 	// HelperStructs are struct definitions that are not tied to OptsField, but tied to the Operation itself, e.g. Show() return type
 	HelperStructs   []*Field
 	ShowMapping     *Mapping
+	DescribeKind    *DescriptionMappingKind
 	DescribeMapping *Mapping
-	//CustomMappings []*Mapping
 }
 
 type Mapping struct {
@@ -133,6 +140,6 @@ func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resour
 	return i.newOperationWithDBMapping(OperationKindShow, doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping)
 }
 
-func (i *Interface) DescribeOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
+func (i *Interface) DescribeOperation(kind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
 	return i.newOperationWithDBMapping(OperationKindDescribe, doc, dbRepresentation, resourceRepresentation, queryStruct, addDescriptionMapping)
 }
