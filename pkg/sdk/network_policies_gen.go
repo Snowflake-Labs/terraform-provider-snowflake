@@ -7,7 +7,8 @@ type NetworkPolicies interface {
 	Alter(ctx context.Context, request *AlterNetworkPolicyRequest) error
 	Drop(ctx context.Context, request *DropNetworkPolicyRequest) error
 	Show(ctx context.Context, request *ShowNetworkPolicyRequest) ([]NetworkPolicy, error)
-	Describe(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error)
+
+	Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyDescription, error)
 }
 
 // CreateNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-network-policy.
@@ -82,4 +83,9 @@ type DescribeNetworkPolicyOptions struct {
 type describeNetworkPolicyDBRow struct {
 	Name  string `db:"name"`
 	Value string `db:"value"`
+}
+
+type NetworkPolicyDescription struct {
+	Name  string
+	Value string
 }

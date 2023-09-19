@@ -104,7 +104,7 @@ func (i *Interface) newOperationWithDBMapping(
 	resourceRepresentation *plainStruct,
 	queryStruct *queryStruct,
 	addMappingFunc func(op *Operation, from, to *Field),
-) *Interface {
+) *Operation {
 	db := dbRepresentation.IntoField()
 	res := resourceRepresentation.IntoField()
 	if queryStruct.identifierField != nil {
@@ -116,7 +116,7 @@ func (i *Interface) newOperationWithDBMapping(
 		withOptionsStruct(queryStruct.IntoField())
 	addMappingFunc(op, db, res)
 	i.Operations = append(i.Operations, op)
-	return i
+	return op
 }
 
 type IntoField interface {
@@ -137,9 +137,12 @@ func (i *Interface) DropOperation(doc string, queryStruct *queryStruct) *Interfa
 }
 
 func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
-	return i.newOperationWithDBMapping(OperationKindShow, doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping)
+	i.newOperationWithDBMapping(OperationKindShow, doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping)
+	return i
 }
 
-func (i *Interface) DescribeOperation(kind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
-	return i.newOperationWithDBMapping(OperationKindDescribe, doc, dbRepresentation, resourceRepresentation, queryStruct, addDescriptionMapping)
+func (i *Interface) DescribeOperation(describeKind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
+	op := i.newOperationWithDBMapping(OperationKindDescribe, doc, dbRepresentation, resourceRepresentation, queryStruct, addDescriptionMapping)
+	op.DescribeKind = &describeKind
+	return i
 }

@@ -33,16 +33,20 @@ func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRe
 	return resultList, nil
 }
 
-func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error) {
+func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyDescription, error) {
 	opts := &DescribeNetworkPolicyOptions{
 		// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 		name: id,
 	}
-	result, err := validateAndQueryOne[describeNetworkPolicyDBRow](v.client, ctx, opts)
+	s, err := validateAndQuery[describeNetworkPolicyDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	return result.convert(), nil
+	result := make([]NetworkPolicyDescription, len(*s))
+	for i, value := range *s {
+		result[i] = *value.convert()
+	}
+	return result, nil
 }
 
 func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
@@ -59,6 +63,7 @@ func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
 				IP: v.IP,
 			}
 		}
+		opts.AllowedIpList = s
 	}
 	if r.BlockedIpList != nil {
 		s := make([]IP, len(r.BlockedIpList))
@@ -67,6 +72,7 @@ func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
 				IP: v.IP,
 			}
 		}
+		opts.BlockedIpList = s
 	}
 	return opts
 }
@@ -91,6 +97,7 @@ func (r *AlterNetworkPolicyRequest) toOpts() *AlterNetworkPolicyOptions {
 					IP: v.IP,
 				}
 			}
+			opts.Set.AllowedIpList = s
 		}
 		if r.Set.BlockedIpList != nil {
 			s := make([]IP, len(r.Set.BlockedIpList))
@@ -99,6 +106,7 @@ func (r *AlterNetworkPolicyRequest) toOpts() *AlterNetworkPolicyOptions {
 					IP: v.IP,
 				}
 			}
+			opts.Set.BlockedIpList = s
 		}
 	}
 	return opts
@@ -118,8 +126,13 @@ func (r *ShowNetworkPolicyRequest) toOpts() *ShowNetworkPolicyOptions {
 }
 
 func (r showNetworkPolicyDBRow) convert() *NetworkPolicy {
-	// TODO: Mapping
-	return &NetworkPolicy{}
+	return &NetworkPolicy{
+		CreatedOn:              r.CreatedOn,
+		Name:                   r.Name,
+		Comment:                r.Comment,
+		EntriesInAllowedIpList: r.EntriesInAllowedIpList,
+		EntriesInBlockedIpList: r.EntriesInBlockedIpList,
+	}
 }
 
 func (r *DescribeNetworkPolicyRequest) toOpts() *DescribeNetworkPolicyOptions {
@@ -129,7 +142,9 @@ func (r *DescribeNetworkPolicyRequest) toOpts() *DescribeNetworkPolicyOptions {
 	return opts
 }
 
-func (r describeNetworkPolicyDBRow) convert() *NetworkPolicy {
-	// TODO: Mapping
-	return &NetworkPolicy{}
+func (r describeNetworkPolicyDBRow) convert() *NetworkPolicyDescription {
+	return &NetworkPolicyDescription{
+		Name:  r.Name,
+		Value: r.Value,
+	}
 }

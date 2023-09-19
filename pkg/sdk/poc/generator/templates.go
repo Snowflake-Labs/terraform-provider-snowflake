@@ -6,7 +6,11 @@ var PackageTemplate, _ = template.New("packageTemplate").Parse(`
 package {{ . }}
 `)
 
-var InterfaceTemplate, _ = template.New("interfaceTemplate").Parse(`
+var InterfaceTemplate, _ = template.New("interfaceTemplate").
+	Funcs(template.FuncMap{
+		"deref": func(p *DescriptionMappingKind) string { return string(*p) },
+	}).
+	Parse(`
 import "context"
 
 type {{ .Name }} interface {
@@ -14,7 +18,13 @@ type {{ .Name }} interface {
 		{{- if and (eq .Name "Show") .ShowMapping }}
 			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) ([]{{ .ShowMapping.To.Name }}, error)
 		{{- else if and (eq .Name "Describe") .DescribeMapping }}
-			{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error)
+			{{ if .DescribeKind }}
+				{{ if eq (deref .DescribeKind) "single_value" }}
+					{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error)
+				{{ else if eq (deref .DescribeKind) "slice" }}
+					{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error)
+				{{ end }}
+			{{ end }}
 		{{ else }}
 			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error
 		{{- end -}}
@@ -71,7 +81,11 @@ type {{ .DtoDecl }} struct {
 //		value1 string 		  // that's supported
 //		value1 AnotherRequest // that is not supported
 //	}
-var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
+var ImplementationTemplate, _ = template.New("implementationTemplate").
+	Funcs(template.FuncMap{
+		"deref": func(p *DescriptionMappingKind) string { return string(*p) },
+	}).
+	Parse(`
 {{ define "MAPPING" -}}
 	&{{ .KindNoPtr }}{
 		{{- range .Fields }}
@@ -95,6 +109,7 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").Parse(`
 							  {{- end }}
 							}
 						}
+						opts{{ .Path }} = s
 					{{ end -}}
 				}
 			{{- end -}}
@@ -126,30 +141,38 @@ type {{ $impl }} struct {
 			resultList := convertRows[{{ .ShowMapping.From.Name }}, {{ .ShowMapping.To.Name }}](dbRows)
 			return resultList, nil
 		}
-	{{ else if and (and (eq .Name "Describe") .DescribeMapping) (eq .DescribeMapping "single_value") }}
-		func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error) {
-			opts := &{{ .OptsField.Name }}{
-				// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
-				name: id,
-			}
-			result, err := validateAndQueryOne[{{ .DescribeMapping.From.Name }}](v.client, ctx, opts)
-			if err != nil {
-				return nil, err
-			}
-			return result.convert(), nil
-		}
-	{{ else if and (and (eq .Name "Describe") .DescribeMapping) (eq .DescribeMapping "single_value") }}
-		func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error) {
-			opts := &{{ .OptsField.Name }}{
-				// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
-				name: id,
-			}
-			result, err := validateAndQueryOne[{{ .DescribeMapping.From.Name }}](v.client, ctx, opts)
-			if err != nil {
-				return nil, err
-			}
-			return result.convert(), nil
-		}
+	{{ else if and (eq .Name "Describe") .DescribeMapping }}
+		{{ if .DescribeKind }}
+			{{ if eq (deref .DescribeKind) "single_value" }}
+				func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error) {
+					opts := &{{ .OptsField.Name }}{
+						 // TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
+						 name: id,
+					}
+					result, err := validateAndQueryOne[{{ .DescribeMapping.From.Name }}](v.client, ctx, opts)
+					if err != nil {
+						 return nil, err
+					}
+					return result.convert(), nil
+				}
+			{{ else if eq (deref .DescribeKind) "slice" }}
+				func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error) {
+					opts := &{{ .OptsField.Name }}{
+						 // TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
+						 name: id,
+					}
+					s, err := validateAndQuery[{{ .DescribeMapping.From.Name}}](v.client, ctx, opts)
+					if err != nil {
+						 return nil, err
+					}
+					result := make([]{{ .DescribeMapping.To.Name}}, len(*s))
+					for i, value := range *s {
+						 result[i] = *value.convert()
+					}
+					return result, nil
+				}
+			{{ end }}
+		{{ end }}
 	{{ else }}
 		func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error {
 			opts := request.toOpts()

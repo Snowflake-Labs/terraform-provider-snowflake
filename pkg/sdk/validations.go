@@ -70,6 +70,13 @@ func everyValueNil(values ...interface{}) bool {
 	return true
 }
 
+// TODO This have to be changed or new function should be created with more options or better defaults
+//
+//		because there are cases where validation is incorrect because of this function,
+//		e.g. you want to alter some resource and you want to provide
+//		empty array to unset all of the values, sometimes you cannot do it because in the validation you used this function
+//		to see if anything was set... well it was set, but it was empty array which is considered not set, but in this case
+//	 	it was valid option (and in some cases it may not be!).
 func valueSet(value interface{}) bool {
 	if value == nil {
 		return false
