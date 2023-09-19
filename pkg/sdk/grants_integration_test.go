@@ -444,7 +444,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.LessOrEqual(t, 2, len(grants))
-		var shareGrant Grant
+		var shareGrant *Grant
 		for i, grant := range grants {
 			if grant.GranteeName.Name() == shareTest.ID().Name() {
 				shareGrant = &grants[i]

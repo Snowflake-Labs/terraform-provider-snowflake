@@ -252,8 +252,8 @@ type alertDBRow struct {
 	Action       string    `db:"action"`
 }
 
-func (row alertDBRow) convert() Alert {
-	return Alert{
+func (row alertDBRow) convert() *Alert {
+	return &Alert{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
@@ -273,26 +273,11 @@ func (opts *ShowAlertOptions) validate() error {
 }
 
 func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error) {
-	if opts == nil {
-		opts = &ShowAlertOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+	dbRows, err := validateAndQuery[alertDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var dest []alertDBRow
-	err = v.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]Alert, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.convert()
-	}
-
+	resultList := convertRows[alertDBRow, Alert](dbRows)
 	return resultList, nil
 }
 

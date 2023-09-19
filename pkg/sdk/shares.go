@@ -78,7 +78,7 @@ type shareRow struct {
 	Comment      string    `db:"comment"`
 }
 
-func (r *shareRow) convert() Share {
+func (r shareRow) convert() *Share {
 	toAccounts := strings.Split(r.To, ",")
 	var to []AccountIdentifier
 	if len(toAccounts) != 0 {
@@ -97,7 +97,7 @@ func (r *shareRow) convert() Share {
 			to = append(to, NewAccountIdentifier(orgName, accountName))
 		}
 	}
-	return Share{
+	return &Share{
 		CreatedOn:    r.CreatedOn,
 		Kind:         ShareKind(r.Kind),
 		Name:         NewExternalObjectIdentifier(NewAccountIdentifierFromFullyQualifiedName(r.OwnerAccount), NewAccountObjectIdentifier(r.Name)),
@@ -282,26 +282,12 @@ func (opts *ShowShareOptions) validate() error {
 }
 
 func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error) {
-	if opts == nil {
-		opts = &ShowShareOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+	dbRows, err := validateAndQuery[shareRow](s.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []*shareRow
-	err = s.client.query(ctx, &rows, sql)
-	if err != nil {
-		return nil, err
-	}
-	shares := make([]Share, 0, len(rows))
-	for _, row := range rows {
-		shares = append(shares, row.convert())
-	}
-	return shares, nil
+	resultList := convertRows[shareRow, Share](dbRows)
+	return resultList, nil
 }
 
 func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error) {

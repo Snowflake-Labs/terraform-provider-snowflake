@@ -411,8 +411,8 @@ type warehouseDBRow struct {
 	ScalingPolicy                   string        `db:"scaling_policy"`
 }
 
-func (row warehouseDBRow) convert() Warehouse {
-	wh := Warehouse{
+func (row warehouseDBRow) convert() *Warehouse {
+	wh := &Warehouse{
 		Name:                            row.Name,
 		State:                           WarehouseState(row.State),
 		Type:                            WarehouseType(row.Type),
@@ -454,26 +454,11 @@ func (row warehouseDBRow) convert() Warehouse {
 }
 
 func (c *warehouses) Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error) {
-	if opts == nil {
-		opts = &ShowWarehouseOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+	dbRows, err := validateAndQuery[warehouseDBRow](c.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var dest []warehouseDBRow
-	err = c.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]Warehouse, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.convert()
-	}
-
+	resultList := convertRows[warehouseDBRow, Warehouse](dbRows)
 	return resultList, nil
 }
 

@@ -94,8 +94,8 @@ type userDBRow struct {
 	HasRsaPublicKey       bool           `db:"has_rsa_public_key"`
 }
 
-func (row userDBRow) convert() User {
-	user := User{
+func (row userDBRow) convert() *User {
+	user := &User{
 		Name:                  row.Name,
 		CreatedOn:             row.CreatedOn,
 		LoginName:             row.LoginName,
@@ -581,27 +581,11 @@ func (input *ShowUserOptions) validate() error {
 }
 
 func (v *users) Show(ctx context.Context, opts *ShowUserOptions) ([]User, error) {
-	if opts == nil {
-		opts = &ShowUserOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+	dbRows, err := validateAndQuery[userDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var dest []userDBRow
-
-	err = v.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]User, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.convert()
-	}
-
+	resultList := convertRows[userDBRow, User](dbRows)
 	return resultList, nil
 }
 

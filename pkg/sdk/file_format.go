@@ -114,7 +114,7 @@ type showFileFormatsOptionsResult struct {
 	DisableAutoConvert   bool `json:"DISABLE_AUTO_CONVERT"`
 }
 
-func (row *FileFormatRow) convert() FileFormat {
+func (row FileFormatRow) convert() *FileFormat {
 	inputOptions := showFileFormatsOptionsResult{}
 	err := json.Unmarshal([]byte(row.FormatOptions), &inputOptions)
 	if err != nil {
@@ -122,7 +122,7 @@ func (row *FileFormatRow) convert() FileFormat {
 		panic("cannot parse options json")
 	}
 
-	ff := FileFormat{
+	ff := &FileFormat{
 		Name:          NewSchemaObjectIdentifier(row.DatabaseName, row.SchemaName, row.Name),
 		CreatedOn:     row.CreatedOn,
 		Type:          FileFormatType(row.FormatType),
@@ -639,23 +639,12 @@ func (opts *ShowFileFormatsOptions) validate() error {
 }
 
 func (v *fileFormats) Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]FileFormat, error) {
-	if opts == nil {
-		opts = &ShowFileFormatsOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+	dbRows, err := validateAndQuery[FileFormatRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []FileFormatRow
-	err = v.client.query(ctx, &rows, sql)
-	fileFormats := make([]FileFormat, len(rows))
-	for i, row := range rows {
-		fileFormats[i] = row.convert()
-	}
-	return fileFormats, err
+	resultList := convertRows[FileFormatRow, FileFormat](dbRows)
+	return resultList, nil
 }
 
 func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error) {

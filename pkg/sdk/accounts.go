@@ -345,8 +345,8 @@ type accountDBRow struct {
 	IsOrgAdmin                           bool           `db:"is_org_admin"`
 }
 
-func (row accountDBRow) convert() Account {
-	acc := Account{
+func (row accountDBRow) convert() *Account {
+	acc := &Account{
 		OrganizationName:                     row.OrganizationName,
 		AccountName:                          row.AccountName,
 		RegionGroup:                          "",
@@ -377,26 +377,11 @@ func (row accountDBRow) convert() Account {
 }
 
 func (c *accounts) Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error) {
-	if opts == nil {
-		opts = &ShowAccountOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+	dbRows, err := validateAndQuery[accountDBRow](c.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var dest []accountDBRow
-	err = c.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]Account, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.convert()
-	}
-
+	resultList := convertRows[accountDBRow, Account](dbRows)
 	return resultList, nil
 }
 

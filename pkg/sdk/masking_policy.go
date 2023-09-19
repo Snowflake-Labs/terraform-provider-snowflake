@@ -246,12 +246,12 @@ type maskingPolicyDBRow struct {
 	Options       string    `db:"options"`
 }
 
-func (row maskingPolicyDBRow) convert() MaskingPolicy {
+func (row maskingPolicyDBRow) convert() *MaskingPolicy {
 	exemptOtherPolicies, err := jsonparser.GetBoolean([]byte(row.Options), "EXEMPT_OTHER_POLICIES")
 	if err != nil {
 		exemptOtherPolicies = false
 	}
-	return MaskingPolicy{
+	return &MaskingPolicy{
 		CreatedOn:           row.CreatedOn,
 		Name:                row.Name,
 		DatabaseName:        row.DatabaseName,
@@ -265,26 +265,11 @@ func (row maskingPolicyDBRow) convert() MaskingPolicy {
 
 // List all the masking policies by pattern.
 func (v *maskingPolicies) Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error) {
-	if opts == nil {
-		opts = &ShowMaskingPolicyOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+	dbRows, err := validateAndQuery[maskingPolicyDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var dest []maskingPolicyDBRow
-	err = v.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]MaskingPolicy, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.convert()
-	}
-
+	resultList := convertRows[maskingPolicyDBRow, MaskingPolicy](dbRows)
 	return resultList, nil
 }
 

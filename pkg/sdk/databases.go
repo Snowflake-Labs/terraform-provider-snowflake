@@ -94,8 +94,8 @@ type databaseRow struct {
 	Kind          sql.NullString `db:"kind"`
 }
 
-func (row *databaseRow) convert() Database {
-	database := Database{
+func (row databaseRow) convert() *Database {
+	database := &Database{
 		CreatedOn: row.CreatedOn,
 		Name:      row.Name,
 	}
@@ -543,23 +543,12 @@ func (opts *ShowDatabasesOptions) validate() error {
 }
 
 func (v *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error) {
-	if opts == nil {
-		opts = &ShowDatabasesOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+	dbRows, err := validateAndQuery[databaseRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []databaseRow
-	err = v.client.query(ctx, &rows, sql)
-	databases := make([]Database, len(rows))
-	for i, row := range rows {
-		databases[i] = row.convert()
-	}
-	return databases, err
+	resultList := convertRows[databaseRow, Database](dbRows)
+	return resultList, nil
 }
 
 func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
