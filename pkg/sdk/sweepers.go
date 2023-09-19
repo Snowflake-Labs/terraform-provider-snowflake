@@ -145,7 +145,7 @@ func getShareSweeper(client *Client, prefix string) func() error {
 		}
 		for _, share := range shares {
 			if (share.Kind == ShareKindOutbound) && (prefix == "" || strings.HasPrefix(share.Name.Name(), prefix)) {
-				log.Printf("[DEBUG] Dropping share %s", share.Name.Name())
+				log.Printf("[DEBUG] Dropping share %s", share.ID().Name())
 				if err := client.Shares.Drop(ctx, share.ID()); err != nil {
 					return err
 				}
