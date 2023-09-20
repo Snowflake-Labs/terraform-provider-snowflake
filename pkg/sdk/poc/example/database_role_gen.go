@@ -23,9 +23,9 @@ type AlterDatabaseRoleOptions struct {
 	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
 	IfExists     *bool                    `ddl:"keyword" sql:"IF EXISTS"`
 	name         DatabaseObjectIdentifier `ddl:"identifier"`
-	Rename       *DatabaseRoleRename      `ddl:"list,no_parentheses" sql:"RENAME TO"`
-	Set          *DatabaseRoleSet         `ddl:"list,no_parentheses" sql:"SET"`
-	Unset        *DatabaseRoleUnset       `ddl:"list,no_parentheses" sql:"UNSET"`
+	Rename       DatabaseRoleRename       `ddl:"list,no_parentheses" sql:"RENAME TO"`
+	Set          DatabaseRoleSet          `ddl:"list,no_parentheses" sql:"SET"`
+	Unset        DatabaseRoleUnset        `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type DatabaseRoleRename struct {
@@ -33,8 +33,8 @@ type DatabaseRoleRename struct {
 }
 
 type DatabaseRoleSet struct {
-	Comment          string            `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	NestedThirdLevel *NestedThirdLevel `ddl:"list,no_parentheses" sql:"NESTED"`
+	Comment          string           `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	NestedThirdLevel NestedThirdLevel `ddl:"list,no_parentheses" sql:"NESTED"`
 }
 
 type NestedThirdLevel struct {

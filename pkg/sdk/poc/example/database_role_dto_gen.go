@@ -17,9 +17,9 @@ type CreateDatabaseRoleRequest struct {
 type AlterDatabaseRoleRequest struct {
 	IfExists *bool
 	name     DatabaseObjectIdentifier // required
-	Rename   *DatabaseRoleRenameRequest
-	Set      *DatabaseRoleSetRequest
-	Unset    *DatabaseRoleUnsetRequest
+	Rename   DatabaseRoleRenameRequest
+	Set      DatabaseRoleSetRequest
+	Unset    DatabaseRoleUnsetRequest
 }
 
 type DatabaseRoleRenameRequest struct {
@@ -28,7 +28,7 @@ type DatabaseRoleRenameRequest struct {
 
 type DatabaseRoleSetRequest struct {
 	Comment          string // required
-	NestedThirdLevel *NestedThirdLevelRequest
+	NestedThirdLevel NestedThirdLevelRequest
 }
 
 type NestedThirdLevelRequest struct {

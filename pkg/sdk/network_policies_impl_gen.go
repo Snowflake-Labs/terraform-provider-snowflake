@@ -35,7 +35,6 @@ func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRe
 
 func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyDescription, error) {
 	opts := &DescribeNetworkPolicyOptions{
-		// TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 		name: id,
 	}
 	s, err := validateAndQuery[describeNetworkPolicyDBRow](v.client, ctx, opts)
