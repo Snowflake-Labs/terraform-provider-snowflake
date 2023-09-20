@@ -57,12 +57,6 @@ func (f *Field) withValidations(validations ...*Validation) *Field {
 	return f
 }
 
-// TODO find a way to mark certain field as required
-// func (f *Field) WithRequired(required bool) *Field {
-//	f.Required = required
-//	return f
-//}
-
 // HasAnyValidationInSubtree checks if any validations are present from current field level downwards
 func (f *Field) HasAnyValidationInSubtree() bool {
 	if len(f.Validations) > 0 {
@@ -92,14 +86,14 @@ func (f *Field) TagsPrintable() string {
 	return ""
 }
 
-// TODO Rename KindNoPrefix or smth
-// KindNoPtr return field's Kind but without pointer
+// KindNoPtr return field's Kind but without pointer and array
 func (f *Field) KindNoPtr() string {
 	kindWithoutPtr, _ := strings.CutPrefix(f.Kind, "*")
 	kindWithoutPtr, _ = strings.CutPrefix(kindWithoutPtr, "[]")
 	return kindWithoutPtr
 }
 
+// KindNoSlice return field's Kind but without array
 func (f *Field) KindNoSlice() string {
 	kindWithoutSlice, _ := strings.CutPrefix(f.Kind, "[]")
 	return kindWithoutSlice

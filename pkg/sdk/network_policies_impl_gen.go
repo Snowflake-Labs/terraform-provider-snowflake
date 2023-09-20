@@ -126,13 +126,8 @@ func (r *ShowNetworkPolicyRequest) toOpts() *ShowNetworkPolicyOptions {
 }
 
 func (r showNetworkPolicyDBRow) convert() *NetworkPolicy {
-	return &NetworkPolicy{
-		CreatedOn:              r.CreatedOn,
-		Name:                   r.Name,
-		Comment:                r.Comment,
-		EntriesInAllowedIpList: r.EntriesInAllowedIpList,
-		EntriesInBlockedIpList: r.EntriesInBlockedIpList,
-	}
+	// TODO: Mapping
+	return &NetworkPolicy{}
 }
 
 func (r *DescribeNetworkPolicyRequest) toOpts() *DescribeNetworkPolicyOptions {
@@ -143,8 +138,6 @@ func (r *DescribeNetworkPolicyRequest) toOpts() *DescribeNetworkPolicyOptions {
 }
 
 func (r describeNetworkPolicyDBRow) convert() *NetworkPolicyDescription {
-	return &NetworkPolicyDescription{
-		Name:  r.Name,
-		Value: r.Value,
-	}
+	// TODO: Mapping
+	return &NetworkPolicyDescription{}
 }

@@ -1,6 +1,6 @@
 package generator
 
-// SelfIdentifier TODO
+// SelfIdentifier
 func (v *queryStruct) SelfIdentifier() *queryStruct {
 	identifier := NewField("name", "<will be replaced>", Tags().Identifier(), IdentifierOptions().Required())
 	v.identifierField = identifier

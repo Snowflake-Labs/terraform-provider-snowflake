@@ -103,3 +103,34 @@ func validateAndQueryOne[T any](client *Client, ctx context.Context, opts valida
 	_, _, _ = client, ctx, opts
 	return nil, nil
 }
+
+func assertOptsInvalid(t *testing.T, opts validatable, expectedError error) {
+	_ = t
+	_ = opts
+	_ = expectedError
+}
+
+func assertOptsInvalidJoinedErrors(t *testing.T, opts validatable, expectedErrors ...error) {
+	_ = t
+	_ = opts
+	_ = expectedErrors
+}
+
+func assertOptsValid(t *testing.T, opts validatable) {
+	_ = t
+	_ = opts
+}
+
+func assertSQLEquals(t *testing.T, opts any, format string, args ...any) {
+	_ = t
+	_ = opts
+	_ = format
+	_ = args
+}
+
+func assertOptsValidAndSQLEquals(t *testing.T, opts validatable, format string, args ...any) {
+	_ = t
+	_ = opts
+	_ = format
+	_ = args
+}

@@ -9,19 +9,23 @@ type DatabaseRoles interface {
 
 // CreateDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database-role.
 type CreateDatabaseRoleOptions struct {
-	OrReplace   *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	IfNotExists *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name        DatabaseObjectIdentifier `ddl:"identifier"`
-	Comment     *string                  `ddl:"parameter,single_quotes"`
+	create       bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace    *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
+	IfNotExists  *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name         DatabaseObjectIdentifier `ddl:"identifier"`
+	Comment      *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // AlterDatabaseRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-database-role.
 type AlterDatabaseRoleOptions struct {
-	IfExists *bool                    `ddl:"keyword" sql:"IF EXISTS"`
-	name     DatabaseObjectIdentifier `ddl:"identifier"`
-	Rename   *DatabaseRoleRename      `ddl:"list,no_parentheses" sql:"RENAME TO"`
-	Set      *DatabaseRoleSet         `ddl:"list,no_parentheses" sql:"SET"`
-	Unset    *DatabaseRoleUnset       `ddl:"list,no_parentheses" sql:"UNSET"`
+	alter        bool                     `ddl:"static" sql:"ALTER"`
+	databaseRole bool                     `ddl:"static" sql:"DATABASE ROLE"`
+	IfExists     *bool                    `ddl:"keyword" sql:"IF EXISTS"`
+	name         DatabaseObjectIdentifier `ddl:"identifier"`
+	Rename       *DatabaseRoleRename      `ddl:"list,no_parentheses" sql:"RENAME TO"`
+	Set          *DatabaseRoleSet         `ddl:"list,no_parentheses" sql:"SET"`
+	Unset        *DatabaseRoleUnset       `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type DatabaseRoleRename struct {
@@ -29,7 +33,7 @@ type DatabaseRoleRename struct {
 }
 
 type DatabaseRoleSet struct {
-	Comment          *string           `ddl:"parameter,single_quotes"`
+	Comment          string            `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	NestedThirdLevel *NestedThirdLevel `ddl:"list,no_parentheses" sql:"NESTED"`
 }
 

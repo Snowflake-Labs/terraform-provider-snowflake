@@ -123,7 +123,6 @@ type IntoField interface {
 	IntoField() *Field
 }
 
-// TODO helper structs for other operations or cache for not duplicating structs
 func (i *Interface) CreateOperation(doc string, queryStruct *queryStruct, helperStructs ...IntoField) *Interface {
 	return i.newSimpleOperation(OperationKindCreate, doc, queryStruct, helperStructs...)
 }

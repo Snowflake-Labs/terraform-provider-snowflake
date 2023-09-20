@@ -70,17 +70,6 @@ type {{ .DtoDecl }} struct {
 }
 `)
 
-// TODO Support slices that have requests inside them, e.g.
-// TODO Better solution for {{ if .IsSlice }}{{ else }} impl if possible
-//
-//	type FooRequest struct {
-//		b []BarRequest
-//	}
-//
-//	type BarRequest {
-//		value1 string 		  // that's supported
-//		value1 AnotherRequest // that is not supported
-//	}
 var ImplementationTemplate, _ = template.New("implementationTemplate").
 	Funcs(template.FuncMap{
 		"deref": func(p *DescriptionMappingKind) string { return string(*p) },

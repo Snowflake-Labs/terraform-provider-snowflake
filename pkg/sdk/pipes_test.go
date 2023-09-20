@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -363,4 +364,15 @@ func TestPipesDescribe(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE PIPE %s`, id.FullyQualifiedName())
 	})
+}
+
+func Test(t *testing.T) {
+	vars := []string{"one", "two"}
+
+	for _, v := range vars {
+		switch v {
+		case "one":
+			fmt.Println("Hey")
+		}
+	}
 }

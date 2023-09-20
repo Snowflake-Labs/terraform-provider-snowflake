@@ -1,11 +1,11 @@
 package sdk
 
-// TODO expose only needed types (field, interface, operation could be not exposed - only building functions)
 import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 
 //go:generate go run ./poc/main.go
 
 var (
+	// TODO: prefix / postfix for top level definitions - readme
 	ip = g.QueryStruct("IP").
 		Text("IP", g.KeywordOptions().SingleQuotes().Required())
 
@@ -16,21 +16,15 @@ var (
 	).
 		CreateOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/create-network-policy",
-			// top level QueryStruct name doesn't matter because it's created from op name + interface field
+			// Change
+			// TODO top level QueryStruct name doesn't matter because it's created from op name + interface field
 			g.QueryStruct("CreateNetworkPolicies").
 				Create().
 				OrReplace().
 				SQL("NETWORK POLICY").
-				// by convention field is named "name" and type is derived from interface field
 				SelfIdentifier().
 				ListQueryStructField("AllowedIpList", ip, g.ParameterOptions().SQL("ALLOWED_IP_LIST").Parentheses()).
 				ListQueryStructField("BlockedIpList", ip, g.ParameterOptions().SQL("BLOCKED_IP_LIST").Parentheses()).
-				// for those cases better to pass name and sql prefix in Options ?
-				// ListAssignment is Optional in its nature, because it's a slice which can be null,
-				// thus should it be ListAssignment or OptionalListAssignment ?
-				//ListAssignment("ALLOWED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes().Required()).
-				//ListAssignment("BLOCKED_IP_LIST", "string", g.ParameterOptions().Parentheses().SingleQuotes()).
-				// for those cases better to pass name and sql prefix in Options ? prefix could be empty
 				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 				WithValidation(g.ValidIdentifier, "name"),
 		).
@@ -40,15 +34,13 @@ var (
 				Alter().
 				SQL("NETWORK POLICY").
 				IfExists().
+				// TODO is it ok - add to readme
 				SelfIdentifier().
 				OptionalQueryStructField(
-					// We can omit name and derive it from type, in this case field could be NetworkPolicySet
+					// TODO We can omit name and derive it from type, in this case field could be NetworkPolicySet - yes, already in readme - add something
 					// Or we can have a convention of <resource name><type> and remove prefix
 					"Set",
 					g.QueryStruct("NetworkPolicySet").
-						// should we pass plain kinds or instead there should be interface with [Kind() string] func in it
-						// then we would force users to use g.KindOf... functions family, and it would look more consistent
-						// with places where we would use g.KindOfT[type]()
 						ListQueryStructField("AllowedIpList", ip, g.ParameterOptions().SQL("ALLOWED_IP_LIST").Parentheses()).
 						ListQueryStructField("BlockedIpList", ip, g.ParameterOptions().SQL("BLOCKED_IP_LIST").Parentheses()).
 						OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
@@ -57,7 +49,6 @@ var (
 				).
 				OptionalSQL("UNSET COMMENT").
 				Identifier("RenameTo", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
-				// generator.ValidIdentifier validation can be implicit (we can add it when calling SelfIdentifier)
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.AtLeastOneValueSet, "Set", "UnsetComment", "RenameTo").
 				WithValidation(g.ValidIdentifierIfSet, "RenameTo"),
@@ -89,11 +80,6 @@ var (
 				Show().
 				SQL("NETWORK POLICIES"),
 		).
-		// Should describe be always Describe(context, id) or Describe(context, request) ? or we support both ?
-		//	e.g. external tables are expecting more inputs than id
-		// TODO Support key / value descriptions - should be an option in desc operation
-		// 	normal 		- Description(ctx, req) (*Desc, error)
-		// 	key / value - Description(ctx, req) ([]Desc, error)
 		DescribeOperation(
 			g.DescriptionMappingKindSlice,
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy",
