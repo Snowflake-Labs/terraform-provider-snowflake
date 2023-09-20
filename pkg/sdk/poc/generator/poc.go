@@ -154,7 +154,6 @@ const (
 
 type Validation struct { //nolint
 	Type       ValidationType
-	Struct     *Field
 	FieldNames []string
 }
 
@@ -188,12 +187,12 @@ func (v *Validation) Condition(field *Field) string {
 	panic("condition for validation unknown")
 }
 
-func (v *Validation) Error() string {
+func (v *Validation) Error(field *Field) string {
 	switch v.Type {
 	case ValidIdentifier:
 		return fmt.Sprintf("ErrInvalidObjectIdentifier") //nolint
 	case ConflictingFields:
-		return fmt.Sprintf("errOneOf(%s, %s)", wrapWith(v.Struct.Name, `"`), strings.Join(v.paramsQuoted(), ","))
+		return fmt.Sprintf("errOneOf(%s, %s)", wrapWith(field.Name, `"`), strings.Join(v.paramsQuoted(), ","))
 	case ExactlyOneValueSet:
 		return fmt.Sprintf("errExactlyOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
 	case AtLeastOneValueSet:

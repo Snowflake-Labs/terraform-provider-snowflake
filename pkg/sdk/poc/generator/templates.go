@@ -148,7 +148,7 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 	{{$field := .}}
 	{{- range .Validations}}
 	if {{.Condition $field}} {
-		errs = append(errs, {{.Error}})
+		errs = append(errs, {{.Error $field}})
 	}
 	{{- end}}
 	{{- range .Fields}}
