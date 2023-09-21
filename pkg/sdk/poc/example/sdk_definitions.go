@@ -30,16 +30,19 @@ type (
 )
 
 func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
+	t.Helper()
 	_ = t
 	return AccountObjectIdentifier{}
 }
 
 func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
+	t.Helper()
 	_ = t
 	return DatabaseObjectIdentifier{}
 }
 
 func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
+	t.Helper()
 	_ = t
 	return SchemaObjectIdentifier{}
 }

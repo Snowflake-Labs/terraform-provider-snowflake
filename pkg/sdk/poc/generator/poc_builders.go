@@ -1,80 +1,80 @@
 package generator
 
 func NewInterface(
-	Name string,
-	NameSingular string,
-	IdentifierKind string,
+	name string,
+	nameSingular string,
+	identifierKind string,
 ) *Interface {
 	s := Interface{}
-	s.Name = Name
-	s.NameSingular = NameSingular
-	s.IdentifierKind = IdentifierKind
+	s.Name = name
+	s.NameSingular = nameSingular
+	s.IdentifierKind = identifierKind
 	return &s
 }
 
-func (i *Interface) WithOperations(Operations []*Operation) *Interface {
-	i.Operations = Operations
+func (i *Interface) WithOperations(operations []*Operation) *Interface {
+	i.Operations = operations
 	return i
 }
 
 func NewOperation(
-	Name string,
-	Doc string,
+	name string,
+	doc string,
 ) *Operation {
 	s := Operation{}
-	s.Name = Name
-	s.Doc = Doc
+	s.Name = name
+	s.Doc = doc
 	return &s
 }
 
-func (s *Operation) WithObjectInterface(ObjectInterface *Interface) *Operation {
-	s.ObjectInterface = ObjectInterface
+func (s *Operation) WithObjectInterface(objectInterface *Interface) *Operation {
+	s.ObjectInterface = objectInterface
 	return s
 }
 
-func (s *Operation) WithOptsField(OptsField *Field) *Operation {
-	s.OptsField = OptsField
+func (s *Operation) WithOptsField(optsField *Field) *Operation {
+	s.OptsField = optsField
 	return s
 }
 
 func NewField(
-	Name string,
-	Kind string,
-	Tags map[string][]string,
+	name string,
+	kind string,
+	tags map[string][]string,
 ) *Field {
 	s := Field{}
-	s.Name = Name
-	s.Kind = Kind
-	s.Tags = Tags
+	s.Name = name
+	s.Kind = kind
+	s.Tags = tags
 	return &s
 }
 
-func (field *Field) WithParent(Parent *Field) *Field {
-	field.Parent = Parent
+func (field *Field) WithParent(parent *Field) *Field {
+	field.Parent = parent
 	return field
 }
 
-func (field *Field) WithFields(Fields []*Field) *Field {
-	field.Fields = Fields
+func (field *Field) WithFields(fields []*Field) *Field {
+	field.Fields = fields
 	return field
 }
 
-func (field *Field) WithValidations(Validations []*Validation) *Field {
-	field.Validations = Validations
+func (field *Field) WithValidations(validations []*Validation) *Field {
+	field.Validations = validations
 	return field
 }
 
-func (field *Field) WithRequired(Required bool) *Field {
-	field.Required = Required
+func (field *Field) WithRequired(required bool) *Field {
+	field.Required = required
 	return field
 }
 
 func NewValidation(
-	Type ValidationType,
-	FieldNames []string,
+	vType ValidationType,
+	fieldNames []string,
 ) *Validation {
 	s := Validation{}
-	s.Type = Type
-	s.FieldNames = FieldNames
+	s.Type = vType
+	s.FieldNames = fieldNames
 	return &s
 }
