@@ -234,7 +234,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	// TODO: Uncomment when the problem with alter external table set / unset tags is solved
-	//t.Run("Alter: set tags", func(t *testing.T) {
+	// t.Run("Alter: set tags", func(t *testing.T) {
 	//	externalTableID := randomAccountObjectIdentifier(t)
 	//	err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 	//	require.NoError(t, err)
