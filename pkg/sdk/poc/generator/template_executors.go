@@ -2,11 +2,12 @@ package generator
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
 	"io"
 	"log"
 	"os"
 	"text/template"
+
+	"golang.org/x/exp/slices"
 )
 
 var (

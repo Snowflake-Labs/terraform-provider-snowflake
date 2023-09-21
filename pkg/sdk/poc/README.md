@@ -53,6 +53,10 @@ checking behaviour which should get rid of edge cases that may cause bugs in the
   - divide implementation templates for Show, Describe and others
 - check if SelfIdentifier implementation is correct (mostly type, because it's derived from interface obj) by checking
 if there's a resource with different types of identifiers across queries (e.g. Create <AccountObjectIdentifier>, Alter <SchemaObjectIdentifier>) 
+- we should specify prefix / postfix standard for top-level items in _def.go files to avoid any conflicts in the package
+- remove name argument from QueryStruct in the Operation, because Opt structs in the Operation will have name from op name + interface field and not query struct itself
+- Derive field name from QueryStruct, e.g. see network_policies_def where we can remove "Set" field, but we have to make a convention of creating nested struct with
+name pattern like <interface name><name> e.g. NetworkPoliciesSet or NetworkPolicySet, then we could automatically remove prefix and we'll name field with postfix, so "Set" in this case
 
 ##### Improvements
 - automatic names of nested `struct`s (e.g. `DatabaseRoleRename`)

@@ -69,9 +69,9 @@ func (v *Validation) Condition(field *Field) string {
 func (v *Validation) Error() string {
 	switch v.Type {
 	case ValidIdentifier:
-		return fmt.Sprintf("ErrInvalidObjectIdentifier")
+		return fmt.Sprint("ErrInvalidObjectIdentifier")
 	case ValidIdentifierIfSet:
-		return fmt.Sprintf("ErrInvalidObjectIdentifier")
+		return fmt.Sprint("ErrInvalidObjectIdentifier")
 	case ConflictingFields:
 		return fmt.Sprintf("errOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
 	case ExactlyOneValueSet:

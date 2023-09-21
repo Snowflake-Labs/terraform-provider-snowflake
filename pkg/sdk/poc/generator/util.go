@@ -49,7 +49,7 @@ func wrapWith(s string, with string) string {
 
 var (
 	// Split by empty space or underscore
-	splitSQLPattern   = regexp.MustCompile("\\s+|_")
+	splitSQLPattern   = regexp.MustCompile(`\s+|_`)
 	englishLowerCaser = cases.Lower(language.English)
 	englishTitleCaser = cases.Title(language.English)
 )

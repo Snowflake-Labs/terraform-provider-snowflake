@@ -17,6 +17,6 @@ func (v *queryStruct) Identifier(fieldName string, kind string, transformer *Ide
 //	return NewField(fieldName, "AccountObjectIdentifier", Tags().Identifier()).WithRequired(true)
 //}
 //
-//func DatabaseObjectIdentifier(fieldName string) *Field {
+// func DatabaseObjectIdentifier(fieldName string) *Field {
 //	return NewField(fieldName, "DatabaseObjectIdentifier", Tags().Identifier()).WithRequired(true)
 //}

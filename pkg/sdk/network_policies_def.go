@@ -5,7 +5,6 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var (
-	// TODO: prefix / postfix for top level definitions - readme
 	ip = g.QueryStruct("IP").
 		Text("IP", g.KeywordOptions().SingleQuotes().Required())
 
@@ -16,8 +15,6 @@ var (
 	).
 		CreateOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/create-network-policy",
-			// Change
-			// TODO top level QueryStruct name doesn't matter because it's created from op name + interface field
 			g.QueryStruct("CreateNetworkPolicies").
 				Create().
 				OrReplace().
@@ -34,11 +31,8 @@ var (
 				Alter().
 				SQL("NETWORK POLICY").
 				IfExists().
-				// TODO is it ok - add to readme
 				SelfIdentifier().
 				OptionalQueryStructField(
-					// TODO We can omit name and derive it from type, in this case field could be NetworkPolicySet - yes, already in readme - add something
-					// Or we can have a convention of <resource name><type> and remove prefix
 					"Set",
 					g.QueryStruct("NetworkPolicySet").
 						ListQueryStructField("AllowedIpList", ip, g.ParameterOptions().SQL("ALLOWED_IP_LIST").Parentheses()).
