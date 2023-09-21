@@ -804,6 +804,103 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 }
 
+func TestGrants_GrantOwnership(t *testing.T) {
+	roleId := NewAccountObjectIdentifier("role1")
+	databaseRoleId := NewDatabaseObjectIdentifier("db1", "role1")
+	tableId := NewSchemaObjectIdentifier("db1", "schema1", "table1")
+
+	defaultSchemaObjectOpts := func() *GrantOwnershipOptions {
+		return &GrantOwnershipOptions{
+			On: OwnershipGrantOn{
+				GrantOnSchemaObject{
+					SchemaObject: &Object{
+						ObjectType: ObjectTypeTable,
+						Name:       tableId,
+					},
+				},
+			},
+			To: OwnershipGrantTo{
+				AccountRoleName: Pointer(roleId),
+			},
+		}
+	}
+
+	t.Run("validation: grant on schema object", func(t *testing.T) {
+		opts := defaultSchemaObjectOpts()
+		opts.On.SchemaObject = GrantOnSchemaObject{}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Object, AllIn or Future must be set"))
+	})
+
+	t.Run("validation: grant on schema object - all", func(t *testing.T) {
+		opts := defaultSchemaObjectOpts()
+		opts.On = OwnershipGrantOn{
+			SchemaObject: GrantOnSchemaObject{
+				All: &GrantOnSchemaObjectIn{
+					PluralObjectType: PluralObjectTypeTables,
+				},
+			},
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+	})
+
+	t.Run("validation: grant on schema object - future", func(t *testing.T) {
+		opts := defaultSchemaObjectOpts()
+		opts.On = OwnershipGrantOn{
+			SchemaObject: GrantOnSchemaObject{
+				Future: &GrantOnSchemaObjectIn{
+					PluralObjectType: PluralObjectTypeTables,
+				},
+			},
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+	})
+
+	t.Run("validation: grant to empty", func(t *testing.T) {
+		opts := defaultSchemaObjectOpts()
+		opts.To = OwnershipGrantTo{}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [databaseRoleName accountRoleName] must be set"))
+	})
+
+	t.Run("validation: grant to role and database role", func(t *testing.T) {
+		opts := defaultSchemaObjectOpts()
+		opts.To = OwnershipGrantTo{
+			DatabaseRoleName: Pointer(databaseRoleId),
+			AccountRoleName:  Pointer(roleId),
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [databaseRoleName accountRoleName] must be set"))
+	})
+
+	t.Run("validation: no revoke or copy", func(t *testing.T) {
+		opts := defaultSchemaObjectOpts()
+		opts.CurrentGrants = &OwnershipCurrentGrants{}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [revoke copy] must be set"))
+	})
+
+	t.Run("validation: both revoke or copy", func(t *testing.T) {
+		opts := defaultSchemaObjectOpts()
+		opts.CurrentGrants = &OwnershipCurrentGrants{
+			RevokeOrCopy: OwnershipRevokeOrCopy{
+				Revoke: Bool(true),
+				Copy:   Bool(true),
+			},
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [revoke copy] must be set"))
+	})
+
+	t.Run("on schema object to role", func(t *testing.T) {
+		opts := defaultSchemaObjectOpts()
+		assertOptsValidAndSQLEquals(t, opts, `GRANT OWNERSHIP ON TABLE %s TO ROLE %s`, tableId.FullyQualifiedName(), roleId.FullyQualifiedName())
+	})
+
+	t.Run("on schema object to database role", func(t *testing.T) {
+		opts := defaultSchemaObjectOpts()
+		opts.To = OwnershipGrantTo{
+			DatabaseRoleName: Pointer(databaseRoleId),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `GRANT OWNERSHIP ON TABLE %s TO DATABASE ROLE %s`, tableId.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
+	})
+}
+
 func TestGrantShow(t *testing.T) {
 	t.Run("no options", func(t *testing.T) {
 		opts := &ShowGrantOptions{}

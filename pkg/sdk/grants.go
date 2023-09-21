@@ -257,7 +257,7 @@ func (row grantRow) convert() *Grant {
 type GrantOwnershipOptions struct {
 	grantOwnership bool                    `ddl:"static" sql:"GRANT OWNERSHIP"`
 	On             OwnershipGrantOn        `ddl:"keyword" sql:"ON"`
-	To             OwnershipGrantTo        `ddl:"-"`
+	To             OwnershipGrantTo        `ddl:"keyword" sql:"TO"`
 	CurrentGrants  *OwnershipCurrentGrants `ddl:"-"`
 }
 
