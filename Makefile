@@ -103,10 +103,7 @@ clean-generator-poc:
 .PHONY: run-generator-poc
 
 run-generator-%: ./pkg/sdk/%_def.go ./pkg/sdk/%_dto_gen.go ## Run go generate on definition
-	go generate ./pkg/sdk/$*_def.go; \
- 	go generate ./pkg/sdk/$*_dto_gen.go
+	go generate ./pkg/sdk/$*_def.go ./pkg/sdk/$*_dto_gen.go
 
-clean-generator-%: ./pkg/sdk/%_def.go ./pkg/sdk/%_dto_gen.go ## Clean generated files for specified resource
-	rm -f ./pkg/sdk/$*_def.go; \
- 	rm -f ./pkg/sdk/$*_dto_gen.go
-.PHONY: clean-generator
+clean-generator-%: ./pkg/sdk/%_*_gen.go ## Clean generated files for specified resource
+	rm -f ./pkg/sdk/$*_*_gen.go
