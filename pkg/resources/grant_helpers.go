@@ -187,8 +187,10 @@ func readGenericGrant(
 			privileges.addString(grant.Privilege)
 			// Reassign set back
 			sharePrivileges[granteeNameStrippedAccount] = privileges
-		default:
-			log.Printf("[WARN] unexpected grantee type: %s", grant.GranteeType)
+		case "DATABASE_ROLE":
+			log.Printf("[WARN] DATABASE_ROLE is not supported by grant helpers")
+		case "APPLICATION_ROLE":
+			log.Printf("[WARN] APPLICATION_ROLE is not supported by grant helpers")
 		}
 	}
 
