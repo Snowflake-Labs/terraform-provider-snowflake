@@ -112,10 +112,10 @@ to provide the solution or fix as soon as possible. Thanks :)
 https://github.com//Snowflake-Labs/terraform-provider-snowflake/issues/new?labels=bug&title=%s&body=%s
 
 Errors:
-%v`,
+%s`,
 		url.QueryEscape("New issue"),
 		url.QueryEscape(fmt.Sprintf(ghIssueBodyTemplate, err.Error())),
-		err,
+		err.Error(),
 	)
 }
 
@@ -201,7 +201,7 @@ func NewErrorNotSet(structPointer any, fields ...any) error {
 // TODO We can force to use sdkError as wrapper
 // WrapErrors TODO
 func WrapErrors(wrapper error, errs ...error) error {
-	if err, ok := wrapper.(*sdkError); ok {
+	if err, ok := wrapper.(*sdkError); ok { //nolint:all
 		err.nestedErrors = append(err.nestedErrors, errs...)
 		return wrapper
 	} else {
@@ -233,7 +233,7 @@ func getCallerInfo(skip int) (int, string) {
 
 func writeTree(e error, builder *strings.Builder, indent int) {
 	var sdkErr *sdkError
-	if joinedErr, ok := e.(interface{ Unwrap() []error }); ok {
+	if joinedErr, ok := e.(interface{ Unwrap() []error }); ok { //nolint:all
 		errs := joinedErr.Unwrap()
 		for i, err := range errs {
 			if i > 0 {
