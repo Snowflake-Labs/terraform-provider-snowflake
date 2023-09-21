@@ -22,7 +22,7 @@ var (
 	dbRoleSet = g.QueryStruct("DatabaseRoleSet").
 		// Fields
 		TextAssignment("COMMENT", g.ParameterOptions().SingleQuotes().Required()).
-		QueryStructField("NestedThirdLevel", nestedThirdLevel, g.ListOptions().NoParens().SQL("NESTED"))
+		OptionalQueryStructField("NestedThirdLevel", nestedThirdLevel, g.ListOptions().NoParens().SQL("NESTED"))
 
 	dbRoleUnset = g.QueryStruct("DatabaseRoleUnset").
 		// Fields
@@ -57,9 +57,9 @@ var (
 				SQL("DATABASE ROLE").
 				IfExists().
 				SelfIdentifier().
-				QueryStructField("Rename", dbRoleRename, g.ListOptions().NoParens().SQL("RENAME TO")).
-				QueryStructField("Set", dbRoleSet, g.ListOptions().NoParens().SQL("SET")).
-				QueryStructField("Unset", dbRoleUnset, g.ListOptions().NoParens().SQL("UNSET")).
+				OptionalQueryStructField("Rename", dbRoleRename, g.ListOptions().NoParens().SQL("RENAME TO")).
+				OptionalQueryStructField("Set", dbRoleSet, g.ListOptions().NoParens().SQL("SET")).
+				OptionalQueryStructField("Unset", dbRoleUnset, g.ListOptions().NoParens().SQL("UNSET")).
 				// Validations
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ConflictingFields, "Rename", "Set", "Unset"),
