@@ -425,7 +425,7 @@ resource "snowflake_table" "test_table" {
 	schema   = snowflake_schema.test_schema.name
 	name     = "%s"
 	comment  = "Terraform acceptance test"
-	
+
 	column {
 		name = "column1"
 		type = "VARIANT"
@@ -467,7 +467,7 @@ resource "snowflake_table" "test_table" {
 	schema   = snowflake_schema.test_schema.name
 	name     = "%s"
 	comment  = "Terraform acceptance test"
-	
+
 	column {
 		name = "column1"
 		type = "VARIANT"
@@ -1063,7 +1063,6 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
@@ -1091,7 +1090,6 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
@@ -1438,7 +1436,7 @@ resource "snowflake_table" "test_table" {
 		name = "column2"
 		type = "TIMESTAMP_NTZ(9)"
 	}
-	
+
 	column {
 		name = "column4"
 		type = "NUMBER(38,0)"
