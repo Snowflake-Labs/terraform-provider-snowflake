@@ -15,6 +15,8 @@ type Grants interface {
 	RevokePrivilegesFromDatabaseRole(ctx context.Context, privileges *DatabaseRoleGrantPrivileges, on *DatabaseRoleGrantOn, role DatabaseObjectIdentifier, opts *RevokePrivilegesFromDatabaseRoleOptions) error
 	GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error
 	RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, from AccountObjectIdentifier) error
+	GrantOwnership(ctx context.Context, on OwnershipGrantOn, to OwnershipGrantTo, opts *GrantOwnershipOptions) error
+
 	Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, error)
 }
 
@@ -249,4 +251,33 @@ func (row grantRow) convert() *Grant {
 		GrantOption: row.GrantOption,
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
 	}
+}
+
+// GrantOwnershipOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#syntax.
+type GrantOwnershipOptions struct {
+	grantOwnership bool                    `ddl:"static" sql:"GRANT OWNERSHIP"`
+	On             OwnershipGrantOn        `ddl:"keyword" sql:"ON"`
+	To             OwnershipGrantTo        `ddl:"-"`
+	CurrentGrants  *OwnershipCurrentGrants `ddl:"-"`
+}
+
+type OwnershipGrantOn struct {
+	SchemaObject GrantOnSchemaObject `ddl:"-"`
+}
+
+type OwnershipGrantTo struct {
+	// One of
+	DatabaseRoleName *DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
+	AccountRoleName  *AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
+}
+
+type OwnershipCurrentGrants struct {
+	RevokeOrCopy  OwnershipRevokeOrCopy `ddl:"-"`
+	currentGrants bool                  `ddl:"static" sql:"CURRENT GRANTS"`
+}
+
+type OwnershipRevokeOrCopy struct {
+	// One of
+	Revoke *bool `ddl:"static" sql:"REVOKE"`
+	Copy   *bool `ddl:"static" sql:"COPY"`
 }
