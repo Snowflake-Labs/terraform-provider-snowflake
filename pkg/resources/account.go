@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -197,6 +198,12 @@ var accountSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "Indicates whether the ORGADMIN role is enabled in an account. If TRUE, the role is enabled.",
 	},
+	"grace_period_in_days": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     3,
+		Description: "Specifies the number of days to wait before dropping the account. The default is 3 days.",
+	},
 }
 
 func Account() *schema.Resource {
@@ -284,7 +291,14 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	account, err := client.Accounts.ShowByID(ctx, objectIdentifier)
+	var account *sdk.Account
+	err = helpers.Retry(5, 3*time.Second, func() (error, bool) {
+		account, err = client.Accounts.ShowByID(ctx, objectIdentifier)
+		if err != nil {
+			return nil, false
+		}
+		return nil, true
+	})
 	if err != nil {
 		return err
 	}
@@ -301,7 +315,15 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	acc, err := client.Accounts.ShowByID(ctx, id)
+	var acc *sdk.Account
+	var err error
+	err = helpers.Retry(5, 3*time.Second, func() (error, bool) {
+		acc, err = client.Accounts.ShowByID(ctx, id)
+		if err != nil {
+			return nil, false
+		}
+		return nil, true
+	})
 	if err != nil {
 		return err
 	}
@@ -335,42 +357,37 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateAccount implements schema.UpdateFunc.
 func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-	ctx := context.Background()
+	/*
+		db := meta.(*sql.DB)
+		client := sdk.NewClientFromDB(db)
+		ctx := context.Background()
 
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	// Rename
-	if d.HasChange("name") {
-		newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
-			Rename: &sdk.AccountRename{
-				Name:    id,
-				NewName: newID,
-			},
-		})
-		if err != nil {
-			return err
+		// Change comment
+		if d.HasChange("comment") {
+			// changing comment isn't supported for accounts
+			err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
+				ObjectType: sdk.ObjectTypeAccount,
+				ObjectName: sdk.NewAccountObjectIdentifier(d.Get("name").(string)),
+				Value:      sdk.String(d.Get("comment").(string)),
+			})
+			if err != nil {
+				return err
+			}
 		}
-		d.SetId(helpers.EncodeSnowflakeID(newID))
-	}
-
-	// Change comment
-	if d.HasChange("comment") {
-		err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
-			ObjectType: sdk.ObjectTypeAccount,
-			ObjectName: id,
-			Value:      sdk.String(d.Get("comment").(string)),
-		})
-		if err != nil {
-			return err
-		}
-	}
+	*/
 	return nil
 }
 
 // DeleteAccount implements schema.DeleteFunc.
-func DeleteAccount(_ *schema.ResourceData, _ interface{}) error {
-	return fmt.Errorf("cannot delete Snowflake accounts because there is no self service API allowing Terraform to do so. To delete an account, contact Snowflake Support and provide a unique identifier for your account, which can be one of the following:\n  Account name\n  Account locator\nOnce you contact Snowflake Support, it may take up to six weeks for the account to be fully deleted. This delay allows you to recover the account within 30 days of the request. Snowflake usually deducts the account from the number of accounts allowed for your organization within a few days of the initial request")
+func DeleteAccount(d *schema.ResourceData, meta interface{}) error {
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	gracePeriodInDays := d.Get("grace_period_in_days").(int)
+	err := client.Accounts.Drop(ctx, helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier), gracePeriodInDays, &sdk.DropAccountOptions{
+		IfExists: sdk.Bool(true),
+	})
+	return err
 }
