@@ -814,11 +814,9 @@ func TestGrants_GrantOwnership(t *testing.T) {
 	defaultOpts := func() *GrantOwnershipOptions {
 		return &GrantOwnershipOptions{
 			On: OwnershipGrantOn{
-				GrantOnSchemaObject{
-					SchemaObject: &Object{
-						ObjectType: ObjectTypeTable,
-						Name:       tableId,
-					},
+				Object: &Object{
+					ObjectType: ObjectTypeTable,
+					Name:       tableId,
 				},
 			},
 			To: OwnershipGrantTo{
@@ -827,19 +825,32 @@ func TestGrants_GrantOwnership(t *testing.T) {
 		}
 	}
 
-	t.Run("validation: grant on schema object", func(t *testing.T) {
+	t.Run("validation: grant on empty", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.On.SchemaObject = GrantOnSchemaObject{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Object, AllIn or Future must be set"))
+		opts.On = OwnershipGrantOn{}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [Object AllIn Future] must be set"))
+	})
+
+	t.Run("validation: grant on too many", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.On = OwnershipGrantOn{
+			Object: &Object{
+				ObjectType: ObjectTypeTable,
+				Name:       tableId,
+			},
+			Future: &GrantOnSchemaObjectIn{
+				PluralObjectType: PluralObjectTypeTables,
+				InDatabase:       Pointer(dbId),
+			},
+		}
+		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [Object AllIn Future] must be set"))
 	})
 
 	t.Run("validation: grant on schema object - all", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.On = OwnershipGrantOn{
-			SchemaObject: GrantOnSchemaObject{
-				All: &GrantOnSchemaObjectIn{
-					PluralObjectType: PluralObjectTypeTables,
-				},
+			All: &GrantOnSchemaObjectIn{
+				PluralObjectType: PluralObjectTypeTables,
 			},
 		}
 		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
@@ -848,10 +859,8 @@ func TestGrants_GrantOwnership(t *testing.T) {
 	t.Run("validation: grant on schema object - future", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.On = OwnershipGrantOn{
-			SchemaObject: GrantOnSchemaObject{
-				Future: &GrantOnSchemaObjectIn{
-					PluralObjectType: PluralObjectTypeTables,
-				},
+			Future: &GrantOnSchemaObjectIn{
+				PluralObjectType: PluralObjectTypeTables,
 			},
 		}
 		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
@@ -887,7 +896,7 @@ func TestGrants_GrantOwnership(t *testing.T) {
 
 	t.Run("on future schema object in database", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.On.SchemaObject = GrantOnSchemaObject{
+		opts.On = OwnershipGrantOn{
 			Future: &GrantOnSchemaObjectIn{
 				PluralObjectType: PluralObjectTypeTables,
 				InDatabase:       Pointer(dbId),
@@ -898,7 +907,7 @@ func TestGrants_GrantOwnership(t *testing.T) {
 
 	t.Run("on all schema objects in schema", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.On.SchemaObject = GrantOnSchemaObject{
+		opts.On = OwnershipGrantOn{
 			All: &GrantOnSchemaObjectIn{
 				PluralObjectType: PluralObjectTypeTables,
 				InSchema:         Pointer(schemaId),

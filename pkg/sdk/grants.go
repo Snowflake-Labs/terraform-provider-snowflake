@@ -254,6 +254,7 @@ func (row grantRow) convert() *Grant {
 }
 
 // GrantOwnershipOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#syntax.
+// Description is a bit misleading, ownership can be given not only to schema objects but also to account level objects.
 type GrantOwnershipOptions struct {
 	grantOwnership bool                    `ddl:"static" sql:"GRANT OWNERSHIP"`
 	On             OwnershipGrantOn        `ddl:"keyword" sql:"ON"`
@@ -262,7 +263,10 @@ type GrantOwnershipOptions struct {
 }
 
 type OwnershipGrantOn struct {
-	SchemaObject GrantOnSchemaObject `ddl:"-"`
+	// One of
+	Object *Object                `ddl:"-"`
+	All    *GrantOnSchemaObjectIn `ddl:"keyword" sql:"ALL"`
+	Future *GrantOnSchemaObjectIn `ddl:"keyword" sql:"FUTURE"`
 }
 
 type OwnershipGrantTo struct {

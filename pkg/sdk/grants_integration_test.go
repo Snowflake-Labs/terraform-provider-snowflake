@@ -500,11 +500,9 @@ func TestInt_GrantOwnership(t *testing.T) {
 		table, _ := createTable(t, client, database, schema)
 
 		on := OwnershipGrantOn{
-			SchemaObject: GrantOnSchemaObject{
-				SchemaObject: &Object{
-					ObjectType: ObjectTypeTable,
-					Name:       table.ID(),
-				},
+			Object: &Object{
+				ObjectType: ObjectTypeTable,
+				Name:       table.ID(),
 			},
 		}
 		to := OwnershipGrantTo{
@@ -540,11 +538,9 @@ func TestInt_GrantOwnership(t *testing.T) {
 		roleId := role.ID()
 
 		on := OwnershipGrantOn{
-			SchemaObject: GrantOnSchemaObject{
-				Future: &GrantOnSchemaObjectIn{
-					PluralObjectType: PluralObjectTypeExternalTables,
-					InDatabase:       Pointer(database.ID()),
-				},
+			Future: &GrantOnSchemaObjectIn{
+				PluralObjectType: PluralObjectTypeExternalTables,
+				InDatabase:       Pointer(database.ID()),
 			},
 		}
 		to := OwnershipGrantTo{
@@ -581,11 +577,9 @@ func TestInt_GrantOwnership(t *testing.T) {
 		roleId := role.ID()
 
 		on := OwnershipGrantOn{
-			SchemaObject: GrantOnSchemaObject{
-				SchemaObject: &Object{
-					ObjectType: ObjectTypeWarehouse,
-					Name:       warehouse.ID(),
-				},
+			Object: &Object{
+				ObjectType: ObjectTypeWarehouse,
+				Name:       warehouse.ID(),
 			},
 		}
 		to := OwnershipGrantTo{
