@@ -250,9 +250,9 @@ func TestInt_ExternalTables(t *testing.T) {
 	//	tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
 	//	require.NoError(t, err)
 	//	assert.Equal(t, tagValue, tv)
-	//})
+	// })
 	//
-	//t.Run("Alter: unset tags", func(t *testing.T) {
+	// t.Run("Alter: unset tags", func(t *testing.T) {
 	//	externalTableID := randomAccountObjectIdentifier(t)
 	//	err := client.ExternalTables.Create(
 	//		ctx,
