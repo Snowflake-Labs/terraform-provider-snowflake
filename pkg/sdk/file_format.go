@@ -639,6 +639,7 @@ func (opts *ShowFileFormatsOptions) validate() error {
 }
 
 func (v *fileFormats) Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]FileFormat, error) {
+	opts = createIfNil(opts)
 	dbRows, err := validateAndQuery[FileFormatRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err

@@ -282,6 +282,7 @@ func (opts *ShowShareOptions) validate() error {
 }
 
 func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error) {
+	opts = createIfNil(opts)
 	dbRows, err := validateAndQuery[shareRow](s.client, ctx, opts)
 	if err != nil {
 		return nil, err

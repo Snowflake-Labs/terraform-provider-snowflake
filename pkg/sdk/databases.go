@@ -543,6 +543,7 @@ func (opts *ShowDatabasesOptions) validate() error {
 }
 
 func (v *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error) {
+	opts = createIfNil(opts)
 	dbRows, err := validateAndQuery[databaseRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err

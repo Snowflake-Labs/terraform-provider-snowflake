@@ -459,6 +459,7 @@ func (row failoverGroupDBRow) convert() *FailoverGroup {
 }
 
 func (v *failoverGroups) Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error) {
+	opts = createIfNil(opts)
 	dbRows, err := validateAndQuery[failoverGroupDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err

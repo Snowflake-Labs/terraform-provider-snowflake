@@ -301,9 +301,7 @@ func (row passwordPolicyDBRow) convert() PasswordPolicy {
 
 // List all the password policies by pattern.
 func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]PasswordPolicy, error) {
-	if opts == nil {
-		opts = &PasswordPolicyShowOptions{}
-	}
+	opts = createIfNil(opts)
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}

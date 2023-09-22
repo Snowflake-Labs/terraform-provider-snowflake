@@ -265,6 +265,7 @@ func (row maskingPolicyDBRow) convert() *MaskingPolicy {
 
 // List all the masking policies by pattern.
 func (v *maskingPolicies) Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error) {
+	opts = createIfNil(opts)
 	dbRows, err := validateAndQuery[maskingPolicyDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err

@@ -581,6 +581,7 @@ func (input *ShowUserOptions) validate() error {
 }
 
 func (v *users) Show(ctx context.Context, opts *ShowUserOptions) ([]User, error) {
+	opts = createIfNil(opts)
 	dbRows, err := validateAndQuery[userDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err

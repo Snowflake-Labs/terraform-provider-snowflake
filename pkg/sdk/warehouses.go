@@ -454,6 +454,7 @@ func (row warehouseDBRow) convert() *Warehouse {
 }
 
 func (c *warehouses) Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error) {
+	opts = createIfNil(opts)
 	dbRows, err := validateAndQuery[warehouseDBRow](c.client, ctx, opts)
 	if err != nil {
 		return nil, err

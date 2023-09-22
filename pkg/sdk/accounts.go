@@ -377,6 +377,7 @@ func (row accountDBRow) convert() *Account {
 }
 
 func (c *accounts) Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error) {
+	opts = createIfNil(opts)
 	dbRows, err := validateAndQuery[accountDBRow](c.client, ctx, opts)
 	if err != nil {
 		return nil, err

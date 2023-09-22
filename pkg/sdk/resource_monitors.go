@@ -365,9 +365,7 @@ func (opts *ShowResourceMonitorOptions) validate() error {
 }
 
 func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error) {
-	if opts == nil {
-		opts = &ShowResourceMonitorOptions{}
-	}
+	opts = createIfNil(opts)
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}

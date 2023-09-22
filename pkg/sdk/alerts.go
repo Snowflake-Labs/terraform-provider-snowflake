@@ -273,6 +273,7 @@ func (opts *ShowAlertOptions) validate() error {
 }
 
 func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error) {
+	opts = createIfNil(opts)
 	dbRows, err := validateAndQuery[alertDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
