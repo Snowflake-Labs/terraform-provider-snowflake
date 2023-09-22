@@ -35,6 +35,10 @@ make clean-generator-poc run-generator-poc
 
 ### Next steps
 ##### Essentials
+- modify makefile scripts (see TODO in makefile)
+- add arguments to the generator, so we'll be able to specify which files should be generated / re-generated,
+because after we fill things that need our input we don't want to re-generate those files and override the changes
+- add support for Enums
 - generate `ShowID` function with 3 implementation variations (the last one is the rarest one and can be postponed)
   - use `Show` function with Like
   - use Show without any options and filter with Go for + if
@@ -73,6 +77,7 @@ name pattern like <interface name><name> e.g. NetworkPoliciesSet or NetworkPolic
   - example implementation - StringTyper implements Typer and all the KindOf... functions use StringTyper to return Typer easily - https://go.dev/play/p/TZZgSkkHw_M
 
 ##### Known issues
+- cannot re-generate when client.go is using generated interface
 - spaces in templates (especially nested validations)
 - request mapping fails (`.toOpts()`) when nested object is not optional (pointer) e.g.
 ```go
