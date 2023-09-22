@@ -21,7 +21,6 @@ type Client struct {
 	dryRun         bool
 	traceLogs      []string
 
-
 	// System-Defined Functions
 	ContextFunctions     ContextFunctions
 	ConversionFunctions  ConversionFunctions
@@ -48,6 +47,7 @@ type Client struct {
 	Users            Users
 	Schemas          Schemas
 	Warehouses       Warehouses
+	DynamicTables    DynamicTables
 }
 
 func NewDefaultClient() (*Client, error) {
@@ -62,7 +62,6 @@ func NewDryRunClient() *Client {
 	client.initialize()
 	return client
 }
-
 
 func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	var err error
@@ -156,6 +155,7 @@ func (c *Client) initialize() {
 	c.SystemFunctions = &systemFunctions{client: c}
 	c.Users = &users{client: c}
 	c.Warehouses = &warehouses{client: c}
+	c.DynamicTables = &dynamicTables{client: c}
 }
 
 func (c *Client) TraceLogs() []string {
