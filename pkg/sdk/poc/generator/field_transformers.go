@@ -41,12 +41,8 @@ func (v *KeywordTransformer) Transform(f *Field) *Field {
 	if v.required {
 		f.Required = true
 	}
-	if len(v.sqlPrefix) != 0 {
-		addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
-	}
-	if len(v.quotes) != 0 {
-		addTagIfMissing(f.Tags, "ddl", v.quotes)
-	}
+	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
+	addTagIfMissing(f.Tags, "ddl", v.quotes)
 	return f
 }
 
@@ -91,15 +87,9 @@ func (v *ParameterTransformer) Transform(f *Field) *Field {
 	if v.required {
 		f.Required = true
 	}
-	if len(v.sqlPrefix) != 0 {
-		addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
-	}
-	if len(v.quotes) != 0 {
-		addTagIfMissing(f.Tags, "ddl", v.quotes)
-	}
-	if len(v.parentheses) != 0 {
-		addTagIfMissing(f.Tags, "ddl", v.parentheses)
-	}
+	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
+	addTagIfMissing(f.Tags, "ddl", v.quotes)
+	addTagIfMissing(f.Tags, "ddl", v.parentheses)
 	return f
 }
 
@@ -133,18 +123,15 @@ func (v *ListTransformer) Transform(f *Field) *Field {
 	if v.required {
 		f.Required = true
 	}
-	if len(v.sqlPrefix) != 0 {
-		addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
-	}
-	if len(v.parentheses) != 0 {
-		addTagIfMissing(f.Tags, "ddl", v.parentheses)
-	}
+	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
+	addTagIfMissing(f.Tags, "ddl", v.parentheses)
 	return f
 }
 
 type IdentifierTransformer struct {
 	required  bool
 	sqlPrefix string
+	quotes    string
 }
 
 func IdentifierOptions() *IdentifierTransformer {
@@ -153,6 +140,16 @@ func IdentifierOptions() *IdentifierTransformer {
 
 func (v *IdentifierTransformer) SQL(sqlPrefix string) *IdentifierTransformer {
 	v.sqlPrefix = sqlPrefix
+	return v
+}
+
+func (v *IdentifierTransformer) SingleQuotes() *IdentifierTransformer {
+	v.quotes = "single_quotes"
+	return v
+}
+
+func (v *IdentifierTransformer) DoubleQuotes() *IdentifierTransformer {
+	v.quotes = "double_quotes"
 	return v
 }
 
@@ -166,18 +163,19 @@ func (v *IdentifierTransformer) Transform(f *Field) *Field {
 	if v.required {
 		f.Required = true
 	}
-	if len(v.sqlPrefix) != 0 {
-		addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
-	}
+	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
+	addTagIfMissing(f.Tags, "ddl", v.quotes)
 	return f
 }
 
 func addTagIfMissing(m map[string][]string, key string, value string) {
-	if val, ok := m[key]; ok {
-		if !slices.Contains(val, value) {
-			m[key] = append(val, value)
+	if len(value) > 0 {
+		if val, ok := m[key]; ok {
+			if !slices.Contains(val, value) {
+				m[key] = append(val, value)
+			}
+		} else {
+			m[key] = []string{value}
 		}
-	} else {
-		m[key] = []string{value}
 	}
 }

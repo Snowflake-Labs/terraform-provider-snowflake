@@ -37,7 +37,10 @@ make clean-generator-poc run-generator-poc
 ##### Essentials
 - modify makefile scripts (see TODO in makefile)
 - add arguments to the generator, so we'll be able to specify which files should be generated / re-generated,
-because after we fill things that need our input we don't want to re-generate those files and override the changes
+because after we fill things that need our input we don't want to re-generate those files and override the changes,
+also adding small changes is very challenging, e.g. for new validation rule you have to re-generate unit-tests to get
+one new function, revert to old tests (the one with filled tests), copy new test case (of course we could add that one by hand
+but if we add one case, or modify more cases this becomes more challenging)
 - add support for Enums
 - generate `ShowID` function with 3 implementation variations (the last one is the rarest one and can be postponed)
   - use `Show` function with Like
@@ -77,12 +80,18 @@ name pattern like <interface name><name> e.g. NetworkPoliciesSet or NetworkPolic
   - example implementation - StringTyper implements Typer and all the KindOf... functions use StringTyper to return Typer easily - https://go.dev/play/p/TZZgSkkHw_M
 
 ##### Known issues
+- wrong generated validations for validIdentifierIfSet for cases like
+```go
+A := QueryStruct("A").
+	Identifier("Name").
+	Validation(ValidIdentifierIfSet, "Name")
+B := QueryStruct("B")
+    .ListQueryStructField(A) // A []A - validations will be wrong because this is array
+```
 - cannot re-generate when client.go is using generated interface
 - spaces in templates (especially nested validations)
 - request mapping fails (`.toOpts()`) when nested object is not optional (pointer) e.g.
 ```go
-package main
-
 type NestedReq struct {
 }
 

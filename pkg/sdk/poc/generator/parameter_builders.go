@@ -31,3 +31,15 @@ func (v *queryStruct) OptionalTextAssignment(sqlPrefix string, transformer *Para
 	}
 	return v.Assignment(sqlToFieldName(sqlPrefix, true), "*string", transformer)
 }
+
+func (v *queryStruct) OptionalIdentifierAssignment(sqlPrefix string, identifierKind string, transformer *ParameterTransformer) *queryStruct {
+	if transformer != nil {
+		transformer = transformer.SQL(sqlPrefix)
+	} else {
+		transformer = ParameterOptions().SQL(sqlPrefix)
+	}
+	if len(identifierKind) > 0 && identifierKind[0] != '*' {
+		identifierKind = KindOfPointer(identifierKind)
+	}
+	return v.Assignment(sqlToFieldName(sqlPrefix, true), identifierKind, transformer)
+}
