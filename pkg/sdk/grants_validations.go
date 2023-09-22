@@ -275,24 +275,12 @@ func (opts *GrantOwnershipOptions) validate() error {
 	if err := opts.To.validate(); err != nil {
 		return err
 	}
-	if valueSet(opts.CurrentGrants) {
-		if err := opts.CurrentGrants.validate(); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
 func (v *OwnershipGrantTo) validate() error {
 	if !exactlyOneValueSet(v.DatabaseRoleName, v.AccountRoleName) {
 		return errExactlyOneOf("databaseRoleName", "accountRoleName")
-	}
-	return nil
-}
-
-func (v *OwnershipCurrentGrants) validate() error {
-	if !exactlyOneValueSet(v.RevokeOrCopy.Revoke, v.RevokeOrCopy.Copy) {
-		return errExactlyOneOf("revoke", "copy")
 	}
 	return nil
 }

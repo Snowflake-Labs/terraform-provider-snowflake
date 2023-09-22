@@ -272,9 +272,16 @@ type OwnershipGrantTo struct {
 }
 
 type OwnershipCurrentGrants struct {
-	RevokeOrCopy  OwnershipRevokeOrCopy `ddl:"-"`
-	currentGrants bool                  `ddl:"static" sql:"CURRENT GRANTS"`
+	OutboundPrivileges OwnershipCurrentGrantsOutboundPrivileges `ddl:"keyword"`
+	currentGrants      bool                                     `ddl:"static" sql:"CURRENT GRANTS"`
 }
+
+type OwnershipCurrentGrantsOutboundPrivileges string
+
+const (
+	Revoke OwnershipCurrentGrantsOutboundPrivileges = "REVOKE"
+	Copy   OwnershipCurrentGrantsOutboundPrivileges = "COPY"
+)
 
 type OwnershipRevokeOrCopy struct {
 	// One of

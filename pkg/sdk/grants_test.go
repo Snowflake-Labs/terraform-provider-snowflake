@@ -872,23 +872,6 @@ func TestGrants_GrantOwnership(t *testing.T) {
 		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [databaseRoleName accountRoleName] must be set"))
 	})
 
-	t.Run("validation: no revoke or copy", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.CurrentGrants = &OwnershipCurrentGrants{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [revoke copy] must be set"))
-	})
-
-	t.Run("validation: both revoke or copy", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.CurrentGrants = &OwnershipCurrentGrants{
-			RevokeOrCopy: OwnershipRevokeOrCopy{
-				Revoke: Bool(true),
-				Copy:   Bool(true),
-			},
-		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [revoke copy] must be set"))
-	})
-
 	t.Run("on schema object to role", func(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `GRANT OWNERSHIP ON TABLE %s TO ROLE %s`, tableId.FullyQualifiedName(), roleId.FullyQualifiedName())
@@ -922,6 +905,14 @@ func TestGrants_GrantOwnership(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `GRANT OWNERSHIP ON ALL TABLES IN SCHEMA %s TO ROLE %s`, schemaId.FullyQualifiedName(), roleId.FullyQualifiedName())
+	})
+
+	t.Run("on schema object with current grants", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.CurrentGrants = &OwnershipCurrentGrants{
+			OutboundPrivileges: Copy,
+		}
+		assertOptsValidAndSQLEquals(t, opts, `GRANT OWNERSHIP ON TABLE %s TO ROLE %s COPY CURRENT GRANTS`, tableId.FullyQualifiedName(), roleId.FullyQualifiedName())
 	})
 }
 
