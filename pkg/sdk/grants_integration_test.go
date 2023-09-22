@@ -568,6 +568,49 @@ func TestInt_GrantOwnership(t *testing.T) {
 		assert.Equal(t, ObjectTypeRole, returnedGrants[0].GrantTo)
 		assert.Equal(t, roleId, returnedGrants[0].GranteeName)
 	})
+
+	t.Run("on account level object to role", func(t *testing.T) {
+		warehouse, warehouseCleanup := createWarehouse(t, client)
+		t.Cleanup(warehouseCleanup)
+
+		// role is deliberately created after warehouse, so that cleanup is done in reverse
+		// because after ownership grant we lose privilege to drop object
+		// with first dropping the role, we reacquire rights to do it - a little hacky trick
+		role, roleCleanup := createRole(t, client)
+		t.Cleanup(roleCleanup)
+		roleId := role.ID()
+
+		on := OwnershipGrantOn{
+			SchemaObject: GrantOnSchemaObject{
+				SchemaObject: &Object{
+					ObjectType: ObjectTypeWarehouse,
+					Name:       warehouse.ID(),
+				},
+			},
+		}
+		to := OwnershipGrantTo{
+			AccountRoleName: &roleId,
+		}
+		currentGrants := OwnershipCurrentGrants{
+			OutboundPrivileges: Copy,
+		}
+
+		err := client.Grants.GrantOwnership(ctx, on, to, &GrantOwnershipOptions{CurrentGrants: &currentGrants})
+		require.NoError(t, err)
+
+		returnedGrants, err := client.Grants.Show(ctx, &ShowGrantOptions{
+			To: &ShowGrantsTo{
+				Role: roleId,
+			},
+		})
+		require.NoError(t, err)
+		require.Equal(t, 1, len(returnedGrants))
+
+		assert.Equal(t, SchemaObjectOwnership.String(), returnedGrants[0].Privilege)
+		assert.Equal(t, ObjectTypeWarehouse, returnedGrants[0].GrantedOn)
+		assert.Equal(t, ObjectTypeRole, returnedGrants[0].GrantedTo)
+		assert.Equal(t, roleId, returnedGrants[0].GranteeName)
+	})
 }
 
 func TestInt_ShowGrants(t *testing.T) {

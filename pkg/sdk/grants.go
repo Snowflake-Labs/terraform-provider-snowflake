@@ -282,9 +282,3 @@ const (
 	Revoke OwnershipCurrentGrantsOutboundPrivileges = "REVOKE"
 	Copy   OwnershipCurrentGrantsOutboundPrivileges = "COPY"
 )
-
-type OwnershipRevokeOrCopy struct {
-	// One of
-	Revoke *bool `ddl:"static" sql:"REVOKE"`
-	Copy   *bool `ddl:"static" sql:"COPY"`
-}
