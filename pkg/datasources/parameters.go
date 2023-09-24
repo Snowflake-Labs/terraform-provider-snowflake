@@ -1,13 +1,13 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -31,10 +31,9 @@ var parametersSchema = map[string]*schema.Schema{
 		Description: "If parameter_type is set to \"SESSION\" then user is the name of the user to display session parameters for.",
 	},
 	"object_type": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		Description:  "If parameter_type is set to \"OBJECT\" then object_type is the type of object to display object parameters for. Valid values are any object supported by the IN clause of the [SHOW PARAMETERS](https://docs.snowflake.com/en/sql-reference/sql/show-parameters.html#parameters) statement, including: WAREHOUSE | DATABASE | SCHEMA | TASK | TABLE",
-		ValidateFunc: validation.StringInSlice(snowflake.GetParameterObjectTypeSetAsStrings(), false),
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "If parameter_type is set to \"OBJECT\" then object_type is the type of object to display object parameters for. Valid values are any object supported by the IN clause of the [SHOW PARAMETERS](https://docs.snowflake.com/en/sql-reference/sql/show-parameters.html#parameters) statement, including: WAREHOUSE | DATABASE | SCHEMA | TASK | TABLE",
 	},
 	"object_name": {
 		Type:        schema.TypeString,
@@ -72,11 +71,6 @@ var parametersSchema = map[string]*schema.Schema{
 					Computed:    true,
 					Description: "The description of the parameter",
 				},
-				"type": {
-					Type:        schema.TypeString,
-					Computed:    true,
-					Description: "The type of the parameter",
-				},
 			},
 		},
 	},
@@ -91,36 +85,53 @@ func Parameters() *schema.Resource {
 
 func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	p, ok := d.GetOk("pattern")
 	pattern := ""
 	if ok {
 		pattern = p.(string)
 	}
-	var parameters []snowflake.Parameter
+	var parameters []*sdk.Parameter
 	var err error
-	parameterType := snowflake.ParameterType(strings.ToUpper(d.Get("parameter_type").(string)))
+	opts := sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{},
+	}
+	if pattern != "" {
+		opts.Like = &sdk.Like{Pattern: sdk.String(pattern)}
+	}
+	parameterType := strings.ToUpper(d.Get("parameter_type").(string))
 	switch parameterType {
-	case snowflake.ParameterTypeAccount:
-		parameters, err = snowflake.ListAccountParameters(db, pattern)
-	case snowflake.ParameterTypeSession:
+	case "ACCOUNT":
+		opts.In.Account = sdk.Bool(true)
+	case "SESSION":
 		user := d.Get("user").(string)
 		if user == "" {
 			return fmt.Errorf("user is required when parameter_type is set to SESSION")
 		}
-		parameters, err = snowflake.ListSessionParameters(db, pattern, user)
-	case snowflake.ParameterTypeObject:
-		oType := d.Get("object_type").(string)
-		objectType := snowflake.ObjectType(oType)
+		opts.In.User = sdk.NewAccountObjectIdentifier(user)
+	case "OBJECT":
+		objectType := sdk.ObjectType(d.Get("object_type").(string))
 		objectName := d.Get("object_name").(string)
-		parameters, err = snowflake.ListObjectParameters(db, objectType, objectName, pattern)
+		switch objectType {
+		case sdk.ObjectTypeWarehouse:
+			opts.In.Warehouse = sdk.NewAccountObjectIdentifier(objectName)
+		case sdk.ObjectTypeDatabase:
+			opts.In.Database = sdk.NewAccountObjectIdentifier(objectName)
+		case sdk.ObjectTypeSchema:
+			opts.In.Schema = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(objectName)
+		case sdk.ObjectTypeTask:
+			opts.In.Task = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName)
+		case sdk.ObjectTypeTable:
+			opts.In.Table = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName)
+		default:
+			return fmt.Errorf("object_type %s is not supported", objectType)
+		}
 	}
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("[DEBUG] parameters not found")
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] error occurred during read: %v", err.Error())
-		return err
+	parameters, err = client.Parameters.ShowParameters(ctx, &opts)
+
+	if err != nil {
+		return fmt.Errorf("error listing parameters: %w", err)
 	}
 	d.SetId("parameters")
 
@@ -128,12 +139,11 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 	for _, param := range parameters {
 		paramMap := map[string]interface{}{}
 
-		paramMap["key"] = param.Key.String
-		paramMap["value"] = param.Value.String
-		paramMap["default"] = param.Default.String
-		paramMap["level"] = param.Level.String
-		paramMap["description"] = param.Description.String
-		paramMap["type"] = param.PType.String
+		paramMap["key"] = param.Key
+		paramMap["value"] = param.Value
+		paramMap["default"] = param.Default
+		paramMap["level"] = param.Level
+		paramMap["description"] = param.Description
 
 		params = append(params, paramMap)
 	}

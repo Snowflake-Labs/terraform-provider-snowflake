@@ -20,6 +20,14 @@ func errOneOf(fieldNames ...string) error {
 	return fmt.Errorf("fields %v are incompatible and cannot be set at once", fieldNames)
 }
 
+func errExactlyOneOf(fieldNames ...string) error {
+	return fmt.Errorf("exactly one of %v must be set", fieldNames)
+}
+
+func errAtLeastOneOf(fieldNames ...string) error {
+	return fmt.Errorf("at least one of %v must be set", fieldNames)
+}
+
 func decodeDriverError(err error) error {
 	if err == nil {
 		return nil
