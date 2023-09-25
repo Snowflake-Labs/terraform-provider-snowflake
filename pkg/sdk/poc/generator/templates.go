@@ -191,7 +191,7 @@ var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 		t.Run("{{ .TodoComment $field }}", func(t *testing.T) {
 			opts := defaultOpts()
 			// TODO: fill me
-			assertOptsInvalidJoinedErrors(t, opts, {{ .Error }})
+			assertOptsInvalidJoinedErrors(t, opts, {{ .ReturnedError }})
 		})
 	{{ end -}}
 {{ end }}
@@ -245,7 +245,7 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 	{{- $field := . -}}
 	{{- range .Validations }}
 		if {{ .Condition $field }} {
-			errs = append(errs, {{ .Error $field }})
+			errs = append(errs, {{ .ReturnedError $field }})
 		}
 	{{- end -}}
 	{{- range .Fields }}

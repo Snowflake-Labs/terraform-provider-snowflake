@@ -26,7 +26,7 @@ func TestNetworkPolicies_Create(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -55,7 +55,7 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
 		opts.UnsetComment = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set opts.UnsetComment opts.RenameTo] should be set", func(t *testing.T) {
@@ -125,7 +125,7 @@ func TestNetworkPolicies_Drop(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -170,7 +170,7 @@ func TestNetworkPolicies_Describe(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {

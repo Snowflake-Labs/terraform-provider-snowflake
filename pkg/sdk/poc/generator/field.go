@@ -135,24 +135,26 @@ func (f *Field) Path() string {
 
 // DtoKind returns what should be fields kind in generated DTO, because it may differ from Kind
 func (f *Field) DtoKind() string {
-	if f.IsRoot() {
+	switch {
+	case f.IsRoot():
 		withoutSuffix, _ := strings.CutSuffix(f.Kind, "Options")
 		return fmt.Sprintf("%sRequest", withoutSuffix)
-	} else if f.IsStruct() {
+	case f.IsStruct():
 		return fmt.Sprintf("%sRequest", f.Kind)
-	} else {
+	default:
 		return f.Kind
 	}
 }
 
 // DtoDecl returns how struct should be declared in generated DTO (e.g. definition is without a pointer)
 func (f *Field) DtoDecl() string {
-	if f.Parent == nil {
+	switch {
+	case f.Parent == nil:
 		withoutSuffix, _ := strings.CutSuffix(f.KindNoPtr(), "Options")
 		return fmt.Sprintf("%sRequest", withoutSuffix)
-	} else if f.IsStruct() {
+	case f.IsStruct():
 		return fmt.Sprintf("%sRequest", f.KindNoPtr())
-	} else {
+	default:
 		return f.KindNoPtr()
 	}
 }

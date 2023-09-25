@@ -41,8 +41,7 @@ type DropNetworkPolicyRequest struct {
 	name     AccountObjectIdentifier // required
 }
 
-type ShowNetworkPolicyRequest struct {
-}
+type ShowNetworkPolicyRequest struct{}
 
 type DescribeNetworkPolicyRequest struct {
 	name AccountObjectIdentifier // required

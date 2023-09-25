@@ -3,9 +3,10 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInt_NetworkPolicies(t *testing.T) {

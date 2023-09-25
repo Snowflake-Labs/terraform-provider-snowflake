@@ -16,7 +16,7 @@ func (opts *CreateNetworkPolicyOptions) validate() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
@@ -27,13 +27,13 @@ func (opts *AlterNetworkPolicyOptions) validate() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	if ok := anyValueSet(opts.Set, opts.UnsetComment, opts.RenameTo); !ok {
 		errs = append(errs, errAtLeastOneOf("Set", "UnsetComment", "RenameTo"))
 	}
 	if valueSet(opts.RenameTo) && !validObjectidentifier(opts.RenameTo) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	if valueSet(opts.Set) {
 		if ok := anyValueSet(opts.Set.AllowedIpList, opts.Set.BlockedIpList, opts.Set.Comment); !ok {
@@ -49,7 +49,7 @@ func (opts *DropNetworkPolicyOptions) validate() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
@@ -68,7 +68,7 @@ func (opts *DescribeNetworkPolicyOptions) validate() error {
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }

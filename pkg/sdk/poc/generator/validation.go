@@ -66,12 +66,12 @@ func (v *Validation) Condition(field *Field) string {
 	panic("condition for validation unknown")
 }
 
-func (v *Validation) Error() string {
+func (v *Validation) ReturnedError() string {
 	switch v.Type {
 	case ValidIdentifier:
-		return fmt.Sprint("ErrInvalidObjectIdentifier")
+		return "ErrInvalidObjectIdentifier"
 	case ValidIdentifierIfSet:
-		return fmt.Sprint("ErrInvalidObjectIdentifier")
+		return "ErrInvalidObjectIdentifier"
 	case ConflictingFields:
 		return fmt.Sprintf("errOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
 	case ExactlyOneValueSet:
