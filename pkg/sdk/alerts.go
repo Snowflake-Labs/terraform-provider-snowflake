@@ -180,7 +180,7 @@ type dropAlertOptions struct {
 
 func (opts *dropAlertOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -319,7 +319,7 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 			return alert, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type describeAlertOptions struct {
@@ -330,7 +330,7 @@ type describeAlertOptions struct {
 
 func (v *describeAlertOptions) validate() error {
 	if !validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }

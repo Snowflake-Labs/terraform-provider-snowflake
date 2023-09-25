@@ -22,7 +22,7 @@ func TestPipesCreate(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: copy statement required", func(t *testing.T) {
@@ -65,7 +65,7 @@ func TestPipesAlter(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: no alter action", func(t *testing.T) {
@@ -218,7 +218,7 @@ func TestPipesDrop(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("empty options", func(t *testing.T) {
@@ -356,7 +356,7 @@ func TestPipesDescribe(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("with name", func(t *testing.T) {
