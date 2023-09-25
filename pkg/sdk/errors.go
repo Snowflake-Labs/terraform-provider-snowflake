@@ -83,13 +83,32 @@ func decodeDriverError(err error) error {
 
 const ghIssueBodyTemplate = `
 <!-- 
-Please provide additional information, like: 
-- failing configuration - what caused an error
-- context - what you were trying to achieve
--->
+**Provider Version**
+
+The provider version you are using.
+
+**Terraform Version**
+
+The version of Terraform you were using when the bug was encountered.
+
+**Describe the bug**
+
+A clear and concise description of what the bug is.
+
+**Expected behavior**
+
+A clear and concise description of what you expected to happen.
+
+**Code samples and commands**
+
+Please add code examples and commands that were run to cause the problem.
+
+**Additional context**
+
+Add any other context about the problem here.
 
 <!-- 
-Please provide error messages if we missed any (see the errors below and compare it with your console output)
+Please provide additional error messages if we missed any (see the errors below and compare it with your console output)
 -->
 
 Errors:
@@ -119,30 +138,61 @@ Errors:
 	)
 }
 
-type sdkError struct {
+type SDKError struct { //nolint:all
 	file         string
 	line         int
 	message      string
 	nestedErrors []error
 }
 
-func (e *sdkError) Error() string {
+func (e *SDKError) errorFileInfoHidden() string {
 	builder := new(strings.Builder)
-	writeTree(e, builder, 0)
+	writeTree(e, builder, 0, false)
 	return builder.String()
 }
 
-// NewError Creates new sdk.sdkError with information like filename or line number
+func (e *SDKError) Error() string {
+	builder := new(strings.Builder)
+	writeTree(e, builder, 0, true)
+	return builder.String()
+}
+
+// NewError Creates new sdk.SDKError with information like filename or line number
 // depending on where NewError was called
 func NewError(message string) error {
 	return newSDKError(message, 2)
 }
 
-// NewPredefinedError Lets you predefine factory method for given sdk.sdkError which is convenient
+// NewPredefinedError Lets you predefine factory method for given sdk.SDKError which is convenient
 // when given error must be returned multiple times
 func NewPredefinedError(message string) func() error {
 	return func() error {
 		return newSDKError(message, 2)
+	}
+}
+
+type SDKPredefinedError func() error //nolint:all
+
+func (fn SDKPredefinedError) Error() string {
+	return fn().Error()
+}
+
+// NewPredefinedError2
+// we can get is where redefined error is declared, not returned, which may be worse than the NewPredefinedError
+// version, but this one is better at replacing current predefined errors like ErrInvalidObjectIdentifier. With NewPredefinedError
+// we would have to change every return statement of this error to function call (because NewPredefinedError returns factory method for predefined err)
+// and the nature of NewPredefinedError2 is that we can return value as with ErrInvalidObjectIdentifier example.
+// The only disadvantage of this is that we'll get file + line from declaration which may cause issues that we have right now
+// (not knowing places where errors have been returned from - one function can return ErrInvalidObjectIdentifier in two places
+// and we'll know from which place with this approach unfortunately) and this error should solve them.
+// We can use both (e.g. for new errors use NewPredefinedError2 and for replacing old use NewPredefinedError)
+// or we can just choose one approach over the other. (of course NewPredefinedError2 will be renamed to something that makes more sense)
+// TODO this approach to predefined errors, this is lazy evaluated error, so the only filename + line number
+// TODO if we're going with this approach, change other methods to handle SDKPredefinedError type
+func NewPredefinedError2(message string) SDKPredefinedError {
+	err := newSDKError(message, 2)
+	return func() error {
+		return err
 	}
 }
 
@@ -198,10 +248,12 @@ func NewErrorNotSet(structPointer any, fields ...any) error {
 	)
 }
 
-// TODO We can force to use sdkError as wrapper
-// WrapErrors TODO
+// WrapErrors wraps errs with wrapper error.
+// When wrapper is any other type than SDKError than it'll create new SDKError with wrapper's error message
+// and in every case errs will be added to its internal list of errors.
+// TODO We can force to use SDKError as wrapper
 func WrapErrors(wrapper error, errs ...error) error {
-	if err, ok := wrapper.(*sdkError); ok { //nolint:all
+	if err, ok := wrapper.(*SDKError); ok { //nolint:all
 		err.nestedErrors = append(err.nestedErrors, errs...)
 		return wrapper
 	} else {
@@ -211,7 +263,7 @@ func WrapErrors(wrapper error, errs ...error) error {
 
 func newSDKError(message string, skip int, nested ...error) error {
 	line, filename := getCallerInfo(skip)
-	return &sdkError{
+	return &SDKError{
 		file:         filename,
 		line:         line,
 		message:      message,
@@ -231,21 +283,25 @@ func getCallerInfo(skip int) (int, string) {
 	return line, filename
 }
 
-func writeTree(e error, builder *strings.Builder, indent int) {
-	var sdkErr *sdkError
+func writeTree(e error, builder *strings.Builder, indent int, fileInfo bool) {
+	var sdkErr *SDKError
 	if joinedErr, ok := e.(interface{ Unwrap() []error }); ok { //nolint:all
 		errs := joinedErr.Unwrap()
 		for i, err := range errs {
 			if i > 0 {
 				builder.WriteByte('\n')
 			}
-			writeTree(err, builder, indent)
+			writeTree(err, builder, indent, fileInfo)
 		}
 	} else if errors.As(e, &sdkErr) {
-		builder.WriteString(strings.Repeat("› ", indent) + fmt.Sprintf("[%s:%d] %s", sdkErr.file, sdkErr.line, sdkErr.message))
+		if fileInfo {
+			builder.WriteString(strings.Repeat("› ", indent) + fmt.Sprintf("[%s:%d] %s", sdkErr.file, sdkErr.line, sdkErr.message))
+		} else {
+			builder.WriteString(strings.Repeat("› ", indent) + fmt.Sprintf("[file:line] %s", sdkErr.message))
+		}
 		for _, err := range sdkErr.nestedErrors {
 			builder.WriteByte('\n')
-			writeTree(err, builder, indent+2)
+			writeTree(err, builder, indent+2, fileInfo)
 		}
 	} else {
 		builder.WriteString(strings.Repeat("› ", indent) + e.Error())
