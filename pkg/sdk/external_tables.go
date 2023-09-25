@@ -412,8 +412,8 @@ type externalTableColumnDetailsRow struct {
 	PolicyName sql.NullString `db:"policy name"`
 }
 
-func (r *externalTableColumnDetailsRow) toExternalTableColumnDetails() ExternalTableColumnDetails {
-	details := ExternalTableColumnDetails{
+func (r externalTableColumnDetailsRow) convert() *ExternalTableColumnDetails {
+	details := &ExternalTableColumnDetails{
 		Name:       r.Name,
 		Type:       r.Type,
 		Kind:       r.Kind,
@@ -461,8 +461,8 @@ type externalTableStageDetailsRow struct {
 	PropertyDefault string `db:"property_default"`
 }
 
-func (r externalTableStageDetailsRow) toExternalTableStageDetails() ExternalTableStageDetails {
-	return ExternalTableStageDetails{
+func (r externalTableStageDetailsRow) convert() *ExternalTableStageDetails {
+	return &ExternalTableStageDetails{
 		ParentProperty:  r.ParentProperty,
 		Property:        r.Property,
 		PropertyType:    r.PropertyType,

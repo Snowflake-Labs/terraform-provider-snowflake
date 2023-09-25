@@ -58,13 +58,7 @@ func (v *externalTables) ShowByID(ctx context.Context, req *ShowExternalTableByI
 		return nil, err
 	}
 
-	for _, t := range externalTables {
-		if t.ID() == req.id {
-			return &t, nil
-		}
-	}
-
-	return nil, ErrObjectNotExistOrAuthorized
+	return findOne(externalTables, func(t ExternalTable) bool { return t.ID() == req.id })
 }
 
 func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error) {
@@ -74,12 +68,7 @@ func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExter
 	if err != nil {
 		return nil, err
 	}
-
-	result := make([]ExternalTableColumnDetails, len(rows))
-	for i, r := range rows {
-		result[i] = r.toExternalTableColumnDetails()
-	}
-	return result, nil
+	return convertRows[externalTableColumnDetailsRow, ExternalTableColumnDetails](rows), nil
 }
 
 func (v *externalTables) DescribeStage(ctx context.Context, req *DescribeExternalTableStageRequest) ([]ExternalTableStageDetails, error) {
@@ -89,11 +78,5 @@ func (v *externalTables) DescribeStage(ctx context.Context, req *DescribeExterna
 	if err != nil {
 		return nil, err
 	}
-
-	result := make([]ExternalTableStageDetails, len(rows))
-	for i, r := range rows {
-		result[i] = r.toExternalTableStageDetails()
-	}
-
-	return result, nil
+	return convertRows[externalTableStageDetailsRow, ExternalTableStageDetails](rows), nil
 }

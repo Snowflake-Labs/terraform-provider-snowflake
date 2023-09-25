@@ -36,7 +36,9 @@ func TestInt_ExternalTables(t *testing.T) {
 		NewExternalTableColumnRequest("weather", DataTypeVariant, "value:weather::variant"),
 	}
 
-	columnsWithPartition := append(columns, []*ExternalTableColumnRequest{
+	var columnsWithPartition []*ExternalTableColumnRequest
+	copy(columnsWithPartition, columns)
+	columnsWithPartition = append(columnsWithPartition, []*ExternalTableColumnRequest{
 		NewExternalTableColumnRequest("weather_date", DataTypeDate, "to_date(to_timestamp(value:time::int))"),
 		NewExternalTableColumnRequest("part_date", DataTypeDate, "parse_json(metadata$external_table_partition):weather_date::date"),
 	}...)
@@ -233,7 +235,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// TODO: Uncomment when the problem with alter external table set / unset tags is solved
+	// TODO: (SNOW-919981) Uncomment when the problem with alter external table set / unset tags is solved
 	// t.Run("Alter: set tags", func(t *testing.T) {
 	//	externalTableID := randomAccountObjectIdentifier(t)
 	//	err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
@@ -276,7 +278,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	//
 	//	_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
 	//	require.Error(t, err)
-	//})
+	// })
 
 	t.Run("Alter: add partitions", func(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
