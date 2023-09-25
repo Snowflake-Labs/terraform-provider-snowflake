@@ -29,16 +29,17 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	tag, _ := createTag(t, client, db, schema)
 
-	columns := []*ExternalTableColumnRequest{
-		NewExternalTableColumnRequest("filename", DataTypeString, "metadata$filename::string"),
-		NewExternalTableColumnRequest("city", DataTypeString, "value:city:findname::string"),
-		NewExternalTableColumnRequest("time", DataTypeTimestamp, "to_timestamp(value:time::int)"),
-		NewExternalTableColumnRequest("weather", DataTypeVariant, "value:weather::variant"),
+	defaultColumns := func() []*ExternalTableColumnRequest {
+		return []*ExternalTableColumnRequest{
+			NewExternalTableColumnRequest("filename", DataTypeString, "metadata$filename::string"),
+			NewExternalTableColumnRequest("city", DataTypeString, "value:city:findname::string"),
+			NewExternalTableColumnRequest("time", DataTypeTimestamp, "to_timestamp(value:time::int)"),
+			NewExternalTableColumnRequest("weather", DataTypeVariant, "value:weather::variant"),
+		}
 	}
 
-	var columnsWithPartition []*ExternalTableColumnRequest
-	copy(columnsWithPartition, columns)
-	columnsWithPartition = append(columnsWithPartition, []*ExternalTableColumnRequest{
+	columns := defaultColumns()
+	columnsWithPartition := append(defaultColumns(), []*ExternalTableColumnRequest{
 		NewExternalTableColumnRequest("weather_date", DataTypeDate, "to_date(to_timestamp(value:time::int))"),
 		NewExternalTableColumnRequest("part_date", DataTypeDate, "parse_json(metadata$external_table_partition):weather_date::date"),
 	}...)
