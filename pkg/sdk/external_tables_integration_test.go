@@ -333,7 +333,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
-		require.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("Show", func(t *testing.T) {
