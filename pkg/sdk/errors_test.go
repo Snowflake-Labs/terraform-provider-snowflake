@@ -6,9 +6,9 @@ import (
 )
 
 func printErr(err error) {
-	if e, ok := err.(*SDKError); ok {
+	if e, ok := err.(*SDKError); ok { //nolint:all
 		fmt.Println(e.errorFileInfoHidden())
-	} else if fn, ok := err.(SDKPredefinedError); ok {
+	} else if fn, ok := err.(SDKPredefinedError); ok { //nolint:all
 		printErr(fn())
 	} else {
 		fmt.Println(err)
@@ -67,21 +67,21 @@ func ExampleWrapErrors() {
 	printErr(err3)
 
 	// Output:
-	//[file:line] Higher level error
-	//› › [file:line] Some error
-	//› › [file:line] Some predefined error
+	// [file:line] Higher level error
+	// › › [file:line] Some error
+	// › › [file:line] Some predefined error
 	//
-	//[file:line] Higher level error
-	//› › [file:line] Some error
-	//› › [file:line] Some predefined error
+	// [file:line] Higher level error
+	// › › [file:line] Some error
+	// › › [file:line] Some predefined error
 	//
-	//[file:line] Root
-	//› › [file:line] Higher level error
-	//› › › › [file:line] Some error
-	//› › › › [file:line] Some predefined error
-	//› › [file:line] Higher level error
-	//› › › › [file:line] Some error
-	//› › › › [file:line] Some predefined error
+	// [file:line] Root
+	// › › [file:line] Higher level error
+	// › › › › [file:line] Some error
+	// › › › › [file:line] Some predefined error
+	// › › [file:line] Higher level error
+	// › › › › [file:line] Some error
+	// › › › › [file:line] Some predefined error
 }
 
 func ExampleNewErrorOneOf() {
@@ -131,6 +131,27 @@ func ExampleNewTopLevelError() {
 	gigaErr := errors.Join(err, err2, err3)
 	printErr(NewTopLevelError(gigaErr))
 
-	// Output:
+	// Prints:
+	// Snowflake Terraform Provider error!
+	// If you think you've encountered a bug, please report it with the link below.
+	// If any of the error information is missing in the issue body, please fill it up.
+	// Any additional information (or context what you were trying to achieve) would be helpful
+	// to provide the solution or fix as soon as possible. Thanks :)
 	//
+	// https://github.com//Snowflake-Labs/terraform-provider-snowflake/issues/new?labels=bug&title=New+issue&body=%0A%3C%21--+%0A%2A%2AProvider+Version%2A%2A%0A%0AThe+provider+version+you+are+using.%0A%0A%2A%2ATerraform+Version%2A%2A%0A%0AThe+version+of+Terraform+you+were+using+when+the+bug+was+encountered.%0A%0A%2A%2ADescribe+the+bug%2A%2A%0A%0AA+clear+and+concise+description+of+what+the+bug+is.%0A%0A%2A%2AExpected+behavior%2A%2A%0A%0AA+clear+and+concise+description+of+what+you+expected+to+happen.%0A%0A%2A%2ACode+samples+and+commands%2A%2A%0A%0APlease+add+code+examples+and+commands+that+were+run+to+cause+the+problem.%0A%0A%2A%2AAdditional+context%2A%2A%0A%0AAdd+any+other+context+about+the+problem+here.%0A%0A%3C%21--+%0APlease+provide+additional+error+messages+if+we+missed+any+%28see+the+errors+below+and+compare+it+with+your+console+output%29%0A--%3E%0A%0AErrors%3A%0A%5Berrors_test.go%3A128%5D+Higher+level+error%0A%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A125%5D+Some+error%0A%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A127%5D+Some+predefined+error%0A%5Berrors_test.go%3A129%5D+Higher+level+error%0A%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A125%5D+Some+error%0A%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A129%5D+Some+predefined+error%0A%5Berrors_test.go%3A130%5D+Root%0A%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A128%5D+Higher+level+error%0A%E2%80%BA+%E2%80%BA+%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A125%5D+Some+error%0A%E2%80%BA+%E2%80%BA+%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A127%5D+Some+predefined+error%0A%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A129%5D+Higher+level+error%0A%E2%80%BA+%E2%80%BA+%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A125%5D+Some+error%0A%E2%80%BA+%E2%80%BA+%E2%80%BA+%E2%80%BA+%5Berrors_test.go%3A129%5D+Some+predefined+error%0A
+	//
+	// Errors:
+	// [errors_test.go:128] Higher level error
+	// › › [errors_test.go:125] Some error
+	// › › [errors_test.go:127] Some predefined error
+	// [errors_test.go:129] Higher level error
+	// › › [errors_test.go:125] Some error
+	// › › [errors_test.go:129] Some predefined error
+	// [errors_test.go:130] Root
+	// › › [errors_test.go:128] Higher level error
+	// › › › › [errors_test.go:125] Some error
+	// › › › › [errors_test.go:127] Some predefined error
+	// › › [errors_test.go:129] Higher level error
+	// › › › › [errors_test.go:125] Some error
+	// › › › › [errors_test.go:129] Some predefined error
 }

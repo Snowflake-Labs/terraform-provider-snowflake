@@ -82,7 +82,6 @@ func decodeDriverError(err error) error {
 }
 
 const ghIssueBodyTemplate = `
-<!-- 
 **Provider Version**
 
 The provider version you are using.
