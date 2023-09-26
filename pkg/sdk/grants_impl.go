@@ -66,6 +66,15 @@ func (v *grants) RevokePrivilegeFromShare(ctx context.Context, privilege ObjectP
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to OwnershipGrantTo, opts *GrantOwnershipOptions) error {
+	if opts == nil {
+		opts = &GrantOwnershipOptions{}
+	}
+	opts.On = on
+	opts.To = to
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, error) {
 	if opts == nil {
 		opts = &ShowGrantOptions{}

@@ -15,6 +15,8 @@ type Grants interface {
 	RevokePrivilegesFromDatabaseRole(ctx context.Context, privileges *DatabaseRoleGrantPrivileges, on *DatabaseRoleGrantOn, role DatabaseObjectIdentifier, opts *RevokePrivilegesFromDatabaseRoleOptions) error
 	GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error
 	RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, from AccountObjectIdentifier) error
+	GrantOwnership(ctx context.Context, on OwnershipGrantOn, to OwnershipGrantTo, opts *GrantOwnershipOptions) error
+
 	Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, error)
 }
 
@@ -250,3 +252,37 @@ func (row grantRow) convert() *Grant {
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
 	}
 }
+
+// GrantOwnershipOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#syntax.
+// Description is a bit misleading, ownership can be given not only to schema objects but also to account level objects.
+type GrantOwnershipOptions struct {
+	grantOwnership bool                    `ddl:"static" sql:"GRANT OWNERSHIP"`
+	On             OwnershipGrantOn        `ddl:"keyword" sql:"ON"`
+	To             OwnershipGrantTo        `ddl:"keyword" sql:"TO"`
+	CurrentGrants  *OwnershipCurrentGrants `ddl:"-"`
+}
+
+type OwnershipGrantOn struct {
+	// One of
+	Object *Object                `ddl:"-"`
+	All    *GrantOnSchemaObjectIn `ddl:"keyword" sql:"ALL"`
+	Future *GrantOnSchemaObjectIn `ddl:"keyword" sql:"FUTURE"`
+}
+
+type OwnershipGrantTo struct {
+	// One of
+	DatabaseRoleName *DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
+	AccountRoleName  *AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
+}
+
+type OwnershipCurrentGrants struct {
+	OutboundPrivileges OwnershipCurrentGrantsOutboundPrivileges `ddl:"keyword"`
+	currentGrants      bool                                     `ddl:"static" sql:"CURRENT GRANTS"`
+}
+
+type OwnershipCurrentGrantsOutboundPrivileges string
+
+const (
+	Revoke OwnershipCurrentGrantsOutboundPrivileges = "REVOKE"
+	Copy   OwnershipCurrentGrantsOutboundPrivileges = "COPY"
+)

@@ -69,13 +69,13 @@ Integration status - indicates if given resource / datasource is using new SDK.
 | Database Role                       | ✅                    | snowflake_database_role                        | snowflake_database_role       | ✅                  |
 | Role                                | 👨‍💻                | snowflake_role                                 | snowflake_role                | 👨‍💻              |
 | Grant Privilege to Application Role | ❌                    | snowflake_grant_privileges_to_application_role | snowflake_grants              | ❌                  |
-| Grant Privilege to Database Role    | 👨‍💻                | snowflake_grant_privileges_to_database_role    | snowflake_grants              | 👨‍💻              |
+| Grant Privilege to Database Role    | ✅                    | snowflake_grant_privileges_to_database_role    | snowflake_grants              | 👨‍💻              |
 | Grant Privilege to Role             | ❌                    | snowflake_grant_privileges_to_role             | snowflake_grants              | ✅                  |
 | Grant Role                          | ❌                    | snowflake_grant_role                           | snowflake_grants              | ❌                  |
 | Grant Database Role                 | ✅                    | snowflake_grant_database_role                  | snowflake_grants              | ❌                  |
 | Grant Application Role              | ❌                    | snowflake_grant_application_role               | snowflake_grants              | ❌                  |
 | Grant Privilege to Share            | ✅                    | snowflake_grant_privileges_to_share            | snowflake_grants              | ❌                  |
-| Grant Ownership                     | ❌                    | snowflake_grant_ownership                      | snowflake_grants              | ❌                  |
+| Grant Ownership                     | ✅                    | snowflake_grant_ownership                      | snowflake_grants              | ❌                  |
 | API Integration                     | ❌                    | snowflake_api_integration                      | snowflake_integrations        | ❌                  |
 | Notification Integration            | ❌                    | snowflake_notification_integration             | snowflake_integrations        | ❌                  |
 | Security Integration                | ❌                    | snowflake_security_integration                 | snowflake_integrations        | ❌                  |
