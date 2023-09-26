@@ -2,10 +2,7 @@ package sdk
 
 import "context"
 
-var (
-	_ ExternalTables                = (*externalTables)(nil)
-	_ convertibleRow[ExternalTable] = (*externalTableRow)(nil)
-)
+var _ ExternalTables = (*externalTables)(nil)
 
 type externalTables struct {
 	client *Client

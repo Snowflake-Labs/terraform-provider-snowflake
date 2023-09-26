@@ -7,17 +7,9 @@ import (
 )
 
 var (
-	_ ExternalTables = (*externalTables)(nil)
-	_ validatable    = (*CreateExternalTableOptions)(nil)
-	_ validatable    = (*CreateWithManualPartitioningExternalTableOptions)(nil)
-	_ validatable    = (*CreateDeltaLakeExternalTableOptions)(nil)
-	_ validatable    = (*CreateExternalTableUsingTemplateOptions)(nil)
-	_ validatable    = (*AlterExternalTableOptions)(nil)
-	_ validatable    = (*AlterExternalTablePartitionOptions)(nil)
-	_ validatable    = (*DropExternalTableOptions)(nil)
-	_ validatable    = (*ShowExternalTableOptions)(nil)
-	_ validatable    = (*describeExternalTableColumns)(nil)
-	_ validatable    = (*describeExternalTableStage)(nil)
+	_ convertibleRow[ExternalTable]              = (*externalTableRow)(nil)
+	_ convertibleRow[ExternalTableColumnDetails] = (*externalTableColumnDetailsRow)(nil)
+	_ convertibleRow[ExternalTableStageDetails]  = (*externalTableStageDetailsRow)(nil)
 )
 
 type ExternalTables interface {
