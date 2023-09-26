@@ -17,7 +17,7 @@ func (opts *PipeCreateOptions) validate() error {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if opts.copyStatement == "" {
 		return errCopyStatementRequired
@@ -30,7 +30,7 @@ func (opts *PipeAlterOptions) validate() error {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if ok := exactlyOneValueSet(
 		opts.Set,
@@ -69,7 +69,7 @@ func (opts *PipeDropOptions) validate() error {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -92,16 +92,14 @@ func (opts *describePipeOptions) validate() error {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
 
 var (
-	errNilOptions                    = errors.New("options cannot be nil")
-	errCopyStatementRequired         = errors.New("copy statement required")
-	errPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
-	errScopeRequiredForInKeyword     = errors.New("exactly one scope must be specified for in keyword")
-	errAlterNeedsExactlyOneAction    = errors.New("alter statement needs exactly one action from: set, unset, refresh")
-	errAlterNeedsAtLeastOneProperty  = errors.New("alter statement needs at least one property")
+	errCopyStatementRequired        = errors.New("copy statement required")
+	errScopeRequiredForInKeyword    = errors.New("exactly one scope must be specified for in keyword")
+	errAlterNeedsExactlyOneAction   = errors.New("alter statement needs exactly one action from: set, unset, refresh")
+	errAlterNeedsAtLeastOneProperty = errors.New("alter statement needs at least one property")
 )

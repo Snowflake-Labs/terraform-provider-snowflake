@@ -675,7 +675,7 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 			return FileFormat, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type FileFormatDetails struct {

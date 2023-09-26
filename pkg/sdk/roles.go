@@ -2,38 +2,42 @@ package sdk
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
+	"time"
 )
 
 type Roles interface {
 	// Create creates a role.
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *RoleCreateOptions) error
+	Create(ctx context.Context, req *CreateRoleRequest) error
 	// Alter modifies an existing role
-	Alter(ctx context.Context, id AccountObjectIdentifier, opts *RoleAlterOptions) error
+	Alter(ctx context.Context, req *AlterRoleRequest) error
 	// Drop removes a role.
-	Drop(ctx context.Context, id AccountObjectIdentifier, opts *RoleDropOptions) error
+	Drop(ctx context.Context, req *DropRoleRequest) error
 	// Show returns a list of roles.
-	Show(ctx context.Context, opts *RoleShowOptions) ([]*Role, error)
+	Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error)
 	// ShowByID returns a user by ID
-	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role, error)
+	ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, error)
 	// Grant grants privileges on a role.
-	// Grant(ctx context.Context, id AccountObjectIdentifier, opts *RoleGrantOptions) error
+	Grant(ctx context.Context, req *GrantRoleRequest) error
 	// Revoke revokes privileges on a role.
-	// Revoke(ctx context.Context, id AccountObjectIdentifier, opts *RoleRevokeOptions) error
+	Revoke(ctx context.Context, req *RevokeRoleRequest) error
 	// Use sets the active role for the current session.
-	// Use(ctx context.Context, id AccountObjectIdentifier) error
+	Use(ctx context.Context, req *UseRoleRequest) error
 	// UseSecondary specifies the active/current secondary roles for the session.
-	// UseSecondary(ctx context.Context, opts *RolesUseSecondaryOptions) error
-}
-
-var _ Roles = (*roles)(nil)
-
-type roles struct {
-	client *Client
+	UseSecondary(ctx context.Context, req *UseSecondaryRolesRequest) error
 }
 
 type Role struct {
-	Name string `db:"name"`
+	CreatedOn       time.Time
+	Name            string
+	IsDefault       bool
+	IsCurrent       bool
+	IsInherited     bool
+	AssignedToUsers int
+	GrantedToRoles  int
+	GrantedRoles    int
+	Owner           string
+	Comment         string
 }
 
 func (v *Role) ID() AccountObjectIdentifier {
@@ -44,51 +48,115 @@ func (v *Role) ObjectType() ObjectType {
 	return ObjectTypeRole
 }
 
-// RoleCreateOptions contains options for creating a role.
-type RoleCreateOptions struct{}
-
-func (v *roles) Create(ctx context.Context, id AccountObjectIdentifier, opts *RoleCreateOptions) error {
-	sql := fmt.Sprintf(`CREATE ROLE %v`, id.FullyQualifiedName())
-	_, err := v.client.exec(ctx, sql)
-	return err
+type roleDBRow struct {
+	CreatedOn       time.Time      `db:"created_on"`
+	Name            string         `db:"name"`
+	IsDefault       sql.NullString `db:"is_default"`
+	IsCurrent       sql.NullString `db:"is_current"`
+	IsInherited     sql.NullString `db:"is_inherited"`
+	AssignedToUsers int            `db:"assigned_to_users"`
+	GrantedToRoles  int            `db:"granted_to_roles"`
+	GrantedRoles    int            `db:"granted_roles"`
+	Owner           sql.NullString `db:"owner"`
+	Comment         sql.NullString `db:"comment"`
 }
 
-// RoleAlterOptions contains options for altering a user.
-type RoleAlterOptions struct{}
-
-func (v *roles) Alter(ctx context.Context, id AccountObjectIdentifier, opts *RoleAlterOptions) error {
-	return nil
-}
-
-// RoleDropOptions contains options for dropping a role.
-type RoleDropOptions struct{}
-
-func (v *roles) Drop(ctx context.Context, id AccountObjectIdentifier, opts *RoleDropOptions) error {
-	sql := fmt.Sprintf(`DROP ROLE %v`, id.FullyQualifiedName())
-	_, err := v.client.exec(ctx, sql)
-	return err
-}
-
-// RoleShowOptions contains options for listing roles.
-type RoleShowOptions struct{}
-
-func (v *roles) Show(ctx context.Context, opts *RoleShowOptions) ([]*Role, error) {
-	var rows []Role
-	sql := `SHOW ROLES`
-	err := v.client.query(ctx, &rows, sql)
-	if err != nil {
-		return nil, err
+func (row roleDBRow) convert() *Role {
+	role := &Role{
+		CreatedOn:       row.CreatedOn,
+		Name:            row.Name,
+		AssignedToUsers: row.AssignedToUsers,
+		GrantedToRoles:  row.GrantedToRoles,
+		GrantedRoles:    row.GrantedRoles,
 	}
-
-	roles := make([]*Role, len(rows))
-	for i, row := range rows {
-		var role Role = row
-		roles[i] = &role
+	if row.IsDefault.Valid {
+		role.IsDefault = row.IsDefault.String == "Y"
 	}
-
-	return roles, nil
+	if row.IsCurrent.Valid {
+		role.IsCurrent = row.IsCurrent.String == "Y"
+	}
+	if row.IsInherited.Valid {
+		role.IsInherited = row.IsInherited.String == "Y"
+	}
+	if row.Owner.Valid {
+		role.Owner = row.Owner.String
+	}
+	if row.Comment.Valid {
+		role.Comment = row.Comment.String
+	}
+	return role
 }
 
-func (v *roles) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role, error) {
-	return nil, nil
+// CreateRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-role
+type CreateRoleOptions struct {
+	create      bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	role        bool                    `ddl:"static" sql:"ROLE"`
+	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name        AccountObjectIdentifier `ddl:"identifier"`
+	Comment     *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Tag         []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
+}
+
+// AlterRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-role
+type AlterRoleOptions struct {
+	alter    bool                    `ddl:"static" sql:"ALTER"`
+	role     bool                    `ddl:"static" sql:"ROLE"`
+	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name     AccountObjectIdentifier `ddl:"identifier"`
+
+	// One of
+	RenameTo     *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	SetComment   *string                  `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
+	SetTags      []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
+	UnsetComment *bool                    `ddl:"keyword" sql:"UNSET COMMENT"`
+	UnsetTags    []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
+}
+
+// DropRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/drop-role
+type DropRoleOptions struct {
+	drop     bool                    `ddl:"static" sql:"DROP"`
+	roles    bool                    `ddl:"static" sql:"ROLE"`
+	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name     AccountObjectIdentifier `ddl:"identifier"`
+}
+
+// ShowRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/show-roles
+type ShowRoleOptions struct {
+	show    bool          `ddl:"static" sql:"SHOW"`
+	roles   bool          `ddl:"static" sql:"ROLES"`
+	Like    *Like         `ddl:"keyword" sql:"LIKE"`
+	InClass *RolesInClass `ddl:"keyword" sql:"IN CLASS"`
+}
+
+type RolesInClass struct {
+	Class ObjectIdentifier `ddl:"identifier"`
+}
+
+// GrantRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/grant-role
+type GrantRoleOptions struct {
+	grant bool                    `ddl:"static" sql:"GRANT"`
+	role  bool                    `ddl:"static" sql:"ROLE"`
+	name  AccountObjectIdentifier `ddl:"identifier"`
+	Grant GrantRole               `ddl:"keyword,no_parentheses" sql:"TO"`
+}
+
+type GrantRole struct {
+	// one of
+	Role *AccountObjectIdentifier `ddl:"identifier" sql:"ROLE"`
+	User *AccountObjectIdentifier `ddl:"identifier" sql:"USER"`
+}
+
+// RevokeRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/revoke-role
+type RevokeRoleOptions struct {
+	revoke bool                    `ddl:"static" sql:"REVOKE"`
+	role   bool                    `ddl:"static" sql:"ROLE"`
+	name   AccountObjectIdentifier `ddl:"identifier"`
+	Revoke RevokeRole              `ddl:"keyword,no_parentheses" sql:"FROM"`
+}
+
+type RevokeRole struct {
+	// one of
+	User *AccountObjectIdentifier `ddl:"identifier" sql:"USER"`
+	Role *AccountObjectIdentifier `ddl:"identifier" sql:"ROLE"`
 }

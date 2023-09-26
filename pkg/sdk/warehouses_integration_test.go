@@ -179,7 +179,7 @@ func TestInt_WarehouseDescribe(t *testing.T) {
 	t.Run("when warehouse does not exist", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("does_not_exist")
 		_, err := client.Warehouses.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 
@@ -520,13 +520,13 @@ func TestInt_WarehouseDrop(t *testing.T) {
 		err := client.Warehouses.Drop(ctx, warehouse.ID(), nil)
 		require.NoError(t, err)
 		_, err = client.Warehouses.Describe(ctx, warehouse.ID())
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when warehouse does not exist", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("does_not_exist")
 		err := client.Warehouses.Drop(ctx, id, nil)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when warehouse exists and if exists is true", func(t *testing.T) {
@@ -536,6 +536,6 @@ func TestInt_WarehouseDrop(t *testing.T) {
 		err := client.Warehouses.Drop(ctx, warehouse.ID(), dropOptions)
 		require.NoError(t, err)
 		_, err = client.Warehouses.Describe(ctx, warehouse.ID())
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }

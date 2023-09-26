@@ -89,14 +89,14 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.DatabaseRoles.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("drop database_role: non-existing", func(t *testing.T) {
 		id := NewDatabaseObjectIdentifier(database.Name, "does_not_exist")
 
 		err := client.DatabaseRoles.Drop(ctx, NewDropDatabaseRoleRequest(id))
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("alter database_role: set value and unset value", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.DatabaseRoles.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 
 		databaseRole, err := client.DatabaseRoles.ShowByID(ctx, newId)
 		require.NoError(t, err)

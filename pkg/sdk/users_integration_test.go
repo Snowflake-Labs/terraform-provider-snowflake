@@ -215,7 +215,7 @@ func TestInt_UserDescribe(t *testing.T) {
 	t.Run("when user does not exist", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("does_not_exist")
 		_, err := client.Users.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 
@@ -229,12 +229,12 @@ func TestInt_UserDrop(t *testing.T) {
 		err := client.Users.Drop(ctx, id)
 		require.NoError(t, err)
 		_, err = client.Users.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when user does not exist", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("does_not_exist")
 		err := client.Users.Drop(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
