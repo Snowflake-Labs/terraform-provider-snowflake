@@ -424,15 +424,7 @@ func (c *accounts) Drop(ctx context.Context, id AccountObjectIdentifier, gracePe
 	}
 	opts.name = id
 	opts.gracePeriodInDays = gracePeriodInDays
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = c.client.exec(ctx, sql)
-	return err
+	return validateAndExec(c.client, ctx, opts)
 }
 
 type undropAccountOptions struct {

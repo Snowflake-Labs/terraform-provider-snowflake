@@ -3,10 +3,12 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/avast/retry-go"
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,6 +34,19 @@ func TestInt_AccountShow(t *testing.T) {
 	assert.NotEmpty(t, accounts)
 	assert.Equal(t, 1, len(accounts))
 	assert.Contains(t, []string{accounts[0].AccountLocator, accounts[0].AccountName}, currentAccount)
+}
+
+func TestInt_AccountShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	ok, err := client.ContextFunctions.IsRoleInSession(ctx, NewAccountObjectIdentifier("ORGADMIN"))
+	require.NoError(t, err)
+	if !ok {
+		t.Skip("ORGADMIN role is not in current session")
+	}
+	require.NoError(t, err)
+	_, err = client.Accounts.ShowByID(ctx, NewAccountObjectIdentifier("NOT_EXISTING_ACCOUNT"))
+	require.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
 }
 
 func TestInt_AccountCreate(t *testing.T) {
@@ -62,15 +77,17 @@ func TestInt_AccountCreate(t *testing.T) {
 		require.NoError(t, err)
 
 		var account *Account
-		for i := 0; i < 3; i++ {
-			account, err = client.Accounts.ShowByID(ctx, accountID)
-			if err != nil {
-				t.Logf("retrying... %d", i+1)
-				time.Sleep(1 * time.Second)
-				continue
-			}
-			break
-		}
+		err = retry.Do(
+			func() error {
+				account, err = client.Accounts.ShowByID(ctx, accountID)
+				return err
+			},
+			retry.OnRetry(func(n uint, err error) {
+				log.Printf("[DEBUG] Retrying client.Accounts.ShowByID: #%d", n+1)
+			}),
+			retry.Delay(1*time.Second),
+			retry.Attempts(3),
+		)
 		require.NoError(t, err)
 		assert.Equal(t, accountID.Name(), account.AccountName)
 		assert.Equal(t, EditionBusinessCritical, account.Edition)
@@ -89,15 +106,17 @@ func TestInt_AccountCreate(t *testing.T) {
 		err = client.Accounts.Alter(ctx, alterOpts)
 		require.NoError(t, err)
 
-		for i := 0; i < 3; i++ {
-			account, err = client.Accounts.ShowByID(ctx, newAccountID)
-			if err != nil {
-				t.Logf("retrying... %d", i+1)
-				time.Sleep(1 * time.Second)
-				continue
-			}
-			break
-		}
+		err = retry.Do(
+			func() error {
+				account, err = client.Accounts.ShowByID(ctx, newAccountID)
+				return err
+			},
+			retry.OnRetry(func(n uint, err error) {
+				log.Printf("[DEBUG] Retrying client.Accounts.ShowByID: #%d", n+1)
+			}),
+			retry.Delay(1*time.Second),
+			retry.Attempts(3),
+		)
 		require.NoError(t, err)
 		assert.Equal(t, newAccountID.Name(), account.AccountName)
 

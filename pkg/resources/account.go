@@ -358,6 +358,7 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 // UpdateAccount implements schema.UpdateFunc.
 func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
 	/*
+		todo: comments may eventually work again for accounts, so this can be uncommented when that happens
 		db := meta.(*sql.DB)
 		client := sdk.NewClientFromDB(db)
 		ctx := context.Background()
