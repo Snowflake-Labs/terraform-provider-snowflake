@@ -46,7 +46,7 @@ func TestInt_AccountShowByID(t *testing.T) {
 	}
 	require.NoError(t, err)
 	_, err = client.Accounts.ShowByID(ctx, NewAccountObjectIdentifier("NOT_EXISTING_ACCOUNT"))
-	require.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+	require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 }
 
 func TestInt_AccountCreate(t *testing.T) {
