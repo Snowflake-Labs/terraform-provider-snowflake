@@ -492,16 +492,44 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 
 func createRole(t *testing.T, client *Client) (*Role, func()) {
 	t.Helper()
-	id := randomAccountObjectIdentifier(t)
+	return createRoleWithRequest(t, client, NewCreateRoleRequest(randomAccountObjectIdentifier(t)))
+}
+
+func createRoleWithRequest(t *testing.T, client *Client, req *CreateRoleRequest) (*Role, func()) {
+	t.Helper()
+	require.True(t, validObjectidentifier(req.name))
 	ctx := context.Background()
-	err := client.Roles.Create(ctx, id, nil)
+	err := client.Roles.Create(ctx, req)
 	require.NoError(t, err)
-	return &Role{
-			Name: id.Name(),
-		}, func() {
-			err := client.Roles.Drop(ctx, id, nil)
-			require.NoError(t, err)
-		}
+	role, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(req.name))
+	require.NoError(t, err)
+	return role, func() {
+		err = client.Roles.Drop(ctx, NewDropRoleRequest(req.name))
+		require.NoError(t, err)
+	}
+}
+
+func createDatabaseRole(t *testing.T, client *Client, database *Database) (*DatabaseRole, func()) {
+	t.Helper()
+	name := randomString(t)
+	id := NewDatabaseObjectIdentifier(database.Name, name)
+	ctx := context.Background()
+
+	err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
+	require.NoError(t, err)
+
+	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return databaseRole, cleanupDatabaseRoleProvider(t, ctx, client, id)
+}
+
+func cleanupDatabaseRoleProvider(t *testing.T, ctx context.Context, client *Client, id DatabaseObjectIdentifier) func() {
+	t.Helper()
+	return func() {
+		err := client.DatabaseRoles.Drop(ctx, NewDropDatabaseRoleRequest(id))
+		require.NoError(t, err)
+	}
 }
 
 func createMaskingPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*MaskingPolicy, func()) {

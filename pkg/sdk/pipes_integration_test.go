@@ -161,7 +161,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 		id := NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
 
 		_, err := client.Pipes.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 
@@ -274,14 +274,14 @@ func TestInt_PipeDrop(t *testing.T) {
 
 		require.NoError(t, err)
 		_, err = client.Pipes.Describe(ctx, pipe.ID())
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("pipe does not exist", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
 
 		err := client.Alerts.Drop(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 

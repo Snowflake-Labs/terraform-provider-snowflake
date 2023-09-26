@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.71.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.70.1...v0.71.0) (2023-09-21)
+
+
+### Features
+
+* Add grant privileges to database role to SDK ([#2023](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2023)) ([717289f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/717289f71fd4a08f44d4f20f6e16dc4dded77803))
+* Convert alert datasource to new sdk ([#2020](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2020)) ([2d0eaeb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2d0eaebe8ea1605251dd24f86a2f83e6e3be67c8))
+* Initialize SDK generator ([#2033](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2033)) ([96b47e5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/96b47e5fdbb6175a7a24d0518b975279927c22de))
+* Parameters sdk v2 ([#1914](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1914)) ([1d15355](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1d1535572e1b82f3cb2308e3c19e632eb34fe24b))
+
+
+### BugFixes
+
+* add dynamic tables to grants ([#2059](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2059)) ([3767de9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3767de97ec685acebd0e8e105878eb9129a0752c))
+* SNOW-59564 remove default data retention in days value ([#2029](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2029)) ([53c20b4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/53c20b4dc3b1141bcad07976f2dba93198e4d200))
+
 ## [0.70.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.70.0...v0.70.1) (2023-09-01)
 
 

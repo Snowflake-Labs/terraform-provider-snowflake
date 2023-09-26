@@ -62,7 +62,7 @@ type CreatePasswordPolicyOptions struct {
 
 func (opts *CreatePasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 
 	return nil
@@ -96,12 +96,12 @@ type AlterPasswordPolicyOptions struct {
 
 func (opts *AlterPasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 
 	if everyValueNil(opts.Set, opts.Unset) {
 		if !validObjectidentifier(opts.NewName) {
-			return ErrInvalidObjectIdentifier
+			return errInvalidObjectIdentifier
 		}
 	}
 
@@ -221,7 +221,7 @@ type DropPasswordPolicyOptions struct {
 
 func (opts *DropPasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -343,7 +343,7 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 			return passwordPolicy, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type describePasswordPolicyOptions struct {
@@ -354,7 +354,7 @@ type describePasswordPolicyOptions struct {
 
 func (v *describePasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }

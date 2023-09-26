@@ -6,5 +6,5 @@ func findOne[T any](collection []T, condition func(T) bool) (*T, error) {
 			return &o, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }

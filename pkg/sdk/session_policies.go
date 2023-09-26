@@ -69,7 +69,7 @@ type CreateSessionPolicyOptions struct {
 
 func (opts *CreateSessionPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -111,7 +111,7 @@ type DropSessionPolicyOptions struct {
 
 func (opts *DropSessionPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -173,7 +173,7 @@ func (v *sessionPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 			return sessionPolicy, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type SessionPolicyDetails struct{}

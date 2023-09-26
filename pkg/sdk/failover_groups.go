@@ -80,7 +80,7 @@ type CreateFailoverGroupOptions struct {
 
 func (opts *CreateFailoverGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -113,10 +113,10 @@ type CreateSecondaryReplicationGroupOptions struct {
 
 func (opts *CreateSecondaryReplicationGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if !validObjectidentifier(opts.primaryFailoverGroup) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -152,7 +152,7 @@ type AlterSourceFailoverGroupOptions struct {
 
 func (opts *AlterSourceFailoverGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Add, opts.Move, opts.Remove, opts.NewName) {
 		return errors.New("exactly one of SET, ADD, MOVE, REMOVE, or NewName must be specified")
@@ -257,7 +257,7 @@ type AlterTargetFailoverGroupOptions struct {
 
 func (opts *AlterTargetFailoverGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if !exactlyOneValueSet(opts.Refresh, opts.Primary, opts.Suspend, opts.Resume) {
 		return errors.New("must set one of [Refresh, Primary, Suspend, Resume]")
@@ -290,7 +290,7 @@ type DropFailoverGroupOptions struct {
 
 func (opts *DropFailoverGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -498,7 +498,7 @@ func (v *failoverGroups) ShowByID(ctx context.Context, id AccountObjectIdentifie
 			return failoverGroup, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type showFailoverGroupDatabasesOptions struct {
@@ -509,7 +509,7 @@ type showFailoverGroupDatabasesOptions struct {
 
 func (opts *showFailoverGroupDatabasesOptions) validate() error {
 	if !validObjectidentifier(opts.in) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -547,7 +547,7 @@ type showFailoverGroupSharesOptions struct {
 
 func (opts *showFailoverGroupSharesOptions) validate() error {
 	if !validObjectidentifier(opts.in) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }

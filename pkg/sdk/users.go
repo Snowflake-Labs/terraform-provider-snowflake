@@ -402,7 +402,7 @@ type DropUserOptions struct {
 
 func (opts *DropUserOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -538,7 +538,7 @@ type describeUserOptions struct {
 
 func (v *describeUserOptions) validate() error {
 	if !validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -620,5 +620,5 @@ func (v *users) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User
 			return user, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
