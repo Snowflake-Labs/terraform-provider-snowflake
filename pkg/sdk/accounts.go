@@ -76,15 +76,7 @@ func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts 
 		opts = &CreateAccountOptions{}
 	}
 	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	stmt, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = c.client.exec(ctx, stmt)
-	return err
+	return validateAndExec(c.client, ctx, opts)
 }
 
 type AlterAccountOptions struct {
@@ -275,15 +267,7 @@ func (c *accounts) Alter(ctx context.Context, opts *AlterAccountOptions) error {
 	if opts == nil {
 		opts = &AlterAccountOptions{}
 	}
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = c.client.exec(ctx, sql)
-	return err
+	return validateAndExec(c.client, ctx, opts)
 }
 
 type ShowAccountOptions struct {

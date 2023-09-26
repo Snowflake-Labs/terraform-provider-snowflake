@@ -61,13 +61,16 @@ func TestInt_AccountCreate(t *testing.T) {
 		err = client.Accounts.Create(ctx, accountID, opts)
 		require.NoError(t, err)
 
-		t.Logf("sleeping for 5 seconds to wait for account to be created")
-		for i := 0; i < 5; i++ {
-			t.Logf("%d", 5-i)
-			time.Sleep(1 * time.Second)
+		var account *Account
+		for i := 0; i < 3; i++ {
+			account, err = client.Accounts.ShowByID(ctx, accountID)
+			if err != nil {
+				t.Logf("retrying... %d", i+1)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			break
 		}
-
-		account, err := client.Accounts.ShowByID(ctx, accountID)
 		require.NoError(t, err)
 		assert.Equal(t, accountID.Name(), account.AccountName)
 		assert.Equal(t, EditionBusinessCritical, account.Edition)
@@ -86,13 +89,15 @@ func TestInt_AccountCreate(t *testing.T) {
 		err = client.Accounts.Alter(ctx, alterOpts)
 		require.NoError(t, err)
 
-		t.Logf("sleeping for 5 seconds to wait for account to be renamed")
-		for i := 0; i < 5; i++ {
-			t.Logf("%d", 5-i)
-			time.Sleep(1 * time.Second)
+		for i := 0; i < 3; i++ {
+			account, err = client.Accounts.ShowByID(ctx, newAccountID)
+			if err != nil {
+				t.Logf("retrying... %d", i+1)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			break
 		}
-
-		account, err = client.Accounts.ShowByID(ctx, newAccountID)
 		require.NoError(t, err)
 		assert.Equal(t, newAccountID.Name(), account.AccountName)
 
