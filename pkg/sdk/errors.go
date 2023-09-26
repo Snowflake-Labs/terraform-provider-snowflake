@@ -116,6 +116,7 @@ Errors:
 
 // NewTopLevelError wraps an error with "final" error message of sdk.
 // It should be placed in the highest place of call stack to catch as much error context as possible.
+// TODO Is it possible to call this function somewhere high in the callstack, so it always be top level ? If not maybe this would be overkill / too hard to use
 // TODO It's possible to wrap errors multiple times, this function will try to keep only the one with most error context.
 func NewTopLevelError(err error) error {
 	// TODO if called multiple times, unwrap lower level errors and wrap err to have more context
@@ -176,8 +177,8 @@ func (fn SDKPredefinedError) Error() string {
 	return fn().Error()
 }
 
-// NewPredefinedError2
-// we can get is where redefined error is declared, not returned, which may be worse than the NewPredefinedError
+// NewPredefinedError2 same as NewPredefinedError, but we're getting filename + line where this error is declared,
+// not returned, which may be worse than the NewPredefinedError
 // version, but this one is better at replacing current predefined errors like ErrInvalidObjectIdentifier. With NewPredefinedError
 // we would have to change every return statement of this error to function call (because NewPredefinedError returns factory method for predefined err)
 // and the nature of NewPredefinedError2 is that we can return value as with ErrInvalidObjectIdentifier example.

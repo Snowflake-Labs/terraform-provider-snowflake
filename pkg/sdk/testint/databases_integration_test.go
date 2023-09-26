@@ -176,7 +176,7 @@ this test keeps failing need to fix.
 		err := client.Databases.Drop(ctx, databaseID, nil)
 		require.NoError(t, err)
 		_, err = client.Databases.ShowByID(ctx, databaseID)
-		require.SDKError(t, err)
+		require.Error(t, err)
 		err = client.Databases.Undrop(ctx, databaseID)
 		require.NoError(t, err)
 		database, err := client.Databases.ShowByID(ctx, databaseID)
