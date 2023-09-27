@@ -150,15 +150,11 @@ type {{ $impl }} struct {
 						 // TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 						 name: id,
 					}
-					s, err := validateAndQuery[{{ .DescribeMapping.From.Name}}](v.client, ctx, opts)
+					rows, err := validateAndQuery[{{ .DescribeMapping.From.Name}}](v.client, ctx, opts)
 					if err != nil {
 						 return nil, err
 					}
-					result := make([]{{ .DescribeMapping.To.Name}}, len(*s))
-					for i, value := range *s {
-						 result[i] = *value.convert()
-					}
-					return result, nil
+					return convertRows[{{ .DescribeMapping.From.Name }}, {{ .DescribeMapping.To.Name }}](rows), nil
 				}
 			{{ end }}
 		{{ end }}

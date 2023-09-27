@@ -26,13 +26,10 @@ func TestInt_NetworkPolicies(t *testing.T) {
 			WithComment(&comment)
 	}
 
-	findNetworkPolicy := func(nps []NetworkPolicy, name string) *NetworkPolicy {
-		for _, v := range nps {
-			if v.Name == name {
-				return &v
-			}
-		}
-		return nil
+	findNetworkPolicy := func(nps []NetworkPolicy, name string) (*NetworkPolicy, error) {
+		return findOne[NetworkPolicy](nps, func(t NetworkPolicy) bool {
+			return t.Name == name
+		})
 	}
 
 	t.Run("Create", func(t *testing.T) {
@@ -44,8 +41,8 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np := findNetworkPolicy(nps, req.name.Name())
-		require.NotNil(t, np)
+		np, err := findNetworkPolicy(nps, req.name.Name())
+		require.NoError(t, err)
 		assert.Equal(t, *req.Comment, np.Comment)
 		assert.Equal(t, len(req.AllowedIpList), np.EntriesInAllowedIpList)
 		assert.Equal(t, len(req.BlockedIpList), np.EntriesInBlockedIpList)
@@ -64,7 +61,8 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.name.Name())
+		require.NoError(t, err)
 		assert.Equal(t, 2, np.EntriesInAllowedIpList)
 	})
 
@@ -81,7 +79,8 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.name.Name())
+		require.NoError(t, err)
 		assert.Equal(t, 1, np.EntriesInBlockedIpList)
 	})
 
@@ -99,7 +98,8 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.name.Name())
+		require.NoError(t, err)
 		assert.Equal(t, alteredComment, np.Comment)
 	})
 
@@ -115,7 +115,8 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.name.Name())
+		require.NoError(t, err)
 		assert.Equal(t, "", np.Comment)
 	})
 
@@ -145,7 +146,8 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np := findNetworkPolicy(nps, newID.Name())
+		np, err := findNetworkPolicy(nps, newID.Name())
+		require.NoError(t, err)
 		assert.Equal(t, newID.Name(), np.Name)
 		assert.Equal(t, *req.Comment, np.Comment)
 		assert.Equal(t, len(req.AllowedIpList), np.EntriesInAllowedIpList)

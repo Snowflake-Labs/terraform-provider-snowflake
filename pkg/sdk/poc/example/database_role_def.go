@@ -26,7 +26,7 @@ var (
 
 	dbRoleUnset = g.QueryStruct("DatabaseRoleUnset").
 		// Fields
-		Text("Comment", g.KeywordOptions().SQL("COMMENT").Required()).
+		SQL("COMMENT").
 		// Validations
 		WithValidation(g.AtLeastOneValueSet, "Comment")
 
@@ -43,7 +43,7 @@ var (
 				OrReplace().
 				SQL("DATABASE ROLE").
 				IfNotExists().
-				SelfIdentifier().
+				Name().
 				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 				// Validations
 				WithValidation(g.ValidIdentifier, "name").
@@ -56,12 +56,12 @@ var (
 				Alter().
 				SQL("DATABASE ROLE").
 				IfExists().
-				SelfIdentifier().
+				Name().
 				OptionalQueryStructField("Rename", dbRoleRename, g.ListOptions().NoParens().SQL("RENAME TO")).
 				OptionalQueryStructField("Set", dbRoleSet, g.ListOptions().NoParens().SQL("SET")).
 				OptionalQueryStructField("Unset", dbRoleUnset, g.ListOptions().NoParens().SQL("UNSET")).
 				// Validations
 				WithValidation(g.ValidIdentifier, "name").
-				WithValidation(g.ConflictingFields, "Rename", "Set", "Unset"),
+				WithValidation(g.ExactlyOneValueSet, "Rename", "Set", "Unset"),
 		)
 )

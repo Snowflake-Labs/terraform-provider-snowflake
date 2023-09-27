@@ -1,6 +1,6 @@
 package example
 
-//go:generate go run ./dto-builder-generator/main.go
+//go:generate go run ../../dto-builder-generator/main.go
 
 var (
 	_ optionsProvider[CreateDatabaseRoleOptions] = new(CreateDatabaseRoleRequest)

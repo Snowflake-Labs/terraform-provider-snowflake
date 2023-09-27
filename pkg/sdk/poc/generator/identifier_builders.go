@@ -1,7 +1,7 @@
 package generator
 
-// SelfIdentifier adds identifier with field name "name" and type will be inferred from interface definition
-func (v *queryStruct) SelfIdentifier() *queryStruct {
+// Name adds identifier with field name "name" and type will be inferred from interface definition
+func (v *queryStruct) Name() *queryStruct {
 	identifier := NewField("name", "<will be replaced>", Tags().Identifier(), IdentifierOptions().Required())
 	v.identifierField = identifier
 	v.fields = append(v.fields, identifier)

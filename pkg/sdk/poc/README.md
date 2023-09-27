@@ -64,6 +64,13 @@ if there's a resource with different types of identifiers across queries (e.g. C
 - remove name argument from QueryStruct in the Operation, because Opt structs in the Operation will have name from op name + interface field and not query struct itself
 - Derive field name from QueryStruct, e.g. see network_policies_def where we can remove "Set" field, but we have to make a convention of creating nested struct with
 name pattern like <interface name><name> e.g. NetworkPoliciesSet or NetworkPolicySet, then we could automatically remove prefix and we'll name field with postfix, so "Set" in this case
+- Add more operations (every operation ?) in the database_role_def.go example
+- Divide into packages or add common prefix for similar files (e.g. struct_plain.go, struct_db.go or builders_keyword.go, builders_parameter.go)
+- Make a clear division between DSL files and model files (etc. QueryStruct(DSL) and Field(Model)) and divide them into separate packages (?)
+- Simplify ImplementationTemplate (templates.go) and separate into multiple templates variables / definitions
+- Add parameter to DtoTemplate (templates.go) to generate the right path to the dto generator's main.go file
+- Right now to avoid generated structs duplication, arrays containing struct names have been introduced (template_executors.go),
+find a better solution to solve the issue (add more logic to the templates ?)
 
 ##### Improvements
 - automatic names of nested `struct`s (e.g. `DatabaseRoleRename`)

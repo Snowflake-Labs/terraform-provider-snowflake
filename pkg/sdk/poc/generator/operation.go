@@ -29,9 +29,12 @@ type Operation struct {
 	// OptsField defines opts used to create SQL for given operation
 	OptsField *Field
 	// HelperStructs are struct definitions that are not tied to OptsField, but tied to the Operation itself, e.g. Show() return type
-	HelperStructs   []*Field
-	ShowMapping     *Mapping
-	DescribeKind    *DescriptionMappingKind
+	HelperStructs []*Field
+	// ShowMapping is a definition of mapping needed by Operation kind of OperationKindShow
+	ShowMapping *Mapping
+	// DescribeKind defines a kind of mapping that needs to be performed in particular case of Describe implementation
+	DescribeKind *DescriptionMappingKind
+	// DescribeMapping is a definition of mapping needed by Operation kind of OperationKindDescribe
 	DescribeMapping *Mapping
 }
 

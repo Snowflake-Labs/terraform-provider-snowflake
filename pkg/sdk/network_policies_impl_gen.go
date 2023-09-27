@@ -41,11 +41,7 @@ func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifi
 	if err != nil {
 		return nil, err
 	}
-	result := make([]NetworkPolicyDescription, len(s))
-	for i, value := range s {
-		result[i] = *value.convert()
-	}
-	return result, nil
+	return convertRows[describeNetworkPolicyDBRow, NetworkPolicyDescription](s), nil
 }
 
 func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {

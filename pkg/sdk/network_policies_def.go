@@ -19,7 +19,7 @@ var (
 				Create().
 				OrReplace().
 				SQL("NETWORK POLICY").
-				SelfIdentifier().
+				Name().
 				ListQueryStructField("AllowedIpList", ip, g.ParameterOptions().SQL("ALLOWED_IP_LIST").Parentheses()).
 				ListQueryStructField("BlockedIpList", ip, g.ParameterOptions().SQL("BLOCKED_IP_LIST").Parentheses()).
 				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
@@ -31,7 +31,7 @@ var (
 				Alter().
 				SQL("NETWORK POLICY").
 				IfExists().
-				SelfIdentifier().
+				Name().
 				OptionalQueryStructField(
 					"Set",
 					g.QueryStruct("NetworkPolicySet").
@@ -53,7 +53,7 @@ var (
 				Drop().
 				SQL("NETWORK POLICY").
 				IfExists().
-				SelfIdentifier().
+				Name().
 				WithValidation(g.ValidIdentifier, "name"),
 		).
 		ShowOperation(
@@ -86,7 +86,7 @@ var (
 			g.QueryStruct("DescribeNetworkPolicy").
 				Describe().
 				SQL("NETWORK POLICY").
-				SelfIdentifier().
+				Name().
 				WithValidation(g.ValidIdentifier, "name"),
 		)
 )
