@@ -32,7 +32,7 @@ resource "snowflake_database" "from_replica" {
   name                        = "testing_3"
   comment                     = "test comment"
   data_retention_time_in_days = 3
-  from_replica                = "org1\".\"account1\".\"primary_db_name"
+  from_replica                = "org1.account1.primary_db_name"
 }
 
 resource "snowflake_database" "from_share" {
