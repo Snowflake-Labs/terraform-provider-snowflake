@@ -434,7 +434,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, showOptions)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(passwordPolicyList))
-	return passwordPolicyList[0], func() {
+	return &passwordPolicyList[0], func() {
 		err := client.PasswordPolicies.Drop(ctx, id, nil)
 		require.NoError(t, err)
 		if schemaCleanup != nil {
@@ -478,7 +478,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 	maskingPolicyList, err := client.MaskingPolicies.Show(ctx, showOptions)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(maskingPolicyList))
-	return maskingPolicyList[0], func() {
+	return &maskingPolicyList[0], func() {
 		err := client.MaskingPolicies.Drop(ctx, id)
 		require.NoError(t, err)
 		if schemaCleanup != nil {
@@ -583,7 +583,7 @@ func createAlertWithOptions(t *testing.T, client *Client, database *Database, sc
 	alertList, err := client.Alerts.Show(ctx, showOptions)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(alertList))
-	return alertList[0], func() {
+	return &alertList[0], func() {
 		err := client.Alerts.Drop(ctx, id)
 		require.NoError(t, err)
 		if schemaCleanup != nil {

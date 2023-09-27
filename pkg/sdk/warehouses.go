@@ -25,7 +25,7 @@ type Warehouses interface {
 	// Drop removes a warehouse.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropWarehouseOptions) error
 	// Show returns a list of warehouses.
-	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]*Warehouse, error)
+	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error)
 	// ShowByID returns a warehouse by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	// Describe returns the details of a warehouse.
@@ -411,7 +411,7 @@ type warehouseDBRow struct {
 	ScalingPolicy                   string        `db:"scaling_policy"`
 }
 
-func (row warehouseDBRow) toWarehouse() *Warehouse {
+func (row warehouseDBRow) convert() *Warehouse {
 	wh := &Warehouse{
 		Name:                            row.Name,
 		State:                           WarehouseState(row.State),
@@ -453,27 +453,13 @@ func (row warehouseDBRow) toWarehouse() *Warehouse {
 	return wh
 }
 
-func (c *warehouses) Show(ctx context.Context, opts *ShowWarehouseOptions) ([]*Warehouse, error) {
-	if opts == nil {
-		opts = &ShowWarehouseOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (c *warehouses) Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[warehouseDBRow](c.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	dest := []warehouseDBRow{}
-	err = c.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]*Warehouse, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.toWarehouse()
-	}
-
+	resultList := convertRows[warehouseDBRow, Warehouse](dbRows)
 	return resultList, nil
 }
 
@@ -489,7 +475,7 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 
 	for _, warehouse := range warehouses {
 		if warehouse.ID().name == id.Name() {
-			return warehouse, nil
+			return &warehouse, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized
