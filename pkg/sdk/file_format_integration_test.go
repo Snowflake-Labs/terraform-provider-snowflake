@@ -466,8 +466,8 @@ func TestInt_FileFormatsShow(t *testing.T) {
 		fileFormats, err := client.FileFormats.Show(ctx, nil)
 		require.NoError(t, err)
 		assert.LessOrEqual(t, 2, len(fileFormats))
-		assert.Contains(t, fileFormats, fileFormatTest)
-		assert.Contains(t, fileFormats, fileFormatTest2)
+		assert.Contains(t, fileFormats, *fileFormatTest)
+		assert.Contains(t, fileFormats, *fileFormatTest2)
 	})
 
 	t.Run("LIKE", func(t *testing.T) {
@@ -478,7 +478,7 @@ func TestInt_FileFormatsShow(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.LessOrEqual(t, 1, len(fileFormats))
-		assert.Contains(t, fileFormats, fileFormatTest)
+		assert.Contains(t, fileFormats, *fileFormatTest)
 	})
 
 	t.Run("IN", func(t *testing.T) {
@@ -489,8 +489,8 @@ func TestInt_FileFormatsShow(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.LessOrEqual(t, 2, len(fileFormats))
-		assert.Contains(t, fileFormats, fileFormatTest)
-		assert.Contains(t, fileFormats, fileFormatTest2)
+		assert.Contains(t, fileFormats, *fileFormatTest)
+		assert.Contains(t, fileFormats, *fileFormatTest2)
 	})
 }
 

@@ -40,7 +40,7 @@ type FailoverGroups interface {
 	// Drop removes a failover group.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropFailoverGroupOptions) error
 	// Show returns a list of failover groups.
-	Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]*FailoverGroup, error)
+	Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error)
 	// ShowByID returns a failover group by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error)
 	// ShowDatabases returns a list of databases in a failover group.
@@ -393,7 +393,7 @@ type failoverGroupDBRow struct {
 	Owner                   sql.NullString `db:"owner"`
 }
 
-func (row failoverGroupDBRow) toFailoverGroup() *FailoverGroup {
+func (row failoverGroupDBRow) convert() *FailoverGroup {
 	ots := strings.Split(row.ObjectTypes, ",")
 	pluralObjectTypes := make([]PluralObjectType, 0, len(ots))
 	for _, ot := range ots {
@@ -458,29 +458,13 @@ func (row failoverGroupDBRow) toFailoverGroup() *FailoverGroup {
 	}
 }
 
-// List all the failover groups by pattern.
-func (v *failoverGroups) Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]*FailoverGroup, error) {
-	if opts == nil {
-		opts = &ShowFailoverGroupOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (v *failoverGroups) Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[failoverGroupDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	dest := []failoverGroupDBRow{}
-
-	err = v.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]*FailoverGroup, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.toFailoverGroup()
-	}
-
+	resultList := convertRows[failoverGroupDBRow, FailoverGroup](dbRows)
 	return resultList, nil
 }
 
@@ -495,7 +479,7 @@ func (v *failoverGroups) ShowByID(ctx context.Context, id AccountObjectIdentifie
 	}
 	for _, failoverGroup := range failoverGroups {
 		if failoverGroup.ID() == id && failoverGroup.AccountLocator == currentAccount {
-			return failoverGroup, nil
+			return &failoverGroup, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized
