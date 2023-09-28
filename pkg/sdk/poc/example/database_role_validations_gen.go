@@ -16,7 +16,7 @@ func (opts *CreateDatabaseRoleOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateDatabaseRoleOptions", "OrReplace", "IfNotExists"))
 	}
 	return errors.Join(errs...)
 }
@@ -29,8 +29,8 @@ func (opts *AlterDatabaseRoleOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if everyValueSet(opts.Rename, opts.Set, opts.Unset) {
-		errs = append(errs, errOneOf("Rename", "Set", "Unset"))
+	if ok := exactlyOneValueSet(opts.Rename, opts.Set, opts.Unset); !ok {
+		errs = append(errs, errExactlyOneOf("Rename", "Set", "Unset"))
 	}
 	if valueSet(opts.Rename) {
 		if !validObjectidentifier(opts.Rename.Name) {

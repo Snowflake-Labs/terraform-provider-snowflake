@@ -26,7 +26,7 @@ func TestDatabaseRoles_Create(t *testing.T) {
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateDatabaseRoleOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -63,10 +63,10 @@ func TestDatabaseRoles_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: conflicting fields for [opts.Rename opts.Set opts.Unset]", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Rename opts.Set opts.Unset] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("Rename", "Set", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Rename", "Set", "Unset"))
 	})
 
 	t.Run("validation: valid identifier for [opts.Rename.Name]", func(t *testing.T) {

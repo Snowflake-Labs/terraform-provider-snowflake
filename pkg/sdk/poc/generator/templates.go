@@ -187,7 +187,7 @@ var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 		t.Run("{{ .TodoComment $field }}", func(t *testing.T) {
 			opts := defaultOpts()
 			// TODO: fill me
-			assertOptsInvalidJoinedErrors(t, opts, {{ .ReturnedError }})
+			assertOptsInvalidJoinedErrors(t, opts, {{ .ReturnedError $field }})
 		})
 	{{ end -}}
 {{ end }}

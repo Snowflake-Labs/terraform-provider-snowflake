@@ -26,7 +26,7 @@ var (
 
 	dbRoleUnset = g.QueryStruct("DatabaseRoleUnset").
 		// Fields
-		SQL("COMMENT").
+		OptionalSQL("COMMENT").
 		// Validations
 		WithValidation(g.AtLeastOneValueSet, "Comment")
 
