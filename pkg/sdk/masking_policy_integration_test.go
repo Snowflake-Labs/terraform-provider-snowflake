@@ -43,8 +43,8 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, maskingPolicies, maskingPolicyTest)
-		assert.Contains(t, maskingPolicies, maskingPolicy2Test)
+		assert.Contains(t, maskingPolicies, *maskingPolicyTest)
+		assert.Contains(t, maskingPolicies, *maskingPolicy2Test)
 		assert.Equal(t, 2, len(maskingPolicies))
 	})
 
@@ -59,7 +59,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, maskingPolicies, maskingPolicyTest)
+		assert.Contains(t, maskingPolicies, *maskingPolicyTest)
 		assert.Equal(t, 1, len(maskingPolicies))
 	})
 

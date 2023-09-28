@@ -79,7 +79,7 @@ func valueSet(value interface{}) bool {
 		reflectedValue = reflectedValue.Elem()
 	}
 	switch reflectedValue.Kind() {
-	case reflect.Slice:
+	case reflect.Slice, reflect.String:
 		return reflectedValue.Len() > 0
 	case reflect.Invalid:
 		return false

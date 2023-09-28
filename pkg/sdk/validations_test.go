@@ -168,6 +168,16 @@ func TestValueSet(t *testing.T) {
 		ok := valueSet(s.ot)
 		assert.Equal(t, ok, false)
 	})
+
+	t.Run("with invalid empty string", func(t *testing.T) {
+		invalid := ""
+		assert.False(t, valueSet(invalid))
+	})
+
+	t.Run("with valid non-empty string", func(t *testing.T) {
+		valid := "non-empty string"
+		assert.True(t, valueSet(valid))
+	})
 }
 
 func TestValidateIntInRange(t *testing.T) {
