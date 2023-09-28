@@ -25,7 +25,7 @@ func main() {
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 	definition := getDefinition(file)
 
-	//runAllTemplatesToStdOut(definition)
+	runAllTemplatesToStdOut(definition)
 	runAllTemplatesAndSave(definition, file)
 }
 

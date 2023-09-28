@@ -55,13 +55,12 @@ func (s *AlterDatabaseRoleRequest) WithUnset(Unset *DatabaseRoleUnsetRequest) *A
 	return s
 }
 
-func NewDatabaseRoleRenameRequest() *DatabaseRoleRenameRequest {
-	return &DatabaseRoleRenameRequest{}
-}
-
-func (s *DatabaseRoleRenameRequest) WithName(Name DatabaseObjectIdentifier) *DatabaseRoleRenameRequest {
+func NewDatabaseRoleRenameRequest(
+	Name DatabaseObjectIdentifier,
+) *DatabaseRoleRenameRequest {
+	s := DatabaseRoleRenameRequest{}
 	s.Name = Name
-	return s
+	return &s
 }
 
 func NewDatabaseRoleSetRequest(
@@ -77,13 +76,12 @@ func (s *DatabaseRoleSetRequest) WithNestedThirdLevel(NestedThirdLevel *NestedTh
 	return s
 }
 
-func NewNestedThirdLevelRequest() *NestedThirdLevelRequest {
-	return &NestedThirdLevelRequest{}
-}
-
-func (s *NestedThirdLevelRequest) WithField(Field DatabaseObjectIdentifier) *NestedThirdLevelRequest {
+func NewNestedThirdLevelRequest(
+	Field DatabaseObjectIdentifier,
+) *NestedThirdLevelRequest {
+	s := NestedThirdLevelRequest{}
 	s.Field = Field
-	return s
+	return &s
 }
 
 func NewDatabaseRoleUnsetRequest() *DatabaseRoleUnsetRequest {

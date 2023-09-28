@@ -23,7 +23,7 @@ type AlterDatabaseRoleRequest struct {
 }
 
 type DatabaseRoleRenameRequest struct {
-	Name DatabaseObjectIdentifier
+	Name DatabaseObjectIdentifier // required
 }
 
 type DatabaseRoleSetRequest struct {
@@ -32,7 +32,7 @@ type DatabaseRoleSetRequest struct {
 }
 
 type NestedThirdLevelRequest struct {
-	Field DatabaseObjectIdentifier
+	Field DatabaseObjectIdentifier // required
 }
 
 type DatabaseRoleUnsetRequest struct {

@@ -9,13 +9,13 @@ import (
 var (
 	dbRoleRename = g.QueryStruct("DatabaseRoleRename").
 		// Fields
-		Identifier("Name", g.KindOfT[DatabaseObjectIdentifier](), nil).
+		Identifier("Name", g.KindOfT[DatabaseObjectIdentifier](), g.IdentifierOptions().Required()).
 		// Validations
 		WithValidation(g.ValidIdentifier, "Name")
 
 	nestedThirdLevel = g.QueryStruct("NestedThirdLevel").
 		// Fields
-		Identifier("Field", g.KindOfT[DatabaseObjectIdentifier](), nil).
+		Identifier("Field", g.KindOfT[DatabaseObjectIdentifier](), g.IdentifierOptions().Required()).
 		// Validations
 		WithValidation(g.AtLeastOneValueSet, "Field")
 
