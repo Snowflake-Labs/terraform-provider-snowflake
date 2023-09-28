@@ -388,13 +388,14 @@ func createTable(t *testing.T, client *Client, database *Database, schema *Schem
 
 func createTag(t *testing.T, client *Client, database *Database, schema *Schema) (*Tag, func()) {
 	t.Helper()
-	return createTagWithOptions(t, client, database, schema, &TagCreateOptions{})
+	return createTagWithOptions(t, client, database, schema)
 }
 
-func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *TagCreateOptions) (*Tag, func()) {
+func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema) (*Tag, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	ctx := context.Background()
+	
 	_, err := client.exec(ctx, fmt.Sprintf("CREATE TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
 	require.NoError(t, err)
 	return &Tag{
