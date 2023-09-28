@@ -722,3 +722,13 @@ func createStageWithURL(t *testing.T, client *Client, name AccountObjectIdentifi
 		require.NoError(t, err)
 	}
 }
+
+func createNetworkPolicy(t *testing.T, client *Client, req *CreateNetworkPolicyRequest) (error, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.NetworkPolicies.Create(ctx, req)
+	return err, func() {
+		err := client.NetworkPolicies.Drop(ctx, NewDropNetworkPolicyRequest(req.name))
+		require.NoError(t, err)
+	}
+}

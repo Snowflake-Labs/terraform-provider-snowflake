@@ -42,5 +42,5 @@ type NestedThirdLevel struct {
 }
 
 type DatabaseRoleUnset struct {
-	Comment bool `ddl:"keyword" sql:"COMMENT"`
+	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
