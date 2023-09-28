@@ -19,8 +19,12 @@ var (
 	errInvalidObjectIdentifier = errors.New("invalid object identifier")
 )
 
-func errOneOf(fieldNames ...string) error {
-	return fmt.Errorf("fields %v are incompatible and cannot be set at once", fieldNames)
+func errOneOf(structName string, fieldNames ...string) error {
+	return fmt.Errorf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames)
+}
+
+func errNotSet(structName string, fieldNames ...string) error {
+	return fmt.Errorf("%v fields: %v should be set", structName, fieldNames)
 }
 
 func errExactlyOneOf(fieldNames ...string) error {

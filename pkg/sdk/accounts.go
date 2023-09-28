@@ -19,7 +19,7 @@ type Accounts interface {
 	// Alter modifies an existing account
 	Alter(ctx context.Context, opts *AlterAccountOptions) error
 	// Show returns a list of accounts.
-	Show(ctx context.Context, opts *ShowAccountOptions) ([]*Account, error)
+	Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error)
 	// ShowByID returns an account by id
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
 }
@@ -345,7 +345,7 @@ type accountDBRow struct {
 	IsOrgAdmin                           bool           `db:"is_org_admin"`
 }
 
-func (row accountDBRow) toAccount() *Account {
+func (row accountDBRow) convert() *Account {
 	acc := &Account{
 		OrganizationName:                     row.OrganizationName,
 		AccountName:                          row.AccountName,
@@ -376,27 +376,13 @@ func (row accountDBRow) toAccount() *Account {
 	return acc
 }
 
-func (c *accounts) Show(ctx context.Context, opts *ShowAccountOptions) ([]*Account, error) {
-	if opts == nil {
-		opts = &ShowAccountOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (c *accounts) Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[accountDBRow](c.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	dest := []accountDBRow{}
-	err = c.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]*Account, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.toAccount()
-	}
-
+	resultList := convertRows[accountDBRow, Account](dbRows)
 	return resultList, nil
 }
 
@@ -412,7 +398,7 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 
 	for _, account := range accounts {
 		if account.AccountName == id.Name() || account.AccountLocator == id.Name() {
-			return account, nil
+			return &account, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

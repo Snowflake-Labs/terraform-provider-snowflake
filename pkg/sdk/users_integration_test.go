@@ -27,7 +27,7 @@ func TestInt_UsersShow(t *testing.T) {
 		}
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, users, userTest)
+		assert.Contains(t, users, *userTest)
 		assert.Equal(t, 1, len(users))
 	})
 
@@ -37,8 +37,8 @@ func TestInt_UsersShow(t *testing.T) {
 		}
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, users, userTest)
-		assert.Contains(t, users, userTest2)
+		assert.Contains(t, users, *userTest)
+		assert.Contains(t, users, *userTest2)
 		assert.Equal(t, 2, len(users))
 	})
 	t.Run("with starts with, limit and from options", func(t *testing.T) {
@@ -50,7 +50,7 @@ func TestInt_UsersShow(t *testing.T) {
 
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, users, userTest)
+		assert.Contains(t, users, *userTest)
 		assert.Equal(t, 1, len(users))
 	})
 
