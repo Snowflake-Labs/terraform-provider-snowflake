@@ -6,12 +6,13 @@ var (
 	_ optionsProvider[createDynamicTableOptions] = new(CreateDynamicTableRequest)
 	_ optionsProvider[alterDynamicTableOptions]  = new(AlterDynamicTableRequest)
 	_ optionsProvider[dropDynamicTableOptions]   = new(DropDynamicTableRequest)
+	_ optionsProvider[showDynamicTableOptions]   = new(ShowDynamicTableRequest)
 )
 
 type CreateDynamicTableRequest struct {
 	orReplace bool
 
-	name      AccountObjectIdentifier // required
+	name      SchemaObjectIdentifier // required
 	warehouse AccountObjectIdentifier // required
 	targetLag TargetLag               // required
 	query     string                  // required
@@ -20,7 +21,7 @@ type CreateDynamicTableRequest struct {
 }
 
 type AlterDynamicTableRequest struct {
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
 
 	// One of
 	suspend *bool
@@ -35,9 +36,16 @@ type DynamicTableSetRequest struct {
 }
 
 type DropDynamicTableRequest struct {
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
 }
 
 type DescribeDynamicTableRequest struct {
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
+}
+
+type ShowDynamicTableRequest struct {
+	like       *Like
+	in         *In
+	startsWith *string
+	limit  *LimitFrom
 }

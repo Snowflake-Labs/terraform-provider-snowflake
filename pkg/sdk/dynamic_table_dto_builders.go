@@ -1,7 +1,7 @@
 package sdk
 
 func NewCreateDynamicTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	warehouse AccountObjectIdentifier,
 	targetLag TargetLag,
 	query string,
@@ -25,7 +25,7 @@ func (s *CreateDynamicTableRequest) WithComment(comment *string) *CreateDynamicT
 }
 
 func NewAlterDynamicTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *AlterDynamicTableRequest {
 	s := AlterDynamicTableRequest{}
 	s.name = name
@@ -67,7 +67,7 @@ func (s *DynamicTableSetRequest) WithWarehourse(warehourse *AccountObjectIdentif
 }
 
 func NewDropDynamicTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DropDynamicTableRequest {
 	s := DropDynamicTableRequest{}
 	s.name = name
@@ -75,9 +75,33 @@ func NewDropDynamicTableRequest(
 }
 
 func NewDescribeDynamicTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DescribeDynamicTableRequest {
 	s := DescribeDynamicTableRequest{}
 	s.name = name
 	return &s
+}
+
+func NewShowDynamicTableRequest() *ShowDynamicTableRequest {
+	return &ShowDynamicTableRequest{}
+}
+
+func (s *ShowDynamicTableRequest) WithLike(like *Like) *ShowDynamicTableRequest {
+	s.like = like
+	return s
+}
+
+func (s *ShowDynamicTableRequest) WithIn(in *In) *ShowDynamicTableRequest {
+	s.in = in
+	return s
+}
+
+func (s *ShowDynamicTableRequest) WithStartsWith(startsWith *string) *ShowDynamicTableRequest {
+	s.startsWith = startsWith
+	return s
+}
+
+func (s *ShowDynamicTableRequest) WithLimit(limit *LimitFrom) *ShowDynamicTableRequest {
+	s.limit = limit
+	return s
 }

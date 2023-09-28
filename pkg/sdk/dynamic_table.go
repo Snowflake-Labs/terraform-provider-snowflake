@@ -11,7 +11,8 @@ type DynamicTables interface {
 	Alter(ctx context.Context, request *AlterDynamicTableRequest) error
 	Describe(ctx context.Context, request *DescribeDynamicTableRequest) (*DynamicTableDetails, error)
 	Drop(ctx context.Context, request *DropDynamicTableRequest) error
-	Show(ctx context.Context, opts *ShowDynamicTableOptions) ([]*DynamicTable, error)
+	Show(ctx context.Context, opts *ShowDynamicTableRequest) ([]DynamicTable, error)
+	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*DynamicTable, error)
 }
 
 // createDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-dynamic-table
@@ -19,7 +20,7 @@ type createDynamicTableOptions struct {
 	create       bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace    *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
-	name         AccountObjectIdentifier `ddl:"identifier"`
+	name         SchemaObjectIdentifier  `ddl:"identifier"`
 	targetLag    TargetLag               `ddl:"parameter,no_quotes" sql:"TARGET_LAG"`
 	warehouse    AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
 	Comment      *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -40,7 +41,7 @@ type DynamicTableSet struct {
 type alterDynamicTableOptions struct {
 	alter        bool                    `ddl:"static" sql:"ALTER"`
 	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
-	name         AccountObjectIdentifier `ddl:"identifier"`
+	name         SchemaObjectIdentifier `ddl:"identifier"`
 
 	Suspend *bool            `ddl:"keyword" sql:"SUSPEND"`
 	Resume  *bool            `ddl:"keyword" sql:"RESUME"`
@@ -52,11 +53,11 @@ type alterDynamicTableOptions struct {
 type dropDynamicTableOptions struct {
 	drop         bool                    `ddl:"static" sql:"DROP"`
 	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
-	name         AccountObjectIdentifier `ddl:"identifier"`
+	name         SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-// ShowDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-dynamic-tables
-type ShowDynamicTableOptions struct {
+// showDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-dynamic-tables
+type showDynamicTableOptions struct {
 	show         bool       `ddl:"static" sql:"SHOW"`
 	dynamicTable bool       `ddl:"static" sql:"DYNAMIC TABLES"`
 	Like         *Like      `ddl:"keyword" sql:"LIKE"`
@@ -103,8 +104,8 @@ type DynamicTable struct {
 	DataTimestamp       time.Time
 }
 
-func (dt *DynamicTable) ID() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(dt.Name)
+func (dt *DynamicTable) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(dt.DatabaseName, dt.SchemaName, dt.Name)
 }
 
 type dynamicTableRow struct {
@@ -131,7 +132,7 @@ type dynamicTableRow struct {
 	DataTimestamp       time.Time      `db:"data_timestamp"`
 }
 
-func (dtr *dynamicTableRow) toDynamicTable() *DynamicTable {
+func (dtr dynamicTableRow) convert() *DynamicTable {
 	dt := &DynamicTable{
 		CreatedOn:           dtr.CreatedOn,
 		Name:                dtr.Name,
@@ -162,33 +163,11 @@ func (dtr *dynamicTableRow) toDynamicTable() *DynamicTable {
 	return dt
 }
 
-func (dt *dynamicTables) Show(ctx context.Context, opts *ShowDynamicTableOptions) ([]*DynamicTable, error) {
-	if opts == nil {
-		opts = &ShowDynamicTableOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return nil, err
-	}
-	rows := []*dynamicTableRow{}
-	if err := dt.client.query(ctx, &rows, sql); err != nil {
-		return nil, err
-	}
-	entities := make([]*DynamicTable, len(rows))
-	for i, row := range rows {
-		entities[i] = row.toDynamicTable()
-	}
-	return entities, nil
-}
-
 // describeDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-dynamic-table
 type describeDynamicTableOptions struct {
 	describe     bool                    `ddl:"static" sql:"DESCRIBE"`
 	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
-	name         AccountObjectIdentifier `ddl:"identifier"`
+	name         SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 type DynamicTableDetails struct {
