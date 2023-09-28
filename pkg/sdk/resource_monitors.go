@@ -24,7 +24,7 @@ type ResourceMonitors interface {
 	// Drop removes a resource monitor.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
 	// Show returns a list of resource monitor.
-	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]*ResourceMonitor, error)
+	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error)
 	// ShowByID returns a resource monitor by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
 }
@@ -68,7 +68,7 @@ type resourceMonitorRow struct {
 	NotifyUsers        sql.NullString `db:"notify_users"`
 }
 
-func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
+func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 	resourceMonitor := &ResourceMonitor{
 		Name: row.Name,
 	}
@@ -364,10 +364,8 @@ func (opts *ShowResourceMonitorOptions) validate() error {
 	return nil
 }
 
-func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]*ResourceMonitor, error) {
-	if opts == nil {
-		opts = &ShowResourceMonitorOptions{}
-	}
+func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error) {
+	opts = createIfNil(opts)
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
@@ -380,13 +378,13 @@ func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOp
 	if err != nil {
 		return nil, err
 	}
-	resourceMonitors := make([]*ResourceMonitor, 0, len(rows))
+	resourceMonitors := make([]ResourceMonitor, 0, len(rows))
 	for _, row := range rows {
-		resourceMonitor, err := row.toResourceMonitor()
+		resourceMonitor, err := row.convert()
 		if err != nil {
 			return nil, err
 		}
-		resourceMonitors = append(resourceMonitors, resourceMonitor)
+		resourceMonitors = append(resourceMonitors, *resourceMonitor)
 	}
 	return resourceMonitors, nil
 }
@@ -402,7 +400,7 @@ func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentif
 	}
 	for _, resourceMonitor := range resourceMonitors {
 		if resourceMonitor.Name == id.Name() {
-			return resourceMonitor, nil
+			return &resourceMonitor, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

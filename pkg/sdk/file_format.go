@@ -28,7 +28,7 @@ type FileFormats interface {
 	// Drop removes a FileFormat.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropFileFormatOptions) error
 	// Show returns a list of fileFormats.
-	Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]*FileFormat, error)
+	Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]FileFormat, error)
 	// ShowByID returns a FileFormat by ID
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error)
 	// Describe returns the details of a FileFormat.
@@ -114,7 +114,7 @@ type showFileFormatsOptionsResult struct {
 	DisableAutoConvert   bool `json:"DISABLE_AUTO_CONVERT"`
 }
 
-func (row *FileFormatRow) toFileFormat() *FileFormat {
+func (row FileFormatRow) convert() *FileFormat {
 	inputOptions := showFileFormatsOptionsResult{}
 	err := json.Unmarshal([]byte(row.FormatOptions), &inputOptions)
 	if err != nil {
@@ -132,9 +132,9 @@ func (row *FileFormatRow) toFileFormat() *FileFormat {
 		Options:       FileFormatTypeOptions{},
 	}
 
-	newNullIf := []NullString{}
-	for _, s := range inputOptions.NullIf {
-		newNullIf = append(newNullIf, NullString{s})
+	newNullIf := make([]NullString, len(inputOptions.NullIf))
+	for i, s := range inputOptions.NullIf {
+		newNullIf[i] = NullString{s}
 	}
 
 	switch ff.Type {
@@ -638,24 +638,14 @@ func (opts *ShowFileFormatsOptions) validate() error {
 	return nil
 }
 
-func (v *fileFormats) Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]*FileFormat, error) {
-	if opts == nil {
-		opts = &ShowFileFormatsOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (v *fileFormats) Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]FileFormat, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[FileFormatRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []FileFormatRow
-	err = v.client.query(ctx, &rows, sql)
-	fileFormats := make([]*FileFormat, len(rows))
-	for i, row := range rows {
-		fileFormats[i] = row.toFileFormat()
-	}
-	return fileFormats, err
+	resultList := convertRows[FileFormatRow, FileFormat](dbRows)
+	return resultList, nil
 }
 
 func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error) {
@@ -670,9 +660,9 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 	if err != nil {
 		return nil, err
 	}
-	for _, FileFormat := range fileFormats {
-		if reflect.DeepEqual(FileFormat.ID(), id) {
-			return FileFormat, nil
+	for _, f := range fileFormats {
+		if reflect.DeepEqual(f.ID(), id) {
+			return &f, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

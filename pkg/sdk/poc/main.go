@@ -10,12 +10,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/example"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
 
 var definitionMapping = map[string]*generator.Interface{
-	"database_role_def.go": example.DatabaseRole,
+	"database_role_def.go":    example.DatabaseRole,
+	"network_policies_def.go": sdk.NetworkPoliciesDef,
 }
 
 func main() {

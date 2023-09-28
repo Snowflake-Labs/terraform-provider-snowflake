@@ -31,10 +31,12 @@ type Client struct {
 	Comments         Comments
 	Databases        Databases
 	DatabaseRoles    DatabaseRoles
+	ExternalTables   ExternalTables
 	FailoverGroups   FailoverGroups
 	FileFormats      FileFormats
 	Grants           Grants
 	MaskingPolicies  MaskingPolicies
+	NetworkPolicies  NetworkPolicies
 	Parameters       Parameters
 	PasswordPolicies PasswordPolicies
 	Pipes            Pipes
@@ -128,10 +130,12 @@ func (c *Client) initialize() {
 	c.ConversionFunctions = &conversionFunctions{client: c}
 	c.Databases = &databases{client: c}
 	c.DatabaseRoles = &databaseRoles{client: c}
+	c.ExternalTables = &externalTables{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
 	c.FileFormats = &fileFormats{client: c}
 	c.Grants = &grants{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
+	c.NetworkPolicies = &networkPolicies{client: c}
 	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
 	c.Pipes = &pipes{client: c}
