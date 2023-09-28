@@ -55,9 +55,9 @@ func SelectCurrentAccount() string {
 }
 
 type CurrentAccount struct {
-	Account string `db:"account"`
+	Account     string `db:"account"`
 	RegionGroup string `db:"region_group"`
-	Region  string `db:"region"`
+	Region      string `db:"region"`
 }
 
 func ScanCurrentAccount(row *sqlx.Row) (*CurrentAccount, error) {

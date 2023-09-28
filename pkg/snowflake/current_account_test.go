@@ -17,10 +17,10 @@ func TestCurrentAccountSelect(t *testing.T) {
 
 func TestCurrentAccountRead(t *testing.T) {
 	type testCaseEntry struct {
-		account string
+		account      string
 		region_group string
-		region  string
-		url     string
+		region       string
+		url          string
 	}
 
 	testCases := map[string]testCaseEntry{
