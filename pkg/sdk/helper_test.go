@@ -423,7 +423,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 	err := client.PasswordPolicies.Create(ctx, id, options)
 	require.NoError(t, err)
 
-	showOptions := &PasswordPolicyShowOptions{
+	showOptions := &ShowPasswordPolicyOptions{
 		Like: &Like{
 			Pattern: String(name),
 		},

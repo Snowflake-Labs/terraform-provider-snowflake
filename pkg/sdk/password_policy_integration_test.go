@@ -30,7 +30,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("with show options", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
+		showOptions := &ShowPasswordPolicyOptions{
 			In: &In{
 				Schema: schemaTest.ID(),
 			},
@@ -43,7 +43,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("with show options and like", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
+		showOptions := &ShowPasswordPolicyOptions{
 			Like: &Like{
 				Pattern: String(passwordPolicyTest.Name),
 			},
@@ -58,7 +58,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent password policy", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
+		showOptions := &ShowPasswordPolicyOptions{
 			Like: &Like{
 				Pattern: String("non-existent"),
 			},
@@ -70,7 +70,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 
 	/* there appears to be a bug in the Snowflake API. LIMIT is not actually limiting the number of results
 	t.Run("when limiting the number of results", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
+		showOptions := &ShowPasswordPolicyOptions{
 			In: &In{
 				Schema: String(schemaTest.FullyQualifiedName()),
 			},
