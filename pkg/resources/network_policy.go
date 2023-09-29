@@ -8,7 +8,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -122,66 +121,27 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	builder := snowflake.NetworkPolicy(policyName)
-
-	// There is no way to SHOW a single Network Policy, so we have to read *all* network policies and filter in memory
-	showSQL := builder.ShowAllNetworkPolicies()
-
-	rows, err := snowflake.Query(db, showSQL)
-
-	allPolicies, err := snowflake.ScanNetworkPolicies(rows)
+	policyDescriptions, err := client.NetworkPolicies.Describe(ctx, sdk.NewAccountObjectIdentifier(policyName))
 	if err != nil {
 		return err
 	}
 
-	var s *snowflake.NetworkPolicyStruct
-	for _, value := range allPolicies {
-		if value.Name.String == policyName {
-			s = value
-		}
-	}
-
-	if s == nil {
-		// The network policy was not found, the Terraform state does not reflect the Snowflake state
-		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	descSQL := builder.Describe()
-	rows, err = snowflake.Query(db, descSQL)
-	if err != nil {
+	if err = d.Set("name", networkPolicy.Name); err != nil {
 		return err
 	}
 
-	err = d.Set("name", s.Name.String)
-	if err != nil {
+	if err = d.Set("comment", networkPolicy.Comment); err != nil {
 		return err
 	}
 
-	err = d.Set("comment", s.Comment.String)
-	if err != nil {
-		return err
-	}
-
-	var (
-		name  string
-		value string
-	)
-	for rows.Next() {
-		err := rows.Scan(&name, &value)
-		if err != nil {
-			return err
-		}
-
-		if name == "ALLOWED_IP_LIST" {
-			err = d.Set("allowed_ip_list", strings.Split(value, ","))
-			if err != nil {
+	for _, desc := range policyDescriptions {
+		switch desc.Name {
+		case "ALLOWED_IP_LIST":
+			if err = d.Set("allowed_ip_list", strings.Split(desc.Value, ",")); err != nil {
 				return err
 			}
-		} else if name == "BLOCKED_IP_LIST" {
-			err = d.Set("blocked_ip_list", strings.Split(value, ","))
-			if err != nil {
+		case "BLOCKED_IP_LIST":
+			if err = d.Set("blocked_ip_list", strings.Split(desc.Value, ",")); err != nil {
 				return err
 			}
 		}
@@ -192,22 +152,23 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateNetworkPolicy implements schema.UpdateFunc.
 func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
 	name := d.Id()
-	builder := snowflake.NetworkPolicy(name)
+	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
 
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 
 		if c := comment.(string); c == "" {
-			q := builder.RemoveComment()
-			err := snowflake.Exec(db, q)
+			err := client.NetworkPolicies.Alter(ctx, baseReq.WithUnsetComment(sdk.Bool(true)))
 			if err != nil {
 				return fmt.Errorf("error unsetting comment for network policy %v err = %w", name, err)
 			}
 		} else {
-			q := builder.ChangeComment(c)
-			err := snowflake.Exec(db, q)
+			setReq := sdk.NewNetworkPolicySetRequest().WithComment(sdk.String(comment.(string)))
+			err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 			if err != nil {
 				return fmt.Errorf("error updating comment for network policy %v err = %w", name, err)
 			}
@@ -216,8 +177,12 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("allowed_ip_list") {
 		newIps := ipChangeParser(d, "allowed_ip_list")
-		q := builder.ChangeIPList("ALLOWED", newIps)
-		err := snowflake.Exec(db, q)
+		ipRequests := make([]sdk.IPRequest, len(newIps))
+		for i, v := range newIps {
+			ipRequests[i] = *sdk.NewIPRequest(v)
+		}
+		setReq := sdk.NewNetworkPolicySetRequest().WithAllowedIpList(ipRequests)
+		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
 			return fmt.Errorf("error updating ALLOWED_IP_LIST for network policy %v err = %w", name, err)
 		}
@@ -225,8 +190,12 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("blocked_ip_list") {
 		newIps := ipChangeParser(d, "blocked_ip_list")
-		q := builder.ChangeIPList("BLOCKED", newIps)
-		err := snowflake.Exec(db, q)
+		ipRequests := make([]sdk.IPRequest, len(newIps))
+		for i, v := range newIps {
+			ipRequests[i] = *sdk.NewIPRequest(v)
+		}
+		setReq := sdk.NewNetworkPolicySetRequest().WithBlockedIpList(ipRequests)
+		err := client.NetworkPolicies.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
 			return fmt.Errorf("error updating BLOCKED_IP_LIST for network policy %v err = %w", name, err)
 		}
@@ -237,11 +206,12 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteNetworkPolicy implements schema.DeleteFunc.
 func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
 	name := d.Id()
+	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 
-	dropSQL := snowflake.NetworkPolicy(name).Drop()
-	err := snowflake.Exec(db, dropSQL)
+	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name)))
 	if err != nil {
 		return fmt.Errorf("error deleting network policy %v err = %w", name, err)
 	}
