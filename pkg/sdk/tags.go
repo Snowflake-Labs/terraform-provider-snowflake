@@ -1,7 +1,7 @@
 package sdk
 
 // placeholder for the real implementation.
-type TagCreateOptions struct{}
+type CreateTagOptions struct{}
 
 type Tag struct {
 	DatabaseName string
