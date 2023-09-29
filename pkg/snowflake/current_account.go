@@ -51,7 +51,7 @@ var regionMapping = map[string]string{
 // SelectCurrentAccount returns the query that will return the current account, region_group, and region
 // the CURRENT_REGION() function returns the format region_group.region (e.g. PUBLIC.AWS_US_WEST_2) only when organizations have accounts in multiple region groups. Otherwise, this function returns the snowflake region without the region_group.
 func SelectCurrentAccount() string {
-	return `SELECT CURRENT_ACCOUNT() AS "account",  CASE WHEN CONTAINS(CURRENT_REGION(), '.') THEN LEFT(CURRENT_REGION(), POSITION('.' IN CURRENT_REGION()) - 1) ELSE 'PUBLIC' END AS "region_group", CASE WHEN CONTAINS(CURRENT_REGION(), '.') THEN RIGHT(CURRENT_REGION(), LENGTH(CURRENT_REGION()) - POSITION('.' IN CURRENT_REGION())) ELSE CURRENT_REGION() END AS "region";`
+	return `SELECT current_account AS "account", CASE WHEN CONTAINS(current_region, '.') THEN LEFT(current_region, POSITION('.' IN current_region) - 1) ELSE 'PUBLIC' END AS "region_group", CASE WHEN CONTAINS(current_region, '.') THEN RIGHT(current_region, LENGTH(current_region) - POSITION('.' IN current_region)) ELSE current_region END AS "region" FROM (SELECT CURRENT_ACCOUNT() AS current_account, CURRENT_REGION() AS current_region);`
 }
 
 type CurrentAccount struct {

@@ -12,7 +12,7 @@ import (
 
 func TestCurrentAccountSelect(t *testing.T) {
 	r := require.New(t)
-	r.Equal(`SELECT CURRENT_ACCOUNT() AS "account",  CASE WHEN CONTAINS(CURRENT_REGION(), '.') THEN LEFT(CURRENT_REGION(), POSITION('.' IN CURRENT_REGION()) - 1) ELSE 'PUBLIC' END AS "region_group", CASE WHEN CONTAINS(CURRENT_REGION(), '.') THEN RIGHT(CURRENT_REGION(), LENGTH(CURRENT_REGION()) - POSITION('.' IN CURRENT_REGION())) ELSE CURRENT_REGION() END AS "region";`, snowflake.SelectCurrentAccount())
+	r.Equal(`SELECT current_account AS "account", CASE WHEN CONTAINS(current_region, '.') THEN LEFT(current_region, POSITION('.' IN current_region) - 1) ELSE 'PUBLIC' END AS "region_group", CASE WHEN CONTAINS(current_region, '.') THEN RIGHT(current_region, LENGTH(current_region) - POSITION('.' IN current_region)) ELSE current_region END AS "region" FROM (SELECT CURRENT_ACCOUNT() AS current_account, CURRENT_REGION() AS current_region);`, snowflake.SelectCurrentAccount())
 }
 
 func TestCurrentAccountRead(t *testing.T) {
@@ -66,7 +66,7 @@ func TestCurrentAccountRead(t *testing.T) {
 			sqlxDB := sqlx.NewDb(mockDB, "sqlmock")
 
 			rows := sqlmock.NewRows([]string{"account", "region_group", "region"}).AddRow(tc.account, tc.region_group, tc.region)
-			mock.ExpectQuery(regexp.QuoteMeta(`SELECT CURRENT_ACCOUNT() AS "account",  CASE WHEN CONTAINS(CURRENT_REGION(), '.') THEN LEFT(CURRENT_REGION(), POSITION('.' IN CURRENT_REGION()) - 1) ELSE 'PUBLIC' END AS "region_group", CASE WHEN CONTAINS(CURRENT_REGION(), '.') THEN RIGHT(CURRENT_REGION(), LENGTH(CURRENT_REGION()) - POSITION('.' IN CURRENT_REGION())) ELSE CURRENT_REGION() END AS "region";`)).WillReturnRows(rows)
+			mock.ExpectQuery(regexp.QuoteMeta(`SELECT current_account AS "account", CASE WHEN CONTAINS(current_region, '.') THEN LEFT(current_region, POSITION('.' IN current_region) - 1) ELSE 'PUBLIC' END AS "region_group", CASE WHEN CONTAINS(current_region, '.') THEN RIGHT(current_region, LENGTH(current_region) - POSITION('.' IN current_region)) ELSE current_region END AS "region" FROM (SELECT CURRENT_ACCOUNT() AS current_account, CURRENT_REGION() AS current_region);`)).WillReturnRows(rows)
 
 			acc, err := snowflake.ReadCurrentAccount(sqlxDB.DB)
 			r.NoError(err)
