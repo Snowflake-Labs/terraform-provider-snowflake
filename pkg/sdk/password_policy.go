@@ -14,7 +14,7 @@ var (
 	_ validatable = new(CreatePasswordPolicyOptions)
 	_ validatable = new(AlterPasswordPolicyOptions)
 	_ validatable = new(DropPasswordPolicyOptions)
-	_ validatable = new(PasswordPolicyShowOptions)
+	_ validatable = new(ShowPasswordPolicyOptions)
 	_ validatable = new(describePasswordPolicyOptions)
 )
 
@@ -28,7 +28,7 @@ type PasswordPolicies interface {
 	// Drop removes a password policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPasswordPolicyOptions) error
 	// Show returns a list of password policies.
-	Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]PasswordPolicy, error)
+	Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error)
 	// ShowByID returns a password policy by ID.
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
 	// Describe returns the details of a password policy.
@@ -242,8 +242,8 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 	return err
 }
 
-// PasswordPolicyShowOptions represents the options for listing password policies.
-type PasswordPolicyShowOptions struct {
+// ShowPasswordPolicyOptions represents the options for listing password policies.
+type ShowPasswordPolicyOptions struct {
 	show             bool  `ddl:"static" sql:"SHOW"`
 	passwordPolicies bool  `ddl:"static" sql:"PASSWORD POLICIES"`
 	Like             *Like `ddl:"keyword" sql:"LIKE"`
@@ -251,11 +251,11 @@ type PasswordPolicyShowOptions struct {
 	Limit            *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-func (input *PasswordPolicyShowOptions) validate() error {
+func (input *ShowPasswordPolicyOptions) validate() error {
 	return nil
 }
 
-// PasswordPolicys is a user friendly result for a CREATE PASSWORD POLICY query.
+// PasswordPolicy is a user-friendly result for a CREATE PASSWORD POLICY query.
 type PasswordPolicy struct {
 	CreatedOn    time.Time
 	Name         string
@@ -300,7 +300,7 @@ func (row passwordPolicyDBRow) convert() PasswordPolicy {
 }
 
 // List all the password policies by pattern.
-func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]PasswordPolicy, error) {
+func (v *passwordPolicies) Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error) {
 	opts = createIfNil(opts)
 	if err := opts.validate(); err != nil {
 		return nil, err
@@ -323,7 +323,7 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 }
 
 func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error) {
-	passwordPolicies, err := v.Show(ctx, &PasswordPolicyShowOptions{
+	passwordPolicies, err := v.Show(ctx, &ShowPasswordPolicyOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},

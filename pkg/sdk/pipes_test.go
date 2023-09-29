@@ -7,15 +7,15 @@ import (
 func TestPipesCreate(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
-	defaultOpts := func() *PipeCreateOptions {
-		return &PipeCreateOptions{
+	defaultOpts := func() *CreatePipeOptions {
+		return &CreatePipeOptions{
 			name:          id,
 			copyStatement: "<copy_statement>",
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *PipeCreateOptions = nil
+		var opts *CreatePipeOptions = nil
 		assertOptsInvalid(t, opts, errNilOptions)
 	})
 
@@ -51,14 +51,14 @@ func TestPipesCreate(t *testing.T) {
 func TestPipesAlter(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
-	defaultOpts := func() *PipeAlterOptions {
-		return &PipeAlterOptions{
+	defaultOpts := func() *AlterPipeOptions {
+		return &AlterPipeOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *PipeAlterOptions = nil
+		var opts *AlterPipeOptions = nil
 		assertOptsInvalid(t, opts, errNilOptions)
 	})
 
@@ -204,14 +204,14 @@ func TestPipesAlter(t *testing.T) {
 func TestPipesDrop(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
-	defaultOpts := func() *PipeDropOptions {
-		return &PipeDropOptions{
+	defaultOpts := func() *DropPipeOptions {
+		return &DropPipeOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *PipeDropOptions = nil
+		var opts *DropPipeOptions = nil
 		assertOptsInvalid(t, opts, errNilOptions)
 	})
 
@@ -238,12 +238,12 @@ func TestPipesShow(t *testing.T) {
 	databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
 	schemaIdentifier := NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())
 
-	defaultOpts := func() *PipeShowOptions {
-		return &PipeShowOptions{}
+	defaultOpts := func() *ShowPipeOptions {
+		return &ShowPipeOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *PipeShowOptions = nil
+		var opts *ShowPipeOptions = nil
 		assertOptsInvalid(t, opts, errNilOptions)
 	})
 

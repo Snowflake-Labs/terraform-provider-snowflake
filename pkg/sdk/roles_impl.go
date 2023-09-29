@@ -14,19 +14,19 @@ type roles struct {
 }
 
 func (v *roles) Create(ctx context.Context, req *CreateRoleRequest) error {
-	return validateAndExec(v.client, ctx, req.ToOpts())
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *roles) Alter(ctx context.Context, req *AlterRoleRequest) error {
-	return validateAndExec(v.client, ctx, req.ToOpts())
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *roles) Drop(ctx context.Context, req *DropRoleRequest) error {
-	return validateAndExec(v.client, ctx, req.ToOpts())
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *roles) Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error) {
-	dbRows, err := validateAndQuery[roleDBRow](v.client, ctx, req.ToOpts())
+	dbRows, err := validateAndQuery[roleDBRow](v.client, ctx, req.toOpts())
 	if err != nil {
 		return nil, err
 	}
@@ -43,11 +43,11 @@ func (v *roles) ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, 
 }
 
 func (v *roles) Grant(ctx context.Context, req *GrantRoleRequest) error {
-	return validateAndExec(v.client, ctx, req.ToOpts())
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *roles) Revoke(ctx context.Context, req *RevokeRoleRequest) error {
-	return validateAndExec(v.client, ctx, req.ToOpts())
+	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
 func (v *roles) Use(ctx context.Context, req *UseRoleRequest) error {

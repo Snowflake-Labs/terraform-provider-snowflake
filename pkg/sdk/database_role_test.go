@@ -195,7 +195,7 @@ func TestDatabaseRolesShow(t *testing.T) {
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *PipeShowOptions = nil
+		var opts *ShowPipeOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
 	})
 

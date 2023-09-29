@@ -8,7 +8,7 @@ var (
 	_ validatable = new(CreateSessionPolicyOptions)
 	_ validatable = new(AlterSessionPolicyOptions)
 	_ validatable = new(DropSessionPolicyOptions)
-	_ validatable = new(sessionPolicyShowOptions)
+	_ validatable = new(showSessionPolicyOptions)
 )
 
 type SessionPolicies interface {
@@ -132,18 +132,18 @@ func (v *sessionPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, o
 	return err
 }
 
-// sessionPolicyShowOptions contains options for listing session policies.
-type sessionPolicyShowOptions struct {
+// showSessionPolicyOptions contains options for listing session policies.
+type showSessionPolicyOptions struct {
 	show            bool `ddl:"static" sql:"SHOW"`
 	sessionPolicies bool `ddl:"static" sql:"SESSION POLICIES"`
 }
 
-func (opts *sessionPolicyShowOptions) validate() error {
+func (opts *showSessionPolicyOptions) validate() error {
 	return nil
 }
 
 func (v *sessionPolicies) Show(ctx context.Context) ([]SessionPolicy, error) {
-	opts := &sessionPolicyShowOptions{}
+	opts := &showSessionPolicyOptions{}
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}

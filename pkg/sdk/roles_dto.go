@@ -1,5 +1,14 @@
 package sdk
 
+var (
+	_ optionsProvider[CreateRoleOptions] = new(CreateRoleRequest)
+	_ optionsProvider[AlterRoleOptions]  = new(AlterRoleRequest)
+	_ optionsProvider[DropRoleOptions]   = new(DropRoleRequest)
+	_ optionsProvider[ShowRoleOptions]   = new(ShowRoleRequest)
+	_ optionsProvider[GrantRoleOptions]  = new(GrantRoleRequest)
+	_ optionsProvider[RevokeRoleOptions] = new(RevokeRoleRequest)
+)
+
 type CreateRoleRequest struct {
 	OrReplace   *bool
 	IfNotExists *bool
@@ -34,7 +43,7 @@ func (s *CreateRoleRequest) WithTag(tag []TagAssociation) *CreateRoleRequest {
 	return s
 }
 
-func (s *CreateRoleRequest) ToOpts() *CreateRoleOptions {
+func (s *CreateRoleRequest) toOpts() *CreateRoleOptions {
 	return &CreateRoleOptions{
 		OrReplace:   s.OrReplace,
 		IfNotExists: s.IfNotExists,
@@ -90,7 +99,7 @@ func (s *AlterRoleRequest) WithUnsetTags(unsetTags []ObjectIdentifier) *AlterRol
 	return s
 }
 
-func (s *AlterRoleRequest) ToOpts() *AlterRoleOptions {
+func (s *AlterRoleRequest) toOpts() *AlterRoleOptions {
 	return &AlterRoleOptions{
 		IfExists:     s.IfExists,
 		name:         s.name,
@@ -118,7 +127,7 @@ func (s *DropRoleRequest) WithIfExists(ifExists bool) *DropRoleRequest {
 	return s
 }
 
-func (s *DropRoleRequest) ToOpts() *DropRoleOptions {
+func (s *DropRoleRequest) toOpts() *DropRoleOptions {
 	return &DropRoleOptions{
 		IfExists: s.IfExists,
 		name:     s.name,
@@ -156,7 +165,7 @@ func NewLikeRequest(pattern string) *LikeRequest {
 	}
 }
 
-func (s *ShowRoleRequest) ToOpts() *ShowRoleOptions {
+func (s *ShowRoleRequest) toOpts() *ShowRoleOptions {
 	return &ShowRoleOptions{
 		Like:    s.Like,
 		InClass: s.InClass,
@@ -185,7 +194,7 @@ func NewGrantRoleRequest(name AccountObjectIdentifier, grant GrantRole) *GrantRo
 	}
 }
 
-func (s *GrantRoleRequest) ToOpts() *GrantRoleOptions {
+func (s *GrantRoleRequest) toOpts() *GrantRoleOptions {
 	return &GrantRoleOptions{
 		name:  s.name,
 		Grant: s.Grant,
@@ -204,7 +213,7 @@ func NewRevokeRoleRequest(name AccountObjectIdentifier, revoke RevokeRole) *Revo
 	}
 }
 
-func (s *RevokeRoleRequest) ToOpts() *RevokeRoleOptions {
+func (s *RevokeRoleRequest) toOpts() *RevokeRoleOptions {
 	return &RevokeRoleOptions{
 		name:   s.name,
 		Revoke: s.Revoke,
