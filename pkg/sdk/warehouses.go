@@ -14,7 +14,7 @@ var (
 	_ validatable = new(AlterWarehouseOptions)
 	_ validatable = new(DropWarehouseOptions)
 	_ validatable = new(ShowWarehouseOptions)
-	_ validatable = new(warehouseDescribeOptions)
+	_ validatable = new(describeWarehouseOptions)
 )
 
 type Warehouses interface {
@@ -481,13 +481,13 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 	return nil, errObjectNotExistOrAuthorized
 }
 
-type warehouseDescribeOptions struct {
+type describeWarehouseOptions struct {
 	describe  bool                    `ddl:"static" sql:"DESCRIBE"`
 	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *warehouseDescribeOptions) validate() error {
+func (opts *describeWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		return errInvalidObjectIdentifier
 	}
@@ -515,7 +515,7 @@ type WarehouseDetails struct {
 }
 
 func (c *warehouses) Describe(ctx context.Context, id AccountObjectIdentifier) (*WarehouseDetails, error) {
-	opts := &warehouseDescribeOptions{
+	opts := &describeWarehouseOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {
