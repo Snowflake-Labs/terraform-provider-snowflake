@@ -1,9 +1,10 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"strings"
 
@@ -56,25 +57,36 @@ func NetworkPolicy() *schema.Resource {
 
 // CreateNetworkPolicy implements schema.CreateFunc.
 func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
-	builder := snowflake.NetworkPolicy(name)
+	req := sdk.NewCreateNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
 
 	// Set optionals
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		req = req.WithComment(sdk.String(v.(string)))
 	}
 
 	if v, ok := d.GetOk("allowed_ip_list"); ok {
-		builder.WithAllowedIPList(expandStringList(v.(*schema.Set).List()))
+		ipList := expandStringList(v.(*schema.Set).List())
+		ipRequests := make([]sdk.IPRequest, len(ipList))
+		for i, v := range ipList {
+			ipRequests[i] = *sdk.NewIPRequest(v)
+		}
+		req = req.WithAllowedIpList(ipRequests)
 	}
 
 	if v, ok := d.GetOk("blocked_ip_list"); ok {
-		builder.WithBlockedIPList(expandStringList(v.(*schema.Set).List()))
+		ipList := expandStringList(v.(*schema.Set).List())
+		ipRequests := make([]sdk.IPRequest, len(ipList))
+		for i, v := range ipList {
+			ipRequests[i] = *sdk.NewIPRequest(v)
+		}
+		req = req.WithAllowedIpList(ipRequests)
 	}
 
-	stmt := builder.Create()
-	err := snowflake.Exec(db, stmt)
+	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	err := client.NetworkPolicies.Create(ctx, req)
 	if err != nil {
 		return fmt.Errorf("error creating network policy %v err = %w", name, err)
 	}
@@ -85,8 +97,30 @@ func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // ReadNetworkPolicy implements schema.ReadFunc.
 func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
 	policyName := d.Id()
+	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
+	networkPolicies, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
+	if err != nil {
+		return err
+	}
+
+	var networkPolicy *sdk.NetworkPolicy
+	for _, np := range networkPolicies {
+		if np.Name == policyName {
+			networkPolicy = &np
+			break
+		}
+	}
+
+	if networkPolicy == nil {
+		// If not found, mark resource to be removed from state file during apply or refresh
+		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	builder := snowflake.NetworkPolicy(policyName)
 
@@ -94,15 +128,6 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	showSQL := builder.ShowAllNetworkPolicies()
 
 	rows, err := snowflake.Query(db, showSQL)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return err
-	}
 
 	allPolicies, err := snowflake.ScanNetworkPolicies(rows)
 	if err != nil {
