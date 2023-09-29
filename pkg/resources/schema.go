@@ -156,11 +156,13 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	values := map[string]any{
 		"name":                s.Name,
 		"database":            s.DatabaseName,
-		"comment":             *s.Comment,
 		"data_retention_days": retentionTime,
 		// reset the options before reading back from the DB
 		"is_transient": false,
 		"is_managed":   false,
+	}
+	if s.Comment != nil {
+		values["comment"] = *s.Comment
 	}
 
 	for k, v := range values {
