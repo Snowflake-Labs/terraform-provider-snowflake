@@ -655,7 +655,7 @@ func createPipe(t *testing.T, client *Client, database *Database, schema *Schema
 		require.NoError(t, err)
 	}
 
-	err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{})
+	err := client.Pipes.Create(ctx, id, copyStatement, &CreatePipeOptions{})
 	if err != nil {
 		return nil, pipeCleanup
 	}
