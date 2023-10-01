@@ -35,7 +35,7 @@ make clean-generator-poc run-generator-poc
 
 ### Next steps
 ##### Essentials
-- modify makefile scripts (see TODO in makefile)
+- (?) add mapping from db to plain struct (for now only "// TODO: Mapping" comment is generated)
 - add arguments to the generator, so we'll be able to specify which files should be generated / re-generated,
 because after we fill things that need our input we don't want to re-generate those files and override the changes,
 also adding small changes is very challenging, e.g. for new validation rule you have to re-generate unit-tests to get
