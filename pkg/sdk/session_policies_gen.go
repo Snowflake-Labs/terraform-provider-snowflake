@@ -5,6 +5,10 @@ import "context"
 type SessionPolicies interface {
 	Create(ctx context.Context, request *CreateSessionPolicyRequest) error
 	Alter(ctx context.Context, request *AlterSessionPolicyRequest) error
+	Drop(ctx context.Context, request *DropSessionPolicyRequest) error
+	Show(ctx context.Context, request *ShowSessionPolicyRequest) ([]SessionPolicy, error)
+
+	Describe(ctx context.Context, id AccountObjectIdentifier) (*SessionPolicyDescription, error)
 }
 
 // CreateSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-session-policy.
@@ -42,4 +46,63 @@ type SessionPolicyUnset struct {
 	SessionIdleTimeoutMins   *bool `ddl:"keyword" sql:"SESSION_IDLE_TIMEOUT_MINS"`
 	SessionUiIdleTimeoutMins *bool `ddl:"keyword" sql:"SESSION_UI_IDLE_TIMEOUT_MINS"`
 	Comment                  *bool `ddl:"keyword" sql:"COMMENT"`
+}
+
+// DropSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-session-policy.
+type DropSessionPolicyOptions struct {
+	drop          bool                    `ddl:"static" sql:"DROP"`
+	sessionPolicy bool                    `ddl:"static" sql:"SESSION POLICY"`
+	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name          AccountObjectIdentifier `ddl:"identifier"`
+}
+
+// ShowSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-session-policies.
+type ShowSessionPolicyOptions struct {
+	show            bool `ddl:"static" sql:"SHOW"`
+	sessionPolicies bool `ddl:"static" sql:"SESSION POLICIES"`
+}
+
+type showSessionPolicyDBRow struct {
+	CreatedOn    string `db:"created_on"`
+	Name         string `db:"name"`
+	DatabaseName string `db:"database_name"`
+	SchemaName   string `db:"schema_name"`
+	Kind         string `db:"kind"`
+	Owner        string `db:"owner"`
+	Comment      string `db:"comment"`
+	Options      string `db:"options"`
+}
+
+type SessionPolicy struct {
+	CreatedOn    string
+	Name         string
+	DatabaseName string
+	SchemaName   string
+	Kind         string
+	Owner        string
+	Comment      string
+	Options      string
+}
+
+// DescribeSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-session-policy.
+type DescribeSessionPolicyOptions struct {
+	describe      bool                    `ddl:"static" sql:"DESCRIBE"`
+	sessionPolicy bool                    `ddl:"static" sql:"SESSION POLICY"`
+	name          AccountObjectIdentifier `ddl:"identifier"`
+}
+
+type describeSessionPolicyDBRow struct {
+	Createdon                string `db:"createdOn"`
+	Name                     string `db:"name"`
+	Sessionidletimeoutmins   int    `db:"sessionIdleTimeoutMins"`
+	Sessionuiidletimeoutmins int    `db:"sessionUIIdleTimeoutMins"`
+	Comment                  string `db:"comment"`
+}
+
+type SessionPolicyDescription struct {
+	CreatedOn                string
+	Name                     string
+	SessionIdleTimeoutMins   int
+	SessionUIIdleTimeoutMins int
+	Comment                  string
 }

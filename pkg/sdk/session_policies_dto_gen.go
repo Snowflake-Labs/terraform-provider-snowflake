@@ -3,8 +3,11 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateSessionPolicyOptions] = new(CreateSessionPolicyRequest)
-	_ optionsProvider[AlterSessionPolicyOptions]  = new(AlterSessionPolicyRequest)
+	_ optionsProvider[CreateSessionPolicyOptions]   = new(CreateSessionPolicyRequest)
+	_ optionsProvider[AlterSessionPolicyOptions]    = new(AlterSessionPolicyRequest)
+	_ optionsProvider[DropSessionPolicyOptions]     = new(DropSessionPolicyRequest)
+	_ optionsProvider[ShowSessionPolicyOptions]     = new(ShowSessionPolicyRequest)
+	_ optionsProvider[DescribeSessionPolicyOptions] = new(DescribeSessionPolicyRequest)
 )
 
 type CreateSessionPolicyRequest struct {
@@ -36,4 +39,16 @@ type SessionPolicyUnsetRequest struct {
 	SessionIdleTimeoutMins   *bool
 	SessionUiIdleTimeoutMins *bool
 	Comment                  *bool
+}
+
+type DropSessionPolicyRequest struct {
+	IfExists *bool
+	name     AccountObjectIdentifier // required
+}
+
+type ShowSessionPolicyRequest struct {
+}
+
+type DescribeSessionPolicyRequest struct {
+	name AccountObjectIdentifier // required
 }

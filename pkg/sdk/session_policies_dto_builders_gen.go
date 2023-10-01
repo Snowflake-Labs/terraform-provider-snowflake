@@ -112,3 +112,28 @@ func (s *SessionPolicyUnsetRequest) WithComment(Comment *bool) *SessionPolicyUns
 	s.Comment = Comment
 	return s
 }
+
+func NewDropSessionPolicyRequest(
+	name AccountObjectIdentifier,
+) *DropSessionPolicyRequest {
+	s := DropSessionPolicyRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *DropSessionPolicyRequest) WithIfExists(IfExists *bool) *DropSessionPolicyRequest {
+	s.IfExists = IfExists
+	return s
+}
+
+func NewShowSessionPolicyRequest() *ShowSessionPolicyRequest {
+	return &ShowSessionPolicyRequest{}
+}
+
+func NewDescribeSessionPolicyRequest(
+	name AccountObjectIdentifier,
+) *DescribeSessionPolicyRequest {
+	s := DescribeSessionPolicyRequest{}
+	s.name = name
+	return &s
+}

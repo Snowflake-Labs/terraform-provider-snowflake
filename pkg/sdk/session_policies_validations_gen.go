@@ -5,6 +5,9 @@ import "errors"
 var (
 	_ validatable = new(CreateSessionPolicyOptions)
 	_ validatable = new(AlterSessionPolicyOptions)
+	_ validatable = new(DropSessionPolicyOptions)
+	_ validatable = new(ShowSessionPolicyOptions)
+	_ validatable = new(DescribeSessionPolicyOptions)
 )
 
 func (opts *CreateSessionPolicyOptions) validate() error {
@@ -41,6 +44,36 @@ func (opts *AlterSessionPolicyOptions) validate() error {
 		if ok := anyValueSet(opts.Unset.SessionIdleTimeoutMins, opts.Unset.SessionUiIdleTimeoutMins, opts.Unset.Comment); !ok {
 			errs = append(errs, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
 		}
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *DropSessionPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, errInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *ShowSessionPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	return errors.Join(errs...)
+}
+
+func (opts *DescribeSessionPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }

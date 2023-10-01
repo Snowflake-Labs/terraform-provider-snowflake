@@ -93,3 +93,99 @@ func TestSessionPolicies_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 }
+
+func TestSessionPolicies_Drop(t *testing.T) {
+	id := randomAccountObjectIdentifier(t)
+
+	// Minimal valid DropSessionPolicyOptions
+	defaultOpts := func() *DropSessionPolicyOptions {
+		return &DropSessionPolicyOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *DropSessionPolicyOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+}
+
+func TestSessionPolicies_Show(t *testing.T) {
+	id := randomAccountObjectIdentifier(t)
+
+	// Minimal valid ShowSessionPolicyOptions
+	defaultOpts := func() *ShowSessionPolicyOptions {
+		return &ShowSessionPolicyOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *ShowSessionPolicyOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+}
+
+func TestSessionPolicies_Describe(t *testing.T) {
+	id := randomAccountObjectIdentifier(t)
+
+	// Minimal valid DescribeSessionPolicyOptions
+	defaultOpts := func() *DescribeSessionPolicyOptions {
+		return &DescribeSessionPolicyOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *DescribeSessionPolicyOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+}

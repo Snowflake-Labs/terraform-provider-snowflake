@@ -18,6 +18,32 @@ func (v *sessionPolicies) Alter(ctx context.Context, request *AlterSessionPolicy
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *sessionPolicies) Drop(ctx context.Context, request *DropSessionPolicyRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *sessionPolicies) Show(ctx context.Context, request *ShowSessionPolicyRequest) ([]SessionPolicy, error) {
+	opts := request.toOpts()
+	dbRows, err := validateAndQuery[showSessionPolicyDBRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	resultList := convertRows[showSessionPolicyDBRow, SessionPolicy](dbRows)
+	return resultList, nil
+}
+
+func (v *sessionPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) (*SessionPolicyDescription, error) {
+	opts := &DescribeSessionPolicyOptions{
+		name: id,
+	}
+	result, err := validateAndQueryOne[describeSessionPolicyDBRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return result.convert(), nil
+}
+
 func (r *CreateSessionPolicyRequest) toOpts() *CreateSessionPolicyOptions {
 	opts := &CreateSessionPolicyOptions{
 		OrReplace:                r.OrReplace,
@@ -54,4 +80,34 @@ func (r *AlterSessionPolicyRequest) toOpts() *AlterSessionPolicyOptions {
 		}
 	}
 	return opts
+}
+
+func (r *DropSessionPolicyRequest) toOpts() *DropSessionPolicyOptions {
+	opts := &DropSessionPolicyOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+	}
+	return opts
+}
+
+func (r *ShowSessionPolicyRequest) toOpts() *ShowSessionPolicyOptions {
+	opts := &ShowSessionPolicyOptions{}
+	return opts
+}
+
+func (r showSessionPolicyDBRow) convert() *SessionPolicy {
+	// TODO: Mapping
+	return &SessionPolicy{}
+}
+
+func (r *DescribeSessionPolicyRequest) toOpts() *DescribeSessionPolicyOptions {
+	opts := &DescribeSessionPolicyOptions{
+		name: r.name,
+	}
+	return opts
+}
+
+func (r describeSessionPolicyDBRow) convert() *SessionPolicyDescription {
+	// TODO: Mapping
+	return &SessionPolicyDescription{}
 }
