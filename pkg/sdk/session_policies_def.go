@@ -54,5 +54,59 @@ var (
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set", "SetTags", "UnsetTags", "Unset").
 				WithValidation(g.ValidIdentifierIfSet, "RenameTo"),
+		).
+		DropOperation(
+			"https://docs.snowflake.com/en/sql-reference/sql/drop-session-policy",
+			g.QueryStruct("DropSessionPolicy").
+				Drop().
+				SQL("SESSION POLICY").
+				IfExists().
+				Name().
+				WithValidation(g.ValidIdentifier, "name"),
+		).
+		ShowOperation(
+			"https://docs.snowflake.com/en/sql-reference/sql/show-session-policies",
+			g.DbStruct("showSessionPolicyDBRow").
+				Field("created_on", "string").
+				Field("name", "string").
+				Field("database_name", "string").
+				Field("schema_name", "string").
+				Field("kind", "string").
+				Field("owner", "string").
+				Field("comment", "string").
+				Field("options", "string"),
+			g.PlainStruct("SessionPolicy").
+				Field("CreatedOn", "string").
+				Field("Name", "string").
+				Field("DatabaseName", "string").
+				Field("SchemaName", "string").
+				Field("Kind", "string").
+				Field("Owner", "string").
+				Field("Comment", "string").
+				Field("Options", "string"),
+			g.QueryStruct("ShowSessionPolicies").
+				Show().
+				SQL("SESSION POLICIES"),
+		).
+		DescribeOperation(
+			g.DescriptionMappingKindSingleValue,
+			"https://docs.snowflake.com/en/sql-reference/sql/desc-session-policy",
+			g.DbStruct("describeSessionPolicyDBRow").
+				Field("createdOn", "string").
+				Field("name", "string").
+				Field("sessionIdleTimeoutMins", "int").
+				Field("sessionUIIdleTimeoutMins", "int").
+				Field("comment", "string"),
+			g.PlainStruct("SessionPolicyDescription").
+				Field("CreatedOn", "string").
+				Field("Name", "string").
+				Field("SessionIdleTimeoutMins", "int").
+				Field("SessionUIIdleTimeoutMins", "int").
+				Field("Comment", "string"),
+			g.QueryStruct("DescribeSessionPolicy").
+				Describe().
+				SQL("SESSION POLICY").
+				Name().
+				WithValidation(g.ValidIdentifier, "name"),
 		)
 )
