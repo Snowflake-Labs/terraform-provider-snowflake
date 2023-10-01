@@ -33,7 +33,7 @@ func (v *sessionPolicies) Show(ctx context.Context, request *ShowSessionPolicyRe
 	return resultList, nil
 }
 
-func (v *sessionPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) (*SessionPolicyDescription, error) {
+func (v *sessionPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicyDescription, error) {
 	opts := &DescribeSessionPolicyOptions{
 		name: id,
 	}

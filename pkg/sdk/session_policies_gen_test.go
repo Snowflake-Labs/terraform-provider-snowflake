@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestSessionPolicies_Create(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid CreateSessionPolicyOptions
 	defaultOpts := func() *CreateSessionPolicyOptions {
@@ -37,7 +37,7 @@ func TestSessionPolicies_Create(t *testing.T) {
 }
 
 func TestSessionPolicies_Alter(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid AlterSessionPolicyOptions
 	defaultOpts := func() *AlterSessionPolicyOptions {
@@ -95,7 +95,7 @@ func TestSessionPolicies_Alter(t *testing.T) {
 }
 
 func TestSessionPolicies_Drop(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid DropSessionPolicyOptions
 	defaultOpts := func() *DropSessionPolicyOptions {
@@ -129,7 +129,7 @@ func TestSessionPolicies_Drop(t *testing.T) {
 }
 
 func TestSessionPolicies_Show(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid ShowSessionPolicyOptions
 	defaultOpts := func() *ShowSessionPolicyOptions {
@@ -157,7 +157,7 @@ func TestSessionPolicies_Show(t *testing.T) {
 }
 
 func TestSessionPolicies_Describe(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid DescribeSessionPolicyOptions
 	defaultOpts := func() *DescribeSessionPolicyOptions {

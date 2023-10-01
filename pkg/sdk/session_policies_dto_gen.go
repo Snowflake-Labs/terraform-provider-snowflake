@@ -13,7 +13,7 @@ var (
 type CreateSessionPolicyRequest struct {
 	OrReplace                *bool
 	IfNotExists              *bool
-	name                     AccountObjectIdentifier // required
+	name                     SchemaObjectIdentifier // required
 	SessionIdleTimeoutMins   *int
 	SessionUiIdleTimeoutMins *int
 	Comment                  *string
@@ -21,8 +21,8 @@ type CreateSessionPolicyRequest struct {
 
 type AlterSessionPolicyRequest struct {
 	IfExists  *bool
-	name      AccountObjectIdentifier // required
-	RenameTo  *AccountObjectIdentifier
+	name      SchemaObjectIdentifier // required
+	RenameTo  *SchemaObjectIdentifier
 	Set       *SessionPolicySetRequest
 	SetTags   []TagAssociation
 	UnsetTags []ObjectIdentifier
@@ -43,12 +43,12 @@ type SessionPolicyUnsetRequest struct {
 
 type DropSessionPolicyRequest struct {
 	IfExists *bool
-	name     AccountObjectIdentifier // required
+	name     SchemaObjectIdentifier // required
 }
 
 type ShowSessionPolicyRequest struct {
 }
 
 type DescribeSessionPolicyRequest struct {
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
 }

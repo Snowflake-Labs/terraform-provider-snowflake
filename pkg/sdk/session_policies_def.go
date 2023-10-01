@@ -8,7 +8,7 @@ var (
 	SessionPoliciesDef = g.NewInterface(
 		"SessionPolicies",
 		"SessionPolicy",
-		g.KindOfT[AccountObjectIdentifier](),
+		g.KindOfT[SchemaObjectIdentifier](),
 	).
 		CreateOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/create-session-policy",
@@ -30,7 +30,7 @@ var (
 				SQL("SESSION POLICY").
 				IfExists().
 				Name().
-				Identifier("RenameTo", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+				Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 				OptionalQueryStructField(
 					"Set",
 					g.QueryStruct("SessionPolicySet").

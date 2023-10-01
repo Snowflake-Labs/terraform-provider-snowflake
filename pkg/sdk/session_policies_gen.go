@@ -8,32 +8,32 @@ type SessionPolicies interface {
 	Drop(ctx context.Context, request *DropSessionPolicyRequest) error
 	Show(ctx context.Context, request *ShowSessionPolicyRequest) ([]SessionPolicy, error)
 
-	Describe(ctx context.Context, id AccountObjectIdentifier) (*SessionPolicyDescription, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicyDescription, error)
 }
 
 // CreateSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-session-policy.
 type CreateSessionPolicyOptions struct {
-	create                   bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace                *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	sessionPolicy            bool                    `ddl:"static" sql:"SESSION POLICY"`
-	IfNotExists              *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                     AccountObjectIdentifier `ddl:"identifier"`
-	SessionIdleTimeoutMins   *int                    `ddl:"parameter,no_quotes" sql:"SESSION_IDLE_TIMEOUT_MINS"`
-	SessionUiIdleTimeoutMins *int                    `ddl:"parameter,no_quotes" sql:"SESSION_UI_IDLE_TIMEOUT_MINS"`
-	Comment                  *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                   bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace                *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	sessionPolicy            bool                   `ddl:"static" sql:"SESSION POLICY"`
+	IfNotExists              *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                     SchemaObjectIdentifier `ddl:"identifier"`
+	SessionIdleTimeoutMins   *int                   `ddl:"parameter,no_quotes" sql:"SESSION_IDLE_TIMEOUT_MINS"`
+	SessionUiIdleTimeoutMins *int                   `ddl:"parameter,no_quotes" sql:"SESSION_UI_IDLE_TIMEOUT_MINS"`
+	Comment                  *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // AlterSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-session-policy.
 type AlterSessionPolicyOptions struct {
-	alter         bool                     `ddl:"static" sql:"ALTER"`
-	sessionPolicy bool                     `ddl:"static" sql:"SESSION POLICY"`
-	IfExists      *bool                    `ddl:"keyword" sql:"IF EXISTS"`
-	name          AccountObjectIdentifier  `ddl:"identifier"`
-	RenameTo      *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set           *SessionPolicySet        `ddl:"keyword" sql:"SET"`
-	SetTags       []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags     []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
-	Unset         *SessionPolicyUnset      `ddl:"keyword" sql:"UNSET"`
+	alter         bool                    `ddl:"static" sql:"ALTER"`
+	sessionPolicy bool                    `ddl:"static" sql:"SESSION POLICY"`
+	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name          SchemaObjectIdentifier  `ddl:"identifier"`
+	RenameTo      *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Set           *SessionPolicySet       `ddl:"keyword" sql:"SET"`
+	SetTags       []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags     []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
+	Unset         *SessionPolicyUnset     `ddl:"keyword" sql:"UNSET"`
 }
 
 type SessionPolicySet struct {
@@ -50,10 +50,10 @@ type SessionPolicyUnset struct {
 
 // DropSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-session-policy.
 type DropSessionPolicyOptions struct {
-	drop          bool                    `ddl:"static" sql:"DROP"`
-	sessionPolicy bool                    `ddl:"static" sql:"SESSION POLICY"`
-	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name          AccountObjectIdentifier `ddl:"identifier"`
+	drop          bool                   `ddl:"static" sql:"DROP"`
+	sessionPolicy bool                   `ddl:"static" sql:"SESSION POLICY"`
+	IfExists      *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 // ShowSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-session-policies.
@@ -86,9 +86,9 @@ type SessionPolicy struct {
 
 // DescribeSessionPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-session-policy.
 type DescribeSessionPolicyOptions struct {
-	describe      bool                    `ddl:"static" sql:"DESCRIBE"`
-	sessionPolicy bool                    `ddl:"static" sql:"SESSION POLICY"`
-	name          AccountObjectIdentifier `ddl:"identifier"`
+	describe      bool                   `ddl:"static" sql:"DESCRIBE"`
+	sessionPolicy bool                   `ddl:"static" sql:"SESSION POLICY"`
+	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 type describeSessionPolicyDBRow struct {

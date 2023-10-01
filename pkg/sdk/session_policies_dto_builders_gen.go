@@ -5,7 +5,7 @@ package sdk
 import ()
 
 func NewCreateSessionPolicyRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *CreateSessionPolicyRequest {
 	s := CreateSessionPolicyRequest{}
 	s.name = name
@@ -38,7 +38,7 @@ func (s *CreateSessionPolicyRequest) WithComment(Comment *string) *CreateSession
 }
 
 func NewAlterSessionPolicyRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *AlterSessionPolicyRequest {
 	s := AlterSessionPolicyRequest{}
 	s.name = name
@@ -50,7 +50,7 @@ func (s *AlterSessionPolicyRequest) WithIfExists(IfExists *bool) *AlterSessionPo
 	return s
 }
 
-func (s *AlterSessionPolicyRequest) WithRenameTo(RenameTo *AccountObjectIdentifier) *AlterSessionPolicyRequest {
+func (s *AlterSessionPolicyRequest) WithRenameTo(RenameTo *SchemaObjectIdentifier) *AlterSessionPolicyRequest {
 	s.RenameTo = RenameTo
 	return s
 }
@@ -114,7 +114,7 @@ func (s *SessionPolicyUnsetRequest) WithComment(Comment *bool) *SessionPolicyUns
 }
 
 func NewDropSessionPolicyRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DropSessionPolicyRequest {
 	s := DropSessionPolicyRequest{}
 	s.name = name
@@ -131,7 +131,7 @@ func NewShowSessionPolicyRequest() *ShowSessionPolicyRequest {
 }
 
 func NewDescribeSessionPolicyRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DescribeSessionPolicyRequest {
 	s := DescribeSessionPolicyRequest{}
 	s.name = name
