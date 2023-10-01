@@ -86,7 +86,7 @@ func errAtLeastOneOf(fieldNames ...string) error {
 
 var (
 	errNilOptions              = errors.New("options cannot be nil")
-	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
+	errInvalidObjectIdentifier = errors.New("invalid object identifier")
 )
 
 func validateAndExec(client *Client, ctx context.Context, opts validatable) error {
