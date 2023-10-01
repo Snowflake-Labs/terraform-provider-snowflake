@@ -29,8 +29,8 @@ func (opts *AlterNetworkPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, errInvalidObjectIdentifier)
 	}
-	if ok := anyValueSet(opts.Set, opts.UnsetComment, opts.RenameTo); !ok {
-		errs = append(errs, errAtLeastOneOf("Set", "UnsetComment", "RenameTo"))
+	if ok := exactlyOneValueSet(opts.Set, opts.UnsetComment, opts.RenameTo); !ok {
+		errs = append(errs, errExactlyOneOf("Set", "UnsetComment", "RenameTo"))
 	}
 	if valueSet(opts.RenameTo) && !validObjectidentifier(opts.RenameTo) {
 		errs = append(errs, errInvalidObjectIdentifier)
