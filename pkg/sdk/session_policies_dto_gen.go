@@ -4,6 +4,7 @@ package sdk
 
 var (
 	_ optionsProvider[CreateSessionPolicyOptions] = new(CreateSessionPolicyRequest)
+	_ optionsProvider[AlterSessionPolicyOptions]  = new(AlterSessionPolicyRequest)
 )
 
 type CreateSessionPolicyRequest struct {
@@ -13,4 +14,26 @@ type CreateSessionPolicyRequest struct {
 	SessionIdleTimeoutMins   *int
 	SessionUiIdleTimeoutMins *int
 	Comment                  *string
+}
+
+type AlterSessionPolicyRequest struct {
+	IfExists  *bool
+	name      AccountObjectIdentifier // required
+	RenameTo  *AccountObjectIdentifier
+	Set       *SessionPolicySetRequest
+	SetTags   []TagAssociation
+	UnsetTags []ObjectIdentifier
+	Unset     *SessionPolicyUnsetRequest
+}
+
+type SessionPolicySetRequest struct {
+	SessionIdleTimeoutMins   *int
+	SessionUiIdleTimeoutMins *int
+	Comment                  *string
+}
+
+type SessionPolicyUnsetRequest struct {
+	SessionIdleTimeoutMins   *bool
+	SessionUiIdleTimeoutMins *bool
+	Comment                  *bool
 }

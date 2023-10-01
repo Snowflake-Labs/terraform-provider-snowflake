@@ -35,3 +35,61 @@ func TestSessionPolicies_Create(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 }
+
+func TestSessionPolicies_Alter(t *testing.T) {
+	id := randomAccountObjectIdentifier(t)
+
+	// Minimal valid AlterSessionPolicyOptions
+	defaultOpts := func() *AlterSessionPolicyOptions {
+		return &AlterSessionPolicyOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *AlterSessionPolicyOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.SetTags opts.UnsetTags opts.Unset] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
+	})
+
+	t.Run("validation: valid identifier for [opts.RenameTo] if set", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: at least one of the fields [opts.Set.SessionIdleTimeoutMins opts.Set.SessionUiIdleTimeoutMins opts.Set.Comment] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Unset.SessionIdleTimeoutMins opts.Unset.SessionUiIdleTimeoutMins opts.Unset.Comment] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+}
