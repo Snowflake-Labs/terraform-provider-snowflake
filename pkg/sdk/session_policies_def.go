@@ -40,6 +40,8 @@ var (
 						WithValidation(g.AtLeastOneValueSet, "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"),
 					g.KeywordOptions().SQL("SET"),
 				).
+				SetTags().
+				UnsetTags().
 				OptionalQueryStructField(
 					"Unset",
 					g.QueryStruct("SessionPolicyUnset").
@@ -50,7 +52,7 @@ var (
 					g.KeywordOptions().SQL("UNSET"),
 				).
 				WithValidation(g.ValidIdentifier, "name").
-				WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set", "Unset").
+				WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set", "SetTags", "UnsetTags", "Unset").
 				WithValidation(g.ValidIdentifierIfSet, "RenameTo"),
 		)
 )
