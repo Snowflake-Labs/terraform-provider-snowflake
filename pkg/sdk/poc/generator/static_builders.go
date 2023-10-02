@@ -24,3 +24,11 @@ func (v *QueryStruct) Show() *QueryStruct {
 func (v *QueryStruct) Describe() *QueryStruct {
 	return v.SQL("DESCRIBE")
 }
+
+func (v *queryStruct) Grant() *queryStruct {
+	return v.SQL("GRANT")
+}
+
+func (v *queryStruct) Revoke() *queryStruct {
+	return v.SQL("REVOKE")
+}

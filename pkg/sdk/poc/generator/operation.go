@@ -9,6 +9,8 @@ const (
 	OperationKindShow     OperationKind = "Show"
 	OperationKindShowByID OperationKind = "ShowByID"
 	OperationKindDescribe OperationKind = "Describe"
+	OperationKindGrant    OperationKind = "Grant"
+	OperationKindRevoke   OperationKind = "Revoke"
 )
 
 type DescriptionMappingKind string
@@ -143,6 +145,14 @@ func (i *Interface) AlterOperation(doc string, queryStruct *QueryStruct) *Interf
 
 func (i *Interface) DropOperation(doc string, queryStruct *QueryStruct) *Interface {
 	return i.newSimpleOperation(string(OperationKindDrop), doc, queryStruct)
+}
+
+func (i *Interface) GrantOperation(doc string, queryStruct *queryStruct) *Interface {
+	return i.newSimpleOperation(OperationKindGrant, doc, queryStruct)
+}
+
+func (i *Interface) RevokeOperation(doc string, queryStruct *queryStruct) *Interface {
+	return i.newSimpleOperation(OperationKindRevoke, doc, queryStruct)
 }
 
 func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct) *Interface {
