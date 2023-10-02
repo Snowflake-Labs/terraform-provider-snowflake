@@ -102,21 +102,8 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
 
-	networkPolicies, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
-	if err != nil {
-		return err
-	}
-
-	var networkPolicy *sdk.NetworkPolicy
-	for _, np := range networkPolicies {
-		if np.Name == policyName {
-			np := np
-			networkPolicy = &np
-			break
-		}
-	}
-
-	if networkPolicy == nil {
+	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, sdk.NewAccountObjectIdentifier(policyName))
+	if networkPolicy == nil || err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] network policy (%s) not found", d.Id())
 		d.SetId("")
