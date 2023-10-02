@@ -105,8 +105,16 @@ func (r *ShowSessionPolicyRequest) toOpts() *ShowSessionPolicyOptions {
 }
 
 func (r showSessionPolicyDBRow) convert() *SessionPolicy {
-	// TODO: Mapping
-	return &SessionPolicy{}
+	return &SessionPolicy{
+		CreatedOn:    r.CreatedOn,
+		Name:         r.Name,
+		DatabaseName: r.DatabaseName,
+		SchemaName:   r.SchemaName,
+		Kind:         r.Kind,
+		Owner:        r.Owner,
+		Comment:      r.Comment,
+		Options:      r.Options,
+	}
 }
 
 func (r *DescribeSessionPolicyRequest) toOpts() *DescribeSessionPolicyOptions {
@@ -117,6 +125,11 @@ func (r *DescribeSessionPolicyRequest) toOpts() *DescribeSessionPolicyOptions {
 }
 
 func (r describeSessionPolicyDBRow) convert() *SessionPolicyDescription {
-	// TODO: Mapping
-	return &SessionPolicyDescription{}
+	return &SessionPolicyDescription{
+		CreatedOn:                r.Createdon,
+		Name:                     r.Name,
+		SessionIdleTimeoutMins:   r.Sessionidletimeoutmins,
+		SessionUIIdleTimeoutMins: r.Sessionuiidletimeoutmins,
+		Comment:                  r.Comment,
+	}
 }

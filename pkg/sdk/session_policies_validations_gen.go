@@ -35,9 +35,6 @@ func (opts *AlterSessionPolicyOptions) validate() error {
 	if ok := exactlyOneValueSet(opts.RenameTo, opts.Set, opts.SetTags, opts.UnsetTags, opts.Unset); !ok {
 		errs = append(errs, errExactlyOneOf("RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
 	}
-	if valueSet(opts.RenameTo) && !validObjectidentifier(opts.RenameTo) {
-		errs = append(errs, errInvalidObjectIdentifier)
-	}
 	if valueSet(opts.Set) {
 		if ok := anyValueSet(opts.Set.SessionIdleTimeoutMins, opts.Set.SessionUiIdleTimeoutMins, opts.Set.Comment); !ok {
 			errs = append(errs, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
