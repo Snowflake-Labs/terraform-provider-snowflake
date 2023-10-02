@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -10,6 +11,10 @@ import (
 )
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_TABLE_DATA_RETENTION_TESTS"); ok {
+		t.Skip("Skipping TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle")
+	}
+
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
@@ -54,6 +59,10 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 }
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_TABLE_DATA_RETENTION_TESTS"); ok {
+		t.Skip("Skipping TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle")
+	}
+
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    providers(),
