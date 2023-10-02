@@ -125,11 +125,14 @@ func (r *DescribeSessionPolicyRequest) toOpts() *DescribeSessionPolicyOptions {
 }
 
 func (r describeSessionPolicyDBRow) convert() *SessionPolicyDescription {
-	return &SessionPolicyDescription{
-		CreatedOn:                r.Createdon,
+	sessionPolicyDescription := SessionPolicyDescription{
+		CreatedOn:                r.CreatedOn,
 		Name:                     r.Name,
-		SessionIdleTimeoutMins:   r.Sessionidletimeoutmins,
-		SessionUIIdleTimeoutMins: r.Sessionuiidletimeoutmins,
-		Comment:                  r.Comment,
+		SessionIdleTimeoutMins:   r.SessionIdleTimeoutMins,
+		SessionUIIdleTimeoutMins: r.SessionUiIdleTimeoutMins,
 	}
+	if r.Comment.Valid {
+		sessionPolicyDescription.Comment = r.Comment.String
+	}
+	return &sessionPolicyDescription
 }

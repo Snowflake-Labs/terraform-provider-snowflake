@@ -92,10 +92,10 @@ var (
 			g.DescriptionMappingKindSingleValue,
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-session-policy",
 			g.DbStruct("describeSessionPolicyDBRow").
-				Field("createdOn", "string").
+				Field("created_on", "string").
 				Field("name", "string").
-				Field("sessionIdleTimeoutMins", "int").
-				Field("sessionUIIdleTimeoutMins", "int").
+				Field("session_idle_timeout_mins", "int").
+				Field("session_ui_idle_timeout_mins", "int").
 				Field("comment", "string"),
 			g.PlainStruct("SessionPolicyDescription").
 				Field("CreatedOn", "string").

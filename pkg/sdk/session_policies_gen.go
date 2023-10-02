@@ -1,6 +1,9 @@
 package sdk
 
-import "context"
+import (
+	"context"
+	"database/sql"
+)
 
 type SessionPolicies interface {
 	Create(ctx context.Context, request *CreateSessionPolicyRequest) error
@@ -92,11 +95,11 @@ type DescribeSessionPolicyOptions struct {
 }
 
 type describeSessionPolicyDBRow struct {
-	Createdon                string `db:"createdOn"`
-	Name                     string `db:"name"`
-	Sessionidletimeoutmins   int    `db:"sessionIdleTimeoutMins"`
-	Sessionuiidletimeoutmins int    `db:"sessionUIIdleTimeoutMins"`
-	Comment                  string `db:"comment"`
+	CreatedOn                string         `db:"created_on"`
+	Name                     string         `db:"name"`
+	SessionIdleTimeoutMins   int            `db:"session_idle_timeout_mins"`
+	SessionUiIdleTimeoutMins int            `db:"session_ui_idle_timeout_mins"`
+	Comment                  sql.NullString `db:"comment"`
 }
 
 type SessionPolicyDescription struct {
