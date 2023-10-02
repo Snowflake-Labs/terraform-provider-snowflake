@@ -394,10 +394,10 @@ func createTable(t *testing.T, client *Client, database *Database, schema *Schem
 
 func createTag(t *testing.T, client *Client, database *Database, schema *Schema) (*Tag, func()) {
 	t.Helper()
-	return createTagWithOptions(t, client, database, schema, &TagCreateOptions{})
+	return createTagWithOptions(t, client, database, schema, &CreateTagOptions{})
 }
 
-func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *TagCreateOptions) (*Tag, func()) {
+func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *CreateTagOptions) (*Tag, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	ctx := context.Background()
@@ -429,7 +429,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 	err := client.PasswordPolicies.Create(ctx, id, options)
 	require.NoError(t, err)
 
-	showOptions := &PasswordPolicyShowOptions{
+	showOptions := &ShowPasswordPolicyOptions{
 		Like: &Like{
 			Pattern: String(name),
 		},
@@ -661,7 +661,7 @@ func createPipe(t *testing.T, client *Client, database *Database, schema *Schema
 		require.NoError(t, err)
 	}
 
-	err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{})
+	err := client.Pipes.Create(ctx, id, copyStatement, &CreatePipeOptions{})
 	if err != nil {
 		return nil, pipeCleanup
 	}

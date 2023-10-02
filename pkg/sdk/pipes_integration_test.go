@@ -39,7 +39,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 			ctx,
 			NewSchemaObjectIdentifier(database.Name, schema.Name, randomAlphanumericN(t, 20)),
 			createPipeCopyStatement(t, table, stage),
-			&PipeCreateOptions{},
+			&CreatePipeOptions{},
 		)
 
 		require.ErrorContains(t, err, "(42000): SQL compilation error:\nsyntax error line")
@@ -64,7 +64,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 			ctx,
 			NewSchemaObjectIdentifier(database.Name, schema.Name, randomAlphanumericN(t, 20)),
 			createCopyStatementWithoutQualifiersForStage(t, table, stage),
-			&PipeCreateOptions{},
+			&CreatePipeOptions{},
 		)
 
 		require.NoError(t, err)
@@ -103,7 +103,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	t.Cleanup(pipe2Cleanup)
 
 	t.Run("show: without options", func(t *testing.T) {
-		pipes, err := client.Pipes.Show(ctx, &PipeShowOptions{})
+		pipes, err := client.Pipes.Show(ctx, &ShowPipeOptions{})
 
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(pipes))
@@ -112,7 +112,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	})
 
 	t.Run("show: in schema", func(t *testing.T) {
-		showOptions := &PipeShowOptions{
+		showOptions := &ShowPipeOptions{
 			In: &In{
 				Schema: schema.ID(),
 			},
@@ -126,7 +126,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	})
 
 	t.Run("show: like", func(t *testing.T) {
-		showOptions := &PipeShowOptions{
+		showOptions := &ShowPipeOptions{
 			Like: &Like{
 				Pattern: String(pipe1Name),
 			},
@@ -139,7 +139,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	})
 
 	t.Run("show: non-existent pipe", func(t *testing.T) {
-		showOptions := &PipeShowOptions{
+		showOptions := &ShowPipeOptions{
 			Like: &Like{
 				Pattern: String("non-existent"),
 			},
@@ -208,7 +208,7 @@ func TestInt_PipeCreate(t *testing.T) {
 		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		comment := randomComment(t)
 
-		err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{
+		err := client.Pipes.Create(ctx, id, copyStatement, &CreatePipeOptions{
 			OrReplace:   Bool(false),
 			IfNotExists: Bool(true),
 			AutoIngest:  Bool(false),
@@ -226,7 +226,7 @@ func TestInt_PipeCreate(t *testing.T) {
 		name := randomString(t)
 		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{
+		err := client.Pipes.Create(ctx, id, copyStatement, &CreatePipeOptions{
 			OrReplace:   Bool(true),
 			IfNotExists: Bool(true),
 		})
@@ -311,7 +311,7 @@ func TestInt_PipeAlter(t *testing.T) {
 		pipe, pipeCleanup := createPipe(t, client, database, schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
-		alterOptions := &PipeAlterOptions{
+		alterOptions := &AlterPipeOptions{
 			Set: &PipeSet{
 				Comment:             String("new comment"),
 				PipeExecutionPaused: Bool(true),
@@ -326,7 +326,7 @@ func TestInt_PipeAlter(t *testing.T) {
 
 		assert.Equal(t, "new comment", alteredPipe.Comment)
 
-		alterOptions = &PipeAlterOptions{
+		alterOptions = &AlterPipeOptions{
 			Unset: &PipeUnset{
 				Comment:             Bool(true),
 				PipeExecutionPaused: Bool(true),
@@ -351,7 +351,7 @@ func TestInt_PipeAlter(t *testing.T) {
 		t.Cleanup(pipeCleanup)
 
 		tagValue := "abc"
-		alterOptions := &PipeAlterOptions{
+		alterOptions := &AlterPipeOptions{
 			SetTags: &PipeSetTags{
 				Tag: []TagAssociation{
 					{
@@ -370,7 +370,7 @@ func TestInt_PipeAlter(t *testing.T) {
 
 		assert.Equal(t, tagValue, returnedTagValue)
 
-		alterOptions = &PipeAlterOptions{
+		alterOptions = &AlterPipeOptions{
 			UnsetTags: &PipeUnsetTags{
 				Tag: []ObjectIdentifier{
 					tag.ID(),
@@ -390,7 +390,7 @@ func TestInt_PipeAlter(t *testing.T) {
 		pipe, pipeCleanup := createPipe(t, client, database, schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
-		alterOptions := &PipeAlterOptions{
+		alterOptions := &AlterPipeOptions{
 			Refresh: &PipeRefresh{
 				Prefix:        String("/d1"),
 				ModifiedAfter: String("2018-07-30T13:56:46-07:00"),

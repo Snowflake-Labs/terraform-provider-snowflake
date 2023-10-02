@@ -14,8 +14,8 @@ var (
 	_ validatable = (*AlterExternalTablePartitionOptions)(nil)
 	_ validatable = (*DropExternalTableOptions)(nil)
 	_ validatable = (*ShowExternalTableOptions)(nil)
-	_ validatable = (*describeExternalTableColumns)(nil)
-	_ validatable = (*describeExternalTableStage)(nil)
+	_ validatable = (*describeExternalTableColumnsOptions)(nil)
+	_ validatable = (*describeExternalTableStageOptions)(nil)
 )
 
 func (opts *CreateExternalTableOptions) validate() error {
@@ -162,14 +162,14 @@ func (opts *ShowExternalTableOptions) validate() error {
 	return nil
 }
 
-func (v *describeExternalTableColumns) validate() error {
+func (v *describeExternalTableColumnsOptions) validate() error {
 	if !validObjectidentifier(v.name) {
 		return errInvalidObjectIdentifier
 	}
 	return nil
 }
 
-func (v *describeExternalTableStage) validate() error {
+func (v *describeExternalTableStageOptions) validate() error {
 	if !validObjectidentifier(v.name) {
 		return errInvalidObjectIdentifier
 	}
