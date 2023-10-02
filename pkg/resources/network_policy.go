@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -109,6 +110,7 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	var networkPolicy *sdk.NetworkPolicy
 	for _, np := range networkPolicies {
 		if np.Name == policyName {
+			np := np
 			networkPolicy = &np
 			break
 		}
