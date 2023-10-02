@@ -749,7 +749,7 @@ func createDynamicTableWithOptions(t *testing.T, client *Client, warehouse *Ware
 	ctx := context.Background()
 	err := client.DynamicTables.Create(ctx, NewCreateDynamicTableRequest(name, warehouse.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
 	require.NoError(t, err)
-	entities, err := client.DynamicTables.Show(ctx, NewShowDynamicTableRequest().WithLike(&Like{Pattern:String(name.Name())}).WithIn(&In{Schema: schema.ID()}))
+	entities, err := client.DynamicTables.Show(ctx, NewShowDynamicTableRequest().WithLike(&Like{Pattern: String(name.Name())}).WithIn(&In{Schema: schema.ID()}))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(entities))
 	return &entities[0], func() {
@@ -766,6 +766,8 @@ func createDynamicTableWithOptions(t *testing.T, client *Client, warehouse *Ware
 		if warehouseCleanup != nil {
 			warehouseCleanup()
 		}
+	}
+}
 
 func createStageWithURL(t *testing.T, client *Client, name AccountObjectIdentifier, url string) (*Stage, func()) {
 	t.Helper()
