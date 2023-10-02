@@ -212,6 +212,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 			Set: &PasswordPolicySet{
 				PasswordMinLength: Int(10),
 				PasswordMaxLength: Int(20),
+				Comment:           String("new comment"),
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, passwordPolicy.ID(), alterOptions)
@@ -221,6 +222,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		assert.Equal(t, passwordPolicy.Name, passwordPolicyDetails.Name.Value)
 		assert.Equal(t, 10, *passwordPolicyDetails.PasswordMinLength.Value)
 		assert.Equal(t, 20, *passwordPolicyDetails.PasswordMaxLength.Value)
+		assert.Equal(t, "new comment", passwordPolicyDetails.Comment.Value)
 	})
 
 	t.Run("when renaming", func(t *testing.T) {
@@ -247,8 +249,10 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 
 	t.Run("when unsetting values", func(t *testing.T) {
 		createOptions := &CreatePasswordPolicyOptions{
-			Comment:            String("test comment"),
+			PasswordMaxAgeDays: Int(20),
 			PasswordMaxRetries: Int(10),
+			// todo: uncomment this once comments are working again
+			// Comment: String("test comment")
 		}
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
 		id := passwordPolicy.ID()
@@ -262,7 +266,9 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		alterOptions = &AlterPasswordPolicyOptions{
 			Unset: &PasswordPolicyUnset{
-				Comment: Bool(true),
+				PasswordMaxAgeDays: Bool(true),
+				// todo: uncomment this once comments are working again
+				// Comment: Bool("true")
 			},
 		}
 		err = client.PasswordPolicies.Alter(ctx, id, alterOptions)
@@ -276,16 +282,20 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 
 	t.Run("when unsetting multiple values at same time", func(t *testing.T) {
 		createOptions := &CreatePasswordPolicyOptions{
-			Comment:            String("test comment"),
+			PasswordMaxAgeDays: Int(20),
 			PasswordMaxRetries: Int(10),
+			// todo: uncomment this once comments are working again
+			// Comment: String("test comment")
 		}
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
 		id := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
 		alterOptions := &AlterPasswordPolicyOptions{
 			Unset: &PasswordPolicyUnset{
-				Comment:            Bool(true),
+				PasswordMaxAgeDays: Bool(true),
 				PasswordMaxRetries: Bool(true),
+				// todo: uncomment this once comments are working again
+				// Comment: Bool("true")
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, id, alterOptions)

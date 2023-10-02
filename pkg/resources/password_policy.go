@@ -357,9 +357,13 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 				Comment: sdk.String(v.(string)),
 			}
 		} else {
+			alterOptions.Set = &sdk.PasswordPolicySet{
+				Comment: sdk.String(""),
+			}
+			/* todo: uncomment this once comments are working again
 			alterOptions.Unset = &sdk.PasswordPolicyUnset{
 				Comment: sdk.Bool(true),
-			}
+			}*/
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
