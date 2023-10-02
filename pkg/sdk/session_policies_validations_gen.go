@@ -18,6 +18,9 @@ func (opts *CreateSessionPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
 		errs = append(errs, errInvalidObjectIdentifier)
 	}
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateSessionPolicyOptions", "OrReplace", "IfNotExists"))
+	}
 	return errors.Join(errs...)
 }
 

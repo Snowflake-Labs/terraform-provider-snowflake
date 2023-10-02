@@ -21,7 +21,8 @@ var (
 				OptionalIntAssignment("SESSION_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
 				OptionalIntAssignment("SESSION_UI_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
 				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-				WithValidation(g.ValidIdentifier, "name"),
+				WithValidation(g.ValidIdentifier, "name").
+				WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 		).
 		AlterOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/alter-session-policy",
