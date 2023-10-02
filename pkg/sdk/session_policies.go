@@ -1,10 +1,10 @@
 package sdk
 
-type SessionPolicies interface{}
-
-type sessionPolicies struct {
-	client *Client
-}
+//type SessionPolicies interface{}
+//
+//type sessionPolicies struct {
+//	client *Client
+//}
 
 //
 //import (
