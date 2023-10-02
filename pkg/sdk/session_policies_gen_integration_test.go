@@ -2,9 +2,10 @@ package sdk
 
 import (
 	"context"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInt_SessionPolicies(t *testing.T) {
