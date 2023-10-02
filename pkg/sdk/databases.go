@@ -40,7 +40,7 @@ type Databases interface {
 	// Undrop restores the most recent version of a dropped database
 	Undrop(ctx context.Context, id AccountObjectIdentifier) error
 	// Show returns a list of databases.
-	Show(ctx context.Context, opts *ShowDatabasesOptions) ([]*Database, error)
+	Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error)
 	// ShowByID returns a database by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
 	// Describe returns the details of a database.
@@ -94,8 +94,8 @@ type databaseRow struct {
 	Kind          sql.NullString `db:"kind"`
 }
 
-func (row *databaseRow) toDatabase() *Database {
-	database := Database{
+func (row databaseRow) convert() *Database {
+	database := &Database{
 		CreatedOn: row.CreatedOn,
 		Name:      row.Name,
 	}
@@ -141,7 +141,7 @@ func (row *databaseRow) toDatabase() *Database {
 	if row.Kind.Valid {
 		database.Kind = row.Kind.String
 	}
-	return &database
+	return database
 }
 
 type CreateDatabaseOptions struct {
@@ -542,24 +542,14 @@ func (opts *ShowDatabasesOptions) validate() error {
 	return nil
 }
 
-func (v *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]*Database, error) {
-	if opts == nil {
-		opts = &ShowDatabasesOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (v *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[databaseRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []databaseRow
-	err = v.client.query(ctx, &rows, sql)
-	databases := make([]*Database, len(rows))
-	for i, row := range rows {
-		databases[i] = row.toDatabase()
-	}
-	return databases, err
+	resultList := convertRows[databaseRow, Database](dbRows)
+	return resultList, nil
 }
 
 func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
@@ -573,7 +563,7 @@ func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*
 	}
 	for _, database := range databases {
 		if database.ID() == id {
-			return database, nil
+			return &database, nil
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized

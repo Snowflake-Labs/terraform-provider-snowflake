@@ -37,8 +37,8 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 		}
 		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, passwordPolicies, passwordPolicyTest)
-		assert.Contains(t, passwordPolicies, passwordPolicy2Test)
+		assert.Contains(t, passwordPolicies, *passwordPolicyTest)
+		assert.Contains(t, passwordPolicies, *passwordPolicy2Test)
 		assert.Equal(t, 2, len(passwordPolicies))
 	})
 
@@ -53,7 +53,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 		}
 		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, passwordPolicies, passwordPolicyTest)
+		assert.Contains(t, passwordPolicies, *passwordPolicyTest)
 		assert.Equal(t, 1, len(passwordPolicies))
 	})
 

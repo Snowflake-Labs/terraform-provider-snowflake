@@ -155,6 +155,8 @@ func (p SchemaPrivilege) String() string {
 type SchemaObjectPrivilege string
 
 const (
+	SchemaObjectOwnership SchemaObjectPrivilege = "OWNERSHIP"
+
 	// -- For ALERT
 	// OPERATE [ , ... ]
 	SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE"

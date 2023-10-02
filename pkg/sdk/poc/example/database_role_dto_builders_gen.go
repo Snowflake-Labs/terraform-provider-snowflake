@@ -84,10 +84,11 @@ func NewNestedThirdLevelRequest(
 	return &s
 }
 
-func NewDatabaseRoleUnsetRequest(
-	Comment bool,
-) *DatabaseRoleUnsetRequest {
-	s := DatabaseRoleUnsetRequest{}
+func NewDatabaseRoleUnsetRequest() *DatabaseRoleUnsetRequest {
+	return &DatabaseRoleUnsetRequest{}
+}
+
+func (s *DatabaseRoleUnsetRequest) WithComment(Comment *bool) *DatabaseRoleUnsetRequest {
 	s.Comment = Comment
-	return &s
+	return s
 }

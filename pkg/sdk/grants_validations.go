@@ -14,6 +14,7 @@ var (
 	_ validatable = new(RevokePrivilegesFromDatabaseRoleOptions)
 	_ validatable = new(grantPrivilegeToShareOptions)
 	_ validatable = new(revokePrivilegeFromShareOptions)
+	_ validatable = new(GrantOwnershipOptions)
 	_ validatable = new(ShowGrantOptions)
 )
 
@@ -263,6 +264,40 @@ func (v *RevokePrivilegeFromShareOn) validate() error {
 func (v *OnView) validate() error {
 	if !exactlyOneValueSet(v.Name, v.AllInSchema) {
 		return fmt.Errorf("only one of name or allInSchema can be set")
+	}
+	return nil
+}
+
+func (opts *GrantOwnershipOptions) validate() error {
+	if err := opts.On.validate(); err != nil {
+		return err
+	}
+	if err := opts.To.validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (v *OwnershipGrantOn) validate() error {
+	if !exactlyOneValueSet(v.Object, v.All, v.Future) {
+		return errExactlyOneOf("Object", "AllIn", "Future")
+	}
+	if valueSet(v.All) {
+		if err := v.All.validate(); err != nil {
+			return err
+		}
+	}
+	if valueSet(v.Future) {
+		if err := v.Future.validate(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (v *OwnershipGrantTo) validate() error {
+	if !exactlyOneValueSet(v.DatabaseRoleName, v.AccountRoleName) {
+		return errExactlyOneOf("databaseRoleName", "accountRoleName")
 	}
 	return nil
 }
