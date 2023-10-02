@@ -14,7 +14,7 @@ func (v *queryStruct) ListAssignment(sqlPrefix string, listItemKind string, tran
 	return v.Assignment(sqlToFieldName(sqlPrefix, true), KindOfSlice(listItemKind), transformer)
 }
 
-func (v *queryStruct) IntAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
+func (v *queryStruct) NumberAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
 	if transformer != nil {
 		transformer = transformer.SQL(sqlPrefix)
 	} else {
@@ -23,7 +23,7 @@ func (v *queryStruct) IntAssignment(sqlPrefix string, transformer *ParameterTran
 	return v.Assignment(sqlToFieldName(sqlPrefix, true), "int", transformer)
 }
 
-func (v *queryStruct) OptionalIntAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
+func (v *queryStruct) OptionalNumberAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
 	if transformer != nil {
 		transformer = transformer.SQL(sqlPrefix)
 	} else {

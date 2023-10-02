@@ -17,8 +17,8 @@ var SessionPoliciesDef = g.NewInterface(
 			SQL("SESSION POLICY").
 			IfNotExists().
 			Name().
-			OptionalIntAssignment("SESSION_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
-			OptionalIntAssignment("SESSION_UI_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
+			OptionalNumberAssignment("SESSION_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
+			OptionalNumberAssignment("SESSION_UI_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
@@ -30,12 +30,12 @@ var SessionPoliciesDef = g.NewInterface(
 			SQL("SESSION POLICY").
 			IfExists().
 			Name().
-			Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 			OptionalQueryStructField(
 				"Set",
 				g.QueryStruct("SessionPolicySet").
-					OptionalIntAssignment("SESSION_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
-					OptionalIntAssignment("SESSION_UI_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
+					OptionalNumberAssignment("SESSION_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
+					OptionalNumberAssignment("SESSION_UI_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
 					OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 					WithValidation(g.AtLeastOneValueSet, "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"),
 				g.KeywordOptions().SQL("SET"),
