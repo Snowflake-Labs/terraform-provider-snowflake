@@ -19,26 +19,29 @@ func TestSessionPolicies_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateSessionPolicyOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SESSION POLICY %s", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.OrReplace = Bool(true)
+		opts.SessionIdleTimeoutMins = Int(5)
+		opts.SessionUiIdleTimeoutMins = Int(34)
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE SESSION POLICY %s SESSION_IDLE_TIMEOUT_MINS = 5 SESSION_UI_IDLE_TIMEOUT_MINS = 34 COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 }
 
@@ -59,44 +62,83 @@ func TestSessionPolicies_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.SetTags opts.UnsetTags opts.Unset] should be present", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.SetTags opts.UnsetTags opts.Unset] should be present - none present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
 	})
 
-	t.Run("validation: valid identifier for [opts.RenameTo] if set", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.SetTags opts.UnsetTags opts.Unset] should be present - more present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		opts.Set = &SessionPolicySet{
+			Comment: String("some comment"),
+		}
+		opts.Unset = &SessionPolicyUnset{
+			Comment: Bool(true),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.SessionIdleTimeoutMins opts.Set.SessionUiIdleTimeoutMins opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Set = &SessionPolicySet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.SessionIdleTimeoutMins opts.Unset.SessionUiIdleTimeoutMins opts.Unset.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Unset = &SessionPolicyUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("alter set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Set = &SessionPolicySet{
+			Comment: String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SESSION POLICY %s SET COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("alter unset", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Unset = &SessionPolicyUnset{
+			Comment: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SESSION POLICY %s UNSET COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("alter rename", func(t *testing.T) {
+		opts := defaultOpts()
+		newId := randomSchemaObjectIdentifier(t)
+		opts.RenameTo = &newId
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SESSION POLICY %s RENAME TO %s", id.FullyQualifiedName(), newId.FullyQualifiedName())
+	})
+
+	t.Run("alter set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag1"),
+				Value: "value1",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("tag2"),
+				Value: "value2",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SESSION POLICY %s SET TAG "tag1" = 'value1', "tag2" = 'value2'`, id.FullyQualifiedName())
+	})
+
+	t.Run("alter unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("tag1"),
+			NewAccountObjectIdentifier("tag2"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SESSION POLICY %s UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
 	})
 }
 
@@ -117,31 +159,20 @@ func TestSessionPolicies_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "DROP SESSION POLICY %s", id.FullyQualifiedName())
 	})
 }
 
 func TestSessionPolicies_Show(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
-
 	// Minimal valid ShowSessionPolicyOptions
 	defaultOpts := func() *ShowSessionPolicyOptions {
-		return &ShowSessionPolicyOptions{
-			name: id,
-		}
+		return &ShowSessionPolicyOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
@@ -149,16 +180,9 @@ func TestSessionPolicies_Show(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
 	})
 
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
-	})
-
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "SHOW SESSION POLICIES")
 	})
 }
 
@@ -179,19 +203,12 @@ func TestSessionPolicies_Describe(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE SESSION POLICY %s", id.FullyQualifiedName())
 	})
 }

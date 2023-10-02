@@ -7,7 +7,7 @@ type SessionPolicies interface {
 	Alter(ctx context.Context, request *AlterSessionPolicyRequest) error
 	Drop(ctx context.Context, request *DropSessionPolicyRequest) error
 	Show(ctx context.Context, request *ShowSessionPolicyRequest) ([]SessionPolicy, error)
-
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicyDescription, error)
 }
 
@@ -105,4 +105,8 @@ type SessionPolicyDescription struct {
 	SessionIdleTimeoutMins   int
 	SessionUIIdleTimeoutMins int
 	Comment                  string
+}
+
+func (v *SessionPolicy) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }

@@ -53,8 +53,7 @@ var (
 					g.KeywordOptions().SQL("UNSET"),
 				).
 				WithValidation(g.ValidIdentifier, "name").
-				WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set", "SetTags", "UnsetTags", "Unset").
-				WithValidation(g.ValidIdentifierIfSet, "RenameTo"),
+				WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set", "SetTags", "UnsetTags", "Unset"),
 		).
 		DropOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/drop-session-policy",

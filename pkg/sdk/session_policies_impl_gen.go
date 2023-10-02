@@ -33,6 +33,15 @@ func (v *sessionPolicies) Show(ctx context.Context, request *ShowSessionPolicyRe
 	return resultList, nil
 }
 
+func (v *sessionPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error) {
+	sessionPolicies, err := v.Show(ctx, NewShowSessionPolicyRequest())
+	if err != nil {
+		return nil, err
+	}
+
+	return findOne(sessionPolicies, func(r SessionPolicy) bool { return r.Name == id.Name() })
+}
+
 func (v *sessionPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicyDescription, error) {
 	opts := &DescribeSessionPolicyOptions{
 		name: id,
