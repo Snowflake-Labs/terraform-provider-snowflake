@@ -68,6 +68,9 @@ func (opts *alterDynamicTableOptions) validate() error {
 	); !ok {
 		errs = append(errs, errAlterNeedsExactlyOneAction)
 	}
+	if !anyValueSet(opts.Suspend, opts.Resume, opts.Refresh, opts.Set) {
+		errs = append(errs, errAlterNeedsAtLeastOneProperty)
+	}
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
 		errs = append(errs, errOneOf("Suspend", "Resume"))
 	}

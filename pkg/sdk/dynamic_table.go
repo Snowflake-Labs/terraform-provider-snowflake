@@ -39,8 +39,8 @@ type DynamicTableSet struct {
 
 // alterDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-dynamic-table
 type alterDynamicTableOptions struct {
-	alter        bool                    `ddl:"static" sql:"ALTER"`
-	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
+	alter        bool                   `ddl:"static" sql:"ALTER"`
+	dynamicTable bool                   `ddl:"static" sql:"DYNAMIC TABLE"`
 	name         SchemaObjectIdentifier `ddl:"identifier"`
 
 	Suspend *bool            `ddl:"keyword" sql:"SUSPEND"`
@@ -51,8 +51,8 @@ type alterDynamicTableOptions struct {
 
 // dropDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-dynamic-table
 type dropDynamicTableOptions struct {
-	drop         bool                    `ddl:"static" sql:"DROP"`
-	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
+	drop         bool                   `ddl:"static" sql:"DROP"`
+	dynamicTable bool                   `ddl:"static" sql:"DYNAMIC TABLE"`
 	name         SchemaObjectIdentifier `ddl:"identifier"`
 }
 
@@ -165,8 +165,8 @@ func (dtr dynamicTableRow) convert() *DynamicTable {
 
 // describeDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-dynamic-table
 type describeDynamicTableOptions struct {
-	describe     bool                    `ddl:"static" sql:"DESCRIBE"`
-	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
+	describe     bool                   `ddl:"static" sql:"DESCRIBE"`
+	dynamicTable bool                   `ddl:"static" sql:"DYNAMIC TABLE"`
 	name         SchemaObjectIdentifier `ddl:"identifier"`
 }
 

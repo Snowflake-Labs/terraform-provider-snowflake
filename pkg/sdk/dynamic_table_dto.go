@@ -12,7 +12,7 @@ var (
 type CreateDynamicTableRequest struct {
 	orReplace bool
 
-	name      SchemaObjectIdentifier // required
+	name      SchemaObjectIdentifier  // required
 	warehouse AccountObjectIdentifier // required
 	targetLag TargetLag               // required
 	query     string                  // required
@@ -47,5 +47,5 @@ type ShowDynamicTableRequest struct {
 	like       *Like
 	in         *In
 	startsWith *string
-	limit  *LimitFrom
+	limit      *LimitFrom
 }
