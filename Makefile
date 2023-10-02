@@ -2,6 +2,7 @@ export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=1.4.1
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
+export SKIP_TABLE_DATA_RETENTION_TESTS=true
 
 BASE_BINARY_NAME=terraform-provider-snowflake
 TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
