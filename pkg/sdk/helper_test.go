@@ -190,18 +190,18 @@ func randomIntRange(t *testing.T, min, max int) int {
 func createSessionPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*SessionPolicy, func()) {
 	t.Helper()
 	id := NewSchemaObjectIdentifier(database.Name, schema.Name, randomStringN(t, 12))
-	return createSessionPolicyWithOptions(t, client, id, &CreateSessionPolicyOptions{})
+	return createSessionPolicyWithOptions(t, client, id, NewCreateSessionPolicyRequest(id))
 }
 
-func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, opts *CreateSessionPolicyOptions) (*SessionPolicy, func()) {
+func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, request *CreateSessionPolicyRequest) (*SessionPolicy, func()) {
 	t.Helper()
 	ctx := context.Background()
-	err := client.SessionPolicies.Create(ctx, id, opts)
+	err := client.SessionPolicies.Create(ctx, request)
 	require.NoError(t, err)
 	sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
 	require.NoError(t, err)
 	return sessionPolicy, func() {
-		err := client.SessionPolicies.Drop(ctx, id, nil)
+		err := client.SessionPolicies.Drop(ctx, NewDropSessionPolicyRequest(id))
 		require.NoError(t, err)
 	}
 }
