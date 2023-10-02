@@ -10,9 +10,9 @@ import (
 var (
 	_ validatable = new(CreateShareOptions)
 	_ validatable = new(AlterShareOptions)
-	_ validatable = new(shareDropOptions)
+	_ validatable = new(dropShareOptions)
 	_ validatable = new(ShowShareOptions)
-	_ validatable = new(shareDescribeOptions)
+	_ validatable = new(describeShareOptions)
 )
 
 type Shares interface {
@@ -23,7 +23,7 @@ type Shares interface {
 	// Drop removes a share.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
 	// Show returns a list of shares.
-	Show(ctx context.Context, opts *ShowShareOptions) ([]*Share, error)
+	Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error)
 	// ShowByID returns a share by ID.
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
 	// Describe returns the details of an outbound share.
@@ -70,6 +70,7 @@ func (v *Share) ObjectType() ObjectType {
 type shareRow struct {
 	CreatedOn    time.Time `db:"created_on"`
 	Kind         string    `db:"kind"`
+	OwnerAccount string    `db:"owner_account"`
 	Name         string    `db:"name"`
 	DatabaseName string    `db:"database_name"`
 	To           string    `db:"to"`
@@ -77,7 +78,7 @@ type shareRow struct {
 	Comment      string    `db:"comment"`
 }
 
-func (r *shareRow) toShare() *Share {
+func (r shareRow) convert() *Share {
 	toAccounts := strings.Split(r.To, ",")
 	var to []AccountIdentifier
 	if len(toAccounts) != 0 {
@@ -99,7 +100,7 @@ func (r *shareRow) toShare() *Share {
 	return &Share{
 		CreatedOn:    r.CreatedOn,
 		Kind:         ShareKind(r.Kind),
-		Name:         NewExternalObjectIdentifierFromFullyQualifiedName(r.Name),
+		Name:         NewExternalObjectIdentifier(NewAccountIdentifierFromFullyQualifiedName(r.OwnerAccount), NewAccountObjectIdentifier(r.Name)),
 		DatabaseName: NewAccountObjectIdentifier(r.DatabaseName),
 		To:           to,
 		Owner:        r.Owner,
@@ -138,18 +139,18 @@ func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *C
 	return err
 }
 
-type shareDropOptions struct {
+type dropShareOptions struct {
 	drop  bool                    `ddl:"static" sql:"DROP"`
 	share bool                    `ddl:"static" sql:"SHARE"`
 	name  AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *shareDropOptions) validate() error {
+func (opts *dropShareOptions) validate() error {
 	return nil
 }
 
 func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
-	opts := &shareDropOptions{
+	opts := &dropShareOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {
@@ -280,27 +281,14 @@ func (opts *ShowShareOptions) validate() error {
 	return nil
 }
 
-func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]*Share, error) {
-	if opts == nil {
-		opts = &ShowShareOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[shareRow](s.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []*shareRow
-	err = s.client.query(ctx, &rows, sql)
-	if err != nil {
-		return nil, err
-	}
-	shares := make([]*Share, 0, len(rows))
-	for _, row := range rows {
-		shares = append(shares, row.toShare())
-	}
-	return shares, nil
+	resultList := convertRows[shareRow, Share](dbRows)
+	return resultList, nil
 }
 
 func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error) {
@@ -314,10 +302,10 @@ func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Sha
 	}
 	for _, share := range shares {
 		if share.Name.Name() == id.Name() {
-			return share, nil
+			return &share, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type ShareDetails struct {
@@ -355,21 +343,21 @@ func shareDetailsFromRows(rows []shareDetailsRow) *ShareDetails {
 	return v
 }
 
-type shareDescribeOptions struct {
+type describeShareOptions struct {
 	describe bool             `ddl:"static" sql:"DESCRIBE"`
 	share    bool             `ddl:"static" sql:"SHARE"`
 	name     ObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *shareDescribeOptions) validate() error {
+func (opts *describeShareOptions) validate() error {
 	if ok := validObjectidentifier(opts.name); !ok {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
 
 func (c *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error) {
-	opts := &shareDescribeOptions{
+	opts := &describeShareOptions{
 		name: id,
 	}
 	sql, err := structToSQL(opts)
@@ -385,7 +373,7 @@ func (c *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifie
 }
 
 func (c *shares) DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error) {
-	opts := &shareDescribeOptions{
+	opts := &describeShareOptions{
 		name: id,
 	}
 	sql, err := structToSQL(opts)

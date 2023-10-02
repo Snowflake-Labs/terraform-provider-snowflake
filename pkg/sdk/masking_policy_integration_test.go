@@ -43,8 +43,8 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, maskingPolicies, maskingPolicyTest)
-		assert.Contains(t, maskingPolicies, maskingPolicy2Test)
+		assert.Contains(t, maskingPolicies, *maskingPolicyTest)
+		assert.Contains(t, maskingPolicies, *maskingPolicy2Test)
 		assert.Equal(t, 2, len(maskingPolicies))
 	})
 
@@ -59,7 +59,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, maskingPolicies, maskingPolicyTest)
+		assert.Contains(t, maskingPolicies, *maskingPolicyTest)
 		assert.Equal(t, 1, len(maskingPolicies))
 	})
 
@@ -274,7 +274,7 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 	t.Run("when masking policy does not exist", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		_, err := client.MaskingPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 
@@ -410,12 +410,12 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 		err := client.MaskingPolicies.Drop(ctx, id)
 		require.NoError(t, err)
 		_, err = client.MaskingPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when masking policy does not exist", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		err := client.MaskingPolicies.Drop(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }

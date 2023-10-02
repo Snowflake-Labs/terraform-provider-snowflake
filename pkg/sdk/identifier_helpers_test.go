@@ -7,6 +7,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestNewAccountIdentifierFromFullyQualifiedName(t *testing.T) {
+	type test struct {
+		input string
+		want  AccountIdentifier
+	}
+
+	tests := []test{
+		{input: "BSB98216", want: AccountIdentifier{accountLocator: "BSB98216"}},
+		{input: "SNOW.MY_TEST_ACCOUNT", want: AccountIdentifier{organizationName: "SNOW", accountName: "MY_TEST_ACCOUNT"}},
+		{input: "\"SNOW\".\"MY_TEST_ACCOUNT\"", want: AccountIdentifier{organizationName: "SNOW", accountName: "MY_TEST_ACCOUNT"}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.input, func(t *testing.T) {
+			id := NewAccountIdentifierFromFullyQualifiedName(tc.input)
+			require.Equal(t, tc.want, id)
+		})
+	}
+}
+
 func TestNewSchemaObjectIdentifierFromFullyQualifiedName(t *testing.T) {
 	type test struct {
 		input string

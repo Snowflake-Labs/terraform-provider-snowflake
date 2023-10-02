@@ -99,6 +99,16 @@ func NewAccountIdentifierFromAccountLocator(accountLocator string) AccountIdenti
 	}
 }
 
+func NewAccountIdentifierFromFullyQualifiedName(fullyQualifiedName string) AccountIdentifier {
+	parts := strings.Split(fullyQualifiedName, ".")
+	if len(parts) == 1 {
+		return NewAccountIdentifierFromAccountLocator(fullyQualifiedName)
+	}
+	organizationName := strings.Trim(parts[0], `"`)
+	accountName := strings.Trim(parts[1], `"`)
+	return NewAccountIdentifier(organizationName, accountName)
+}
+
 func (i AccountIdentifier) Name() string {
 	if i.organizationName != "" && i.accountName != "" {
 		return fmt.Sprintf("%s.%s", i.organizationName, i.accountName)

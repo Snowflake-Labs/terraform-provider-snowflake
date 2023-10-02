@@ -27,7 +27,7 @@ func TestInt_UsersShow(t *testing.T) {
 		}
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, users, userTest)
+		assert.Contains(t, users, *userTest)
 		assert.Equal(t, 1, len(users))
 	})
 
@@ -37,8 +37,8 @@ func TestInt_UsersShow(t *testing.T) {
 		}
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, users, userTest)
-		assert.Contains(t, users, userTest2)
+		assert.Contains(t, users, *userTest)
+		assert.Contains(t, users, *userTest2)
 		assert.Equal(t, 2, len(users))
 	})
 	t.Run("with starts with, limit and from options", func(t *testing.T) {
@@ -50,7 +50,7 @@ func TestInt_UsersShow(t *testing.T) {
 
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, users, userTest)
+		assert.Contains(t, users, *userTest)
 		assert.Equal(t, 1, len(users))
 	})
 
@@ -215,7 +215,7 @@ func TestInt_UserDescribe(t *testing.T) {
 	t.Run("when user does not exist", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("does_not_exist")
 		_, err := client.Users.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 
@@ -229,12 +229,12 @@ func TestInt_UserDrop(t *testing.T) {
 		err := client.Users.Drop(ctx, id)
 		require.NoError(t, err)
 		_, err = client.Users.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when user does not exist", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("does_not_exist")
 		err := client.Users.Drop(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }

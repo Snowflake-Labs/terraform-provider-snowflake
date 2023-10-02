@@ -8,7 +8,7 @@ var (
 	_ validatable = new(CreateSessionPolicyOptions)
 	_ validatable = new(AlterSessionPolicyOptions)
 	_ validatable = new(DropSessionPolicyOptions)
-	_ validatable = new(sessionPolicyShowOptions)
+	_ validatable = new(showSessionPolicyOptions)
 )
 
 type SessionPolicies interface {
@@ -19,7 +19,7 @@ type SessionPolicies interface {
 	// Drop removes a session policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropSessionPolicyOptions) error
 	// Show returns a list of session policy.
-	Show(ctx context.Context) ([]*SessionPolicy, error)
+	Show(ctx context.Context) ([]SessionPolicy, error)
 	// ShowByID returns a session policy by ID
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error)
 	// Describe returns the details of a session policy.
@@ -44,7 +44,7 @@ type sessionPolicyRow struct {
 	SchemaName   string `db:"schema_name"`
 }
 
-func (row *sessionPolicyRow) toSessionPolicy() *SessionPolicy {
+func (row *sessionPolicyRow) convert() *SessionPolicy {
 	return &SessionPolicy{
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
@@ -69,7 +69,7 @@ type CreateSessionPolicyOptions struct {
 
 func (opts *CreateSessionPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -111,7 +111,7 @@ type DropSessionPolicyOptions struct {
 
 func (opts *DropSessionPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -132,18 +132,18 @@ func (v *sessionPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, o
 	return err
 }
 
-// sessionPolicyShowOptions contains options for listing session policies.
-type sessionPolicyShowOptions struct {
+// showSessionPolicyOptions contains options for listing session policies.
+type showSessionPolicyOptions struct {
 	show            bool `ddl:"static" sql:"SHOW"`
 	sessionPolicies bool `ddl:"static" sql:"SESSION POLICIES"`
 }
 
-func (opts *sessionPolicyShowOptions) validate() error {
+func (opts *showSessionPolicyOptions) validate() error {
 	return nil
 }
 
-func (v *sessionPolicies) Show(ctx context.Context) ([]*SessionPolicy, error) {
-	opts := &sessionPolicyShowOptions{}
+func (v *sessionPolicies) Show(ctx context.Context) ([]SessionPolicy, error) {
+	opts := &showSessionPolicyOptions{}
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
@@ -156,9 +156,9 @@ func (v *sessionPolicies) Show(ctx context.Context) ([]*SessionPolicy, error) {
 	if err != nil {
 		return nil, err
 	}
-	sessionPolicies := make([]*SessionPolicy, 0, len(rows))
+	sessionPolicies := make([]SessionPolicy, 0, len(rows))
 	for _, row := range rows {
-		sessionPolicies = append(sessionPolicies, row.toSessionPolicy())
+		sessionPolicies = append(sessionPolicies, *row.convert())
 	}
 	return sessionPolicies, nil
 }
@@ -170,10 +170,10 @@ func (v *sessionPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 	}
 	for _, sessionPolicy := range sessionPolicies {
 		if sessionPolicy.Name == id.Name() {
-			return sessionPolicy, nil
+			return &sessionPolicy, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type SessionPolicyDetails struct{}

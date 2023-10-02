@@ -5,19 +5,19 @@ import (
 )
 
 var (
-	_ validatable = new(PipeCreateOptions)
-	_ validatable = new(PipeAlterOptions)
-	_ validatable = new(PipeDropOptions)
-	_ validatable = new(PipeShowOptions)
+	_ validatable = new(CreatePipeOptions)
+	_ validatable = new(AlterPipeOptions)
+	_ validatable = new(DropPipeOptions)
+	_ validatable = new(ShowPipeOptions)
 	_ validatable = new(describePipeOptions)
 )
 
-func (opts *PipeCreateOptions) validate() error {
+func (opts *CreatePipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if opts.copyStatement == "" {
 		return errCopyStatementRequired
@@ -25,12 +25,12 @@ func (opts *PipeCreateOptions) validate() error {
 	return nil
 }
 
-func (opts *PipeAlterOptions) validate() error {
+func (opts *AlterPipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if ok := exactlyOneValueSet(
 		opts.Set,
@@ -64,17 +64,17 @@ func (opts *PipeAlterOptions) validate() error {
 	return nil
 }
 
-func (opts *PipeDropOptions) validate() error {
+func (opts *DropPipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
 
-func (opts *PipeShowOptions) validate() error {
+func (opts *ShowPipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
@@ -92,16 +92,14 @@ func (opts *describePipeOptions) validate() error {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
 
 var (
-	errNilOptions                    = errors.New("options cannot be nil")
-	errCopyStatementRequired         = errors.New("copy statement required")
-	errPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
-	errScopeRequiredForInKeyword     = errors.New("exactly one scope must be specified for in keyword")
-	errAlterNeedsExactlyOneAction    = errors.New("alter statement needs exactly one action from: set, unset, refresh")
-	errAlterNeedsAtLeastOneProperty  = errors.New("alter statement needs at least one property")
+	errCopyStatementRequired        = errors.New("copy statement required")
+	errScopeRequiredForInKeyword    = errors.New("exactly one scope must be specified for in keyword")
+	errAlterNeedsExactlyOneAction   = errors.New("alter statement needs exactly one action from: set, unset, refresh")
+	errAlterNeedsAtLeastOneProperty = errors.New("alter statement needs at least one property")
 )

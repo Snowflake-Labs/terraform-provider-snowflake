@@ -8,16 +8,31 @@ import (
 )
 
 var (
+	errNilOptions                    = errors.New("options cannot be nil")
+	errPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
+
 	// go-snowflake errors.
-	ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
-	ErrAccountIsEmpty             = errors.New("account is empty")
+	errObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
+	errAccountIsEmpty             = errors.New("account is empty")
 
 	// snowflake-sdk errors.
-	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
+	errInvalidObjectIdentifier = errors.New("invalid object identifier")
 )
 
-func errOneOf(fieldNames ...string) error {
-	return fmt.Errorf("fields %v are incompatible and cannot be set at once", fieldNames)
+func errOneOf(structName string, fieldNames ...string) error {
+	return fmt.Errorf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames)
+}
+
+func errNotSet(structName string, fieldNames ...string) error {
+	return fmt.Errorf("%v fields: %v should be set", structName, fieldNames)
+}
+
+func errExactlyOneOf(fieldNames ...string) error {
+	return fmt.Errorf("exactly one of %v must be set", fieldNames)
+}
+
+func errAtLeastOneOf(fieldNames ...string) error {
+	return fmt.Errorf("at least one of %v must be set", fieldNames)
 }
 
 func decodeDriverError(err error) error {
@@ -26,8 +41,8 @@ func decodeDriverError(err error) error {
 	}
 	log.Printf("[DEBUG] err: %v\n", err)
 	m := map[string]error{
-		"does not exist or not authorized": ErrObjectNotExistOrAuthorized,
-		"account is empty":                 ErrAccountIsEmpty,
+		"does not exist or not authorized": errObjectNotExistOrAuthorized,
+		"account is empty":                 errAccountIsEmpty,
 	}
 	for k, v := range m {
 		if strings.Contains(err.Error(), k) {

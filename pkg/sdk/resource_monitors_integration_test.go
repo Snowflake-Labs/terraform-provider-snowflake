@@ -23,7 +23,7 @@ func TestInt_ResourceMonitorsShow(t *testing.T) {
 		}
 		resourceMonitors, err := client.ResourceMonitors.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, resourceMonitors, resourceMonitorTest)
+		assert.Contains(t, resourceMonitors, *resourceMonitorTest)
 		assert.Equal(t, 1, len(resourceMonitors))
 	})
 
@@ -175,7 +175,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = resourceMonitors[0]
+		resourceMonitor = &resourceMonitors[0]
 		var newNotifyTriggers []TriggerDefinition
 		for _, threshold := range resourceMonitor.NotifyTriggers {
 			newNotifyTriggers = append(newNotifyTriggers, TriggerDefinition{Threshold: threshold, TriggerAction: TriggerActionNotify})
@@ -205,7 +205,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = resourceMonitors[0]
+		resourceMonitor = &resourceMonitors[0]
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 	})
 	t.Run("when changing scheduling info", func(t *testing.T) {
@@ -232,7 +232,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(resourceMonitors))
-		resourceMonitor = resourceMonitors[0]
+		resourceMonitor = &resourceMonitors[0]
 		assert.Equal(t, *frequency, resourceMonitor.Frequency)
 		startTime, err := ParseTimestampWithOffset(resourceMonitor.StartTime)
 		require.NoError(t, err)
@@ -253,12 +253,12 @@ func TestInt_ResourceMonitorDrop(t *testing.T) {
 		err := client.ResourceMonitors.Drop(ctx, id)
 		require.NoError(t, err)
 		_, err = client.ResourceMonitors.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when resource monitor does not exist", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("does_not_exist")
 		err := client.ResourceMonitors.Drop(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }

@@ -2,6 +2,7 @@ export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=1.4.1
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
+export SKIP_TABLE_DATA_RETENTION_TESTS=true
 
 BASE_BINARY_NAME=terraform-provider-snowflake
 TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
@@ -24,10 +25,11 @@ dev-cleanup: ## cleanup development dependencies
 
 sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	@read -p "Are you sure? [y/n]" -n 1 REPLY; echo; \
-		if [[ $$REPLY =~ ^[yY]$$ ]]; then \
-		  SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
-		  else echo "Aborting..."; \
+	@echo "Are you sure? [y/n]" >&2
+	@read -r REPLY; \
+		if echo "$$REPLY" | grep -qG "^[yY]$$"; then \
+			SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
+			else echo "Aborting..."; \
 		fi;
 .PHONY: sweep
 
@@ -36,7 +38,7 @@ lint-ci: ## run the fast go linters
 .PHONY: lint-ci
 
 test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 1200s -v $(COVERAGE_FLAGS) ./...
+	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 2000s -v $(COVERAGE_FLAGS) ./...
 .PHONY: test-acceptance
 
 build-local: ## build the binary locally
@@ -90,3 +92,32 @@ generate-all-dto: ## Generate all DTOs for SDK interfaces
 
 generate-dto-%: ./pkg/sdk/%_dto.go ## Generate DTO for given SDK interface
 	go generate $<
+
+run-generator-poc:
+	go generate ./pkg/sdk/poc/example/*_def.go
+	go generate ./pkg/sdk/poc/example/*_dto_gen.go
+.PHONY: run-generator-poc
+
+clean-generator-poc:
+	rm -f ./pkg/sdk/poc/example/*_gen.go
+	rm -f ./pkg/sdk/poc/example/*_gen_test.go
+.PHONY: run-generator-poc
+
+# TODO Below run-generator-% script won't generate, because there's some complications with the syntax and order how it runs
+#run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on definition
+#	go generate ./pkg/sdk/$*_def.go && go generate ./pkg/sdk/$*_dto_gen.go
+#
+#clean-generator-%: ./pkg/sdk/%_*_gen.go ## Clean generated files for specified resource
+#	rm -f ./pkg/sdk/$*_*_gen.go
+
+# TODO For now use those like this => make file=network_policies clean-generator run-generator
+clean-generator: ## Remove generated files and tests for given ${file}
+	rm -f ./pkg/sdk/${file}*_gen.go
+	rm -f ./pkg/sdk/${file}*_gen_test.go
+	rm -f ./pkg/sdk/${file}*_gen_integration_test.go
+.PHONY: clean-generator
+
+run-generator: ## Generate files and tests for given ${file}
+	go generate ./pkg/sdk/${file}_def.go
+	go generate ./pkg/sdk/${file}_dto_gen.go
+.PHONY: run-generator

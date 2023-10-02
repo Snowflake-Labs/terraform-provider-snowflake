@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -59,7 +61,7 @@ var integrationGrantSchema = map[string]*schema.Schema{
 		Default:     "",
 		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
 			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return snowflake.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
+			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
 		},
 	},
 }

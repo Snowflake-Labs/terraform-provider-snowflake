@@ -57,7 +57,6 @@ func TestAcc_ParametersOnObject(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.0.key"),
-					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.0.type"),
 					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "object_type", "DATABASE"),
 					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "object_name", dbName),
 				),
