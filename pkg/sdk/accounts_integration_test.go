@@ -3,10 +3,12 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"os"
+	"log"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/avast/retry-go"
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,7 +36,7 @@ func TestInt_AccountShow(t *testing.T) {
 	assert.Contains(t, []string{accounts[0].AccountLocator, accounts[0].AccountName}, currentAccount)
 }
 
-func TestInt_AccountCreate(t *testing.T) {
+func TestInt_AccountShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, NewAccountObjectIdentifier("ORGADMIN"))
@@ -42,8 +44,18 @@ func TestInt_AccountCreate(t *testing.T) {
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
-	if _, ok := os.LookupEnv("SNOWFLAKE_TEST_ACCOUNT_CREATE"); !ok {
-		t.Skip("Skipping TestInt_AccountCreate")
+	require.NoError(t, err)
+	_, err = client.Accounts.ShowByID(ctx, NewAccountObjectIdentifier("NOT_EXISTING_ACCOUNT"))
+	require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+}
+
+func TestInt_AccountCreate(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	ok, err := client.ContextFunctions.IsRoleInSession(ctx, NewAccountObjectIdentifier("ORGADMIN"))
+	require.NoError(t, err)
+	if !ok {
+		t.Skip("ORGADMIN role is not in current session")
 	}
 	t.Run("complete case", func(t *testing.T) {
 		accountID := NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Fruit()) + "_" + fmt.Sprintf("%d", (randomIntRange(t, 100, 999))))
@@ -63,7 +75,19 @@ func TestInt_AccountCreate(t *testing.T) {
 		}
 		err = client.Accounts.Create(ctx, accountID, opts)
 		require.NoError(t, err)
-		account, err := client.Accounts.ShowByID(ctx, accountID)
+
+		var account *Account
+		err = retry.Do(
+			func() error {
+				account, err = client.Accounts.ShowByID(ctx, accountID)
+				return err
+			},
+			retry.OnRetry(func(n uint, err error) {
+				log.Printf("[DEBUG] Retrying client.Accounts.ShowByID: #%d", n+1)
+			}),
+			retry.Delay(1*time.Second),
+			retry.Attempts(3),
+		)
 		require.NoError(t, err)
 		assert.Equal(t, accountID.Name(), account.AccountName)
 		assert.Equal(t, EditionBusinessCritical, account.Edition)
@@ -81,7 +105,18 @@ func TestInt_AccountCreate(t *testing.T) {
 		}
 		err = client.Accounts.Alter(ctx, alterOpts)
 		require.NoError(t, err)
-		account, err = client.Accounts.ShowByID(ctx, newAccountID)
+
+		err = retry.Do(
+			func() error {
+				account, err = client.Accounts.ShowByID(ctx, newAccountID)
+				return err
+			},
+			retry.OnRetry(func(n uint, err error) {
+				log.Printf("[DEBUG] Retrying client.Accounts.ShowByID: #%d", n+1)
+			}),
+			retry.Delay(1*time.Second),
+			retry.Attempts(3),
+		)
 		require.NoError(t, err)
 		assert.Equal(t, newAccountID.Name(), account.AccountName)
 
@@ -96,6 +131,32 @@ func TestInt_AccountCreate(t *testing.T) {
 		require.NoError(t, err)
 		_, err = client.Accounts.ShowByID(ctx, newAccountID)
 		require.NoError(t, err)
+
+		// drop account
+		err = client.Accounts.Drop(ctx, newAccountID, 3, &DropAccountOptions{
+			IfExists: Bool(true),
+		})
+		require.NoError(t, err)
+
+		// check if account is dropped
+		_, err = client.Accounts.ShowByID(ctx, newAccountID)
+		require.Error(t, err)
+
+		// undrop account
+		err = client.Accounts.Undrop(ctx, newAccountID)
+		require.NoError(t, err)
+
+		// check if account is undropped
+		_, err = client.Accounts.ShowByID(ctx, newAccountID)
+		require.NoError(t, err)
+
+		// drop account again
+		err = client.Accounts.Drop(ctx, newAccountID, 3, nil)
+		require.NoError(t, err)
+
+		// check if account is dropped
+		_, err = client.Accounts.ShowByID(ctx, newAccountID)
+		require.Error(t, err)
 	})
 }
 
