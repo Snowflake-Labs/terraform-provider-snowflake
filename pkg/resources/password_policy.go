@@ -360,7 +360,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 			alterOptions.Set = &sdk.PasswordPolicySet{
 				Comment: sdk.String(""),
 			}
-			/* todo: uncomment this once comments are working again
+			/* todo [SNOW-928909]: uncomment this once comments are working again
 			alterOptions.Unset = &sdk.PasswordPolicyUnset{
 				Comment: sdk.Bool(true),
 			}*/
