@@ -17,17 +17,11 @@ var (
 )
 
 type Users interface {
-	// Create creates a user.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateUserOptions) error
-	// Alter modifies an existing user
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterUserOptions) error
-	// Drop removes a user.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
-	// Describe returns the details of a user.
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*UserDetails, error)
-	// Show returns a list of users.
 	Show(ctx context.Context, opts *ShowUserOptions) ([]User, error)
-	// ShowByID returns a user by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User, error)
 }
 
@@ -156,8 +150,7 @@ func (v *User) ObjectType() ObjectType {
 	return ObjectTypeUser
 }
 
-// CreateUserOptions contains options for creating a user.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/create-user.
+// CreateUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-user.
 type CreateUserOptions struct {
 	create            bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace         *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -262,8 +255,7 @@ type UserObjectParametersUnset struct {
 	NetworkPolicy                    *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 }
 
-// AlterUserOptions contains options for altering a user.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/alter-user.
+// AlterUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-user.
 type AlterUserOptions struct {
 	alter    bool                    `ddl:"static" sql:"ALTER"`
 	user     bool                    `ddl:"static" sql:"USER"`
@@ -392,8 +384,7 @@ func (opts *UserUnset) validate() error {
 	return nil
 }
 
-// DropUserOptions contains options for dropping a user.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/drop-user.
+// DropUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-user.
 type DropUserOptions struct {
 	drop bool                    `ddl:"static" sql:"DROP"`
 	user bool                    `ddl:"static" sql:"USER"`
@@ -528,8 +519,7 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 	return v
 }
 
-// describeUserOptions contains options for describing the properties specified for users, as well as the default values of the properties.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/desc-user.
+// describeUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-user.
 type describeUserOptions struct {
 	describe bool                    `ddl:"static" sql:"DESCRIBE"`
 	user     bool                    `ddl:"static" sql:"USER"`
@@ -564,8 +554,7 @@ func (v *users) Describe(ctx context.Context, id AccountObjectIdentifier) (*User
 	return userDetailsFromRows(dest), nil
 }
 
-// ShowUserOptions contains options for listing users.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/show-users.
+// ShowUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-users.
 type ShowUserOptions struct {
 	show       bool    `ddl:"static" sql:"SHOW"`
 	Terse      *bool   `ddl:"static" sql:"TERSE"`
