@@ -42,5 +42,3 @@ Read-Only:
 - `format_type` (String)
 - `name` (String)
 - `schema` (String)
-
-

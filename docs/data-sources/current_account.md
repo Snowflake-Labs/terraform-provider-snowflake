@@ -31,5 +31,3 @@ resource "aws_ssm_parameter" "snowflake_account_url" {
 - `id` (String) The ID of this resource.
 - `region` (String) The Snowflake Region; as returned by CURRENT_REGION()
 - `url` (String) The Snowflake URL.
-
-

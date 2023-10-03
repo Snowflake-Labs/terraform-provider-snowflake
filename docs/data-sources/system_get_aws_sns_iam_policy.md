@@ -23,5 +23,3 @@ description: |-
 
 - `aws_sns_topic_policy_json` (String) IAM policy for Snowflake’s SQS queue to subscribe to this topic
 - `id` (String) The ID of this resource.
-
-

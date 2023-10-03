@@ -45,5 +45,3 @@ Read-Only:
 - `organization_name` (String)
 - `region_group` (String)
 - `snowflake_region` (String)
-
-

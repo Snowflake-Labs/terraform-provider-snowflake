@@ -38,5 +38,3 @@ Read-Only:
 - `comment` (String)
 - `name` (String)
 - `owner` (String)
-
-

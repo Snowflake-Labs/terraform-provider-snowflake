@@ -43,5 +43,3 @@ Read-Only:
 - `name` (String)
 - `return_type` (String)
 - `schema` (String)
-
-

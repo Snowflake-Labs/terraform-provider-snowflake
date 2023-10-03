@@ -42,5 +42,3 @@ Read-Only:
 - `name` (String)
 - `schema` (String)
 - `storage_integration` (String)
-
-

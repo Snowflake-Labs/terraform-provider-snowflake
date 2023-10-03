@@ -154,5 +154,3 @@ Read-Only:
 - `grantee_name` (String)
 - `name` (String)
 - `privilege` (String)
-
-
