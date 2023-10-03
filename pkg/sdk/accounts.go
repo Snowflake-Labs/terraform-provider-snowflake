@@ -36,6 +36,7 @@ var (
 	EditionBusinessCritical AccountEdition = "BUSINESS_CRITICAL"
 )
 
+// CreateAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-account.
 type CreateAccountOptions struct {
 	create  bool                    `ddl:"static" sql:"CREATE"`
 	account bool                    `ddl:"static" sql:"ACCOUNT"`
@@ -79,6 +80,7 @@ func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts 
 	return validateAndExec(c.client, ctx, opts)
 }
 
+// AlterAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-account.
 type AlterAccountOptions struct {
 	alter   bool `ddl:"static" sql:"ALTER"`
 	account bool `ddl:"static" sql:"ACCOUNT"`
@@ -270,6 +272,7 @@ func (c *accounts) Alter(ctx context.Context, opts *AlterAccountOptions) error {
 	return validateAndExec(c.client, ctx, opts)
 }
 
+// ShowAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-organisation-accounts.
 type ShowAccountOptions struct {
 	show     bool  `ddl:"static" sql:"SHOW"`
 	accounts bool  `ddl:"static" sql:"ORGANIZATION ACCOUNTS"`
@@ -386,6 +389,7 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 	return nil, errObjectNotExistOrAuthorized
 }
 
+// DropAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-account.
 type DropAccountOptions struct {
 	drop              bool                    `ddl:"static" sql:"DROP"`
 	account           bool                    `ddl:"static" sql:"ACCOUNT"`
@@ -413,6 +417,7 @@ func (c *accounts) Drop(ctx context.Context, id AccountObjectIdentifier, gracePe
 	return validateAndExec(c.client, ctx, opts)
 }
 
+// undropAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/undrop-account.
 type undropAccountOptions struct {
 	undrop  bool                    `ddl:"static" sql:"UNDROP"`
 	account bool                    `ddl:"static" sql:"ACCOUNT"`
