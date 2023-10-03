@@ -31,6 +31,7 @@ type Client struct {
 	Comments         Comments
 	Databases        Databases
 	DatabaseRoles    DatabaseRoles
+	DynamicTables    DynamicTables
 	ExternalTables   ExternalTables
 	FailoverGroups   FailoverGroups
 	FileFormats      FileFormats
@@ -130,6 +131,7 @@ func (c *Client) initialize() {
 	c.ConversionFunctions = &conversionFunctions{client: c}
 	c.Databases = &databases{client: c}
 	c.DatabaseRoles = &databaseRoles{client: c}
+	c.DynamicTables = &dynamicTables{client: c}
 	c.ExternalTables = &externalTables{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
 	c.FileFormats = &fileFormats{client: c}
