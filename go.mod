@@ -7,7 +7,7 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/brianvoe/gofakeit/v6 v6.21.0
 	github.com/buger/jsonparser v1.1.1
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
