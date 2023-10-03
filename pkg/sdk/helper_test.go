@@ -19,7 +19,7 @@ func getAccountIdentifier(t *testing.T, client *Client) AccountIdentifier {
 	ctx := context.Background()
 	currentAccountLocator, err := client.ContextFunctions.CurrentAccount(ctx)
 	require.NoError(t, err)
-	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
 	require.NoError(t, err)
 	for _, replicationAccount := range replicationAccounts {
 		if replicationAccount.AccountLocator == currentAccountLocator {
