@@ -33,6 +33,7 @@ var validAccountPrivileges = NewPrivilegeSet(
 	privilegeExecuteTask,
 	privilegeImportShare,
 	privilegeManageGrants,
+	privilegeManageWarehouses,
 	privilegeMonitor,
 	privilegeMonitorUsage,
 	privilegeMonitorExecution,
