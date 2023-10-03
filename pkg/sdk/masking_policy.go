@@ -10,7 +10,6 @@ import (
 	"github.com/buger/jsonparser"
 )
 
-// Compile-time proof of interface implementation.
 var _ MaskingPolicies = (*maskingPolicies)(nil)
 
 var (
@@ -21,28 +20,20 @@ var (
 	_ validatable = new(describeMaskingPolicyOptions)
 )
 
-// MaskingPolicies describes all the masking policy related methods that the
-// Snowflake API supports.
 type MaskingPolicies interface {
-	// Create creates a new masking policy.
 	Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, expression string, opts *CreateMaskingPolicyOptions) error
-	// Alter modifies an existing masking policy.
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterMaskingPolicyOptions) error
-	// Drop removes a masking policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
-	// Show returns a list of masking policies.
 	Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error)
-	// ShowByID returns a masking policy by ID
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
-	// Describe returns the details of a masking policy.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicyDetails, error)
 }
 
-// maskingPolicies implements MaskingPolicies.
 type maskingPolicies struct {
 	client *Client
 }
 
+// CreateMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-masking-policy.
 type CreateMaskingPolicyOptions struct {
 	create        bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace     *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -87,6 +78,7 @@ func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 	return err
 }
 
+// AlterMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-masking-policy.
 type AlterMaskingPolicyOptions struct {
 	alter         bool                   `ddl:"static" sql:"ALTER"`
 	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
@@ -168,6 +160,7 @@ func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, 
 	return err
 }
 
+// DropMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-masking-policy.
 type DropMaskingPolicyOptions struct {
 	drop          bool                   `ddl:"static" sql:"DROP"`
 	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
@@ -200,7 +193,7 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) e
 	return err
 }
 
-// ShowMaskingPolicyOptions represents the options for listing masking policies.
+// ShowMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-masking-policies.
 type ShowMaskingPolicyOptions struct {
 	show            bool  `ddl:"static" sql:"SHOW"`
 	maskingPolicies bool  `ddl:"static" sql:"MASKING POLICIES"`
@@ -295,6 +288,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 	return nil, errObjectNotExistOrAuthorized
 }
 
+// describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.
 type describeMaskingPolicyOptions struct {
 	describe      bool                   `ddl:"static" sql:"DESCRIBE"`
 	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
