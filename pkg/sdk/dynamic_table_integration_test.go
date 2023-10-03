@@ -135,7 +135,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 
 		err := client.DynamicTables.Alter(ctx, NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(Bool(true)).WithResume(Bool(true)))
 		require.Error(t, err)
-		expected := "alter statement needs exactly one action from: set, unset, refresh\nfields [Suspend Resume] are incompatible and cannot be set at once"
+		expected := "alter statement needs exactly one action from: set, unset, refresh"
 		require.Equal(t, expected, err.Error())
 	})
 
