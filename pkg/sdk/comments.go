@@ -20,6 +20,7 @@ type comments struct {
 
 var _ Comments = (*comments)(nil)
 
+// SetCommentOptions is based on https://docs.snowflake.com/en/sql-reference/sql/comment.
 type SetCommentOptions struct {
 	comment    bool             `ddl:"static" sql:"COMMENT"`
 	IfExists   *bool            `ddl:"keyword" sql:"IF EXISTS"`
@@ -49,6 +50,7 @@ func (c *comments) Set(ctx context.Context, opts *SetCommentOptions) error {
 	return err
 }
 
+// SetColumnCommentOptions is based on https://docs.snowflake.com/en/sql-reference/sql/comment.
 type SetColumnCommentOptions struct {
 	comment  bool             `ddl:"static" sql:"COMMENT"`
 	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
