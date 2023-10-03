@@ -64,5 +64,3 @@ Read-Only:
 - `key` (String)
 - `level` (String)
 - `value` (String)
-
-

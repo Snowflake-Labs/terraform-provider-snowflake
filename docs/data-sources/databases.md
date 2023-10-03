@@ -54,5 +54,3 @@ Read-Only:
 
 - `accounts` (List of String)
 - `ignore_edition_check` (Boolean)
-
-

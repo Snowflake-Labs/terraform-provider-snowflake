@@ -38,5 +38,3 @@ Read-Only:
 - `comment` (String)
 - `database` (String)
 - `name` (String)
-
-

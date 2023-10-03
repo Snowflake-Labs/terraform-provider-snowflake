@@ -36,5 +36,3 @@ Read-Only:
 - `size` (String)
 - `state` (String)
 - `type` (String)
-
-

@@ -42,5 +42,3 @@ Read-Only:
 - `integration` (String)
 - `name` (String)
 - `schema` (String)
-
-

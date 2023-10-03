@@ -29,5 +29,3 @@ data "snowflake_role" "this" {
 
 - `comment` (String) The comment on the role
 - `id` (String) The ID of this resource.
-
-
