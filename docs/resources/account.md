@@ -52,6 +52,7 @@ resource "snowflake_account" "ac1" {
 - `admin_rsa_public_key` (String, Sensitive) Assigns a public key to the initial administrative user of the account in order to implement [key pair authentication](https://docs.snowflake.com/en/sql-reference/sql/create-account.html#:~:text=key%20pair%20authentication) for the user. Optional if the `ADMIN_PASSWORD` parameter is specified.
 - `comment` (String) Specifies a comment for the account.
 - `first_name` (String, Sensitive) First name of the initial administrative user of the account
+- `grace_period_in_days` (Number) Specifies the number of days to wait before dropping the account. The default is 3 days.
 - `last_name` (String, Sensitive) Last name of the initial administrative user of the account
 - `must_change_password` (Boolean) Specifies whether the new user created to administer the account is forced to change their password upon first login into the account.
 - `region` (String) ID of the Snowflake Region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)

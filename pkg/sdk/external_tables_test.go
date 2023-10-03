@@ -503,14 +503,14 @@ func TestExternalTablesShow(t *testing.T) {
 
 func TestExternalTablesDescribe(t *testing.T) {
 	t.Run("type columns", func(t *testing.T) {
-		opts := &describeExternalTableColumns{
+		opts := &describeExternalTableColumnsOptions{
 			name: NewAccountObjectIdentifier("external_table"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE EXTERNAL TABLE "external_table" TYPE = COLUMNS`)
 	})
 
 	t.Run("type stage", func(t *testing.T) {
-		opts := &describeExternalTableStage{
+		opts := &describeExternalTableStageOptions{
 			name: NewAccountObjectIdentifier("external_table"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE EXTERNAL TABLE "external_table" TYPE = STAGE`)

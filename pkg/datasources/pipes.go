@@ -69,7 +69,7 @@ func ReadPipes(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	extractedPipes, err := client.Pipes.Show(ctx, &sdk.PipeShowOptions{
+	extractedPipes, err := client.Pipes.Show(ctx, &sdk.ShowPipeOptions{
 		In: &sdk.In{
 			Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
 		},

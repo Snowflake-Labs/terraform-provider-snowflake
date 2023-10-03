@@ -14,14 +14,12 @@ var (
 )
 
 type Accounts interface {
-	// Create creates an account.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error
-	// Alter modifies an existing account
 	Alter(ctx context.Context, opts *AlterAccountOptions) error
-	// Show returns a list of accounts.
 	Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error)
-	// ShowByID returns an account by id
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
+	Drop(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int, opts *DropAccountOptions) error
+	Undrop(ctx context.Context, id AccountObjectIdentifier) error
 }
 
 var _ Accounts = (*accounts)(nil)
@@ -78,15 +76,7 @@ func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts 
 		opts = &CreateAccountOptions{}
 	}
 	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	stmt, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = c.client.exec(ctx, stmt)
-	return err
+	return validateAndExec(c.client, ctx, opts)
 }
 
 type AlterAccountOptions struct {
@@ -277,15 +267,7 @@ func (c *accounts) Alter(ctx context.Context, opts *AlterAccountOptions) error {
 	if opts == nil {
 		opts = &AlterAccountOptions{}
 	}
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = c.client.exec(ctx, sql)
-	return err
+	return validateAndExec(c.client, ctx, opts)
 }
 
 type ShowAccountOptions struct {
@@ -402,4 +384,49 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 		}
 	}
 	return nil, errObjectNotExistOrAuthorized
+}
+
+type DropAccountOptions struct {
+	drop              bool                    `ddl:"static" sql:"DROP"`
+	account           bool                    `ddl:"static" sql:"ACCOUNT"`
+	IfExists          *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name              AccountObjectIdentifier `ddl:"identifier"`
+	gracePeriodInDays int                     `ddl:"parameter" sql:"GRACE_PERIOD_IN_DAYS"`
+}
+
+func (opts *DropAccountOptions) validate() error {
+	if !validObjectidentifier(opts.name) {
+		return fmt.Errorf("Name must be set")
+	}
+	if !validateIntGreaterThanOrEqual(opts.gracePeriodInDays, 3) {
+		return fmt.Errorf("gracePeriodInDays must be greater than or equal to 3")
+	}
+	return nil
+}
+
+func (c *accounts) Drop(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int, opts *DropAccountOptions) error {
+	if opts == nil {
+		opts = &DropAccountOptions{}
+	}
+	opts.name = id
+	opts.gracePeriodInDays = gracePeriodInDays
+	return validateAndExec(c.client, ctx, opts)
+}
+
+type undropAccountOptions struct {
+	undrop  bool                    `ddl:"static" sql:"UNDROP"`
+	account bool                    `ddl:"static" sql:"ACCOUNT"`
+	name    AccountObjectIdentifier `ddl:"identifier"`
+}
+
+func (c *accounts) Undrop(ctx context.Context, id AccountObjectIdentifier) error {
+	opts := &undropAccountOptions{
+		name: id,
+	}
+	sql, err := structToSQL(opts)
+	if err != nil {
+		return err
+	}
+	_, err = c.client.exec(ctx, sql)
+	return err
 }

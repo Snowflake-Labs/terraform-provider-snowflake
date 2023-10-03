@@ -1,7 +1,7 @@
 package sdk
 
 // placeholder for the real implementation.
-type TableCreateOptions struct{}
+type CreateTableOptions struct{}
 
 type Table struct {
 	DatabaseName string
