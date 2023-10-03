@@ -9,7 +9,7 @@ require (
 	github.com/buger/jsonparser v1.1.1
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-uuid v1.0.3
-	github.com/hashicorp/terraform-plugin-docs v0.14.1
+	github.com/hashicorp/terraform-plugin-docs v0.16.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/luna-duclos/instrumentedsql v1.1.3
@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
 	golang.org/x/crypto v0.13.0
-	golang.org/x/exp v0.0.0-20230315142452-642cacee5cc0
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 	golang.org/x/text v0.13.0
 	golang.org/x/tools v0.13.0
 )
