@@ -119,12 +119,13 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 				"object_type": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					Description:   "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW",
+					Description:   "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW",
 					RequiredWith:  []string{"on_schema_object.0.object_name"},
 					ConflictsWith: []string{"on_schema_object.0.all", "on_schema_object.0.future"},
 					ForceNew:      true,
 					ValidateFunc: validation.StringInSlice([]string{
 						"ALERT",
+						"DYNAMIC TABLE",
 						"EVENT TABLE",
 						"FILE FORMAT",
 						"FUNCTION",
@@ -165,10 +166,11 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 							"object_type_plural": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
+								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:    true,
 								ValidateFunc: validation.StringInSlice([]string{
 									"ALERTS",
+									"DYNAMIC TABLES",
 									"EVENT TABLES",
 									"FILE FORMATS",
 									"FUNCTIONS",
@@ -218,10 +220,11 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 							"object_type_plural": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
+								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:    true,
 								ValidateFunc: validation.StringInSlice([]string{
 									"ALERTS",
+									"DYNAMIC TABLES",
 									"EVENT TABLES",
 									"FILE FORMATS",
 									"FUNCTIONS",
@@ -513,7 +516,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 				On: &sdk.ShowGrantsOn{
 					Object: &sdk.Object{
 						ObjectType: sdk.ObjectTypeSchema,
-						Name:       sdk.NewSchemaIdentifierFromFullyQualifiedName(resourceID.SchemaName),
+						Name:       sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(resourceID.SchemaName),
 					},
 				},
 			}
@@ -556,7 +559,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 				opts = sdk.ShowGrantOptions{
 					Future: sdk.Bool(true),
 					In: &sdk.ShowGrantsIn{
-						Schema: sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(resourceID.SchemaName)),
+						Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(resourceID.SchemaName)),
 					},
 				}
 			}
@@ -709,7 +712,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 		resourceID.OnSchema = true
 		if v, ok := onSchema["schema_name"]; ok && len(v.(string)) > 0 {
 			resourceID.SchemaName = v.(string)
-			on.Schema.Schema = sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(v.(string)))
+			on.Schema.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(v.(string)))
 		}
 		if v, ok := onSchema["all_schemas_in_database"]; ok && len(v.(string)) > 0 {
 			resourceID.All = true
@@ -757,7 +760,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			if v, ok := all["in_schema"]; ok && len(v.(string)) > 0 {
 				resourceID.InSchema = true
 				resourceID.SchemaName = v.(string)
-				on.SchemaObject.All.InSchema = sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(v.(string)))
+				on.SchemaObject.All.InSchema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(v.(string)))
 			}
 		}
 
@@ -776,7 +779,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			if v, ok := future["in_schema"]; ok && len(v.(string)) > 0 {
 				resourceID.InSchema = true
 				resourceID.SchemaName = v.(string)
-				on.SchemaObject.Future.InSchema = sdk.Pointer(sdk.NewSchemaIdentifierFromFullyQualifiedName(v.(string)))
+				on.SchemaObject.Future.InSchema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(v.(string)))
 			}
 		}
 

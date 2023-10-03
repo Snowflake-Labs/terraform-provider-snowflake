@@ -13,6 +13,19 @@ import (
 // Compile-time proof of interface implementation.
 var _ FailoverGroups = (*failoverGroups)(nil)
 
+var (
+	_ validatable = new(CreateDatabaseOptions)
+	_ validatable = new(CreateSharedDatabaseOptions)
+	_ validatable = new(CreateSecondaryDatabaseOptions)
+	_ validatable = new(AlterDatabaseOptions)
+	_ validatable = new(AlterDatabaseReplicationOptions)
+	_ validatable = new(AlterDatabaseFailoverOptions)
+	_ validatable = new(DropDatabaseOptions)
+	_ validatable = new(undropDatabaseOptions)
+	_ validatable = new(ShowDatabasesOptions)
+	_ validatable = new(describeDatabaseOptions)
+)
+
 // FailoverGroups describes all the failover group related methods that the
 // Snowflake API supports.
 type FailoverGroups interface {
@@ -27,7 +40,7 @@ type FailoverGroups interface {
 	// Drop removes a failover group.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropFailoverGroupOptions) error
 	// Show returns a list of failover groups.
-	Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]*FailoverGroup, error)
+	Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error)
 	// ShowByID returns a failover group by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error)
 	// ShowDatabases returns a list of databases in a failover group.
@@ -51,8 +64,8 @@ const (
 )
 
 type CreateFailoverGroupOptions struct {
-	create        bool                    `ddl:"static" sql:"CREATE"`         //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	create        bool                    `ddl:"static" sql:"CREATE"`
+	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"`
 	IfNotExists   *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
 
@@ -67,7 +80,7 @@ type CreateFailoverGroupOptions struct {
 
 func (opts *CreateFailoverGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -91,8 +104,8 @@ func (v *failoverGroups) Create(ctx context.Context, id AccountObjectIdentifier,
 }
 
 type CreateSecondaryReplicationGroupOptions struct {
-	create               bool                     `ddl:"static" sql:"CREATE"`         //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup        bool                     `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	create               bool                     `ddl:"static" sql:"CREATE"`
+	failoverGroup        bool                     `ddl:"static" sql:"FAILOVER GROUP"`
 	IfNotExists          *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                 AccountObjectIdentifier  `ddl:"identifier"`
 	primaryFailoverGroup ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
@@ -100,10 +113,10 @@ type CreateSecondaryReplicationGroupOptions struct {
 
 func (opts *CreateSecondaryReplicationGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if !validObjectidentifier(opts.primaryFailoverGroup) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -126,8 +139,8 @@ func (v *failoverGroups) CreateSecondaryReplicationGroup(ctx context.Context, id
 }
 
 type AlterSourceFailoverGroupOptions struct {
-	alter         bool                    `ddl:"static" sql:"ALTER"`          //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	alter         bool                    `ddl:"static" sql:"ALTER"`
+	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"`
 	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
 	NewName       AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
@@ -139,7 +152,7 @@ type AlterSourceFailoverGroupOptions struct {
 
 func (opts *AlterSourceFailoverGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Add, opts.Move, opts.Remove, opts.NewName) {
 		return errors.New("exactly one of SET, ADD, MOVE, REMOVE, or NewName must be specified")
@@ -232,8 +245,8 @@ func (v *failoverGroups) AlterSource(ctx context.Context, id AccountObjectIdenti
 }
 
 type AlterTargetFailoverGroupOptions struct {
-	alter         bool                    `ddl:"static" sql:"ALTER"`          //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	alter         bool                    `ddl:"static" sql:"ALTER"`
+	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"`
 	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
 	Refresh       *bool                   `ddl:"keyword" sql:"REFRESH"`
@@ -244,7 +257,7 @@ type AlterTargetFailoverGroupOptions struct {
 
 func (opts *AlterTargetFailoverGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if !exactlyOneValueSet(opts.Refresh, opts.Primary, opts.Suspend, opts.Resume) {
 		return errors.New("must set one of [Refresh, Primary, Suspend, Resume]")
@@ -269,15 +282,15 @@ func (v *failoverGroups) AlterTarget(ctx context.Context, id AccountObjectIdenti
 }
 
 type DropFailoverGroupOptions struct {
-	drop          bool                    `ddl:"static" sql:"DROP"`           //lint:ignore U1000 This is used in the ddl tag
-	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"` //lint:ignore U1000 This is used in the ddl tag
+	drop          bool                    `ddl:"static" sql:"DROP"`
+	failoverGroup bool                    `ddl:"static" sql:"FAILOVER GROUP"`
 	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *DropFailoverGroupOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -303,8 +316,8 @@ func (v *failoverGroups) Drop(ctx context.Context, id AccountObjectIdentifier, o
 
 // ShowFailoverGroupOptions represents the options for listing failover groups.
 type ShowFailoverGroupOptions struct {
-	show           bool              `ddl:"static" sql:"SHOW"`            //lint:ignore U1000 This is used in the ddl tag
-	failoverGroups bool              `ddl:"static" sql:"FAILOVER GROUPS"` //lint:ignore U1000 This is used in the ddl tag
+	show           bool              `ddl:"static" sql:"SHOW"`
+	failoverGroups bool              `ddl:"static" sql:"FAILOVER GROUPS"`
 	InAccount      AccountIdentifier `ddl:"identifier" sql:"IN ACCOUNT"`
 }
 
@@ -380,7 +393,7 @@ type failoverGroupDBRow struct {
 	Owner                   sql.NullString `db:"owner"`
 }
 
-func (row failoverGroupDBRow) toFailoverGroup() *FailoverGroup {
+func (row failoverGroupDBRow) convert() *FailoverGroup {
 	ots := strings.Split(row.ObjectTypes, ",")
 	pluralObjectTypes := make([]PluralObjectType, 0, len(ots))
 	for _, ot := range ots {
@@ -445,29 +458,13 @@ func (row failoverGroupDBRow) toFailoverGroup() *FailoverGroup {
 	}
 }
 
-// List all the failover groups by pattern.
-func (v *failoverGroups) Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]*FailoverGroup, error) {
-	if opts == nil {
-		opts = &ShowFailoverGroupOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (v *failoverGroups) Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[failoverGroupDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	dest := []failoverGroupDBRow{}
-
-	err = v.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]*FailoverGroup, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.toFailoverGroup()
-	}
-
+	resultList := convertRows[failoverGroupDBRow, FailoverGroup](dbRows)
 	return resultList, nil
 }
 
@@ -482,21 +479,21 @@ func (v *failoverGroups) ShowByID(ctx context.Context, id AccountObjectIdentifie
 	}
 	for _, failoverGroup := range failoverGroups {
 		if failoverGroup.ID() == id && failoverGroup.AccountLocator == currentAccount {
-			return failoverGroup, nil
+			return &failoverGroup, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type showFailoverGroupDatabasesOptions struct {
-	show      bool                    `ddl:"static" sql:"SHOW"`      //lint:ignore U1000 This is used in the ddl tag
-	databases bool                    `ddl:"static" sql:"DATABASES"` //lint:ignore U1000 This is used in the ddl tag
+	show      bool                    `ddl:"static" sql:"SHOW"`
+	databases bool                    `ddl:"static" sql:"DATABASES"`
 	in        AccountObjectIdentifier `ddl:"identifier" sql:"IN FAILOVER GROUP"`
 }
 
 func (opts *showFailoverGroupDatabasesOptions) validate() error {
 	if !validObjectidentifier(opts.in) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -527,14 +524,14 @@ func (v *failoverGroups) ShowDatabases(ctx context.Context, id AccountObjectIden
 }
 
 type showFailoverGroupSharesOptions struct {
-	show      bool                    `ddl:"static" sql:"SHOW"`   //lint:ignore U1000 This is used in the ddl tag
-	databases bool                    `ddl:"static" sql:"SHARES"` //lint:ignore U1000 This is used in the ddl tag
+	show      bool                    `ddl:"static" sql:"SHOW"`
+	databases bool                    `ddl:"static" sql:"SHARES"`
 	in        AccountObjectIdentifier `ddl:"identifier" sql:"IN FAILOVER GROUP"`
 }
 
 func (opts *showFailoverGroupSharesOptions) validate() error {
 	if !validObjectidentifier(opts.in) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }

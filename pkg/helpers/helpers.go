@@ -2,10 +2,12 @@ package helpers
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
@@ -88,7 +90,7 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 	case 1:
 		return sdk.NewAccountObjectIdentifier(parts[0])
 	case 2:
-		return sdk.NewSchemaIdentifier(parts[0], parts[1])
+		return sdk.NewDatabaseObjectIdentifier(parts[0], parts[1])
 	case 3:
 		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2])
 	case 4:
@@ -96,6 +98,22 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 	default:
 		return nil
 	}
+}
+
+func Retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) error {
+	for i := 0; i < attempts; i++ {
+		err, done := f()
+		if err != nil {
+			return err
+		}
+		if done {
+			return nil
+		} else {
+			log.Printf("[INFO] operation not finished yet, retrying in %v seconds\n", sleepDuration.Seconds())
+			time.Sleep(sleepDuration)
+		}
+	}
+	return fmt.Errorf("giving up after %v attempts", attempts)
 }
 
 const IDDelimiter = "|"

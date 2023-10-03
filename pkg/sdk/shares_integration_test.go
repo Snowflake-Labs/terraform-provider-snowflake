@@ -32,7 +32,7 @@ func TestInt_SharesShow(t *testing.T) {
 		shares, err := client.Shares.Show(ctx, showOptions)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(shares))
-		assert.Contains(t, shares, shareTest)
+		assert.Contains(t, shares, *shareTest)
 	})
 
 	t.Run("when searching a non-existent share", func(t *testing.T) {
@@ -118,7 +118,7 @@ func TestInt_SharesDrop(t *testing.T) {
 
 	t.Run("when share does not exist", func(t *testing.T) {
 		err := client.Shares.Drop(ctx, NewAccountObjectIdentifier("does_not_exist"))
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 

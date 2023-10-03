@@ -281,7 +281,7 @@ func TestFileFormatsShow(t *testing.T) {
 				Pattern: String("test"),
 			},
 			In: &In{
-				Schema: NewSchemaIdentifier("db", "schema"),
+				Schema: NewDatabaseObjectIdentifier("db", "schema"),
 			},
 		}
 		actual, err := structToSQL(opts)
@@ -299,7 +299,7 @@ func TestFileFormatsShowById(t *testing.T) {
 				Pattern: String(id.Name()),
 			},
 			In: &In{
-				Schema: NewSchemaIdentifier(id.databaseName, id.schemaName),
+				Schema: NewDatabaseObjectIdentifier(id.databaseName, id.schemaName),
 			},
 		}
 		actual, err := structToSQL(opts)

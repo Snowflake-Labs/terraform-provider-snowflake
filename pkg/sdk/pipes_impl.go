@@ -8,42 +8,39 @@ type pipes struct {
 	client *Client
 }
 
-func (v *pipes) Create(ctx context.Context, id SchemaObjectIdentifier, copyStatement string, opts *PipeCreateOptions) error {
-	opts = createIfNil[PipeCreateOptions](opts)
+func (v *pipes) Create(ctx context.Context, id SchemaObjectIdentifier, copyStatement string, opts *CreatePipeOptions) error {
+	opts = createIfNil[CreatePipeOptions](opts)
 	opts.name = id
 	opts.copyStatement = copyStatement
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *PipeAlterOptions) error {
-	opts = createIfNil[PipeAlterOptions](opts)
+func (v *pipes) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterPipeOptions) error {
+	opts = createIfNil[AlterPipeOptions](opts)
 	opts.name = id
 	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *pipes) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
-	opts := &PipeDropOptions{
+	opts := &DropPipeOptions{
 		name: id,
 	}
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *pipes) Show(ctx context.Context, opts *PipeShowOptions) ([]*Pipe, error) {
+func (v *pipes) Show(ctx context.Context, opts *ShowPipeOptions) ([]Pipe, error) {
 	dbRows, err := validateAndQuery[pipeDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	resultList := make([]*Pipe, len(*dbRows))
-	for i, row := range *dbRows {
-		resultList[i] = row.toPipe()
-	}
+	resultList := convertRows[pipeDBRow, Pipe](dbRows)
 
 	return resultList, nil
 }
 
 func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {
-	pipes, err := v.Show(ctx, &PipeShowOptions{
+	pipes, err := v.Show(ctx, &ShowPipeOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -55,12 +52,7 @@ func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 		return nil, err
 	}
 
-	for _, pipe := range pipes {
-		if pipe.ID().name == id.Name() {
-			return pipe, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return findOne(pipes, func(p Pipe) bool { return p.ID().name == id.Name() })
 }
 
 func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {
@@ -71,5 +63,5 @@ func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 	if err != nil {
 		return nil, err
 	}
-	return pipeRow.toPipe(), nil
+	return pipeRow.convert(), nil
 }

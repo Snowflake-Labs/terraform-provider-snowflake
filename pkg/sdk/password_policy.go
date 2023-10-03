@@ -10,6 +10,14 @@ import (
 // Compile-time proof of interface implementation.
 var _ PasswordPolicies = (*passwordPolicies)(nil)
 
+var (
+	_ validatable = new(CreatePasswordPolicyOptions)
+	_ validatable = new(AlterPasswordPolicyOptions)
+	_ validatable = new(DropPasswordPolicyOptions)
+	_ validatable = new(ShowPasswordPolicyOptions)
+	_ validatable = new(describePasswordPolicyOptions)
+)
+
 // PasswordPolicies describes all the password policy related methods that the
 // Snowflake API supports.
 type PasswordPolicies interface {
@@ -20,7 +28,7 @@ type PasswordPolicies interface {
 	// Drop removes a password policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPasswordPolicyOptions) error
 	// Show returns a list of password policies.
-	Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]*PasswordPolicy, error)
+	Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error)
 	// ShowByID returns a password policy by ID.
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
 	// Describe returns the details of a password policy.
@@ -33,9 +41,9 @@ type passwordPolicies struct {
 }
 
 type CreatePasswordPolicyOptions struct {
-	create         bool                   `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create         bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace      *bool                  `ddl:"keyword" sql:"OR REPLACE"`
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
 	IfNotExists    *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 
@@ -54,7 +62,7 @@ type CreatePasswordPolicyOptions struct {
 
 func (opts *CreatePasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 
 	return nil
@@ -77,8 +85,8 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 }
 
 type AlterPasswordPolicyOptions struct {
-	alter          bool                   `ddl:"static" sql:"ALTER"`           //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	alter          bool                   `ddl:"static" sql:"ALTER"`
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
 	IfExists       *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 	NewName        SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
@@ -88,12 +96,12 @@ type AlterPasswordPolicyOptions struct {
 
 func (opts *AlterPasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 
 	if everyValueNil(opts.Set, opts.Unset) {
 		if !validObjectidentifier(opts.NewName) {
-			return ErrInvalidObjectIdentifier
+			return errInvalidObjectIdentifier
 		}
 	}
 
@@ -205,15 +213,15 @@ func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier,
 }
 
 type DropPasswordPolicyOptions struct {
-	drop           bool                   `ddl:"static" sql:"DROP"`            //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	drop           bool                   `ddl:"static" sql:"DROP"`
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
 	IfExists       *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *DropPasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -234,20 +242,20 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 	return err
 }
 
-// PasswordPolicyShowOptions represents the options for listing password policies.
-type PasswordPolicyShowOptions struct {
-	show             bool  `ddl:"static" sql:"SHOW"`              //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicies bool  `ddl:"static" sql:"PASSWORD POLICIES"` //lint:ignore U1000 This is used in the ddl tag
+// ShowPasswordPolicyOptions represents the options for listing password policies.
+type ShowPasswordPolicyOptions struct {
+	show             bool  `ddl:"static" sql:"SHOW"`
+	passwordPolicies bool  `ddl:"static" sql:"PASSWORD POLICIES"`
 	Like             *Like `ddl:"keyword" sql:"LIKE"`
 	In               *In   `ddl:"keyword" sql:"IN"`
 	Limit            *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-func (input *PasswordPolicyShowOptions) validate() error {
+func (input *ShowPasswordPolicyOptions) validate() error {
 	return nil
 }
 
-// PasswordPolicys is a user friendly result for a CREATE PASSWORD POLICY query.
+// PasswordPolicy is a user-friendly result for a CREATE PASSWORD POLICY query.
 type PasswordPolicy struct {
 	CreatedOn    time.Time
 	Name         string
@@ -279,8 +287,8 @@ type passwordPolicyDBRow struct {
 	Options       string    `db:"options"`
 }
 
-func (row passwordPolicyDBRow) toPasswordPolicy() *PasswordPolicy {
-	return &PasswordPolicy{
+func (row passwordPolicyDBRow) convert() PasswordPolicy {
+	return PasswordPolicy{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
@@ -292,10 +300,8 @@ func (row passwordPolicyDBRow) toPasswordPolicy() *PasswordPolicy {
 }
 
 // List all the password policies by pattern.
-func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]*PasswordPolicy, error) {
-	if opts == nil {
-		opts = &PasswordPolicyShowOptions{}
-	}
+func (v *passwordPolicies) Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error) {
+	opts = createIfNil(opts)
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
@@ -303,27 +309,26 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	if err != nil {
 		return nil, err
 	}
-	dest := []passwordPolicyDBRow{}
-
+	var dest []passwordPolicyDBRow
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, err
 	}
-	resultList := make([]*PasswordPolicy, len(dest))
+	resultList := make([]PasswordPolicy, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toPasswordPolicy()
+		resultList[i] = row.convert()
 	}
 
 	return resultList, nil
 }
 
 func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error) {
-	passwordPolicies, err := v.Show(ctx, &PasswordPolicyShowOptions{
+	passwordPolicies, err := v.Show(ctx, &ShowPasswordPolicyOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
 		In: &In{
-			Schema: NewSchemaIdentifier(id.DatabaseName(), id.SchemaName()),
+			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
 		},
 	})
 	if err != nil {
@@ -332,21 +337,21 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 
 	for _, passwordPolicy := range passwordPolicies {
 		if passwordPolicy.ID().name == id.Name() {
-			return passwordPolicy, nil
+			return &passwordPolicy, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type describePasswordPolicyOptions struct {
-	describe       bool                   `ddl:"static" sql:"DESCRIBE"`        //lint:ignore U1000 This is used in the ddl tag
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"` //lint:ignore U1000 This is used in the ddl tag
+	describe       bool                   `ddl:"static" sql:"DESCRIBE"`
+	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 func (v *describePasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }

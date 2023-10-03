@@ -716,7 +716,7 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 
 	t.Run("when searching a non-existent failover group", func(t *testing.T) {
 		_, err := client.FailoverGroups.ShowByID(ctx, NewAccountObjectIdentifier("does-not-exist"))
-		require.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 

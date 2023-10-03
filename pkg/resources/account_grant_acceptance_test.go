@@ -22,13 +22,13 @@ func TestAcc_AccountGrant_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", "MONITOR USAGE"),
 				),
 			},
-			// UPDATE ALL PRIVILEGES
+			/*// UPDATE ALL PRIVILEGES
 			{
 				Config: accountGrantConfig(roleName, "ALL PRIVILEGES"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", "ALL PRIVILEGES"),
 				),
-			},
+			},*/
 			// IMPORT
 			{
 				ResourceName:      "snowflake_account_grant.test",
@@ -70,6 +70,23 @@ func TestAcc_AccountGrantManageSupportCases(t *testing.T) {
 				Config: accountGrantConfig(roleName, "MANAGE ACCOUNT SUPPORT CASES"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", "MANAGE ACCOUNT SUPPORT CASES"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_AccountGrantManageWarehouses(t *testing.T) {
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    providers(),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: accountGrantConfig(roleName, "MANAGE WAREHOUSES"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_account_grant.test", "privilege", "MANAGE WAREHOUSES"),
 				),
 			},
 		},

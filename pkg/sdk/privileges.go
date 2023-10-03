@@ -37,6 +37,8 @@ const (
 	GlobalPrivilegeImportShare GlobalPrivilege = "IMPORT SHARE"
 	// | MANAGE GRANTS
 	GlobalPrivilegeManageGrants GlobalPrivilege = "MANAGE GRANTS"
+	// | MANAGE WAREHOUSES
+	GlobalPrivilegeManageWarehouses GlobalPrivilege = "MANAGE WAREHOUSES"
 
 	// | MODIFY { LOG LEVEL | TRACE LEVEL | SESSION LOG LEVEL | SESSION TRACE LEVEL }
 	GlobalPrivilegeModifyLogLevel          GlobalPrivilege = "MODIFY LOG LEVEL"
@@ -155,9 +157,16 @@ func (p SchemaPrivilege) String() string {
 type SchemaObjectPrivilege string
 
 const (
+	SchemaObjectOwnership SchemaObjectPrivilege = "OWNERSHIP"
+
 	// -- For ALERT
 	// OPERATE [ , ... ]
 	SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE"
+
+	// -- FOR DYNAMIC TABLE
+	//  OPERATE, SELECT [ , ...]
+	// SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE" (duplicate)
+	// SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT" (duplicate)
 
 	// -- For EVENT TABLE
 	// { SELECT | INSERT } [ , ... ]

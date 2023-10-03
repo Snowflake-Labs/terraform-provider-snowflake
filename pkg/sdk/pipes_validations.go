@@ -5,19 +5,19 @@ import (
 )
 
 var (
-	_ validatableOpts = &PipeCreateOptions{}
-	_ validatableOpts = &PipeAlterOptions{}
-	_ validatableOpts = &PipeDropOptions{}
-	_ validatableOpts = &PipeShowOptions{}
-	_ validatableOpts = &describePipeOptions{}
+	_ validatable = new(CreatePipeOptions)
+	_ validatable = new(AlterPipeOptions)
+	_ validatable = new(DropPipeOptions)
+	_ validatable = new(ShowPipeOptions)
+	_ validatable = new(describePipeOptions)
 )
 
-func (opts *PipeCreateOptions) validateProp() error {
+func (opts *CreatePipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if opts.copyStatement == "" {
 		return errCopyStatementRequired
@@ -25,12 +25,12 @@ func (opts *PipeCreateOptions) validateProp() error {
 	return nil
 }
 
-func (opts *PipeAlterOptions) validateProp() error {
+func (opts *AlterPipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if ok := exactlyOneValueSet(
 		opts.Set,
@@ -64,17 +64,17 @@ func (opts *PipeAlterOptions) validateProp() error {
 	return nil
 }
 
-func (opts *PipeDropOptions) validateProp() error {
+func (opts *DropPipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
 
-func (opts *PipeShowOptions) validateProp() error {
+func (opts *ShowPipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
@@ -87,21 +87,19 @@ func (opts *PipeShowOptions) validateProp() error {
 	return nil
 }
 
-func (opts *describePipeOptions) validateProp() error {
+func (opts *describePipeOptions) validate() error {
 	if opts == nil {
 		return errNilOptions
 	}
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
 
 var (
-	errNilOptions                    = errors.New("options cannot be nil")
-	errCopyStatementRequired         = errors.New("copy statement required")
-	errPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
-	errScopeRequiredForInKeyword     = errors.New("exactly one scope must be specified for in keyword")
-	errAlterNeedsExactlyOneAction    = errors.New("alter statement needs exactly one action from: set, unset, refresh")
-	errAlterNeedsAtLeastOneProperty  = errors.New("alter statement needs at least one property")
+	errCopyStatementRequired        = errors.New("copy statement required")
+	errScopeRequiredForInKeyword    = errors.New("exactly one scope must be specified for in keyword")
+	errAlterNeedsExactlyOneAction   = errors.New("alter statement needs exactly one action from: set, unset, refresh")
+	errAlterNeedsAtLeastOneProperty = errors.New("alter statement needs at least one property")
 )

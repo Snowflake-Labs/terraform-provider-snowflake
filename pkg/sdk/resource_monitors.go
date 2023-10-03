@@ -9,6 +9,13 @@ import (
 	"strings"
 )
 
+var (
+	_ validatable = new(CreateResourceMonitorOptions)
+	_ validatable = new(AlterResourceMonitorOptions)
+	_ validatable = new(dropResourceMonitorOptions)
+	_ validatable = new(ShowResourceMonitorOptions)
+)
+
 type ResourceMonitors interface {
 	// Create creates a resource monitor.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error
@@ -17,7 +24,7 @@ type ResourceMonitors interface {
 	// Drop removes a resource monitor.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
 	// Show returns a list of resource monitor.
-	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]*ResourceMonitor, error)
+	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error)
 	// ShowByID returns a resource monitor by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
 }
@@ -61,7 +68,7 @@ type resourceMonitorRow struct {
 	NotifyUsers        sql.NullString `db:"notify_users"`
 }
 
-func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
+func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 	resourceMonitor := &ResourceMonitor{
 		Name: row.Name,
 	}
@@ -177,9 +184,9 @@ func (v *ResourceMonitor) ObjectType() ObjectType {
 
 // CreateResourceMonitorOptions contains options for creating a resource monitor.
 type CreateResourceMonitorOptions struct {
-	create          bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create          bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
+	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	With            *ResourceMonitorWith    `ddl:"keyword" sql:"WITH"`
 }
@@ -195,7 +202,7 @@ type ResourceMonitorWith struct {
 
 func (opts *CreateResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -269,8 +276,8 @@ const (
 
 // AlterResourceMonitorOptions contains options for altering a resource monitor.
 type AlterResourceMonitorOptions struct {
-	alter           bool                    `ddl:"static" sql:"ALTER"`            //lint:ignore U1000 This is used in the ddl tag
-	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
+	alter           bool                    `ddl:"static" sql:"ALTER"`
+	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
 	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	Set             *ResourceMonitorSet     `ddl:"keyword" sql:"SET"`
@@ -280,7 +287,7 @@ type AlterResourceMonitorOptions struct {
 
 func (opts *AlterResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if opts.Set == nil {
 		return nil
@@ -319,14 +326,14 @@ type ResourceMonitorSet struct {
 
 // resourceMonitorDropOptions contains options for dropping a resource monitor.
 type dropResourceMonitorOptions struct {
-	drop            bool                    `ddl:"static" sql:"DROP"`             //lint:ignore U1000 This is used in the ddl tag
-	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"` //lint:ignore U1000 This is used in the ddl tag
+	drop            bool                    `ddl:"static" sql:"DROP"`
+	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *dropResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -348,8 +355,8 @@ func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier)
 
 // ShowResourceMonitorOptions contains options for listing resource monitors.
 type ShowResourceMonitorOptions struct {
-	show             bool  `ddl:"static" sql:"SHOW"`              //lint:ignore U1000 This is used in the ddl tag
-	resourceMonitors bool  `ddl:"static" sql:"RESOURCE MONITORS"` //lint:ignore U1000 This is used in the ddl tag
+	show             bool  `ddl:"static" sql:"SHOW"`
+	resourceMonitors bool  `ddl:"static" sql:"RESOURCE MONITORS"`
 	Like             *Like `ddl:"keyword" sql:"LIKE"`
 }
 
@@ -357,10 +364,8 @@ func (opts *ShowResourceMonitorOptions) validate() error {
 	return nil
 }
 
-func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]*ResourceMonitor, error) {
-	if opts == nil {
-		opts = &ShowResourceMonitorOptions{}
-	}
+func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error) {
+	opts = createIfNil(opts)
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
@@ -373,13 +378,13 @@ func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOp
 	if err != nil {
 		return nil, err
 	}
-	resourceMonitors := make([]*ResourceMonitor, 0, len(rows))
+	resourceMonitors := make([]ResourceMonitor, 0, len(rows))
 	for _, row := range rows {
-		resourceMonitor, err := row.toResourceMonitor()
+		resourceMonitor, err := row.convert()
 		if err != nil {
 			return nil, err
 		}
-		resourceMonitors = append(resourceMonitors, resourceMonitor)
+		resourceMonitors = append(resourceMonitors, *resourceMonitor)
 	}
 	return resourceMonitors, nil
 }
@@ -395,8 +400,8 @@ func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentif
 	}
 	for _, resourceMonitor := range resourceMonitors {
 		if resourceMonitor.Name == id.Name() {
-			return resourceMonitor, nil
+			return &resourceMonitor, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }

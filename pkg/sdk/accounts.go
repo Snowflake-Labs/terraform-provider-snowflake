@@ -7,15 +7,19 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateAccountOptions)
+	_ validatable = new(AlterAccountOptions)
+	_ validatable = new(ShowAccountOptions)
+)
+
 type Accounts interface {
-	// Create creates an account.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error
-	// Alter modifies an existing account
 	Alter(ctx context.Context, opts *AlterAccountOptions) error
-	// Show returns a list of accounts.
-	Show(ctx context.Context, opts *ShowAccountOptions) ([]*Account, error)
-	// ShowByID returns an account by id
+	Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
+	Drop(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int, opts *DropAccountOptions) error
+	Undrop(ctx context.Context, id AccountObjectIdentifier) error
 }
 
 var _ Accounts = (*accounts)(nil)
@@ -33,8 +37,8 @@ var (
 )
 
 type CreateAccountOptions struct {
-	create  bool                    `ddl:"static" sql:"CREATE"`  //lint:ignore U1000 This is used in the ddl tag
-	account bool                    `ddl:"static" sql:"ACCOUNT"` //lint:ignore U1000 This is used in the ddl tag
+	create  bool                    `ddl:"static" sql:"CREATE"`
+	account bool                    `ddl:"static" sql:"ACCOUNT"`
 	name    AccountObjectIdentifier `ddl:"identifier"`
 
 	// Object properties
@@ -72,20 +76,12 @@ func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts 
 		opts = &CreateAccountOptions{}
 	}
 	opts.name = id
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	stmt, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = c.client.exec(ctx, stmt)
-	return err
+	return validateAndExec(c.client, ctx, opts)
 }
 
 type AlterAccountOptions struct {
-	alter   bool `ddl:"static" sql:"ALTER"`   //lint:ignore U1000 This is used in the ddl tag
-	account bool `ddl:"static" sql:"ACCOUNT"` //lint:ignore U1000 This is used in the ddl tag
+	alter   bool `ddl:"static" sql:"ALTER"`
+	account bool `ddl:"static" sql:"ACCOUNT"`
 
 	Set    *AccountSet    `ddl:"keyword" sql:"SET"`
 	Unset  *AccountUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
@@ -271,20 +267,12 @@ func (c *accounts) Alter(ctx context.Context, opts *AlterAccountOptions) error {
 	if opts == nil {
 		opts = &AlterAccountOptions{}
 	}
-	if err := opts.validate(); err != nil {
-		return err
-	}
-	sql, err := structToSQL(opts)
-	if err != nil {
-		return err
-	}
-	_, err = c.client.exec(ctx, sql)
-	return err
+	return validateAndExec(c.client, ctx, opts)
 }
 
 type ShowAccountOptions struct {
-	show     bool  `ddl:"static" sql:"SHOW"`                  //lint:ignore U1000 This is used in the ddl tag
-	accounts bool  `ddl:"static" sql:"ORGANIZATION ACCOUNTS"` //lint:ignore U1000 This is used in the ddl tag
+	show     bool  `ddl:"static" sql:"SHOW"`
+	accounts bool  `ddl:"static" sql:"ORGANIZATION ACCOUNTS"`
 	Like     *Like `ddl:"keyword" sql:"LIKE"`
 }
 
@@ -339,7 +327,7 @@ type accountDBRow struct {
 	IsOrgAdmin                           bool           `db:"is_org_admin"`
 }
 
-func (row accountDBRow) toAccount() *Account {
+func (row accountDBRow) convert() *Account {
 	acc := &Account{
 		OrganizationName:                     row.OrganizationName,
 		AccountName:                          row.AccountName,
@@ -370,27 +358,13 @@ func (row accountDBRow) toAccount() *Account {
 	return acc
 }
 
-func (c *accounts) Show(ctx context.Context, opts *ShowAccountOptions) ([]*Account, error) {
-	if opts == nil {
-		opts = &ShowAccountOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (c *accounts) Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[accountDBRow](c.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	dest := []accountDBRow{}
-	err = c.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]*Account, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.toAccount()
-	}
-
+	resultList := convertRows[accountDBRow, Account](dbRows)
 	return resultList, nil
 }
 
@@ -406,8 +380,53 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 
 	for _, account := range accounts {
 		if account.AccountName == id.Name() || account.AccountLocator == id.Name() {
-			return account, nil
+			return &account, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
+}
+
+type DropAccountOptions struct {
+	drop              bool                    `ddl:"static" sql:"DROP"`
+	account           bool                    `ddl:"static" sql:"ACCOUNT"`
+	IfExists          *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name              AccountObjectIdentifier `ddl:"identifier"`
+	gracePeriodInDays int                     `ddl:"parameter" sql:"GRACE_PERIOD_IN_DAYS"`
+}
+
+func (opts *DropAccountOptions) validate() error {
+	if !validObjectidentifier(opts.name) {
+		return fmt.Errorf("Name must be set")
+	}
+	if !validateIntGreaterThanOrEqual(opts.gracePeriodInDays, 3) {
+		return fmt.Errorf("gracePeriodInDays must be greater than or equal to 3")
+	}
+	return nil
+}
+
+func (c *accounts) Drop(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int, opts *DropAccountOptions) error {
+	if opts == nil {
+		opts = &DropAccountOptions{}
+	}
+	opts.name = id
+	opts.gracePeriodInDays = gracePeriodInDays
+	return validateAndExec(c.client, ctx, opts)
+}
+
+type undropAccountOptions struct {
+	undrop  bool                    `ddl:"static" sql:"UNDROP"`
+	account bool                    `ddl:"static" sql:"ACCOUNT"`
+	name    AccountObjectIdentifier `ddl:"identifier"`
+}
+
+func (c *accounts) Undrop(ctx context.Context, id AccountObjectIdentifier) error {
+	opts := &undropAccountOptions{
+		name: id,
+	}
+	sql, err := structToSQL(opts)
+	if err != nil {
+		return err
+	}
+	_, err = c.client.exec(ctx, sql)
+	return err
 }

@@ -30,20 +30,20 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("with show options", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
+		showOptions := &ShowPasswordPolicyOptions{
 			In: &In{
 				Schema: schemaTest.ID(),
 			},
 		}
 		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, passwordPolicies, passwordPolicyTest)
-		assert.Contains(t, passwordPolicies, passwordPolicy2Test)
+		assert.Contains(t, passwordPolicies, *passwordPolicyTest)
+		assert.Contains(t, passwordPolicies, *passwordPolicy2Test)
 		assert.Equal(t, 2, len(passwordPolicies))
 	})
 
 	t.Run("with show options and like", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
+		showOptions := &ShowPasswordPolicyOptions{
 			Like: &Like{
 				Pattern: String(passwordPolicyTest.Name),
 			},
@@ -53,12 +53,12 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 		}
 		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, passwordPolicies, passwordPolicyTest)
+		assert.Contains(t, passwordPolicies, *passwordPolicyTest)
 		assert.Equal(t, 1, len(passwordPolicies))
 	})
 
 	t.Run("when searching a non-existent password policy", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
+		showOptions := &ShowPasswordPolicyOptions{
 			Like: &Like{
 				Pattern: String("non-existent"),
 			},
@@ -70,7 +70,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 
 	/* there appears to be a bug in the Snowflake API. LIMIT is not actually limiting the number of results
 	t.Run("when limiting the number of results", func(t *testing.T) {
-		showOptions := &PasswordPolicyShowOptions{
+		showOptions := &ShowPasswordPolicyOptions{
 			In: &In{
 				Schema: String(schemaTest.FullyQualifiedName()),
 			},
@@ -104,22 +104,24 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 			PasswordMaxAgeDays:        Int(30),
 			PasswordMaxRetries:        Int(5),
 			PasswordLockoutTimeMins:   Int(30),
-			Comment:                   String("test comment"),
+			// todo [SNOW-928909]: uncomment this once comments are working again
+			// Comment:                   String("test comment"),
 		})
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
-		assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
-		assert.Equal(t, 10, passwordPolicyDetails.PasswordMinLength.Value)
-		assert.Equal(t, 20, passwordPolicyDetails.PasswordMaxLength.Value)
-		assert.Equal(t, 1, passwordPolicyDetails.PasswordMinUpperCaseChars.Value)
-		assert.Equal(t, 1, passwordPolicyDetails.PasswordMinLowerCaseChars.Value)
-		assert.Equal(t, 1, passwordPolicyDetails.PasswordMinNumericChars.Value)
-		assert.Equal(t, 1, passwordPolicyDetails.PasswordMinSpecialChars.Value)
-		assert.Equal(t, 30, passwordPolicyDetails.PasswordMaxAgeDays.Value)
-		assert.Equal(t, 5, passwordPolicyDetails.PasswordMaxRetries.Value)
-		assert.Equal(t, 30, passwordPolicyDetails.PasswordLockoutTimeMins.Value)
+		// todo [SNOW-928909]: uncomment this once comments are working again
+		// assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
+		assert.Equal(t, 10, *passwordPolicyDetails.PasswordMinLength.Value)
+		assert.Equal(t, 20, *passwordPolicyDetails.PasswordMaxLength.Value)
+		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinUpperCaseChars.Value)
+		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinLowerCaseChars.Value)
+		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinNumericChars.Value)
+		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinSpecialChars.Value)
+		assert.Equal(t, 30, *passwordPolicyDetails.PasswordMaxAgeDays.Value)
+		assert.Equal(t, 5, *passwordPolicyDetails.PasswordMaxRetries.Value)
+		assert.Equal(t, 30, *passwordPolicyDetails.PasswordLockoutTimeMins.Value)
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
@@ -131,16 +133,18 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 			PasswordMinLength:         Int(10),
 			PasswordMaxLength:         Int(20),
 			PasswordMinUpperCaseChars: Int(5),
-			Comment:                   String("test comment"),
+			// todo [SNOW-928909]: uncomment this once comments are working again
+			// Comment:                   String("test comment"),
 		})
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
-		assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
-		assert.Equal(t, 10, passwordPolicyDetails.PasswordMinLength.Value)
-		assert.Equal(t, 20, passwordPolicyDetails.PasswordMaxLength.Value)
-		assert.Equal(t, 5, passwordPolicyDetails.PasswordMinUpperCaseChars.Value)
+		// todo [SNOW-928909]: uncomment this once comments are working again
+		// assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
+		assert.Equal(t, 10, *passwordPolicyDetails.PasswordMinLength.Value)
+		assert.Equal(t, 20, *passwordPolicyDetails.PasswordMaxLength.Value)
+		assert.Equal(t, 5, *passwordPolicyDetails.PasswordMinUpperCaseChars.Value)
 	})
 
 	t.Run("test no options", func(t *testing.T) {
@@ -152,15 +156,15 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
 		assert.Equal(t, "", passwordPolicyDetails.Comment.Value)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinLength.Value, passwordPolicyDetails.PasswordMinLength.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMaxLength.Value, passwordPolicyDetails.PasswordMaxLength.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinUpperCaseChars.Value, passwordPolicyDetails.PasswordMinUpperCaseChars.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinLowerCaseChars.Value, passwordPolicyDetails.PasswordMinLowerCaseChars.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinNumericChars.Value, passwordPolicyDetails.PasswordMinNumericChars.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMinSpecialChars.Value, passwordPolicyDetails.PasswordMinSpecialChars.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMaxAgeDays.Value, passwordPolicyDetails.PasswordMaxAgeDays.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordMaxRetries.Value, passwordPolicyDetails.PasswordMaxRetries.DefaultValue)
-		assert.Equal(t, passwordPolicyDetails.PasswordLockoutTimeMins.Value, passwordPolicyDetails.PasswordLockoutTimeMins.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordMinLength.Value, *passwordPolicyDetails.PasswordMinLength.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordMaxLength.Value, *passwordPolicyDetails.PasswordMaxLength.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordMinUpperCaseChars.Value, *passwordPolicyDetails.PasswordMinUpperCaseChars.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordMinLowerCaseChars.Value, *passwordPolicyDetails.PasswordMinLowerCaseChars.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordMinNumericChars.Value, *passwordPolicyDetails.PasswordMinNumericChars.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordMinSpecialChars.Value, *passwordPolicyDetails.PasswordMinSpecialChars.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordMaxAgeDays.Value, *passwordPolicyDetails.PasswordMaxAgeDays.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordMaxRetries.Value, *passwordPolicyDetails.PasswordMaxRetries.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordLockoutTimeMins.Value, *passwordPolicyDetails.PasswordLockoutTimeMins.DefaultValue)
 	})
 }
 
@@ -187,7 +191,7 @@ func TestInt_PasswordPolicyDescribe(t *testing.T) {
 	t.Run("when password policy does not exist", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		_, err := client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 
@@ -208,6 +212,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 			Set: &PasswordPolicySet{
 				PasswordMinLength: Int(10),
 				PasswordMaxLength: Int(20),
+				Comment:           String("new comment"),
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, passwordPolicy.ID(), alterOptions)
@@ -215,8 +220,9 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, passwordPolicy.ID())
 		require.NoError(t, err)
 		assert.Equal(t, passwordPolicy.Name, passwordPolicyDetails.Name.Value)
-		assert.Equal(t, 10, passwordPolicyDetails.PasswordMinLength.Value)
-		assert.Equal(t, 20, passwordPolicyDetails.PasswordMaxLength.Value)
+		assert.Equal(t, 10, *passwordPolicyDetails.PasswordMinLength.Value)
+		assert.Equal(t, 20, *passwordPolicyDetails.PasswordMaxLength.Value)
+		assert.Equal(t, "new comment", passwordPolicyDetails.Comment.Value)
 	})
 
 	t.Run("when renaming", func(t *testing.T) {
@@ -243,8 +249,10 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 
 	t.Run("when unsetting values", func(t *testing.T) {
 		createOptions := &CreatePasswordPolicyOptions{
-			Comment:            String("test comment"),
+			PasswordMaxAgeDays: Int(20),
 			PasswordMaxRetries: Int(10),
+			// todo [SNOW-928909]: uncomment this once comments are working again
+			// Comment: String("test comment")
 		}
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
 		id := passwordPolicy.ID()
@@ -258,7 +266,9 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		alterOptions = &AlterPasswordPolicyOptions{
 			Unset: &PasswordPolicyUnset{
-				Comment: Bool(true),
+				PasswordMaxAgeDays: Bool(true),
+				// todo [SNOW-928909]: uncomment this once comments are working again
+				// Comment: Bool("true")
 			},
 		}
 		err = client.PasswordPolicies.Alter(ctx, id, alterOptions)
@@ -267,21 +277,25 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, passwordPolicy.Name, passwordPolicyDetails.Name.Value)
 		assert.Equal(t, "", passwordPolicyDetails.Comment.Value)
-		assert.Equal(t, passwordPolicyDetails.PasswordMaxRetries.Value, passwordPolicyDetails.PasswordMaxRetries.DefaultValue)
+		assert.Equal(t, *passwordPolicyDetails.PasswordMaxRetries.Value, *passwordPolicyDetails.PasswordMaxRetries.DefaultValue)
 	})
 
 	t.Run("when unsetting multiple values at same time", func(t *testing.T) {
 		createOptions := &CreatePasswordPolicyOptions{
-			Comment:            String("test comment"),
+			PasswordMaxAgeDays: Int(20),
 			PasswordMaxRetries: Int(10),
+			// todo [SNOW-928909]: uncomment this once comments are working again
+			// Comment: String("test comment")
 		}
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
 		id := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
 		alterOptions := &AlterPasswordPolicyOptions{
 			Unset: &PasswordPolicyUnset{
-				Comment:            Bool(true),
+				PasswordMaxAgeDays: Bool(true),
 				PasswordMaxRetries: Bool(true),
+				// todo [SNOW-928909]: uncomment this once comments are working again
+				// Comment: Bool("true")
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, id, alterOptions)
@@ -305,13 +319,13 @@ func TestInt_PasswordPolicyDrop(t *testing.T) {
 		err := client.PasswordPolicies.Drop(ctx, id, nil)
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when password policy does not exist", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		err := client.PasswordPolicies.Drop(ctx, id, nil)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when password policy exists and if exists is true", func(t *testing.T) {
@@ -321,6 +335,6 @@ func TestInt_PasswordPolicyDrop(t *testing.T) {
 		err := client.PasswordPolicies.Drop(ctx, id, dropOptions)
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }

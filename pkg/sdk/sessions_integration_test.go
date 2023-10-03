@@ -39,16 +39,16 @@ func TestInt_AlterSession(t *testing.T) {
 	}
 	t.Cleanup(cleanup)
 
-	parameter, err := client.Sessions.ShowSessionParameter(ctx, SessionParameterAbortDetachedQuery)
+	parameter, err := client.Parameters.ShowSessionParameter(ctx, SessionParameterAbortDetachedQuery)
 	require.NoError(t, err)
 	assert.Equal(t, "true", parameter.Value)
-	parameter, err = client.Sessions.ShowSessionParameter(ctx, SessionParameterAutocommit)
+	parameter, err = client.Parameters.ShowSessionParameter(ctx, SessionParameterAutocommit)
 	require.NoError(t, err)
 	assert.Equal(t, "true", parameter.Value)
-	parameter, err = client.Sessions.ShowSessionParameter(ctx, SessionParameterGeographyOutputFormat)
+	parameter, err = client.Parameters.ShowSessionParameter(ctx, SessionParameterGeographyOutputFormat)
 	require.NoError(t, err)
 	assert.Equal(t, string(GeographyOutputFormatGeoJSON), parameter.Value)
-	parameter, err = client.Sessions.ShowSessionParameter(ctx, SessionParameterWeekOfYearPolicy)
+	parameter, err = client.Parameters.ShowSessionParameter(ctx, SessionParameterWeekOfYearPolicy)
 	require.NoError(t, err)
 	assert.Equal(t, "1", parameter.Value)
 }
@@ -56,7 +56,7 @@ func TestInt_AlterSession(t *testing.T) {
 func TestInt_ShowParameters(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-	parameters, err := client.Sessions.ShowParameters(ctx, nil)
+	parameters, err := client.Parameters.ShowParameters(ctx, nil)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameters)
 }
@@ -64,7 +64,7 @@ func TestInt_ShowParameters(t *testing.T) {
 func TestInt_ShowAccountParameter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-	parameter, err := client.Sessions.ShowAccountParameter(ctx, AccountParameterAutocommit)
+	parameter, err := client.Parameters.ShowAccountParameter(ctx, AccountParameterAutocommit)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
@@ -72,7 +72,7 @@ func TestInt_ShowAccountParameter(t *testing.T) {
 func TestInt_ShowSessionParameter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
-	parameter, err := client.Sessions.ShowSessionParameter(ctx, SessionParameterAutocommit)
+	parameter, err := client.Parameters.ShowSessionParameter(ctx, SessionParameterAutocommit)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
@@ -82,7 +82,7 @@ func TestInt_ShowObjectParameter(t *testing.T) {
 	ctx := context.Background()
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	parameter, err := client.Sessions.ShowObjectParameter(ctx, ObjectParameterDataRetentionTimeInDays, databaseTest.ObjectType(), databaseTest.ID())
+	parameter, err := client.Parameters.ShowObjectParameter(ctx, ObjectParameterDataRetentionTimeInDays, Object{ObjectType: databaseTest.ObjectType(), Name: databaseTest.ID()})
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
@@ -93,7 +93,7 @@ func TestInt_ShowUserParameter(t *testing.T) {
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
 	userID := NewAccountObjectIdentifier(user)
-	parameter, err := client.Sessions.ShowUserParameter(ctx, UserParameterAutocommit, userID)
+	parameter, err := client.Parameters.ShowUserParameter(ctx, UserParameterAutocommit, userID)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
@@ -156,7 +156,7 @@ func TestInt_UseSchema(t *testing.T) {
 	originalDB, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		originalSchemaIdentifier := NewSchemaIdentifier(originalDB, originalSchema)
+		originalSchemaIdentifier := NewDatabaseObjectIdentifier(originalDB, originalSchema)
 		if !validObjectidentifier(originalSchemaIdentifier) {
 			return
 		}

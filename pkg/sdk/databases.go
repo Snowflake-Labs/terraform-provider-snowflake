@@ -9,6 +9,19 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateDatabaseOptions)
+	_ validatable = new(CreateSharedDatabaseOptions)
+	_ validatable = new(CreateSecondaryDatabaseOptions)
+	_ validatable = new(AlterDatabaseOptions)
+	_ validatable = new(AlterDatabaseReplicationOptions)
+	_ validatable = new(AlterDatabaseFailoverOptions)
+	_ validatable = new(DropDatabaseOptions)
+	_ validatable = new(undropDatabaseOptions)
+	_ validatable = new(ShowDatabasesOptions)
+	_ validatable = new(describeDatabaseOptions)
+)
+
 type Databases interface {
 	// Create creates a database.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateDatabaseOptions) error
@@ -27,7 +40,7 @@ type Databases interface {
 	// Undrop restores the most recent version of a dropped database
 	Undrop(ctx context.Context, id AccountObjectIdentifier) error
 	// Show returns a list of databases.
-	Show(ctx context.Context, opts *ShowDatabasesOptions) ([]*Database, error)
+	Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error)
 	// ShowByID returns a database by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
 	// Describe returns the details of a database.
@@ -81,8 +94,8 @@ type databaseRow struct {
 	Kind          sql.NullString `db:"kind"`
 }
 
-func (row *databaseRow) toDatabase() *Database {
-	database := Database{
+func (row databaseRow) convert() *Database {
+	database := &Database{
 		CreatedOn: row.CreatedOn,
 		Name:      row.Name,
 	}
@@ -128,15 +141,15 @@ func (row *databaseRow) toDatabase() *Database {
 	if row.Kind.Valid {
 		database.Kind = row.Kind.String
 	}
-	return &database
+	return database
 }
 
 type CreateDatabaseOptions struct {
-	create                     bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create                     bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace                  *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	Transient                  *bool                   `ddl:"keyword" sql:"TRANSIENT"`
-	database                   bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
-	name                       AccountObjectIdentifier `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
+	database                   bool                    `ddl:"static" sql:"DATABASE"`
+	name                       AccountObjectIdentifier `ddl:"identifier"`
 	IfNotExists                *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	Clone                      *Clone                  `ddl:"-"`
 	DataRetentionTimeInDays    *int                    `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
@@ -174,19 +187,19 @@ func (v *databases) Create(ctx context.Context, id AccountObjectIdentifier, opts
 }
 
 type CreateSharedDatabaseOptions struct {
-	create    bool                     `ddl:"static" sql:"CREATE"`   //lint:ignore U1000 This is used in the ddl tag
-	database  bool                     `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
-	name      AccountObjectIdentifier  `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
+	create    bool                     `ddl:"static" sql:"CREATE"`
+	database  bool                     `ddl:"static" sql:"DATABASE"`
+	name      AccountObjectIdentifier  `ddl:"identifier"`
 	fromShare ExternalObjectIdentifier `ddl:"identifier" sql:"FROM SHARE"`
 	Comment   *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateSharedDatabaseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if !validObjectidentifier(opts.fromShare) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -211,19 +224,19 @@ func (v *databases) CreateShared(ctx context.Context, id AccountObjectIdentifier
 }
 
 type CreateSecondaryDatabaseOptions struct {
-	create                  bool                     `ddl:"static" sql:"CREATE"`   //lint:ignore U1000 This is used in the ddl tag
-	database                bool                     `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
-	name                    AccountObjectIdentifier  `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
+	create                  bool                     `ddl:"static" sql:"CREATE"`
+	database                bool                     `ddl:"static" sql:"DATABASE"`
+	name                    AccountObjectIdentifier  `ddl:"identifier"`
 	primaryDatabase         ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
 	DataRetentionTimeInDays *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 }
 
 func (opts *CreateSecondaryDatabaseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if !validObjectidentifier(opts.primaryDatabase) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -246,8 +259,8 @@ func (v *databases) CreateSecondary(ctx context.Context, id AccountObjectIdentif
 }
 
 type AlterDatabaseOptions struct {
-	alter    bool                    `ddl:"static" sql:"ALTER"`    //lint:ignore U1000 This is used in the ddl tag
-	database bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
+	alter    bool                    `ddl:"static" sql:"ALTER"`
+	database bool                    `ddl:"static" sql:"DATABASE"`
 	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name     AccountObjectIdentifier `ddl:"identifier"`
 	NewName  AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
@@ -258,7 +271,7 @@ type AlterDatabaseOptions struct {
 
 func (opts *AlterDatabaseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if validObjectidentifier(opts.NewName) && anyValueSet(opts.Set, opts.Unset, opts.SwapWith) {
 		return errors.New("RENAME TO cannot be set with other options")
@@ -329,8 +342,8 @@ func (v *databases) Alter(ctx context.Context, id AccountObjectIdentifier, opts 
 }
 
 type AlterDatabaseReplicationOptions struct {
-	alter              bool                    `ddl:"static" sql:"ALTER"`    //lint:ignore U1000 This is used in the ddl tag
-	database           bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
+	alter              bool                    `ddl:"static" sql:"ALTER"`
+	database           bool                    `ddl:"static" sql:"DATABASE"`
 	name               AccountObjectIdentifier `ddl:"identifier"`
 	EnableReplication  *EnableReplication      `ddl:"keyword" sql:"ENABLE REPLICATION"`
 	DisableReplication *DisableReplication     `ddl:"keyword" sql:"DISABLE REPLICATION"`
@@ -339,7 +352,7 @@ type AlterDatabaseReplicationOptions struct {
 
 func (opts *AlterDatabaseReplicationOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if everyValueNil(opts.EnableReplication, opts.DisableReplication, opts.Refresh) {
 		return errors.New("one of ENABLE REPLICATION, DISABLE REPLICATION or REFRESH must be set")
@@ -394,8 +407,8 @@ func (v *databases) AlterReplication(ctx context.Context, id AccountObjectIdenti
 }
 
 type AlterDatabaseFailoverOptions struct {
-	alter           bool                    `ddl:"static" sql:"ALTER"`    //lint:ignore U1000 This is used in the ddl tag
-	database        bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
+	alter           bool                    `ddl:"static" sql:"ALTER"`
+	database        bool                    `ddl:"static" sql:"DATABASE"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	EnableFailover  *EnableFailover         `ddl:"keyword" sql:"ENABLE FAILOVER"`
 	DisableFailover *DisableFailover        `ddl:"keyword" sql:"DISABLE FAILOVER"`
@@ -404,7 +417,7 @@ type AlterDatabaseFailoverOptions struct {
 
 func (opts *AlterDatabaseFailoverOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if everyValueNil(opts.EnableFailover, opts.DisableFailover, opts.Primary) {
 		return errors.New("one of ENABLE FAILOVER, DISABLE FAILOVER or PRIMARY must be set")
@@ -458,15 +471,15 @@ func (v *databases) AlterFailover(ctx context.Context, id AccountObjectIdentifie
 }
 
 type DropDatabaseOptions struct {
-	drop     bool                    `ddl:"static" sql:"DROP"`     //lint:ignore U1000 This is used in the ddl tag
-	database bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
+	drop     bool                    `ddl:"static" sql:"DROP"`
+	database bool                    `ddl:"static" sql:"DATABASE"`
 	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name     AccountObjectIdentifier `ddl:"identifier"` //lint:ignore U1000 This is used in the ddl tag
+	name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *DropDatabaseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -488,14 +501,14 @@ func (v *databases) Drop(ctx context.Context, id AccountObjectIdentifier, opts *
 }
 
 type undropDatabaseOptions struct {
-	undrop   bool                    `ddl:"static" sql:"UNDROP"`   //lint:ignore U1000 This is used in the ddl tag
-	database bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
-	name     AccountObjectIdentifier `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
+	undrop   bool                    `ddl:"static" sql:"UNDROP"`
+	database bool                    `ddl:"static" sql:"DATABASE"`
+	name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *undropDatabaseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -516,9 +529,9 @@ func (v *databases) Undrop(ctx context.Context, id AccountObjectIdentifier) erro
 }
 
 type ShowDatabasesOptions struct {
-	show       bool       `ddl:"static" sql:"SHOW"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool       `ddl:"static" sql:"SHOW"`
 	Terse      *bool      `ddl:"keyword" sql:"TERSE"`
-	databases  bool       `ddl:"static" sql:"DATABASES"` //lint:ignore U1000 This is used in the ddl tag
+	databases  bool       `ddl:"static" sql:"DATABASES"`
 	History    *bool      `ddl:"keyword" sql:"HISTORY"`
 	Like       *Like      `ddl:"keyword" sql:"LIKE"`
 	StartsWith *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
@@ -529,24 +542,14 @@ func (opts *ShowDatabasesOptions) validate() error {
 	return nil
 }
 
-func (v *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]*Database, error) {
-	if opts == nil {
-		opts = &ShowDatabasesOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (v *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[databaseRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []databaseRow
-	err = v.client.query(ctx, &rows, sql)
-	databases := make([]*Database, len(rows))
-	for i, row := range rows {
-		databases[i] = row.toDatabase()
-	}
-	return databases, err
+	resultList := convertRows[databaseRow, Database](dbRows)
+	return resultList, nil
 }
 
 func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
@@ -560,10 +563,10 @@ func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*
 	}
 	for _, database := range databases {
 		if database.ID() == id {
-			return database, nil
+			return &database, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 type DatabaseDetails struct {
@@ -577,14 +580,14 @@ type DatabaseDetailsRow struct {
 }
 
 type describeDatabaseOptions struct {
-	describe bool                    `ddl:"static" sql:"DESCRIBE"` //lint:ignore U1000 This is used in the ddl tag
-	database bool                    `ddl:"static" sql:"DATABASE"` //lint:ignore U1000 This is used in the ddl tag
-	name     AccountObjectIdentifier `ddl:"identifier"`            //lint:ignore U1000 This is used in the ddl tag
+	describe bool                    `ddl:"static" sql:"DESCRIBE"`
+	database bool                    `ddl:"static" sql:"DATABASE"`
+	name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *describeDatabaseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }

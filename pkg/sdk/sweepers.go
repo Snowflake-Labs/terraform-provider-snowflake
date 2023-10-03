@@ -113,14 +113,14 @@ func getRoleSweeper(client *Client, prefix string) func() error {
 			log.Printf("[DEBUG] Sweeping all roles with prefix %s", prefix)
 		}
 		ctx := context.Background()
-		roles, err := client.Roles.Show(ctx, nil)
+		roles, err := client.Roles.Show(ctx, NewShowRoleRequest())
 		if err != nil {
 			return err
 		}
 		for _, role := range roles {
 			if (prefix == "" || strings.HasPrefix(role.Name, prefix)) && !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "SYSADMIN", "ORGADMIN", "USERADMIN", "PUBLIC"}, role.Name) {
 				log.Printf("[DEBUG] Dropping role %s", role.Name)
-				if err := client.Roles.Drop(ctx, role.ID(), nil); err != nil {
+				if err := client.Roles.Drop(ctx, NewDropRoleRequest(role.ID())); err != nil {
 					return err
 				}
 			} else {
@@ -145,7 +145,7 @@ func getShareSweeper(client *Client, prefix string) func() error {
 		}
 		for _, share := range shares {
 			if (share.Kind == ShareKindOutbound) && (prefix == "" || strings.HasPrefix(share.Name.Name(), prefix)) {
-				log.Printf("[DEBUG] Dropping share %s", share.Name.Name())
+				log.Printf("[DEBUG] Dropping share %s", share.ID().Name())
 				if err := client.Shares.Drop(ctx, share.ID()); err != nil {
 					return err
 				}

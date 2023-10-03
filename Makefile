@@ -1,110 +1,112 @@
-SHA=$(shell git rev-parse --short HEAD)
-export DIRTY=$(shell if `git diff-index --quiet HEAD --`; then echo false; else echo true;  fi)
-export BASE_BINARY_NAME=terraform-provider-snowflake
 export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=1.4.1
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
+export SKIP_TABLE_DATA_RETENTION_TESTS=true
 
-go_test ?= -
-ifeq (, $(shell which gotest))
-	go_test=go test
-else
-	go_test=gotest
-endif
-
-all: test docs install
-.PHONY: all
-
-setup: ## setup development dependencies
-	curl -sfL https://raw.githubusercontent.com/chanzuckerberg/bff/main/download.sh | sh
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
-	curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh
-.PHONY: setup
-
-sweep:
-	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v
-
-lint:  ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml  -diff "git diff main"
-.PHONY: lint
-
-lint-ci: ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
-.PHONY: lint-ci
-
-lint-all:  ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml  -filter-mode nofilter
-.PHONY: lint-all
-
-lint-missing-acceptance-tests:
-	@for r in `ls pkg/resources/ | grep -v list_expansion | grep -v privileges | grep -v grant_helpers | grep -v test | xargs -I{} basename {} .go`; do \
-		if [ ! -f pkg/resources/"$$r"_acceptance_test.go ]; then \
-			echo $$r; \
-		fi; \
-	done
-.PHONY: lint-missing-acceptance-tests
-
-build: ## build the binary
-	go build ${LDFLAGS} -o $(BASE_BINARY_NAME) .
-.PHONY: build
-
-coverage: ## run the go coverage tool, reading file coverage.out
-	go tool cover -html=coverage.txt
-.PHONY: coverage
-
-test:  ## run the tests (except sdk tests)
-	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/resources/...
-	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/provider/...
-	CGO_ENABLED=1 $(go_test) -race -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./pkg/snowflake/...
-
-.PHONY: test
-
-test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 $(go_test) -timeout 1200s -v -coverprofile=coverage.txt -covermode=atomic $(TESTARGS) ./...
-.PHONY: test-acceptance
-
-deps:
-	go mod tidy -compat=1.19
-.PHONY: deps
-
-install: ## install the terraform-provider-snowflake binary in $GOPATH/bin
-	go install ${LDFLAGS} .
-.PHONY: install
-
-install-tf: build ## installs plugin where terraform can find it
-	mkdir -p $(HOME)/.terraform.d/plugins
-	cp ./$(BASE_BINARY_NAME) $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME)
-.PHONY: install-tf
-
-uninstall-tf: build ## uninstalls plugin from where terraform can find it
-	rm $(HOME)/.terraform.d/plugins/$(BASE_BINARY_NAME) 2>/dev/null
-.PHONY: install-tf
+BASE_BINARY_NAME=terraform-provider-snowflake
+TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
+TERRAFORM_PLUGIN_LOCAL_INSTALL=$(TERRAFORM_PLUGINS_DIR)/$(BASE_BINARY_NAME)
+COVERAGE_REPORT_FILE=coverage.txt
+COVERAGE_FLAGS=-coverprofile=$(COVERAGE_REPORT_FILE) -covermode=atomic
 
 help: ## display help for this makefile
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help
 
-clean: ## clean the repo
-	rm terraform-provider-snowflake 2>/dev/null || true
+dev-setup: ## setup development dependencies
+	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.3
+	@which ./bin/reviewdog || curl -sSfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b ./bin v0.14.2
+.PHONY: dev-setup
+
+dev-cleanup: ## cleanup development dependencies
+	rm -rf bin/*
+.PHONY: dev-cleanup
+
+sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	@echo "Are you sure? [y/n]" >&2
+	@read -r REPLY; \
+		if echo "$$REPLY" | grep -qG "^[yY]$$"; then \
+			SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
+			else echo "Aborting..."; \
+		fi;
+.PHONY: sweep
+
+lint-ci: ## run the fast go linters
+	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
+.PHONY: lint-ci
+
+test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
+	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 2000s -v $(COVERAGE_FLAGS) ./...
+.PHONY: test-acceptance
+
+build-local: ## build the binary locally
+	go build -o $(BASE_BINARY_NAME) .
+.PHONY: build-local
+
+install-tf: build-local ## installs plugin where terraform can find it
+	mkdir -p $(TERRAFORM_PLUGINS_DIR)
+	cp ./$(BASE_BINARY_NAME) $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
+.PHONY: install-tf
+
+uninstall-tf: ## uninstalls plugin from where terraform can find it
+	rm -f $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
+.PHONY: uninstall-tf
+
+clean: ## clean local binaries
+	rm -f $(BASE_BINARY_NAME)
 	go clean
-	rm -rf dist
 .PHONY: clean
 
-docs:
+docs: ## generate docs for terraform plugin
 	SNOWFLAKE_USER= SNOWFLAKE_ACCOUNT= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 .PHONY: docs
 
-check-docs: docs ## check that docs have been generated
+docs-check: docs ## check that docs have been generated
 	git diff --exit-code -- docs
-.PHONY: check-docs
+.PHONY: docs-check
 
-check-mod:
-	go mod tidy -compat=1.19
+mod: ## add missing and remove unused modules
+	go mod tidy -compat=1.20
+.PHONY: mod
+
+mod-check: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum
-.PHONY: check-mod
+.PHONY: mod-check
 
-.PHONY: fmt
-fmt: ## Run linter and apply formatting autofix
-	golangci-lint run ./... -v --fix
+lint-check: ## Run static code analysis and check formatting
+	./bin/golangci-lint run ./... -v
+.PHONY: lint-check
+
+lint-fix: ## Run static code analysis, check formatting and try to fix findings
+	./bin/golangci-lint run ./... -v --fix
+.PHONY: lint-fix
+
+pre-push: docs-check lint-check mod-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+.PHONY: pre-push
+
+generate-all-dto: ## Generate all DTOs for SDK interfaces
+	go generate ./pkg/sdk/*_dto.go
+.PHONY: generate-all
+
+generate-dto-%: ./pkg/sdk/%_dto.go ## Generate DTO for given SDK interface
+	go generate $<
+
+run-generator-poc:
+	go generate ./pkg/sdk/poc/example/*_def.go
+	go generate ./pkg/sdk/poc/example/*_dto_gen.go
+.PHONY: run-generator-poc
+
+clean-generator-poc:
+	rm -f ./pkg/sdk/poc/example/*_gen.go
+	rm -f ./pkg/sdk/poc/example/*_gen_test.go
+.PHONY: run-generator-poc
+
+run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on given object definition
+	go generate $<
+	go generate ./pkg/sdk/$*_dto_gen.go
+
+clean-generator-%: ## Clean generated files for specified resource
+	rm -f ./pkg/sdk/$**_gen.go
+	rm -f ./pkg/sdk/$**_gen_*test.go

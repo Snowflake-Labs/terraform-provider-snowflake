@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+var (
+	_ validatable = new(CreateWarehouseOptions)
+	_ validatable = new(AlterWarehouseOptions)
+	_ validatable = new(DropWarehouseOptions)
+	_ validatable = new(ShowWarehouseOptions)
+	_ validatable = new(describeWarehouseOptions)
+)
+
 type Warehouses interface {
 	// Create creates a warehouse.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateWarehouseOptions) error
@@ -17,7 +25,7 @@ type Warehouses interface {
 	// Drop removes a warehouse.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropWarehouseOptions) error
 	// Show returns a list of warehouses.
-	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]*Warehouse, error)
+	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error)
 	// ShowByID returns a warehouse by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	// Describe returns the details of a warehouse.
@@ -88,9 +96,9 @@ var (
 )
 
 type CreateWarehouseOptions struct {
-	create      bool                    `ddl:"static" sql:"CREATE"` //lint:ignore U1000 This is used in the ddl tag
+	create      bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	warehouse   bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	warehouse   bool                    `ddl:"static" sql:"WAREHOUSE"`
 	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        AccountObjectIdentifier `ddl:"identifier"`
 
@@ -117,7 +125,7 @@ type CreateWarehouseOptions struct {
 
 func (opts *CreateWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
 		return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
@@ -145,8 +153,8 @@ func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opt
 }
 
 type AlterWarehouseOptions struct {
-	alter     bool                    `ddl:"static" sql:"ALTER"`     //lint:ignore U1000 This is used in the ddl tag
-	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	alter     bool                    `ddl:"static" sql:"ALTER"`
+	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 
@@ -162,7 +170,7 @@ type AlterWarehouseOptions struct {
 
 func (opts *AlterWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	if ok := exactlyOneValueSet(
 		opts.Suspend,
@@ -286,15 +294,15 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 }
 
 type DropWarehouseOptions struct {
-	drop      bool                    `ddl:"static" sql:"DROP"`      //lint:ignore U1000 This is used in the ddl tag
-	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+	drop      bool                    `ddl:"static" sql:"DROP"`
+	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *DropWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -321,8 +329,8 @@ func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts 
 }
 
 type ShowWarehouseOptions struct {
-	show       bool  `ddl:"static" sql:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
-	warehouses bool  `ddl:"static" sql:"WAREHOUSES"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool  `ddl:"static" sql:"SHOW"`
+	warehouses bool  `ddl:"static" sql:"WAREHOUSES"`
 	Like       *Like `ddl:"keyword" sql:"LIKE"`
 }
 
@@ -403,7 +411,7 @@ type warehouseDBRow struct {
 	ScalingPolicy                   string        `db:"scaling_policy"`
 }
 
-func (row warehouseDBRow) toWarehouse() *Warehouse {
+func (row warehouseDBRow) convert() *Warehouse {
 	wh := &Warehouse{
 		Name:                            row.Name,
 		State:                           WarehouseState(row.State),
@@ -445,27 +453,13 @@ func (row warehouseDBRow) toWarehouse() *Warehouse {
 	return wh
 }
 
-func (c *warehouses) Show(ctx context.Context, opts *ShowWarehouseOptions) ([]*Warehouse, error) {
-	if opts == nil {
-		opts = &ShowWarehouseOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (c *warehouses) Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[warehouseDBRow](c.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	dest := []warehouseDBRow{}
-	err = c.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]*Warehouse, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.toWarehouse()
-	}
-
+	resultList := convertRows[warehouseDBRow, Warehouse](dbRows)
 	return resultList, nil
 }
 
@@ -481,21 +475,21 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 
 	for _, warehouse := range warehouses {
 		if warehouse.ID().name == id.Name() {
-			return warehouse, nil
+			return &warehouse, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
-type warehouseDescribeOptions struct {
-	describe  bool                    `ddl:"static" sql:"DESCRIBE"`  //lint:ignore U1000 This is used in the ddl tag
-	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"` //lint:ignore U1000 This is used in the ddl tag
+type describeWarehouseOptions struct {
+	describe  bool                    `ddl:"static" sql:"DESCRIBE"`
+	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *warehouseDescribeOptions) validate() error {
+func (opts *describeWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -521,7 +515,7 @@ type WarehouseDetails struct {
 }
 
 func (c *warehouses) Describe(ctx context.Context, id AccountObjectIdentifier) (*WarehouseDetails, error) {
-	opts := &warehouseDescribeOptions{
+	opts := &describeWarehouseOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {

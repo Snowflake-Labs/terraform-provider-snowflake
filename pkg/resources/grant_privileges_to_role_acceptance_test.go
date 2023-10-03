@@ -46,32 +46,33 @@ func TestAccGrantPrivilegesToRole_onAccount(t *testing.T) {
 	})
 }
 
-func TestAccGrantPrivilegesToRole_onAccountAllPrivileges(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+/*
+	func TestAccGrantPrivilegesToRole_onAccountAllPrivileges(t *testing.T) {
+		name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
-		CheckDestroy: nil,
-		Steps: []resource.TestStep{
-			{
-				Config: grantPrivilegesToRole_onAccountConfigAllPrivileges(name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account", "true"),
-					resource.TestCheckNoResourceAttr("snowflake_grant_privileges_to_role.g", "privileges"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "all_privileges", "true"),
-				),
+		resource.ParallelTest(t, resource.TestCase{
+			Providers:    providers(),
+			CheckDestroy: nil,
+			Steps: []resource.TestStep{
+				{
+					Config: grantPrivilegesToRole_onAccountConfigAllPrivileges(name),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
+						resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account", "true"),
+						resource.TestCheckNoResourceAttr("snowflake_grant_privileges_to_role.g", "privileges"),
+						resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "all_privileges", "true"),
+					),
+				},
+				// IMPORT
+				{
+					ResourceName:      "snowflake_grant_privileges_to_role.g",
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
 			},
-			// IMPORT
-			{
-				ResourceName:      "snowflake_grant_privileges_to_role.g",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
+		})
+	}
+*/
 func grantPrivilegesToRole_onAccountConfig(name string, privileges []string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {

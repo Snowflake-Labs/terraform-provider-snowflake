@@ -48,14 +48,14 @@ func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12), randomStringN(t, 12))
 }
 
-func randomSchemaIdentifier(t *testing.T) SchemaIdentifier {
+func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 	t.Helper()
-	return NewSchemaIdentifier(randomStringN(t, 12), randomStringN(t, 12))
+	return NewDatabaseObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12))
 }
 
-func alphanumericSchemaIdentifier(t *testing.T) SchemaIdentifier {
+func alphanumericDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 	t.Helper()
-	return NewSchemaIdentifier(randomAlphanumericN(t, 12), randomAlphanumericN(t, 12))
+	return NewDatabaseObjectIdentifier(randomAlphanumericN(t, 12), randomAlphanumericN(t, 12))
 }
 
 func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
@@ -76,7 +76,7 @@ func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifie
 	}
 }
 
-func useSchema(t *testing.T, client *Client, schemaID SchemaIdentifier) func() {
+func useSchema(t *testing.T, client *Client, schemaID DatabaseObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
@@ -86,7 +86,7 @@ func useSchema(t *testing.T, client *Client, schemaID SchemaIdentifier) func() {
 	err = client.Sessions.UseSchema(ctx, schemaID)
 	require.NoError(t, err)
 	return func() {
-		err := client.Sessions.UseSchema(ctx, NewSchemaIdentifier(orgDB, orgSchema))
+		err := client.Sessions.UseSchema(ctx, NewDatabaseObjectIdentifier(orgDB, orgSchema))
 		require.NoError(t, err)
 	}
 }
@@ -190,18 +190,18 @@ func randomIntRange(t *testing.T, min, max int) int {
 func createSessionPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*SessionPolicy, func()) {
 	t.Helper()
 	id := NewSchemaObjectIdentifier(database.Name, schema.Name, randomStringN(t, 12))
-	return createSessionPolicyWithOptions(t, client, id, &CreateSessionPolicyOptions{})
+	return createSessionPolicyWithOptions(t, client, id, NewCreateSessionPolicyRequest(id))
 }
 
-func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, opts *CreateSessionPolicyOptions) (*SessionPolicy, func()) {
+func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, request *CreateSessionPolicyRequest) (*SessionPolicy, func()) {
 	t.Helper()
 	ctx := context.Background()
-	err := client.SessionPolicies.Create(ctx, id, opts)
+	err := client.SessionPolicies.Create(ctx, request)
 	require.NoError(t, err)
 	sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
 	require.NoError(t, err)
 	return sessionPolicy, func() {
-		err := client.SessionPolicies.Drop(ctx, id, nil)
+		err := client.SessionPolicies.Drop(ctx, NewDropSessionPolicyRequest(id))
 		require.NoError(t, err)
 	}
 }
@@ -287,16 +287,16 @@ func createShareWithOptions(t *testing.T, client *Client, opts *CreateShareOptio
 	}
 }
 
-func createFileFormat(t *testing.T, client *Client, schema SchemaIdentifier) (*FileFormat, func()) {
+func createFileFormat(t *testing.T, client *Client, schema DatabaseObjectIdentifier) (*FileFormat, func()) {
 	t.Helper()
 	return createFileFormatWithOptions(t, client, schema, &CreateFileFormatOptions{
 		Type: FileFormatTypeCSV,
 	})
 }
 
-func createFileFormatWithOptions(t *testing.T, client *Client, schema SchemaIdentifier, opts *CreateFileFormatOptions) (*FileFormat, func()) {
+func createFileFormatWithOptions(t *testing.T, client *Client, schema DatabaseObjectIdentifier, opts *CreateFileFormatOptions) (*FileFormat, func()) {
 	t.Helper()
-	id := NewSchemaObjectIdentifier(schema.databaseName, schema.schemaName, randomString(t))
+	id := NewSchemaObjectIdentifier(schema.databaseName, schema.name, randomString(t))
 	ctx := context.Background()
 	err := client.FileFormats.Create(ctx, id, opts)
 	require.NoError(t, err)
@@ -359,15 +359,15 @@ func createSchema(t *testing.T, client *Client, database *Database) (*Schema, fu
 func createSchemaWithIdentifier(t *testing.T, client *Client, database *Database, name string) (*Schema, func()) {
 	t.Helper()
 	ctx := context.Background()
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE SCHEMA \"%s\".\"%s\"", database.Name, name))
+	schemaID := NewDatabaseObjectIdentifier(database.Name, name)
+	err := client.Schemas.Create(ctx, schemaID, nil)
 	require.NoError(t, err)
-	return &Schema{
-			DatabaseName: database.Name,
-			Name:         name,
-		}, func() {
-			_, err := client.exec(ctx, fmt.Sprintf("DROP SCHEMA \"%s\".\"%s\"", database.Name, name))
-			require.NoError(t, err)
-		}
+	schema, err := client.Schemas.ShowByID(ctx, NewDatabaseObjectIdentifier(database.Name, name))
+	require.NoError(t, err)
+	return schema, func() {
+		err := client.Schemas.Drop(ctx, schemaID, nil)
+		require.NoError(t, err)
+	}
 }
 
 func createTable(t *testing.T, client *Client, database *Database, schema *Schema) (*Table, func()) {
@@ -388,10 +388,10 @@ func createTable(t *testing.T, client *Client, database *Database, schema *Schem
 
 func createTag(t *testing.T, client *Client, database *Database, schema *Schema) (*Tag, func()) {
 	t.Helper()
-	return createTagWithOptions(t, client, database, schema, &TagCreateOptions{})
+	return createTagWithOptions(t, client, database, schema, &CreateTagOptions{})
 }
 
-func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *TagCreateOptions) (*Tag, func()) {
+func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *CreateTagOptions) (*Tag, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	ctx := context.Background()
@@ -423,7 +423,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 	err := client.PasswordPolicies.Create(ctx, id, options)
 	require.NoError(t, err)
 
-	showOptions := &PasswordPolicyShowOptions{
+	showOptions := &ShowPasswordPolicyOptions{
 		Like: &Like{
 			Pattern: String(name),
 		},
@@ -434,7 +434,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, showOptions)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(passwordPolicyList))
-	return passwordPolicyList[0], func() {
+	return &passwordPolicyList[0], func() {
 		err := client.PasswordPolicies.Drop(ctx, id, nil)
 		require.NoError(t, err)
 		if schemaCleanup != nil {
@@ -478,7 +478,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 	maskingPolicyList, err := client.MaskingPolicies.Show(ctx, showOptions)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(maskingPolicyList))
-	return maskingPolicyList[0], func() {
+	return &maskingPolicyList[0], func() {
 		err := client.MaskingPolicies.Drop(ctx, id)
 		require.NoError(t, err)
 		if schemaCleanup != nil {
@@ -492,16 +492,44 @@ func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Data
 
 func createRole(t *testing.T, client *Client) (*Role, func()) {
 	t.Helper()
-	id := randomAccountObjectIdentifier(t)
+	return createRoleWithRequest(t, client, NewCreateRoleRequest(randomAccountObjectIdentifier(t)))
+}
+
+func createRoleWithRequest(t *testing.T, client *Client, req *CreateRoleRequest) (*Role, func()) {
+	t.Helper()
+	require.True(t, validObjectidentifier(req.name))
 	ctx := context.Background()
-	err := client.Roles.Create(ctx, id, nil)
+	err := client.Roles.Create(ctx, req)
 	require.NoError(t, err)
-	return &Role{
-			Name: id.Name(),
-		}, func() {
-			err := client.Roles.Drop(ctx, id, nil)
-			require.NoError(t, err)
-		}
+	role, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(req.name))
+	require.NoError(t, err)
+	return role, func() {
+		err = client.Roles.Drop(ctx, NewDropRoleRequest(req.name))
+		require.NoError(t, err)
+	}
+}
+
+func createDatabaseRole(t *testing.T, client *Client, database *Database) (*DatabaseRole, func()) {
+	t.Helper()
+	name := randomString(t)
+	id := NewDatabaseObjectIdentifier(database.Name, name)
+	ctx := context.Background()
+
+	err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
+	require.NoError(t, err)
+
+	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return databaseRole, cleanupDatabaseRoleProvider(t, ctx, client, id)
+}
+
+func cleanupDatabaseRoleProvider(t *testing.T, ctx context.Context, client *Client, id DatabaseObjectIdentifier) func() {
+	t.Helper()
+	return func() {
+		err := client.DatabaseRoles.Drop(ctx, NewDropDatabaseRoleRequest(id))
+		require.NoError(t, err)
+	}
 }
 
 func createMaskingPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*MaskingPolicy, func()) {
@@ -555,7 +583,7 @@ func createAlertWithOptions(t *testing.T, client *Client, database *Database, sc
 	alertList, err := client.Alerts.Show(ctx, showOptions)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(alertList))
-	return alertList[0], func() {
+	return &alertList[0], func() {
 		err := client.Alerts.Drop(ctx, id)
 		require.NoError(t, err)
 		if schemaCleanup != nil {
@@ -588,6 +616,32 @@ func ParseTimestampWithOffset(s string) (*time.Time, error) {
 	return &adjustedTime, nil
 }
 
+func createUser(t *testing.T, client *Client) (*User, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	id := NewAccountObjectIdentifier(name)
+	return createUserWithOptions(t, client, id, &CreateUserOptions{})
+}
+
+func createUserWithName(t *testing.T, client *Client, name string) (*User, func()) {
+	t.Helper()
+	id := NewAccountObjectIdentifier(name)
+	return createUserWithOptions(t, client, id, &CreateUserOptions{})
+}
+
+func createUserWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, opts *CreateUserOptions) (*User, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.Users.Create(ctx, id, opts)
+	require.NoError(t, err)
+	user, err := client.Users.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return user, func() {
+		err := client.Users.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+}
+
 func createPipe(t *testing.T, client *Client, database *Database, schema *Schema, name string, copyStatement string) (*Pipe, func()) {
 	t.Helper()
 	require.NotNil(t, database, "database has to be created")
@@ -601,7 +655,7 @@ func createPipe(t *testing.T, client *Client, database *Database, schema *Schema
 		require.NoError(t, err)
 	}
 
-	err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{})
+	err := client.Pipes.Create(ctx, id, copyStatement, &CreatePipeOptions{})
 	if err != nil {
 		return nil, pipeCleanup
 	}
@@ -614,6 +668,21 @@ func createPipe(t *testing.T, client *Client, database *Database, schema *Schema
 	require.NoError(t, errDescribe)
 
 	return createdPipe, pipeCleanup
+}
+
+func createStageWithName(t *testing.T, client *Client, name string) (*string, func()) {
+	t.Helper()
+	ctx := context.Background()
+	stageCleanup := func() {
+		_, err := client.exec(ctx, fmt.Sprintf("DROP STAGE %s", name))
+		require.NoError(t, err)
+	}
+	_, err := client.exec(ctx, fmt.Sprintf("CREATE STAGE %s", name))
+	if err != nil {
+		return nil, stageCleanup
+	}
+	require.NoError(t, err)
+	return &name, stageCleanup
 }
 
 func createStage(t *testing.T, client *Client, database *Database, schema *Schema, name string) (*Stage, func()) {
@@ -640,4 +709,26 @@ func createStage(t *testing.T, client *Client, database *Database, schema *Schem
 		SchemaName:   schema.Name,
 		Name:         name,
 	}, stageCleanup
+}
+
+func createStageWithURL(t *testing.T, client *Client, name AccountObjectIdentifier, url string) (*Stage, func()) {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.exec(ctx, fmt.Sprintf(`CREATE STAGE "%s" URL = '%s'`, name.Name(), url))
+	require.NoError(t, err)
+
+	return nil, func() {
+		_, err := client.exec(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name.Name()))
+		require.NoError(t, err)
+	}
+}
+
+func createNetworkPolicy(t *testing.T, client *Client, req *CreateNetworkPolicyRequest) (error, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.NetworkPolicies.Create(ctx, req)
+	return err, func() {
+		err := client.NetworkPolicies.Drop(ctx, NewDropNetworkPolicyRequest(req.name))
+		require.NoError(t, err)
+	}
 }

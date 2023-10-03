@@ -42,8 +42,8 @@ func TestInt_AlertsShow(t *testing.T) {
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, alerts, alertTest)
-		assert.Contains(t, alerts, alert2Test)
+		assert.Contains(t, alerts, *alertTest)
+		assert.Contains(t, alerts, *alert2Test)
 		assert.Equal(t, 2, len(alerts))
 	})
 
@@ -58,7 +58,7 @@ func TestInt_AlertsShow(t *testing.T) {
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
 		require.NoError(t, err)
-		assert.Contains(t, alerts, alertTest)
+		assert.Contains(t, alerts, *alertTest)
 		assert.Equal(t, 1, len(alerts))
 	})
 
@@ -206,11 +206,11 @@ func TestInt_AlertCreate(t *testing.T) {
 		condition := "SELECT 1"
 		action := `
 			select
-				case 
-					when true then 
-						1 
-					else 
-						2 
+				case
+					when true then
+						1
+					else
+						2
 				end
 		`
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
@@ -264,7 +264,7 @@ func TestInt_AlertDescribe(t *testing.T) {
 	t.Run("when alert does not exist", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		_, err := client.Alerts.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }
 
@@ -412,12 +412,12 @@ func TestInt_AlertDrop(t *testing.T) {
 		err := client.Alerts.Drop(ctx, id)
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when alert does not exist", func(t *testing.T) {
 		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		err := client.Alerts.Drop(ctx, id)
-		assert.ErrorIs(t, err, ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 }

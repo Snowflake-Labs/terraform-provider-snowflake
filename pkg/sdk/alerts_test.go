@@ -234,7 +234,7 @@ func TestAlertShow(t *testing.T) {
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {
-		schemaIdentifier := NewSchemaIdentifier(id.DatabaseName(), id.SchemaName())
+		schemaIdentifier := NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())
 		opts := &ShowAlertOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),

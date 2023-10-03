@@ -98,3 +98,77 @@ func TestInt_IsRoleInSession(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, role)
 }
+
+func TestInt_RolesUse(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
+	currentRoleID := NewAccountObjectIdentifier(currentRole)
+	require.NoError(t, err)
+
+	role, cleanup := createRole(t, client)
+	t.Cleanup(cleanup)
+	require.NotEqual(t, currentRole, role.Name)
+
+	err = client.Roles.Grant(ctx, NewGrantRoleRequest(role.ID(), GrantRole{Role: &currentRoleID}))
+	require.NoError(t, err)
+
+	err = client.Sessions.UseRole(ctx, role.ID())
+	require.NoError(t, err)
+
+	activeRole, err := client.ContextFunctions.CurrentRole(ctx)
+	require.NoError(t, err)
+
+	assert.Equal(t, activeRole, role.Name)
+
+	err = client.Sessions.UseRole(ctx, currentRoleID)
+	require.NoError(t, err)
+}
+
+func TestInt_RolesUseSecondaryRoles(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
+	require.NoError(t, err)
+
+	role, cleanup := createRole(t, client)
+	t.Cleanup(cleanup)
+	require.NotEqual(t, currentRole, role.Name)
+
+	user, err := client.ContextFunctions.CurrentUser(ctx)
+	require.NoError(t, err)
+	userID := NewAccountObjectIdentifier(user)
+
+	err = client.Roles.Grant(ctx, NewGrantRoleRequest(role.ID(), GrantRole{User: &userID}))
+	require.NoError(t, err)
+
+	err = client.Sessions.UseRole(ctx, role.ID())
+	require.NoError(t, err)
+
+	err = client.Sessions.UseSecondaryRoles(ctx, SecondaryRolesAll)
+	require.NoError(t, err)
+
+	r, err := client.ContextFunctions.CurrentSecondaryRoles(ctx)
+	require.NoError(t, err)
+
+	names := make([]string, len(r.Roles))
+	for i, v := range r.Roles {
+		names[i] = v.Name()
+	}
+	assert.Equal(t, SecondaryRolesAll, r.Value)
+	assert.Contains(t, names, currentRole)
+
+	err = client.Sessions.UseSecondaryRoles(ctx, SecondaryRolesNone)
+	require.NoError(t, err)
+
+	secondaryRolesAfter, err := client.ContextFunctions.CurrentSecondaryRoles(ctx)
+	require.NoError(t, err)
+
+	assert.Equal(t, SecondaryRolesNone, secondaryRolesAfter.Value)
+	assert.Equal(t, 0, len(secondaryRolesAfter.Roles))
+
+	t.Cleanup(func() {
+		err = client.Sessions.UseRole(ctx, NewAccountObjectIdentifier(currentRole))
+		require.NoError(t, err)
+	})
+}

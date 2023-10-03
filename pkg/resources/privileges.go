@@ -57,6 +57,7 @@ const (
 	privilegeImportShare                 Privilege = "IMPORT SHARE"
 	privilegeInsert                      Privilege = "INSERT"
 	privilegeManageGrants                Privilege = "MANAGE GRANTS"
+	privilegeManageWarehouses            Privilege = "MANAGE WAREHOUSES"
 	privilegeModify                      Privilege = "MODIFY"
 	privilegeMonitor                     Privilege = "MONITOR"
 	privilegeMonitorExecution            Privilege = "MONITOR EXECUTION"

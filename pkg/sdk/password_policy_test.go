@@ -152,7 +152,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 
 	t.Run("empty options", func(t *testing.T) {
-		opts := &PasswordPolicyShowOptions{}
+		opts := &ShowPasswordPolicyOptions{}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := "SHOW PASSWORD POLICIES"
@@ -160,7 +160,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with like", func(t *testing.T) {
-		opts := &PasswordPolicyShowOptions{
+		opts := &ShowPasswordPolicyOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -172,7 +172,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with like and in account", func(t *testing.T) {
-		opts := &PasswordPolicyShowOptions{
+		opts := &ShowPasswordPolicyOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -188,7 +188,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 
 	t.Run("with like and in database", func(t *testing.T) {
 		databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
-		opts := &PasswordPolicyShowOptions{
+		opts := &ShowPasswordPolicyOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -203,8 +203,8 @@ func TestPasswordPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {
-		schemaIdentifier := NewSchemaIdentifier(id.DatabaseName(), id.SchemaName())
-		opts := &PasswordPolicyShowOptions{
+		schemaIdentifier := NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())
+		opts := &ShowPasswordPolicyOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
@@ -219,7 +219,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 	})
 
 	t.Run("with limit", func(t *testing.T) {
-		opts := &PasswordPolicyShowOptions{
+		opts := &ShowPasswordPolicyOptions{
 			Limit: Int(10),
 		}
 		actual, err := structToSQL(opts)
