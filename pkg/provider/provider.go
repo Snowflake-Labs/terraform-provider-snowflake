@@ -248,6 +248,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_api_integration":                         resources.APIIntegration(),
 		"snowflake_database":                                resources.Database(),
 		"snowflake_database_role":                           resources.DatabaseRole(),
+		"snowflake_dynamic_table":                           resources.DynamicTable(),
 		"snowflake_email_notification_integration":          resources.EmailNotificationIntegration(),
 		"snowflake_external_function":                       resources.ExternalFunction(),
 		"snowflake_external_oauth_integration":              resources.ExternalOauthIntegration(),
