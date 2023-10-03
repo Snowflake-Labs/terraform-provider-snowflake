@@ -20,7 +20,7 @@ func TestDatabaseRoles_Create(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestDatabaseRoles_Alter(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.Rename opts.Set opts.Unset] should be present", func(t *testing.T) {
@@ -72,7 +72,7 @@ func TestDatabaseRoles_Alter(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.Rename.Name]", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.NestedThirdLevel.Field] should be set", func(t *testing.T) {

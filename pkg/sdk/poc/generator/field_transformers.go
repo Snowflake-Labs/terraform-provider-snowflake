@@ -67,6 +67,11 @@ func (v *ParameterTransformer) SQL(sqlPrefix string) *ParameterTransformer {
 	return v
 }
 
+func (v *ParameterTransformer) NoQuotes() *ParameterTransformer {
+	v.quotes = "no_quotes"
+	return v
+}
+
 func (v *ParameterTransformer) SingleQuotes() *ParameterTransformer {
 	v.quotes = "single_quotes"
 	return v

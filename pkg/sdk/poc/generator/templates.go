@@ -135,7 +135,6 @@ type {{ $impl }} struct {
 			{{ if eq (deref .DescribeKind) "single_value" }}
 				func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error) {
 					opts := &{{ .OptsField.Name }}{
-						 // TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 						 name: id,
 					}
 					result, err := validateAndQueryOne[{{ .DescribeMapping.From.Name }}](v.client, ctx, opts)
@@ -147,7 +146,6 @@ type {{ $impl }} struct {
 			{{ else if eq (deref .DescribeKind) "slice" }}
 				func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error) {
 					opts := &{{ .OptsField.Name }}{
-						 // TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 						 name: id,
 					}
 					rows, err := validateAndQuery[{{ .DescribeMapping.From.Name}}](v.client, ctx, opts)
