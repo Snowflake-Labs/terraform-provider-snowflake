@@ -45,6 +45,7 @@ var validAccountPrivileges = NewPrivilegeSet(
 	privilegePurchaseDataExchangeListing,
 	privilegeAccountSupportCases,
 	privilegeUserSupportCases,
+	privilegeResolveAll,
 	privilegeAllPrivileges,
 )
 
