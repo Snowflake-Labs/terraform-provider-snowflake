@@ -18,6 +18,7 @@ import (
 var definitionMapping = map[string]*generator.Interface{
 	"database_role_def.go":    example.DatabaseRole,
 	"network_policies_def.go": sdk.NetworkPoliciesDef,
+	"session_policies_def.go": sdk.SessionPoliciesDef,
 }
 
 func main() {
@@ -25,7 +26,7 @@ func main() {
 	fmt.Printf("Running generator on %s with args %#v\n", file, os.Args[1:])
 	definition := getDefinition(file)
 
-	runAllTemplatesToStdOut(definition)
+	//runAllTemplatesToStdOut(definition)
 	runAllTemplatesAndSave(definition, file)
 }
 

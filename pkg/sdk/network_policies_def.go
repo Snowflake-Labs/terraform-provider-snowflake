@@ -44,7 +44,7 @@ var (
 				OptionalSQL("UNSET COMMENT").
 				Identifier("RenameTo", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 				WithValidation(g.ValidIdentifier, "name").
-				WithValidation(g.AtLeastOneValueSet, "Set", "UnsetComment", "RenameTo").
+				WithValidation(g.ExactlyOneValueSet, "Set", "UnsetComment", "RenameTo").
 				WithValidation(g.ValidIdentifierIfSet, "RenameTo"),
 		).
 		DropOperation(
