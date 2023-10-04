@@ -34,8 +34,12 @@ func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, err
 }
 
 func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
-	// TODO: fill me
-	return nil, nil
+	// TODO: adjust request if e.g. LIKE is supported for the resource
+	tasks, err := v.Show(ctx, NewShowTaskRequest())
+	if err != nil {
+		return nil, err
+	}
+	return findOne(tasks, func(r Task) bool { return r.Name == id.Name() })
 }
 
 func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*TaskDescription, error) {

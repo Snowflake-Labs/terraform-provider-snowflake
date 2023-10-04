@@ -136,8 +136,12 @@ type {{ $impl }} struct {
 		}
 	{{ else if eq .Name "ShowByID" }}
 		func (v *{{ $impl }}) ShowByID(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
-			// TODO: fill me
-			return nil, nil
+			// TODO: adjust request if e.g. LIKE is supported for the resource
+			{{ $impl }}, err := v.Show(ctx, NewShow{{ .ObjectInterface.NameSingular }}Request())
+			if err != nil {
+				return nil, err
+			}
+			return findOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
 		}
 	{{ else if and (eq .Name "Describe") .DescribeMapping }}
 		{{ if .DescribeKind }}
