@@ -7,9 +7,8 @@ type Tasks interface {
 	Alter(ctx context.Context, request *AlterTaskRequest) error
 	Drop(ctx context.Context, request *DropTaskRequest) error
 	Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error)
-
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*TaskDescription, error)
-
 	Execute(ctx context.Context, request *ExecuteTaskRequest) error
 }
 

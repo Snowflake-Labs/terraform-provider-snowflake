@@ -33,6 +33,11 @@ func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, err
 	return resultList, nil
 }
 
+func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
+	// TODO: fill me
+	return nil, nil
+}
+
 func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*TaskDescription, error) {
 	opts := &DescribeTaskOptions{
 		name: id,

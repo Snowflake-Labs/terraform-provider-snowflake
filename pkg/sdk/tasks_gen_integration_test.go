@@ -21,6 +21,10 @@ func TestInt_Tasks(t *testing.T) {
 		// TODO: fill me
 	})
 
+	t.Run("ShowByID", func(t *testing.T) {
+		// TODO: fill me
+	})
+
 	t.Run("Describe", func(t *testing.T) {
 		// TODO: fill me
 	})

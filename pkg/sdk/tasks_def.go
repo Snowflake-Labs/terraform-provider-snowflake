@@ -114,6 +114,7 @@ var TasksDef = g.NewInterface(
 			Terse().
 			SQL("TASKS"), // TODO: add like and others,
 	).
+	ShowByIdOperation().
 	DescribeOperation(
 		g.DescriptionMappingKindSingleValue,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-task",

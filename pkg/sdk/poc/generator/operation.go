@@ -83,6 +83,13 @@ func addDescriptionMapping(op *Operation, from, to *Field) {
 	op.DescribeMapping = newMapping("convert", from, to)
 }
 
+func (i *Interface) newNoSqlOperation(kind string) *Interface {
+	operation := newOperation(kind, "placeholder").
+		withOptionsStruct(nil)
+	i.Operations = append(i.Operations, operation)
+	return i
+}
+
 func (i *Interface) newSimpleOperation(kind string, doc string, queryStruct *queryStruct, helperStructs ...IntoField) *Interface {
 	if queryStruct.identifierField != nil {
 		queryStruct.identifierField.Kind = i.IdentifierKind
@@ -141,6 +148,10 @@ func (i *Interface) DropOperation(doc string, queryStruct *queryStruct) *Interfa
 func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
 	i.newOperationWithDBMapping(string(OperationKindShow), doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping)
 	return i
+}
+
+func (i *Interface) ShowByIdOperation() *Interface {
+	return i.newNoSqlOperation(string(OperationKindShowByID))
 }
 
 func (i *Interface) DescribeOperation(describeKind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
