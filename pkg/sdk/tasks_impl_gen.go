@@ -1,6 +1,8 @@
 package sdk
 
-import "context"
+import (
+	"context"
+)
 
 var _ Tasks = (*tasks)(nil)
 
@@ -34,12 +36,7 @@ func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, err
 }
 
 func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	tasks, err := v.Show(ctx, NewShowTaskRequest())
-	if err != nil {
-		return nil, err
-	}
-	return findOne(tasks, func(r Task) bool { return r.Name == id.Name() })
+	return v.Describe(ctx, id)
 }
 
 func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
@@ -149,8 +146,61 @@ func (r *ShowTaskRequest) toOpts() *ShowTaskOptions {
 }
 
 func (r taskDBRow) convert() *Task {
-	// TODO: Mapping
-	return &Task{}
+	task := Task{
+		CreatedOn:    r.CreatedOn,
+		Name:         r.Name,
+		DatabaseName: r.DatabaseName,
+		SchemaName:   r.SchemaName,
+	}
+	if r.Id.Valid {
+		task.Id = r.Id.String
+	}
+	if r.Owner.Valid {
+		task.Owner = r.Owner.String
+	}
+	if r.Comment.Valid {
+		task.Comment = r.Comment.String
+	}
+	if r.Warehouse.Valid {
+		task.Warehouse = r.Warehouse.String
+	}
+	if r.Schedule.Valid {
+		task.Schedule = r.Schedule.String
+	}
+	if r.Predecessors.Valid {
+		task.Predecessors = r.Predecessors.String
+	}
+	if r.State.Valid {
+		task.State = r.State.String
+	}
+	if r.Definition.Valid {
+		task.Definition = r.Definition.String
+	}
+	if r.Condition.Valid {
+		task.Condition = r.Condition.String
+	}
+	if r.AllowOverlappingExecution.Valid {
+		task.AllowOverlappingExecution = r.AllowOverlappingExecution.String
+	}
+	if r.ErrorIntegration.Valid {
+		task.ErrorIntegration = r.ErrorIntegration.String
+	}
+	if r.LastCommittedOn.Valid {
+		task.LastCommittedOn = r.LastCommittedOn.String
+	}
+	if r.LastSuspendedOn.Valid {
+		task.LastSuspendedOn = r.LastSuspendedOn.String
+	}
+	if r.OwnerRoleType.Valid {
+		task.OwnerRoleType = r.OwnerRoleType.String
+	}
+	if r.Config.Valid {
+		task.Config = r.Config.String
+	}
+	if r.Budget.Valid {
+		task.Budget = r.Budget.String
+	}
+	return &task
 }
 
 func (r *DescribeTaskRequest) toOpts() *DescribeTaskOptions {
@@ -158,11 +208,6 @@ func (r *DescribeTaskRequest) toOpts() *DescribeTaskOptions {
 		name: r.name,
 	}
 	return opts
-}
-
-func (r taskDBRow) convert() *Task {
-	// TODO: Mapping
-	return &Task{}
 }
 
 func (r *ExecuteTaskRequest) toOpts() *ExecuteTaskOptions {

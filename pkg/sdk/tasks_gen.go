@@ -1,6 +1,9 @@
 package sdk
 
-import "context"
+import (
+	"context"
+	"database/sql"
+)
 
 type Tasks interface {
 	Create(ctx context.Context, request *CreateTaskRequest) error
@@ -102,26 +105,26 @@ type ShowTaskOptions struct {
 }
 
 type taskDBRow struct {
-	CreatedOn                 string `db:"created_on"`
-	Name                      string `db:"name"`
-	Id                        string `db:"id"`
-	DatabaseName              string `db:"database_name"`
-	SchemaName                string `db:"schema_name"`
-	Owner                     string `db:"owner"`
-	Comment                   string `db:"comment"`
-	Warehouse                 string `db:"warehouse"`
-	Schedule                  string `db:"schedule"`
-	Predecessors              string `db:"predecessors"`
-	State                     string `db:"state"`
-	Definition                string `db:"definition"`
-	Condition                 string `db:"condition"`
-	AllowOverlappingExecution string `db:"allow_overlapping_execution"`
-	ErrorIntegration          string `db:"error_integration"`
-	LastCommittedOn           string `db:"last_committed_on"`
-	LastSuspendedOn           string `db:"last_suspended_on"`
-	OwnerRoleType             string `db:"owner_role_type"`
-	Config                    string `db:"config"`
-	Budget                    string `db:"budget"`
+	CreatedOn                 string         `db:"created_on"`
+	Name                      string         `db:"name"`
+	Id                        sql.NullString `db:"id"`
+	DatabaseName              string         `db:"database_name"`
+	SchemaName                string         `db:"schema_name"`
+	Owner                     sql.NullString `db:"owner"`
+	Comment                   sql.NullString `db:"comment"`
+	Warehouse                 sql.NullString `db:"warehouse"`
+	Schedule                  sql.NullString `db:"schedule"`
+	Predecessors              sql.NullString `db:"predecessors"`
+	State                     sql.NullString `db:"state"`
+	Definition                sql.NullString `db:"definition"`
+	Condition                 sql.NullString `db:"condition"`
+	AllowOverlappingExecution sql.NullString `db:"allow_overlapping_execution"`
+	ErrorIntegration          sql.NullString `db:"error_integration"`
+	LastCommittedOn           sql.NullString `db:"last_committed_on"`
+	LastSuspendedOn           sql.NullString `db:"last_suspended_on"`
+	OwnerRoleType             sql.NullString `db:"owner_role_type"`
+	Config                    sql.NullString `db:"config"`
+	Budget                    sql.NullString `db:"budget"`
 }
 
 type Task struct {
