@@ -178,6 +178,16 @@ func TestTasks_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
+	t.Run("alter set session parameter", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &TaskSet{
+			SessionParameters: &SessionParameters{
+				JSONIndent: Int(15),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET JSON_INDENT = 15", id.FullyQualifiedName())
+	})
+
 	t.Run("alter unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TaskUnset{
@@ -219,7 +229,7 @@ func TestTasks_Alter(t *testing.T) {
 	t.Run("alter modify when", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ModifyWhen = String("new when")
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s MODIFY AS new when", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s MODIFY WHEN new when", id.FullyQualifiedName())
 	})
 }
 
