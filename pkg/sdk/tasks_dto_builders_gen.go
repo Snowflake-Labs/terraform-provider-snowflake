@@ -102,3 +102,154 @@ func (s *CreateTaskWarehouseRequest) WithUserTaskManagedInitialWarehouseSize(Use
 	s.UserTaskManagedInitialWarehouseSize = UserTaskManagedInitialWarehouseSize
 	return s
 }
+
+func NewAlterTaskRequest(
+	name SchemaObjectIdentifier,
+) *AlterTaskRequest {
+	s := AlterTaskRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *AlterTaskRequest) WithIfExists(IfExists *bool) *AlterTaskRequest {
+	s.IfExists = IfExists
+	return s
+}
+
+func (s *AlterTaskRequest) WithResume(Resume *bool) *AlterTaskRequest {
+	s.Resume = Resume
+	return s
+}
+
+func (s *AlterTaskRequest) WithSuspend(Suspend *bool) *AlterTaskRequest {
+	s.Suspend = Suspend
+	return s
+}
+
+func (s *AlterTaskRequest) WithRemoveAfter(RemoveAfter []SchemaObjectIdentifier) *AlterTaskRequest {
+	s.RemoveAfter = RemoveAfter
+	return s
+}
+
+func (s *AlterTaskRequest) WithAddAfter(AddAfter []SchemaObjectIdentifier) *AlterTaskRequest {
+	s.AddAfter = AddAfter
+	return s
+}
+
+func (s *AlterTaskRequest) WithSet(Set *TaskSetRequest) *AlterTaskRequest {
+	s.Set = Set
+	return s
+}
+
+func (s *AlterTaskRequest) WithUnset(Unset *TaskUnsetRequest) *AlterTaskRequest {
+	s.Unset = Unset
+	return s
+}
+
+func (s *AlterTaskRequest) WithSetTags(SetTags []TagAssociation) *AlterTaskRequest {
+	s.SetTags = SetTags
+	return s
+}
+
+func (s *AlterTaskRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterTaskRequest {
+	s.UnsetTags = UnsetTags
+	return s
+}
+
+func (s *AlterTaskRequest) WithModifyAs(ModifyAs *string) *AlterTaskRequest {
+	s.ModifyAs = ModifyAs
+	return s
+}
+
+func (s *AlterTaskRequest) WithModifyWhen(ModifyWhen *string) *AlterTaskRequest {
+	s.ModifyWhen = ModifyWhen
+	return s
+}
+
+func NewTaskSetRequest() *TaskSetRequest {
+	return &TaskSetRequest{}
+}
+
+func (s *TaskSetRequest) WithWarehouse(Warehouse *AccountObjectIdentifier) *TaskSetRequest {
+	s.Warehouse = Warehouse
+	return s
+}
+
+func (s *TaskSetRequest) WithSchedule(Schedule *string) *TaskSetRequest {
+	s.Schedule = Schedule
+	return s
+}
+
+func (s *TaskSetRequest) WithConfig(Config *string) *TaskSetRequest {
+	s.Config = Config
+	return s
+}
+
+func (s *TaskSetRequest) WithAllowOverlappingExecution(AllowOverlappingExecution *bool) *TaskSetRequest {
+	s.AllowOverlappingExecution = AllowOverlappingExecution
+	return s
+}
+
+func (s *TaskSetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *int) *TaskSetRequest {
+	s.UserTaskTimeoutMs = UserTaskTimeoutMs
+	return s
+}
+
+func (s *TaskSetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *int) *TaskSetRequest {
+	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+	return s
+}
+
+func (s *TaskSetRequest) WithComment(Comment *string) *TaskSetRequest {
+	s.Comment = Comment
+	return s
+}
+
+func (s *TaskSetRequest) WithSessionParameters(SessionParameters *SessionParameters) *TaskSetRequest {
+	s.SessionParameters = SessionParameters
+	return s
+}
+
+func NewTaskUnsetRequest() *TaskUnsetRequest {
+	return &TaskUnsetRequest{}
+}
+
+func (s *TaskUnsetRequest) WithWarehouse(Warehouse *bool) *TaskUnsetRequest {
+	s.Warehouse = Warehouse
+	return s
+}
+
+func (s *TaskUnsetRequest) WithSchedule(Schedule *bool) *TaskUnsetRequest {
+	s.Schedule = Schedule
+	return s
+}
+
+func (s *TaskUnsetRequest) WithConfig(Config *bool) *TaskUnsetRequest {
+	s.Config = Config
+	return s
+}
+
+func (s *TaskUnsetRequest) WithAllowOverlappingExecution(AllowOverlappingExecution *bool) *TaskUnsetRequest {
+	s.AllowOverlappingExecution = AllowOverlappingExecution
+	return s
+}
+
+func (s *TaskUnsetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *bool) *TaskUnsetRequest {
+	s.UserTaskTimeoutMs = UserTaskTimeoutMs
+	return s
+}
+
+func (s *TaskUnsetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *bool) *TaskUnsetRequest {
+	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+	return s
+}
+
+func (s *TaskUnsetRequest) WithComment(Comment *bool) *TaskUnsetRequest {
+	s.Comment = Comment
+	return s
+}
+
+func (s *TaskUnsetRequest) WithSessionParametersUnset(SessionParametersUnset *SessionParametersUnset) *TaskUnsetRequest {
+	s.SessionParametersUnset = SessionParametersUnset
+	return s
+}

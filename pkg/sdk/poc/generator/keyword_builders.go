@@ -38,6 +38,11 @@ func (v *queryStruct) OptionalSessionParameters() *queryStruct {
 	return v
 }
 
+func (v *queryStruct) OptionalSessionParametersUnset() *queryStruct {
+	v.fields = append(v.fields, NewField("SessionParametersUnset", "*SessionParametersUnset", Tags().List().NoParentheses(), nil).withValidations(&Validation{Type: ValidateValue, FieldNames: []string{"SessionParametersUnset"}}))
+	return v
+}
+
 func (v *queryStruct) WithTags() *queryStruct {
 	v.fields = append(v.fields, NewField("Tag", "[]TagAssociation", Tags().Keyword().Parentheses().SQL("TAG"), nil))
 	return v

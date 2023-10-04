@@ -8,4 +8,8 @@ func TestInt_Tasks(t *testing.T) {
 	t.Run("Create", func(t *testing.T) {
 		// TODO: fill me
 	})
+
+	t.Run("Alter", func(t *testing.T) {
+		// TODO: fill me
+	})
 }
