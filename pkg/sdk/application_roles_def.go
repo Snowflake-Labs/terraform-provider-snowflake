@@ -57,21 +57,21 @@ var (
 				SQL("APPLICATION ROLES IN APPLICATION").
 				Name().
 				OptionalQueryStructField("LimitFrom", LimitFromDef, nil),
-		).
-		GrantOperation(
-			"https://docs.snowflake.com/en/sql-reference/sql/grant-application-roles",
-			g.QueryStruct("GrantApplicationRole").
-				Grant().
-				SQL("APPLICATION ROLE").
-				Name().
-				QueryStructField("GrantTo", ApplicationGrantOptionsDef, nil),
-		).
-		RevokeOperation(
-			"https://docs.snowflake.com/en/sql-reference/sql/revoke-application-roles",
-			g.QueryStruct("RevokeApplicationRole").
-				Revoke().
-				SQL("APPLICATION ROLE").
-				Name().
-				QueryStructField("RevokeFrom", ApplicationGrantOptionsDef, nil),
 		)
+	//GrantOperation(
+	//	"https://docs.snowflake.com/en/sql-reference/sql/grant-application-roles",
+	//	g.QueryStruct("GrantApplicationRole").
+	//		Grant().
+	//		SQL("APPLICATION ROLE").
+	//		Name().
+	//		QueryStructField("GrantTo", ApplicationGrantOptionsDef, nil),
+	//).
+	//RevokeOperation(
+	//	"https://docs.snowflake.com/en/sql-reference/sql/revoke-application-roles",
+	//	g.QueryStruct("RevokeApplicationRole").
+	//		Revoke().
+	//		SQL("APPLICATION ROLE").
+	//		Name().
+	//		QueryStructField("RevokeFrom", ApplicationGrantOptionsDef, nil),
+	//)
 )
