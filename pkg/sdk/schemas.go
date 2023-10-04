@@ -17,21 +17,13 @@ var (
 )
 
 type Schemas interface {
-	// Create creates a schema.
 	Create(ctx context.Context, id DatabaseObjectIdentifier, opts *CreateSchemaOptions) error
-	// Alter modifies an existing schema.
 	Alter(ctx context.Context, id DatabaseObjectIdentifier, opts *AlterSchemaOptions) error
-	// Drop removes a schema.
 	Drop(ctx context.Context, id DatabaseObjectIdentifier, opts *DropSchemaOptions) error
-	// Undrop restores the most recent version of a dropped schema.
 	Undrop(ctx context.Context, id DatabaseObjectIdentifier) error
-	// Describe lists objects in the schema.
 	Describe(ctx context.Context, id DatabaseObjectIdentifier) ([]SchemaDetails, error)
-	// Show returns a list of schemas.
 	Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, error)
-	// ShowByID returns a schema by ID.
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error)
-	// Use sets the active schema for the current session.
 	Use(ctx context.Context, id DatabaseObjectIdentifier) error
 }
 
@@ -265,6 +257,7 @@ func (v *schemas) Drop(ctx context.Context, id DatabaseObjectIdentifier, opts *D
 	return err
 }
 
+// undropSchemaOptions is based on https://docs.snowflake.com/en/sql-reference/sql/undrop-schema.
 type undropSchemaOptions struct {
 	undrop bool                     `ddl:"static" sql:"UNDROP"`
 	schema bool                     `ddl:"static" sql:"SCHEMA"`
@@ -293,6 +286,7 @@ func (v *schemas) Undrop(ctx context.Context, id DatabaseObjectIdentifier) error
 	return err
 }
 
+// describeSchemaOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-schema.
 type describeSchemaOptions struct {
 	describe bool                     `ddl:"static" sql:"DESCRIBE"`
 	database bool                     `ddl:"static" sql:"SCHEMA"`
