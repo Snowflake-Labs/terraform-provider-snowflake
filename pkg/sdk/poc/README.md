@@ -33,6 +33,11 @@ To invoke example generation (with first cleaning all the generated files) run:
 make clean-generator-poc run-generator-poc
 ```
 
+To invoke generation inside SDK package (with cleaning), e.g. for `session_policies` run (mind the `_`(underscore)):
+```shell
+make clean-generator-session_policies run-generator-session_policies
+```
+
 ### Next steps
 ##### Essentials
 - (?) add mapping from db to plain struct (for now only "// TODO: Mapping" comment is generated)
