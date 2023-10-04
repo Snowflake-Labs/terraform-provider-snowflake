@@ -59,9 +59,7 @@ func (v *externalTables) ShowByID(ctx context.Context, req *ShowExternalTableByI
 }
 
 func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error) {
-	rows, err := validateAndQuery[externalTableColumnDetailsRow](v.client, ctx, &describeExternalTableColumns{
-		name: req.id,
-	})
+	rows, err := validateAndQuery[externalTableColumnDetailsRow](v.client, ctx, req.toOpts())
 	if err != nil {
 		return nil, err
 	}
@@ -69,9 +67,7 @@ func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExter
 }
 
 func (v *externalTables) DescribeStage(ctx context.Context, req *DescribeExternalTableStageRequest) ([]ExternalTableStageDetails, error) {
-	rows, err := validateAndQuery[externalTableStageDetailsRow](v.client, ctx, &describeExternalTableStage{
-		name: req.id,
-	})
+	rows, err := validateAndQuery[externalTableStageDetailsRow](v.client, ctx, req.toOpts())
 	if err != nil {
 		return nil, err
 	}

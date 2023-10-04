@@ -2,6 +2,7 @@ export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=1.4.1
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
+export SKIP_TABLE_DATA_RETENTION_TESTS=true
 
 BASE_BINARY_NAME=terraform-provider-snowflake
 TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
@@ -101,3 +102,11 @@ clean-generator-poc:
 	rm -f ./pkg/sdk/poc/example/*_gen.go
 	rm -f ./pkg/sdk/poc/example/*_gen_test.go
 .PHONY: run-generator-poc
+
+run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on given object definition
+	go generate $<
+	go generate ./pkg/sdk/$*_dto_gen.go
+
+clean-generator-%: ## Clean generated files for specified resource
+	rm -f ./pkg/sdk/$**_gen.go
+	rm -f ./pkg/sdk/$**_gen_*test.go

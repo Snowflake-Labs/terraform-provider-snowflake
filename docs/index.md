@@ -61,6 +61,8 @@ provider "snowflake" {
 - `oauth_endpoint` (String, Sensitive) Required when `oauth_refresh_token` is used. Can be sourced from `SNOWFLAKE_OAUTH_ENDPOINT` environment variable.
 - `oauth_redirect_url` (String, Sensitive) Required when `oauth_refresh_token` is used. Can be sourced from `SNOWFLAKE_OAUTH_REDIRECT_URL` environment variable.
 - `oauth_refresh_token` (String, Sensitive) Token for use with OAuth. Setup and generation of the token is left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`, `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `private_key_path`, `oauth_access_token` or `password`. Can be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment variable.
+- `passcode` (String) Specifies the passcode provided by Duo when using multi-factor authentication (MFA) for login.
+- `passcode_in_password` (Boolean) False by default. Set to true if the MFA passcode is embedded in the login password. Appends the MFA passcode to the end of the password.
 - `password` (String, Sensitive) Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`. Can be sourced from `SNOWFLAKE_PASSWORD` environment variable.
 - `port` (Number) Support custom port values to snowflake go driver for use with privatelink. Can be sourced from `SNOWFLAKE_PORT` environment variable.
 - `private_key` (String, Sensitive) Private Key for username+private-key auth. Cannot be used with `browser_auth` or `password`. Can be sourced from `SNOWFLAKE_PRIVATE_KEY` environment variable.

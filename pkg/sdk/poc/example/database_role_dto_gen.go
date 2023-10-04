@@ -1,6 +1,6 @@
 package example
 
-//go:generate go run ../../dto-builder-generator/main.go
+//go:generate go run ./../../dto-builder-generator/main.go
 
 var (
 	_ optionsProvider[CreateDatabaseRoleOptions] = new(CreateDatabaseRoleRequest)
@@ -36,5 +36,5 @@ type NestedThirdLevelRequest struct {
 }
 
 type DatabaseRoleUnsetRequest struct {
-	Comment bool // required
+	Comment *bool
 }

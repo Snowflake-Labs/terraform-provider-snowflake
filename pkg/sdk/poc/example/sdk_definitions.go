@@ -86,7 +86,7 @@ func errAtLeastOneOf(fieldNames ...string) error {
 
 var (
 	errNilOptions              = errors.New("options cannot be nil")
-	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
+	errInvalidObjectIdentifier = errors.New("invalid object identifier")
 )
 
 func validateAndExec(client *Client, ctx context.Context, opts validatable) error {
@@ -102,4 +102,40 @@ func validateAndQuery[T any](client *Client, ctx context.Context, opts validatab
 func validateAndQueryOne[T any](client *Client, ctx context.Context, opts validatable) (*T, error) {
 	_, _, _ = client, ctx, opts
 	return nil, nil
+}
+
+func assertOptsInvalid(t *testing.T, opts validatable, expectedError error) {
+	t.Helper()
+	_ = t
+	_ = opts
+	_ = expectedError
+}
+
+func assertOptsInvalidJoinedErrors(t *testing.T, opts validatable, expectedErrors ...error) {
+	t.Helper()
+	_ = t
+	_ = opts
+	_ = expectedErrors
+}
+
+func assertOptsValid(t *testing.T, opts validatable) {
+	t.Helper()
+	_ = t
+	_ = opts
+}
+
+func assertSQLEquals(t *testing.T, opts any, format string, args ...any) {
+	t.Helper()
+	_ = t
+	_ = opts
+	_ = format
+	_ = args
+}
+
+func assertOptsValidAndSQLEquals(t *testing.T, opts validatable, format string, args ...any) {
+	t.Helper()
+	_ = t
+	_ = opts
+	_ = format
+	_ = args
 }

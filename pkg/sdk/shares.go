@@ -10,25 +10,18 @@ import (
 var (
 	_ validatable = new(CreateShareOptions)
 	_ validatable = new(AlterShareOptions)
-	_ validatable = new(shareDropOptions)
+	_ validatable = new(dropShareOptions)
 	_ validatable = new(ShowShareOptions)
-	_ validatable = new(shareDescribeOptions)
+	_ validatable = new(describeShareOptions)
 )
 
 type Shares interface {
-	// Create creates a share.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error
-	// Alter modifies an existing share
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterShareOptions) error
-	// Drop removes a share.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
-	// Show returns a list of shares.
 	Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error)
-	// ShowByID returns a share by ID.
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
-	// Describe returns the details of an outbound share.
 	DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error)
-	// Describe returns the details of an inbound share.
 	DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error)
 }
 
@@ -108,6 +101,7 @@ func (r shareRow) convert() *Share {
 	}
 }
 
+// CreateShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-share.
 type CreateShareOptions struct {
 	create    bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -139,18 +133,19 @@ func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *C
 	return err
 }
 
-type shareDropOptions struct {
+// dropShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-share.
+type dropShareOptions struct {
 	drop  bool                    `ddl:"static" sql:"DROP"`
 	share bool                    `ddl:"static" sql:"SHARE"`
 	name  AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *shareDropOptions) validate() error {
+func (opts *dropShareOptions) validate() error {
 	return nil
 }
 
 func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
-	opts := &shareDropOptions{
+	opts := &dropShareOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {
@@ -164,6 +159,7 @@ func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
 	return err
 }
 
+// AlterShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-share.
 type AlterShareOptions struct {
 	alter    bool                    `ddl:"static" sql:"ALTER"`
 	share    bool                    `ddl:"static" sql:"SHARE"`
@@ -269,6 +265,7 @@ func (v *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *Al
 	return err
 }
 
+// ShowShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-shares.
 type ShowShareOptions struct {
 	show       bool       `ddl:"static" sql:"SHOW"`
 	shares     bool       `ddl:"static" sql:"SHARES"`
@@ -343,13 +340,14 @@ func shareDetailsFromRows(rows []shareDetailsRow) *ShareDetails {
 	return v
 }
 
-type shareDescribeOptions struct {
+// describeShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-share.
+type describeShareOptions struct {
 	describe bool             `ddl:"static" sql:"DESCRIBE"`
 	share    bool             `ddl:"static" sql:"SHARE"`
 	name     ObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *shareDescribeOptions) validate() error {
+func (opts *describeShareOptions) validate() error {
 	if ok := validObjectidentifier(opts.name); !ok {
 		return errInvalidObjectIdentifier
 	}
@@ -357,7 +355,7 @@ func (opts *shareDescribeOptions) validate() error {
 }
 
 func (c *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error) {
-	opts := &shareDescribeOptions{
+	opts := &describeShareOptions{
 		name: id,
 	}
 	sql, err := structToSQL(opts)
@@ -373,7 +371,7 @@ func (c *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifie
 }
 
 func (c *shares) DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error) {
-	opts := &shareDescribeOptions{
+	opts := &describeShareOptions{
 		name: id,
 	}
 	sql, err := structToSQL(opts)

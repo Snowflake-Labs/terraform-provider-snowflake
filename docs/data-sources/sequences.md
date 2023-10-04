@@ -41,5 +41,3 @@ Read-Only:
 - `database` (String)
 - `name` (String)
 - `schema` (String)
-
-

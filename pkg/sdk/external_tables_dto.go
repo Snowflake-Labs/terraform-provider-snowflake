@@ -2,6 +2,19 @@ package sdk
 
 //go:generate go run ./dto-builder-generator/main.go
 
+var (
+	_ optionsProvider[CreateExternalTableOptions]                       = new(CreateExternalTableRequest)
+	_ optionsProvider[CreateWithManualPartitioningExternalTableOptions] = new(CreateWithManualPartitioningExternalTableRequest)
+	_ optionsProvider[CreateDeltaLakeExternalTableOptions]              = new(CreateDeltaLakeExternalTableRequest)
+	_ optionsProvider[CreateExternalTableUsingTemplateOptions]          = new(CreateExternalTableUsingTemplateRequest)
+	_ optionsProvider[AlterExternalTableOptions]                        = new(AlterExternalTableRequest)
+	_ optionsProvider[AlterExternalTablePartitionOptions]               = new(AlterExternalTablePartitionRequest)
+	_ optionsProvider[DropExternalTableOptions]                         = new(DropExternalTableRequest)
+	_ optionsProvider[ShowExternalTableOptions]                         = new(ShowExternalTableRequest)
+	_ optionsProvider[describeExternalTableColumnsOptions]              = new(DescribeExternalTableColumnsRequest)
+	_ optionsProvider[describeExternalTableStageOptions]                = new(DescribeExternalTableStageRequest)
+)
+
 type CreateExternalTableRequest struct {
 	orReplace           *bool
 	ifNotExists         *bool
@@ -677,4 +690,16 @@ type DescribeExternalTableColumnsRequest struct {
 
 type DescribeExternalTableStageRequest struct {
 	id AccountObjectIdentifier // required
+}
+
+func (v *DescribeExternalTableColumnsRequest) toOpts() *describeExternalTableColumnsOptions {
+	return &describeExternalTableColumnsOptions{
+		name: v.id,
+	}
+}
+
+func (v *DescribeExternalTableStageRequest) toOpts() *describeExternalTableStageOptions {
+	return &describeExternalTableStageOptions{
+		name: v.id,
+	}
 }

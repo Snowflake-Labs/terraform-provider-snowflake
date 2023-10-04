@@ -190,6 +190,18 @@ func Provider() *schema.Provider {
 				Description: "Sets session parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters)",
 				Optional:    true,
 			},
+			"passcode": {
+				Type:          schema.TypeString,
+				Description:   "Specifies the passcode provided by Duo when using multi-factor authentication (MFA) for login.",
+				Optional:      true,
+				ConflictsWith: []string{"passcode_in_password"},
+			},
+			"passcode_in_password": {
+				Type:          schema.TypeBool,
+				Description:   "False by default. Set to true if the MFA passcode is embedded in the login password. Appends the MFA passcode to the end of the password.",
+				Optional:      true,
+				ConflictsWith: []string{"passcode"},
+			},
 		},
 		ResourcesMap:   getResources(),
 		DataSourcesMap: getDataSources(),
@@ -356,6 +368,8 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	insecureMode := s.Get("insecure_mode").(bool)
 	profile := s.Get("profile").(string)
 	session_params := s.Get("session_params").(map[string]interface{})
+	passcode := s.Get("passcode").(string)
+	passcodeInPassword := s.Get("passcode_in_password").(bool)
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
@@ -391,6 +405,8 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		insecureMode,
 		profile,
 		params,
+		passcode,
+		passcodeInPassword,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not build dsn for snowflake connection err = %w", err)
@@ -432,6 +448,8 @@ func DSN(
 	insecureMode bool,
 	profile string,
 	params map[string]*string,
+	passcode string,
+	passcodeInPassword bool,
 ) (string, error) {
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
@@ -459,6 +477,14 @@ func DSN(
 	// If warehouse is set
 	if warehouse != "" {
 		config.Warehouse = warehouse
+	}
+
+	if passcode != "" {
+		config.Passcode = passcode
+	}
+
+	if passcodeInPassword {
+		config.PasscodeInPassword = passcodeInPassword
 	}
 
 	if privateKeyPath != "" { //nolint:gocritic // todo: please fix this to pass gocritic
@@ -659,6 +685,8 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		false,
 		profile,
 		params,
+		"",
+		false,
 	)
 	if err != nil {
 		return nil, err

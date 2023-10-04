@@ -34,5 +34,3 @@ Read-Only:
 - `credit_quota` (String)
 - `frequency` (String)
 - `name` (String)
-
-
