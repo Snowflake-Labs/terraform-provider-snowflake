@@ -128,4 +128,14 @@ var TasksDef = g.NewInterface(
 			SQL("TASK").
 			Name().
 			WithValidation(g.ValidIdentifier, "name"),
+	).
+	CustomOperation(
+		"Execute",
+		"https://docs.snowflake.com/en/sql-reference/sql/execute-task",
+		g.QueryStruct("ExecuteTask").
+			SQL("EXECUTE").
+			SQL("TASK").
+			Name().
+			OptionalSQL("RETRY LAST").
+			WithValidation(g.ValidIdentifier, "name"),
 	)

@@ -8,6 +8,7 @@ var (
 	_ validatable = new(DropTaskOptions)
 	_ validatable = new(ShowTaskOptions)
 	_ validatable = new(DescribeTaskOptions)
+	_ validatable = new(ExecuteTaskOptions)
 )
 
 func (opts *CreateTaskOptions) validate() error {
@@ -94,6 +95,17 @@ func (opts *ShowTaskOptions) validate() error {
 }
 
 func (opts *DescribeTaskOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, errInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *ExecuteTaskOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}

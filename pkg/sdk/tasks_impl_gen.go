@@ -44,6 +44,11 @@ func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*TaskD
 	return result.convert(), nil
 }
 
+func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
 	opts := &CreateTaskOptions{
 		OrReplace:   r.OrReplace,
@@ -144,4 +149,12 @@ func (r *DescribeTaskRequest) toOpts() *DescribeTaskOptions {
 func (r describeTaskDBRow) convert() *TaskDescription {
 	// TODO: Mapping
 	return &TaskDescription{}
+}
+
+func (r *ExecuteTaskRequest) toOpts() *ExecuteTaskOptions {
+	opts := &ExecuteTaskOptions{
+		name:      r.name,
+		RetryLast: r.RetryLast,
+	}
+	return opts
 }

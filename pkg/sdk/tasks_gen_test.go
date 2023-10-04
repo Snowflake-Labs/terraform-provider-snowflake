@@ -225,3 +225,37 @@ func TestTasks_Describe(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 }
+
+func TestTasks_Execute(t *testing.T) {
+	id := randomSchemaObjectIdentifier(t)
+
+	// Minimal valid ExecuteTaskOptions
+	defaultOpts := func() *ExecuteTaskOptions {
+		return &ExecuteTaskOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *ExecuteTaskOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+}

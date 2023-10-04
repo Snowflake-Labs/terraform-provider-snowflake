@@ -283,3 +283,16 @@ func NewDescribeTaskRequest(
 	s.name = name
 	return &s
 }
+
+func NewExecuteTaskRequest(
+	name SchemaObjectIdentifier,
+) *ExecuteTaskRequest {
+	s := ExecuteTaskRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *ExecuteTaskRequest) WithRetryLast(RetryLast *bool) *ExecuteTaskRequest {
+	s.RetryLast = RetryLast
+	return s
+}

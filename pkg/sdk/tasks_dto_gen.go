@@ -8,6 +8,7 @@ var (
 	_ optionsProvider[DropTaskOptions]     = new(DropTaskRequest)
 	_ optionsProvider[ShowTaskOptions]     = new(ShowTaskRequest)
 	_ optionsProvider[DescribeTaskOptions] = new(DescribeTaskRequest)
+	_ optionsProvider[ExecuteTaskOptions]  = new(ExecuteTaskRequest)
 )
 
 type CreateTaskRequest struct {
@@ -83,4 +84,9 @@ type ShowTaskRequest struct {
 
 type DescribeTaskRequest struct {
 	name SchemaObjectIdentifier // required
+}
+
+type ExecuteTaskRequest struct {
+	name      SchemaObjectIdentifier // required
+	RetryLast *bool
 }

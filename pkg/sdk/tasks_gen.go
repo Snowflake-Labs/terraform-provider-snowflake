@@ -9,6 +9,8 @@ type Tasks interface {
 	Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error)
 
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*TaskDescription, error)
+
+	Execute(ctx context.Context, request *ExecuteTaskRequest) error
 }
 
 // CreateTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-task.
@@ -120,4 +122,12 @@ type describeTaskDBRow struct {
 type TaskDescription struct {
 	CreatedOn string
 	Name      string
+}
+
+// ExecuteTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/execute-task.
+type ExecuteTaskOptions struct {
+	execute   bool                   `ddl:"static" sql:"EXECUTE"`
+	task      bool                   `ddl:"static" sql:"TASK"`
+	name      SchemaObjectIdentifier `ddl:"identifier"`
+	RetryLast *bool                  `ddl:"keyword" sql:"RETRY LAST"`
 }
