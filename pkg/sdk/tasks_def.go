@@ -4,8 +4,6 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
-// UserTaskManagedInitialWarehouseSizeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE.
-
 var taskDbRow = g.DbStruct("taskDBRow").
 	Field("created_on", "string").
 	Field("name", "string").
