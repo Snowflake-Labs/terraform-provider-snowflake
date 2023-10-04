@@ -54,31 +54,59 @@ func TestInt_Tasks(t *testing.T) {
 		return task
 	}
 
-	t.Run("Create", func(t *testing.T) {
+	t.Run("create task: no optionals", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("Alter", func(t *testing.T) {
+	t.Run("create task: complete case", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("Drop", func(t *testing.T) {
+	t.Run("drop task: existing", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("Show", func(t *testing.T) {
+	t.Run("drop task: non-existing", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("ShowByID", func(t *testing.T) {
+	t.Run("alter task: set value and unset value", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("Describe", func(t *testing.T) {
+	t.Run("alter task: set and unset tag", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("Execute", func(t *testing.T) {
+	t.Run("alter task: suspend and resume", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("alter task: remove after and add after", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("alter task: modify when and as", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("show task: default", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("show task: terse", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("show task: with options", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("describe task: default", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("execute task: default", func(t *testing.T) {
 		// TODO: fill me
 	})
 }
