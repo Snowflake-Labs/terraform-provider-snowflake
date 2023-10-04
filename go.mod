@@ -5,17 +5,17 @@ go 1.20
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/brianvoe/gofakeit/v6 v6.21.0
+	github.com/brianvoe/gofakeit/v6 v6.23.2
 	github.com/buger/jsonparser v1.1.1
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/pelletier/go-toml/v2 v2.0.7
-	github.com/snowflakedb/gosnowflake v1.6.24
+	github.com/pelletier/go-toml/v2 v2.1.0
+	github.com/snowflakedb/gosnowflake v1.6.25
 	github.com/stretchr/testify v1.8.4
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a
 	golang.org/x/crypto v0.13.0
