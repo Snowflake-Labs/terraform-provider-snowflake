@@ -50,9 +50,6 @@ func (opts *AlterTaskOptions) validate() error {
 		if ok := anyValueSet(opts.Set.Warehouse, opts.Set.Schedule, opts.Set.Config, opts.Set.AllowOverlappingExecution, opts.Set.UserTaskTimeoutMs, opts.Set.SuspendTaskAfterNumFailures, opts.Set.Comment, opts.Set.SessionParameters); !ok {
 			errs = append(errs, errAtLeastOneOf("Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "Comment", "SessionParameters"))
 		}
-		if valueSet(opts.Set.Warehouse) && !validObjectidentifier(opts.Set.Warehouse) {
-			errs = append(errs, errInvalidObjectIdentifier)
-		}
 		if valueSet(opts.Set.SessionParameters) {
 			if err := opts.Set.SessionParameters.validate(); err != nil {
 				errs = append(errs, err)
