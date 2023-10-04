@@ -28,6 +28,7 @@ type sessions struct {
 	client *Client
 }
 
+// AlterSessionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-session.
 type AlterSessionOptions struct {
 	alter   bool          `ddl:"static" sql:"ALTER"`
 	session bool          `ddl:"static" sql:"SESSION"`
@@ -118,6 +119,7 @@ func (v *sessions) UseRole(ctx context.Context, role AccountObjectIdentifier) er
 	return err
 }
 
+// SecondaryRoleOption is based on https://docs.snowflake.com/en/sql-reference/sql/use-secondary-roles.
 type SecondaryRoleOption string
 
 const (

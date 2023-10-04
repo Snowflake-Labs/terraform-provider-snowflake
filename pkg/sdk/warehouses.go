@@ -18,17 +18,11 @@ var (
 )
 
 type Warehouses interface {
-	// Create creates a warehouse.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateWarehouseOptions) error
-	// Alter modifies an existing warehouse
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterWarehouseOptions) error
-	// Drop removes a warehouse.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropWarehouseOptions) error
-	// Show returns a list of warehouses.
 	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error)
-	// ShowByID returns a warehouse by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
-	// Describe returns the details of a warehouse.
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*WarehouseDetails, error)
 }
 
@@ -95,6 +89,7 @@ var (
 	ScalingPolicyEconomy  ScalingPolicy = "ECONOMY"
 )
 
+// CreateWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-warehouse.
 type CreateWarehouseOptions struct {
 	create      bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -152,6 +147,7 @@ func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opt
 	return err
 }
 
+// AlterWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-warehouse.
 type AlterWarehouseOptions struct {
 	alter     bool                    `ddl:"static" sql:"ALTER"`
 	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`
@@ -293,6 +289,7 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 	return err
 }
 
+// DropWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-warehouse.
 type DropWarehouseOptions struct {
 	drop      bool                    `ddl:"static" sql:"DROP"`
 	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`
@@ -328,6 +325,7 @@ func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts 
 	return err
 }
 
+// ShowWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-warehouses.
 type ShowWarehouseOptions struct {
 	show       bool  `ddl:"static" sql:"SHOW"`
 	warehouses bool  `ddl:"static" sql:"WAREHOUSES"`
@@ -481,6 +479,7 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 	return nil, errObjectNotExistOrAuthorized
 }
 
+// describeWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-warehouse.
 type describeWarehouseOptions struct {
 	describe  bool                    `ddl:"static" sql:"DESCRIBE"`
 	warehouse bool                    `ddl:"static" sql:"WAREHOUSE"`

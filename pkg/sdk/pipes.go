@@ -8,24 +8,15 @@ import (
 var _ convertibleRow[Pipe] = new(pipeDBRow)
 
 type Pipes interface {
-	// Create creates a pipe.
 	Create(ctx context.Context, id SchemaObjectIdentifier, copyStatement string, opts *CreatePipeOptions) error
-	// Alter modifies an existing pipe.
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterPipeOptions) error
-	// Drop removes a pipe.
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
-	// Show returns a list of pipes.
 	Show(ctx context.Context, opts *ShowPipeOptions) ([]Pipe, error)
-	// ShowByID returns a pipe by ID.
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error)
-	// Describe returns the details of a pipe.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error)
 }
 
-// CreatePipeOptions contains options for creating a new pipe in the system for defining the COPY INTO <table> statement
-// used by Snowpipe to load data from an ingestion queue into tables.
-//
-// Based on https://docs.snowflake.com/en/sql-reference/sql/create-pipe.
+// CreatePipeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-pipe.
 type CreatePipeOptions struct {
 	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -43,9 +34,7 @@ type CreatePipeOptions struct {
 	copyStatement string `ddl:"keyword,no_quotes"`
 }
 
-// AlterPipeOptions contains options for modifying a limited set of properties for an existing pipe object.
-//
-// Based on https://docs.snowflake.com/en/sql-reference/sql/alter-pipe.
+// AlterPipeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-pipe.
 type AlterPipeOptions struct {
 	alter    bool                   `ddl:"static" sql:"ALTER"`
 	role     bool                   `ddl:"static" sql:"PIPE"`
@@ -84,9 +73,7 @@ type PipeRefresh struct {
 	ModifiedAfter *string `ddl:"parameter,single_quotes" sql:"MODIFIED_AFTER"`
 }
 
-// DropPipeOptions contains options for removing the specified pipe from the current/specified schema.
-//
-// Based on https://docs.snowflake.com/en/sql-reference/sql/drop-pipe.
+// DropPipeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-pipe.
 type DropPipeOptions struct {
 	drop     bool                   `ddl:"static" sql:"DROP"`
 	pipe     bool                   `ddl:"static" sql:"PIPE"`
@@ -94,9 +81,7 @@ type DropPipeOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-// ShowPipeOptions contains options for showing pipes which user has access privilege to.
-//
-// https://docs.snowflake.com/en/sql-reference/sql/show-pipes
+// ShowPipeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-pipes.
 type ShowPipeOptions struct {
 	show  bool  `ddl:"static" sql:"SHOW"`
 	pipes bool  `ddl:"static" sql:"PIPES"`
@@ -181,9 +166,7 @@ func (row pipeDBRow) convert() *Pipe {
 	return &pipe
 }
 
-// describePipeOptions contains options for describing the properties specified for a pipe, as well as the default values of the properties.
-//
-// Based on https://docs.snowflake.com/en/sql-reference/sql/desc-pipe.
+// describePipeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-pipe.
 type describePipeOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"`
 	pipe     bool                   `ddl:"static" sql:"PIPE"`

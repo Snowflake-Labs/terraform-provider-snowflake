@@ -783,6 +783,7 @@ const (
 	UserParameterWeekStart                             UserParameter = "WEEK_START"
 )
 
+// AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
 	// Account Parameters
 	AllowClientMFACaching                        *bool    `ddl:"parameter" sql:"ALLOW_CLIENT_MFA_CACHING"`
@@ -880,6 +881,7 @@ const (
 	UnsupportedDDLActionFail   UnsupportedDDLAction = "FAIL"
 )
 
+// SessionParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#session-parameters.
 type SessionParameters struct {
 	AbortDetachedQuery                    *bool                             `ddl:"parameter" sql:"ABORT_DETACHED_QUERY"`
 	Autocommit                            *bool                             `ddl:"parameter" sql:"AUTOCOMMIT"`
@@ -1021,6 +1023,7 @@ const (
 	TraceLevelOff     TraceLevel = "OFF"
 )
 
+// ObjectParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#object-parameters.
 type ObjectParameters struct {
 	DataRetentionTimeInDays             *int           `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	DefaultDDLCollation                 *string        `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
@@ -1106,6 +1109,7 @@ type UserParametersUnset struct {
 	EnableUnredactedQuerySyntaxError *bool `ddl:"keyword" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 }
 
+// ShowParametersOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-parameters.
 type ShowParametersOptions struct {
 	show       bool          `ddl:"static" sql:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
 	parameters bool          `ddl:"static" sql:"PARAMETERS"` //lint:ignore U1000 This is used in the ddl tag

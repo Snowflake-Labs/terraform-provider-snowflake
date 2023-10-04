@@ -115,6 +115,7 @@ type RevokePrivilegesFromDatabaseRoleOptions struct {
 	Cascade        *bool                        `ddl:"keyword" sql:"CASCADE"`
 }
 
+// grantPrivilegeToShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege-share.
 type grantPrivilegeToShareOptions struct {
 	grant     bool                     `ddl:"static" sql:"GRANT"`
 	privilege ObjectPrivilege          `ddl:"keyword"`
@@ -135,6 +136,7 @@ type OnTable struct {
 	AllInSchema DatabaseObjectIdentifier `ddl:"identifier" sql:"ALL TABLES IN SCHEMA"`
 }
 
+// revokePrivilegeFromShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/revoke-privilege-share.
 type revokePrivilegeFromShareOptions struct {
 	revoke    bool                        `ddl:"static" sql:"REVOKE"`
 	privilege ObjectPrivilege             `ddl:"keyword"`
@@ -154,6 +156,7 @@ type OnView struct {
 	AllInSchema DatabaseObjectIdentifier `ddl:"identifier" sql:"ALL VIEWS IN SCHEMA"`
 }
 
+// ShowGrantOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-grants.
 type ShowGrantOptions struct {
 	show   bool          `ddl:"static" sql:"SHOW"`
 	Future *bool         `ddl:"keyword" sql:"FUTURE"`

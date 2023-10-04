@@ -23,29 +23,17 @@ var (
 )
 
 type Databases interface {
-	// Create creates a database.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateDatabaseOptions) error
-	// CreateShared creates a database from a shared database.
 	CreateShared(ctx context.Context, id AccountObjectIdentifier, shareID ExternalObjectIdentifier, opts *CreateSharedDatabaseOptions) error
-	// CreateSecondary creates a secondary database.
 	CreateSecondary(ctx context.Context, id AccountObjectIdentifier, primaryID ExternalObjectIdentifier, opts *CreateSecondaryDatabaseOptions) error
-	// Alter modifies an existing database
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterDatabaseOptions) error
-	// AlterReplication modifies an existing database replica
 	AlterReplication(ctx context.Context, id AccountObjectIdentifier, opts *AlterDatabaseReplicationOptions) error
-	// AlterFailover modifies an existing database failover group
 	AlterFailover(ctx context.Context, id AccountObjectIdentifier, opts *AlterDatabaseFailoverOptions) error
-	// Drop removes a database.
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropDatabaseOptions) error
-	// Undrop restores the most recent version of a dropped database
 	Undrop(ctx context.Context, id AccountObjectIdentifier) error
-	// Show returns a list of databases.
 	Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error)
-	// ShowByID returns a database by ID
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
-	// Describe returns the details of a database.
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*DatabaseDetails, error)
-	// Use sets the active database for the current session.
 	Use(ctx context.Context, id AccountObjectIdentifier) error
 }
 
@@ -144,6 +132,7 @@ func (row databaseRow) convert() *Database {
 	return database
 }
 
+// CreateDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateDatabaseOptions struct {
 	create                     bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace                  *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -186,6 +175,7 @@ func (v *databases) Create(ctx context.Context, id AccountObjectIdentifier, opts
 	return err
 }
 
+// CreateSharedDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateSharedDatabaseOptions struct {
 	create    bool                     `ddl:"static" sql:"CREATE"`
 	database  bool                     `ddl:"static" sql:"DATABASE"`
@@ -223,6 +213,7 @@ func (v *databases) CreateShared(ctx context.Context, id AccountObjectIdentifier
 	return err
 }
 
+// CreateSecondaryDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-database.
 type CreateSecondaryDatabaseOptions struct {
 	create                  bool                     `ddl:"static" sql:"CREATE"`
 	database                bool                     `ddl:"static" sql:"DATABASE"`
@@ -258,6 +249,7 @@ func (v *databases) CreateSecondary(ctx context.Context, id AccountObjectIdentif
 	return err
 }
 
+// AlterDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-database.
 type AlterDatabaseOptions struct {
 	alter    bool                    `ddl:"static" sql:"ALTER"`
 	database bool                    `ddl:"static" sql:"DATABASE"`
@@ -341,6 +333,7 @@ func (v *databases) Alter(ctx context.Context, id AccountObjectIdentifier, opts 
 	return err
 }
 
+// AlterDatabaseReplicationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-database.
 type AlterDatabaseReplicationOptions struct {
 	alter              bool                    `ddl:"static" sql:"ALTER"`
 	database           bool                    `ddl:"static" sql:"DATABASE"`
@@ -406,6 +399,7 @@ func (v *databases) AlterReplication(ctx context.Context, id AccountObjectIdenti
 	return err
 }
 
+// AlterDatabaseFailoverOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-database.
 type AlterDatabaseFailoverOptions struct {
 	alter           bool                    `ddl:"static" sql:"ALTER"`
 	database        bool                    `ddl:"static" sql:"DATABASE"`
@@ -470,6 +464,7 @@ func (v *databases) AlterFailover(ctx context.Context, id AccountObjectIdentifie
 	return err
 }
 
+// DropDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-database.
 type DropDatabaseOptions struct {
 	drop     bool                    `ddl:"static" sql:"DROP"`
 	database bool                    `ddl:"static" sql:"DATABASE"`
@@ -500,6 +495,7 @@ func (v *databases) Drop(ctx context.Context, id AccountObjectIdentifier, opts *
 	return err
 }
 
+// undropDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/undrop-database.
 type undropDatabaseOptions struct {
 	undrop   bool                    `ddl:"static" sql:"UNDROP"`
 	database bool                    `ddl:"static" sql:"DATABASE"`
@@ -528,6 +524,7 @@ func (v *databases) Undrop(ctx context.Context, id AccountObjectIdentifier) erro
 	return err
 }
 
+// ShowDatabasesOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-databases.
 type ShowDatabasesOptions struct {
 	show       bool       `ddl:"static" sql:"SHOW"`
 	Terse      *bool      `ddl:"keyword" sql:"TERSE"`
@@ -579,6 +576,7 @@ type DatabaseDetailsRow struct {
 	Kind      string
 }
 
+// describeDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-database.
 type describeDatabaseOptions struct {
 	describe bool                    `ddl:"static" sql:"DESCRIBE"`
 	database bool                    `ddl:"static" sql:"DATABASE"`
@@ -614,6 +612,7 @@ func (v *databases) Describe(ctx context.Context, id AccountObjectIdentifier) (*
 	return &details, err
 }
 
+// Use is based on https://docs.snowflake.com/en/sql-reference/sql/use-database.
 func (v *databases) Use(ctx context.Context, id AccountObjectIdentifier) error {
 	// proxy to sessions
 	return v.client.Sessions.UseDatabase(ctx, id)
