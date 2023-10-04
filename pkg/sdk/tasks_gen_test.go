@@ -59,31 +59,28 @@ func TestTasks_Create(t *testing.T) {
 		otherTaskId := randomSchemaObjectIdentifier(t)
 		tagId := randomSchemaObjectIdentifier(t)
 
-		opts := defaultOpts()
-		opts.OrReplace = Bool(true)
-		opts.Warehouse = &CreateTaskWarehouse{
-			Warehouse: &warehouseId,
-		}
-		opts.Schedule = String("10 MINUTE")
-		opts.Config = String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)
-		opts.AllowOverlappingExecution = Bool(true)
-		opts.SessionParameters = &SessionParameters{
-			JSONIndent: Int(10),
-		}
-		opts.UserTaskTimeoutMs = Int(5)
-		opts.SuspendTaskAfterNumFailures = Int(6)
-		opts.ErrorIntegration = String("some_error_integration")
-		opts.CopyGrants = Bool(true)
-		opts.Comment = String("some comment")
-		opts.After = []SchemaObjectIdentifier{otherTaskId}
-		opts.Tag = []TagAssociation{
-			{
+		req := NewCreateTaskRequest(id, sql).
+			WithOrReplace(Bool(true)).
+			WithWarehouse(NewCreateTaskWarehouseRequest().WithWarehouse(&warehouseId)).
+			WithSchedule(String("10 MINUTE")).
+			WithConfig(String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
+			WithAllowOverlappingExecution(Bool(true)).
+			WithSessionParameters(&SessionParameters{
+				JSONIndent: Int(10),
+			}).
+			WithUserTaskTimeoutMs(Int(5)).
+			WithSuspendTaskAfterNumFailures(Int(6)).
+			WithErrorIntegration(String("some_error_integration")).
+			WithCopyGrants(Bool(true)).
+			WithComment(String("some comment")).
+			WithAfter([]SchemaObjectIdentifier{otherTaskId}).
+			WithTag([]TagAssociation{{
 				Name:  tagId,
 				Value: "v1",
-			},
-		}
-		opts.When = String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`)
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TASK %s WAREHOUSE %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true JSON_INDENT = 10 USER_TASK_TIMEOUT_MS = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = some_error_integration COPY GRANTS COMMENT = 'some comment' AFTER = %s TAG (%s = 'v1') WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), otherTaskId.FullyQualifiedName(), tagId.FullyQualifiedName())
+			}}).
+			WithWhen(String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
+
+		assertOptsValidAndSQLEquals(t, req.toOpts(), "CREATE OR REPLACE TASK %s WAREHOUSE %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true JSON_INDENT = 10 USER_TASK_TIMEOUT_MS = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = some_error_integration COPY GRANTS COMMENT = 'some comment' AFTER = %s TAG (%s = 'v1') WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), otherTaskId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 

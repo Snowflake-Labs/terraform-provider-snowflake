@@ -40,6 +40,7 @@ make clean-generator-session_policies run-generator-session_policies
 
 ### Next steps
 ##### Essentials
+- fix builder generation (`With`s for optional fields should have required param, optional fields should not be exported in `Request` structs)
 - (?) add mapping from db to plain struct (for now only "// TODO: Mapping" comment is generated)
 - add arguments to the generator, so we'll be able to specify which files should be generated / re-generated,
 because after we fill things that need our input we don't want to re-generate those files and override the changes,
