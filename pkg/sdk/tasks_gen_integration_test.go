@@ -54,12 +54,57 @@ func TestInt_Tasks(t *testing.T) {
 		return task
 	}
 
+	_, _ = assertTaskTerse, createTask
+
 	t.Run("create task: no optionals", func(t *testing.T) {
-		// TODO: fill me
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		request := NewCreateTaskRequest(id, sql)
+
+		err := client.Tasks.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		task, err := client.Tasks.ShowByID(ctx, id)
+
+		require.NoError(t, err)
+		assertTask(t, task, id)
 	})
 
 	t.Run("create task: complete case", func(t *testing.T) {
-		// TODO: fill me
+		//name := randomString(t)
+		//id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		//
+		//request := NewCreateTaskRequest(id, sql).
+		//	WithOrReplace(Bool(true)).
+		//	WithWarehouse(NewCreateTaskWarehouseRequest().WithWarehouse(&warehouseId)).
+		//	WithSchedule(String("10 MINUTE")).
+		//	WithConfig(String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
+		//	WithAllowOverlappingExecution(Bool(true)).
+		//	WithSessionParameters(&SessionParameters{
+		//		JSONIndent: Int(10),
+		//	}).
+		//	WithUserTaskTimeoutMs(Int(5)).
+		//	WithSuspendTaskAfterNumFailures(Int(6)).
+		//	WithErrorIntegration(String("some_error_integration")).
+		//	WithCopyGrants(Bool(true)).
+		//	WithComment(String("some comment")).
+		//	WithAfter([]SchemaObjectIdentifier{otherTaskId}).
+		//	WithTag([]TagAssociation{{
+		//		Name:  tagId,
+		//		Value: "v1",
+		//	}}).
+		//	WithWhen(String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
+		//
+		//err := client.Tasks.Create(ctx, request)
+		//require.NoError(t, err)
+		//t.Cleanup(cleanupTaskProvider(id))
+		//
+		//task, err := client.Tasks.ShowByID(ctx, id)
+		//
+		//require.NoError(t, err)
+		//assertTask(t, task, id)
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
