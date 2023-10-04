@@ -253,3 +253,33 @@ func (s *TaskUnsetRequest) WithSessionParametersUnset(SessionParametersUnset *Se
 	s.SessionParametersUnset = SessionParametersUnset
 	return s
 }
+
+func NewDropTaskRequest(
+	name SchemaObjectIdentifier,
+) *DropTaskRequest {
+	s := DropTaskRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *DropTaskRequest) WithIfExists(IfExists *bool) *DropTaskRequest {
+	s.IfExists = IfExists
+	return s
+}
+
+func NewShowTaskRequest() *ShowTaskRequest {
+	return &ShowTaskRequest{}
+}
+
+func (s *ShowTaskRequest) WithTerse(Terse *bool) *ShowTaskRequest {
+	s.Terse = Terse
+	return s
+}
+
+func NewDescribeTaskRequest(
+	name SchemaObjectIdentifier,
+) *DescribeTaskRequest {
+	s := DescribeTaskRequest{}
+	s.name = name
+	return &s
+}

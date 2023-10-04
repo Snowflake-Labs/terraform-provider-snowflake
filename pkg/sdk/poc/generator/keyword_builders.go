@@ -17,6 +17,10 @@ func (v *queryStruct) IfExists() *queryStruct {
 	return v.OptionalSQL("IF EXISTS")
 }
 
+func (v *queryStruct) Terse() *queryStruct {
+	return v.OptionalSQL("TERSE")
+}
+
 func (v *queryStruct) Text(name string, transformer *KeywordTransformer) *queryStruct {
 	v.fields = append(v.fields, NewField(name, "string", Tags().Keyword(), transformer))
 	return v

@@ -5,6 +5,10 @@ import "context"
 type Tasks interface {
 	Create(ctx context.Context, request *CreateTaskRequest) error
 	Alter(ctx context.Context, request *AlterTaskRequest) error
+	Drop(ctx context.Context, request *DropTaskRequest) error
+	Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error)
+
+	Describe(ctx context.Context, id SchemaObjectIdentifier) (*TaskDescription, error)
 }
 
 // CreateTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-task.
@@ -74,4 +78,46 @@ type TaskUnset struct {
 	SuspendTaskAfterNumFailures *bool                   `ddl:"keyword" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
 	Comment                     *bool                   `ddl:"keyword" sql:"COMMENT"`
 	SessionParametersUnset      *SessionParametersUnset `ddl:"list,no_parentheses"`
+}
+
+// DropTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-task.
+type DropTaskOptions struct {
+	drop     bool                   `ddl:"static" sql:"DROP"`
+	task     bool                   `ddl:"static" sql:"TASK"`
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
+}
+
+// ShowTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-tasks.
+type ShowTaskOptions struct {
+	show  bool  `ddl:"static" sql:"SHOW"`
+	Terse *bool `ddl:"keyword" sql:"TERSE"`
+	tasks bool  `ddl:"static" sql:"TASKS"`
+}
+
+type showTaskDBRow struct {
+	CreatedOn string `db:"created_on"`
+	Name      string `db:"name"`
+}
+
+type Task struct {
+	CreatedOn string
+	Name      string
+}
+
+// DescribeTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-task.
+type DescribeTaskOptions struct {
+	describe bool                   `ddl:"static" sql:"DESCRIBE"`
+	task     bool                   `ddl:"static" sql:"TASK"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
+}
+
+type describeTaskDBRow struct {
+	CreatedOn string `db:"created_on"`
+	Name      string `db:"name"`
+}
+
+type TaskDescription struct {
+	CreatedOn string
+	Name      string
 }

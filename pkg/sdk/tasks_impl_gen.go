@@ -18,6 +18,32 @@ func (v *tasks) Alter(ctx context.Context, request *AlterTaskRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *tasks) Drop(ctx context.Context, request *DropTaskRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error) {
+	opts := request.toOpts()
+	dbRows, err := validateAndQuery[showTaskDBRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	resultList := convertRows[showTaskDBRow, Task](dbRows)
+	return resultList, nil
+}
+
+func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*TaskDescription, error) {
+	opts := &DescribeTaskOptions{
+		name: id,
+	}
+	result, err := validateAndQueryOne[describeTaskDBRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return result.convert(), nil
+}
+
 func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
 	opts := &CreateTaskOptions{
 		OrReplace:   r.OrReplace,
@@ -86,4 +112,36 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 		}
 	}
 	return opts
+}
+
+func (r *DropTaskRequest) toOpts() *DropTaskOptions {
+	opts := &DropTaskOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+	}
+	return opts
+}
+
+func (r *ShowTaskRequest) toOpts() *ShowTaskOptions {
+	opts := &ShowTaskOptions{
+		Terse: r.Terse,
+	}
+	return opts
+}
+
+func (r showTaskDBRow) convert() *Task {
+	// TODO: Mapping
+	return &Task{}
+}
+
+func (r *DescribeTaskRequest) toOpts() *DescribeTaskOptions {
+	opts := &DescribeTaskOptions{
+		name: r.name,
+	}
+	return opts
+}
+
+func (r describeTaskDBRow) convert() *TaskDescription {
+	// TODO: Mapping
+	return &TaskDescription{}
 }

@@ -3,8 +3,11 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateTaskOptions] = new(CreateTaskRequest)
-	_ optionsProvider[AlterTaskOptions]  = new(AlterTaskRequest)
+	_ optionsProvider[CreateTaskOptions]   = new(CreateTaskRequest)
+	_ optionsProvider[AlterTaskOptions]    = new(AlterTaskRequest)
+	_ optionsProvider[DropTaskOptions]     = new(DropTaskRequest)
+	_ optionsProvider[ShowTaskOptions]     = new(ShowTaskRequest)
+	_ optionsProvider[DescribeTaskOptions] = new(DescribeTaskRequest)
 )
 
 type CreateTaskRequest struct {
@@ -67,4 +70,17 @@ type TaskUnsetRequest struct {
 	SuspendTaskAfterNumFailures *bool
 	Comment                     *bool
 	SessionParametersUnset      *SessionParametersUnset
+}
+
+type DropTaskRequest struct {
+	IfExists *bool
+	name     SchemaObjectIdentifier // required
+}
+
+type ShowTaskRequest struct {
+	Terse *bool
+}
+
+type DescribeTaskRequest struct {
+	name SchemaObjectIdentifier // required
 }

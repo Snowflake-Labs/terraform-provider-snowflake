@@ -5,6 +5,9 @@ import "errors"
 var (
 	_ validatable = new(CreateTaskOptions)
 	_ validatable = new(AlterTaskOptions)
+	_ validatable = new(DropTaskOptions)
+	_ validatable = new(ShowTaskOptions)
+	_ validatable = new(DescribeTaskOptions)
 )
 
 func (opts *CreateTaskOptions) validate() error {
@@ -67,6 +70,36 @@ func (opts *AlterTaskOptions) validate() error {
 				errs = append(errs, err)
 			}
 		}
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *DropTaskOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, errInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *ShowTaskOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	return errors.Join(errs...)
+}
+
+func (opts *DescribeTaskOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
