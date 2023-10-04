@@ -41,6 +41,12 @@ func TestTasks_Create(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Warehouse", "UserTaskManagedInitialWarehouseSize"))
 	})
 
+	t.Run("validation: opts.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, err)
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me

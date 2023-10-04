@@ -29,12 +29,12 @@ func (v *queryStruct) OptionalText(name string, transformer *KeywordTransformer)
 
 // SessionParameters *SessionParameters `ddl:"list,no_parentheses"`
 func (v *queryStruct) SessionParameters() *queryStruct {
-	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil))
+	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(&Validation{Type: ValidateValue, FieldNames: []string{"SessionParameters"}}))
 	return v
 }
 
 func (v *queryStruct) OptionalSessionParameters() *queryStruct {
-	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil))
+	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(&Validation{Type: ValidateValue, FieldNames: []string{"SessionParameters"}}))
 	return v
 }
 

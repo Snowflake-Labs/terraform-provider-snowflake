@@ -25,5 +25,10 @@ func (opts *CreateTaskOptions) validate() error {
 			errs = append(errs, errExactlyOneOf("Warehouse", "UserTaskManagedInitialWarehouseSize"))
 		}
 	}
+	if valueSet(opts.SessionParameters) {
+		if err := opts.SessionParameters.validate(); err != nil {
+			errs = append(errs, err)
+		}
+	}
 	return errors.Join(errs...)
 }

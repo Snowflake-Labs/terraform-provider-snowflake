@@ -11,6 +11,7 @@ import (
 // - conflicting fields - present here, put on level containing given fields
 // - exactly one value set - present here, put on level containing given fields
 // - at least one value set - present here, put on level containing given fields
+// - validate nested field - present here, used for common structs which have their own validate() methods specified
 // - nested validation conditionally - not present here, handled by putting validations on lower level fields
 type ValidationType int64
 
@@ -20,6 +21,7 @@ const (
 	ConflictingFields
 	ExactlyOneValueSet
 	AtLeastOneValueSet
+	ValidateValue
 )
 
 type Validation struct {
@@ -62,6 +64,8 @@ func (v *Validation) Condition(field *Field) string {
 		return fmt.Sprintf("ok := exactlyOneValueSet(%s); !ok", strings.Join(v.fieldsWithPath(field), ","))
 	case AtLeastOneValueSet:
 		return fmt.Sprintf("ok := anyValueSet(%s); !ok", strings.Join(v.fieldsWithPath(field), ","))
+	case ValidateValue:
+		return fmt.Sprintf("err := %s.validate(); err != nil", strings.Join(v.fieldsWithPath(field.Parent), ","))
 	}
 	panic("condition for validation unknown")
 }
@@ -78,6 +82,8 @@ func (v *Validation) ReturnedError(field *Field) string {
 		return fmt.Sprintf("errExactlyOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
 	case AtLeastOneValueSet:
 		return fmt.Sprintf("errAtLeastOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
+	case ValidateValue:
+		return fmt.Sprintf("err")
 	}
 	panic("condition for validation unknown")
 }
@@ -94,6 +100,8 @@ func (v *Validation) TodoComment(field *Field) string {
 		return fmt.Sprintf("validation: exactly one field from %v should be present", v.fieldsWithPath(field))
 	case AtLeastOneValueSet:
 		return fmt.Sprintf("validation: at least one of the fields %v should be set", v.fieldsWithPath(field))
+	case ValidateValue:
+		return fmt.Sprintf("validation: %v should be valid", v.fieldsWithPath(field)[0])
 	}
 	panic("condition for validation unknown")
 }
