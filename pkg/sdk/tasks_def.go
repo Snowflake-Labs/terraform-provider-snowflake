@@ -105,14 +105,55 @@ var TasksDef = g.NewInterface(
 		"https://docs.snowflake.com/en/sql-reference/sql/show-tasks",
 		g.DbStruct("showTaskDBRow").
 			Field("created_on", "string").
-			Field("name", "string"),
+			Field("name", "string").
+			Field("id", "string").
+			Field("database_name", "string").
+			Field("schema_name", "string").
+			Field("owner", "string").
+			Field("comment", "string").
+			Field("warehouse", "string").
+			Field("schedule", "string").
+			Field("predecessors", "string").
+			Field("state", "string").
+			Field("definition", "string").
+			Field("condition", "string").
+			Field("allow_overlapping_execution", "string").
+			Field("error_integration", "string").
+			Field("last_committed_on", "string").
+			Field("last_suspended_on", "string").
+			Field("owner_role_type", "string").
+			Field("config", "string").
+			Field("budget", "string"),
 		g.PlainStruct("Task").
 			Field("CreatedOn", "string").
-			Field("Name", "string"),
+			Field("Name", "string").
+			Field("Id", "string").
+			Field("DatabaseName", "string").
+			Field("SchemaName", "string").
+			Field("Owner", "string").
+			Field("Comment", "string").
+			Field("Warehouse", "string").
+			Field("Schedule", "string").
+			Field("Predecessors", "string").
+			Field("State", "string").
+			Field("Definition", "string").
+			Field("Condition", "string").
+			Field("AllowOverlappingExecution", "string").
+			Field("ErrorIntegration", "string").
+			Field("LastCommittedOn", "string").
+			Field("LastSuspendedOn", "string").
+			Field("OwnerRoleType", "string").
+			Field("Config", "string").
+			Field("Budget", "string"),
 		g.QueryStruct("ShowTasks").
 			Show().
 			Terse().
-			SQL("TASKS"), // TODO: add like and others,
+			SQL("TASKS").
+			OptionalLike().
+			OptionalIn().
+			OptionalStartsWith().
+			OptionalSQL("ROOT ONLY").
+			OptionalLimit(),
 	).
 	ShowByIdOperation().
 	DescribeOperation(

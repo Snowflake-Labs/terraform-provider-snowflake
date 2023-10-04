@@ -49,6 +49,16 @@ func (v *TagBuilder) NoParentheses() *TagBuilder {
 	return v
 }
 
+func (v *TagBuilder) NoEquals() *TagBuilder {
+	v.ddl = append(v.ddl, "no_equals")
+	return v
+}
+
+func (v *TagBuilder) SingleQuotes() *TagBuilder {
+	v.ddl = append(v.ddl, "single_quotes")
+	return v
+}
+
 func (v *TagBuilder) DB(db ...string) *TagBuilder {
 	v.db = append(v.db, db...)
 	return v

@@ -276,6 +276,31 @@ func (s *ShowTaskRequest) WithTerse(Terse *bool) *ShowTaskRequest {
 	return s
 }
 
+func (s *ShowTaskRequest) WithLike(Like *Like) *ShowTaskRequest {
+	s.Like = Like
+	return s
+}
+
+func (s *ShowTaskRequest) WithIn(In *In) *ShowTaskRequest {
+	s.In = In
+	return s
+}
+
+func (s *ShowTaskRequest) WithStartsWith(StartsWith *string) *ShowTaskRequest {
+	s.StartsWith = StartsWith
+	return s
+}
+
+func (s *ShowTaskRequest) WithRootOnly(RootOnly *bool) *ShowTaskRequest {
+	s.RootOnly = RootOnly
+	return s
+}
+
+func (s *ShowTaskRequest) WithLimit(Limit *int) *ShowTaskRequest {
+	s.Limit = Limit
+	return s
+}
+
 func NewDescribeTaskRequest(
 	name SchemaObjectIdentifier,
 ) *DescribeTaskRequest {

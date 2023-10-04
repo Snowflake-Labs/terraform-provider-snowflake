@@ -79,7 +79,12 @@ type DropTaskRequest struct {
 }
 
 type ShowTaskRequest struct {
-	Terse *bool
+	Terse      *bool
+	Like       *Like
+	In         *In
+	StartsWith *string
+	RootOnly   *bool
+	Limit      *int
 }
 
 type DescribeTaskRequest struct {

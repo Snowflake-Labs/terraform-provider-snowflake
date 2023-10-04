@@ -61,3 +61,23 @@ func (v *queryStruct) UnsetTags() *queryStruct {
 	v.fields = append(v.fields, NewField("UnsetTags", "[]ObjectIdentifier", Tags().Keyword().SQL("UNSET TAG"), nil))
 	return v
 }
+
+func (v *queryStruct) OptionalLike() *queryStruct {
+	v.fields = append(v.fields, NewField("Like", "*Like", Tags().Keyword().SQL("LIKE"), nil))
+	return v
+}
+
+func (v *queryStruct) OptionalIn() *queryStruct {
+	v.fields = append(v.fields, NewField("In", "*In", Tags().Keyword().SQL("IN"), nil))
+	return v
+}
+
+func (v *queryStruct) OptionalStartsWith() *queryStruct {
+	v.fields = append(v.fields, NewField("StartsWith", "*string", Tags().Parameter().NoEquals().SingleQuotes().SQL("STARTS WITH"), nil))
+	return v
+}
+
+func (v *queryStruct) OptionalLimit() *queryStruct {
+	v.fields = append(v.fields, NewField("Limit", "*int", Tags().Parameter().NoEquals().SQL("LIMIT"), nil))
+	return v
+}

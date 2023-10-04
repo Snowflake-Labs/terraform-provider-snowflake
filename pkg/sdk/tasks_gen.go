@@ -91,19 +91,60 @@ type DropTaskOptions struct {
 
 // ShowTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-tasks.
 type ShowTaskOptions struct {
-	show  bool  `ddl:"static" sql:"SHOW"`
-	Terse *bool `ddl:"keyword" sql:"TERSE"`
-	tasks bool  `ddl:"static" sql:"TASKS"`
+	show       bool    `ddl:"static" sql:"SHOW"`
+	Terse      *bool   `ddl:"keyword" sql:"TERSE"`
+	tasks      bool    `ddl:"static" sql:"TASKS"`
+	Like       *Like   `ddl:"keyword" sql:"LIKE"`
+	In         *In     `ddl:"keyword" sql:"IN"`
+	StartsWith *string `ddl:"parameter,no_equals,single_quotes" sql:"STARTS WITH"`
+	RootOnly   *bool   `ddl:"keyword" sql:"ROOT ONLY"`
+	Limit      *int    `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
 type showTaskDBRow struct {
-	CreatedOn string `db:"created_on"`
-	Name      string `db:"name"`
+	CreatedOn                 string `db:"created_on"`
+	Name                      string `db:"name"`
+	Id                        string `db:"id"`
+	DatabaseName              string `db:"database_name"`
+	SchemaName                string `db:"schema_name"`
+	Owner                     string `db:"owner"`
+	Comment                   string `db:"comment"`
+	Warehouse                 string `db:"warehouse"`
+	Schedule                  string `db:"schedule"`
+	Predecessors              string `db:"predecessors"`
+	State                     string `db:"state"`
+	Definition                string `db:"definition"`
+	Condition                 string `db:"condition"`
+	AllowOverlappingExecution string `db:"allow_overlapping_execution"`
+	ErrorIntegration          string `db:"error_integration"`
+	LastCommittedOn           string `db:"last_committed_on"`
+	LastSuspendedOn           string `db:"last_suspended_on"`
+	OwnerRoleType             string `db:"owner_role_type"`
+	Config                    string `db:"config"`
+	Budget                    string `db:"budget"`
 }
 
 type Task struct {
-	CreatedOn string
-	Name      string
+	CreatedOn                 string
+	Name                      string
+	Id                        string
+	DatabaseName              string
+	SchemaName                string
+	Owner                     string
+	Comment                   string
+	Warehouse                 string
+	Schedule                  string
+	Predecessors              string
+	State                     string
+	Definition                string
+	Condition                 string
+	AllowOverlappingExecution string
+	ErrorIntegration          string
+	LastCommittedOn           string
+	LastSuspendedOn           string
+	OwnerRoleType             string
+	Config                    string
+	Budget                    string
 }
 
 // DescribeTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-task.

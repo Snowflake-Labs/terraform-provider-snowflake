@@ -138,7 +138,12 @@ func (r *DropTaskRequest) toOpts() *DropTaskOptions {
 
 func (r *ShowTaskRequest) toOpts() *ShowTaskOptions {
 	opts := &ShowTaskOptions{
-		Terse: r.Terse,
+		Terse:      r.Terse,
+		Like:       r.Like,
+		In:         r.In,
+		StartsWith: r.StartsWith,
+		RootOnly:   r.RootOnly,
+		Limit:      r.Limit,
 	}
 	return opts
 }
