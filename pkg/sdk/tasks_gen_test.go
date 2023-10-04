@@ -86,6 +86,7 @@ func TestTasks_Create(t *testing.T) {
 
 func TestTasks_Alter(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
+	otherTaskId := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid AlterTaskOptions
 	defaultOpts := func() *AlterTaskOptions {
@@ -143,6 +144,82 @@ func TestTasks_Alter(t *testing.T) {
 		opts.Unset = &TaskUnset{}
 		opts.Unset.SessionParametersUnset = &SessionParametersUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("at least one session parameter must be set"))
+	})
+
+	t.Run("alter resume", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Resume = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s RESUME", id.FullyQualifiedName())
+	})
+
+	t.Run("alter suspend", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Suspend = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SUSPEND", id.FullyQualifiedName())
+	})
+
+	t.Run("alter remove after", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.RemoveAfter = []SchemaObjectIdentifier{otherTaskId}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s REMOVE AFTER %s", id.FullyQualifiedName(), otherTaskId.FullyQualifiedName())
+	})
+
+	t.Run("alter add after", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AddAfter = []SchemaObjectIdentifier{otherTaskId}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s ADD AFTER %s", id.FullyQualifiedName(), otherTaskId.FullyQualifiedName())
+	})
+
+	t.Run("alter set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &TaskSet{
+			Comment: String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET COMMENT = 'some comment'", id.FullyQualifiedName())
+	})
+
+	t.Run("alter unset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &TaskUnset{
+			Comment: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s UNSET COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("alter set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag1"),
+				Value: "value1",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("tag2"),
+				Value: "value2",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TASK %s SET TAG "tag1" = 'value1', "tag2" = 'value2'`, id.FullyQualifiedName())
+	})
+
+	t.Run("alter unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("tag1"),
+			NewAccountObjectIdentifier("tag2"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TASK %s UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
+	})
+
+	t.Run("alter modify as", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ModifyAs = String("new as")
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s MODIFY AS new as", id.FullyQualifiedName())
+	})
+
+	t.Run("alter modify when", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ModifyWhen = String("new when")
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s MODIFY AS new when", id.FullyQualifiedName())
 	})
 }
 
