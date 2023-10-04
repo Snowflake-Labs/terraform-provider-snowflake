@@ -76,7 +76,7 @@ func (r *DropApplicationRoleRequest) toOpts() *DropApplicationRoleOptions {
 
 func (r *ShowApplicationRoleRequest) toOpts() *ShowApplicationRoleOptions {
 	opts := &ShowApplicationRoleOptions{
-		name: r.name,
+		ApplicationName: r.ApplicationName,
 	}
 	if r.LimitFrom != nil {
 		opts.LimitFrom = &LimitFromApplicationRole{

@@ -134,7 +134,7 @@ func TestApplicationRoles_Show(t *testing.T) {
 	// Minimal valid ShowApplicationRoleOptions
 	defaultOpts := func() *ShowApplicationRoleOptions {
 		return &ShowApplicationRoleOptions{
-			name: id,
+			ApplicationName: id,
 		}
 	}
 
@@ -143,21 +143,19 @@ func TestApplicationRoles_Show(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
 	})
 
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+	t.Run("validation: valid identifier for [opts.ApplicationName]", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.ApplicationName = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.LimitFrom = &LimitFromApplicationRole{
+			Rows: 123,
+			From: String("some limit"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW APPLICATION ROLES IN APPLICATION %s LIMIT 123 FROM 'some limit'", id.Name())
 	})
 }
 
@@ -178,44 +176,73 @@ func TestApplicationRoles_Grant(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.GrantTo.ParentRole opts.GrantTo.ApplicationRole opts.GrantTo.Application] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		parentRole := randomAccountObjectIdentifier(t)
+		appRole := randomAccountObjectIdentifier(t)
+		opts.GrantTo = ApplicationGrantOptions{
+			ParentRole:      &parentRole,
+			ApplicationRole: &appRole,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ParentRole", "ApplicationRole", "Application"))
 	})
 
 	t.Run("validation: valid identifier for [opts.GrantTo.ParentRole] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		invalidID := NewAccountObjectIdentifier("")
+		opts.GrantTo = ApplicationGrantOptions{
+			ParentRole: &invalidID,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.GrantTo.ApplicationRole] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		invalidID := NewAccountObjectIdentifier("")
+		opts.GrantTo = ApplicationGrantOptions{
+			ApplicationRole: &invalidID,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.GrantTo.Application] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		invalidID := NewAccountObjectIdentifier("")
+		opts.GrantTo = ApplicationGrantOptions{
+			Application: &invalidID,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("parent role", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		roleID := randomAccountObjectIdentifier(t)
+		opts.GrantTo = ApplicationGrantOptions{
+			ParentRole: &roleID,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "GRANT APPLICATION ROLE %s TO ROLE %s", id.Name(), roleID.Name())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("application role", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		roleID := randomAccountObjectIdentifier(t)
+		opts.GrantTo = ApplicationGrantOptions{
+			ApplicationRole: &roleID,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "GRANT APPLICATION ROLE %s TO APPLICATION ROLE %s", id.Name(), roleID.Name())
+	})
+
+	t.Run("application", func(t *testing.T) {
+		opts := defaultOpts()
+		appID := randomAccountObjectIdentifier(t)
+		opts.GrantTo = ApplicationGrantOptions{
+			Application: &appID,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "GRANT APPLICATION ROLE %s TO APPLICATION %s", id.Name(), appID.Name())
 	})
 }
 
@@ -236,43 +263,72 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.RevokeFrom.ParentRole opts.RevokeFrom.ApplicationRole opts.RevokeFrom.Application] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		parentRole := randomAccountObjectIdentifier(t)
+		appRole := randomAccountObjectIdentifier(t)
+		opts.RevokeFrom = ApplicationGrantOptions{
+			ParentRole:      &parentRole,
+			ApplicationRole: &appRole,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ParentRole", "ApplicationRole", "Application"))
 	})
 
 	t.Run("validation: valid identifier for [opts.RevokeFrom.ParentRole] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		invalidID := NewAccountObjectIdentifier("")
+		opts.RevokeFrom = ApplicationGrantOptions{
+			ParentRole: &invalidID,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.RevokeFrom.ApplicationRole] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		invalidID := NewAccountObjectIdentifier("")
+		opts.RevokeFrom = ApplicationGrantOptions{
+			ApplicationRole: &invalidID,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.RevokeFrom.Application] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		invalidID := NewAccountObjectIdentifier("")
+		opts.RevokeFrom = ApplicationGrantOptions{
+			Application: &invalidID,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("parent role", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		roleID := randomAccountObjectIdentifier(t)
+		opts.RevokeFrom = ApplicationGrantOptions{
+			ParentRole: &roleID,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "REVOKE APPLICATION ROLE %s FROM ROLE %s", id.Name(), roleID.Name())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("application role", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		roleID := randomAccountObjectIdentifier(t)
+		opts.RevokeFrom = ApplicationGrantOptions{
+			ApplicationRole: &roleID,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "FROM APPLICATION ROLE %s FROM APPLICATION ROLE %s", id.Name(), roleID.Name())
+	})
+
+	t.Run("application", func(t *testing.T) {
+		opts := defaultOpts()
+		appID := randomAccountObjectIdentifier(t)
+		opts.RevokeFrom = ApplicationGrantOptions{
+			Application: &appID,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "FROM APPLICATION ROLE %s FROM APPLICATION %s", id.Name(), appID.Name())
 	})
 }

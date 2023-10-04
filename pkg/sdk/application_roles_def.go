@@ -6,13 +6,17 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 var (
 	LimitFromDef = g.QueryStruct("LimitFromApplicationRole").
-			Number("Rows", g.KeywordOptions()).
-			OptionalText("From", g.KeywordOptions().SingleQuotes())
+			Number("Rows", g.KeywordOptions().SQL("LIMIT").Required()).
+			OptionalText("From", g.KeywordOptions().SingleQuotes().SQL("FROM"))
 
 	ApplicationGrantOptionsDef = g.QueryStruct("ApplicationGrantOptions").
-					OptionalIdentifier("ParentRole", g.KindOfTPointer[AccountObjectIdentifier](), nil).
-					OptionalIdentifier("ApplicationRole", g.KindOfTPointer[AccountObjectIdentifier](), nil).
-					OptionalIdentifier("Application", g.KindOfTPointer[AccountObjectIdentifier](), nil)
+					OptionalIdentifier("ParentRole", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("ROLE")).
+					OptionalIdentifier("ApplicationRole", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("APPLICATION ROLE")).
+					OptionalIdentifier("Application", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("APPLICATION")).
+					WithValidation(g.ExactlyOneValueSet, "ParentRole", "ApplicationRole", "Application").
+					WithValidation(g.ValidIdentifierIfSet, "ParentRole").
+					WithValidation(g.ValidIdentifierIfSet, "ApplicationRole").
+					WithValidation(g.ValidIdentifierIfSet, "Application")
 
 	ApplicationRolesDef = g.NewInterface(
 		"ApplicationRoles",
@@ -27,7 +31,9 @@ var (
 				SQL("APPLICATION ROLE").
 				IfNotExists().
 				Name().
-				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()),
+				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
+				WithValidation(g.ValidIdentifier, "name").
+				WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 		).
 		AlterOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/alter-application-role",
@@ -38,7 +44,10 @@ var (
 				Name().
 				OptionalIdentifier("RenameTo", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 				OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
-				OptionalSQL("UNSET COMMENT"),
+				OptionalSQL("UNSET COMMENT").
+				WithValidation(g.ValidIdentifier, "name").
+				WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "UnsetComment").
+				WithValidation(g.ValidIdentifierIfSet, "RenameTo"),
 		).
 		DropOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/drop-application-role",
@@ -46,7 +55,8 @@ var (
 				Drop().
 				SQL("APPLICATION ROLE").
 				IfExists().
-				Name(),
+				Name().
+				WithValidation(g.ValidIdentifier, "name"),
 		).
 		ShowOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/show-application-roles",
@@ -65,8 +75,9 @@ var (
 			g.QueryStruct("ShowApplicationRoles").
 				Show().
 				SQL("APPLICATION ROLES IN APPLICATION").
-				Name().
-				OptionalQueryStructField("LimitFrom", LimitFromDef, nil),
+				Identifier("ApplicationName", g.KindOfT[AccountObjectIdentifier](), nil).
+				OptionalQueryStructField("LimitFrom", LimitFromDef, nil).
+				WithValidation(g.ValidIdentifier, "ApplicationName"),
 		).
 		GrantOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/grant-application-roles",
@@ -74,7 +85,8 @@ var (
 				Grant().
 				SQL("APPLICATION ROLE").
 				Name().
-				QueryStructField("GrantTo", ApplicationGrantOptionsDef, nil),
+				QueryStructField("GrantTo", ApplicationGrantOptionsDef, g.KeywordOptions().SQL("TO").Required()).
+				WithValidation(g.ValidIdentifier, "name"),
 		).
 		RevokeOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/revoke-application-roles",
@@ -82,6 +94,7 @@ var (
 				Revoke().
 				SQL("APPLICATION ROLE").
 				Name().
-				QueryStructField("RevokeFrom", ApplicationGrantOptionsDef, nil),
+				QueryStructField("RevokeFrom", ApplicationGrantOptionsDef, g.KeywordOptions().SQL("FROM").Required()).
+				WithValidation(g.ValidIdentifier, "name"),
 		)
 )
