@@ -52,14 +52,14 @@ type AlterTaskOptions struct {
 	name        SchemaObjectIdentifier   `ddl:"identifier"`
 	Resume      *bool                    `ddl:"keyword" sql:"RESUME"`
 	Suspend     *bool                    `ddl:"keyword" sql:"SUSPEND"`
-	RemoveAfter []SchemaObjectIdentifier `ddl:"parameter" sql:"REMOVE AFTER"`
-	AddAfter    []SchemaObjectIdentifier `ddl:"parameter" sql:"ADD AFTER"`
+	RemoveAfter []SchemaObjectIdentifier `ddl:"parameter,no_equals" sql:"REMOVE AFTER"`
+	AddAfter    []SchemaObjectIdentifier `ddl:"parameter,no_equals" sql:"ADD AFTER"`
 	Set         *TaskSet                 `ddl:"keyword" sql:"SET"`
 	Unset       *TaskUnset               `ddl:"keyword" sql:"UNSET"`
 	SetTags     []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags   []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
-	ModifyAs    *string                  `ddl:"parameter,no_quotes" sql:"MODIFY AS"`
-	ModifyWhen  *string                  `ddl:"parameter,no_quotes" sql:"MODIFY WHEN"`
+	ModifyAs    *string                  `ddl:"parameter,no_quotes,no_equals" sql:"MODIFY AS"`
+	ModifyWhen  *string                  `ddl:"parameter,no_quotes,no_equals" sql:"MODIFY WHEN"`
 }
 
 type TaskSet struct {

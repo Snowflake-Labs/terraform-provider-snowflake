@@ -95,8 +95,8 @@ var TasksDef = g.NewInterface(
 			Name().
 			OptionalSQL("RESUME").
 			OptionalSQL("SUSPEND").
-			ListAssignment("REMOVE AFTER", "SchemaObjectIdentifier", nil).
-			ListAssignment("ADD AFTER", "SchemaObjectIdentifier", nil).
+			ListAssignment("REMOVE AFTER", "SchemaObjectIdentifier", g.ParameterOptions().NoEquals()).
+			ListAssignment("ADD AFTER", "SchemaObjectIdentifier", g.ParameterOptions().NoEquals()).
 			OptionalQueryStructField(
 				"Set",
 				g.QueryStruct("TaskSet").
@@ -127,8 +127,8 @@ var TasksDef = g.NewInterface(
 			).
 			SetTags().
 			UnsetTags().
-			OptionalTextAssignment("MODIFY AS", g.ParameterOptions().NoQuotes()).
-			OptionalTextAssignment("MODIFY WHEN", g.ParameterOptions().NoQuotes()).
+			OptionalTextAssignment("MODIFY AS", g.ParameterOptions().NoQuotes().NoEquals()).
+			OptionalTextAssignment("MODIFY WHEN", g.ParameterOptions().NoQuotes().NoEquals()).
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ExactlyOneValueSet, "Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"),
 	).
