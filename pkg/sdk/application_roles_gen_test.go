@@ -23,6 +23,13 @@ func TestApplicationRoles_Create(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApplicationRoleOptions", "OrReplace", "IfNotExists"))
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -54,32 +61,42 @@ func TestApplicationRoles_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: at least one of the fields [opts.RenameTo opts.SetComment opts.UnsetComment] should be set", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.RenameTo opts.SetComment opts.UnsetComment] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("RenameTo", "SetComment", "UnsetComment"))
+		opts.SetComment = String("some comment")
+		opts.UnsetComment = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("RenameTo", "SetComment", "UnsetComment"))
 	})
 
 	t.Run("validation: valid identifier for [opts.RenameTo] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		newName := NewAccountObjectIdentifier("")
+		opts.RenameTo = &newName
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("rename to", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		newID := NewAccountObjectIdentifier("new_name")
+		opts.IfExists = Bool(true)
+		opts.RenameTo = &newID
+		assertOptsValidAndSQLEquals(t, opts, "ALTER APPLICATION ROLE %s IF EXISTS RENAME TO %s", id.Name(), newID.Name())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("set comment", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.SetComment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, "ALTER APPLICATION ROLE %s SET COMMENT = 'some comment'", id.Name())
+	})
+
+	t.Run("unset comment", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetComment = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER APPLICATION ROLE %s UNSET COMMENT", id.Name())
 	})
 }
 
@@ -100,20 +117,14 @@ func TestApplicationRoles_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "DROP APPLICATION ROLE %s IF EXISTS", id.Name())
 	})
 }
 
@@ -134,7 +145,6 @@ func TestApplicationRoles_Show(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
