@@ -51,14 +51,39 @@ func TestTasks_Create(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE TASK %s AS %s", id.FullyQualifiedName(), sql)
 	})
 
 	t.Run("all options", func(t *testing.T) {
+		warehouseId := randomAccountObjectIdentifier(t)
+		otherTaskId := randomSchemaObjectIdentifier(t)
+		tagId := randomSchemaObjectIdentifier(t)
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.OrReplace = Bool(true)
+		opts.Warehouse = &CreateTaskWarehouse{
+			Warehouse: &warehouseId,
+		}
+		opts.Schedule = String("10 MINUTE")
+		opts.Config = String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)
+		opts.AllowOverlappingExecution = Bool(true)
+		opts.SessionParameters = &SessionParameters{
+			JSONIndent: Int(10),
+		}
+		opts.UserTaskTimeoutMs = Int(5)
+		opts.SuspendTaskAfterNumFailures = Int(6)
+		opts.ErrorIntegration = String("some_error_integration")
+		opts.CopyGrants = Bool(true)
+		opts.Comment = String("some comment")
+		opts.After = []SchemaObjectIdentifier{otherTaskId}
+		opts.Tag = []TagAssociation{
+			{
+				Name:  tagId,
+				Value: "v1",
+			},
+		}
+		opts.When = String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TASK %s WAREHOUSE %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true JSON_INDENT = 10 USER_TASK_TIMEOUT_MS = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = some_error_integration COPY GRANTS COMMENT = 'some comment' AFTER = %s TAG (%s = 'v1') WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), otherTaskId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
