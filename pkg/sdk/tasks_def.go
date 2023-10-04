@@ -66,7 +66,6 @@ var TasksDef = g.NewInterface(
 				g.QueryStruct("CreateTaskWarehouse").
 					OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("WAREHOUSE")).
 					OptionalTextAssignment("USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE", g.ParameterOptions().SingleQuotes()).
-					WithValidation(g.ValidIdentifier, "Warehouse").
 					WithValidation(g.ExactlyOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize"),
 				g.KeywordOptions(),
 			).

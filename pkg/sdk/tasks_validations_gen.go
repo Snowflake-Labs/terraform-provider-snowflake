@@ -23,9 +23,6 @@ func (opts *CreateTaskOptions) validate() error {
 		errs = append(errs, errOneOf("CreateTaskOptions", "OrReplace", "IfNotExists"))
 	}
 	if valueSet(opts.Warehouse) {
-		if !validObjectidentifier(opts.Warehouse.Warehouse) {
-			errs = append(errs, errInvalidObjectIdentifier)
-		}
 		if ok := exactlyOneValueSet(opts.Warehouse.Warehouse, opts.Warehouse.UserTaskManagedInitialWarehouseSize); !ok {
 			errs = append(errs, errExactlyOneOf("Warehouse", "UserTaskManagedInitialWarehouseSize"))
 		}

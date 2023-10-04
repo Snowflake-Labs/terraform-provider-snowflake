@@ -1,14 +1,19 @@
 package sdk
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestTasks_Create(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
+	sql := "SELECT CURRENT_TIMESTAMP"
 
 	// Minimal valid CreateTaskOptions
 	defaultOpts := func() *CreateTaskOptions {
 		return &CreateTaskOptions{
 			name: id,
+			sql:  sql,
 		}
 	}
 
@@ -19,32 +24,29 @@ func TestTasks_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateTaskOptions", "OrReplace", "IfNotExists"))
-	})
-
-	t.Run("validation: valid identifier for [opts.Warehouse.Warehouse]", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.Warehouse.Warehouse opts.Warehouse.UserTaskManagedInitialWarehouseSize] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Warehouse = &CreateTaskWarehouse{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Warehouse", "UserTaskManagedInitialWarehouseSize"))
 	})
 
 	t.Run("validation: opts.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, err)
+		opts.SessionParameters = &SessionParameters{
+			JSONIndent: Int(25),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("JSON_INDENT must be between 0 and 16"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -102,7 +104,7 @@ func TestTasks_Alter(t *testing.T) {
 	t.Run("validation: opts.Set.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, err)
+		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf(""))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.Warehouse opts.Unset.Schedule opts.Unset.Config opts.Unset.AllowOverlappingExecution opts.Unset.UserTaskTimeoutMs opts.Unset.SuspendTaskAfterNumFailures opts.Unset.Comment opts.Unset.SessionParametersUnset] should be set", func(t *testing.T) {
@@ -114,7 +116,7 @@ func TestTasks_Alter(t *testing.T) {
 	t.Run("validation: opts.Unset.SessionParametersUnset.SessionParametersUnset should be valid", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, err)
+		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf(""))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -165,13 +167,11 @@ func TestTasks_Drop(t *testing.T) {
 }
 
 func TestTasks_Show(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	//id := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid ShowTaskOptions
 	defaultOpts := func() *ShowTaskOptions {
-		return &ShowTaskOptions{
-			name: id,
-		}
+		return &ShowTaskOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
