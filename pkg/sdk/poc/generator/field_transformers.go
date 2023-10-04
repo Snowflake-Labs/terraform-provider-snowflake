@@ -26,6 +26,11 @@ func (v *KeywordTransformer) SQL(sqlPrefix string) *KeywordTransformer {
 	return v
 }
 
+func (v *KeywordTransformer) NoQuotes() *KeywordTransformer {
+	v.quotes = "no_quotes"
+	return v
+}
+
 func (v *KeywordTransformer) SingleQuotes() *KeywordTransformer {
 	v.quotes = "single_quotes"
 	return v
@@ -51,6 +56,7 @@ type ParameterTransformer struct {
 	sqlPrefix   string
 	quotes      string
 	parentheses string
+	equals      string
 }
 
 func ParameterOptions() *ParameterTransformer {
@@ -72,6 +78,11 @@ func (v *ParameterTransformer) NoQuotes() *ParameterTransformer {
 	return v
 }
 
+func (v *ParameterTransformer) NoEquals() *ParameterTransformer {
+	v.equals = "no_equals"
+	return v
+}
+
 func (v *ParameterTransformer) SingleQuotes() *ParameterTransformer {
 	v.quotes = "single_quotes"
 	return v
@@ -79,6 +90,11 @@ func (v *ParameterTransformer) SingleQuotes() *ParameterTransformer {
 
 func (v *ParameterTransformer) DoubleQuotes() *ParameterTransformer {
 	v.quotes = "double_quotes"
+	return v
+}
+
+func (v *ParameterTransformer) NoParentheses() *ParameterTransformer {
+	v.quotes = "no_parentheses"
 	return v
 }
 
@@ -95,6 +111,7 @@ func (v *ParameterTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.quotes)
 	addTagIfMissing(f.Tags, "ddl", v.parentheses)
+	addTagIfMissing(f.Tags, "ddl", v.equals)
 	return f
 }
 

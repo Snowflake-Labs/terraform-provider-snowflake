@@ -27,6 +27,22 @@ func (v *queryStruct) OptionalText(name string, transformer *KeywordTransformer)
 	return v
 }
 
+// SessionParameters *SessionParameters `ddl:"list,no_parentheses"`
+func (v *queryStruct) SessionParameters() *queryStruct {
+	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil))
+	return v
+}
+
+func (v *queryStruct) OptionalSessionParameters() *queryStruct {
+	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil))
+	return v
+}
+
+func (v *queryStruct) WithTags() *queryStruct {
+	v.fields = append(v.fields, NewField("Tag", "[]TagAssociation", Tags().Keyword().Parentheses().SQL("TAG"), nil))
+	return v
+}
+
 func (v *queryStruct) SetTags() *queryStruct {
 	v.fields = append(v.fields, NewField("SetTags", "[]TagAssociation", Tags().Keyword().SQL("SET TAG"), nil))
 	return v
