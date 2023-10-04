@@ -50,28 +50,38 @@ var (
 		).
 		ShowOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/show-application-roles",
-			g.DbStruct(""),
-			g.PlainStruct(""),
+			g.DbStruct("applicationRoleDbRow").
+				Field("created_on", "time.Time").
+				Field("name", "string").
+				Field("owner", "string").
+				Field("comment", "string").
+				Field("owner_role_type", "string"),
+			g.PlainStruct("ApplicationRole").
+				Field("CreatedOn", "time.Time").
+				Field("Name", "string").
+				Field("Owner", "string").
+				Field("Comment", "string").
+				Field("OwnerRoleTYpe", "string"),
 			g.QueryStruct("ShowApplicationRoles").
 				Show().
 				SQL("APPLICATION ROLES IN APPLICATION").
 				Name().
 				OptionalQueryStructField("LimitFrom", LimitFromDef, nil),
+		).
+		GrantOperation(
+			"https://docs.snowflake.com/en/sql-reference/sql/grant-application-roles",
+			g.QueryStruct("GrantApplicationRole").
+				Grant().
+				SQL("APPLICATION ROLE").
+				Name().
+				QueryStructField("GrantTo", ApplicationGrantOptionsDef, nil),
+		).
+		RevokeOperation(
+			"https://docs.snowflake.com/en/sql-reference/sql/revoke-application-roles",
+			g.QueryStruct("RevokeApplicationRole").
+				Revoke().
+				SQL("APPLICATION ROLE").
+				Name().
+				QueryStructField("RevokeFrom", ApplicationGrantOptionsDef, nil),
 		)
-	//GrantOperation(
-	//	"https://docs.snowflake.com/en/sql-reference/sql/grant-application-roles",
-	//	g.QueryStruct("GrantApplicationRole").
-	//		Grant().
-	//		SQL("APPLICATION ROLE").
-	//		Name().
-	//		QueryStructField("GrantTo", ApplicationGrantOptionsDef, nil),
-	//).
-	//RevokeOperation(
-	//	"https://docs.snowflake.com/en/sql-reference/sql/revoke-application-roles",
-	//	g.QueryStruct("RevokeApplicationRole").
-	//		Revoke().
-	//		SQL("APPLICATION ROLE").
-	//		Name().
-	//		QueryStructField("RevokeFrom", ApplicationGrantOptionsDef, nil),
-	//)
 )
