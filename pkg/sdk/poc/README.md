@@ -87,6 +87,7 @@ find a better solution to solve the issue (add more logic to the templates ?)
   - example implementation - StringTyper implements Typer and all the KindOf... functions use StringTyper to return Typer easily - https://go.dev/play/p/TZZgSkkHw_M
 
 ##### Known issues
+- generating two converts when Show and Desc use the same data structure
 - wrong generated validations for validIdentifierIfSet for cases like
 ```go
 A := QueryStruct("A").

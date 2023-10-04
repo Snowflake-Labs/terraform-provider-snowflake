@@ -8,7 +8,7 @@ type Tasks interface {
 	Drop(ctx context.Context, request *DropTaskRequest) error
 	Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
-	Describe(ctx context.Context, id SchemaObjectIdentifier) (*TaskDescription, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Execute(ctx context.Context, request *ExecuteTaskRequest) error
 }
 
@@ -101,7 +101,7 @@ type ShowTaskOptions struct {
 	Limit      *int    `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-type showTaskDBRow struct {
+type taskDBRow struct {
 	CreatedOn                 string `db:"created_on"`
 	Name                      string `db:"name"`
 	Id                        string `db:"id"`
@@ -152,16 +152,6 @@ type DescribeTaskOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"`
 	task     bool                   `ddl:"static" sql:"TASK"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
-}
-
-type describeTaskDBRow struct {
-	CreatedOn string `db:"created_on"`
-	Name      string `db:"name"`
-}
-
-type TaskDescription struct {
-	CreatedOn string
-	Name      string
 }
 
 // ExecuteTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/execute-task.

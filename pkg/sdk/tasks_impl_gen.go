@@ -25,11 +25,11 @@ func (v *tasks) Drop(ctx context.Context, request *DropTaskRequest) error {
 
 func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error) {
 	opts := request.toOpts()
-	dbRows, err := validateAndQuery[showTaskDBRow](v.client, ctx, opts)
+	dbRows, err := validateAndQuery[taskDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	resultList := convertRows[showTaskDBRow, Task](dbRows)
+	resultList := convertRows[taskDBRow, Task](dbRows)
 	return resultList, nil
 }
 
@@ -42,11 +42,11 @@ func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task,
 	return findOne(tasks, func(r Task) bool { return r.Name == id.Name() })
 }
 
-func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*TaskDescription, error) {
+func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
 	opts := &DescribeTaskOptions{
 		name: id,
 	}
-	result, err := validateAndQueryOne[describeTaskDBRow](v.client, ctx, opts)
+	result, err := validateAndQueryOne[taskDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (r *ShowTaskRequest) toOpts() *ShowTaskOptions {
 	return opts
 }
 
-func (r showTaskDBRow) convert() *Task {
+func (r taskDBRow) convert() *Task {
 	// TODO: Mapping
 	return &Task{}
 }
@@ -160,9 +160,9 @@ func (r *DescribeTaskRequest) toOpts() *DescribeTaskOptions {
 	return opts
 }
 
-func (r describeTaskDBRow) convert() *TaskDescription {
+func (r taskDBRow) convert() *Task {
 	// TODO: Mapping
-	return &TaskDescription{}
+	return &Task{}
 }
 
 func (r *ExecuteTaskRequest) toOpts() *ExecuteTaskOptions {

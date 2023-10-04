@@ -6,6 +6,50 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 // UserTaskManagedInitialWarehouseSizeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE.
 
+var taskDbRow = g.DbStruct("taskDBRow").
+	Field("created_on", "string").
+	Field("name", "string").
+	Field("id", "string").
+	Field("database_name", "string").
+	Field("schema_name", "string").
+	Field("owner", "string").
+	Field("comment", "string").
+	Field("warehouse", "string").
+	Field("schedule", "string").
+	Field("predecessors", "string").
+	Field("state", "string").
+	Field("definition", "string").
+	Field("condition", "string").
+	Field("allow_overlapping_execution", "string").
+	Field("error_integration", "string").
+	Field("last_committed_on", "string").
+	Field("last_suspended_on", "string").
+	Field("owner_role_type", "string").
+	Field("config", "string").
+	Field("budget", "string")
+
+var task = g.PlainStruct("Task").
+	Field("CreatedOn", "string").
+	Field("Name", "string").
+	Field("Id", "string").
+	Field("DatabaseName", "string").
+	Field("SchemaName", "string").
+	Field("Owner", "string").
+	Field("Comment", "string").
+	Field("Warehouse", "string").
+	Field("Schedule", "string").
+	Field("Predecessors", "string").
+	Field("State", "string").
+	Field("Definition", "string").
+	Field("Condition", "string").
+	Field("AllowOverlappingExecution", "string").
+	Field("ErrorIntegration", "string").
+	Field("LastCommittedOn", "string").
+	Field("LastSuspendedOn", "string").
+	Field("OwnerRoleType", "string").
+	Field("Config", "string").
+	Field("Budget", "string")
+
 var TasksDef = g.NewInterface(
 	"Tasks",
 	"Task",
@@ -103,48 +147,8 @@ var TasksDef = g.NewInterface(
 	).
 	ShowOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/show-tasks",
-		g.DbStruct("showTaskDBRow").
-			Field("created_on", "string").
-			Field("name", "string").
-			Field("id", "string").
-			Field("database_name", "string").
-			Field("schema_name", "string").
-			Field("owner", "string").
-			Field("comment", "string").
-			Field("warehouse", "string").
-			Field("schedule", "string").
-			Field("predecessors", "string").
-			Field("state", "string").
-			Field("definition", "string").
-			Field("condition", "string").
-			Field("allow_overlapping_execution", "string").
-			Field("error_integration", "string").
-			Field("last_committed_on", "string").
-			Field("last_suspended_on", "string").
-			Field("owner_role_type", "string").
-			Field("config", "string").
-			Field("budget", "string"),
-		g.PlainStruct("Task").
-			Field("CreatedOn", "string").
-			Field("Name", "string").
-			Field("Id", "string").
-			Field("DatabaseName", "string").
-			Field("SchemaName", "string").
-			Field("Owner", "string").
-			Field("Comment", "string").
-			Field("Warehouse", "string").
-			Field("Schedule", "string").
-			Field("Predecessors", "string").
-			Field("State", "string").
-			Field("Definition", "string").
-			Field("Condition", "string").
-			Field("AllowOverlappingExecution", "string").
-			Field("ErrorIntegration", "string").
-			Field("LastCommittedOn", "string").
-			Field("LastSuspendedOn", "string").
-			Field("OwnerRoleType", "string").
-			Field("Config", "string").
-			Field("Budget", "string"),
+		taskDbRow,
+		task,
 		g.QueryStruct("ShowTasks").
 			Show().
 			Terse().
@@ -159,12 +163,8 @@ var TasksDef = g.NewInterface(
 	DescribeOperation(
 		g.DescriptionMappingKindSingleValue,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-task",
-		g.DbStruct("describeTaskDBRow").
-			Field("created_on", "string").
-			Field("name", "string"),
-		g.PlainStruct("TaskDescription").
-			Field("CreatedOn", "string").
-			Field("Name", "string"),
+		taskDbRow,
+		task,
 		g.QueryStruct("DescribeTask").
 			Describe().
 			SQL("TASK").
