@@ -75,8 +75,8 @@ var (
 			g.QueryStruct("ShowApplicationRoles").
 				Show().
 				SQL("APPLICATION ROLES IN APPLICATION").
-				Identifier("ApplicationName", g.KindOfT[AccountObjectIdentifier](), nil).
-				OptionalQueryStructField("LimitFrom", LimitFromDef, nil).
+				Identifier("ApplicationName", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions()).
+				OptionalQueryStructField("LimitFrom", LimitFromDef, g.KeywordOptions()).
 				WithValidation(g.ValidIdentifier, "ApplicationName"),
 		).
 		GrantOperation(

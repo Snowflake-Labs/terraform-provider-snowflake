@@ -33,14 +33,14 @@ func TestApplicationRoles_Create(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE APPLICATION ROLE %s", id.Name())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE APPLICATION ROLE "%s"`, id.Name())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, "CREATE APPLICATION ROLE IF NOT EXISTS %s ", id.Name())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE APPLICATION ROLE IF NOT EXISTS "%s" COMMENT = 'some comment'`, id.Name())
 	})
 }
 
@@ -76,7 +76,7 @@ func TestApplicationRoles_Alter(t *testing.T) {
 		opts := defaultOpts()
 		newName := NewAccountObjectIdentifier("")
 		opts.RenameTo = &newName
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("RenameTo", "SetComment", "UnsetComment"))
 	})
 
 	t.Run("rename to", func(t *testing.T) {
@@ -84,19 +84,19 @@ func TestApplicationRoles_Alter(t *testing.T) {
 		newID := NewAccountObjectIdentifier("new_name")
 		opts.IfExists = Bool(true)
 		opts.RenameTo = &newID
-		assertOptsValidAndSQLEquals(t, opts, "ALTER APPLICATION ROLE %s IF EXISTS RENAME TO %s", id.Name(), newID.Name())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION ROLE IF EXISTS "%s" RENAME TO "%s"`, id.Name(), newID.Name())
 	})
 
 	t.Run("set comment", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetComment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, "ALTER APPLICATION ROLE %s SET COMMENT = 'some comment'", id.Name())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION ROLE "%s" SET COMMENT = 'some comment'`, id.Name())
 	})
 
 	t.Run("unset comment", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.UnsetComment = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, "ALTER APPLICATION ROLE %s UNSET COMMENT", id.Name())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION ROLE "%s" UNSET COMMENT`, id.Name())
 	})
 }
 
@@ -124,7 +124,7 @@ func TestApplicationRoles_Drop(t *testing.T) {
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, "DROP APPLICATION ROLE %s IF EXISTS", id.Name())
+		assertOptsValidAndSQLEquals(t, opts, `DROP APPLICATION ROLE IF EXISTS "%s"`, id.Name())
 	})
 }
 
@@ -155,7 +155,7 @@ func TestApplicationRoles_Show(t *testing.T) {
 			Rows: 123,
 			From: String("some limit"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SHOW APPLICATION ROLES IN APPLICATION %s LIMIT 123 FROM 'some limit'", id.Name())
+		assertOptsValidAndSQLEquals(t, opts, `SHOW APPLICATION ROLES IN APPLICATION "%s" LIMIT 123 FROM 'some limit'`, id.Name())
 	})
 }
 
@@ -224,7 +224,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 		opts.GrantTo = ApplicationGrantOptions{
 			ParentRole: &roleID,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "GRANT APPLICATION ROLE %s TO ROLE %s", id.Name(), roleID.Name())
+		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLICATION ROLE "%s" TO ROLE "%s"`, id.Name(), roleID.Name())
 	})
 
 	t.Run("application role", func(t *testing.T) {
@@ -233,7 +233,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 		opts.GrantTo = ApplicationGrantOptions{
 			ApplicationRole: &roleID,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "GRANT APPLICATION ROLE %s TO APPLICATION ROLE %s", id.Name(), roleID.Name())
+		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLICATION ROLE "%s" TO APPLICATION ROLE "%s"`, id.Name(), roleID.Name())
 	})
 
 	t.Run("application", func(t *testing.T) {
@@ -242,7 +242,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 		opts.GrantTo = ApplicationGrantOptions{
 			Application: &appID,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "GRANT APPLICATION ROLE %s TO APPLICATION %s", id.Name(), appID.Name())
+		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLICATION ROLE "%s" TO APPLICATION "%s"`, id.Name(), appID.Name())
 	})
 }
 
@@ -311,7 +311,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 		opts.RevokeFrom = ApplicationGrantOptions{
 			ParentRole: &roleID,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "REVOKE APPLICATION ROLE %s FROM ROLE %s", id.Name(), roleID.Name())
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE APPLICATION ROLE "%s" FROM ROLE "%s"`, id.Name(), roleID.Name())
 	})
 
 	t.Run("application role", func(t *testing.T) {
@@ -320,7 +320,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 		opts.RevokeFrom = ApplicationGrantOptions{
 			ApplicationRole: &roleID,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "FROM APPLICATION ROLE %s FROM APPLICATION ROLE %s", id.Name(), roleID.Name())
+		assertOptsValidAndSQLEquals(t, opts, `FROM APPLICATION ROLE "%s" FROM APPLICATION ROLE "%s"`, id.Name(), roleID.Name())
 	})
 
 	t.Run("application", func(t *testing.T) {
@@ -329,6 +329,6 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 		opts.RevokeFrom = ApplicationGrantOptions{
 			Application: &appID,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "FROM APPLICATION ROLE %s FROM APPLICATION %s", id.Name(), appID.Name())
+		assertOptsValidAndSQLEquals(t, opts, `FROM APPLICATION ROLE "%s" FROM APPLICATION "%s"`, id.Name(), appID.Name())
 	})
 }
