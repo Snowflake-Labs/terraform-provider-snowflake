@@ -86,7 +86,7 @@ func TestTasks_Create(t *testing.T) {
 			}}).
 			WithWhen(String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
 
-		assertOptsValidAndSQLEquals(t, req.toOpts(), "CREATE OR REPLACE TASK %s WAREHOUSE %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true JSON_INDENT = 10 USER_TASK_TIMEOUT_MS = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = some_error_integration COPY GRANTS COMMENT = 'some comment' AFTER = %s TAG (%s = 'v1') WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), otherTaskId.FullyQualifiedName(), tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, req.toOpts(), "CREATE OR REPLACE TASK %s WAREHOUSE = %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true JSON_INDENT = 10 USER_TASK_TIMEOUT_MS = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = some_error_integration COPY GRANTS COMMENT = 'some comment' AFTER %s TAG (%s = 'v1') WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), otherTaskId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
