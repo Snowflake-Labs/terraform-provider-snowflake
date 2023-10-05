@@ -268,15 +268,11 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: set value and unset value", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-
-		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTask(t)
+		id := task.ID()
 
 		alterRequest := NewAlterTaskRequest(id).WithSet(NewTaskSetRequest().WithComment(String("new comment")))
-		err = client.Tasks.Alter(ctx, alterRequest)
+		err := client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		alteredTask, err := client.Tasks.ShowByID(ctx, id)
@@ -298,12 +294,8 @@ func TestInt_Tasks(t *testing.T) {
 		tag, tagCleanup := createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-
-		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTask(t)
+		id := task.ID()
 
 		tagValue := "abc"
 		tags := []TagAssociation{
@@ -314,7 +306,7 @@ func TestInt_Tasks(t *testing.T) {
 		}
 		alterRequestSetTags := NewAlterTaskRequest(id).WithSetTags(tags)
 
-		err = client.Tasks.Alter(ctx, alterRequestSetTags)
+		err := client.Tasks.Alter(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeTask)
@@ -408,16 +400,12 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: modify when and as", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-
-		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTask(t)
+		id := task.ID()
 
 		newSql := "SELECT CURRENT_DATE"
 		alterRequest := NewAlterTaskRequest(id).WithModifyAs(String(newSql))
-		err = client.Tasks.Alter(ctx, alterRequest)
+		err := client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		alteredTask, err := client.Tasks.ShowByID(ctx, id)
