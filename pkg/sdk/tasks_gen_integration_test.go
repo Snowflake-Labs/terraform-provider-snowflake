@@ -153,9 +153,6 @@ func TestInt_Tasks(t *testing.T) {
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
-		//tag, tagCleanup := createTag(t, client, database, schema)
-		//t.Cleanup(tagCleanup)
-
 		request := NewCreateTaskRequest(id, sql).
 			WithOrReplace(Bool(true)).
 			WithWarehouse(NewCreateTaskWarehouseRequest().WithWarehouse(Pointer(warehouse.ID()))).
@@ -168,10 +165,6 @@ func TestInt_Tasks(t *testing.T) {
 			WithUserTaskTimeoutMs(Int(500)).
 			WithSuspendTaskAfterNumFailures(Int(3)).
 			WithComment(String("some comment")).
-			//WithTag([]TagAssociation{{
-			//	Name:  tag.ID(),
-			//	Value: "v1",
-			//}}).
 			WithWhen(String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
 
 		err := client.Tasks.Create(ctx, request)
@@ -229,6 +222,29 @@ func TestInt_Tasks(t *testing.T) {
 	//	require.NoError(t, err)
 	//	assertTaskWithOptions(t, task, id, name, "", "", "", "", false, "", nil)
 	//})
+
+	t.Run("create task: with tags", func(t *testing.T) {
+		tag, tagCleanup := createTag(t, client, database, schema)
+		t.Cleanup(tagCleanup)
+
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		request := NewCreateTaskRequest(id, sql).
+			WithTag([]TagAssociation{{
+				Name:  tag.ID(),
+				Value: "v1",
+			}})
+
+		err := client.Tasks.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeTask)
+		require.NoError(t, err)
+
+		assert.Equal(t, "v1", returnedTagValue)
+	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
 		name := randomString(t)
