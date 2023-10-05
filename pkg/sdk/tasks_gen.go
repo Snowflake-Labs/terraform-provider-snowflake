@@ -141,7 +141,7 @@ type Task struct {
 	State                     string
 	Definition                string
 	Condition                 string
-	AllowOverlappingExecution string
+	AllowOverlappingExecution bool
 	ErrorIntegration          string
 	LastCommittedOn           string
 	LastSuspendedOn           string

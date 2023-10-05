@@ -20,10 +20,28 @@ func TestInt_Tasks(t *testing.T) {
 
 	sql := "SELECT CURRENT_TIMESTAMP"
 
-	assertTask := func(t *testing.T, task *Task, id SchemaObjectIdentifier) {
+	assertTask := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string) {
 		t.Helper()
 		assert.NotEmpty(t, task.CreatedOn)
-		// TODO: fill out
+		assert.Equal(t, name, task.Name)
+		assert.NotEmpty(t, task.Id)
+		assert.Equal(t, database.Name, task.DatabaseName)
+		assert.Equal(t, schema.Name, task.SchemaName)
+		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
+		assert.Equal(t, "", task.Comment)
+		assert.Equal(t, "", task.Warehouse)
+		assert.Equal(t, "", task.Schedule)
+		assert.Equal(t, "[]", task.Predecessors)
+		assert.Equal(t, "suspended", task.State)
+		assert.Equal(t, sql, task.Definition)
+		assert.Equal(t, "", task.Condition)
+		assert.Equal(t, false, task.AllowOverlappingExecution)
+		assert.Empty(t, task.ErrorIntegration)
+		assert.Empty(t, task.LastCommittedOn)
+		assert.Empty(t, task.LastSuspendedOn)
+		assert.Equal(t, "ROLE", task.OwnerRoleType)
+		assert.Empty(t, task.Config)
+		assert.Empty(t, task.Budget)
 	}
 
 	assertTaskTerse := func(t *testing.T, task *Task, id SchemaObjectIdentifier) {
@@ -69,7 +87,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := client.Tasks.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assertTask(t, task, id)
+		assertTask(t, task, id, name)
 	})
 
 	t.Run("create task: almost complete case", func(t *testing.T) {
@@ -111,7 +129,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := client.Tasks.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assertTask(t, task, id)
+		assertTask(t, task, id, name)
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
@@ -308,7 +326,7 @@ func TestInt_Tasks(t *testing.T) {
 		returnedTask, err := client.Tasks.Describe(ctx, task.ID())
 		require.NoError(t, err)
 
-		assertTask(t, returnedTask, task.ID())
+		assertTask(t, returnedTask, task.ID(), task.Name)
 	})
 
 	t.Run("execute task: default", func(t *testing.T) {

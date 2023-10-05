@@ -180,9 +180,9 @@ func (r taskDBRow) convert() *Task {
 		task.Condition = r.Condition.String
 	}
 	if r.AllowOverlappingExecution.Valid {
-		task.AllowOverlappingExecution = r.AllowOverlappingExecution.String
+		task.AllowOverlappingExecution = r.AllowOverlappingExecution.String == "true"
 	}
-	if r.ErrorIntegration.Valid {
+	if r.ErrorIntegration.Valid && r.ErrorIntegration.String != "null" {
 		task.ErrorIntegration = r.ErrorIntegration.String
 	}
 	if r.LastCommittedOn.Valid {
