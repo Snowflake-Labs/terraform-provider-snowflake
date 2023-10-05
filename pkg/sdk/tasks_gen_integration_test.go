@@ -136,11 +136,70 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: set value and unset value", func(t *testing.T) {
-		// TODO: fill me
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		alterRequest := NewAlterTaskRequest(id).WithSet(NewTaskSetRequest().WithComment(String("new comment")))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredTask, err := client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "new comment", alteredTask.Comment)
+
+		alterRequest = NewAlterTaskRequest(id).WithUnset(NewTaskUnsetRequest().WithComment(Bool(true)))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredTask, err = client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "", alteredTask.Comment)
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
-		// TODO: fill me
+		tag, tagCleanup := createTag(t, client, database, schema)
+		t.Cleanup(tagCleanup)
+
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		tagValue := "abc"
+		tags := []TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := NewAlterTaskRequest(id).WithSetTags(tags)
+
+		err = client.Tasks.Alter(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeTask)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := NewAlterTaskRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.Tasks.Alter(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeTask)
+		require.Error(t, err)
 	})
 
 	t.Run("alter task: suspend and resume", func(t *testing.T) {
