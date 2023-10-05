@@ -197,7 +197,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 		opts.GrantTo = ApplicationGrantOptions{
 			ParentRole: &invalidID,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ParentRole", "ApplicationRole", "Application"))
 	})
 
 	t.Run("validation: valid identifier for [opts.GrantTo.ApplicationRole] if set", func(t *testing.T) {
@@ -206,7 +206,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 		opts.GrantTo = ApplicationGrantOptions{
 			ApplicationRole: &invalidID,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ParentRole", "ApplicationRole", "Application"))
 	})
 
 	t.Run("validation: valid identifier for [opts.GrantTo.Application] if set", func(t *testing.T) {
@@ -215,7 +215,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 		opts.GrantTo = ApplicationGrantOptions{
 			Application: &invalidID,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ParentRole", "ApplicationRole", "Application"))
 	})
 
 	t.Run("parent role", func(t *testing.T) {
@@ -284,7 +284,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 		opts.RevokeFrom = ApplicationGrantOptions{
 			ParentRole: &invalidID,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ParentRole", "ApplicationRole", "Application"))
 	})
 
 	t.Run("validation: valid identifier for [opts.RevokeFrom.ApplicationRole] if set", func(t *testing.T) {
@@ -293,7 +293,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 		opts.RevokeFrom = ApplicationGrantOptions{
 			ApplicationRole: &invalidID,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ParentRole", "ApplicationRole", "Application"))
 	})
 
 	t.Run("validation: valid identifier for [opts.RevokeFrom.Application] if set", func(t *testing.T) {
@@ -302,7 +302,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 		opts.RevokeFrom = ApplicationGrantOptions{
 			Application: &invalidID,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ParentRole", "ApplicationRole", "Application"))
 	})
 
 	t.Run("parent role", func(t *testing.T) {
@@ -320,7 +320,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 		opts.RevokeFrom = ApplicationGrantOptions{
 			ApplicationRole: &roleID,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `FROM APPLICATION ROLE "%s" FROM APPLICATION ROLE "%s"`, id.Name(), roleID.Name())
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE APPLICATION ROLE "%s" FROM APPLICATION ROLE "%s"`, id.Name(), roleID.Name())
 	})
 
 	t.Run("application", func(t *testing.T) {
@@ -329,6 +329,6 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 		opts.RevokeFrom = ApplicationGrantOptions{
 			Application: &appID,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `FROM APPLICATION ROLE "%s" FROM APPLICATION "%s"`, id.Name(), appID.Name())
+		assertOptsValidAndSQLEquals(t, opts, `REVOKE APPLICATION ROLE "%s" FROM APPLICATION "%s"`, id.Name(), appID.Name())
 	})
 }

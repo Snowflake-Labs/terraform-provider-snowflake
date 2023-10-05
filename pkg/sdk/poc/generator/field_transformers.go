@@ -53,6 +53,7 @@ func (v *KeywordTransformer) Transform(f *Field) *Field {
 
 type ParameterTransformer struct {
 	required    bool
+	equals      string
 	sqlPrefix   string
 	quotes      string
 	parentheses string
@@ -65,6 +66,11 @@ func ParameterOptions() *ParameterTransformer {
 
 func (v *ParameterTransformer) Required() *ParameterTransformer {
 	v.required = true
+	return v
+}
+
+func (v *ParameterTransformer) NoEquals() *ParameterTransformer {
+	v.equals = "no_equals"
 	return v
 }
 

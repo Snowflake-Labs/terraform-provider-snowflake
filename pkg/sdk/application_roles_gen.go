@@ -45,10 +45,10 @@ type DropApplicationRoleOptions struct {
 
 // ShowApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-application-roles.
 type ShowApplicationRoleOptions struct {
-	show                          bool                    `ddl:"static" sql:"SHOW"`
-	applicationRolesInApplication bool                    `ddl:"static" sql:"APPLICATION ROLES IN APPLICATION"`
-	ApplicationName               AccountObjectIdentifier `ddl:"identifier"`
-	LimitFrom                     *LimitFromApplicationRole
+	show                          bool                      `ddl:"static" sql:"SHOW"`
+	applicationRolesInApplication bool                      `ddl:"static" sql:"APPLICATION ROLES IN APPLICATION"`
+	ApplicationName               AccountObjectIdentifier   `ddl:"identifier"`
+	LimitFrom                     *LimitFromApplicationRole `ddl:"keyword"`
 }
 
 type applicationRoleDbRow struct {

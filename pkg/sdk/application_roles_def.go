@@ -6,8 +6,8 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 var (
 	LimitFromDef = g.QueryStruct("LimitFromApplicationRole").
-			Number("Rows", g.KeywordOptions().SQL("LIMIT").Required()).
-			OptionalText("From", g.KeywordOptions().SingleQuotes().SQL("FROM"))
+			Number("Rows", g.KeywordOptions().Required()).
+			OptionalTextAssignment("FROM", g.ParameterOptions().NoEquals().SingleQuotes())
 
 	ApplicationGrantOptionsDef = g.QueryStruct("ApplicationGrantOptions").
 					OptionalIdentifier("ParentRole", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("ROLE")).
@@ -76,7 +76,7 @@ var (
 				Show().
 				SQL("APPLICATION ROLES IN APPLICATION").
 				Identifier("ApplicationName", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions()).
-				OptionalQueryStructField("LimitFrom", LimitFromDef, g.KeywordOptions()).
+				OptionalQueryStructField("LimitFrom", LimitFromDef, g.KeywordOptions().SQL("LIMIT")).
 				WithValidation(g.ValidIdentifier, "ApplicationName"),
 		).
 		GrantOperation(
