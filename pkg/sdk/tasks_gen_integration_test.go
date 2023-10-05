@@ -22,6 +22,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	assertTask := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string) {
 		t.Helper()
+		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, name, task.Name)
 		assert.NotEmpty(t, task.Id)
@@ -46,6 +47,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	assertTaskWithOptions := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string, comment string, warehouse string, schedule string, condition string, config string) {
 		t.Helper()
+		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, name, task.Name)
 		assert.NotEmpty(t, task.Id)
@@ -68,10 +70,31 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Empty(t, task.Budget)
 	}
 
-	assertTaskTerse := func(t *testing.T, task *Task, id SchemaObjectIdentifier) {
+	assertTaskTerse := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string, schedule string) {
 		t.Helper()
+		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
-		// TODO: fill out
+		assert.Equal(t, name, task.Name)
+		assert.Equal(t, database.Name, task.DatabaseName)
+		assert.Equal(t, schema.Name, task.SchemaName)
+		assert.Equal(t, schedule, task.Schedule)
+
+		// all below are not contained in the terse response, that's why all of them we expect to be empty
+		assert.Empty(t, task.Id)
+		assert.Empty(t, task.Owner)
+		assert.Empty(t, task.Comment)
+		assert.Empty(t, task.Warehouse)
+		assert.Empty(t, task.Predecessors)
+		assert.Empty(t, task.State)
+		assert.Empty(t, task.Definition)
+		assert.Empty(t, task.Condition)
+		assert.Empty(t, task.AllowOverlappingExecution)
+		assert.Empty(t, task.ErrorIntegration)
+		assert.Empty(t, task.LastCommittedOn)
+		assert.Empty(t, task.LastSuspendedOn)
+		assert.Empty(t, task.OwnerRoleType)
+		assert.Empty(t, task.Config)
+		assert.Empty(t, task.Budget)
 	}
 
 	cleanupTaskProvider := func(id SchemaObjectIdentifier) func() {
@@ -318,14 +341,19 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("show task: terse", func(t *testing.T) {
-		task1 := createTask(t)
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql).WithSchedule(String("10 MINUTE")))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
 
 		showRequest := NewShowTaskRequest().WithTerse(Bool(true))
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 		require.NoError(t, err)
 
 		assert.Equal(t, 1, len(returnedTasks))
-		assertTaskTerse(t, &returnedTasks[0], task1.ID())
+		assertTaskTerse(t, &returnedTasks[0], id, name, "10 MINUTE")
 	})
 
 	t.Run("show task: with options", func(t *testing.T) {
