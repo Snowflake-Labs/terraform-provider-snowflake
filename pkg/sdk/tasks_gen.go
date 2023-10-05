@@ -41,7 +41,7 @@ type CreateTaskOptions struct {
 
 type CreateTaskWarehouse struct {
 	Warehouse                           *AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
-	UserTaskManagedInitialWarehouseSize *string                  `ddl:"parameter,single_quotes" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskManagedInitialWarehouseSize *WarehouseSize           `ddl:"parameter,single_quotes" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
 }
 
 // AlterTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-task.

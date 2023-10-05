@@ -33,7 +33,7 @@ type CreateTaskRequest struct {
 
 type CreateTaskWarehouseRequest struct {
 	Warehouse                           *AccountObjectIdentifier
-	UserTaskManagedInitialWarehouseSize *string
+	UserTaskManagedInitialWarehouseSize *WarehouseSize
 }
 
 type AlterTaskRequest struct {

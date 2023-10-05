@@ -98,7 +98,7 @@ func (s *CreateTaskWarehouseRequest) WithWarehouse(Warehouse *AccountObjectIdent
 	return s
 }
 
-func (s *CreateTaskWarehouseRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize *string) *CreateTaskWarehouseRequest {
+func (s *CreateTaskWarehouseRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize *WarehouseSize) *CreateTaskWarehouseRequest {
 	s.UserTaskManagedInitialWarehouseSize = UserTaskManagedInitialWarehouseSize
 	return s
 }
