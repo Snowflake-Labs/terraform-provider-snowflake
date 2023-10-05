@@ -234,7 +234,32 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: modify when and as", func(t *testing.T) {
-		// TODO: fill me
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		newSql := "SELECT CURRENT_DATE"
+		alterRequest := NewAlterTaskRequest(id).WithModifyAs(String(newSql))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredTask, err := client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, newSql, alteredTask.Definition)
+
+		newWhen := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
+		alterRequest = NewAlterTaskRequest(id).WithModifyWhen(String(newWhen))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredTask, err = client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, newWhen, alteredTask.Condition)
 	})
 
 	t.Run("show task: default", func(t *testing.T) {
