@@ -48,7 +48,7 @@ type ShowApplicationRoleOptions struct {
 	show                          bool                      `ddl:"static" sql:"SHOW"`
 	applicationRolesInApplication bool                      `ddl:"static" sql:"APPLICATION ROLES IN APPLICATION"`
 	ApplicationName               AccountObjectIdentifier   `ddl:"identifier"`
-	LimitFrom                     *LimitFromApplicationRole `ddl:"keyword"`
+	LimitFrom                     *LimitFromApplicationRole `ddl:"keyword" sql:"LIMIT"`
 }
 
 type applicationRoleDbRow struct {
@@ -68,8 +68,8 @@ type ApplicationRole struct {
 }
 
 type LimitFromApplicationRole struct {
-	Rows int     `ddl:"keyword" sql:"LIMIT"`
-	From *string `ddl:"keyword,single_quotes" sql:"FROM"`
+	Rows int     `ddl:"keyword"`
+	From *string `ddl:"parameter,single_quotes,no_equals" sql:"FROM"`
 }
 
 // GrantApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-application-roles.
