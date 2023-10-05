@@ -203,7 +203,30 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: suspend and resume", func(t *testing.T) {
-		// TODO: fill me
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql).WithSchedule(String("10 MINUTE")))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		alterRequest := NewAlterTaskRequest(id).WithSuspend(Bool(true))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredTask, err := client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "suspended", alteredTask.State)
+
+		alterRequest = NewAlterTaskRequest(id).WithResume(Bool(true))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredTask, err = client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "started", alteredTask.State)
 	})
 
 	t.Run("alter task: remove after and add after", func(t *testing.T) {
