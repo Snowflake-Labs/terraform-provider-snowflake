@@ -362,7 +362,49 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: remove after and add after", func(t *testing.T) {
-		// TODO: fill me
+		otherName := randomString(t)
+		otherId := NewSchemaObjectIdentifier(database.Name, schema.Name, otherName)
+
+		request := NewCreateTaskRequest(otherId, sql).WithSchedule(String("10 MINUTE"))
+
+		err := client.Tasks.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(otherId))
+
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		request = NewCreateTaskRequest(id, sql).
+			WithAfter([]SchemaObjectIdentifier{otherId})
+
+		err = client.Tasks.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		task, err := client.Tasks.ShowByID(ctx, id)
+
+		require.NoError(t, err)
+		assert.Contains(t, task.Predecessors, otherId.Name())
+
+		alterRequest := NewAlterTaskRequest(id).WithRemoveAfter([]SchemaObjectIdentifier{otherId})
+
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		task, err = client.Tasks.ShowByID(ctx, id)
+
+		require.NoError(t, err)
+		assert.Equal(t, "[]", task.Predecessors)
+
+		alterRequest = NewAlterTaskRequest(id).WithAddAfter([]SchemaObjectIdentifier{otherId})
+
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		task, err = client.Tasks.ShowByID(ctx, id)
+
+		require.NoError(t, err)
+		assert.Contains(t, task.Predecessors, otherId.Name())
 	})
 
 	t.Run("alter task: modify when and as", func(t *testing.T) {
