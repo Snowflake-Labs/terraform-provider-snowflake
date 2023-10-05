@@ -263,19 +263,52 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("show task: default", func(t *testing.T) {
-		// TODO: fill me
+		task1 := createTask(t)
+		task2 := createTask(t)
+
+		showRequest := NewShowTaskRequest()
+		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Equal(t, 2, len(returnedTasks))
+		assert.Contains(t, returnedTasks, *task1)
+		assert.Contains(t, returnedTasks, *task2)
 	})
 
 	t.Run("show task: terse", func(t *testing.T) {
-		// TODO: fill me
+		task1 := createTask(t)
+
+		showRequest := NewShowTaskRequest().WithTerse(Bool(true))
+		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, len(returnedTasks))
+		assertTaskTerse(t, &returnedTasks[0], task1.ID())
 	})
 
 	t.Run("show task: with options", func(t *testing.T) {
-		// TODO: fill me
+		task1 := createTask(t)
+		task2 := createTask(t)
+
+		showRequest := NewShowTaskRequest().
+			WithLike(&Like{&task1.Name}).
+			WithIn(&In{Schema: NewDatabaseObjectIdentifier(database.Name, schema.Name)}).
+			WithLimit(Int(5))
+		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
+
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(returnedTasks))
+		assert.Contains(t, returnedTasks, *task1)
+		assert.NotContains(t, returnedTasks, *task2)
 	})
 
 	t.Run("describe task: default", func(t *testing.T) {
-		// TODO: fill me
+		task := createTask(t)
+
+		returnedTask, err := client.Tasks.Describe(ctx, task.ID())
+		require.NoError(t, err)
+
+		assertTask(t, returnedTask, task.ID())
 	})
 
 	t.Run("execute task: default", func(t *testing.T) {
