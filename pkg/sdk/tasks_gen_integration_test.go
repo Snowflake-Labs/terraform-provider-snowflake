@@ -312,6 +312,10 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("execute task: default", func(t *testing.T) {
-		// TODO: fill me
+		task := createTask(t)
+
+		executeRequest := NewExecuteTaskRequest(task.ID())
+		err := client.Tasks.Execute(ctx, executeRequest)
+		require.NoError(t, err)
 	})
 }
