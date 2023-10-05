@@ -54,6 +54,12 @@ func TestTasks_Create(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "CREATE TASK %s AS %s", id.FullyQualifiedName(), sql)
 	})
 
+	t.Run("with initial warehouse size", func(t *testing.T) {
+		req := NewCreateTaskRequest(id, sql).
+			WithWarehouse(NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(&WarehouseSizeXSmall))
+		assertOptsValidAndSQLEquals(t, req.toOpts(), "CREATE TASK %s USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'XSMALL' AS %s", id.FullyQualifiedName(), sql)
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		warehouseId := randomAccountObjectIdentifier(t)
 		otherTaskId := randomSchemaObjectIdentifier(t)

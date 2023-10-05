@@ -146,6 +146,23 @@ func TestInt_Tasks(t *testing.T) {
 		assertTask(t, task, id, name)
 	})
 
+	t.Run("create task: with initial warehouse", func(t *testing.T) {
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		request := NewCreateTaskRequest(id, sql).
+			WithWarehouse(NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(&WarehouseSizeXSmall))
+
+		err := client.Tasks.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		task, err := client.Tasks.ShowByID(ctx, id)
+
+		require.NoError(t, err)
+		assertTask(t, task, id, name)
+	})
+
 	t.Run("create task: almost complete case", func(t *testing.T) {
 		name := randomString(t)
 		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
