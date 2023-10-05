@@ -261,8 +261,6 @@ func TestTasks_Drop(t *testing.T) {
 }
 
 func TestTasks_Show(t *testing.T) {
-	//id := randomSchemaObjectIdentifier(t)
-
 	// Minimal valid ShowTaskOptions
 	defaultOpts := func() *ShowTaskOptions {
 		return &ShowTaskOptions{}

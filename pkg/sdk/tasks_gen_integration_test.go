@@ -205,7 +205,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	// TODO: this fails with `syntax error line 1 at position 89 unexpected 'GRANTS'`.
 	// I will make a ticket about this and it will be handled after we get a response.
-	//t.Run("create task: with grants", func(t *testing.T) {
+	// t.Run("create task: with grants", func(t *testing.T) {
 	//	name := randomString(t)
 	//	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 	//
@@ -221,7 +221,7 @@ func TestInt_Tasks(t *testing.T) {
 	//
 	//	require.NoError(t, err)
 	//	assertTaskWithOptions(t, task, id, name, "", "", "", "", false, "", nil)
-	//})
+	// })
 
 	t.Run("create task: with tags", func(t *testing.T) {
 		tag, tagCleanup := createTag(t, client, database, schema)

@@ -83,7 +83,7 @@ func (v *Validation) ReturnedError(field *Field) string {
 	case AtLeastOneValueSet:
 		return fmt.Sprintf("errAtLeastOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
 	case ValidateValue:
-		return fmt.Sprintf("err")
+		return "err"
 	}
 	panic("condition for validation unknown")
 }
