@@ -44,6 +44,30 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Empty(t, task.Budget)
 	}
 
+	assertTaskWithOptions := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string, comment string, warehouse string, schedule string, condition string, config string) {
+		t.Helper()
+		assert.NotEmpty(t, task.CreatedOn)
+		assert.Equal(t, name, task.Name)
+		assert.NotEmpty(t, task.Id)
+		assert.Equal(t, database.Name, task.DatabaseName)
+		assert.Equal(t, schema.Name, task.SchemaName)
+		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
+		assert.Equal(t, comment, task.Comment)
+		assert.Equal(t, warehouse, task.Warehouse)
+		assert.Equal(t, schedule, task.Schedule)
+		assert.Equal(t, "[]", task.Predecessors)
+		assert.Equal(t, "suspended", task.State)
+		assert.Equal(t, sql, task.Definition)
+		assert.Equal(t, condition, task.Condition)
+		assert.Equal(t, true, task.AllowOverlappingExecution)
+		assert.Empty(t, task.ErrorIntegration)
+		assert.Empty(t, task.LastCommittedOn)
+		assert.Empty(t, task.LastSuspendedOn)
+		assert.Equal(t, "ROLE", task.OwnerRoleType)
+		assert.Equal(t, config, task.Config)
+		assert.Empty(t, task.Budget)
+	}
+
 	assertTaskTerse := func(t *testing.T, task *Task, id SchemaObjectIdentifier) {
 		t.Helper()
 		assert.NotEmpty(t, task.CreatedOn)
@@ -129,7 +153,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := client.Tasks.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assertTask(t, task, id, name)
+		assertTaskWithOptions(t, task, id, name, "some comment", warehouse.Name, "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`)
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
