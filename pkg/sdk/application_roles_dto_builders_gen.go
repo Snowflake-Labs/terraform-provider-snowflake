@@ -5,7 +5,7 @@ package sdk
 import ()
 
 func NewCreateApplicationRoleRequest(
-	name AccountObjectIdentifier,
+	name DatabaseObjectIdentifier,
 ) *CreateApplicationRoleRequest {
 	s := CreateApplicationRoleRequest{}
 	s.name = name
@@ -28,7 +28,7 @@ func (s *CreateApplicationRoleRequest) WithComment(Comment *string) *CreateAppli
 }
 
 func NewAlterApplicationRoleRequest(
-	name AccountObjectIdentifier,
+	name DatabaseObjectIdentifier,
 ) *AlterApplicationRoleRequest {
 	s := AlterApplicationRoleRequest{}
 	s.name = name
@@ -40,7 +40,7 @@ func (s *AlterApplicationRoleRequest) WithIfExists(IfExists *bool) *AlterApplica
 	return s
 }
 
-func (s *AlterApplicationRoleRequest) WithRenameTo(RenameTo *AccountObjectIdentifier) *AlterApplicationRoleRequest {
+func (s *AlterApplicationRoleRequest) WithRenameTo(RenameTo *DatabaseObjectIdentifier) *AlterApplicationRoleRequest {
 	s.RenameTo = RenameTo
 	return s
 }
@@ -56,7 +56,7 @@ func (s *AlterApplicationRoleRequest) WithUnsetComment(UnsetComment *bool) *Alte
 }
 
 func NewDropApplicationRoleRequest(
-	name AccountObjectIdentifier,
+	name DatabaseObjectIdentifier,
 ) *DropApplicationRoleRequest {
 	s := DropApplicationRoleRequest{}
 	s.name = name
@@ -66,6 +66,14 @@ func NewDropApplicationRoleRequest(
 func (s *DropApplicationRoleRequest) WithIfExists(IfExists *bool) *DropApplicationRoleRequest {
 	s.IfExists = IfExists
 	return s
+}
+
+func NewShowByIDApplicationRoleRequest(
+	name string,
+) *ShowByIDApplicationRoleRequest {
+	s := ShowByIDApplicationRoleRequest{}
+	s.name = name
+	return &s
 }
 
 func NewShowApplicationRoleRequest() *ShowApplicationRoleRequest {
@@ -96,7 +104,7 @@ func (s *LimitFromApplicationRoleRequest) WithFrom(From *string) *LimitFromAppli
 }
 
 func NewGrantApplicationRoleRequest(
-	name AccountObjectIdentifier,
+	name DatabaseObjectIdentifier,
 	GrantTo ApplicationGrantOptionsRequest,
 ) *GrantApplicationRoleRequest {
 	s := GrantApplicationRoleRequest{}
@@ -109,12 +117,12 @@ func NewApplicationGrantOptionsRequest() *ApplicationGrantOptionsRequest {
 	return &ApplicationGrantOptionsRequest{}
 }
 
-func (s *ApplicationGrantOptionsRequest) WithParentRole(ParentRole *AccountObjectIdentifier) *ApplicationGrantOptionsRequest {
+func (s *ApplicationGrantOptionsRequest) WithParentRole(ParentRole *SchemaObjectIdentifier) *ApplicationGrantOptionsRequest {
 	s.ParentRole = ParentRole
 	return s
 }
 
-func (s *ApplicationGrantOptionsRequest) WithApplicationRole(ApplicationRole *AccountObjectIdentifier) *ApplicationGrantOptionsRequest {
+func (s *ApplicationGrantOptionsRequest) WithApplicationRole(ApplicationRole *DatabaseObjectIdentifier) *ApplicationGrantOptionsRequest {
 	s.ApplicationRole = ApplicationRole
 	return s
 }
@@ -125,7 +133,7 @@ func (s *ApplicationGrantOptionsRequest) WithApplication(Application *AccountObj
 }
 
 func NewRevokeApplicationRoleRequest(
-	name AccountObjectIdentifier,
+	name DatabaseObjectIdentifier,
 	RevokeFrom ApplicationGrantOptionsRequest,
 ) *RevokeApplicationRoleRequest {
 	s := RevokeApplicationRoleRequest{}

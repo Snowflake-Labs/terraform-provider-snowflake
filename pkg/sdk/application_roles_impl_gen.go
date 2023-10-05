@@ -35,6 +35,14 @@ func (v *applicationRoles) Show(ctx context.Context, request *ShowApplicationRol
 	return resultList, nil
 }
 
+func (v *applicationRoles) ShowByID(ctx context.Context, request *ShowByIDApplicationRoleRequest) (*ApplicationRole, error) {
+	appRoles, err := v.client.ApplicationRoles.Show(ctx, NewShowApplicationRoleRequest())
+	if err != nil {
+		return nil, err
+	}
+	return findOne(appRoles, func(role ApplicationRole) bool { return role.Name == request.name })
+}
+
 func (v *applicationRoles) Grant(ctx context.Context, request *GrantApplicationRoleRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)

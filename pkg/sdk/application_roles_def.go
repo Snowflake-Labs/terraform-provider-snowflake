@@ -71,7 +71,7 @@ var (
 				Field("Name", "string").
 				Field("Owner", "string").
 				Field("Comment", "string").
-				Field("OwnerRoleTYpe", "string"),
+				Field("OwnerRoleType", "string"),
 			g.QueryStruct("ShowApplicationRoles").
 				Show().
 				SQL("APPLICATION ROLES IN APPLICATION").

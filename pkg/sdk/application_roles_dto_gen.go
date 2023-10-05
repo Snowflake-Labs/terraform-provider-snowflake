@@ -14,21 +14,25 @@ var (
 type CreateApplicationRoleRequest struct {
 	OrReplace   *bool
 	IfNotExists *bool
-	name        AccountObjectIdentifier // required
+	name        DatabaseObjectIdentifier // required
 	Comment     *string
 }
 
 type AlterApplicationRoleRequest struct {
 	IfExists     *bool
-	name         AccountObjectIdentifier // required
-	RenameTo     *AccountObjectIdentifier
+	name         DatabaseObjectIdentifier // required
+	RenameTo     *DatabaseObjectIdentifier
 	SetComment   *string
 	UnsetComment *bool
 }
 
 type DropApplicationRoleRequest struct {
 	IfExists *bool
-	name     AccountObjectIdentifier // required
+	name     DatabaseObjectIdentifier // required
+}
+
+type ShowByIDApplicationRoleRequest struct {
+	name string // required
 }
 
 type ShowApplicationRoleRequest struct {
@@ -42,17 +46,17 @@ type LimitFromApplicationRoleRequest struct {
 }
 
 type GrantApplicationRoleRequest struct {
-	name    AccountObjectIdentifier        // required
+	name    DatabaseObjectIdentifier       // required
 	GrantTo ApplicationGrantOptionsRequest // required
 }
 
 type ApplicationGrantOptionsRequest struct {
-	ParentRole      *AccountObjectIdentifier
-	ApplicationRole *AccountObjectIdentifier
+	ParentRole      *SchemaObjectIdentifier
+	ApplicationRole *DatabaseObjectIdentifier
 	Application     *AccountObjectIdentifier
 }
 
 type RevokeApplicationRoleRequest struct {
-	name       AccountObjectIdentifier        // required
+	name       DatabaseObjectIdentifier       // required
 	RevokeFrom ApplicationGrantOptionsRequest // required
 }
