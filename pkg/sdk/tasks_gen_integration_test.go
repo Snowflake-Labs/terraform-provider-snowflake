@@ -326,7 +326,7 @@ func TestInt_Tasks(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("alter task: suspend and resume", func(t *testing.T) {
+	t.Run("alter task: resume and suspend", func(t *testing.T) {
 		name := randomString(t)
 		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
@@ -334,23 +334,27 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupTaskProvider(id))
 
-		alterRequest := NewAlterTaskRequest(id).WithSuspend(Bool(true))
+		task, err := client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, "suspended", task.State)
+
+		alterRequest := NewAlterTaskRequest(id).WithResume(Bool(true))
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		alteredTask, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, "suspended", alteredTask.State)
+		assert.Equal(t, "started", alteredTask.State)
 
-		alterRequest = NewAlterTaskRequest(id).WithResume(Bool(true))
+		alterRequest = NewAlterTaskRequest(id).WithSuspend(Bool(true))
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		alteredTask, err = client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, "started", alteredTask.State)
+		assert.Equal(t, "suspended", alteredTask.State)
 	})
 
 	t.Run("alter task: remove after and add after", func(t *testing.T) {
