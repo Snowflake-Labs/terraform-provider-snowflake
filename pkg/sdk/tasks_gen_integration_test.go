@@ -167,7 +167,6 @@ func TestInt_Tasks(t *testing.T) {
 			}).
 			WithUserTaskTimeoutMs(Int(500)).
 			WithSuspendTaskAfterNumFailures(Int(3)).
-			//WithCopyGrants(Bool(true)).
 			WithComment(String("some comment")).
 			//WithTag([]TagAssociation{{
 			//	Name:  tag.ID(),
@@ -210,6 +209,26 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 		assertTaskWithOptions(t, task, id, name, "", "", "", "", false, "", &otherId)
 	})
+
+	// TODO: this fails with `syntax error line 1 at position 89 unexpected 'GRANTS'`.
+	// I will make a ticket about this and it will be handled after we get a response.
+	//t.Run("create task: with grants", func(t *testing.T) {
+	//	name := randomString(t)
+	//	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+	//
+	//	request := NewCreateTaskRequest(id, sql).
+	//		WithOrReplace(Bool(true)).
+	//		WithCopyGrants(Bool(true))
+	//
+	//	err := client.Tasks.Create(ctx, request)
+	//	require.NoError(t, err)
+	//	t.Cleanup(cleanupTaskProvider(id))
+	//
+	//	task, err := client.Tasks.ShowByID(ctx, id)
+	//
+	//	require.NoError(t, err)
+	//	assertTaskWithOptions(t, task, id, name, "", "", "", "", false, "", nil)
+	//})
 
 	t.Run("drop task: existing", func(t *testing.T) {
 		name := randomString(t)
