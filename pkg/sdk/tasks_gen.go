@@ -40,7 +40,7 @@ type CreateTaskOptions struct {
 }
 
 type CreateTaskWarehouse struct {
-	Warehouse                           *AccountObjectIdentifier `ddl:"identifier" sql:"WAREHOUSE"`
+	Warehouse                           *AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
 	UserTaskManagedInitialWarehouseSize *string                  `ddl:"parameter,single_quotes" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
 }
 
@@ -163,4 +163,8 @@ type ExecuteTaskOptions struct {
 	task      bool                   `ddl:"static" sql:"TASK"`
 	name      SchemaObjectIdentifier `ddl:"identifier"`
 	RetryLast *bool                  `ddl:"keyword" sql:"RETRY LAST"`
+}
+
+func (v *Task) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }

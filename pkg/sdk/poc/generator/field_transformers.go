@@ -154,6 +154,7 @@ type IdentifierTransformer struct {
 	required  bool
 	sqlPrefix string
 	quotes    string
+	equals    string
 }
 
 func IdentifierOptions() *IdentifierTransformer {
@@ -180,6 +181,16 @@ func (v *IdentifierTransformer) Required() *IdentifierTransformer {
 	return v
 }
 
+func (v *IdentifierTransformer) NoEquals() *IdentifierTransformer {
+	v.equals = "no_equals"
+	return v
+}
+
+func (v *IdentifierTransformer) Equals() *IdentifierTransformer {
+	v.equals = "equals"
+	return v
+}
+
 func (v *IdentifierTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "identifier")
 	if v.required {
@@ -187,6 +198,7 @@ func (v *IdentifierTransformer) Transform(f *Field) *Field {
 	}
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.quotes)
+	addTagIfMissing(f.Tags, "ddl", v.equals)
 	return f
 }
 

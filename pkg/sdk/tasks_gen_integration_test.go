@@ -72,39 +72,46 @@ func TestInt_Tasks(t *testing.T) {
 		assertTask(t, task, id)
 	})
 
-	t.Run("create task: complete case", func(t *testing.T) {
-		//name := randomString(t)
-		//id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		//
-		//request := NewCreateTaskRequest(id, sql).
-		//	WithOrReplace(Bool(true)).
-		//	WithWarehouse(NewCreateTaskWarehouseRequest().WithWarehouse(&warehouseId)).
-		//	WithSchedule(String("10 MINUTE")).
-		//	WithConfig(String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
-		//	WithAllowOverlappingExecution(Bool(true)).
-		//	WithSessionParameters(&SessionParameters{
-		//		JSONIndent: Int(10),
-		//	}).
-		//	WithUserTaskTimeoutMs(Int(5)).
-		//	WithSuspendTaskAfterNumFailures(Int(6)).
-		//	WithErrorIntegration(String("some_error_integration")).
-		//	WithCopyGrants(Bool(true)).
-		//	WithComment(String("some comment")).
-		//	WithAfter([]SchemaObjectIdentifier{otherTaskId}).
-		//	WithTag([]TagAssociation{{
-		//		Name:  tagId,
-		//		Value: "v1",
-		//	}}).
-		//	WithWhen(String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
-		//
-		//err := client.Tasks.Create(ctx, request)
-		//require.NoError(t, err)
-		//t.Cleanup(cleanupTaskProvider(id))
-		//
-		//task, err := client.Tasks.ShowByID(ctx, id)
-		//
-		//require.NoError(t, err)
-		//assertTask(t, task, id)
+	t.Run("create task: almost complete case", func(t *testing.T) {
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		warehouse, warehouseCleanup := createWarehouse(t, client)
+		t.Cleanup(warehouseCleanup)
+
+		//tag, tagCleanup := createTag(t, client, database, schema)
+		//t.Cleanup(tagCleanup)
+
+		//otherTask := createTask(t)
+
+		request := NewCreateTaskRequest(id, sql).
+			WithOrReplace(Bool(true)).
+			WithWarehouse(NewCreateTaskWarehouseRequest().WithWarehouse(Pointer(warehouse.ID()))).
+			WithSchedule(String("10 MINUTE")).
+			WithConfig(String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
+			WithAllowOverlappingExecution(Bool(true)).
+			WithSessionParameters(&SessionParameters{
+				JSONIndent: Int(4),
+			}).
+			WithUserTaskTimeoutMs(Int(500)).
+			WithSuspendTaskAfterNumFailures(Int(3)).
+			//WithCopyGrants(Bool(true)).
+			//WithAfter([]SchemaObjectIdentifier{otherTask.ID()}).
+			WithComment(String("some comment")).
+			//WithTag([]TagAssociation{{
+			//	Name:  tag.ID(),
+			//	Value: "v1",
+			//}}).
+			WithWhen(String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
+
+		err := client.Tasks.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		task, err := client.Tasks.ShowByID(ctx, id)
+
+		require.NoError(t, err)
+		assertTask(t, task, id)
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
