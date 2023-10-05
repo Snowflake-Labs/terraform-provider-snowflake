@@ -10,8 +10,8 @@ var (
 			OptionalTextAssignment("FROM", g.ParameterOptions().NoEquals().SingleQuotes())
 
 	ApplicationGrantOptionsDef = g.QueryStruct("ApplicationGrantOptions").
-					OptionalIdentifier("ParentRole", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("ROLE")).
-					OptionalIdentifier("ApplicationRole", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("APPLICATION ROLE")).
+					OptionalIdentifier("ParentRole", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROLE")).
+					OptionalIdentifier("ApplicationRole", g.KindOfTPointer[DatabaseObjectIdentifier](), g.IdentifierOptions().SQL("APPLICATION ROLE")).
 					OptionalIdentifier("Application", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("APPLICATION")).
 					WithValidation(g.ExactlyOneValueSet, "ParentRole", "ApplicationRole", "Application").
 					WithValidation(g.ValidIdentifierIfSet, "ParentRole").
@@ -21,7 +21,7 @@ var (
 	ApplicationRolesDef = g.NewInterface(
 		"ApplicationRoles",
 		"ApplicationRole",
-		g.KindOfT[AccountObjectIdentifier](),
+		g.KindOfT[DatabaseObjectIdentifier](),
 	).
 		CreateOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/create-application-role",
@@ -42,7 +42,7 @@ var (
 				SQL("APPLICATION ROLE").
 				IfExists().
 				Name().
-				OptionalIdentifier("RenameTo", g.KindOfTPointer[AccountObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+				OptionalIdentifier("RenameTo", g.KindOfTPointer[DatabaseObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 				OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
 				OptionalSQL("UNSET COMMENT").
 				WithValidation(g.ValidIdentifier, "name").
