@@ -45,7 +45,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Empty(t, task.Budget)
 	}
 
-	assertTaskWithOptions := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string, comment string, warehouse string, schedule string, condition string, config string) {
+	assertTaskWithOptions := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *SchemaObjectIdentifier) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
@@ -57,17 +57,26 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, comment, task.Comment)
 		assert.Equal(t, warehouse, task.Warehouse)
 		assert.Equal(t, schedule, task.Schedule)
-		assert.Equal(t, "[]", task.Predecessors)
 		assert.Equal(t, "suspended", task.State)
 		assert.Equal(t, sql, task.Definition)
 		assert.Equal(t, condition, task.Condition)
-		assert.Equal(t, true, task.AllowOverlappingExecution)
+		assert.Equal(t, allowOverlappingExecution, task.AllowOverlappingExecution)
 		assert.Empty(t, task.ErrorIntegration)
 		assert.Empty(t, task.LastCommittedOn)
 		assert.Empty(t, task.LastSuspendedOn)
 		assert.Equal(t, "ROLE", task.OwnerRoleType)
 		assert.Equal(t, config, task.Config)
 		assert.Empty(t, task.Budget)
+		if predecessor != nil {
+			// Predecessors list is formatted, so matching it is unnecessarily complicated:
+			// e.g. `[\n  \"\\\"qgb)Z1KcNWJ(\\\".\\\"glN@JtR=7dzP$7\\\".\\\"_XEL(7N_F?@frgT5>dQS>V|vSy,J\\\"\"\n]`.
+			// We just match parts of the expected predecessor. Later we can parse the output while constructing Task object.
+			assert.Contains(t, task.Predecessors, predecessor.DatabaseName())
+			assert.Contains(t, task.Predecessors, predecessor.SchemaName())
+			assert.Contains(t, task.Predecessors, predecessor.Name())
+		} else {
+			assert.Equal(t, "[]", task.Predecessors)
+		}
 	}
 
 	assertTaskTerse := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string, schedule string) {
@@ -147,8 +156,6 @@ func TestInt_Tasks(t *testing.T) {
 		//tag, tagCleanup := createTag(t, client, database, schema)
 		//t.Cleanup(tagCleanup)
 
-		//otherTask := createTask(t)
-
 		request := NewCreateTaskRequest(id, sql).
 			WithOrReplace(Bool(true)).
 			WithWarehouse(NewCreateTaskWarehouseRequest().WithWarehouse(Pointer(warehouse.ID()))).
@@ -161,7 +168,6 @@ func TestInt_Tasks(t *testing.T) {
 			WithUserTaskTimeoutMs(Int(500)).
 			WithSuspendTaskAfterNumFailures(Int(3)).
 			//WithCopyGrants(Bool(true)).
-			//WithAfter([]SchemaObjectIdentifier{otherTask.ID()}).
 			WithComment(String("some comment")).
 			//WithTag([]TagAssociation{{
 			//	Name:  tag.ID(),
@@ -176,7 +182,33 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := client.Tasks.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assertTaskWithOptions(t, task, id, name, "some comment", warehouse.Name, "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`)
+		assertTaskWithOptions(t, task, id, name, "some comment", warehouse.Name, "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
+	})
+
+	t.Run("create task: with after", func(t *testing.T) {
+		otherName := randomString(t)
+		otherId := NewSchemaObjectIdentifier(database.Name, schema.Name, otherName)
+
+		request := NewCreateTaskRequest(otherId, sql).WithSchedule(String("10 MINUTE"))
+
+		err := client.Tasks.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(otherId))
+
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		request = NewCreateTaskRequest(id, sql).
+			WithAfter([]SchemaObjectIdentifier{otherId})
+
+		err = client.Tasks.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		task, err := client.Tasks.ShowByID(ctx, id)
+
+		require.NoError(t, err)
+		assertTaskWithOptions(t, task, id, name, "", "", "", "", false, "", &otherId)
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {

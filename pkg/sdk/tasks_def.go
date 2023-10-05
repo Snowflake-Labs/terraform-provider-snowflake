@@ -78,7 +78,7 @@ var TasksDef = g.NewInterface(
 			OptionalTextAssignment("ERROR_INTEGRATION", g.ParameterOptions().NoQuotes()).
 			OptionalSQL("COPY GRANTS").
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-			ListAssignment("AFTER", "SchemaObjectIdentifier", nil).
+			ListAssignment("AFTER", "SchemaObjectIdentifier", g.ParameterOptions().NoEquals()).
 			WithTags().
 			OptionalTextAssignment("WHEN", g.ParameterOptions().NoQuotes().NoEquals()).
 			SQL("AS").

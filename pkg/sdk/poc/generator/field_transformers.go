@@ -119,6 +119,7 @@ type ListTransformer struct {
 	required    bool
 	sqlPrefix   string
 	parentheses string
+	equals      string
 }
 
 func ListOptions() *ListTransformer {
@@ -135,6 +136,11 @@ func (v *ListTransformer) NoParens() *ListTransformer {
 	return v
 }
 
+func (v *ListTransformer) NoEquals() *ListTransformer {
+	v.equals = "no_equals"
+	return v
+}
+
 func (v *ListTransformer) SQL(sqlPrefix string) *ListTransformer {
 	v.sqlPrefix = sqlPrefix
 	return v
@@ -147,6 +153,7 @@ func (v *ListTransformer) Transform(f *Field) *Field {
 	}
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.parentheses)
+	addTagIfMissing(f.Tags, "ddl", v.equals)
 	return f
 }
 

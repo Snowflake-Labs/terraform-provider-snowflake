@@ -32,7 +32,7 @@ type CreateTaskOptions struct {
 	ErrorIntegration            *string                  `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
 	CopyGrants                  *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment                     *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	After                       []SchemaObjectIdentifier `ddl:"parameter" sql:"AFTER"`
+	After                       []SchemaObjectIdentifier `ddl:"parameter,no_equals" sql:"AFTER"`
 	Tag                         []TagAssociation         `ddl:"keyword,parentheses" sql:"TAG"`
 	When                        *string                  `ddl:"parameter,no_quotes,no_equals" sql:"WHEN"`
 	as                          bool                     `ddl:"static" sql:"AS"`
