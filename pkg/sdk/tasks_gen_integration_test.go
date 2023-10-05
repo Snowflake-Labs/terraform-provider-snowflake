@@ -115,11 +115,24 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
-		// TODO: fill me
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql))
+		require.NoError(t, err)
+
+		err = client.Tasks.Drop(ctx, NewDropTaskRequest(id))
+		require.NoError(t, err)
+
+		_, err = client.Tasks.ShowByID(ctx, id)
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("drop task: non-existing", func(t *testing.T) {
-		// TODO: fill me
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, "does_not_exist")
+
+		err := client.Tasks.Drop(ctx, NewDropTaskRequest(id))
+		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("alter task: set value and unset value", func(t *testing.T) {
