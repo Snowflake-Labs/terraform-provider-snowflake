@@ -69,37 +69,25 @@ func (s *DropApplicationRoleRequest) WithIfExists(IfExists *bool) *DropApplicati
 }
 
 func NewShowByIDApplicationRoleRequest(
-	name string,
+	name DatabaseObjectIdentifier,
+	ApplicationName AccountObjectIdentifier,
 ) *ShowByIDApplicationRoleRequest {
 	s := ShowByIDApplicationRoleRequest{}
 	s.name = name
-	return &s
-}
-
-func NewShowApplicationRoleRequest() *ShowApplicationRoleRequest {
-	return &ShowApplicationRoleRequest{}
-}
-
-func (s *ShowApplicationRoleRequest) WithApplicationName(ApplicationName AccountObjectIdentifier) *ShowApplicationRoleRequest {
 	s.ApplicationName = ApplicationName
-	return s
-}
-
-func (s *ShowApplicationRoleRequest) WithLimitFrom(LimitFrom *LimitFromApplicationRoleRequest) *ShowApplicationRoleRequest {
-	s.LimitFrom = LimitFrom
-	return s
-}
-
-func NewLimitFromApplicationRoleRequest(
-	Rows int,
-) *LimitFromApplicationRoleRequest {
-	s := LimitFromApplicationRoleRequest{}
-	s.Rows = Rows
 	return &s
 }
 
-func (s *LimitFromApplicationRoleRequest) WithFrom(From *string) *LimitFromApplicationRoleRequest {
-	s.From = From
+func NewShowApplicationRoleRequest(
+	ApplicationName AccountObjectIdentifier,
+) *ShowApplicationRoleRequest {
+	s := ShowApplicationRoleRequest{}
+	s.ApplicationName = ApplicationName
+	return &s
+}
+
+func (s *ShowApplicationRoleRequest) WithLimit(Limit *LimitFrom) *ShowApplicationRoleRequest {
+	s.Limit = Limit
 	return s
 }
 
@@ -117,7 +105,7 @@ func NewApplicationGrantOptionsRequest() *ApplicationGrantOptionsRequest {
 	return &ApplicationGrantOptionsRequest{}
 }
 
-func (s *ApplicationGrantOptionsRequest) WithParentRole(ParentRole *SchemaObjectIdentifier) *ApplicationGrantOptionsRequest {
+func (s *ApplicationGrantOptionsRequest) WithParentRole(ParentRole *AccountObjectIdentifier) *ApplicationGrantOptionsRequest {
 	s.ParentRole = ParentRole
 	return s
 }

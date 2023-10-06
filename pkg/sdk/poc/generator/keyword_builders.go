@@ -41,6 +41,11 @@ func (v *QueryStruct) OptionalNumber(name string, transformer *KeywordTransforme
 	return v
 }
 
+func (v *queryStruct) OptionalLimitFrom() *queryStruct {
+	v.fields = append(v.fields, NewField("Limit", "*LimitFrom", Tags().Keyword().SQL("LIMIT"), nil))
+	return v
+}
+
 // SessionParameters *SessionParameters `ddl:"list,no_parentheses"`
 func (v *QueryStruct) SessionParameters() *QueryStruct {
 	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))

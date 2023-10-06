@@ -36,11 +36,11 @@ func (v *applicationRoles) Show(ctx context.Context, request *ShowApplicationRol
 }
 
 func (v *applicationRoles) ShowByID(ctx context.Context, request *ShowByIDApplicationRoleRequest) (*ApplicationRole, error) {
-	appRoles, err := v.client.ApplicationRoles.Show(ctx, NewShowApplicationRoleRequest())
+	appRoles, err := v.client.ApplicationRoles.Show(ctx, NewShowApplicationRoleRequest(request.ApplicationName))
 	if err != nil {
 		return nil, err
 	}
-	return findOne(appRoles, func(role ApplicationRole) bool { return role.Name == request.name })
+	return findOne(appRoles, func(role ApplicationRole) bool { return role.Name == request.name.Name() })
 }
 
 func (v *applicationRoles) Grant(ctx context.Context, request *GrantApplicationRoleRequest) error {
@@ -86,10 +86,10 @@ func (r *ShowApplicationRoleRequest) toOpts() *ShowApplicationRoleOptions {
 	opts := &ShowApplicationRoleOptions{
 		ApplicationName: r.ApplicationName,
 	}
-	if r.LimitFrom != nil {
-		opts.LimitFrom = &LimitFromApplicationRole{
-			Rows: r.LimitFrom.Rows,
-			From: r.LimitFrom.From,
+	if r.Limit != nil {
+		opts.Limit = &LimitFrom{
+			Rows: r.Limit.Rows,
+			From: r.Limit.From,
 		}
 	}
 	return opts
@@ -101,7 +101,7 @@ func (r applicationRoleDbRow) convert() *ApplicationRole {
 		Name:          r.Name,
 		Owner:         r.Owner,
 		Comment:       r.Comment,
-		OwnerRoleTYpe: r.OwnerRoleType,
+		OwnerRoleType: r.OwnerRoleType,
 	}
 }
 

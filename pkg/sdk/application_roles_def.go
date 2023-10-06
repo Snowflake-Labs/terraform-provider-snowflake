@@ -5,10 +5,6 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var (
-	LimitFromDef = g.QueryStruct("LimitFromApplicationRole").
-			Number("Rows", g.KeywordOptions().Required()).
-			OptionalTextAssignment("FROM", g.ParameterOptions().NoEquals().SingleQuotes())
-
 	ApplicationGrantOptionsDef = g.QueryStruct("ApplicationGrantOptions").
 					OptionalIdentifier("ParentRole", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROLE")).
 					OptionalIdentifier("ApplicationRole", g.KindOfTPointer[DatabaseObjectIdentifier](), g.IdentifierOptions().SQL("APPLICATION ROLE")).
@@ -76,7 +72,7 @@ var (
 				Show().
 				SQL("APPLICATION ROLES IN APPLICATION").
 				Identifier("ApplicationName", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions()).
-				OptionalQueryStructField("LimitFrom", LimitFromDef, g.KeywordOptions().SQL("LIMIT")).
+				OptionalLimitFrom().
 				WithValidation(g.ValidIdentifier, "ApplicationName"),
 		).
 		GrantOperation(

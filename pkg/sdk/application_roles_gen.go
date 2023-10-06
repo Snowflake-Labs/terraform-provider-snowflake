@@ -46,10 +46,10 @@ type DropApplicationRoleOptions struct {
 
 // ShowApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-application-roles.
 type ShowApplicationRoleOptions struct {
-	show                          bool                      `ddl:"static" sql:"SHOW"`
-	applicationRolesInApplication bool                      `ddl:"static" sql:"APPLICATION ROLES IN APPLICATION"`
-	ApplicationName               AccountObjectIdentifier   `ddl:"identifier"`
-	LimitFrom                     *LimitFromApplicationRole `ddl:"keyword" sql:"LIMIT"`
+	show                          bool                    `ddl:"static" sql:"SHOW"`
+	applicationRolesInApplication bool                    `ddl:"static" sql:"APPLICATION ROLES IN APPLICATION"`
+	ApplicationName               AccountObjectIdentifier `ddl:"identifier"`
+	Limit                         *LimitFrom              `ddl:"keyword" sql:"LIMIT"`
 }
 
 type applicationRoleDbRow struct {
@@ -65,12 +65,7 @@ type ApplicationRole struct {
 	Name          string
 	Owner         string
 	Comment       string
-	OwnerRoleTYpe string
-}
-
-type LimitFromApplicationRole struct {
-	Rows int     `ddl:"keyword"`
-	From *string `ddl:"parameter,single_quotes,no_equals" sql:"FROM"`
+	OwnerRoleType string
 }
 
 // GrantApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-application-roles.
@@ -82,7 +77,7 @@ type GrantApplicationRoleOptions struct {
 }
 
 type ApplicationGrantOptions struct {
-	ParentRole      *SchemaObjectIdentifier   `ddl:"identifier" sql:"ROLE"`
+	ParentRole      *AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
 	ApplicationRole *DatabaseObjectIdentifier `ddl:"identifier" sql:"APPLICATION ROLE"`
 	Application     *AccountObjectIdentifier  `ddl:"identifier" sql:"APPLICATION"`
 }

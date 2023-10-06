@@ -32,17 +32,13 @@ type DropApplicationRoleRequest struct {
 }
 
 type ShowByIDApplicationRoleRequest struct {
-	name string // required
+	name            DatabaseObjectIdentifier // required
+	ApplicationName AccountObjectIdentifier  // required
 }
 
 type ShowApplicationRoleRequest struct {
-	ApplicationName AccountObjectIdentifier
-	LimitFrom       *LimitFromApplicationRoleRequest
-}
-
-type LimitFromApplicationRoleRequest struct {
-	Rows int // required
-	From *string
+	ApplicationName AccountObjectIdentifier // required
+	Limit           *LimitFrom
 }
 
 type GrantApplicationRoleRequest struct {
@@ -51,7 +47,7 @@ type GrantApplicationRoleRequest struct {
 }
 
 type ApplicationGrantOptionsRequest struct {
-	ParentRole      *SchemaObjectIdentifier
+	ParentRole      *AccountObjectIdentifier
 	ApplicationRole *DatabaseObjectIdentifier
 	Application     *AccountObjectIdentifier
 }
