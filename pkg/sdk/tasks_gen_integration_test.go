@@ -20,11 +20,11 @@ func TestInt_Tasks(t *testing.T) {
 
 	sql := "SELECT CURRENT_TIMESTAMP"
 
-	assertTask := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string) {
+	assertTask := func(t *testing.T, task *Task, id SchemaObjectIdentifier) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, name, task.Name)
+		assert.Equal(t, id.name, task.Name)
 		assert.NotEmpty(t, task.Id)
 		assert.Equal(t, database.Name, task.DatabaseName)
 		assert.Equal(t, schema.Name, task.SchemaName)
@@ -45,11 +45,11 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Empty(t, task.Budget)
 	}
 
-	assertTaskWithOptions := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *SchemaObjectIdentifier) {
+	assertTaskWithOptions := func(t *testing.T, task *Task, id SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *SchemaObjectIdentifier) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, name, task.Name)
+		assert.Equal(t, id.name, task.Name)
 		assert.NotEmpty(t, task.Id)
 		assert.Equal(t, database.Name, task.DatabaseName)
 		assert.Equal(t, schema.Name, task.SchemaName)
@@ -79,11 +79,11 @@ func TestInt_Tasks(t *testing.T) {
 		}
 	}
 
-	assertTaskTerse := func(t *testing.T, task *Task, id SchemaObjectIdentifier, name string, schedule string) {
+	assertTaskTerse := func(t *testing.T, task *Task, id SchemaObjectIdentifier, schedule string) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, name, task.Name)
+		assert.Equal(t, id.name, task.Name)
 		assert.Equal(t, database.Name, task.DatabaseName)
 		assert.Equal(t, schema.Name, task.SchemaName)
 		assert.Equal(t, schedule, task.Schedule)
@@ -113,12 +113,19 @@ func TestInt_Tasks(t *testing.T) {
 		}
 	}
 
-	createTask := func(t *testing.T) *Task {
+	createTaskBasicRequest := func(t *testing.T) *CreateTaskRequest {
 		t.Helper()
 		name := randomString(t)
 		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql))
+		return NewCreateTaskRequest(id, sql)
+	}
+
+	createTaskWithRequest := func(t *testing.T, request *CreateTaskRequest) *Task {
+		t.Helper()
+		id := request.name
+
+		err := client.Tasks.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupTaskProvider(id))
 
@@ -128,49 +135,33 @@ func TestInt_Tasks(t *testing.T) {
 		return task
 	}
 
-	_, _ = assertTaskTerse, createTask
+	createTask := func(t *testing.T) *Task {
+		t.Helper()
+		return createTaskWithRequest(t, createTaskBasicRequest(t))
+	}
 
 	t.Run("create task: no optionals", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		request := createTaskBasicRequest(t)
 
-		request := NewCreateTaskRequest(id, sql)
+		task := createTaskWithRequest(t, request)
 
-		err := client.Tasks.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
-
-		task, err := client.Tasks.ShowByID(ctx, id)
-
-		require.NoError(t, err)
-		assertTask(t, task, id, name)
+		assertTask(t, task, request.name)
 	})
 
 	t.Run("create task: with initial warehouse", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-
-		request := NewCreateTaskRequest(id, sql).
+		request := createTaskBasicRequest(t).
 			WithWarehouse(NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(&WarehouseSizeXSmall))
 
-		err := client.Tasks.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTaskWithRequest(t, request)
 
-		task, err := client.Tasks.ShowByID(ctx, id)
-
-		require.NoError(t, err)
-		assertTask(t, task, id, name)
+		assertTask(t, task, request.name)
 	})
 
 	t.Run("create task: almost complete case", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
-		request := NewCreateTaskRequest(id, sql).
+		request := createTaskBasicRequest(t).
 			WithOrReplace(Bool(true)).
 			WithWarehouse(NewCreateTaskWarehouseRequest().WithWarehouse(Pointer(warehouse.ID()))).
 			WithSchedule(String("10 MINUTE")).
@@ -183,15 +174,11 @@ func TestInt_Tasks(t *testing.T) {
 			WithSuspendTaskAfterNumFailures(Int(3)).
 			WithComment(String("some comment")).
 			WithWhen(String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
+		id := request.name
 
-		err := client.Tasks.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTaskWithRequest(t, request)
 
-		task, err := client.Tasks.ShowByID(ctx, id)
-
-		require.NoError(t, err)
-		assertTaskWithOptions(t, task, id, name, "some comment", warehouse.Name, "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
+		assertTaskWithOptions(t, task, id, "some comment", warehouse.Name, "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
@@ -200,28 +187,18 @@ func TestInt_Tasks(t *testing.T) {
 
 		request := NewCreateTaskRequest(otherId, sql).WithSchedule(String("10 MINUTE"))
 
-		err := client.Tasks.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(otherId))
+		createTaskWithRequest(t, request)
 
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-
-		request = NewCreateTaskRequest(id, sql).
+		request = createTaskBasicRequest(t).
 			WithAfter([]SchemaObjectIdentifier{otherId})
 
-		err = client.Tasks.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTaskWithRequest(t, request)
 
-		task, err := client.Tasks.ShowByID(ctx, id)
-
-		require.NoError(t, err)
-		assertTaskWithOptions(t, task, id, name, "", "", "", "", false, "", &otherId)
+		assertTaskWithOptions(t, task, request.name, "", "", "", "", false, "", &otherId)
 	})
 
 	// TODO: this fails with `syntax error line 1 at position 89 unexpected 'GRANTS'`.
-	// I will make a ticket about this and it will be handled after we get a response.
+	// The reason is that in the documentation there is a note: "This parameter is not supported currently.".
 	// t.Run("create task: with grants", func(t *testing.T) {
 	//	name := randomString(t)
 	//	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -244,30 +221,25 @@ func TestInt_Tasks(t *testing.T) {
 		tag, tagCleanup := createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-
-		request := NewCreateTaskRequest(id, sql).
+		request := createTaskBasicRequest(t).
 			WithTag([]TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v1",
 			}})
 
-		err := client.Tasks.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTaskWithRequest(t, request)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeTask)
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), ObjectTypeTask)
 		require.NoError(t, err)
 
 		assert.Equal(t, "v1", returnedTagValue)
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		request := createTaskBasicRequest(t)
+		id := request.name
 
-		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql))
+		err := client.Tasks.Create(ctx, request)
 		require.NoError(t, err)
 
 		err = client.Tasks.Drop(ctx, NewDropTaskRequest(id))
@@ -344,19 +316,16 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: resume and suspend", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		request := createTaskBasicRequest(t).
+			WithSchedule(String("10 MINUTE"))
 
-		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql).WithSchedule(String("10 MINUTE")))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTaskWithRequest(t, request)
+		id := task.ID()
 
-		task, err := client.Tasks.ShowByID(ctx, id)
-		require.NoError(t, err)
 		assert.Equal(t, "suspended", task.State)
 
 		alterRequest := NewAlterTaskRequest(id).WithResume(Bool(true))
-		err = client.Tasks.Alter(ctx, alterRequest)
+		err := client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		alteredTask, err := client.Tasks.ShowByID(ctx, id)
@@ -375,33 +344,23 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: remove after and add after", func(t *testing.T) {
-		otherName := randomString(t)
-		otherId := NewSchemaObjectIdentifier(database.Name, schema.Name, otherName)
+		request := createTaskBasicRequest(t).
+			WithSchedule(String("10 MINUTE"))
 
-		request := NewCreateTaskRequest(otherId, sql).WithSchedule(String("10 MINUTE"))
+		otherTask := createTaskWithRequest(t, request)
+		otherId := otherTask.ID()
 
-		err := client.Tasks.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(otherId))
-
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-
-		request = NewCreateTaskRequest(id, sql).
+		request = createTaskBasicRequest(t).
 			WithAfter([]SchemaObjectIdentifier{otherId})
 
-		err = client.Tasks.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTaskWithRequest(t, request)
+		id := task.ID()
 
-		task, err := client.Tasks.ShowByID(ctx, id)
-
-		require.NoError(t, err)
 		assert.Contains(t, task.Predecessors, otherId.Name())
 
 		alterRequest := NewAlterTaskRequest(id).WithRemoveAfter([]SchemaObjectIdentifier{otherId})
 
-		err = client.Tasks.Alter(ctx, alterRequest)
+		err := client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		task, err = client.Tasks.ShowByID(ctx, id)
@@ -459,19 +418,17 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("show task: terse", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		request := createTaskBasicRequest(t).
+			WithSchedule(String("10 MINUTE"))
 
-		err := client.Tasks.Create(ctx, NewCreateTaskRequest(id, sql).WithSchedule(String("10 MINUTE")))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		task := createTaskWithRequest(t, request)
 
 		showRequest := NewShowTaskRequest().WithTerse(Bool(true))
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 		require.NoError(t, err)
 
 		assert.Equal(t, 1, len(returnedTasks))
-		assertTaskTerse(t, &returnedTasks[0], id, name, "10 MINUTE")
+		assertTaskTerse(t, &returnedTasks[0], task.ID(), "10 MINUTE")
 	})
 
 	t.Run("show task: with options", func(t *testing.T) {
@@ -481,7 +438,7 @@ func TestInt_Tasks(t *testing.T) {
 		showRequest := NewShowTaskRequest().
 			WithLike(&Like{&task1.Name}).
 			WithIn(&In{Schema: NewDatabaseObjectIdentifier(database.Name, schema.Name)}).
-			WithLimit(Int(5))
+			WithLimit(&LimitFrom{Rows: Int(5)})
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 
 		require.NoError(t, err)
@@ -496,7 +453,7 @@ func TestInt_Tasks(t *testing.T) {
 		returnedTask, err := client.Tasks.Describe(ctx, task.ID())
 		require.NoError(t, err)
 
-		assertTask(t, returnedTask, task.ID(), task.Name)
+		assertTask(t, returnedTask, task.ID())
 	})
 
 	t.Run("execute task: default", func(t *testing.T) {

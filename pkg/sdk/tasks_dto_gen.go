@@ -84,7 +84,7 @@ type ShowTaskRequest struct {
 	In         *In
 	StartsWith *string
 	RootOnly   *bool
-	Limit      *int
+	Limit      *LimitFrom
 }
 
 type DescribeTaskRequest struct {

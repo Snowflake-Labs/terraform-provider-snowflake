@@ -41,7 +41,7 @@ make clean-generator-session_policies run-generator-session_policies
 ### Next steps
 ##### Essentials
 - fix builder generation (`With`s for optional fields should have required param, optional fields should not be exported in `Request` structs)
-- generate each branch of alter in tests
+- generate each branch of alter in tests (instead of basic and all options)
 - clean up predefined operations in generator (now casting to string)
 - (?) add mapping from db to plain struct (for now only "// TODO: Mapping" comment is generated)
 - add arguments to the generator, so we'll be able to specify which files should be generated / re-generated,

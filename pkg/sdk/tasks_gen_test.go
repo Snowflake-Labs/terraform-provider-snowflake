@@ -293,7 +293,7 @@ func TestTasks_Show(t *testing.T) {
 		}
 		opts.StartsWith = String("abc")
 		opts.RootOnly = Bool(true)
-		opts.Limit = Int(10)
+		opts.Limit = &LimitFrom{Rows: Int(10)}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW TERSE TASKS LIKE 'myaccount' IN ACCOUNT STARTS WITH 'abc' ROOT ONLY LIMIT 10")
 	})
 }

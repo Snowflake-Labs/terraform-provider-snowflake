@@ -296,7 +296,7 @@ func (s *ShowTaskRequest) WithRootOnly(RootOnly *bool) *ShowTaskRequest {
 	return s
 }
 
-func (s *ShowTaskRequest) WithLimit(Limit *int) *ShowTaskRequest {
+func (s *ShowTaskRequest) WithLimit(Limit *LimitFrom) *ShowTaskRequest {
 	s.Limit = Limit
 	return s
 }

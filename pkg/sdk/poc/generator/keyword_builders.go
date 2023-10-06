@@ -33,17 +33,17 @@ func (v *queryStruct) OptionalText(name string, transformer *KeywordTransformer)
 
 // SessionParameters *SessionParameters `ddl:"list,no_parentheses"`
 func (v *queryStruct) SessionParameters() *queryStruct {
-	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(&Validation{Type: ValidateValue, FieldNames: []string{"SessionParameters"}}))
+	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
 	return v
 }
 
 func (v *queryStruct) OptionalSessionParameters() *queryStruct {
-	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(&Validation{Type: ValidateValue, FieldNames: []string{"SessionParameters"}}))
+	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
 	return v
 }
 
 func (v *queryStruct) OptionalSessionParametersUnset() *queryStruct {
-	v.fields = append(v.fields, NewField("SessionParametersUnset", "*SessionParametersUnset", Tags().List().NoParentheses(), nil).withValidations(&Validation{Type: ValidateValue, FieldNames: []string{"SessionParametersUnset"}}))
+	v.fields = append(v.fields, NewField("SessionParametersUnset", "*SessionParametersUnset", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParametersUnset")))
 	return v
 }
 
@@ -78,6 +78,6 @@ func (v *queryStruct) OptionalStartsWith() *queryStruct {
 }
 
 func (v *queryStruct) OptionalLimit() *queryStruct {
-	v.fields = append(v.fields, NewField("Limit", "*int", Tags().Parameter().NoEquals().SQL("LIMIT"), nil))
+	v.fields = append(v.fields, NewField("Limit", "*LimitFrom", Tags().Keyword().SQL("LIMIT"), nil))
 	return v
 }
