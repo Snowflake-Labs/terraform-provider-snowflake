@@ -1,15 +1,14 @@
 package resources
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -86,25 +85,17 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 
 	err := client.Schemas.Create(ctx, sdk.NewDatabaseObjectIdentifier(database, name), &sdk.CreateSchemaOptions{
-		Transient:               getPropertyAsPointer[bool](d, "is_transient"),
-		WithManagedAccess:       getPropertyAsPointer[bool](d, "is_managed"),
-		DataRetentionTimeInDays: getPropertyAsPointer[int](d, "data_retention_days"),
+		Transient:               GetPropertyAsPointer[bool](d, "is_transient"),
+		WithManagedAccess:       GetPropertyAsPointer[bool](d, "is_managed"),
+		DataRetentionTimeInDays: GetPropertyAsPointer[int](d, "data_retention_days"),
 		Tag:                     getPropertyTags(d, "tag"),
-		Comment:                 getPropertyAsPointer[string](d, "comment"),
+		Comment:                 GetPropertyAsPointer[string](d, "comment"),
 	})
 	if err != nil {
 		return fmt.Errorf("error creating schema %v err = %w", name, err)
 	}
 
-	schemaID := &schemaID{
-		DatabaseName: database,
-		SchemaName:   name,
-	}
-	dataIDInput, err := schemaID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	d.SetId(helpers.EncodeSnowflakeID(database, name))
 
 	return ReadSchema(d, meta)
 }
@@ -112,31 +103,20 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 // ReadSchema implements schema.ReadFunc.
 func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	schemaID, err := schemaIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := schemaID.DatabaseName
-	schemaName := schemaID.SchemaName
-
-	// Checks if the corresponding database still exists; if not, than the schema also cannot exist
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	_, err = client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(dbName))
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
+
+	_, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
 	if err != nil {
 		d.SetId("")
 	}
 
-	s, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(dbName, schemaName))
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
+	s, err := client.Schemas.ShowByID(ctx, id)
+	if err != nil {
 		log.Printf("[DEBUG] schema (%s) not found", d.Id())
 		d.SetId("")
 		return nil
-	}
-	if err != nil {
-		return err
 	}
 
 	var retentionTime int64
@@ -191,37 +171,20 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateSchema implements schema.UpdateFunc.
 func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
-	sid, err := schemaIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := sid.DatabaseName
-	schemaName := sid.SchemaName
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	id := sdk.NewDatabaseObjectIdentifier(dbName, schemaName)
 
 	if d.HasChange("name") {
-		name := d.Get("name")
-
+		newName := d.Get("name")
 		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			NewName: sdk.NewDatabaseObjectIdentifier(dbName, name.(string)),
+			NewName: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), newName.(string)),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating schema name on %v err = %w", d.Id(), err)
 		}
-
-		schemaID := &schemaID{
-			DatabaseName: dbName,
-			SchemaName:   name.(string),
-		}
-		dataIDInput, err := schemaID.String()
-		if err != nil {
-			return err
-		}
-		d.SetId(dataIDInput)
+		d.SetId(helpers.EncodeSnowflakeID(id.DatabaseName(), newName))
 	}
 
 	if d.HasChange("comment") {
@@ -310,18 +273,12 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSchema implements schema.DeleteFunc.
 func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
-	schemaID, err := schemaIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := schemaID.DatabaseName
-	schemaName := schemaID.SchemaName
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
-	err = client.Schemas.Drop(ctx, sdk.NewDatabaseObjectIdentifier(dbName, schemaName), new(sdk.DropSchemaOptions))
+	err := client.Schemas.Drop(ctx, id, new(sdk.DropSchemaOptions))
 	if err != nil {
 		return fmt.Errorf("error deleting schema %v err = %w", d.Id(), err)
 	}
@@ -329,45 +286,4 @@ func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 
 	return nil
-}
-
-type schemaID struct {
-	DatabaseName string
-	SchemaName   string
-}
-
-// String() takes in a schemaID object and returns a pipe-delimited string:
-// DatabaseName|schemaName.
-func (si *schemaID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = schemaIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strSchemaID := strings.TrimSpace(buf.String())
-	return strSchemaID, nil
-}
-
-// schemaIDFromString() takes in a pipe-delimited string: DatabaseName|schemaName
-// and returns a schemaID object.
-func schemaIDFromString(stringID string) (*schemaID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = schemaIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per schema")
-	}
-	if len(lines[0]) != 2 {
-		return nil, fmt.Errorf("2 fields allowed")
-	}
-	schemaResult := &schemaID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-	}
-	return schemaResult, nil
 }

@@ -3,7 +3,6 @@ package datasources
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -54,28 +53,19 @@ func ReadSchemas(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database").(string)
 	databaseID := sdk.NewAccountObjectIdentifier(databaseName)
 
-	log.Printf("[DEBUG] database name %s", databaseName)
-
 	currentSchemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaOptions{
 		In: &sdk.SchemaIn{
 			Database: sdk.Bool(true),
 			Name:     databaseID,
 		},
 	})
-
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] schemas in database (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse schemas in database (%s)", d.Id())
+	if err != nil {
+		log.Printf("[DEBUG] unable to show schemas in database (%s)", databaseName)
 		d.SetId("")
 		return nil
 	}
 
 	schemas := make([]map[string]any, len(currentSchemas))
-
 	for i, cs := range currentSchemas {
 		schemas[i] = map[string]any{
 			"name":     cs.Name,

@@ -3,6 +3,8 @@ package resources_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 
@@ -18,6 +20,33 @@ const (
 	onFuture
 	onAll
 )
+
+func TestGetPropertyAsPointer(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+		"integer": {
+			Type:     schema.TypeInt,
+			Required: true,
+		},
+		"string": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"boolean": {
+			Type:     schema.TypeBool,
+			Required: true,
+		},
+	}, map[string]interface{}{
+		"integer": 123,
+		"string":  "some string",
+		"boolean": true,
+		"invalid": true,
+	})
+
+	assert.Equal(t, 123, *resources.GetPropertyAsPointer[int](d, "integer"))
+	assert.Equal(t, "some string", *resources.GetPropertyAsPointer[string](d, "string"))
+	assert.Equal(t, true, *resources.GetPropertyAsPointer[bool](d, "boolean"))
+	assert.Nil(t, resources.GetPropertyAsPointer[bool](d, "invalid"))
+}
 
 func database(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	t.Helper()

@@ -88,7 +88,7 @@ func getPropertyTags(d *schema.ResourceData, key string) []sdk.TagAssociation {
 	return nil
 }
 
-func getPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
+func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	value, ok := d.GetOk(property)
 	if !ok {
 		return nil
