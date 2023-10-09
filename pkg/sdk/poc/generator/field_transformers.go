@@ -136,7 +136,12 @@ func (v *ListTransformer) Required() *ListTransformer {
 	return v
 }
 
-func (v *ListTransformer) NoParens() *ListTransformer {
+func (v *ListTransformer) Parentheses() *ListTransformer {
+	v.parentheses = "parentheses"
+	return v
+}
+
+func (v *ListTransformer) NoParentheses() *ListTransformer {
 	v.parentheses = "no_parentheses"
 	return v
 }

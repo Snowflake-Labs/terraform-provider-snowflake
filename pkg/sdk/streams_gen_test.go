@@ -1,6 +1,10 @@
 package sdk
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"testing"
+)
 
 func TestStreams_CreateOnTable(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
@@ -407,4 +411,23 @@ func TestStreams_Describe(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE STREAM %s`, id.FullyQualifiedName())
 	})
+}
+
+type TestStr struct {
+	Timestamp string `ddl:"parameter,arrow_equals,parentheses,double_quotes" sql:"TIMESTAMP"`
+}
+
+type QueryStr struct {
+	On TestStr `ddl:"list,parentheses"`
+}
+
+func TestSQLBuilder(t *testing.T) {
+	s := &QueryStr{
+		On: TestStr{
+			Timestamp: "some string",
+		},
+	}
+	str, err := structToSQL(s)
+	require.NoError(t, err)
+	assert.Equal(t, `(TIMESTAMP => "some string")`, str)
 }
