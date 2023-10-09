@@ -83,6 +83,11 @@ func (v *ParameterTransformer) NoEquals() *ParameterTransformer {
 	return v
 }
 
+func (v *ParameterTransformer) ArrowEquals() *ParameterTransformer {
+	v.equals = "arrow_equals"
+	return v
+}
+
 func (v *ParameterTransformer) SingleQuotes() *ParameterTransformer {
 	v.quotes = "single_quotes"
 	return v

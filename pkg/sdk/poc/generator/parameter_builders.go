@@ -52,3 +52,11 @@ func (v *queryStruct) OptionalBooleanAssignment(sqlPrefix string, transformer *P
 func (v *queryStruct) OptionalIdentifierAssignment(sqlPrefix string, identifierKind string, transformer *ParameterTransformer) *queryStruct {
 	return v.OptionalAssignment(sqlPrefix, identifierKind, transformer)
 }
+
+func (v *queryStruct) OptionalComment() *queryStruct {
+	return v.OptionalTextAssignment("COMMENT", ParameterOptions().SingleQuotes())
+}
+
+func (v *queryStruct) SetComment() *queryStruct {
+	return v.OptionalTextAssignment("SET COMMENT", ParameterOptions().SingleQuotes())
+}
