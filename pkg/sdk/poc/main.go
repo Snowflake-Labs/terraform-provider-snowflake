@@ -19,6 +19,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"database_role_def.go":    example.DatabaseRole,
 	"network_policies_def.go": sdk.NetworkPoliciesDef,
 	"session_policies_def.go": sdk.SessionPoliciesDef,
+	"tasks_def.go":            sdk.TasksDef,
 }
 
 func main() {
@@ -43,9 +44,11 @@ func getDefinition(file string) *generator.Interface {
 func preprocessDefinition(definition *generator.Interface) {
 	for _, o := range definition.Operations {
 		o.ObjectInterface = definition
-		o.OptsField.Name = fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
-		o.OptsField.Kind = fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
-		setParent(o.OptsField)
+		if o.OptsField != nil {
+			o.OptsField.Name = fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
+			o.OptsField.Kind = fmt.Sprintf("%s%sOptions", o.Name, o.ObjectInterface.NameSingular)
+			setParent(o.OptsField)
+		}
 	}
 }
 

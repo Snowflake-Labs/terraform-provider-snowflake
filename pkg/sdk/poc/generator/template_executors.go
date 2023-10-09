@@ -19,7 +19,9 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 	generatePackageDirective(writer)
 	printTo(writer, InterfaceTemplate, def)
 	for _, o := range def.Operations {
-		generateOptionsStruct(writer, o)
+		if o.OptsField != nil {
+			generateOptionsStruct(writer, o)
+		}
 	}
 }
 
@@ -57,7 +59,9 @@ func GenerateDtos(writer io.Writer, def *Interface) {
 	generatePackageDirective(writer)
 	printTo(writer, DtoTemplate, def)
 	for _, o := range def.Operations {
-		generateDtoDecls(writer, o.OptsField)
+		if o.OptsField != nil {
+			generateDtoDecls(writer, o.OptsField)
+		}
 	}
 }
 
