@@ -521,7 +521,7 @@ func DSN(
 		if profile == "default" {
 			defaultConfig := sdk.DefaultConfig()
 			if defaultConfig.Account == "" || defaultConfig.User == "" {
-				return "", errors.New("Account and User must be set in provider config, ~/.snowflake/config, or as an environment variable.")
+				return "", errors.New("account and User must be set in provider config, ~/.snowflake/config, or as an environment variable")
 			}
 			config = sdk.MergeConfig(config, defaultConfig)
 		} else {

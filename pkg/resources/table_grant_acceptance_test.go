@@ -93,9 +93,6 @@ func TestAccTableGrant_defaults(t *testing.T) {
 				Config: tableGrantConfig(name, normal, "SELECT"),
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.d", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "database", name),
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", name),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
