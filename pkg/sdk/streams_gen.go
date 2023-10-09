@@ -26,7 +26,7 @@ type CreateOnTableStreamOptions struct {
 	IfNotExists     *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name            AccountObjectIdentifier  `ddl:"identifier"`
 	CloneStream     *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
-	copyGrants      bool                     `ddl:"static" sql:"COPY GRANTS"`
+	CopyGrants      *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
 	onTable         bool                     `ddl:"static" sql:"ON TABLE"`
 	TableId         AccountObjectIdentifier  `ddl:"identifier"`
 	On              *OnStream                `ddl:"keyword"`
@@ -52,7 +52,7 @@ type CreateOnExternalTableStreamOptions struct {
 	IfNotExists     *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name            AccountObjectIdentifier  `ddl:"identifier"`
 	CloneStream     *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
-	copyGrants      bool                     `ddl:"static" sql:"COPY GRANTS"`
+	CopyGrants      *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
 	onExternalTable bool                     `ddl:"static" sql:"ON EXTERNAL TABLE"`
 	ExternalTableId AccountObjectIdentifier  `ddl:"identifier"`
 	On              *OnStream                `ddl:"keyword"`
@@ -68,7 +68,7 @@ type CreateOnStageStreamOptions struct {
 	IfNotExists *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        AccountObjectIdentifier  `ddl:"identifier"`
 	CloneStream *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
-	copyGrants  bool                     `ddl:"static" sql:"COPY GRANTS"`
+	CopyGrants  *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
 	onStage     bool                     `ddl:"static" sql:"ON STAGE"`
 	StageId     AccountObjectIdentifier  `ddl:"identifier"`
 	Comment     *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -82,7 +82,7 @@ type CreateOnViewStreamOptions struct {
 	IfNotExists     *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name            AccountObjectIdentifier  `ddl:"identifier"`
 	CloneStream     *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
-	copyGrants      bool                     `ddl:"static" sql:"COPY GRANTS"`
+	CopyGrants      *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
 	onView          bool                     `ddl:"static" sql:"ON VIEW"`
 	ViewId          AccountObjectIdentifier  `ddl:"identifier"`
 	On              *OnStream                `ddl:"keyword"`

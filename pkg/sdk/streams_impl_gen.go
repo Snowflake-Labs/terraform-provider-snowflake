@@ -74,6 +74,7 @@ func (r *CreateOnTableStreamRequest) toOpts() *CreateOnTableStreamOptions {
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
 		CloneStream: r.CloneStream,
+		CopyGrants:  r.CopyGrants,
 		TableId:     r.TableId,
 
 		AppendOnly:      r.AppendOnly,
@@ -99,6 +100,7 @@ func (r *CreateOnExternalTableStreamRequest) toOpts() *CreateOnExternalTableStre
 		IfNotExists:     r.IfNotExists,
 		name:            r.name,
 		CloneStream:     r.CloneStream,
+		CopyGrants:      r.CopyGrants,
 		ExternalTableId: r.ExternalTableId,
 
 		InsertOnly: r.InsertOnly,
@@ -123,6 +125,7 @@ func (r *CreateOnStageStreamRequest) toOpts() *CreateOnStageStreamOptions {
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
 		CloneStream: r.CloneStream,
+		CopyGrants:  r.CopyGrants,
 		StageId:     r.StageId,
 		Comment:     r.Comment,
 	}
@@ -135,6 +138,7 @@ func (r *CreateOnViewStreamRequest) toOpts() *CreateOnViewStreamOptions {
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
 		CloneStream: r.CloneStream,
+		CopyGrants:  r.CopyGrants,
 		ViewId:      r.ViewId,
 
 		AppendOnly:      r.AppendOnly,

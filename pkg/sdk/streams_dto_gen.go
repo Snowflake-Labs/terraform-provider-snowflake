@@ -18,6 +18,7 @@ type CreateOnTableStreamRequest struct {
 	IfNotExists     *bool
 	name            AccountObjectIdentifier // required
 	CloneStream     *AccountObjectIdentifier
+	CopyGrants      *bool
 	TableId         AccountObjectIdentifier // required
 	On              *OnStreamRequest
 	AppendOnly      bool
@@ -39,6 +40,7 @@ type CreateOnExternalTableStreamRequest struct {
 	IfNotExists     *bool
 	name            AccountObjectIdentifier // required
 	CloneStream     *AccountObjectIdentifier
+	CopyGrants      *bool
 	ExternalTableId AccountObjectIdentifier // required
 	On              *OnStreamRequest
 	InsertOnly      bool
@@ -50,6 +52,7 @@ type CreateOnStageStreamRequest struct {
 	IfNotExists *bool
 	name        AccountObjectIdentifier // required
 	CloneStream *AccountObjectIdentifier
+	CopyGrants  *bool
 	StageId     AccountObjectIdentifier // required
 	Comment     *string
 }
@@ -59,6 +62,7 @@ type CreateOnViewStreamRequest struct {
 	IfNotExists     *bool
 	name            AccountObjectIdentifier // required
 	CloneStream     *AccountObjectIdentifier
+	CopyGrants      *bool
 	ViewId          AccountObjectIdentifier // required
 	On              *OnStreamRequest
 	AppendOnly      bool

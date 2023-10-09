@@ -29,6 +29,11 @@ func (s *CreateOnTableStreamRequest) WithCloneStream(CloneStream *AccountObjectI
 	return s
 }
 
+func (s *CreateOnTableStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnTableStreamRequest {
+	s.CopyGrants = CopyGrants
+	return s
+}
+
 func (s *CreateOnTableStreamRequest) WithOn(On *OnStreamRequest) *CreateOnTableStreamRequest {
 	s.On = On
 	return s
@@ -108,6 +113,11 @@ func (s *CreateOnExternalTableStreamRequest) WithCloneStream(CloneStream *Accoun
 	return s
 }
 
+func (s *CreateOnExternalTableStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnExternalTableStreamRequest {
+	s.CopyGrants = CopyGrants
+	return s
+}
+
 func (s *CreateOnExternalTableStreamRequest) WithOn(On *OnStreamRequest) *CreateOnExternalTableStreamRequest {
 	s.On = On
 	return s
@@ -148,6 +158,11 @@ func (s *CreateOnStageStreamRequest) WithCloneStream(CloneStream *AccountObjectI
 	return s
 }
 
+func (s *CreateOnStageStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnStageStreamRequest {
+	s.CopyGrants = CopyGrants
+	return s
+}
+
 func (s *CreateOnStageStreamRequest) WithComment(Comment *string) *CreateOnStageStreamRequest {
 	s.Comment = Comment
 	return s
@@ -175,6 +190,11 @@ func (s *CreateOnViewStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateOn
 
 func (s *CreateOnViewStreamRequest) WithCloneStream(CloneStream *AccountObjectIdentifier) *CreateOnViewStreamRequest {
 	s.CloneStream = CloneStream
+	return s
+}
+
+func (s *CreateOnViewStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnViewStreamRequest {
+	s.CopyGrants = CopyGrants
 	return s
 }
 
