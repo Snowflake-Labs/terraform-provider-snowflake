@@ -200,7 +200,7 @@ func (s *CreateOnViewStreamRequest) WithComment(Comment *string) *CreateOnViewSt
 
 func NewCloneStreamRequest(
 	name AccountObjectIdentifier,
-	sourceStream *AccountObjectIdentifier,
+	sourceStream AccountObjectIdentifier,
 ) *CloneStreamRequest {
 	s := CloneStreamRequest{}
 	s.name = name
@@ -291,6 +291,14 @@ func (s *ShowStreamRequest) WithStartsWith(StartsWith *string) *ShowStreamReques
 func (s *ShowStreamRequest) WithLimit(Limit *LimitFrom) *ShowStreamRequest {
 	s.Limit = Limit
 	return s
+}
+
+func NewShowByIdStreamRequest(
+	name AccountObjectIdentifier,
+) *ShowByIdStreamRequest {
+	s := ShowByIdStreamRequest{}
+	s.name = name
+	return &s
 }
 
 func NewDescribeStreamRequest(

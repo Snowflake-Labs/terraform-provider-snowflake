@@ -90,12 +90,12 @@ type CreateOnViewStreamOptions struct {
 
 // CloneStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream#variant-syntax.
 type CloneStreamOptions struct {
-	create       bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace    *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	stream       bool                     `ddl:"static" sql:"STREAM"`
-	name         AccountObjectIdentifier  `ddl:"identifier"`
-	sourceStream *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
-	CopyGrants   *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
+	create       bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace    *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	stream       bool                    `ddl:"static" sql:"STREAM"`
+	name         AccountObjectIdentifier `ddl:"identifier"`
+	sourceStream AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
+	CopyGrants   *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
 }
 
 // AlterStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-stream.

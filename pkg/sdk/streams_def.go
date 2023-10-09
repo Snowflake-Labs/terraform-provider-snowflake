@@ -137,7 +137,7 @@ var (
 				OrReplace().
 				SQL("STREAM").
 				Name().
-				OptionalIdentifier("sourceStream", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("CLONE").Required()).
+				Identifier("sourceStream", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("CLONE").Required()).
 				OptionalCopyGrants().
 				WithValidation(g.ValidIdentifier, "name"),
 		).

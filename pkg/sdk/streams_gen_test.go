@@ -150,7 +150,7 @@ func TestStreams_CreateOnStage(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON EXTERNAL TABLE %s", id.FullyQualifiedName(), stageId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON STAGE %s", id.FullyQualifiedName(), stageId.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -195,7 +195,7 @@ func TestStreams_CreateOnView(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnExternalTableStreamOptions", "IfNotExists", "OrReplace"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnViewStreamOptions", "IfNotExists", "OrReplace"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -219,11 +219,13 @@ func TestStreams_CreateOnView(t *testing.T) {
 
 func TestStreams_Clone(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
+	sourceId := randomAccountObjectIdentifier(t)
 
 	// Minimal valid CloneStreamOptions
 	defaultOpts := func() *CloneStreamOptions {
 		return &CloneStreamOptions{
-			name: id,
+			name:         id,
+			sourceStream: sourceId,
 		}
 	}
 
@@ -234,20 +236,20 @@ func TestStreams_Clone(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s CLONE %s", id.FullyQualifiedName(), sourceId.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.OrReplace = Bool(true)
+		opts.CopyGrants = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE STREAM %s CLONE %s COPY GRANTS", id.FullyQualifiedName(), sourceId.FullyQualifiedName())
 	})
 }
 
@@ -286,18 +288,21 @@ func TestStreams_Alter(t *testing.T) {
 
 	t.Run("set comment", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.IfExists = Bool(true)
 		opts.SetComment = String("some comment")
 		assertOptsValidAndSQLEquals(t, opts, `ALTER STREAM IF EXISTS %s SET COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 
 	t.Run("unset comment", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.IfExists = Bool(true)
 		opts.UnsetComment = Bool(true)
 		assertOptsValidAndSQLEquals(t, opts, `ALTER STREAM IF EXISTS %s UNSET COMMENT`, id.FullyQualifiedName())
 	})
 
 	t.Run("set tags", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.IfExists = Bool(true)
 		opts.SetTags = []TagAssociation{
 			{
 				Name:  NewAccountObjectIdentifier("tag1"),
@@ -317,7 +322,7 @@ func TestStreams_Alter(t *testing.T) {
 			NewAccountObjectIdentifier("tag1"),
 			NewAccountObjectIdentifier("tag2"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER STREAM IF EXISTS %s UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STREAM %s UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
 	})
 }
 
