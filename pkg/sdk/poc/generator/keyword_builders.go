@@ -83,7 +83,7 @@ func (v *queryStruct) OptionalLimit() *queryStruct {
 }
 
 func (v *queryStruct) OptionalCopyGrants() *queryStruct {
-	return v.SQL("COPY GRANTS")
+	return v.OptionalSQL("COPY GRANTS")
 }
 
 func (v *queryStruct) UnsetComment() *queryStruct {
