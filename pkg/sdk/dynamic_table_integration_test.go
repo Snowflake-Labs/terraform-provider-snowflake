@@ -24,7 +24,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	t.Run("test complete", func(t *testing.T) {
 		name := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, randomString(t))
 		targetLag := TargetLag{
-			Lagtime: String("2 minutes"),
+			MaximumDuration: String("2 minutes"),
 		}
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
 		comment := randomComment(t)
@@ -41,7 +41,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		entity := entities[0]
 		require.Equal(t, name.Name(), entity.Name)
 		require.Equal(t, warehouseTest.ID().Name(), entity.Warehouse)
-		require.Equal(t, *targetLag.Lagtime, entity.TargetLag)
+		require.Equal(t, *targetLag.MaximumDuration, entity.TargetLag)
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {
@@ -145,7 +145,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 
 		targetLagCases := []string{"10 minutes", "DOWNSTREAM"}
 		for _, value := range targetLagCases {
-			err := client.DynamicTables.Alter(ctx, NewAlterDynamicTableRequest(dynamicTable.ID()).WithSet(NewDynamicTableSetRequest().WithTargetLag(&TargetLag{Lagtime: String(value)})))
+			err := client.DynamicTables.Alter(ctx, NewAlterDynamicTableRequest(dynamicTable.ID()).WithSet(NewDynamicTableSetRequest().WithTargetLag(TargetLag{MaximumDuration: String(value)})))
 			require.NoError(t, err)
 			entities, err := client.DynamicTables.Show(ctx, NewShowDynamicTableRequest().WithLike(&Like{Pattern: String(dynamicTable.Name)}))
 			require.NoError(t, err)

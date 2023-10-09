@@ -36,5 +36,3 @@ data "snowflake_database" "this" {
 - `origin` (String)
 - `owner` (String)
 - `retention_time` (Number)
-
-

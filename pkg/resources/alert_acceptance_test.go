@@ -8,8 +8,9 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 type (
@@ -101,7 +102,7 @@ var (
 
 func TestAcc_Alert(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

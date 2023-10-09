@@ -44,7 +44,7 @@ func (v *dynamicTables) Show(ctx context.Context, request *ShowDynamicTableReque
 	return result, nil
 }
 
-func (v *dynamicTables) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*DynamicTable, error) {
+func (v *dynamicTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*DynamicTable, error) {
 	request := NewShowDynamicTableRequest().WithLike(&Like{Pattern: String(id.Name())})
 	dynamicTables, err := v.Show(ctx, request)
 	if err != nil {

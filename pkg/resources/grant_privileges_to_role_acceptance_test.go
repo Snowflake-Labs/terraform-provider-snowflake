@@ -5,15 +5,16 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccGrantPrivilegesToRole_onAccount(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -110,7 +111,7 @@ func TestAccGrantPrivilegesToRole_onAccountObject(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -148,7 +149,7 @@ func TestAccGrantPrivilegesToRole_onAccountObjectAllPrivileges(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -222,7 +223,7 @@ func TestAccGrantPrivilegesToRole_onSchema(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -316,7 +317,7 @@ func TestAccGrantPrivilegesToRole_onSchemaConfigAllPrivileges(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -342,7 +343,7 @@ func TestAccGrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -379,7 +380,7 @@ func TestAccGrantPrivilegesToRole_onSchema_futureSchemasInDatabase(t *testing.T)
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -469,7 +470,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_objectType(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -547,7 +548,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_allInSchema(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -620,7 +621,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_allInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -693,7 +694,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_futureInSchema(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -766,7 +767,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_futureInDatabase(t *testing.T) 
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	objectType := "TABLES"
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -839,7 +840,7 @@ func TestAccGrantPrivilegesToRole_multipleResources(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -907,7 +908,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable(
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	objectType := "EXTERNAL TABLES"
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

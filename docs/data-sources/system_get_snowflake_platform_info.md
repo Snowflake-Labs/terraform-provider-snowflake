@@ -20,5 +20,3 @@ description: |-
 - `aws_vpc_ids` (List of String) Snowflake AWS Virtual Private Cloud IDs
 - `azure_vnet_subnet_ids` (List of String) Snowflake Azure Virtual Network Subnet IDs
 - `id` (String) The ID of this resource.
-
-

@@ -5,15 +5,16 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_TaskGrant(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -68,7 +69,7 @@ func TestAcc_TaskGrant_onAll(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -101,7 +102,7 @@ func TestAcc_TaskGrant_onFuture(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -193,7 +194,7 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 	new_name := name + "_NEW"
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// CREATE SCHEMA level FUTURE ownership grant to role <name>

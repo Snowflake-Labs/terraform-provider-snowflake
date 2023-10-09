@@ -5,9 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func testRolesAndShares(t *testing.T, path string, roles []string) func(*terraform.State) error {
@@ -38,7 +39,7 @@ func TestAcc_DatabaseGrant(t *testing.T) {
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

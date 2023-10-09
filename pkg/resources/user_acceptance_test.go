@@ -7,10 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,7 +40,7 @@ func TestAcc_User(t *testing.T) {
 	r.NoError(err)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

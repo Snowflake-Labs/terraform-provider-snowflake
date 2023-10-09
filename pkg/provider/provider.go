@@ -203,9 +203,10 @@ func Provider() *schema.Provider {
 				ConflictsWith: []string{"passcode"},
 			},
 		},
-		ResourcesMap:   getResources(),
-		DataSourcesMap: getDataSources(),
-		ConfigureFunc:  ConfigureProvider,
+		ResourcesMap:       getResources(),
+		DataSourcesMap:     getDataSources(),
+		ConfigureFunc:      ConfigureProvider,
+		ProviderMetaSchema: map[string]*schema.Schema{},
 	}
 }
 
@@ -311,6 +312,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_database":                           datasources.Database(),
 		"snowflake_database_roles":                     datasources.DatabaseRoles(),
 		"snowflake_databases":                          datasources.Databases(),
+		"snowflake_dynamic_tables":                     datasources.DynamicTables(),
 		"snowflake_external_functions":                 datasources.ExternalFunctions(),
 		"snowflake_external_tables":                    datasources.ExternalTables(),
 		"snowflake_failover_groups":                    datasources.FailoverGroups(),

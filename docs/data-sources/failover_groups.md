@@ -46,5 +46,3 @@ Read-Only:
 - `secondary_state` (String)
 - `snowflake_region` (String)
 - `type` (String)
-
-

@@ -742,7 +742,7 @@ func createDynamicTableWithOptions(t *testing.T, client *Client, warehouse *Ware
 	}
 	name := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, randomString(t))
 	targetLag := TargetLag{
-		Lagtime: String("2 minutes"),
+		MaximumDuration: String("2 minutes"),
 	}
 	query := "select id from " + table.ID().FullyQualifiedName()
 	comment := randomComment(t)

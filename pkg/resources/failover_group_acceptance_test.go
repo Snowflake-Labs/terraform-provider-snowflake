@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_FailoverGroupBasic(t *testing.T) {
@@ -18,7 +19,7 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 	}
 	accountName := os.Getenv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT")
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +53,7 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 	}
 	accountName := os.Getenv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT")
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -89,7 +90,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 	}
 	accountName := os.Getenv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT")
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

@@ -42,5 +42,3 @@ Read-Only:
 - `name` (String)
 - `schema` (String)
 - `warehouse` (String)
-
-

@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *testing.T) {
@@ -17,7 +18,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -65,7 +66,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -129,7 +130,7 @@ func TestAcc_Table(t *testing.T) {
 	table3Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -1063,7 +1064,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -1221,7 +1222,7 @@ func TestAcc_TableTags(t *testing.T) {
 	tagName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -1306,7 +1307,7 @@ func TestAcc_TableIdentity(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -1462,7 +1463,7 @@ func TestAcc_TableRename(t *testing.T) {
 	oldTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	newTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

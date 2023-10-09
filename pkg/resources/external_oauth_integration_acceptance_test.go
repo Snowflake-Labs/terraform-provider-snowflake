@@ -5,9 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_ExternalOauthIntegration(t *testing.T) {
@@ -17,7 +18,7 @@ func TestAcc_ExternalOauthIntegration(t *testing.T) {
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +50,7 @@ func TestAcc_ExternalOauthIntegrationEmptyComment(t *testing.T) {
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -81,7 +82,7 @@ func TestAcc_ExternalOauthIntegrationLowercaseName(t *testing.T) {
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -113,7 +114,7 @@ func TestAcc_ExternalOauthIntegrationCustom(t *testing.T) {
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

@@ -44,5 +44,3 @@ Read-Only:
 - `name` (String)
 - `owner` (String)
 - `to` (List of String)
-
-
