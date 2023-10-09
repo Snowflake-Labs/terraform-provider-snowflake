@@ -121,7 +121,7 @@ func TestAccGrantPrivilegesToRole_onAccountObject(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.0.object_name", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.0.object_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.0.object_type", "DATABASE"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "CREATE DATABASE ROLE"),
@@ -479,8 +479,8 @@ func grantPrivilegesToRole_onSchemaObject_objectType(name string, privileges []s
 
 	resource "snowflake_view" "v" {
 		name        = "%v"
-		database    = snowflake_database.d.name
-		schema      = snowflake_schema.s.name
+		database    = "terraform_test_database"
+		schema      = "terraform_test_schema"
 		is_secure   = true
 		statement   = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	}

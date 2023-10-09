@@ -145,22 +145,13 @@ func tableGrantConfig(name string, grantType grantType, privilege string) string
 	}
 
 	return fmt.Sprintf(`
-resource snowflake_database d {
-	name = "%s"
-}
-
-resource snowflake_schema s {
-	name = "%s"
-	database = snowflake_database.d.name
-}
-
 resource snowflake_role r {
   name = "%s"
 }
 
 resource snowflake_table t {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
+	database = "terraform_test_database"
+	schema   = "terraform_test_schema"
 	name     = "%s"
 
 	column {
@@ -170,14 +161,13 @@ resource snowflake_table t {
 }
 
 resource snowflake_table_grant g {
-    %s
-	database_name = snowflake_database.d.name
-	schema_name = snowflake_schema.s.name
+	database = "terraform_test_database"
+	schema   = "terraform_test_schema"
 	privilege = "%s"
 	roles = [
 		snowflake_role.r.name
 	]
 }
 
-`, name, name, name, name, tableNameConfig, privilege)
+`, name, tableNameConfig, privilege)
 }
