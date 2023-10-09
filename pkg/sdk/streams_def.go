@@ -130,7 +130,7 @@ var (
 				WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace"),
 		).
 		CustomOperation(
-			"Copy",
+			"Clone",
 			"https://docs.snowflake.com/en/sql-reference/sql/create-stream#variant-syntax",
 			g.QueryStruct("CloneStream").
 				Create().

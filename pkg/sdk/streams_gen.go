@@ -11,7 +11,7 @@ type Streams interface {
 	CreateOnExternalTable(ctx context.Context, request *CreateOnExternalTableStreamRequest) error
 	CreateOnStage(ctx context.Context, request *CreateOnStageStreamRequest) error
 	CreateOnView(ctx context.Context, request *CreateOnViewStreamRequest) error
-	Copy(ctx context.Context, request *CopyStreamRequest) error
+	Clone(ctx context.Context, request *CloneStreamRequest) error
 	Alter(ctx context.Context, request *AlterStreamRequest) error
 	Drop(ctx context.Context, request *DropStreamRequest) error
 	Show(ctx context.Context, request *ShowStreamRequest) ([]Stream, error)
@@ -88,8 +88,8 @@ type CreateOnViewStreamOptions struct {
 	Comment         *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-// CopyStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream#variant-syntax.
-type CopyStreamOptions struct {
+// CloneStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream#variant-syntax.
+type CloneStreamOptions struct {
 	create       bool                     `ddl:"static" sql:"CREATE"`
 	OrReplace    *bool                    `ddl:"keyword" sql:"OR REPLACE"`
 	stream       bool                     `ddl:"static" sql:"STREAM"`

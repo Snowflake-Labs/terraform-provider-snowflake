@@ -7,7 +7,7 @@ var (
 	_ optionsProvider[CreateOnExternalTableStreamOptions] = new(CreateOnExternalTableStreamRequest)
 	_ optionsProvider[CreateOnStageStreamOptions]         = new(CreateOnStageStreamRequest)
 	_ optionsProvider[CreateOnViewStreamOptions]          = new(CreateOnViewStreamRequest)
-	_ optionsProvider[CopyStreamOptions]                  = new(CopyStreamRequest)
+	_ optionsProvider[CloneStreamOptions]                 = new(CloneStreamRequest)
 	_ optionsProvider[AlterStreamOptions]                 = new(AlterStreamRequest)
 	_ optionsProvider[DropStreamOptions]                  = new(DropStreamRequest)
 	_ optionsProvider[ShowStreamOptions]                  = new(ShowStreamRequest)
@@ -67,7 +67,7 @@ type CreateOnViewStreamRequest struct {
 	Comment         *string
 }
 
-type CopyStreamRequest struct {
+type CloneStreamRequest struct {
 	OrReplace    *bool
 	name         AccountObjectIdentifier  // required
 	sourceStream *AccountObjectIdentifier // required

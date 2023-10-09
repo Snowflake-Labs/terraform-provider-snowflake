@@ -21,7 +21,7 @@ func TestInt_Streams(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("Copy", func(t *testing.T) {
+	t.Run("Clone", func(t *testing.T) {
 		// TODO: fill me
 	})
 

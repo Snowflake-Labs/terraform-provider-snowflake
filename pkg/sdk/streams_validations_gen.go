@@ -7,7 +7,7 @@ var (
 	_ validatable = new(CreateOnExternalTableStreamOptions)
 	_ validatable = new(CreateOnStageStreamOptions)
 	_ validatable = new(CreateOnViewStreamOptions)
-	_ validatable = new(CopyStreamOptions)
+	_ validatable = new(CloneStreamOptions)
 	_ validatable = new(AlterStreamOptions)
 	_ validatable = new(DropStreamOptions)
 	_ validatable = new(ShowStreamOptions)
@@ -82,7 +82,7 @@ func (opts *CreateOnViewStreamOptions) validate() error {
 	return errors.Join(errs...)
 }
 
-func (opts *CopyStreamOptions) validate() error {
+func (opts *CloneStreamOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}

@@ -217,6 +217,40 @@ func TestStreams_CreateOnView(t *testing.T) {
 	})
 }
 
+func TestStreams_Clone(t *testing.T) {
+	id := randomAccountObjectIdentifier(t)
+
+	// Minimal valid CloneStreamOptions
+	defaultOpts := func() *CloneStreamOptions {
+		return &CloneStreamOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *CloneStreamOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+}
+
 func TestStreams_Alter(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
 

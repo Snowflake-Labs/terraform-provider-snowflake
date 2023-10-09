@@ -198,22 +198,22 @@ func (s *CreateOnViewStreamRequest) WithComment(Comment *string) *CreateOnViewSt
 	return s
 }
 
-func NewCopyStreamRequest(
+func NewCloneStreamRequest(
 	name AccountObjectIdentifier,
 	sourceStream *AccountObjectIdentifier,
-) *CopyStreamRequest {
-	s := CopyStreamRequest{}
+) *CloneStreamRequest {
+	s := CloneStreamRequest{}
 	s.name = name
 	s.sourceStream = sourceStream
 	return &s
 }
 
-func (s *CopyStreamRequest) WithOrReplace(OrReplace *bool) *CopyStreamRequest {
+func (s *CloneStreamRequest) WithOrReplace(OrReplace *bool) *CloneStreamRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CopyStreamRequest) WithCopyGrants(CopyGrants *bool) *CopyStreamRequest {
+func (s *CloneStreamRequest) WithCopyGrants(CopyGrants *bool) *CloneStreamRequest {
 	s.CopyGrants = CopyGrants
 	return s
 }

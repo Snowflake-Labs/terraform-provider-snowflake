@@ -28,7 +28,7 @@ func (v *streams) CreateOnView(ctx context.Context, request *CreateOnViewStreamR
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *streams) Copy(ctx context.Context, request *CopyStreamRequest) error {
+func (v *streams) Clone(ctx context.Context, request *CloneStreamRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -159,8 +159,8 @@ func (r *CreateOnViewStreamRequest) toOpts() *CreateOnViewStreamOptions {
 	return opts
 }
 
-func (r *CopyStreamRequest) toOpts() *CopyStreamOptions {
-	opts := &CopyStreamOptions{
+func (r *CloneStreamRequest) toOpts() *CloneStreamOptions {
+	opts := &CloneStreamOptions{
 		OrReplace:    r.OrReplace,
 		name:         r.name,
 		sourceStream: r.sourceStream,
