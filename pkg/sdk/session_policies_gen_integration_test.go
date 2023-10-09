@@ -80,10 +80,10 @@ func TestInt_SessionPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupSessionPolicyProvider(id))
 
-		databaseRole, err := client.SessionPolicies.ShowByID(ctx, id)
+		sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assertSessionPolicy(t, databaseRole, id, comment)
+		assertSessionPolicy(t, sessionPolicy, id, comment)
 	})
 
 	t.Run("create session_policy: no optionals", func(t *testing.T) {
@@ -96,10 +96,10 @@ func TestInt_SessionPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupSessionPolicyProvider(id))
 
-		databaseRole, err := client.SessionPolicies.ShowByID(ctx, id)
+		sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assertSessionPolicy(t, databaseRole, id, "")
+		assertSessionPolicy(t, sessionPolicy, id, "")
 	})
 
 	t.Run("drop session_policy: existing", func(t *testing.T) {
@@ -135,19 +135,19 @@ func TestInt_SessionPolicies(t *testing.T) {
 		err = client.SessionPolicies.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		alteredDatabaseRole, err := client.SessionPolicies.ShowByID(ctx, id)
+		alteredSessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, "new comment", alteredDatabaseRole.Comment)
+		assert.Equal(t, "new comment", alteredSessionPolicy.Comment)
 
 		alterRequest = NewAlterSessionPolicyRequest(id).WithUnset(NewSessionPolicyUnsetRequest().WithComment(Bool(true)))
 		err = client.SessionPolicies.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		alteredDatabaseRole, err = client.SessionPolicies.ShowByID(ctx, id)
+		alteredSessionPolicy, err = client.SessionPolicies.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, "", alteredDatabaseRole.Comment)
+		assert.Equal(t, "", alteredSessionPolicy.Comment)
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
@@ -190,7 +190,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("alter database_role: rename", func(t *testing.T) {
+	t.Run("alter session_policy: rename", func(t *testing.T) {
 		name := randomString(t)
 		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
@@ -212,10 +212,10 @@ func TestInt_SessionPolicies(t *testing.T) {
 		_, err = client.SessionPolicies.ShowByID(ctx, id)
 		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 
-		databaseRole, err := client.SessionPolicies.ShowByID(ctx, newId)
+		sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, newId)
 		require.NoError(t, err)
 
-		assertSessionPolicy(t, databaseRole, newId, "")
+		assertSessionPolicy(t, sessionPolicy, newId, "")
 	})
 
 	t.Run("show session_policy: default", func(t *testing.T) {
@@ -223,12 +223,12 @@ func TestInt_SessionPolicies(t *testing.T) {
 		sessionPolicy2 := createSessionPolicy(t)
 
 		showRequest := NewShowSessionPolicyRequest()
-		returnedDatabaseRoles, err := client.SessionPolicies.Show(ctx, showRequest)
+		returnedSessionPolicies, err := client.SessionPolicies.Show(ctx, showRequest)
 		require.NoError(t, err)
 
-		assert.Equal(t, 2, len(returnedDatabaseRoles))
-		assert.Contains(t, returnedDatabaseRoles, *sessionPolicy1)
-		assert.Contains(t, returnedDatabaseRoles, *sessionPolicy2)
+		assert.Equal(t, 2, len(returnedSessionPolicies))
+		assert.Contains(t, returnedSessionPolicies, *sessionPolicy1)
+		assert.Contains(t, returnedSessionPolicies, *sessionPolicy2)
 	})
 
 	t.Run("describe session_policy", func(t *testing.T) {

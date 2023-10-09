@@ -21,7 +21,7 @@ const (
 // Operation defines a single operation for given object or objects family (e.g. CREATE DATABASE ROLE)
 type Operation struct {
 	// Name is the operation's name, e.g. "Create"
-	Name OperationKind
+	Name string
 	// ObjectInterface points to the containing interface
 	ObjectInterface *Interface
 	// Doc is the URL for the doc used to create given operation, e.g. https://docs.snowflake.com/en/sql-reference/sql/create-database-role
@@ -44,7 +44,7 @@ type Mapping struct {
 	To              *Field
 }
 
-func newOperation(kind OperationKind, doc string) *Operation {
+func newOperation(kind string, doc string) *Operation {
 	return &Operation{
 		Name:          kind,
 		Doc:           doc,
@@ -83,7 +83,14 @@ func addDescriptionMapping(op *Operation, from, to *Field) {
 	op.DescribeMapping = newMapping("convert", from, to)
 }
 
-func (i *Interface) newSimpleOperation(kind OperationKind, doc string, queryStruct *queryStruct, helperStructs ...IntoField) *Interface {
+func (i *Interface) newNoSqlOperation(kind string) *Interface {
+	operation := newOperation(kind, "placeholder").
+		withOptionsStruct(nil)
+	i.Operations = append(i.Operations, operation)
+	return i
+}
+
+func (i *Interface) newSimpleOperation(kind string, doc string, queryStruct *queryStruct, helperStructs ...IntoField) *Interface {
 	if queryStruct.identifierField != nil {
 		queryStruct.identifierField.Kind = i.IdentifierKind
 	}
@@ -101,7 +108,7 @@ func (i *Interface) newSimpleOperation(kind OperationKind, doc string, queryStru
 }
 
 func (i *Interface) newOperationWithDBMapping(
-	kind OperationKind,
+	kind string,
 	doc string,
 	dbRepresentation *dbStruct,
 	resourceRepresentation *plainStruct,
@@ -127,24 +134,32 @@ type IntoField interface {
 }
 
 func (i *Interface) CreateOperation(doc string, queryStruct *queryStruct, helperStructs ...IntoField) *Interface {
-	return i.newSimpleOperation(OperationKindCreate, doc, queryStruct, helperStructs...)
+	return i.newSimpleOperation(string(OperationKindCreate), doc, queryStruct, helperStructs...)
 }
 
 func (i *Interface) AlterOperation(doc string, queryStruct *queryStruct) *Interface {
-	return i.newSimpleOperation(OperationKindAlter, doc, queryStruct)
+	return i.newSimpleOperation(string(OperationKindAlter), doc, queryStruct)
 }
 
 func (i *Interface) DropOperation(doc string, queryStruct *queryStruct) *Interface {
-	return i.newSimpleOperation(OperationKindDrop, doc, queryStruct)
+	return i.newSimpleOperation(string(OperationKindDrop), doc, queryStruct)
 }
 
 func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
-	i.newOperationWithDBMapping(OperationKindShow, doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping)
+	i.newOperationWithDBMapping(string(OperationKindShow), doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping)
 	return i
 }
 
+func (i *Interface) ShowByIdOperation() *Interface {
+	return i.newNoSqlOperation(string(OperationKindShowByID))
+}
+
 func (i *Interface) DescribeOperation(describeKind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
-	op := i.newOperationWithDBMapping(OperationKindDescribe, doc, dbRepresentation, resourceRepresentation, queryStruct, addDescriptionMapping)
+	op := i.newOperationWithDBMapping(string(OperationKindDescribe), doc, dbRepresentation, resourceRepresentation, queryStruct, addDescriptionMapping)
 	op.DescribeKind = &describeKind
 	return i
+}
+
+func (i *Interface) CustomOperation(kind string, doc string, queryStruct *queryStruct) *Interface {
+	return i.newSimpleOperation(kind, doc, queryStruct)
 }

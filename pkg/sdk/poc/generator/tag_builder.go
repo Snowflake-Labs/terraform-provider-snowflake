@@ -39,8 +39,23 @@ func (v *TagBuilder) List() *TagBuilder {
 	return v
 }
 
+func (v *TagBuilder) Parentheses() *TagBuilder {
+	v.ddl = append(v.ddl, "parentheses")
+	return v
+}
+
 func (v *TagBuilder) NoParentheses() *TagBuilder {
 	v.ddl = append(v.ddl, "no_parentheses")
+	return v
+}
+
+func (v *TagBuilder) NoEquals() *TagBuilder {
+	v.ddl = append(v.ddl, "no_equals")
+	return v
+}
+
+func (v *TagBuilder) SingleQuotes() *TagBuilder {
+	v.ddl = append(v.ddl, "single_quotes")
 	return v
 }
 
