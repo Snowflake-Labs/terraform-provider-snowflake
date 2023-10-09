@@ -16,19 +16,12 @@ var (
 )
 
 type Shares interface {
-	// Create creates a share.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error
-	// Alter modifies an existing share
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterShareOptions) error
-	// Drop removes a share.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
-	// Show returns a list of shares.
 	Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error)
-	// ShowByID returns a share by ID.
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
-	// Describe returns the details of an outbound share.
 	DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error)
-	// Describe returns the details of an inbound share.
 	DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error)
 }
 
@@ -108,6 +101,7 @@ func (r shareRow) convert() *Share {
 	}
 }
 
+// CreateShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-share.
 type CreateShareOptions struct {
 	create    bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -139,6 +133,7 @@ func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *C
 	return err
 }
 
+// dropShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-share.
 type dropShareOptions struct {
 	drop  bool                    `ddl:"static" sql:"DROP"`
 	share bool                    `ddl:"static" sql:"SHARE"`
@@ -164,6 +159,7 @@ func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
 	return err
 }
 
+// AlterShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-share.
 type AlterShareOptions struct {
 	alter    bool                    `ddl:"static" sql:"ALTER"`
 	share    bool                    `ddl:"static" sql:"SHARE"`
@@ -269,6 +265,7 @@ func (v *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *Al
 	return err
 }
 
+// ShowShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-shares.
 type ShowShareOptions struct {
 	show       bool       `ddl:"static" sql:"SHOW"`
 	shares     bool       `ddl:"static" sql:"SHARES"`
@@ -343,6 +340,7 @@ func shareDetailsFromRows(rows []shareDetailsRow) *ShareDetails {
 	return v
 }
 
+// describeShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-share.
 type describeShareOptions struct {
 	describe bool             `ddl:"static" sql:"DESCRIBE"`
 	share    bool             `ddl:"static" sql:"SHARE"`

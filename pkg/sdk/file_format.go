@@ -21,17 +21,11 @@ var (
 )
 
 type FileFormats interface {
-	// Create creates a FileFormat.
 	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreateFileFormatOptions) error
-	// Alter modifies an existing FileFormat
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterFileFormatOptions) error
-	// Drop removes a FileFormat.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropFileFormatOptions) error
-	// Show returns a list of fileFormats.
 	Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]FileFormat, error)
-	// ShowByID returns a FileFormat by ID
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error)
-	// Describe returns the details of a FileFormat.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*FileFormatDetails, error)
 }
 
@@ -326,6 +320,7 @@ type NullString struct {
 	S string `ddl:"parameter,no_equals,single_quotes"`
 }
 
+// CreateFileFormatOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-file-format.
 type CreateFileFormatOptions struct {
 	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -374,6 +369,7 @@ func (v *fileFormats) Create(ctx context.Context, id SchemaObjectIdentifier, opt
 	return err
 }
 
+// AlterFileFormatOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-file-format.
 type AlterFileFormatOptions struct {
 	alter      bool                   `ddl:"static" sql:"ALTER"`
 	fileFormat bool                   `ddl:"static" sql:"FILE FORMAT"`
@@ -600,6 +596,7 @@ func (v *fileFormats) Alter(ctx context.Context, id SchemaObjectIdentifier, opts
 	return err
 }
 
+// DropFileFormatOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-file-format.
 type DropFileFormatOptions struct {
 	drop       bool                   `ddl:"static" sql:"DROP"`
 	fileFormat string                 `ddl:"static" sql:"FILE FORMAT"`
@@ -627,6 +624,7 @@ func (v *fileFormats) Drop(ctx context.Context, id SchemaObjectIdentifier, opts 
 	return err
 }
 
+// ShowFileFormatsOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-file-formats.
 type ShowFileFormatsOptions struct {
 	show        bool  `ddl:"static" sql:"SHOW"`
 	fileFormats bool  `ddl:"static" sql:"FILE FORMATS"`
@@ -680,6 +678,7 @@ type FileFormatDetailsRow struct {
 	Property_Default string
 }
 
+// describeFileFormatOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-file-format.
 type describeFileFormatOptions struct {
 	describe   bool                   `ddl:"static" sql:"DESCRIBE"`
 	fileFormat string                 `ddl:"static" sql:"FILE FORMAT"`
