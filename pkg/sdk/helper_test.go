@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 	"time"

@@ -28,13 +28,11 @@ var dynamicTableShema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The database in which to create the dynamic table.",
-		ForceNew:    true, // todo: can we make this not force new?
 	},
 	"schema": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The schema in which to create the dynamic table.",
-		ForceNew:    true, // todo: can we make this not force new?
 	},
 	"target_lag": {
 		Type:        schema.TypeList,
