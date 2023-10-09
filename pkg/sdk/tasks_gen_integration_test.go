@@ -235,6 +235,24 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, "v1", returnedTagValue)
 	})
 
+	t.Run("clone task: default", func(t *testing.T) {
+		sourceTask := createTask(t)
+
+		name := randomString(t)
+		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+
+		request := NewCloneTaskRequest(id, sourceTask.ID())
+
+		err := client.Tasks.Clone(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskProvider(id))
+
+		task, err := client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertTask(t, task, request.name)
+	})
+
 	t.Run("drop task: existing", func(t *testing.T) {
 		request := createTaskBasicRequest(t)
 		id := request.name
