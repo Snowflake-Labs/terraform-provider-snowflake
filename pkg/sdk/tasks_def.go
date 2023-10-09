@@ -86,6 +86,20 @@ var TasksDef = g.NewInterface(
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 	).
+	CustomOperation(
+		"Clone",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-task#variant-syntax",
+		g.QueryStruct("CloneTask").
+			Create().
+			OrReplace().
+			SQL("TASK").
+			Name().
+			SQL("CLONE").
+			Identifier("sourceTask", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
+			OptionalSQL("COPY GRANTS").
+			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ValidIdentifier, "sourceTask"),
+	).
 	AlterOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-task",
 		g.QueryStruct("AlterTask").

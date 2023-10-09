@@ -4,6 +4,7 @@ package sdk
 
 var (
 	_ optionsProvider[CreateTaskOptions]   = new(CreateTaskRequest)
+	_ optionsProvider[CloneTaskOptions]    = new(CloneTaskRequest)
 	_ optionsProvider[AlterTaskOptions]    = new(AlterTaskRequest)
 	_ optionsProvider[DropTaskOptions]     = new(DropTaskRequest)
 	_ optionsProvider[ShowTaskOptions]     = new(ShowTaskRequest)
@@ -34,6 +35,13 @@ type CreateTaskRequest struct {
 type CreateTaskWarehouseRequest struct {
 	Warehouse                           *AccountObjectIdentifier
 	UserTaskManagedInitialWarehouseSize *WarehouseSize
+}
+
+type CloneTaskRequest struct {
+	OrReplace  *bool
+	name       SchemaObjectIdentifier // required
+	sourceTask SchemaObjectIdentifier // required
+	CopyGrants *bool
 }
 
 type AlterTaskRequest struct {

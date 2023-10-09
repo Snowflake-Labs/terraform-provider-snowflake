@@ -7,6 +7,7 @@ import (
 
 type Tasks interface {
 	Create(ctx context.Context, request *CreateTaskRequest) error
+	Clone(ctx context.Context, request *CloneTaskRequest) error
 	Alter(ctx context.Context, request *AlterTaskRequest) error
 	Drop(ctx context.Context, request *DropTaskRequest) error
 	Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error)
@@ -42,6 +43,17 @@ type CreateTaskOptions struct {
 type CreateTaskWarehouse struct {
 	Warehouse                           *AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
 	UserTaskManagedInitialWarehouseSize *WarehouseSize           `ddl:"parameter,single_quotes" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+}
+
+// CloneTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-task#variant-syntax.
+type CloneTaskOptions struct {
+	create     bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace  *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	task       bool                   `ddl:"static" sql:"TASK"`
+	name       SchemaObjectIdentifier `ddl:"identifier"`
+	clone      bool                   `ddl:"static" sql:"CLONE"`
+	sourceTask SchemaObjectIdentifier `ddl:"identifier"`
+	CopyGrants *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 }
 
 // AlterTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-task.

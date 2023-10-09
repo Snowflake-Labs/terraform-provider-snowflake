@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	_ validatable = new(CreateTaskOptions)
+	_ validatable = new(CloneTaskOptions)
 	_ validatable = new(AlterTaskOptions)
 	_ validatable = new(DropTaskOptions)
 	_ validatable = new(ShowTaskOptions)
@@ -31,6 +32,20 @@ func (opts *CreateTaskOptions) validate() error {
 		if err := opts.SessionParameters.validate(); err != nil {
 			errs = append(errs, err)
 		}
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *CloneTaskOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, errInvalidObjectIdentifier)
+	}
+	if !validObjectidentifier(opts.sourceTask) {
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
