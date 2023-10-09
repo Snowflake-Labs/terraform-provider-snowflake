@@ -66,9 +66,9 @@ var (
 				OptionalCopyGrants().
 				SQL("ON TABLE").
 				Identifier("TableId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
-				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
-				BooleanAssignment("APPEND_ONLY", nil).
-				BooleanAssignment("SHOW_INITIAL_ROWS", nil).
+				OptionalQueryStructField("On", onStreamDef, g.ParameterOptions().NoEquals().Parentheses()).
+				OptionalBooleanAssignment("APPEND_ONLY", nil).
+				OptionalBooleanAssignment("SHOW_INITIAL_ROWS", nil).
 				OptionalComment().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ValidIdentifier, "TableId").
@@ -89,8 +89,8 @@ var (
 				OptionalCopyGrants().
 				SQL("ON EXTERNAL TABLE").
 				Identifier("ExternalTableId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
-				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
-				BooleanAssignment("INSERT_ONLY", nil).
+				OptionalQueryStructField("On", onStreamDef, g.ParameterOptions().NoEquals().Parentheses()).
+				OptionalBooleanAssignment("INSERT_ONLY", nil).
 				OptionalComment().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ValidIdentifier, "ExternalTableId").
@@ -131,9 +131,9 @@ var (
 				OptionalCopyGrants().
 				SQL("ON VIEW").
 				Identifier("ViewId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
-				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
-				BooleanAssignment("APPEND_ONLY", nil).
-				BooleanAssignment("SHOW_INITIAL_ROWS", nil).
+				OptionalQueryStructField("On", onStreamDef, g.ParameterOptions().NoEquals().Parentheses()).
+				OptionalBooleanAssignment("APPEND_ONLY", nil).
+				OptionalBooleanAssignment("SHOW_INITIAL_ROWS", nil).
 				OptionalComment().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ValidIdentifier, "ViewId").

@@ -30,8 +30,8 @@ type CreateOnTableStreamOptions struct {
 	onTable         bool                     `ddl:"static" sql:"ON TABLE"`
 	TableId         AccountObjectIdentifier  `ddl:"identifier"`
 	On              *OnStream                `ddl:"keyword"`
-	AppendOnly      bool                     `ddl:"parameter" sql:"APPEND_ONLY"`
-	ShowInitialRows bool                     `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
+	AppendOnly      *bool                    `ddl:"parameter" sql:"APPEND_ONLY"`
+	ShowInitialRows *bool                    `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
 	Comment         *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -56,7 +56,7 @@ type CreateOnExternalTableStreamOptions struct {
 	onExternalTable bool                     `ddl:"static" sql:"ON EXTERNAL TABLE"`
 	ExternalTableId AccountObjectIdentifier  `ddl:"identifier"`
 	On              *OnStream                `ddl:"keyword"`
-	InsertOnly      bool                     `ddl:"parameter" sql:"INSERT_ONLY"`
+	InsertOnly      *bool                    `ddl:"parameter" sql:"INSERT_ONLY"`
 	Comment         *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -86,8 +86,8 @@ type CreateOnViewStreamOptions struct {
 	onView          bool                     `ddl:"static" sql:"ON VIEW"`
 	ViewId          AccountObjectIdentifier  `ddl:"identifier"`
 	On              *OnStream                `ddl:"keyword"`
-	AppendOnly      bool                     `ddl:"parameter" sql:"APPEND_ONLY"`
-	ShowInitialRows bool                     `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
+	AppendOnly      *bool                    `ddl:"parameter" sql:"APPEND_ONLY"`
+	ShowInitialRows *bool                    `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
 	Comment         *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 

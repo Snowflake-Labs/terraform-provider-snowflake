@@ -21,8 +21,8 @@ type CreateOnTableStreamRequest struct {
 	CopyGrants      *bool
 	TableId         AccountObjectIdentifier // required
 	On              *OnStreamRequest
-	AppendOnly      bool
-	ShowInitialRows bool
+	AppendOnly      *bool
+	ShowInitialRows *bool
 	Comment         *string
 }
 
@@ -43,7 +43,7 @@ type CreateOnExternalTableStreamRequest struct {
 	CopyGrants      *bool
 	ExternalTableId AccountObjectIdentifier // required
 	On              *OnStreamRequest
-	InsertOnly      bool
+	InsertOnly      *bool
 	Comment         *string
 }
 
@@ -65,8 +65,8 @@ type CreateOnViewStreamRequest struct {
 	CopyGrants      *bool
 	ViewId          AccountObjectIdentifier // required
 	On              *OnStreamRequest
-	AppendOnly      bool
-	ShowInitialRows bool
+	AppendOnly      *bool
+	ShowInitialRows *bool
 	Comment         *string
 }
 

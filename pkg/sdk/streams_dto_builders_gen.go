@@ -39,12 +39,12 @@ func (s *CreateOnTableStreamRequest) WithOn(On *OnStreamRequest) *CreateOnTableS
 	return s
 }
 
-func (s *CreateOnTableStreamRequest) WithAppendOnly(AppendOnly bool) *CreateOnTableStreamRequest {
+func (s *CreateOnTableStreamRequest) WithAppendOnly(AppendOnly *bool) *CreateOnTableStreamRequest {
 	s.AppendOnly = AppendOnly
 	return s
 }
 
-func (s *CreateOnTableStreamRequest) WithShowInitialRows(ShowInitialRows bool) *CreateOnTableStreamRequest {
+func (s *CreateOnTableStreamRequest) WithShowInitialRows(ShowInitialRows *bool) *CreateOnTableStreamRequest {
 	s.ShowInitialRows = ShowInitialRows
 	return s
 }
@@ -123,7 +123,7 @@ func (s *CreateOnExternalTableStreamRequest) WithOn(On *OnStreamRequest) *Create
 	return s
 }
 
-func (s *CreateOnExternalTableStreamRequest) WithInsertOnly(InsertOnly bool) *CreateOnExternalTableStreamRequest {
+func (s *CreateOnExternalTableStreamRequest) WithInsertOnly(InsertOnly *bool) *CreateOnExternalTableStreamRequest {
 	s.InsertOnly = InsertOnly
 	return s
 }
@@ -203,12 +203,12 @@ func (s *CreateOnViewStreamRequest) WithOn(On *OnStreamRequest) *CreateOnViewStr
 	return s
 }
 
-func (s *CreateOnViewStreamRequest) WithAppendOnly(AppendOnly bool) *CreateOnViewStreamRequest {
+func (s *CreateOnViewStreamRequest) WithAppendOnly(AppendOnly *bool) *CreateOnViewStreamRequest {
 	s.AppendOnly = AppendOnly
 	return s
 }
 
-func (s *CreateOnViewStreamRequest) WithShowInitialRows(ShowInitialRows bool) *CreateOnViewStreamRequest {
+func (s *CreateOnViewStreamRequest) WithShowInitialRows(ShowInitialRows *bool) *CreateOnViewStreamRequest {
 	s.ShowInitialRows = ShowInitialRows
 	return s
 }

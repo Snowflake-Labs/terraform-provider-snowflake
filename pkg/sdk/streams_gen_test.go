@@ -66,8 +66,8 @@ func TestStreams_CreateOnTable(t *testing.T) {
 			At:     Bool(true),
 			Stream: String("123"),
 		}
-		opts.AppendOnly = true
-		opts.ShowInitialRows = true
+		opts.AppendOnly = Bool(true)
+		opts.ShowInitialRows = Bool(true)
 		opts.Comment = String("some comment")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE STREAM %s ON TABLE %s AT (STREAM => '123') APPEND_ONLY = TRUE SHOW_INITIAL_ROWS = TRUE COMMENT = 'some comment'", id.FullyQualifiedName(), tableId.FullyQualifiedName())
 	})
@@ -137,7 +137,7 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 			At:        Bool(true),
 			Statement: String("123"),
 		}
-		opts.InsertOnly = true
+		opts.InsertOnly = Bool(true)
 		opts.Comment = String("some comment")
 		assertOptsValidAndSQLEquals(t, opts, `CREATE STREAM IF NOT EXISTS %s ON EXTERNAL TABLE %s AT (STATEMENT => "123") INSERT_ONLY = TRUE COMMENT = 'some comment'`, id.FullyQualifiedName(), externalTableId.FullyQualifiedName())
 	})
@@ -271,8 +271,8 @@ func TestStreams_CreateOnView(t *testing.T) {
 			At:     Bool(true),
 			Stream: String("123"),
 		}
-		opts.AppendOnly = true
-		opts.ShowInitialRows = true
+		opts.AppendOnly = Bool(true)
+		opts.ShowInitialRows = Bool(true)
 		opts.Comment = String("some comment")
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE STREAM %s ON VIEW %s BEFORE (TIMESTAMP => "") APPEND_ONLY = TRUE SHOW_INITIAL_ROWS = TRUE COMMENT = 'some comment'`, id.FullyQualifiedName(), viewId.FullyQualifiedName())
 	})
