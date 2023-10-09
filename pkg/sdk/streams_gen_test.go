@@ -1,8 +1,6 @@
 package sdk
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -15,6 +13,12 @@ func TestStreams_CreateOnTable(t *testing.T) {
 		return &CreateOnTableStreamOptions{
 			name:    id,
 			TableId: tableId,
+			On: &OnStream{
+				At: Bool(true),
+				Statement: OnStreamStatement{
+					Stream: String("123"),
+				},
+			},
 		}
 	}
 
@@ -42,8 +46,23 @@ func TestStreams_CreateOnTable(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnTableStreamOptions", "IfNotExists", "OrReplace"))
 	})
 
+	t.Run("validation: exactly one field from [opts.On.At opts.On.Before] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.On.At = Bool(true)
+		opts.On.Before = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("At", "Before"))
+	})
+
+	t.Run("validation: exactly one field from [opts.On.Statement.Timestamp opts.On.Statement.Offset opts.On.Statement.Statement opts.On.Statement.Stream] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.On.At = Bool(true)
+		opts.On.Statement = OnStreamStatement{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.On = nil
 		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON TABLE %s", id.FullyQualifiedName(), tableId.FullyQualifiedName())
 	})
 
@@ -72,6 +91,12 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 		return &CreateOnExternalTableStreamOptions{
 			name:            id,
 			ExternalTableId: externalTableId,
+			On: &OnStream{
+				At: Bool(true),
+				Statement: OnStreamStatement{
+					Stream: String("123"),
+				},
+			},
 		}
 	}
 
@@ -99,8 +124,22 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnExternalTableStreamOptions", "IfNotExists", "OrReplace"))
 	})
 
+	t.Run("validation: exactly one field from [opts.On.At opts.On.Before] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.On.At = Bool(true)
+		opts.On.Before = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("At", "Before"))
+	})
+
+	t.Run("validation: exactly one field from [opts.On.Statement.Timestamp opts.On.Statement.Offset opts.On.Statement.Statement opts.On.Statement.Stream] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.On.Statement = OnStreamStatement{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.On = nil
 		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON EXTERNAL TABLE %s", id.FullyQualifiedName(), externalTableId.FullyQualifiedName())
 	})
 
@@ -179,6 +218,12 @@ func TestStreams_CreateOnView(t *testing.T) {
 		return &CreateOnViewStreamOptions{
 			name:   id,
 			ViewId: viewId,
+			On: &OnStream{
+				At: Bool(true),
+				Statement: OnStreamStatement{
+					Stream: String("123"),
+				},
+			},
 		}
 	}
 
@@ -206,8 +251,22 @@ func TestStreams_CreateOnView(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnViewStreamOptions", "IfNotExists", "OrReplace"))
 	})
 
+	t.Run("validation: exactly one field from [opts.On.At opts.On.Before] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.On.At = Bool(true)
+		opts.On.Before = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("At", "Before"))
+	})
+
+	t.Run("validation: exactly one field from [opts.On.Statement.Timestamp opts.On.Statement.Offset opts.On.Statement.Statement opts.On.Statement.Stream] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.On.Statement = OnStreamStatement{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.On = nil
 		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON VIEW %s", id.FullyQualifiedName(), viewId.FullyQualifiedName())
 	})
 
@@ -418,23 +477,4 @@ func TestStreams_Describe(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE STREAM %s`, id.FullyQualifiedName())
 	})
-}
-
-type TestStr struct {
-	Timestamp string `ddl:"parameter,arrow_equals,parentheses,double_quotes" sql:"TIMESTAMP"`
-}
-
-type QueryStr struct {
-	On TestStr `ddl:"list,parentheses"`
-}
-
-func TestSQLBuilder(t *testing.T) {
-	s := &QueryStr{
-		On: TestStr{
-			Timestamp: "some string",
-		},
-	}
-	str, err := structToSQL(s)
-	require.NoError(t, err)
-	assert.Equal(t, `(TIMESTAMP => "some string")`, str)
 }

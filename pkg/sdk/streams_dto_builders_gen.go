@@ -63,22 +63,31 @@ func (s *OnStreamRequest) WithBefore(Before *bool) *OnStreamRequest {
 	return s
 }
 
-func (s *OnStreamRequest) WithTimestamp(Timestamp *string) *OnStreamRequest {
-	s.Timestamp = Timestamp
-	return s
-}
-
-func (s *OnStreamRequest) WithOffset(Offset *string) *OnStreamRequest {
-	s.Offset = Offset
-	return s
-}
-
-func (s *OnStreamRequest) WithStatement(Statement *string) *OnStreamRequest {
+func (s *OnStreamRequest) WithStatement(Statement OnStreamStatementRequest) *OnStreamRequest {
 	s.Statement = Statement
 	return s
 }
 
-func (s *OnStreamRequest) WithStream(Stream *string) *OnStreamRequest {
+func NewOnStreamStatementRequest() *OnStreamStatementRequest {
+	return &OnStreamStatementRequest{}
+}
+
+func (s *OnStreamStatementRequest) WithTimestamp(Timestamp *string) *OnStreamStatementRequest {
+	s.Timestamp = Timestamp
+	return s
+}
+
+func (s *OnStreamStatementRequest) WithOffset(Offset *string) *OnStreamStatementRequest {
+	s.Offset = Offset
+	return s
+}
+
+func (s *OnStreamStatementRequest) WithStatement(Statement *string) *OnStreamStatementRequest {
+	s.Statement = Statement
+	return s
+}
+
+func (s *OnStreamStatementRequest) WithStream(Stream *string) *OnStreamStatementRequest {
 	s.Stream = Stream
 	return s
 }
@@ -291,14 +300,6 @@ func (s *ShowStreamRequest) WithStartsWith(StartsWith *string) *ShowStreamReques
 func (s *ShowStreamRequest) WithLimit(Limit *LimitFrom) *ShowStreamRequest {
 	s.Limit = Limit
 	return s
-}
-
-func NewShowByIdStreamRequest(
-	name AccountObjectIdentifier,
-) *ShowByIdStreamRequest {
-	s := ShowByIdStreamRequest{}
-	s.name = name
-	return &s
 }
 
 func NewDescribeStreamRequest(

@@ -28,6 +28,16 @@ func (opts *CreateOnTableStreamOptions) validate() error {
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
 		errs = append(errs, errOneOf("CreateOnTableStreamOptions", "IfNotExists", "OrReplace"))
 	}
+	if valueSet(opts.On) {
+		if ok := exactlyOneValueSet(opts.On.At, opts.On.Before); !ok {
+			errs = append(errs, errExactlyOneOf("At", "Before"))
+		}
+		if valueSet(opts.On.Statement) {
+			if ok := exactlyOneValueSet(opts.On.Statement.Timestamp, opts.On.Statement.Offset, opts.On.Statement.Statement, opts.On.Statement.Stream); !ok {
+				errs = append(errs, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+			}
+		}
+	}
 	return errors.Join(errs...)
 }
 
@@ -44,6 +54,16 @@ func (opts *CreateOnExternalTableStreamOptions) validate() error {
 	}
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
 		errs = append(errs, errOneOf("CreateOnExternalTableStreamOptions", "IfNotExists", "OrReplace"))
+	}
+	if valueSet(opts.On) {
+		if ok := exactlyOneValueSet(opts.On.At, opts.On.Before); !ok {
+			errs = append(errs, errExactlyOneOf("At", "Before"))
+		}
+		if valueSet(opts.On.Statement) {
+			if ok := exactlyOneValueSet(opts.On.Statement.Timestamp, opts.On.Statement.Offset, opts.On.Statement.Statement, opts.On.Statement.Stream); !ok {
+				errs = append(errs, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+			}
+		}
 	}
 	return errors.Join(errs...)
 }
@@ -78,6 +98,16 @@ func (opts *CreateOnViewStreamOptions) validate() error {
 	}
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
 		errs = append(errs, errOneOf("CreateOnViewStreamOptions", "IfNotExists", "OrReplace"))
+	}
+	if valueSet(opts.On) {
+		if ok := exactlyOneValueSet(opts.On.At, opts.On.Before); !ok {
+			errs = append(errs, errExactlyOneOf("At", "Before"))
+		}
+		if valueSet(opts.On.Statement) {
+			if ok := exactlyOneValueSet(opts.On.Statement.Timestamp, opts.On.Statement.Offset, opts.On.Statement.Statement, opts.On.Statement.Stream); !ok {
+				errs = append(errs, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+			}
+		}
 	}
 	return errors.Join(errs...)
 }

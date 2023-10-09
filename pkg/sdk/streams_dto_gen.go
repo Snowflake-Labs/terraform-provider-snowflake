@@ -29,6 +29,10 @@ type CreateOnTableStreamRequest struct {
 type OnStreamRequest struct {
 	At        *bool
 	Before    *bool
+	Statement OnStreamStatementRequest
+}
+
+type OnStreamStatementRequest struct {
 	Timestamp *string
 	Offset    *string
 	Statement *string
