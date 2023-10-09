@@ -15,6 +15,7 @@ func TestAcc_ExternalTableGrant_onAll(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -46,6 +47,7 @@ func TestAcc_ExternalTableGrant_onFuture(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

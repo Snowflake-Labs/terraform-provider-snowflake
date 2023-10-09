@@ -19,6 +19,7 @@ func TestAcc_ExternalOauthIntegration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -51,6 +52,7 @@ func TestAcc_ExternalOauthIntegrationEmptyComment(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -83,6 +85,7 @@ func TestAcc_ExternalOauthIntegrationLowercaseName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -115,6 +118,7 @@ func TestAcc_ExternalOauthIntegrationCustom(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

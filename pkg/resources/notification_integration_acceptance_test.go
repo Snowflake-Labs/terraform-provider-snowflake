@@ -21,6 +21,7 @@ func TestAcc_NotificationAzureIntegration(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -46,6 +47,7 @@ func TestAcc_NotificationGCPIntegration(t *testing.T) {
 	pubsubName := "projects/project-1234/subscriptions/sub2"
 	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

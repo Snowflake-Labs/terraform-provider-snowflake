@@ -15,6 +15,7 @@ func TestAccProcedureGrant_onAll(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -45,6 +46,7 @@ func TestAccProcedureGrant_onFuture(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

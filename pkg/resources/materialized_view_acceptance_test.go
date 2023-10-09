@@ -23,6 +23,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -52,6 +53,7 @@ func TestAcc_MaterializedView2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

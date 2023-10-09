@@ -21,6 +21,7 @@ func TestAcc_Account_complete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		// this errors with: Error running post-test destroy, there may be dangling resources: exit status 1
 		// unless we change the resource to return nil on destroy then this is unavoidable

@@ -25,6 +25,7 @@ func TestAcc_Procedure(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

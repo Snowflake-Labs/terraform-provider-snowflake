@@ -15,6 +15,7 @@ func TestAcc_PipeGrant(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -54,6 +55,7 @@ func TestAcc_PipeGrantWithDefaultPrivilege(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

@@ -21,6 +21,7 @@ var (
 func TestAcc_DatabaseRole(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
