@@ -59,14 +59,14 @@ func TestAcc_DynamicTables_complete(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.database_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.schema_name"),
 					// unused by Snowflake API at this time (always empty)
-					//resource.TestCheckResourceAttrSet(dataSourceName, "records.0.cluster_by"),
+					// resource.TestCheckResourceAttrSet(dataSourceName, "records.0.cluster_by"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.rows"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.bytes"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.owner"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.target_lag"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.refresh_mode"),
 					// unused by Snowflake API at this time (always empty)
-					//resource.TestCheckResourceAttrSet(dataSourceName, "records.0.refresh_mode_reason"),
+					// resource.TestCheckResourceAttrSet(dataSourceName, "records.0.refresh_mode_reason"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.warehouse"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.comment"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.text"),

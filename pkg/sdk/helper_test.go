@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -347,7 +348,7 @@ func createDatabaseWithOptions(t *testing.T, client *Client, id AccountObjectIde
 	require.NoError(t, err)
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
-		if err == errObjectNotExistOrAuthorized {
+		if errors.Is(err, errObjectNotExistOrAuthorized) {
 			return
 		}
 		require.NoError(t, err)
@@ -369,7 +370,7 @@ func createSchemaWithIdentifier(t *testing.T, client *Client, database *Database
 	require.NoError(t, err)
 	return schema, func() {
 		err := client.Schemas.Drop(ctx, schemaID, nil)
-		if err == errObjectNotExistOrAuthorized {
+		if errors.Is(err, errObjectNotExistOrAuthorized) {
 			return
 		}
 		require.NoError(t, err)

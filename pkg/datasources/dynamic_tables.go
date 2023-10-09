@@ -286,6 +286,8 @@ func ReadDynamicTables(d *schema.ResourceData, meta interface{}) error {
 		record["data_timestamp"] = dt.DataTimestamp.Format("2006-01-02T16:04:05.000 -0700")
 		records = append(records, record)
 	}
-	d.Set("records", records)
+	if err := d.Set("records", records); err != nil {
+		return err
+	}
 	return nil
 }

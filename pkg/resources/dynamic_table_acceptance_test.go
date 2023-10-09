@@ -60,7 +60,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					// computed attributes
 
 					// - not used at this time
-					//resource.TestCheckResourceAttrSet(resourceName, "cluster_by"),
+					//  resource.TestCheckResourceAttrSet(resourceName, "cluster_by"),
 					resource.TestCheckResourceAttrSet(resourceName, "rows"),
 					resource.TestCheckResourceAttrSet(resourceName, "bytes"),
 					resource.TestCheckResourceAttrSet(resourceName, "owner"),

@@ -120,7 +120,7 @@ func (opts *AlterAlertOptions) validate() error {
 	}
 
 	if everyValueNil(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
-		return errors.New("No alter action specified")
+		return errors.New("no alter action specified")
 	}
 	if !exactlyOneValueSet(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
 		return errors.New(`

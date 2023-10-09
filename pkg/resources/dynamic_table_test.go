@@ -15,19 +15,19 @@ func init() {
 		F: func(profile string) error {
 			client, err := sdk.NewDefaultClient()
 			if err != nil {
-				return fmt.Errorf("Error getting default client during sweep: %s", err)
+				return fmt.Errorf("error getting default client during sweep: %w", err)
 			}
 			ctx := context.Background()
 			dynamicTables, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithIn(&sdk.In{
 				Schema: sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName),
 			}))
 			if err != nil {
-				return fmt.Errorf("Error getting dynamic tables during sweep: %s", err)
+				return fmt.Errorf("error getting dynamic tables during sweep: %w", err)
 			}
 			for _, dynamicTable := range dynamicTables {
 				err := client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(dynamicTable.ID()))
 				if err != nil {
-					return fmt.Errorf("Error dropping dynamic table %s during sweep: %s", dynamicTable.ID(), err)
+					return fmt.Errorf("error dropping dynamic table %s during sweep: %w", dynamicTable.ID(), err)
 				}
 			}
 			return nil

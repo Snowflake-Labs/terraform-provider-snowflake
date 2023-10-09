@@ -64,10 +64,10 @@ func (opts *CreateAccountOptions) validate() error {
 		return fmt.Errorf("at least one of AdminPassword or AdminRSAPublicKey must be set")
 	}
 	if opts.Email == "" {
-		return fmt.Errorf("Email is required")
+		return fmt.Errorf("email is required")
 	}
 	if opts.Edition == "" {
-		return fmt.Errorf("Edition is required")
+		return fmt.Errorf("edition is required")
 	}
 	return nil
 }
