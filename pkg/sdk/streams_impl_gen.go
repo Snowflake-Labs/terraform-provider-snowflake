@@ -87,12 +87,14 @@ func (r *CreateOnTableStreamRequest) toOpts() *CreateOnTableStreamOptions {
 	}
 	if r.On != nil {
 		opts.On = &OnStream{
-			At:        r.On.At,
-			Before:    r.On.Before,
-			Timestamp: r.On.Timestamp,
-			Offset:    r.On.Offset,
-			Statement: r.On.Statement,
-			Stream:    r.On.Stream,
+			At:     r.On.At,
+			Before: r.On.Before,
+			Statement: OnStreamStatement{
+				Timestamp: r.On.Timestamp,
+				Offset:    r.On.Offset,
+				Statement: r.On.Statement,
+				Stream:    r.On.Stream,
+			},
 		}
 	}
 	return opts
@@ -111,12 +113,14 @@ func (r *CreateOnExternalTableStreamRequest) toOpts() *CreateOnExternalTableStre
 	}
 	if r.On != nil {
 		opts.On = &OnStream{
-			At:        r.On.At,
-			Before:    r.On.Before,
-			Timestamp: r.On.Timestamp,
-			Offset:    r.On.Offset,
-			Statement: r.On.Statement,
-			Stream:    r.On.Stream,
+			At:     r.On.At,
+			Before: r.On.Before,
+			Statement: OnStreamStatement{
+				Timestamp: r.On.Timestamp,
+				Offset:    r.On.Offset,
+				Statement: r.On.Statement,
+				Stream:    r.On.Stream,
+			},
 		}
 	}
 	return opts
@@ -148,12 +152,14 @@ func (r *CreateOnViewStreamRequest) toOpts() *CreateOnViewStreamOptions {
 	}
 	if r.On != nil {
 		opts.On = &OnStream{
-			At:        r.On.At,
-			Before:    r.On.Before,
-			Timestamp: r.On.Timestamp,
-			Offset:    r.On.Offset,
-			Statement: r.On.Statement,
-			Stream:    r.On.Stream,
+			At:     r.On.At,
+			Before: r.On.Before,
+			Statement: OnStreamStatement{
+				Timestamp: r.On.Timestamp,
+				Offset:    r.On.Offset,
+				Statement: r.On.Statement,
+				Stream:    r.On.Stream,
+			},
 		}
 	}
 	return opts

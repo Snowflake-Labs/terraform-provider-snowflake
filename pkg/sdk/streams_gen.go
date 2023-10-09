@@ -29,18 +29,22 @@ type CreateOnTableStreamOptions struct {
 	CopyGrants      *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
 	onTable         bool                    `ddl:"static" sql:"ON TABLE"`
 	TableId         AccountObjectIdentifier `ddl:"identifier"`
-	On              *OnStream               `ddl:"parameter,parentheses,no_equals"`
+	On              *OnStream               `ddl:"keyword"`
 	AppendOnly      *bool                   `ddl:"parameter" sql:"APPEND_ONLY"`
 	ShowInitialRows *bool                   `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
 	Comment         *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type OnStream struct {
-	At        *bool   `ddl:"keyword" sql:"AT"`
-	Before    *bool   `ddl:"keyword" sql:"BEFORE"`
-	Timestamp *string `ddl:"parameter,arrow_equals" sql:"TIMESTAMP"`
-	Offset    *string `ddl:"parameter,arrow_equals" sql:"OFFSET"`
-	Statement *string `ddl:"parameter,arrow_equals" sql:"STATEMENT"`
+	At        *bool             `ddl:"keyword" sql:"AT"`
+	Before    *bool             `ddl:"keyword" sql:"BEFORE"`
+	Statement OnStreamStatement `ddl:"list,parentheses"`
+}
+
+type OnStreamStatement struct {
+	Timestamp *string `ddl:"parameter,arrow_equals,double_quotes" sql:"TIMESTAMP"`
+	Offset    *string `ddl:"parameter,arrow_equals,double_quotes" sql:"OFFSET"`
+	Statement *string `ddl:"parameter,arrow_equals,double_quotes" sql:"STATEMENT"`
 	Stream    *string `ddl:"parameter,single_quotes,arrow_equals" sql:"STREAM"`
 }
 
@@ -54,7 +58,7 @@ type CreateOnExternalTableStreamOptions struct {
 	CopyGrants      *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
 	onExternalTable bool                    `ddl:"static" sql:"ON EXTERNAL TABLE"`
 	ExternalTableId AccountObjectIdentifier `ddl:"identifier"`
-	On              *OnStream               `ddl:"parameter,parentheses,no_equals"`
+	On              *OnStream               `ddl:"keyword"`
 	InsertOnly      *bool                   `ddl:"parameter" sql:"INSERT_ONLY"`
 	Comment         *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }

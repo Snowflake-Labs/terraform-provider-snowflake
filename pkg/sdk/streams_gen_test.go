@@ -51,13 +51,15 @@ func TestStreams_CreateOnTable(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.On = &OnStream{
-			At:     Bool(true),
-			Stream: String("123"),
+			At: Bool(true),
+			Statement: OnStreamStatement{
+				Stream: String("123"),
+			},
 		}
 		opts.AppendOnly = Bool(true)
 		opts.ShowInitialRows = Bool(true)
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE STREAM %s ON TABLE %s AT (STREAM => '123') APPEND_ONLY = TRUE SHOW_INITIAL_ROWS = TRUE COMMENT = 'some comment'", id.FullyQualifiedName(), tableId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE STREAM %s ON TABLE %s AT (STREAM => '123') APPEND_ONLY = true SHOW_INITIAL_ROWS = true COMMENT = 'some comment'", id.FullyQualifiedName(), tableId.FullyQualifiedName())
 	})
 }
 
@@ -107,12 +109,14 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 		opts.IfNotExists = Bool(true)
 		opts.CopyGrants = Bool(true)
 		opts.On = &OnStream{
-			At:        Bool(true),
-			Statement: String("123"),
+			At: Bool(true),
+			Statement: OnStreamStatement{
+				Statement: String("123"),
+			},
 		}
 		opts.InsertOnly = Bool(true)
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE STREAM IF NOT EXISTS %s ON EXTERNAL TABLE %s AT (STATEMENT => "123") INSERT_ONLY = TRUE COMMENT = 'some comment'`, id.FullyQualifiedName(), externalTableId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE STREAM IF NOT EXISTS %s COPY GRANTS ON EXTERNAL TABLE %s AT (STATEMENT => "123") INSERT_ONLY = true COMMENT = 'some comment'`, id.FullyQualifiedName(), externalTableId.FullyQualifiedName())
 	})
 }
 
@@ -162,7 +166,7 @@ func TestStreams_CreateOnStage(t *testing.T) {
 		opts.IfNotExists = Bool(true)
 		opts.CopyGrants = Bool(true)
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE STREAM IF NOT EXISTS %s ON STAGE %s AT COMMENT = 'some comment'`, id.FullyQualifiedName(), stageId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE STREAM IF NOT EXISTS %s COPY GRANTS ON STAGE %s COMMENT = 'some comment'`, id.FullyQualifiedName(), stageId.FullyQualifiedName())
 	})
 }
 
@@ -210,14 +214,17 @@ func TestStreams_CreateOnView(t *testing.T) {
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
+		opts.CopyGrants = Bool(true)
 		opts.On = &OnStream{
-			At:     Bool(true),
-			Stream: String("123"),
+			Before: Bool(true),
+			Statement: OnStreamStatement{
+				Stream: String("123"),
+			},
 		}
 		opts.AppendOnly = Bool(true)
 		opts.ShowInitialRows = Bool(true)
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE STREAM %s ON VIEW %s BEFORE (TIMESTAMP => "") APPEND_ONLY = TRUE SHOW_INITIAL_ROWS = TRUE COMMENT = 'some comment'`, id.FullyQualifiedName(), viewId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE STREAM %s COPY GRANTS ON VIEW %s BEFORE (STREAM => '123') APPEND_ONLY = true SHOW_INITIAL_ROWS = true COMMENT = 'some comment'`, id.FullyQualifiedName(), viewId.FullyQualifiedName())
 	})
 }
 

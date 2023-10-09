@@ -9,10 +9,18 @@ var (
 		// TODO: AT / BEFORE enum
 		OptionalSQL("AT").
 		OptionalSQL("BEFORE").
-		OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals()).
-		OptionalTextAssignment("OFFSET", g.ParameterOptions().ArrowEquals()).
-		OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals()).
-		OptionalTextAssignment("STREAM", g.ParameterOptions().ArrowEquals().SingleQuotes())
+		QueryStructField(
+			// TODO: Rename
+			"Statement",
+			g.QueryStruct("OnStreamStatement").
+				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals().DoubleQuotes()).
+				OptionalTextAssignment("OFFSET", g.ParameterOptions().ArrowEquals().DoubleQuotes()).
+				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals().DoubleQuotes()).
+				OptionalTextAssignment("STREAM", g.ParameterOptions().ArrowEquals().SingleQuotes()).
+				WithValidation(g.ExactlyOneValueSet, "Timestamp", "Offset", "Statement", "Stream"),
+			g.ListOptions().Parentheses(),
+		).
+		WithValidation(g.ExactlyOneValueSet, "At", "Before")
 
 	showStreamDbRowDef = g.DbStruct("showStreamsDbRow").
 				Field("created_on", "time.Time").
@@ -65,7 +73,7 @@ var (
 				OptionalCopyGrants().
 				SQL("ON TABLE").
 				Identifier("TableId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
-				OptionalQueryStructField("On", onStreamDef, g.ListOptions().Parentheses()).
+				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
 				OptionalBooleanAssignment("APPEND_ONLY", nil).
 				OptionalBooleanAssignment("SHOW_INITIAL_ROWS", nil).
 				OptionalComment().
@@ -85,7 +93,7 @@ var (
 				OptionalCopyGrants().
 				SQL("ON EXTERNAL TABLE").
 				Identifier("ExternalTableId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
-				OptionalQueryStructField("On", onStreamDef, g.ListOptions().Parentheses()).
+				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
 				OptionalBooleanAssignment("INSERT_ONLY", nil).
 				OptionalComment().
 				WithValidation(g.ValidIdentifier, "name").
@@ -121,7 +129,7 @@ var (
 				OptionalCopyGrants().
 				SQL("ON VIEW").
 				Identifier("ViewId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
-				OptionalQueryStructField("On", onStreamDef, g.ListOptions().Parentheses()).
+				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
 				OptionalBooleanAssignment("APPEND_ONLY", nil).
 				OptionalBooleanAssignment("SHOW_INITIAL_ROWS", nil).
 				OptionalComment().
