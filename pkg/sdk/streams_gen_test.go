@@ -31,22 +31,6 @@ func TestStreams_CreateOnTable(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
-	// TODO: This doesn't work, because of implicit check in valueSet (uncomment if different valueSet is implemented)
-	//t.Run("validation: valid identifier for [opts.CloneStream] if set", func(t *testing.T) {
-	//	opts := defaultOpts()
-	//	invalidId := NewAccountObjectIdentifier("")
-	//	opts.CloneStream = &invalidId
-	//	assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	//})
-
-	t.Run("validation: conflicting fields for [opts.IfNotExists opts.CloneStream]", func(t *testing.T) {
-		opts := defaultOpts()
-		streamId := randomAccountObjectIdentifier(t)
-		opts.IfNotExists = Bool(true)
-		opts.CloneStream = &streamId
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnTableStreamOptions", "IfNotExists", "CloneStream"))
-	})
-
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
@@ -100,21 +84,6 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 		opts := defaultOpts()
 		opts.ExternalTableId = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	})
-
-	//t.Run("validation: valid identifier for [opts.CloneStream] if set", func(t *testing.T) {
-	//	opts := defaultOpts()
-	//	invalidId := NewAccountObjectIdentifier("")
-	//	opts.CloneStream = &invalidId
-	//	assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	//})
-
-	t.Run("validation: conflicting fields for [opts.IfNotExists opts.CloneStream]", func(t *testing.T) {
-		opts := defaultOpts()
-		streamId := randomAccountObjectIdentifier(t)
-		opts.IfNotExists = Bool(true)
-		opts.CloneStream = &streamId
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnExternalTableStreamOptions", "IfNotExists", "CloneStream"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
@@ -172,21 +141,6 @@ func TestStreams_CreateOnStage(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
-	//t.Run("validation: valid identifier for [opts.CloneStream] if set", func(t *testing.T) {
-	//	opts := defaultOpts()
-	//	invalidId := NewAccountObjectIdentifier("")
-	//	opts.CloneStream = &invalidId
-	//	assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	//})
-
-	t.Run("validation: conflicting fields for [opts.IfNotExists opts.CloneStream]", func(t *testing.T) {
-		opts := defaultOpts()
-		streamId := randomAccountObjectIdentifier(t)
-		opts.IfNotExists = Bool(true)
-		opts.CloneStream = &streamId
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnStageStreamOptions", "IfNotExists", "CloneStream"))
-	})
-
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
@@ -235,21 +189,6 @@ func TestStreams_CreateOnView(t *testing.T) {
 		opts := defaultOpts()
 		opts.ViewId = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	})
-
-	//t.Run("validation: valid identifier for [opts.CloneStream] if set", func(t *testing.T) {
-	//	opts := defaultOpts()
-	//	invalidId := NewAccountObjectIdentifier("")
-	//	opts.CloneStream = &invalidId
-	//	assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
-	//})
-
-	t.Run("validation: conflicting fields for [opts.IfNotExists opts.CloneStream]", func(t *testing.T) {
-		opts := defaultOpts()
-		streamId := randomAccountObjectIdentifier(t)
-		opts.IfNotExists = Bool(true)
-		opts.CloneStream = &streamId
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnExternalTableStreamOptions", "IfNotExists", "CloneStream"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {

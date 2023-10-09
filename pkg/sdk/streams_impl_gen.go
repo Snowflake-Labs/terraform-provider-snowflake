@@ -28,6 +28,11 @@ func (v *streams) CreateOnView(ctx context.Context, request *CreateOnViewStreamR
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *streams) Copy(ctx context.Context, request *CopyStreamRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *streams) Alter(ctx context.Context, request *AlterStreamRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
@@ -73,7 +78,6 @@ func (r *CreateOnTableStreamRequest) toOpts() *CreateOnTableStreamOptions {
 		OrReplace:   r.OrReplace,
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
-		CloneStream: r.CloneStream,
 		CopyGrants:  r.CopyGrants,
 		TableId:     r.TableId,
 
@@ -99,7 +103,6 @@ func (r *CreateOnExternalTableStreamRequest) toOpts() *CreateOnExternalTableStre
 		OrReplace:       r.OrReplace,
 		IfNotExists:     r.IfNotExists,
 		name:            r.name,
-		CloneStream:     r.CloneStream,
 		CopyGrants:      r.CopyGrants,
 		ExternalTableId: r.ExternalTableId,
 
@@ -124,7 +127,6 @@ func (r *CreateOnStageStreamRequest) toOpts() *CreateOnStageStreamOptions {
 		OrReplace:   r.OrReplace,
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
-		CloneStream: r.CloneStream,
 		CopyGrants:  r.CopyGrants,
 		StageId:     r.StageId,
 		Comment:     r.Comment,
@@ -137,7 +139,6 @@ func (r *CreateOnViewStreamRequest) toOpts() *CreateOnViewStreamOptions {
 		OrReplace:   r.OrReplace,
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
-		CloneStream: r.CloneStream,
 		CopyGrants:  r.CopyGrants,
 		ViewId:      r.ViewId,
 
@@ -154,6 +155,16 @@ func (r *CreateOnViewStreamRequest) toOpts() *CreateOnViewStreamOptions {
 			Statement: r.On.Statement,
 			Stream:    r.On.Stream,
 		}
+	}
+	return opts
+}
+
+func (r *CopyStreamRequest) toOpts() *CopyStreamOptions {
+	opts := &CopyStreamOptions{
+		OrReplace:    r.OrReplace,
+		name:         r.name,
+		sourceStream: r.sourceStream,
+		CopyGrants:   r.CopyGrants,
 	}
 	return opts
 }

@@ -7,6 +7,7 @@ var (
 	_ validatable = new(CreateOnExternalTableStreamOptions)
 	_ validatable = new(CreateOnStageStreamOptions)
 	_ validatable = new(CreateOnViewStreamOptions)
+	_ validatable = new(CopyStreamOptions)
 	_ validatable = new(AlterStreamOptions)
 	_ validatable = new(DropStreamOptions)
 	_ validatable = new(ShowStreamOptions)
@@ -23,12 +24,6 @@ func (opts *CreateOnTableStreamOptions) validate() error {
 	}
 	if !validObjectidentifier(opts.TableId) {
 		errs = append(errs, errInvalidObjectIdentifier)
-	}
-	if valueSet(opts.CloneStream) && !validObjectidentifier(opts.CloneStream) {
-		errs = append(errs, errInvalidObjectIdentifier)
-	}
-	if everyValueSet(opts.IfNotExists, opts.CloneStream) {
-		errs = append(errs, errOneOf("CreateOnTableStreamOptions", "IfNotExists", "CloneStream"))
 	}
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
 		errs = append(errs, errOneOf("CreateOnTableStreamOptions", "IfNotExists", "OrReplace"))
@@ -47,12 +42,6 @@ func (opts *CreateOnExternalTableStreamOptions) validate() error {
 	if !validObjectidentifier(opts.ExternalTableId) {
 		errs = append(errs, errInvalidObjectIdentifier)
 	}
-	if valueSet(opts.CloneStream) && !validObjectidentifier(opts.CloneStream) {
-		errs = append(errs, errInvalidObjectIdentifier)
-	}
-	if everyValueSet(opts.IfNotExists, opts.CloneStream) {
-		errs = append(errs, errOneOf("CreateOnExternalTableStreamOptions", "IfNotExists", "CloneStream"))
-	}
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
 		errs = append(errs, errOneOf("CreateOnExternalTableStreamOptions", "IfNotExists", "OrReplace"))
 	}
@@ -69,12 +58,6 @@ func (opts *CreateOnStageStreamOptions) validate() error {
 	}
 	if !validObjectidentifier(opts.StageId) {
 		errs = append(errs, errInvalidObjectIdentifier)
-	}
-	if valueSet(opts.CloneStream) && !validObjectidentifier(opts.CloneStream) {
-		errs = append(errs, errInvalidObjectIdentifier)
-	}
-	if everyValueSet(opts.IfNotExists, opts.CloneStream) {
-		errs = append(errs, errOneOf("CreateOnStageStreamOptions", "IfNotExists", "CloneStream"))
 	}
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
 		errs = append(errs, errOneOf("CreateOnStageStreamOptions", "IfNotExists", "OrReplace"))
@@ -93,14 +76,19 @@ func (opts *CreateOnViewStreamOptions) validate() error {
 	if !validObjectidentifier(opts.ViewId) {
 		errs = append(errs, errInvalidObjectIdentifier)
 	}
-	if valueSet(opts.CloneStream) && !validObjectidentifier(opts.CloneStream) {
-		errs = append(errs, errInvalidObjectIdentifier)
-	}
-	if everyValueSet(opts.IfNotExists, opts.CloneStream) {
-		errs = append(errs, errOneOf("CreateOnViewStreamOptions", "IfNotExists", "CloneStream"))
-	}
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
 		errs = append(errs, errOneOf("CreateOnViewStreamOptions", "IfNotExists", "OrReplace"))
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *CopyStreamOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }

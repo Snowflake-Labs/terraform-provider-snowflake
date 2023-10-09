@@ -7,6 +7,7 @@ var (
 	_ optionsProvider[CreateOnExternalTableStreamOptions] = new(CreateOnExternalTableStreamRequest)
 	_ optionsProvider[CreateOnStageStreamOptions]         = new(CreateOnStageStreamRequest)
 	_ optionsProvider[CreateOnViewStreamOptions]          = new(CreateOnViewStreamRequest)
+	_ optionsProvider[CopyStreamOptions]                  = new(CopyStreamRequest)
 	_ optionsProvider[AlterStreamOptions]                 = new(AlterStreamRequest)
 	_ optionsProvider[DropStreamOptions]                  = new(DropStreamRequest)
 	_ optionsProvider[ShowStreamOptions]                  = new(ShowStreamRequest)
@@ -17,7 +18,6 @@ type CreateOnTableStreamRequest struct {
 	OrReplace       *bool
 	IfNotExists     *bool
 	name            AccountObjectIdentifier // required
-	CloneStream     *AccountObjectIdentifier
 	CopyGrants      *bool
 	TableId         AccountObjectIdentifier // required
 	On              *OnStreamRequest
@@ -39,7 +39,6 @@ type CreateOnExternalTableStreamRequest struct {
 	OrReplace       *bool
 	IfNotExists     *bool
 	name            AccountObjectIdentifier // required
-	CloneStream     *AccountObjectIdentifier
 	CopyGrants      *bool
 	ExternalTableId AccountObjectIdentifier // required
 	On              *OnStreamRequest
@@ -51,7 +50,6 @@ type CreateOnStageStreamRequest struct {
 	OrReplace   *bool
 	IfNotExists *bool
 	name        AccountObjectIdentifier // required
-	CloneStream *AccountObjectIdentifier
 	CopyGrants  *bool
 	StageId     AccountObjectIdentifier // required
 	Comment     *string
@@ -61,13 +59,19 @@ type CreateOnViewStreamRequest struct {
 	OrReplace       *bool
 	IfNotExists     *bool
 	name            AccountObjectIdentifier // required
-	CloneStream     *AccountObjectIdentifier
 	CopyGrants      *bool
 	ViewId          AccountObjectIdentifier // required
 	On              *OnStreamRequest
 	AppendOnly      *bool
 	ShowInitialRows *bool
 	Comment         *string
+}
+
+type CopyStreamRequest struct {
+	OrReplace    *bool
+	name         AccountObjectIdentifier  // required
+	sourceStream *AccountObjectIdentifier // required
+	CopyGrants   *bool
 }
 
 type AlterStreamRequest struct {

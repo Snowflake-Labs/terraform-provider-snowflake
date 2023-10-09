@@ -24,11 +24,6 @@ func (s *CreateOnTableStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateO
 	return s
 }
 
-func (s *CreateOnTableStreamRequest) WithCloneStream(CloneStream *AccountObjectIdentifier) *CreateOnTableStreamRequest {
-	s.CloneStream = CloneStream
-	return s
-}
-
 func (s *CreateOnTableStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnTableStreamRequest {
 	s.CopyGrants = CopyGrants
 	return s
@@ -108,11 +103,6 @@ func (s *CreateOnExternalTableStreamRequest) WithIfNotExists(IfNotExists *bool) 
 	return s
 }
 
-func (s *CreateOnExternalTableStreamRequest) WithCloneStream(CloneStream *AccountObjectIdentifier) *CreateOnExternalTableStreamRequest {
-	s.CloneStream = CloneStream
-	return s
-}
-
 func (s *CreateOnExternalTableStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnExternalTableStreamRequest {
 	s.CopyGrants = CopyGrants
 	return s
@@ -153,11 +143,6 @@ func (s *CreateOnStageStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateO
 	return s
 }
 
-func (s *CreateOnStageStreamRequest) WithCloneStream(CloneStream *AccountObjectIdentifier) *CreateOnStageStreamRequest {
-	s.CloneStream = CloneStream
-	return s
-}
-
 func (s *CreateOnStageStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnStageStreamRequest {
 	s.CopyGrants = CopyGrants
 	return s
@@ -188,11 +173,6 @@ func (s *CreateOnViewStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateOn
 	return s
 }
 
-func (s *CreateOnViewStreamRequest) WithCloneStream(CloneStream *AccountObjectIdentifier) *CreateOnViewStreamRequest {
-	s.CloneStream = CloneStream
-	return s
-}
-
 func (s *CreateOnViewStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnViewStreamRequest {
 	s.CopyGrants = CopyGrants
 	return s
@@ -215,6 +195,26 @@ func (s *CreateOnViewStreamRequest) WithShowInitialRows(ShowInitialRows *bool) *
 
 func (s *CreateOnViewStreamRequest) WithComment(Comment *string) *CreateOnViewStreamRequest {
 	s.Comment = Comment
+	return s
+}
+
+func NewCopyStreamRequest(
+	name AccountObjectIdentifier,
+	sourceStream *AccountObjectIdentifier,
+) *CopyStreamRequest {
+	s := CopyStreamRequest{}
+	s.name = name
+	s.sourceStream = sourceStream
+	return &s
+}
+
+func (s *CopyStreamRequest) WithOrReplace(OrReplace *bool) *CopyStreamRequest {
+	s.OrReplace = OrReplace
+	return s
+}
+
+func (s *CopyStreamRequest) WithCopyGrants(CopyGrants *bool) *CopyStreamRequest {
+	s.CopyGrants = CopyGrants
 	return s
 }
 

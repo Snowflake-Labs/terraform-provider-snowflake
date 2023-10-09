@@ -21,6 +21,10 @@ func TestInt_Streams(t *testing.T) {
 		// TODO: fill me
 	})
 
+	t.Run("Copy", func(t *testing.T) {
+		// TODO: fill me
+	})
+
 	t.Run("Alter", func(t *testing.T) {
 		// TODO: fill me
 	})

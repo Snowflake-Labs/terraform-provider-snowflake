@@ -62,7 +62,6 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
-				OptionalIdentifier("CloneStream", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("CLONE")).
 				OptionalCopyGrants().
 				SQL("ON TABLE").
 				Identifier("TableId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -72,8 +71,6 @@ var (
 				OptionalComment().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ValidIdentifier, "TableId").
-				WithValidation(g.ValidIdentifierIfSet, "CloneStream").
-				WithValidation(g.ConflictingFields, "IfNotExists", "CloneStream").
 				WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace"),
 		).
 		CustomOperation(
@@ -85,7 +82,6 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
-				OptionalIdentifier("CloneStream", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("CLONE")).
 				OptionalCopyGrants().
 				SQL("ON EXTERNAL TABLE").
 				Identifier("ExternalTableId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -94,8 +90,6 @@ var (
 				OptionalComment().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ValidIdentifier, "ExternalTableId").
-				WithValidation(g.ValidIdentifierIfSet, "CloneStream").
-				WithValidation(g.ConflictingFields, "IfNotExists", "CloneStream").
 				WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace"),
 		).
 		CustomOperation(
@@ -107,15 +101,12 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
-				OptionalIdentifier("CloneStream", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("CLONE")).
 				OptionalCopyGrants().
 				SQL("ON STAGE").
 				Identifier("StageId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
 				OptionalComment().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ValidIdentifier, "StageId").
-				WithValidation(g.ValidIdentifierIfSet, "CloneStream").
-				WithValidation(g.ConflictingFields, "IfNotExists", "CloneStream").
 				WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace"),
 		).
 		CustomOperation(
@@ -127,19 +118,28 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
-				OptionalIdentifier("CloneStream", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("CLONE")).
 				OptionalCopyGrants().
 				SQL("ON VIEW").
 				Identifier("ViewId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
-				OptionalQueryStructField("On", onStreamDef, g.ParameterOptions().NoEquals().Parentheses()).
+				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
 				OptionalBooleanAssignment("APPEND_ONLY", nil).
 				OptionalBooleanAssignment("SHOW_INITIAL_ROWS", nil).
 				OptionalComment().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ValidIdentifier, "ViewId").
-				WithValidation(g.ValidIdentifierIfSet, "CloneStream").
-				WithValidation(g.ConflictingFields, "IfNotExists", "CloneStream").
 				WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace"),
+		).
+		CustomOperation(
+			"Copy",
+			"https://docs.snowflake.com/en/sql-reference/sql/create-stream#variant-syntax",
+			g.QueryStruct("CloneStream").
+				Create().
+				OrReplace().
+				SQL("STREAM").
+				Name().
+				OptionalIdentifier("sourceStream", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("CLONE").Required()).
+				OptionalCopyGrants().
+				WithValidation(g.ValidIdentifier, "name"),
 		).
 		AlterOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/alter-stream",

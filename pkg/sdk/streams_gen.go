@@ -11,6 +11,7 @@ type Streams interface {
 	CreateOnExternalTable(ctx context.Context, request *CreateOnExternalTableStreamRequest) error
 	CreateOnStage(ctx context.Context, request *CreateOnStageStreamRequest) error
 	CreateOnView(ctx context.Context, request *CreateOnViewStreamRequest) error
+	Copy(ctx context.Context, request *CopyStreamRequest) error
 	Alter(ctx context.Context, request *AlterStreamRequest) error
 	Drop(ctx context.Context, request *DropStreamRequest) error
 	Show(ctx context.Context, request *ShowStreamRequest) ([]Stream, error)
@@ -20,19 +21,18 @@ type Streams interface {
 
 // CreateOnTableStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream.
 type CreateOnTableStreamOptions struct {
-	create          bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace       *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	stream          bool                     `ddl:"static" sql:"STREAM"`
-	IfNotExists     *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name            AccountObjectIdentifier  `ddl:"identifier"`
-	CloneStream     *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
-	CopyGrants      *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
-	onTable         bool                     `ddl:"static" sql:"ON TABLE"`
-	TableId         AccountObjectIdentifier  `ddl:"identifier"`
-	On              *OnStream                `ddl:"keyword"`
-	AppendOnly      *bool                    `ddl:"parameter" sql:"APPEND_ONLY"`
-	ShowInitialRows *bool                    `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
-	Comment         *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create          bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	stream          bool                    `ddl:"static" sql:"STREAM"`
+	IfNotExists     *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name            AccountObjectIdentifier `ddl:"identifier"`
+	CopyGrants      *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
+	onTable         bool                    `ddl:"static" sql:"ON TABLE"`
+	TableId         AccountObjectIdentifier `ddl:"identifier"`
+	On              *OnStream               `ddl:"parameter,parentheses,no_equals"`
+	AppendOnly      *bool                   `ddl:"parameter" sql:"APPEND_ONLY"`
+	ShowInitialRows *bool                   `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
+	Comment         *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type OnStream struct {
@@ -46,49 +46,56 @@ type OnStream struct {
 
 // CreateOnExternalTableStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream.
 type CreateOnExternalTableStreamOptions struct {
-	create          bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace       *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	stream          bool                     `ddl:"static" sql:"STREAM"`
-	IfNotExists     *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name            AccountObjectIdentifier  `ddl:"identifier"`
-	CloneStream     *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
-	CopyGrants      *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
-	onExternalTable bool                     `ddl:"static" sql:"ON EXTERNAL TABLE"`
-	ExternalTableId AccountObjectIdentifier  `ddl:"identifier"`
-	On              *OnStream                `ddl:"keyword"`
-	InsertOnly      *bool                    `ddl:"parameter" sql:"INSERT_ONLY"`
-	Comment         *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create          bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	stream          bool                    `ddl:"static" sql:"STREAM"`
+	IfNotExists     *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name            AccountObjectIdentifier `ddl:"identifier"`
+	CopyGrants      *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
+	onExternalTable bool                    `ddl:"static" sql:"ON EXTERNAL TABLE"`
+	ExternalTableId AccountObjectIdentifier `ddl:"identifier"`
+	On              *OnStream               `ddl:"parameter,parentheses,no_equals"`
+	InsertOnly      *bool                   `ddl:"parameter" sql:"INSERT_ONLY"`
+	Comment         *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // CreateOnStageStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream.
 type CreateOnStageStreamOptions struct {
-	create      bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace   *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	stream      bool                     `ddl:"static" sql:"STREAM"`
-	IfNotExists *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name        AccountObjectIdentifier  `ddl:"identifier"`
-	CloneStream *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
-	CopyGrants  *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
-	onStage     bool                     `ddl:"static" sql:"ON STAGE"`
-	StageId     AccountObjectIdentifier  `ddl:"identifier"`
-	Comment     *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create      bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace   *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	stream      bool                    `ddl:"static" sql:"STREAM"`
+	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name        AccountObjectIdentifier `ddl:"identifier"`
+	CopyGrants  *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
+	onStage     bool                    `ddl:"static" sql:"ON STAGE"`
+	StageId     AccountObjectIdentifier `ddl:"identifier"`
+	Comment     *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // CreateOnViewStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream.
 type CreateOnViewStreamOptions struct {
-	create          bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace       *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	stream          bool                     `ddl:"static" sql:"STREAM"`
-	IfNotExists     *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name            AccountObjectIdentifier  `ddl:"identifier"`
-	CloneStream     *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
-	CopyGrants      *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
-	onView          bool                     `ddl:"static" sql:"ON VIEW"`
-	ViewId          AccountObjectIdentifier  `ddl:"identifier"`
-	On              *OnStream                `ddl:"keyword"`
-	AppendOnly      *bool                    `ddl:"parameter" sql:"APPEND_ONLY"`
-	ShowInitialRows *bool                    `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
-	Comment         *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create          bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	stream          bool                    `ddl:"static" sql:"STREAM"`
+	IfNotExists     *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name            AccountObjectIdentifier `ddl:"identifier"`
+	CopyGrants      *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
+	onView          bool                    `ddl:"static" sql:"ON VIEW"`
+	ViewId          AccountObjectIdentifier `ddl:"identifier"`
+	On              *OnStream               `ddl:"keyword"`
+	AppendOnly      *bool                   `ddl:"parameter" sql:"APPEND_ONLY"`
+	ShowInitialRows *bool                   `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
+	Comment         *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+// CopyStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream#variant-syntax.
+type CopyStreamOptions struct {
+	create       bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace    *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	stream       bool                     `ddl:"static" sql:"STREAM"`
+	name         AccountObjectIdentifier  `ddl:"identifier"`
+	sourceStream *AccountObjectIdentifier `ddl:"identifier" sql:"CLONE"`
+	CopyGrants   *bool                    `ddl:"keyword" sql:"COPY GRANTS"`
 }
 
 // AlterStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-stream.
