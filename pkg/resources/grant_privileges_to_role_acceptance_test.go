@@ -280,7 +280,6 @@ func grantPrivilegesToRole_onSchemaConfigAllPrivileges(name string) string {
 	}
 
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		all_privileges = true
 		on_schema {
@@ -418,7 +417,6 @@ func grantPrivilegesToRole_onSchema_futureSchemasInDatabaseConfig(name string, p
 	}
 
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema {
@@ -551,7 +549,6 @@ func grantPrivilegesToRole_onSchemaObject_allInSchema(name string, privileges []
 	}
 
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema_object {
@@ -616,7 +613,6 @@ func grantPrivilegesToRole_onSchemaObject_allInDatabase(name string, privileges 
 	}
 
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema_object {
@@ -681,7 +677,6 @@ func grantPrivilegesToRole_onSchemaObject_futureInSchema(name string, privileges
 	}
 
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema_object {
@@ -746,7 +741,6 @@ func grantPrivilegesToRole_onSchemaObject_futureInDatabase(name string, objectTy
 	}
 
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema_object {
