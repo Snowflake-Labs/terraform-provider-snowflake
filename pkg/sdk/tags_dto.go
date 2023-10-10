@@ -11,11 +11,34 @@ type CreateTagRequest struct {
 	orReplace   bool
 	ifNotExists bool
 
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
 
 	// One of
 	comment       *string
 	allowedValues *AllowedValues
+}
+
+type AlterTagRequest struct {
+	name SchemaObjectIdentifier // required
+
+	// One of
+	add    *TagAdd
+	drop   *TagDrop
+	set    *TagSet
+	unset  *TagUnset
+	rename *TagRename
+}
+
+type TagSetRequest struct {
+	maskingPolicies []string
+	force           *bool
+	comment         *string
+}
+
+type TagUnsetRequest struct {
+	maskingPolicies []string
+	allowedValues   *bool
+	comment         *bool
 }
 
 type ShowTagRequest struct {
@@ -24,11 +47,11 @@ type ShowTagRequest struct {
 }
 
 type DropTagRequest struct {
-	ifNotExists bool
+	ifExists bool
 
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
 }
 
 type UndropTagRequest struct {
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
 }

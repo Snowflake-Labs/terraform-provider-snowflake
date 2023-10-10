@@ -395,17 +395,17 @@ func createTagWithOptions(t *testing.T, client *Client, database *Database, sche
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	ctx := context.Background()
-	
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
+	tagID := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+	req := NewCreateTagRequest(tagID)
+	err := client.Tags.Create(ctx, req)
 	require.NoError(t, err)
-	return &Tag{
-			Name:         name,
-			DatabaseName: database.Name,
-			SchemaName:   schema.Name,
-		}, func() {
-			_, err := client.exec(ctx, fmt.Sprintf("DROP TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
-			require.NoError(t, err)
-		}
+	tag, err := client.Tags.ShowByID(ctx, tagID)
+	require.NoError(t, err)
+	return tag, func() {
+		req := NewDropTagRequest(tagID).WithIfNotExists(true)
+		err := client.Tags.Drop(ctx, req)
+		require.NoError(t, err)
+	}
 }
 
 func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, options *CreatePasswordPolicyOptions) (*PasswordPolicy, func()) {

@@ -9,21 +9,22 @@ import (
 
 type Tags interface {
 	Create(ctx context.Context, request *CreateTagRequest) error
+	Alter(ctx context.Context, request *AlterTagRequest) error
 	Show(ctx context.Context, opts *ShowTagRequest) ([]Tag, error)
-	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Tag, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error)
 	Drop(ctx context.Context, request *DropTagRequest) error
 	Undrop(ctx context.Context, request *UndropTagRequest) error
 }
 
 // createTagOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-tag
 type createTagOptions struct {
-	create        bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace     *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	tag           string                  `ddl:"static" sql:"TAG"`
-	IfNotExists   *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name          AccountObjectIdentifier `ddl:"identifier"`
-	Comment       *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	AllowedValues *AllowedValues          `ddl:"keyword" sql:"ALLOWED_VALUES"`
+	create        bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace     *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	tag           string                 `ddl:"static" sql:"TAG"`
+	IfNotExists   *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name          SchemaObjectIdentifier `ddl:"identifier"`
+	Comment       *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	AllowedValues *AllowedValues         `ddl:"keyword" sql:"ALLOWED_VALUES"`
 }
 
 type AllowedValues struct {
@@ -79,13 +80,15 @@ func (tr tagRow) convert() *Tag {
 		OwnerRole:    tr.OwnerRoleType,
 	}
 	if tr.AllowedValues.Valid {
-		s := strings.Trim(tr.AllowedValues.String, "[]") // remove brackets
-		items := strings.Split(s, ",")
-		values := make([]string, len(items))
-		for i, item := range items {
-			values[i] = strings.Trim(item, `"`) // remove quotes
+		// remove brackets
+		if s := strings.Trim(tr.AllowedValues.String, "[]"); s != "" {
+			items := strings.Split(s, ",")
+			values := make([]string, len(items))
+			for i, item := range items {
+				values[i] = strings.Trim(item, `"`) // remove quotes
+			}
+			t.AllowedValues = values
 		}
-		t.AllowedValues = values
 	}
 	return t
 }
@@ -96,11 +99,11 @@ type TagSetMaskingPolicies struct {
 }
 
 type TagUnsetMaskingPolicies struct {
-	MaskingPolicies []TagMaskingPolicy `ddl:"list,comma"`
+	MaskingPolicies []TagMaskingPolicy `ddl:"list,comma,single_quotes"`
 }
 
 type TagMaskingPolicy struct {
-	Name string `ddl:"parameter,no_equals" sql:"MASKING POLICY"`
+	Name string `ddl:"parameter,no_equals,double_quotes" sql:"MASKING POLICY"`
 }
 
 type TagSet struct {
@@ -122,31 +125,35 @@ type TagDrop struct {
 	AllowedValues *AllowedValues `ddl:"keyword" sql:"ALLOWED_VALUES"`
 }
 
+type TagRename struct {
+	Name SchemaObjectIdentifier `ddl:"identifier"`
+}
+
 // alterTagOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-tag
 type alterTagOptions struct {
-	alter bool                    `ddl:"static" sql:"ALTER"`
-	tag   string                  `ddl:"static" sql:"TAG"`
-	name  AccountObjectIdentifier `ddl:"identifier"`
+	alter bool                   `ddl:"static" sql:"ALTER"`
+	tag   string                 `ddl:"static" sql:"TAG"`
+	name  SchemaObjectIdentifier `ddl:"identifier"`
 
 	// One of
-	Add      *TagAdd   `ddl:"keyword" sql:"ADD"`
-	Drop     *TagDrop  `ddl:"keyword" sql:"DROP"`
-	Set      *TagSet   `ddl:"keyword" sql:"SET"`
-	Unset    *TagUnset `ddl:"keyword" sql:"UNSET"`
-	RenameTo *string   `ddl:"parameter,no_equals" sql:"RENAME TO"`
+	Add    *TagAdd    `ddl:"keyword" sql:"ADD"`
+	Drop   *TagDrop   `ddl:"keyword" sql:"DROP"`
+	Set    *TagSet    `ddl:"keyword" sql:"SET"`
+	Unset  *TagUnset  `ddl:"keyword" sql:"UNSET"`
+	Rename *TagRename `ddl:"keyword" sql:"RENAME TO"`
 }
 
 // dropTagOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-tag
 type dropTagOptions struct {
-	drop        bool                    `ddl:"static" sql:"DROP"`
-	tag         string                  `ddl:"static" sql:"TAG"`
-	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name        AccountObjectIdentifier `ddl:"identifier"`
+	drop     bool                   `ddl:"static" sql:"DROP"`
+	tag      string                 `ddl:"static" sql:"TAG"`
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 // undropTagOptions is based on https://docs.snowflake.com/en/sql-reference/sql/undrop-tag
 type undropTagOptions struct {
-	undrop bool                    `ddl:"static" sql:"UNDROP"`
-	tag    string                  `ddl:"static" sql:"TAG"`
-	name   AccountObjectIdentifier `ddl:"identifier"`
+	undrop bool                   `ddl:"static" sql:"UNDROP"`
+	tag    string                 `ddl:"static" sql:"TAG"`
+	name   SchemaObjectIdentifier `ddl:"identifier"`
 }

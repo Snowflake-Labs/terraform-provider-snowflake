@@ -2,285 +2,305 @@ package sdk
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestTagCreate(t *testing.T) {
+	id := randomSchemaObjectIdentifier(t)
+	defaultOpts := func() *createTagOptions {
+		return &createTagOptions{
+			name: id,
+		}
+	}
+
 	t.Run("create with allowed values", func(t *testing.T) {
-		opts := &createTagOptions{
-			OrReplace: Bool(true),
-			name: AccountObjectIdentifier{
-				name: "tag",
-			},
-			AllowedValues: &AllowedValues{
-				Values: []AllowedValue{
-					{
-						Value: "value1",
-					},
-					{
-						Value: "value2",
-					},
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.AllowedValues = &AllowedValues{
+			Values: []AllowedValue{
+				{
+					Value: "value1",
+				},
+				{
+					Value: "value2",
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE OR REPLACE TAG "tag" ALLOWED_VALUES 'value1', 'value2'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TAG %s ALLOWED_VALUES 'value1', 'value2'`, id.FullyQualifiedName())
 	})
 
 	t.Run("create with comment", func(t *testing.T) {
-		opts := &createTagOptions{
-			OrReplace: Bool(true),
-			name: AccountObjectIdentifier{
-				name: "tag",
-			},
-			Comment: String("comment"),
-		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE OR REPLACE TAG "tag" COMMENT = 'comment'`
-		assert.Equal(t, expected, actual)
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.Comment = String("comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TAG %s COMMENT = 'comment'`, id.FullyQualifiedName())
 	})
 
-	t.Run("create with not exists", func(t *testing.T) {
-		opts := &createTagOptions{
-			IfNotExists: Bool(true),
-			name: AccountObjectIdentifier{
-				name: "tag",
+	t.Run("create with all optional", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(false)
+		opts.Comment = String("comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TAG IF NOT EXISTS %s COMMENT = 'comment'`, id.FullyQualifiedName())
+	})
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		opts := (*createTagOptions)(nil)
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: both AllowedValues and Comment present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AllowedValues = &AllowedValues{
+			Values: []AllowedValue{
+				{
+					Value: "value1",
+				},
 			},
-			Comment: String("comment"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE TAG IF NOT EXISTS "tag" COMMENT = 'comment'`
-		assert.Equal(t, expected, actual)
+		opts.Comment = String("comment")
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("Comment", "AllowedValues"))
+	})
+
+	t.Run("validation: both ifNotExists and orReplace present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("OrReplace", "IfNotExists"))
+	})
+
+	t.Run("validation: multiple errors", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier, errOneOf("OrReplace", "IfNotExists"))
 	})
 }
 
 func TestTagDrop(t *testing.T) {
-	t.Run("drop with name", func(t *testing.T) {
-		opts := &dropTagOptions{
-			name: NewAccountObjectIdentifier("test"),
+	id := randomSchemaObjectIdentifier(t)
+	defaultOpts := func() *dropTagOptions {
+		return &dropTagOptions{
+			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP TAG "test"`
-		assert.Equal(t, expected, actual)
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *dropTagOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("drop with name", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, `DROP TAG %s`, id.FullyQualifiedName())
+	})
+
+	t.Run("drop with if exists", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, `DROP TAG IF EXISTS %s`, id.FullyQualifiedName())
 	})
 }
 
 func TestTagUndrop(t *testing.T) {
-	t.Run("undrop with name", func(t *testing.T) {
-		opts := &undropTagOptions{
-			name: NewAccountObjectIdentifier("test"),
+	id := randomSchemaObjectIdentifier(t)
+	defaultOpts := func() *undropTagOptions {
+		return &undropTagOptions{
+			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `UNDROP TAG "test"`
-		assert.Equal(t, expected, actual)
+	}
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *dropTagOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("undrop with name", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, `UNDROP TAG %s`, id.FullyQualifiedName())
 	})
 }
 
 func TestTagShow(t *testing.T) {
+	defaultOpts := func() *showTagOptions {
+		return &showTagOptions{}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *showTagOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: empty like", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Like = &Like{}
+		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
+	})
+
 	t.Run("show with empty options", func(t *testing.T) {
-		opts := &showTagOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW TAGS`
-		assert.Equal(t, expected, actual)
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TAGS`)
 	})
 
 	t.Run("show with like", func(t *testing.T) {
-		opts := &showTagOptions{
-			Like: &Like{
-				Pattern: String("test"),
-			},
-		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW TAGS LIKE 'test'`
-		assert.Equal(t, expected, actual)
+		opts := defaultOpts()
+		opts.Like = &Like{Pattern: String("test")}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TAGS LIKE 'test'`)
 	})
 }
 
 func TestTagAlter(t *testing.T) {
-	t.Run("alter with rename to", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name:     NewAccountObjectIdentifier("test"),
-			RenameTo: String("test2"),
+	id := randomSchemaObjectIdentifier(t)
+	defaultOpts := func() *alterTagOptions {
+		return &alterTagOptions{
+			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" RENAME TO test2`
-		assert.Equal(t, expected, actual)
+	}
+	defaultAllowedValues := func() *AllowedValues {
+		return &AllowedValues{
+			Values: []AllowedValue{
+				{
+					Value: "value1",
+				},
+				{
+					Value: "value2",
+				},
+			},
+		}
+	}
+	defaultMaskingPolicies := func() []TagMaskingPolicy {
+		return []TagMaskingPolicy{
+			{
+				Name: "policy1",
+			},
+			{
+				Name: "policy2",
+			},
+		}
+	}
+
+	t.Run("alter with rename to", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Rename = &TagRename{Name: NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), randomStringN(t, 12))}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s RENAME TO %s`, id.FullyQualifiedName(), opts.Rename.Name.FullyQualifiedName())
 	})
 
 	t.Run("alter with add", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name: NewAccountObjectIdentifier("test"),
-			Add: &TagAdd{
-				AllowedValues: &AllowedValues{
-					Values: []AllowedValue{
-						{
-							Value: "value1",
-						},
-						{
-							Value: "value2",
-						},
-					},
-				},
-			},
-		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" ADD ALLOWED_VALUES 'value1', 'value2'`
-		assert.Equal(t, expected, actual)
+		opts := defaultOpts()
+		opts.Add = &TagAdd{AllowedValues: defaultAllowedValues()}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s ADD ALLOWED_VALUES 'value1', 'value2'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter with drop", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name: NewAccountObjectIdentifier("test"),
-			Drop: &TagDrop{
-				AllowedValues: &AllowedValues{
-					Values: []AllowedValue{
-						{
-							Value: "value1",
-						},
-						{
-							Value: "value2",
-						},
-					},
-				},
-			},
-		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" DROP ALLOWED_VALUES 'value1', 'value2'`
-		assert.Equal(t, expected, actual)
+		opts := defaultOpts()
+		opts.Drop = &TagDrop{AllowedValues: defaultAllowedValues()}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s DROP ALLOWED_VALUES 'value1', 'value2'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter with unset allowed values", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name: NewAccountObjectIdentifier("test"),
-			Unset: &TagUnset{
-				AllowedValues: Bool(true),
-			},
-		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" UNSET ALLOWED_VALUES`
-		assert.Equal(t, expected, actual)
-	})
-
-	t.Run("alter with set masking policy", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name: NewAccountObjectIdentifier("test"),
-			Set: &TagSet{
-				MaskingPolicies: &TagSetMaskingPolicies{
-					MaskingPolicies: []TagMaskingPolicy{
-						{
-							Name: "policy1",
-						},
-					},
-				},
-			},
-		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" SET MASKING POLICY policy1`
-		assert.Equal(t, expected, actual)
+		opts := defaultOpts()
+		opts.Unset = &TagUnset{AllowedValues: Bool(true)}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s UNSET ALLOWED_VALUES`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter with set masking policies", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name: NewAccountObjectIdentifier("test"),
-			Set: &TagSet{
-				MaskingPolicies: &TagSetMaskingPolicies{
-					MaskingPolicies: []TagMaskingPolicy{
-						{
-							Name: "policy1",
-						},
-						{
-							Name: "policy2",
-						},
-					},
-					Force: Bool(true),
-				},
+		opts := defaultOpts()
+		opts.Set = &TagSet{
+			MaskingPolicies: &TagSetMaskingPolicies{
+				MaskingPolicies: defaultMaskingPolicies(),
+				Force:           Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" SET MASKING POLICY policy1, MASKING POLICY policy2 FORCE`
-		assert.Equal(t, expected, actual)
-	})
-
-	t.Run("alter with unset masking policy", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name: NewAccountObjectIdentifier("test"),
-			Unset: &TagUnset{
-				MaskingPolicies: &TagUnsetMaskingPolicies{
-					MaskingPolicies: []TagMaskingPolicy{
-						{
-							Name: "policy1",
-						},
-					},
-				},
-			},
-		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" UNSET MASKING POLICY policy1`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s SET MASKING POLICY "policy1", MASKING POLICY "policy2" FORCE`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter with unset masking policies", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name: NewAccountObjectIdentifier("test"),
-			Unset: &TagUnset{
-				MaskingPolicies: &TagUnsetMaskingPolicies{
-					MaskingPolicies: []TagMaskingPolicy{
-						{
-							Name: "policy1",
-						},
-						{
-							Name: "policy2",
-						},
-					},
-				},
+		opts := defaultOpts()
+		opts.Unset = &TagUnset{
+			MaskingPolicies: &TagUnsetMaskingPolicies{
+				MaskingPolicies: defaultMaskingPolicies(),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" UNSET MASKING POLICY policy1, MASKING POLICY policy2`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s UNSET MASKING POLICY "policy1", MASKING POLICY "policy2"`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter with set comment", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name: NewAccountObjectIdentifier("test"),
-			Set: &TagSet{
-				Comment: String("comment"),
-			},
-		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" SET COMMENT = 'comment'`
-		assert.Equal(t, expected, actual)
+		opts := defaultOpts()
+		opts.Set = &TagSet{Comment: String("comment")}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s SET COMMENT = 'comment'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter with unset comment", func(t *testing.T) {
-		opts := &alterTagOptions{
-			name: NewAccountObjectIdentifier("test"),
-			Unset: &TagUnset{
-				Comment: Bool(true),
-			},
+		opts := defaultOpts()
+		opts.Unset = &TagUnset{Comment: Bool(true)}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s UNSET COMMENT`, id.FullyQualifiedName())
+	})
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		opts := (*createTagOptions)(nil)
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: no alter action", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+	})
+
+	t.Run("validation: multiple alter actions", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &TagSet{
+			Comment: String("comment"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER TAG "test" UNSET COMMENT`
-		assert.Equal(t, expected, actual)
+		opts.Unset = &TagUnset{
+			AllowedValues: Bool(true),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+	})
+
+	t.Run("validation: invalid new name", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Rename = &TagRename{
+			Name: NewSchemaObjectIdentifier("", "", ""),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: new name from different db", func(t *testing.T) {
+		newId := NewSchemaObjectIdentifier(id.DatabaseName()+randomStringN(t, 1), randomStringN(t, 12), randomStringN(t, 12))
+
+		opts := defaultOpts()
+		opts.Rename = &TagRename{
+			Name: newId,
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errDifferentDatabase)
+	})
+
+	t.Run("validation: no property to unset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &TagUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsAtLeastOneProperty)
 	})
 }

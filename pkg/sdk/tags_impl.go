@@ -1,6 +1,8 @@
 package sdk
 
-import "context"
+import (
+	"context"
+)
 
 var _ Tags = (*tags)(nil)
 
@@ -9,6 +11,11 @@ type tags struct {
 }
 
 func (v *tags) Create(ctx context.Context, request *CreateTagRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *tags) Alter(ctx context.Context, request *AlterTagRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -23,7 +30,7 @@ func (v *tags) Show(ctx context.Context, request *ShowTagRequest) ([]Tag, error)
 	return result, nil
 }
 
-func (v *tags) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Tag, error) {
+func (v *tags) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error) {
 	request := NewShowTagRequest().WithLike(id.Name())
 	tags, err := v.Show(ctx, request)
 	if err != nil {
@@ -43,42 +50,42 @@ func (v *tags) Undrop(ctx context.Context, request *UndropTagRequest) error {
 }
 
 func (s *CreateTagRequest) toOpts() *createTagOptions {
-	opts := createTagOptions{
-		OrReplace:   Bool(s.orReplace),
-		IfNotExists: Bool(s.ifNotExists),
-		name:        s.name,
+	return &createTagOptions{
+		OrReplace:     Bool(s.orReplace),
+		IfNotExists:   Bool(s.ifNotExists),
+		name:          s.name,
+		Comment:       s.comment,
+		AllowedValues: s.allowedValues,
 	}
-	if s.comment != nil {
-		opts.Comment = s.comment
+}
+
+func (s *AlterTagRequest) toOpts() *alterTagOptions {
+	return &alterTagOptions{
+		name:   s.name,
+		Add:    s.add,
+		Drop:   s.drop,
+		Set:    s.set,
+		Unset:  s.unset,
+		Rename: s.rename,
 	}
-	if s.allowedValues != nil {
-		opts.AllowedValues = s.allowedValues
-	}
-	return &opts
 }
 
 func (s *ShowTagRequest) toOpts() *showTagOptions {
-	opts := showTagOptions{}
-	if s.like != nil {
-		opts.Like = s.like
+	return &showTagOptions{
+		Like: s.like,
+		In:   s.in,
 	}
-	if s.in != nil {
-		opts.In = s.in
-	}
-	return &opts
 }
 
 func (s *DropTagRequest) toOpts() *dropTagOptions {
-	opts := dropTagOptions{
-		IfNotExists: Bool(s.ifNotExists),
-		name:        s.name,
+	return &dropTagOptions{
+		IfExists: Bool(s.ifExists),
+		name:     s.name,
 	}
-	return &opts
 }
 
 func (s *UndropTagRequest) toOpts() *undropTagOptions {
-	opts := undropTagOptions{
+	return &undropTagOptions{
 		name: s.name,
 	}
-	return &opts
 }
