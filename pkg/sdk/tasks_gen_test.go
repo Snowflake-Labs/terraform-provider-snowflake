@@ -90,6 +90,48 @@ func TestTasks_Create(t *testing.T) {
 	})
 }
 
+func TestTasks_Clone(t *testing.T) {
+	id := randomSchemaObjectIdentifier(t)
+	sourceId := randomSchemaObjectIdentifier(t)
+
+	// Minimal valid CloneTaskOptions
+	defaultOpts := func() *CloneTaskOptions {
+		return &CloneTaskOptions{
+			name:       id,
+			sourceTask: sourceId,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *CloneTaskOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: valid identifier for [opts.sourceTask]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.sourceTask = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, "CREATE TASK %s CLONE %s", id.FullyQualifiedName(), sourceId.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.CopyGrants = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TASK %s CLONE %s COPY GRANTS", id.FullyQualifiedName(), sourceId.FullyQualifiedName())
+	})
+}
+
 func TestTasks_Alter(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 	otherTaskId := randomSchemaObjectIdentifier(t)
