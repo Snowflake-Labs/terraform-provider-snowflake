@@ -7,6 +7,12 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
+// TODO: temporary solution to move integration tests in separate package
+var (
+	ErrObjectNotExistOrAuthorized = errObjectNotExistOrAuthorized
+	ErrDifferentDatabase          = errDifferentDatabase
+)
+
 // TODO: do not export this method (it was just a quick workaround to move integration tests in separate package)
 func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, error) {
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
@@ -18,10 +24,6 @@ func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, erro
 func ValidObjectIdentifier(objectIdentifier ObjectIdentifier) bool {
 	return validObjectidentifier(objectIdentifier)
 }
-
-// TODO: temporary solution to move integration tests in separate package
-var ErrObjectNotExistOrAuthorized = errObjectNotExistOrAuthorized
-var ErrDifferentDatabase = errDifferentDatabase
 
 // TODO: temporary; used in integration test helper
 func (r *CreateNetworkPolicyRequest) GetName() AccountObjectIdentifier {

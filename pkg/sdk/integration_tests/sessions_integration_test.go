@@ -13,7 +13,7 @@ func TestInt_AlterSession(t *testing.T) {
 	ctx := testContext(t)
 	opts := &sdk.AlterSessionOptions{
 		Set: &sdk.SessionSet{
-			&sdk.SessionParameters{
+			SessionParameters: &sdk.SessionParameters{
 				AbortDetachedQuery:    sdk.Bool(true),
 				Autocommit:            sdk.Bool(true),
 				GeographyOutputFormat: sdk.Pointer(sdk.GeographyOutputFormatGeoJSON),
@@ -26,7 +26,7 @@ func TestInt_AlterSession(t *testing.T) {
 	cleanup := func() {
 		opts = &sdk.AlterSessionOptions{
 			Unset: &sdk.SessionUnset{
-				&sdk.SessionParametersUnset{
+				SessionParametersUnset: &sdk.SessionParametersUnset{
 					AbortDetachedQuery:    sdk.Bool(true),
 					Autocommit:            sdk.Bool(true),
 					GeographyOutputFormat: sdk.Bool(true),

@@ -65,11 +65,13 @@ func timer(name string) func() {
 // TODO: remove.
 // This is temporary way to move all integration tests to this package without doing revolution in a single PR.
 func testClient(t *testing.T) *sdk.Client {
+	t.Helper()
 	return itc.client
 }
 
 // TODO: remove.
 // This is temporary way to move all integration tests to this package without doing revolution in a single PR.
 func testContext(t *testing.T) context.Context {
+	t.Helper()
 	return itc.ctx
 }

@@ -36,7 +36,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				CSVEscapeUnenclosedField:      sdk.String("h"),
 				CSVTrimSpace:                  sdk.Bool(true),
 				CSVFieldOptionallyEnclosedBy:  sdk.String("'"),
-				CSVNullIf:                     &[]sdk.NullString{{"j"}, {"k"}},
+				CSVNullIf:                     &[]sdk.NullString{{S: "j"}, {S: "k"}},
 				CSVErrorOnColumnCountMismatch: sdk.Bool(true),
 				CSVReplaceInvalidCharacters:   sdk.Bool(true),
 				CSVEmptyFieldAsNull:           sdk.Bool(true),
@@ -75,7 +75,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, "h", *result.Options.CSVEscapeUnenclosedField)
 		assert.Equal(t, true, *result.Options.CSVTrimSpace)
 		assert.Equal(t, sdk.String("'"), result.Options.CSVFieldOptionallyEnclosedBy)
-		assert.Equal(t, &[]sdk.NullString{{"j"}, {"k"}}, result.Options.CSVNullIf)
+		assert.Equal(t, &[]sdk.NullString{{S: "j"}, {S: "k"}}, result.Options.CSVNullIf)
 		assert.Equal(t, true, *result.Options.CSVErrorOnColumnCountMismatch)
 		assert.Equal(t, true, *result.Options.CSVReplaceInvalidCharacters)
 		assert.Equal(t, true, *result.Options.CSVEmptyFieldAsNull)
@@ -99,7 +99,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, "h", *describeResult.Options.CSVEscapeUnenclosedField)
 		assert.Equal(t, true, *describeResult.Options.CSVTrimSpace)
 		assert.Equal(t, sdk.String("'"), describeResult.Options.CSVFieldOptionallyEnclosedBy)
-		assert.Equal(t, &[]sdk.NullString{{"j"}, {"k"}}, describeResult.Options.CSVNullIf)
+		assert.Equal(t, &[]sdk.NullString{{S: "j"}, {S: "k"}}, describeResult.Options.CSVNullIf)
 		assert.Equal(t, true, *describeResult.Options.CSVErrorOnColumnCountMismatch)
 		assert.Equal(t, true, *describeResult.Options.CSVReplaceInvalidCharacters)
 		assert.Equal(t, true, *describeResult.Options.CSVEmptyFieldAsNull)
@@ -117,7 +117,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				JSONTimestampFormat:   sdk.String("c"),
 				JSONBinaryFormat:      &sdk.BinaryFormatHex,
 				JSONTrimSpace:         sdk.Bool(true),
-				JSONNullIf:            &[]sdk.NullString{{"d"}, {"e"}},
+				JSONNullIf:            &[]sdk.NullString{{S: "d"}, {S: "e"}},
 				JSONFileExtension:     sdk.String("f"),
 				JSONEnableOctal:       sdk.Bool(true),
 				JSONAllowDuplicate:    sdk.Bool(true),
@@ -151,7 +151,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, "c", *result.Options.JSONTimestampFormat)
 		assert.Equal(t, sdk.BinaryFormatHex, *result.Options.JSONBinaryFormat)
 		assert.Equal(t, true, *result.Options.JSONTrimSpace)
-		assert.Equal(t, []sdk.NullString{{"d"}, {"e"}}, *result.Options.JSONNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "d"}, {S: "e"}}, *result.Options.JSONNullIf)
 		assert.Equal(t, "f", *result.Options.JSONFileExtension)
 		assert.Equal(t, true, *result.Options.JSONEnableOctal)
 		assert.Equal(t, true, *result.Options.JSONAllowDuplicate)
@@ -169,7 +169,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, "c", *describeResult.Options.JSONTimestampFormat)
 		assert.Equal(t, sdk.BinaryFormatHex, *describeResult.Options.JSONBinaryFormat)
 		assert.Equal(t, true, *describeResult.Options.JSONTrimSpace)
-		assert.Equal(t, []sdk.NullString{{"d"}, {"e"}}, *describeResult.Options.JSONNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "d"}, {S: "e"}}, *describeResult.Options.JSONNullIf)
 		assert.Equal(t, "f", *describeResult.Options.JSONFileExtension)
 		assert.Equal(t, true, *describeResult.Options.JSONEnableOctal)
 		assert.Equal(t, true, *describeResult.Options.JSONAllowDuplicate)
@@ -186,7 +186,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				AvroCompression:              &sdk.AvroCompressionGzip,
 				AvroTrimSpace:                sdk.Bool(true),
 				AvroReplaceInvalidCharacters: sdk.Bool(true),
-				AvroNullIf:                   &[]sdk.NullString{{"a"}, {"b"}},
+				AvroNullIf:                   &[]sdk.NullString{{S: "a"}, {S: "b"}},
 
 				Comment: sdk.String("test comment"),
 			},
@@ -210,7 +210,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, sdk.AvroCompressionGzip, *result.Options.AvroCompression)
 		assert.Equal(t, true, *result.Options.AvroTrimSpace)
 		assert.Equal(t, true, *result.Options.AvroReplaceInvalidCharacters)
-		assert.Equal(t, []sdk.NullString{{"a"}, {"b"}}, *result.Options.AvroNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *result.Options.AvroNullIf)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
@@ -218,7 +218,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, sdk.AvroCompressionGzip, *describeResult.Options.AvroCompression)
 		assert.Equal(t, true, *describeResult.Options.AvroTrimSpace)
 		assert.Equal(t, true, *describeResult.Options.AvroReplaceInvalidCharacters)
-		assert.Equal(t, []sdk.NullString{{"a"}, {"b"}}, *describeResult.Options.AvroNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.AvroNullIf)
 	})
 	t.Run("ORC", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
@@ -227,7 +227,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
 				ORCTrimSpace:                sdk.Bool(true),
 				ORCReplaceInvalidCharacters: sdk.Bool(true),
-				ORCNullIf:                   &[]sdk.NullString{{"a"}, {"b"}},
+				ORCNullIf:                   &[]sdk.NullString{{S: "a"}, {S: "b"}},
 
 				Comment: sdk.String("test comment"),
 			},
@@ -250,14 +250,14 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, true, *result.Options.ORCTrimSpace)
 		assert.Equal(t, true, *result.Options.ORCReplaceInvalidCharacters)
-		assert.Equal(t, []sdk.NullString{{"a"}, {"b"}}, *result.Options.ORCNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *result.Options.ORCNullIf)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, sdk.FileFormatTypeORC, describeResult.Type)
 		assert.Equal(t, true, *describeResult.Options.ORCTrimSpace)
 		assert.Equal(t, true, *describeResult.Options.ORCReplaceInvalidCharacters)
-		assert.Equal(t, []sdk.NullString{{"a"}, {"b"}}, *describeResult.Options.ORCNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ORCNullIf)
 	})
 	t.Run("PARQUET", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
@@ -268,7 +268,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				ParquetBinaryAsText:             sdk.Bool(true),
 				ParquetTrimSpace:                sdk.Bool(true),
 				ParquetReplaceInvalidCharacters: sdk.Bool(true),
-				ParquetNullIf:                   &[]sdk.NullString{{"a"}, {"b"}},
+				ParquetNullIf:                   &[]sdk.NullString{{S: "a"}, {S: "b"}},
 
 				Comment: sdk.String("test comment"),
 			},
@@ -293,7 +293,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, true, *result.Options.ParquetBinaryAsText)
 		assert.Equal(t, true, *result.Options.ParquetTrimSpace)
 		assert.Equal(t, true, *result.Options.ParquetReplaceInvalidCharacters)
-		assert.Equal(t, []sdk.NullString{{"a"}, {"b"}}, *result.Options.ParquetNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *result.Options.ParquetNullIf)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
@@ -302,7 +302,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, true, *describeResult.Options.ParquetBinaryAsText)
 		assert.Equal(t, true, *describeResult.Options.ParquetTrimSpace)
 		assert.Equal(t, true, *describeResult.Options.ParquetReplaceInvalidCharacters)
-		assert.Equal(t, []sdk.NullString{{"a"}, {"b"}}, *describeResult.Options.ParquetNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ParquetNullIf)
 	})
 	t.Run("XML", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))

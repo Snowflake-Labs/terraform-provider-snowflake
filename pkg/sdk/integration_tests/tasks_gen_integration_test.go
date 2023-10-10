@@ -454,7 +454,7 @@ func TestInt_Tasks(t *testing.T) {
 		task2 := createTask(t)
 
 		showRequest := sdk.NewShowTaskRequest().
-			WithLike(&sdk.Like{&task1.Name}).
+			WithLike(&sdk.Like{Pattern: &task1.Name}).
 			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(database.Name, schema.Name)}).
 			WithLimit(&sdk.LimitFrom{Rows: sdk.Int(5)})
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
