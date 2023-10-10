@@ -17,7 +17,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 	blockedIP := sdk.NewIPRequest("125.0.0.1")
 	blockedIP2 := sdk.NewIPRequest("124.0.0.1")
 	defaultCreateRequest := func() *sdk.CreateNetworkPolicyRequest {
-		id := sdk.randomAccountObjectIdentifier(t)
+		id := randomAccountObjectIdentifier(t)
 		comment := "some_comment"
 		return sdk.NewCreateNetworkPolicyRequest(id).
 			WithOrReplace(sdk.Bool(true)).
@@ -132,7 +132,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 			}
 		})
 
-		newID := sdk.randomAccountObjectIdentifier(t)
+		newID := randomAccountObjectIdentifier(t)
 		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.name).WithRenameTo(&newID))
 		require.NoError(t, err)
 		altered = true

@@ -19,7 +19,7 @@ func TestInt_Roles(t *testing.T) {
 	tag2, _ := sdk.createTag(t, client, database, schema)
 
 	t.Run("create no options", func(t *testing.T) {
-		roleID := sdk.randomAccountObjectIdentifier(t)
+		roleID := randomAccountObjectIdentifier(t)
 		err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleID))
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -34,7 +34,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("create if not exists", func(t *testing.T) {
-		roleID := sdk.randomAccountObjectIdentifier(t)
+		roleID := randomAccountObjectIdentifier(t)
 		err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleID).WithIfNotExists(true))
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -48,8 +48,8 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("create complete", func(t *testing.T) {
-		roleID := sdk.randomAccountObjectIdentifier(t)
-		comment := sdk.randomComment(t)
+		roleID := randomAccountObjectIdentifier(t)
+		comment := randomComment(t)
 		createReq := sdk.NewCreateRoleRequest(roleID).
 			WithOrReplace(true).
 			WithTag([]sdk.TagAssociation{
@@ -87,7 +87,7 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("alter rename to", func(t *testing.T) {
 		role, _ := sdk.createRole(t, client)
-		newName := sdk.randomAccountObjectIdentifier(t)
+		newName := randomAccountObjectIdentifier(t)
 		t.Cleanup(func() {
 			err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(newName))
 			if err != nil {
@@ -127,7 +127,7 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("alter unset tags", func(t *testing.T) {
 		tagValue := "tag-value"
-		id := sdk.randomAccountObjectIdentifier(t)
+		id := randomAccountObjectIdentifier(t)
 		role, cleanup := sdk.createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(id).
 			WithTag([]sdk.TagAssociation{
 				{
@@ -152,7 +152,7 @@ func TestInt_Roles(t *testing.T) {
 		role, cleanupRole := sdk.createRole(t, client)
 		t.Cleanup(cleanupRole)
 
-		comment := sdk.randomComment(t)
+		comment := randomComment(t)
 		err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithSetComment(comment))
 		require.NoError(t, err)
 
@@ -162,8 +162,8 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("alter unset comment", func(t *testing.T) {
-		comment := sdk.randomComment(t)
-		id := sdk.randomAccountObjectIdentifier(t)
+		comment := randomComment(t)
+		id := randomAccountObjectIdentifier(t)
 		role, cleanup := sdk.createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(id).WithComment(comment))
 		t.Cleanup(cleanup)
 

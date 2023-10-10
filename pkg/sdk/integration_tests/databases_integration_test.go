@@ -14,7 +14,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("minimal", func(t *testing.T) {
-		databaseID := sdk.randomAccountObjectIdentifier(t)
+		databaseID := randomAccountObjectIdentifier(t)
 		err := client.Databases.Create(ctx, databaseID, nil)
 		require.NoError(t, err)
 		database, err := client.Databases.ShowByID(ctx, databaseID)
@@ -29,7 +29,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	t.Run("as clone", func(t *testing.T) {
 		cloneDatabase, cloneDatabaseCleanup := sdk.createDatabase(t, client)
 		t.Cleanup(cloneDatabaseCleanup)
-		databaseID := sdk.randomAccountObjectIdentifier(t)
+		databaseID := randomAccountObjectIdentifier(t)
 		opts := &sdk.CreateDatabaseOptions{
 			Clone: &sdk.Clone{
 				SourceObject: cloneDatabase.ID(),
@@ -50,7 +50,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	})
 
 	t.Run("complete", func(t *testing.T) {
-		databaseID := sdk.randomAccountObjectIdentifier(t)
+		databaseID := randomAccountObjectIdentifier(t)
 
 		databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
@@ -61,7 +61,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		tag2Test, tag2Cleanup := sdk.createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tag2Cleanup)
 
-		comment := sdk.randomComment(t)
+		comment := randomComment(t)
 		opts := &sdk.CreateDatabaseOptions{
 			OrReplace:                  sdk.Bool(true),
 			Transient:                  sdk.Bool(true),
@@ -135,7 +135,7 @@ func TestInt_CreateShared(t *testing.T) {
 		},
 	})
 
-	databaseID := sdk.randomAccountObjectIdentifier(t)
+	databaseID := randomAccountObjectIdentifier(t)
 	err = secondaryClient.Databases.CreateShared(ctx, databaseID, shareTest.ExternalID(), nil)
 	require.NoError(t, err)
 	database, err := secondaryClient.Databases.ShowByID(ctx, databaseID)
@@ -207,7 +207,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 
 	t.Run("renaming", func(t *testing.T) {
 		databaseTest, _ := sdk.createDatabase(t, client)
-		newName := sdk.randomAccountObjectIdentifier(t)
+		newName := randomAccountObjectIdentifier(t)
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			NewName: newName,
 		})

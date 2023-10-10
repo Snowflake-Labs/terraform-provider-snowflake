@@ -44,7 +44,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("test complete case", func(t *testing.T) {
-		name := sdk.randomString(t)
+		name := randomString(t)
 		id := sdk.NewAccountObjectIdentifier(name)
 		frequency, err := sdk.FrequencyFromString("Monthly")
 		require.NoError(t, err)
@@ -112,7 +112,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := sdk.randomString(t)
+		name := randomString(t)
 		id := sdk.NewAccountObjectIdentifier(name)
 
 		err := client.ResourceMonitors.Create(ctx, id, nil)

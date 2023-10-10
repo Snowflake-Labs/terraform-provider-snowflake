@@ -24,7 +24,7 @@ func TestInt_GetTag(t *testing.T) {
 		maskingPolicyTest, maskingPolicyCleanup := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(maskingPolicyCleanup)
 
-		tagValue := sdk.randomString(t)
+		tagValue := randomString(t)
 		err := client.MaskingPolicies.Alter(ctx, maskingPolicyTest.ID(), &sdk.AlterMaskingPolicyOptions{
 			Set: &sdk.MaskingPolicySet{
 				Tag: []sdk.TagAssociation{
