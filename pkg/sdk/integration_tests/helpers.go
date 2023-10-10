@@ -116,6 +116,32 @@ func createWarehouseWithOptions(t *testing.T, client *sdk.Client, opts *sdk.Crea
 		}
 }
 
+func createUser(t *testing.T, client *sdk.Client) (*sdk.User, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	id := sdk.NewAccountObjectIdentifier(name)
+	return createUserWithOptions(t, client, id, &sdk.CreateUserOptions{})
+}
+
+func createUserWithName(t *testing.T, client *sdk.Client, name string) (*sdk.User, func()) {
+	t.Helper()
+	id := sdk.NewAccountObjectIdentifier(name)
+	return createUserWithOptions(t, client, id, &sdk.CreateUserOptions{})
+}
+
+func createUserWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateUserOptions) (*sdk.User, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.Users.Create(ctx, id, opts)
+	require.NoError(t, err)
+	user, err := client.Users.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return user, func() {
+		err := client.Users.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+}
+
 func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
@@ -194,6 +220,18 @@ func createStage(t *testing.T, client *sdk.Client, database *sdk.Database, schem
 	}, stageCleanup
 }
 
+func createStageWithURL(t *testing.T, client *sdk.Client, name sdk.AccountObjectIdentifier, url string) (*sdk.Stage, func()) {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE STAGE "%s" URL = '%s'`, name.Name(), url))
+	require.NoError(t, err)
+
+	return nil, func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name.Name()))
+		require.NoError(t, err)
+	}
+}
+
 func createPipe(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string, copyStatement string) (*sdk.Pipe, func()) {
 	t.Helper()
 	require.NotNil(t, database, "database has to be created")
@@ -263,5 +301,15 @@ func createPasswordPolicyWithOptions(t *testing.T, client *sdk.Client, database 
 		if databaseCleanup != nil {
 			databaseCleanup()
 		}
+	}
+}
+
+func createNetworkPolicy(t *testing.T, client *sdk.Client, req *sdk.CreateNetworkPolicyRequest) (error, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.NetworkPolicies.Create(ctx, req)
+	return err, func() {
+		err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(req.GetName()))
+		require.NoError(t, err)
 	}
 }

@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -620,31 +619,31 @@ func ParseTimestampWithOffset(s string) (*time.Time, error) {
 	return &adjustedTime, nil
 }
 
-func createUser(t *testing.T, client *Client) (*User, func()) {
-	t.Helper()
-	name := randomStringRange(t, 8, 28)
-	id := NewAccountObjectIdentifier(name)
-	return createUserWithOptions(t, client, id, &CreateUserOptions{})
-}
-
-func createUserWithName(t *testing.T, client *Client, name string) (*User, func()) {
-	t.Helper()
-	id := NewAccountObjectIdentifier(name)
-	return createUserWithOptions(t, client, id, &CreateUserOptions{})
-}
-
-func createUserWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, opts *CreateUserOptions) (*User, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Users.Create(ctx, id, opts)
-	require.NoError(t, err)
-	user, err := client.Users.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return user, func() {
-		err := client.Users.Drop(ctx, id)
-		require.NoError(t, err)
-	}
-}
+//func createUser(t *testing.T, client *Client) (*User, func()) {
+//	t.Helper()
+//	name := randomStringRange(t, 8, 28)
+//	id := NewAccountObjectIdentifier(name)
+//	return createUserWithOptions(t, client, id, &CreateUserOptions{})
+//}
+//
+//func createUserWithName(t *testing.T, client *Client, name string) (*User, func()) {
+//	t.Helper()
+//	id := NewAccountObjectIdentifier(name)
+//	return createUserWithOptions(t, client, id, &CreateUserOptions{})
+//}
+//
+//func createUserWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, opts *CreateUserOptions) (*User, func()) {
+//	t.Helper()
+//	ctx := context.Background()
+//	err := client.Users.Create(ctx, id, opts)
+//	require.NoError(t, err)
+//	user, err := client.Users.ShowByID(ctx, id)
+//	require.NoError(t, err)
+//	return user, func() {
+//		err := client.Users.Drop(ctx, id)
+//		require.NoError(t, err)
+//	}
+//}
 
 //func createPipe(t *testing.T, client *Client, database *Database, schema *Schema, name string, copyStatement string) (*Pipe, func()) {
 //	t.Helper()
@@ -767,24 +766,24 @@ func createDynamicTableWithOptions(t *testing.T, client *Client, warehouse *Ware
 	}
 }
 
-func createStageWithURL(t *testing.T, client *Client, name AccountObjectIdentifier, url string) (*Stage, func()) {
-	t.Helper()
-	ctx := context.Background()
-	_, err := client.exec(ctx, fmt.Sprintf(`CREATE STAGE "%s" URL = '%s'`, name.Name(), url))
-	require.NoError(t, err)
+//func createStageWithURL(t *testing.T, client *Client, name AccountObjectIdentifier, url string) (*Stage, func()) {
+//	t.Helper()
+//	ctx := context.Background()
+//	_, err := client.exec(ctx, fmt.Sprintf(`CREATE STAGE "%s" URL = '%s'`, name.Name(), url))
+//	require.NoError(t, err)
+//
+//	return nil, func() {
+//		_, err := client.exec(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name.Name()))
+//		require.NoError(t, err)
+//	}
+//}
 
-	return nil, func() {
-		_, err := client.exec(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name.Name()))
-		require.NoError(t, err)
-	}
-}
-
-func createNetworkPolicy(t *testing.T, client *Client, req *CreateNetworkPolicyRequest) (error, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.NetworkPolicies.Create(ctx, req)
-	return err, func() {
-		err := client.NetworkPolicies.Drop(ctx, NewDropNetworkPolicyRequest(req.name))
-		require.NoError(t, err)
-	}
-}
+//func createNetworkPolicy(t *testing.T, client *Client, req *CreateNetworkPolicyRequest) (error, func()) {
+//	t.Helper()
+//	ctx := context.Background()
+//	err := client.NetworkPolicies.Create(ctx, req)
+//	return err, func() {
+//		err := client.NetworkPolicies.Drop(ctx, NewDropNetworkPolicyRequest(req.name))
+//		require.NoError(t, err)
+//	}
+//}

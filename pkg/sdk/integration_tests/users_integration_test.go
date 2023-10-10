@@ -13,10 +13,10 @@ func TestInt_UsersShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	userTest, userCleanup := sdk.createUserWithName(t, client, "USER_FOO")
+	userTest, userCleanup := createUserWithName(t, client, "USER_FOO")
 	t.Cleanup(userCleanup)
 
-	userTest2, user2Cleanup := sdk.createUserWithName(t, client, "USER_BAR")
+	userTest2, user2Cleanup := createUserWithName(t, client, "USER_BAR")
 	t.Cleanup(user2Cleanup)
 
 	t.Run("with like options", func(t *testing.T) {
@@ -203,7 +203,7 @@ func TestInt_UserDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	user, userCleanup := sdk.createUser(t, client)
+	user, userCleanup := createUser(t, client)
 	t.Cleanup(userCleanup)
 
 	t.Run("when user exists", func(t *testing.T) {
@@ -224,7 +224,7 @@ func TestInt_UserDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when user exists", func(t *testing.T) {
-		user, _ := sdk.createUser(t, client)
+		user, _ := createUser(t, client)
 		id := user.ID()
 		err := client.Users.Drop(ctx, id)
 		require.NoError(t, err)

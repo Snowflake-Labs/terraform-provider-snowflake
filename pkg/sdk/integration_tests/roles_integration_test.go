@@ -237,7 +237,7 @@ func TestInt_Roles(t *testing.T) {
 		role, cleanup := sdk.createRole(t, client)
 		t.Cleanup(cleanup)
 
-		user, cleanupUser := sdk.createUser(t, client)
+		user, cleanupUser := createUser(t, client)
 		t.Cleanup(cleanupUser)
 
 		userID := user.ID()

@@ -25,7 +25,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	stageID := sdk.NewAccountObjectIdentifier("EXTERNAL_TABLE_STAGE")
 	stageLocation := "@external_table_stage"
-	_, _ = sdk.createStageWithURL(t, client, stageID, "s3://snowflake-workshop-lab/weather-nyc")
+	_, _ = createStageWithURL(t, client, stageID, "s3://snowflake-workshop-lab/weather-nyc")
 
 	tag, _ := createTag(t, client, db, schema)
 

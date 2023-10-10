@@ -34,7 +34,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 	t.Run("Create", func(t *testing.T) {
 		req := defaultCreateRequest()
-		err, dropNetworkPolicy := sdk.createNetworkPolicy(t, client, req)
+		err, dropNetworkPolicy := createNetworkPolicy(t, client, req)
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
@@ -50,7 +50,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 	t.Run("Alter - set allowed ip list", func(t *testing.T) {
 		req := defaultCreateRequest()
-		err, dropNetworkPolicy := sdk.createNetworkPolicy(t, client, req)
+		err, dropNetworkPolicy := createNetworkPolicy(t, client, req)
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
@@ -68,7 +68,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 	t.Run("Alter - set blocked ip list", func(t *testing.T) {
 		req := defaultCreateRequest()
-		err, dropNetworkPolicy := sdk.createNetworkPolicy(t, client, req)
+		err, dropNetworkPolicy := createNetworkPolicy(t, client, req)
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
@@ -86,7 +86,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 	t.Run("Alter - set comment", func(t *testing.T) {
 		req := defaultCreateRequest()
-		err, dropNetworkPolicy := sdk.createNetworkPolicy(t, client, req)
+		err, dropNetworkPolicy := createNetworkPolicy(t, client, req)
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
@@ -105,7 +105,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 	t.Run("Alter - unset comment", func(t *testing.T) {
 		req := defaultCreateRequest()
-		err, dropNetworkPolicy := sdk.createNetworkPolicy(t, client, req)
+		err, dropNetworkPolicy := createNetworkPolicy(t, client, req)
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
@@ -124,7 +124,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		altered := false
 
 		req := defaultCreateRequest()
-		err, dropNetworkPolicy := sdk.createNetworkPolicy(t, client, req)
+		err, dropNetworkPolicy := createNetworkPolicy(t, client, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			if !altered {
@@ -156,7 +156,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 	t.Run("Describe", func(t *testing.T) {
 		req := defaultCreateRequest()
-		err, dropNetworkPolicy := sdk.createNetworkPolicy(t, client, req)
+		err, dropNetworkPolicy := createNetworkPolicy(t, client, req)
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 

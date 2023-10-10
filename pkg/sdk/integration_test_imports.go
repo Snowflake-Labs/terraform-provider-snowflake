@@ -14,3 +14,8 @@ func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, erro
 
 // TODO: temporary solution to move integration tests in separate package
 var ErrObjectNotExistOrAuthorized = errObjectNotExistOrAuthorized
+
+// TODO: temporary; used in integration test helper
+func (r *CreateNetworkPolicyRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
