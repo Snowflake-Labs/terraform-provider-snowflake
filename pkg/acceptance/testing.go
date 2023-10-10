@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
@@ -16,7 +17,7 @@ func TestMain(m *testing.M) {
 	resource.TestMain(m)
 }
 
-var (
+const (
 	TestDatabaseName  = "terraform_test_database"
 	TestSchemaName    = "terraform_test_schema"
 	TestWarehouseName = "terraform_test_warehouse"
@@ -44,43 +45,55 @@ func TestAccProviders() map[string]*schema.Provider {
 	}
 }
 
+var testObjects *TestObjects
+
+type TestObjects struct {
+	DatabaseId  sdk.AccountObjectIdentifier
+	SchemaId    sdk.DatabaseObjectIdentifier
+	WarehouseId sdk.AccountObjectIdentifier
+}
+
+var lock = &sync.Mutex{}
+
 func TestAccPreCheck(t *testing.T) {
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	ctx := context.Background()
+	// use singleton design pattern to ensure we only create these resources once
+	if testObjects == nil {
+		lock.Lock()
+		defer lock.Unlock()
+		if testObjects != nil {
+			return
+		}
+		client, err := sdk.NewDefaultClient()
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx := context.Background()
 
-	// create test database
-	dbId := sdk.NewAccountObjectIdentifier("terraform_test_database")
-	_, err = client.Databases.ShowByID(ctx, dbId)
-	if err != nil {
+		dbId := sdk.NewAccountObjectIdentifier(TestDatabaseName)
 		if err := client.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{
-			OrReplace: sdk.Bool(true),
+			IfNotExists: sdk.Bool(true),
 		}); err != nil {
 			t.Fatal(err)
 		}
-	}
 
-	// create test schema
-	schemaId := sdk.NewDatabaseObjectIdentifier("terraform_test_database", "terraform_test_schema")
-	_, err = client.Schemas.ShowByID(ctx, schemaId)
-	if err != nil {
+		schemaId := sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName)
 		if err := client.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{
-			OrReplace: sdk.Bool(true),
+			IfNotExists: sdk.Bool(true),
 		}); err != nil {
 			t.Fatal(err)
 		}
-	}
 
-	// create test warehouse
-	warehouseId := sdk.NewAccountObjectIdentifier("terraform_test_warehouse")
-	_, err = client.Warehouses.ShowByID(ctx, warehouseId)
-	if err != nil {
+		warehouseId := sdk.NewAccountObjectIdentifier(TestWarehouseName)
 		if err := client.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{
-			OrReplace: sdk.Bool(true),
+			IfNotExists: sdk.Bool(true),
 		}); err != nil {
 			t.Fatal(err)
+		}
+
+		testObjects = &TestObjects{
+			DatabaseId:  dbId,
+			SchemaId:    schemaId,
+			WarehouseId: warehouseId,
 		}
 	}
 }
