@@ -103,6 +103,26 @@ func (s *CreateTaskWarehouseRequest) WithUserTaskManagedInitialWarehouseSize(Use
 	return s
 }
 
+func NewCloneTaskRequest(
+	name SchemaObjectIdentifier,
+	sourceTask SchemaObjectIdentifier,
+) *CloneTaskRequest {
+	s := CloneTaskRequest{}
+	s.name = name
+	s.sourceTask = sourceTask
+	return &s
+}
+
+func (s *CloneTaskRequest) WithOrReplace(OrReplace *bool) *CloneTaskRequest {
+	s.OrReplace = OrReplace
+	return s
+}
+
+func (s *CloneTaskRequest) WithCopyGrants(CopyGrants *bool) *CloneTaskRequest {
+	s.CopyGrants = CopyGrants
+	return s
+}
+
 func NewAlterTaskRequest(
 	name SchemaObjectIdentifier,
 ) *AlterTaskRequest {

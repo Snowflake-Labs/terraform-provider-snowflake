@@ -15,6 +15,11 @@ func (v *tasks) Create(ctx context.Context, request *CreateTaskRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *tasks) Clone(ctx context.Context, request *CloneTaskRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *tasks) Alter(ctx context.Context, request *AlterTaskRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
@@ -80,6 +85,16 @@ func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
 			Warehouse:                           r.Warehouse.Warehouse,
 			UserTaskManagedInitialWarehouseSize: r.Warehouse.UserTaskManagedInitialWarehouseSize,
 		}
+	}
+	return opts
+}
+
+func (r *CloneTaskRequest) toOpts() *CloneTaskOptions {
+	opts := &CloneTaskOptions{
+		OrReplace:  r.OrReplace,
+		name:       r.name,
+		sourceTask: r.sourceTask,
+		CopyGrants: r.CopyGrants,
 	}
 	return opts
 }
