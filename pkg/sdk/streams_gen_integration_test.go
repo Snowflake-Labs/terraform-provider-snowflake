@@ -1,13 +1,26 @@
 package sdk
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestInt_Streams(t *testing.T) {
-	// TODO: prepare common resources
-
-	t.Run("CreateOnTable", func(t *testing.T) {
-		// TODO: fill me
-	})
+	//client := testClient(t)
+	//ctx := context.Background()
+	//
+	//db, cleanupDb := createDatabase(t, client)
+	//t.Cleanup(cleanupDb)
+	//
+	//schema, cleanupSchema := createSchema(t, client, db)
+	//t.Cleanup(cleanupSchema)
+	//
+	//t.Run("CreateOnTable", func(t *testing.T) {
+	//	table, cleanupTable := createTable(t, client, db, schema)
+	//	t.Cleanup(cleanupTable)
+	//
+	//	id := randomAccountObjectIdentifier(t)
+	//	client.Streams.CreateOnTable(ctx, NewCreateOnTableStreamRequest(id, ))
+	//})
 
 	t.Run("CreateOnExternalTable", func(t *testing.T) {
 		// TODO: fill me
