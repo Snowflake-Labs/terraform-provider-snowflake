@@ -6,7 +6,7 @@ import (
 
 func TestStreams_CreateOnTable(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
-	tableId := randomAccountObjectIdentifier(t)
+	tableId := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid CreateOnTableStreamOptions
 	defaultOpts := func() *CreateOnTableStreamOptions {
@@ -35,7 +35,7 @@ func TestStreams_CreateOnTable(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.TableId]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.TableId = NewAccountObjectIdentifier("")
+		opts.TableId = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
@@ -84,7 +84,7 @@ func TestStreams_CreateOnTable(t *testing.T) {
 
 func TestStreams_CreateOnExternalTable(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
-	externalTableId := randomAccountObjectIdentifier(t)
+	externalTableId := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid CreateOnExternalTableStreamOptions
 	defaultOpts := func() *CreateOnExternalTableStreamOptions {
@@ -113,7 +113,7 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.ExternalTableId]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ExternalTableId = NewAccountObjectIdentifier("")
+		opts.ExternalTableId = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
@@ -161,7 +161,7 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 
 func TestStreams_CreateOnStage(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
-	stageId := randomAccountObjectIdentifier(t)
+	stageId := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid CreateOnStageStreamOptions
 	defaultOpts := func() *CreateOnStageStreamOptions {
@@ -184,7 +184,7 @@ func TestStreams_CreateOnStage(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.StageId]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.StageId = NewAccountObjectIdentifier("")
+		opts.StageId = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 
@@ -211,7 +211,7 @@ func TestStreams_CreateOnStage(t *testing.T) {
 
 func TestStreams_CreateOnView(t *testing.T) {
 	id := randomAccountObjectIdentifier(t)
-	viewId := randomAccountObjectIdentifier(t)
+	viewId := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid CreateOnViewStreamOptions
 	defaultOpts := func() *CreateOnViewStreamOptions {
@@ -240,7 +240,7 @@ func TestStreams_CreateOnView(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.viewId]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ViewId = NewAccountObjectIdentifier("")
+		opts.ViewId = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
 	})
 

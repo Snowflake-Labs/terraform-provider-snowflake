@@ -19,7 +19,13 @@ func TestInt_Streams(t *testing.T) {
 	//	t.Cleanup(cleanupTable)
 	//
 	//	id := randomAccountObjectIdentifier(t)
-	//	client.Streams.CreateOnTable(ctx, NewCreateOnTableStreamRequest(id, ))
+	//	err := client.Streams.CreateOnTable(ctx, NewCreateOnTableStreamRequest(id, table.ID()))
+	//	require.NoError(t, err)
+	//	t.Cleanup(func() {
+	//		err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+	//		require.NoError(t, err)
+	//	})
+	//
 	//})
 
 	t.Run("CreateOnExternalTable", func(t *testing.T) {

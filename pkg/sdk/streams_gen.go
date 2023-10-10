@@ -28,7 +28,7 @@ type CreateOnTableStreamOptions struct {
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	CopyGrants      *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
 	onTable         bool                    `ddl:"static" sql:"ON TABLE"`
-	TableId         AccountObjectIdentifier `ddl:"identifier"`
+	TableId         SchemaObjectIdentifier  `ddl:"identifier"`
 	On              *OnStream               `ddl:"keyword"`
 	AppendOnly      *bool                   `ddl:"parameter" sql:"APPEND_ONLY"`
 	ShowInitialRows *bool                   `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`
@@ -57,7 +57,7 @@ type CreateOnExternalTableStreamOptions struct {
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	CopyGrants      *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
 	onExternalTable bool                    `ddl:"static" sql:"ON EXTERNAL TABLE"`
-	ExternalTableId AccountObjectIdentifier `ddl:"identifier"`
+	ExternalTableId SchemaObjectIdentifier  `ddl:"identifier"`
 	On              *OnStream               `ddl:"keyword"`
 	InsertOnly      *bool                   `ddl:"parameter" sql:"INSERT_ONLY"`
 	Comment         *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -72,7 +72,7 @@ type CreateOnStageStreamOptions struct {
 	name        AccountObjectIdentifier `ddl:"identifier"`
 	CopyGrants  *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
 	onStage     bool                    `ddl:"static" sql:"ON STAGE"`
-	StageId     AccountObjectIdentifier `ddl:"identifier"`
+	StageId     SchemaObjectIdentifier  `ddl:"identifier"`
 	Comment     *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -85,7 +85,7 @@ type CreateOnViewStreamOptions struct {
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	CopyGrants      *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
 	onView          bool                    `ddl:"static" sql:"ON VIEW"`
-	ViewId          AccountObjectIdentifier `ddl:"identifier"`
+	ViewId          SchemaObjectIdentifier  `ddl:"identifier"`
 	On              *OnStream               `ddl:"keyword"`
 	AppendOnly      *bool                   `ddl:"parameter" sql:"APPEND_ONLY"`
 	ShowInitialRows *bool                   `ddl:"parameter" sql:"SHOW_INITIAL_ROWS"`

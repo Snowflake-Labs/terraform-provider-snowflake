@@ -6,7 +6,7 @@ import ()
 
 func NewCreateOnTableStreamRequest(
 	name AccountObjectIdentifier,
-	TableId AccountObjectIdentifier,
+	TableId SchemaObjectIdentifier,
 ) *CreateOnTableStreamRequest {
 	s := CreateOnTableStreamRequest{}
 	s.name = name
@@ -94,7 +94,7 @@ func (s *OnStreamStatementRequest) WithStream(Stream *string) *OnStreamStatement
 
 func NewCreateOnExternalTableStreamRequest(
 	name AccountObjectIdentifier,
-	ExternalTableId AccountObjectIdentifier,
+	ExternalTableId SchemaObjectIdentifier,
 ) *CreateOnExternalTableStreamRequest {
 	s := CreateOnExternalTableStreamRequest{}
 	s.name = name
@@ -134,7 +134,7 @@ func (s *CreateOnExternalTableStreamRequest) WithComment(Comment *string) *Creat
 
 func NewCreateOnStageStreamRequest(
 	name AccountObjectIdentifier,
-	StageId AccountObjectIdentifier,
+	StageId SchemaObjectIdentifier,
 ) *CreateOnStageStreamRequest {
 	s := CreateOnStageStreamRequest{}
 	s.name = name
@@ -164,7 +164,7 @@ func (s *CreateOnStageStreamRequest) WithComment(Comment *string) *CreateOnStage
 
 func NewCreateOnViewStreamRequest(
 	name AccountObjectIdentifier,
-	ViewId AccountObjectIdentifier,
+	ViewId SchemaObjectIdentifier,
 ) *CreateOnViewStreamRequest {
 	s := CreateOnViewStreamRequest{}
 	s.name = name

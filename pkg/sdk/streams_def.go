@@ -72,7 +72,7 @@ var (
 				Name().
 				OptionalCopyGrants().
 				SQL("ON TABLE").
-				Identifier("TableId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
+				Identifier("TableId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
 				OptionalBooleanAssignment("APPEND_ONLY", nil).
 				OptionalBooleanAssignment("SHOW_INITIAL_ROWS", nil).
@@ -92,7 +92,7 @@ var (
 				Name().
 				OptionalCopyGrants().
 				SQL("ON EXTERNAL TABLE").
-				Identifier("ExternalTableId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
+				Identifier("ExternalTableId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
 				OptionalBooleanAssignment("INSERT_ONLY", nil).
 				OptionalComment().
@@ -111,7 +111,7 @@ var (
 				Name().
 				OptionalCopyGrants().
 				SQL("ON STAGE").
-				Identifier("StageId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
+				Identifier("StageId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 				OptionalComment().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ValidIdentifier, "StageId").
@@ -128,7 +128,7 @@ var (
 				Name().
 				OptionalCopyGrants().
 				SQL("ON VIEW").
-				Identifier("ViewId", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required()).
+				Identifier("ViewId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
 				OptionalQueryStructField("On", onStreamDef, g.KeywordOptions()).
 				OptionalBooleanAssignment("APPEND_ONLY", nil).
 				OptionalBooleanAssignment("SHOW_INITIAL_ROWS", nil).
