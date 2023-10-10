@@ -7,23 +7,14 @@ import (
 )
 
 type Roles interface {
-	// Create creates a role.
 	Create(ctx context.Context, req *CreateRoleRequest) error
-	// Alter modifies an existing role
 	Alter(ctx context.Context, req *AlterRoleRequest) error
-	// Drop removes a role.
 	Drop(ctx context.Context, req *DropRoleRequest) error
-	// Show returns a list of roles.
 	Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error)
-	// ShowByID returns a user by ID
 	ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, error)
-	// Grant grants privileges on a role.
 	Grant(ctx context.Context, req *GrantRoleRequest) error
-	// Revoke revokes privileges on a role.
 	Revoke(ctx context.Context, req *RevokeRoleRequest) error
-	// Use sets the active role for the current session.
 	Use(ctx context.Context, req *UseRoleRequest) error
-	// UseSecondary specifies the active/current secondary roles for the session.
 	UseSecondary(ctx context.Context, req *UseSecondaryRolesRequest) error
 }
 

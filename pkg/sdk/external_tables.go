@@ -368,8 +368,8 @@ func (e externalTableRow) convert() *ExternalTable {
 	return et
 }
 
-// describeExternalTableColumns based on https://docs.snowflake.com/en/sql-reference/sql/desc-external-table
-type describeExternalTableColumns struct {
+// describeExternalTableColumnsOptions based on https://docs.snowflake.com/en/sql-reference/sql/desc-external-table
+type describeExternalTableColumnsOptions struct {
 	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"`
 	name                  AccountObjectIdentifier `ddl:"identifier"`
 	columnsType           bool                    `ddl:"static" sql:"TYPE = COLUMNS"`
@@ -431,7 +431,7 @@ func (r externalTableColumnDetailsRow) convert() *ExternalTableColumnDetails {
 	return details
 }
 
-type describeExternalTableStage struct {
+type describeExternalTableStageOptions struct {
 	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"`
 	name                  AccountObjectIdentifier `ddl:"identifier"`
 	stageType             bool                    `ddl:"static" sql:"TYPE = STAGE"`

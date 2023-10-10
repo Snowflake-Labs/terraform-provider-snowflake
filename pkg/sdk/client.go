@@ -31,6 +31,7 @@ type Client struct {
 	Comments         Comments
 	DatabaseRoles    DatabaseRoles
 	Databases        Databases
+	DynamicTables    DynamicTables
 	ExternalTables   ExternalTables
 	FailoverGroups   FailoverGroups
 	FileFormats      FileFormats
@@ -47,6 +48,7 @@ type Client struct {
 	Sessions         Sessions
 	Shares           Shares
 	Tags             Tags
+	Tasks            Tasks
 	Users            Users
 	Warehouses       Warehouses
 }
@@ -131,6 +133,7 @@ func (c *Client) initialize() {
 	c.ConversionFunctions = &conversionFunctions{client: c}
 	c.DatabaseRoles = &databaseRoles{client: c}
 	c.Databases = &databases{client: c}
+	c.DynamicTables = &dynamicTables{client: c}
 	c.ExternalTables = &externalTables{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
 	c.FileFormats = &fileFormats{client: c}
@@ -149,6 +152,7 @@ func (c *Client) initialize() {
 	c.Shares = &shares{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
 	c.Tags = &tags{client: c}
+	c.Tasks = &tasks{client: c}
 	c.Users = &users{client: c}
 	c.Warehouses = &warehouses{client: c}
 }

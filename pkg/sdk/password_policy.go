@@ -7,31 +7,22 @@ import (
 	"time"
 )
 
-// Compile-time proof of interface implementation.
 var _ PasswordPolicies = (*passwordPolicies)(nil)
 
 var (
 	_ validatable = new(CreatePasswordPolicyOptions)
 	_ validatable = new(AlterPasswordPolicyOptions)
 	_ validatable = new(DropPasswordPolicyOptions)
-	_ validatable = new(PasswordPolicyShowOptions)
+	_ validatable = new(ShowPasswordPolicyOptions)
 	_ validatable = new(describePasswordPolicyOptions)
 )
 
-// PasswordPolicies describes all the password policy related methods that the
-// Snowflake API supports.
 type PasswordPolicies interface {
-	// Create creates a new password policy.
 	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreatePasswordPolicyOptions) error
-	// Alter modifies an existing password policy.
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterPasswordPolicyOptions) error
-	// Drop removes a password policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPasswordPolicyOptions) error
-	// Show returns a list of password policies.
-	Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]PasswordPolicy, error)
-	// ShowByID returns a password policy by ID.
+	Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
-	// Describe returns the details of a password policy.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicyDetails, error)
 }
 
@@ -40,6 +31,7 @@ type passwordPolicies struct {
 	client *Client
 }
 
+// CreatePasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-password-policy.
 type CreatePasswordPolicyOptions struct {
 	create         bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace      *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -84,6 +76,7 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 	return err
 }
 
+// AlterPasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-password-policy.
 type AlterPasswordPolicyOptions struct {
 	alter          bool                   `ddl:"static" sql:"ALTER"`
 	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
@@ -212,6 +205,7 @@ func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier,
 	return err
 }
 
+// DropPasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-password-policy.
 type DropPasswordPolicyOptions struct {
 	drop           bool                   `ddl:"static" sql:"DROP"`
 	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
@@ -242,8 +236,8 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 	return err
 }
 
-// PasswordPolicyShowOptions represents the options for listing password policies.
-type PasswordPolicyShowOptions struct {
+// ShowPasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-password-policies.
+type ShowPasswordPolicyOptions struct {
 	show             bool  `ddl:"static" sql:"SHOW"`
 	passwordPolicies bool  `ddl:"static" sql:"PASSWORD POLICIES"`
 	Like             *Like `ddl:"keyword" sql:"LIKE"`
@@ -251,11 +245,11 @@ type PasswordPolicyShowOptions struct {
 	Limit            *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-func (input *PasswordPolicyShowOptions) validate() error {
+func (input *ShowPasswordPolicyOptions) validate() error {
 	return nil
 }
 
-// PasswordPolicys is a user friendly result for a CREATE PASSWORD POLICY query.
+// PasswordPolicy is a user-friendly result for a CREATE PASSWORD POLICY query.
 type PasswordPolicy struct {
 	CreatedOn    time.Time
 	Name         string
@@ -300,7 +294,7 @@ func (row passwordPolicyDBRow) convert() PasswordPolicy {
 }
 
 // List all the password policies by pattern.
-func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]PasswordPolicy, error) {
+func (v *passwordPolicies) Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error) {
 	opts = createIfNil(opts)
 	if err := opts.validate(); err != nil {
 		return nil, err
@@ -323,7 +317,7 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 }
 
 func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error) {
-	passwordPolicies, err := v.Show(ctx, &PasswordPolicyShowOptions{
+	passwordPolicies, err := v.Show(ctx, &ShowPasswordPolicyOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -343,6 +337,7 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 	return nil, errObjectNotExistOrAuthorized
 }
 
+// describePasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-password-policy.
 type describePasswordPolicyOptions struct {
 	describe       bool                   `ddl:"static" sql:"DESCRIBE"`
 	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`

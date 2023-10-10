@@ -303,7 +303,7 @@ func TestWarehouseShow(t *testing.T) {
 
 func TestWarehouseDescribe(t *testing.T) {
 	t.Run("only name", func(t *testing.T) {
-		opts := &warehouseDescribeOptions{
+		opts := &describeWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 		}
 		actual, err := structToSQL(opts)

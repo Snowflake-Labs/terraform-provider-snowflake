@@ -34,5 +34,3 @@ resource "snowflake_account_password_policy_attachment" "attachment" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

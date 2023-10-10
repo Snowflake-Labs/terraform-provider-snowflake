@@ -17,15 +17,17 @@ type {{ .Name }} interface {
 	{{- range .Operations }}
 		{{- if and (eq .Name "Show") .ShowMapping }}
 			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) ([]{{ .ShowMapping.To.Name }}, error)
+		{{- else if eq .Name "ShowByID" }}
+			{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error)
 		{{- else if and (eq .Name "Describe") .DescribeMapping }}
-			{{ if .DescribeKind }}
-				{{ if eq (deref .DescribeKind) "single_value" }}
+			{{- if .DescribeKind }}
+				{{- if eq (deref .DescribeKind) "single_value" }}
 					{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error)
-				{{ else if eq (deref .DescribeKind) "slice" }}
+				{{- else if eq (deref .DescribeKind) "slice" }}
 					{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error)
-				{{ end }}
-			{{ end }}
-		{{ else }}
+				{{- end }}
+			{{- end }}
+		{{- else }}
 			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error
 		{{- end -}}
 	{{ end }}
@@ -55,7 +57,9 @@ var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
 
 var (
 	{{- range .Operations }}
+	{{- if .OptsField }}
 	_ optionsProvider[{{ .OptsField.KindNoPtr }}] = new({{ .OptsField.DtoDecl }})
+	{{- end }}
 	{{- end }}
 )
 `)
@@ -130,12 +134,20 @@ type {{ $impl }} struct {
 			resultList := convertRows[{{ .ShowMapping.From.Name }}, {{ .ShowMapping.To.Name }}](dbRows)
 			return resultList, nil
 		}
+	{{ else if eq .Name "ShowByID" }}
+		func (v *{{ $impl }}) ShowByID(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
+			// TODO: adjust request if e.g. LIKE is supported for the resource
+			{{ $impl }}, err := v.Show(ctx, NewShow{{ .ObjectInterface.NameSingular }}Request())
+			if err != nil {
+				return nil, err
+			}
+			return findOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
+		}
 	{{ else if and (eq .Name "Describe") .DescribeMapping }}
 		{{ if .DescribeKind }}
 			{{ if eq (deref .DescribeKind) "single_value" }}
 				func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error) {
 					opts := &{{ .OptsField.Name }}{
-						 // TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 						 name: id,
 					}
 					result, err := validateAndQueryOne[{{ .DescribeMapping.From.Name }}](v.client, ctx, opts)
@@ -147,7 +159,6 @@ type {{ $impl }} struct {
 			{{ else if eq (deref .DescribeKind) "slice" }}
 				func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error) {
 					opts := &{{ .OptsField.Name }}{
-						 // TODO enforce this convention in the DSL (field "name" is queryStruct identifier)
 						 name: id,
 					}
 					rows, err := validateAndQuery[{{ .DescribeMapping.From.Name}}](v.client, ctx, opts)
@@ -167,6 +178,7 @@ type {{ $impl }} struct {
 {{ end }}
 
 {{ range .Operations }}
+	{{- if .OptsField }}
 	func (r *{{ .OptsField.DtoDecl }}) toOpts() *{{ .OptsField.KindNoPtr }} {
 		opts := {{ template "MAPPING" .OptsField -}}
 		return opts
@@ -177,6 +189,7 @@ type {{ $impl }} struct {
 	{{ if .DescribeMapping }}
 		{{ template "MAPPING_FUNC" .DescribeMapping }}
 	{{ end }}
+	{{- end}}
 {{ end }}
 `)
 
@@ -204,6 +217,7 @@ var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 import "testing"
 
 {{ range .Operations }}
+	{{- if .OptsField }}
 	func Test{{ .ObjectInterface.Name }}_{{ .Name }}(t *testing.T) {
 		id := random{{ .ObjectInterface.IdentifierKind }}(t)
 
@@ -233,6 +247,7 @@ import "testing"
 			assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 		})
 	}
+	{{- end }}
 {{ end }}
 `)
 
@@ -257,10 +272,13 @@ import "errors"
 
 var (
 {{- range .Operations }}
+	{{- if .OptsField }}	
 	_ validatable = new({{ .OptsField.KindNoPtr }})
+	{{- end }}
 {{- end }}
 )
 {{ range .Operations }}
+	{{- if .OptsField }}
 	func (opts *{{ .OptsField.KindNoPtr }}) validate() error {
 		if opts == nil {
 			return errors.Join(errNilOptions)
@@ -269,6 +287,7 @@ var (
 		{{- template "VALIDATIONS" .OptsField }}
 		return errors.Join(errs...)
 	}
+	{{- end }}
 {{ end }}
 `)
 

@@ -33,9 +33,17 @@ To invoke example generation (with first cleaning all the generated files) run:
 make clean-generator-poc run-generator-poc
 ```
 
+To invoke generation inside SDK package (with cleaning), e.g. for `session_policies` run (mind the `_`(underscore)):
+```shell
+make clean-generator-session_policies run-generator-session_policies
+```
+
 ### Next steps
 ##### Essentials
-- modify makefile scripts (see TODO in makefile)
+- fix builder generation (`With`s for optional fields should have required param, optional fields should not be exported in `Request` structs)
+- generate each branch of alter in tests (instead of basic and all options)
+- clean up predefined operations in generator (now casting to string)
+- (?) add mapping from db to plain struct (for now only "// TODO: Mapping" comment is generated)
 - add arguments to the generator, so we'll be able to specify which files should be generated / re-generated,
 because after we fill things that need our input we don't want to re-generate those files and override the changes,
 also adding small changes is very challenging, e.g. for new validation rule you have to re-generate unit-tests to get
@@ -85,8 +93,13 @@ find a better solution to solve the issue (add more logic to the templates ?)
 - when calling .SelfIdentifier we can implicitly also add validateObjectIdentifier validation rule
 - enforce user to use KindOf... functions with interface
   - example implementation - StringTyper implements Typer and all the KindOf... functions use StringTyper to return Typer easily - https://go.dev/play/p/TZZgSkkHw_M
+- `queryStruct` should be spilled into `Operation` interface file, because the idea was to have model which is unaware of DSL used to create it.
+- generate full tests for common types (e.g. setting/unsetting tags)
+- generate common resources for integration tests
+- cleanup the design of builders in DSL (e.g. why transformer has to be always added?)
 
 ##### Known issues
+- generating two converts when Show and Desc use the same data structure
 - wrong generated validations for validIdentifierIfSet for cases like
 ```go
 A := QueryStruct("A").

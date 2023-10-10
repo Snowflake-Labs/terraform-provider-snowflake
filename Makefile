@@ -2,6 +2,7 @@ export GO111MODULE=on
 export TF_ACC_TERRAFORM_VERSION=1.4.1
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
+export SKIP_TABLE_DATA_RETENTION_TESTS=true
 
 BASE_BINARY_NAME=terraform-provider-snowflake
 TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
@@ -102,21 +103,10 @@ clean-generator-poc:
 	rm -f ./pkg/sdk/poc/example/*_gen_test.go
 .PHONY: run-generator-poc
 
-# TODO Below run-generator-% script won't generate, because there's some complications with the syntax and order how it runs
-#run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on definition
-#	go generate ./pkg/sdk/$*_def.go && go generate ./pkg/sdk/$*_dto_gen.go
-#
-#clean-generator-%: ./pkg/sdk/%_*_gen.go ## Clean generated files for specified resource
-#	rm -f ./pkg/sdk/$*_*_gen.go
+run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on given object definition
+	go generate $<
+	go generate ./pkg/sdk/$*_dto_gen.go
 
-# TODO For now use those like this => make file=network_policies clean-generator run-generator
-clean-generator: ## Remove generated files and tests for given ${file}
-	rm -f ./pkg/sdk/${file}*_gen.go
-	rm -f ./pkg/sdk/${file}*_gen_test.go
-	rm -f ./pkg/sdk/${file}*_gen_integration_test.go
-.PHONY: clean-generator
-
-run-generator: ## Generate files and tests for given ${file}
-	go generate ./pkg/sdk/${file}_def.go
-	go generate ./pkg/sdk/${file}_dto_gen.go
-.PHONY: run-generator
+clean-generator-%: ## Clean generated files for specified resource
+	rm -f ./pkg/sdk/$**_gen.go
+	rm -f ./pkg/sdk/$**_gen_*test.go

@@ -40,5 +40,3 @@ A password policy specifies the requirements that must be met to create and rese
 
 - `id` (String) The ID of this resource.
 - `qualified_name` (String) The qualified name for the password policy.
-
-

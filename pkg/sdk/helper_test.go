@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -18,7 +19,7 @@ func getAccountIdentifier(t *testing.T, client *Client) AccountIdentifier {
 	ctx := context.Background()
 	currentAccountLocator, err := client.ContextFunctions.CurrentAccount(ctx)
 	require.NoError(t, err)
-	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAcccounts(ctx)
+	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
 	require.NoError(t, err)
 	for _, replicationAccount := range replicationAccounts {
 		if replicationAccount.AccountLocator == currentAccountLocator {
@@ -190,18 +191,18 @@ func randomIntRange(t *testing.T, min, max int) int {
 func createSessionPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*SessionPolicy, func()) {
 	t.Helper()
 	id := NewSchemaObjectIdentifier(database.Name, schema.Name, randomStringN(t, 12))
-	return createSessionPolicyWithOptions(t, client, id, &CreateSessionPolicyOptions{})
+	return createSessionPolicyWithOptions(t, client, id, NewCreateSessionPolicyRequest(id))
 }
 
-func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, opts *CreateSessionPolicyOptions) (*SessionPolicy, func()) {
+func createSessionPolicyWithOptions(t *testing.T, client *Client, id SchemaObjectIdentifier, request *CreateSessionPolicyRequest) (*SessionPolicy, func()) {
 	t.Helper()
 	ctx := context.Background()
-	err := client.SessionPolicies.Create(ctx, id, opts)
+	err := client.SessionPolicies.Create(ctx, request)
 	require.NoError(t, err)
 	sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, id)
 	require.NoError(t, err)
 	return sessionPolicy, func() {
-		err := client.SessionPolicies.Drop(ctx, id, nil)
+		err := client.SessionPolicies.Drop(ctx, NewDropSessionPolicyRequest(id))
 		require.NoError(t, err)
 	}
 }
@@ -347,6 +348,9 @@ func createDatabaseWithOptions(t *testing.T, client *Client, id AccountObjectIde
 	require.NoError(t, err)
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
+		if errors.Is(err, errObjectNotExistOrAuthorized) {
+			return
+		}
 		require.NoError(t, err)
 	}
 }
@@ -366,6 +370,9 @@ func createSchemaWithIdentifier(t *testing.T, client *Client, database *Database
 	require.NoError(t, err)
 	return schema, func() {
 		err := client.Schemas.Drop(ctx, schemaID, nil)
+		if errors.Is(err, errObjectNotExistOrAuthorized) {
+			return
+		}
 		require.NoError(t, err)
 	}
 }
@@ -424,7 +431,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Dat
 	err := client.PasswordPolicies.Create(ctx, id, options)
 	require.NoError(t, err)
 
-	showOptions := &PasswordPolicyShowOptions{
+	showOptions := &ShowPasswordPolicyOptions{
 		Like: &Like{
 			Pattern: String(name),
 		},
@@ -656,7 +663,7 @@ func createPipe(t *testing.T, client *Client, database *Database, schema *Schema
 		require.NoError(t, err)
 	}
 
-	err := client.Pipes.Create(ctx, id, copyStatement, &PipeCreateOptions{})
+	err := client.Pipes.Create(ctx, id, copyStatement, &CreatePipeOptions{})
 	if err != nil {
 		return nil, pipeCleanup
 	}
@@ -710,6 +717,58 @@ func createStage(t *testing.T, client *Client, database *Database, schema *Schem
 		SchemaName:   schema.Name,
 		Name:         name,
 	}, stageCleanup
+}
+
+func createDynamicTable(t *testing.T, client *Client) (*DynamicTable, func()) {
+	t.Helper()
+	return createDynamicTableWithOptions(t, client, nil, nil, nil, nil)
+}
+
+func createDynamicTableWithOptions(t *testing.T, client *Client, warehouse *Warehouse, database *Database, schema *Schema, table *Table) (*DynamicTable, func()) {
+	t.Helper()
+	var warehouseCleanup func()
+	if warehouse == nil {
+		warehouse, warehouseCleanup = createWarehouse(t, client)
+	}
+	var databaseCleanup func()
+	if database == nil {
+		database, databaseCleanup = createDatabase(t, client)
+	}
+	var schemaCleanup func()
+	if schema == nil {
+		schema, schemaCleanup = createSchema(t, client, database)
+	}
+	var tableCleanup func()
+	if table == nil {
+		table, tableCleanup = createTable(t, client, database, schema)
+	}
+	name := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, randomString(t))
+	targetLag := TargetLag{
+		Lagtime: String("2 minutes"),
+	}
+	query := "select id from " + table.ID().FullyQualifiedName()
+	comment := randomComment(t)
+	ctx := context.Background()
+	err := client.DynamicTables.Create(ctx, NewCreateDynamicTableRequest(name, warehouse.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
+	require.NoError(t, err)
+	entities, err := client.DynamicTables.Show(ctx, NewShowDynamicTableRequest().WithLike(&Like{Pattern: String(name.Name())}).WithIn(&In{Schema: schema.ID()}))
+	require.NoError(t, err)
+	require.Equal(t, 1, len(entities))
+	return &entities[0], func() {
+		require.NoError(t, client.DynamicTables.Drop(ctx, NewDropDynamicTableRequest(name)))
+		if tableCleanup != nil {
+			tableCleanup()
+		}
+		if schemaCleanup != nil {
+			schemaCleanup()
+		}
+		if databaseCleanup != nil {
+			databaseCleanup()
+		}
+		if warehouseCleanup != nil {
+			warehouseCleanup()
+		}
+	}
 }
 
 func createStageWithURL(t *testing.T, client *Client, name AccountObjectIdentifier, url string) (*Stage, func()) {

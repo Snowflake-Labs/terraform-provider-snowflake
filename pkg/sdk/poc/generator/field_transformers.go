@@ -26,6 +26,11 @@ func (v *KeywordTransformer) SQL(sqlPrefix string) *KeywordTransformer {
 	return v
 }
 
+func (v *KeywordTransformer) NoQuotes() *KeywordTransformer {
+	v.quotes = "no_quotes"
+	return v
+}
+
 func (v *KeywordTransformer) SingleQuotes() *KeywordTransformer {
 	v.quotes = "single_quotes"
 	return v
@@ -51,6 +56,7 @@ type ParameterTransformer struct {
 	sqlPrefix   string
 	quotes      string
 	parentheses string
+	equals      string
 }
 
 func ParameterOptions() *ParameterTransformer {
@@ -67,6 +73,16 @@ func (v *ParameterTransformer) SQL(sqlPrefix string) *ParameterTransformer {
 	return v
 }
 
+func (v *ParameterTransformer) NoQuotes() *ParameterTransformer {
+	v.quotes = "no_quotes"
+	return v
+}
+
+func (v *ParameterTransformer) NoEquals() *ParameterTransformer {
+	v.equals = "no_equals"
+	return v
+}
+
 func (v *ParameterTransformer) SingleQuotes() *ParameterTransformer {
 	v.quotes = "single_quotes"
 	return v
@@ -74,6 +90,11 @@ func (v *ParameterTransformer) SingleQuotes() *ParameterTransformer {
 
 func (v *ParameterTransformer) DoubleQuotes() *ParameterTransformer {
 	v.quotes = "double_quotes"
+	return v
+}
+
+func (v *ParameterTransformer) NoParentheses() *ParameterTransformer {
+	v.quotes = "no_parentheses"
 	return v
 }
 
@@ -90,6 +111,7 @@ func (v *ParameterTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.quotes)
 	addTagIfMissing(f.Tags, "ddl", v.parentheses)
+	addTagIfMissing(f.Tags, "ddl", v.equals)
 	return f
 }
 
@@ -97,6 +119,7 @@ type ListTransformer struct {
 	required    bool
 	sqlPrefix   string
 	parentheses string
+	equals      string
 }
 
 func ListOptions() *ListTransformer {
@@ -113,6 +136,11 @@ func (v *ListTransformer) NoParens() *ListTransformer {
 	return v
 }
 
+func (v *ListTransformer) NoEquals() *ListTransformer {
+	v.equals = "no_equals"
+	return v
+}
+
 func (v *ListTransformer) SQL(sqlPrefix string) *ListTransformer {
 	v.sqlPrefix = sqlPrefix
 	return v
@@ -125,6 +153,7 @@ func (v *ListTransformer) Transform(f *Field) *Field {
 	}
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.parentheses)
+	addTagIfMissing(f.Tags, "ddl", v.equals)
 	return f
 }
 
@@ -132,6 +161,7 @@ type IdentifierTransformer struct {
 	required  bool
 	sqlPrefix string
 	quotes    string
+	equals    string
 }
 
 func IdentifierOptions() *IdentifierTransformer {
@@ -158,6 +188,16 @@ func (v *IdentifierTransformer) Required() *IdentifierTransformer {
 	return v
 }
 
+func (v *IdentifierTransformer) NoEquals() *IdentifierTransformer {
+	v.equals = "no_equals"
+	return v
+}
+
+func (v *IdentifierTransformer) Equals() *IdentifierTransformer {
+	v.equals = "equals"
+	return v
+}
+
 func (v *IdentifierTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "identifier")
 	if v.required {
@@ -165,6 +205,7 @@ func (v *IdentifierTransformer) Transform(f *Field) *Field {
 	}
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.quotes)
+	addTagIfMissing(f.Tags, "ddl", v.equals)
 	return f
 }
 

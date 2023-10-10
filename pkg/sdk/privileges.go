@@ -37,6 +37,8 @@ const (
 	GlobalPrivilegeImportShare GlobalPrivilege = "IMPORT SHARE"
 	// | MANAGE GRANTS
 	GlobalPrivilegeManageGrants GlobalPrivilege = "MANAGE GRANTS"
+	// | MANAGE WAREHOUSES
+	GlobalPrivilegeManageWarehouses GlobalPrivilege = "MANAGE WAREHOUSES"
 
 	// | MODIFY { LOG LEVEL | TRACE LEVEL | SESSION LOG LEVEL | SESSION TRACE LEVEL }
 	GlobalPrivilegeModifyLogLevel          GlobalPrivilege = "MODIFY LOG LEVEL"

@@ -117,7 +117,7 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	opts := &sdk.PipeCreateOptions{}
+	opts := &sdk.CreatePipeOptions{}
 
 	copyStatement := d.Get("copy_statement").(string)
 
@@ -244,7 +244,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if runSetStatement {
-		options := &sdk.PipeAlterOptions{Set: pipeSet}
+		options := &sdk.AlterPipeOptions{Set: pipeSet}
 		err := client.Pipes.Alter(ctx, objectIdentifier, options)
 		if err != nil {
 			return fmt.Errorf("error updating pipe %v: %w", objectIdentifier.Name(), err)
@@ -252,7 +252,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if runUnsetStatement {
-		options := &sdk.PipeAlterOptions{Unset: pipeUnset}
+		options := &sdk.AlterPipeOptions{Unset: pipeUnset}
 		err := client.Pipes.Alter(ctx, objectIdentifier, options)
 		if err != nil {
 			return fmt.Errorf("error updating pipe %v: %w", objectIdentifier.Name(), err)

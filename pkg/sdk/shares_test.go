@@ -162,7 +162,7 @@ func TestShareShow(t *testing.T) {
 
 func TestShareDrop(t *testing.T) {
 	t.Run("only name", func(t *testing.T) {
-		opts := &shareDropOptions{
+		opts := &dropShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
 		}
 		actual, err := structToSQL(opts)
@@ -174,7 +174,7 @@ func TestShareDrop(t *testing.T) {
 
 func TestShareDescribe(t *testing.T) {
 	t.Run("describe provider", func(t *testing.T) {
-		opts := &shareDescribeOptions{
+		opts := &describeShareOptions{
 			name: NewAccountObjectIdentifier("myprovider"),
 		}
 		actual, err := structToSQL(opts)
@@ -183,7 +183,7 @@ func TestShareDescribe(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("describe consumer", func(t *testing.T) {
-		opts := &shareDescribeOptions{
+		opts := &describeShareOptions{
 			name: NewAccountObjectIdentifier("myconsumer"),
 		}
 		actual, err := structToSQL(opts)
