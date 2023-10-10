@@ -1,7 +1,8 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,18 +10,18 @@ import (
 )
 
 func TestInt_Comment(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 
-	testWarehouse, warehouseCleanup := createWarehouse(t, client)
+	testWarehouse, warehouseCleanup := sdk.createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("set", func(t *testing.T) {
-		comment := randomComment(t)
-		err := client.Comments.Set(ctx, &SetCommentOptions{
-			ObjectType: ObjectTypeWarehouse,
+		comment := sdk.randomComment(t)
+		err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
+			ObjectType: sdk.ObjectTypeWarehouse,
 			ObjectName: testWarehouse.ID(),
-			Value:      String(comment),
+			Value:      sdk.String(comment),
 		})
 		require.NoError(t, err)
 		wh, err := client.Warehouses.ShowByID(ctx, testWarehouse.ID())

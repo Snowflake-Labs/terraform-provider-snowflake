@@ -1,7 +1,8 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,16 +10,16 @@ import (
 )
 
 func TestInt_SessionPolicies(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 
-	database, databaseCleanup := createDatabase(t, client)
+	database, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchema(t, client, database)
+	schema, schemaCleanup := sdk.createSchema(t, client, database)
 	t.Cleanup(schemaCleanup)
 
-	assertSessionPolicy := func(t *testing.T, sessionPolicy *SessionPolicy, id SchemaObjectIdentifier, expectedComment string) {
+	assertSessionPolicy := func(t *testing.T, sessionPolicy *sdk.SessionPolicy, id sdk.SchemaObjectIdentifier, expectedComment string) {
 		t.Helper()
 		assert.NotEmpty(t, sessionPolicy.CreatedOn)
 		assert.Equal(t, id.Name(), sessionPolicy.Name)
@@ -32,8 +33,8 @@ func TestInt_SessionPolicies(t *testing.T) {
 
 	assertSessionPolicyDescription := func(
 		t *testing.T,
-		sessionPolicyDescription *SessionPolicyDescription,
-		id SchemaObjectIdentifier,
+		sessionPolicyDescription *sdk.SessionPolicyDescription,
+		id sdk.SchemaObjectIdentifier,
 	) {
 		t.Helper()
 		assert.NotEmpty(t, sessionPolicyDescription.CreatedOn)
@@ -43,19 +44,19 @@ func TestInt_SessionPolicies(t *testing.T) {
 		assert.Equal(t, "", sessionPolicyDescription.Comment)
 	}
 
-	cleanupSessionPolicyProvider := func(id SchemaObjectIdentifier) func() {
+	cleanupSessionPolicyProvider := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
-			err := client.SessionPolicies.Drop(ctx, NewDropSessionPolicyRequest(id))
+			err := client.SessionPolicies.Drop(ctx, sdk.NewDropSessionPolicyRequest(id))
 			require.NoError(t, err)
 		}
 	}
 
-	createSessionPolicy := func(t *testing.T) *SessionPolicy {
+	createSessionPolicy := func(t *testing.T) *sdk.SessionPolicy {
 		t.Helper()
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		name := sdk.randomString(t)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		err := client.SessionPolicies.Create(ctx, NewCreateSessionPolicyRequest(id))
+		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupSessionPolicyProvider(id))
 
@@ -66,15 +67,15 @@ func TestInt_SessionPolicies(t *testing.T) {
 	}
 
 	t.Run("create session_policy: complete case", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		comment := randomComment(t)
+		name := sdk.randomString(t)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		comment := sdk.randomComment(t)
 
-		request := NewCreateSessionPolicyRequest(id).
-			WithSessionIdleTimeoutMins(Int(5)).
-			WithSessionUiIdleTimeoutMins(Int(34)).
+		request := sdk.NewCreateSessionPolicyRequest(id).
+			WithSessionIdleTimeoutMins(sdk.Int(5)).
+			WithSessionUiIdleTimeoutMins(sdk.Int(34)).
 			WithComment(&comment).
-			WithIfNotExists(Bool(true))
+			WithIfNotExists(sdk.Bool(true))
 
 		err := client.SessionPolicies.Create(ctx, request)
 		require.NoError(t, err)
@@ -87,10 +88,10 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("create session_policy: no optionals", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		name := sdk.randomString(t)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		request := NewCreateSessionPolicyRequest(id)
+		request := sdk.NewCreateSessionPolicyRequest(id)
 
 		err := client.SessionPolicies.Create(ctx, request)
 		require.NoError(t, err)
@@ -103,35 +104,35 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("drop session_policy: existing", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		name := sdk.randomString(t)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		err := client.SessionPolicies.Create(ctx, NewCreateSessionPolicyRequest(id))
+		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
 
-		err = client.SessionPolicies.Drop(ctx, NewDropSessionPolicyRequest(id))
+		err = client.SessionPolicies.Drop(ctx, sdk.NewDropSessionPolicyRequest(id))
 		require.NoError(t, err)
 
 		_, err = client.SessionPolicies.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("drop session_policy: non-existing", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, "does_not_exist")
 
-		err := client.SessionPolicies.Drop(ctx, NewDropSessionPolicyRequest(id))
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		err := client.SessionPolicies.Drop(ctx, sdk.NewDropSessionPolicyRequest(id))
+		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("alter session_policy: set value and unset value", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		name := sdk.randomString(t)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		err := client.SessionPolicies.Create(ctx, NewCreateSessionPolicyRequest(id))
+		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupSessionPolicyProvider(id))
 
-		alterRequest := NewAlterSessionPolicyRequest(id).WithSet(NewSessionPolicySetRequest().WithComment(String("new comment")))
+		alterRequest := sdk.NewAlterSessionPolicyRequest(id).WithSet(sdk.NewSessionPolicySetRequest().WithComment(sdk.String("new comment")))
 		err = client.SessionPolicies.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -140,7 +141,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 
 		assert.Equal(t, "new comment", alteredSessionPolicy.Comment)
 
-		alterRequest = NewAlterSessionPolicyRequest(id).WithUnset(NewSessionPolicyUnsetRequest().WithComment(Bool(true)))
+		alterRequest = sdk.NewAlterSessionPolicyRequest(id).WithUnset(sdk.NewSessionPolicyUnsetRequest().WithComment(sdk.Bool(true)))
 		err = client.SessionPolicies.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -151,55 +152,55 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, database, schema)
+		tag, tagCleanup := sdk.createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		name := sdk.randomString(t)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		err := client.SessionPolicies.Create(ctx, NewCreateSessionPolicyRequest(id))
+		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupSessionPolicyProvider(id))
 
 		tagValue := "abc"
-		tags := []TagAssociation{
+		tags := []sdk.TagAssociation{
 			{
 				Name:  tag.ID(),
 				Value: tagValue,
 			},
 		}
-		alterRequestSetTags := NewAlterSessionPolicyRequest(id).WithSetTags(tags)
+		alterRequestSetTags := sdk.NewAlterSessionPolicyRequest(id).WithSetTags(tags)
 
 		err = client.SessionPolicies.Alter(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeSessionPolicy)
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeSessionPolicy)
 		require.NoError(t, err)
 
 		assert.Equal(t, tagValue, returnedTagValue)
 
-		unsetTags := []ObjectIdentifier{
+		unsetTags := []sdk.ObjectIdentifier{
 			tag.ID(),
 		}
-		alterRequestUnsetTags := NewAlterSessionPolicyRequest(id).WithUnsetTags(unsetTags)
+		alterRequestUnsetTags := sdk.NewAlterSessionPolicyRequest(id).WithUnsetTags(unsetTags)
 
 		err = client.SessionPolicies.Alter(ctx, alterRequestUnsetTags)
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeSessionPolicy)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeSessionPolicy)
 		require.Error(t, err)
 	})
 
 	t.Run("alter session_policy: rename", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		name := sdk.randomString(t)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		err := client.SessionPolicies.Create(ctx, NewCreateSessionPolicyRequest(id))
+		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
 
-		newName := randomString(t)
-		newId := NewSchemaObjectIdentifier(database.Name, schema.Name, newName)
-		alterRequest := NewAlterSessionPolicyRequest(id).WithRenameTo(&newId)
+		newName := sdk.randomString(t)
+		newId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, newName)
+		alterRequest := sdk.NewAlterSessionPolicyRequest(id).WithRenameTo(&newId)
 
 		err = client.SessionPolicies.Alter(ctx, alterRequest)
 		if err != nil {
@@ -210,7 +211,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.SessionPolicies.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 
 		sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, newId)
 		require.NoError(t, err)
@@ -222,7 +223,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		sessionPolicy1 := createSessionPolicy(t)
 		sessionPolicy2 := createSessionPolicy(t)
 
-		showRequest := NewShowSessionPolicyRequest()
+		showRequest := sdk.NewShowSessionPolicyRequest()
 		returnedSessionPolicies, err := client.SessionPolicies.Show(ctx, showRequest)
 		require.NoError(t, err)
 

@@ -1,7 +1,8 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
 	"testing"
 
@@ -10,11 +11,11 @@ import (
 )
 
 func TestInt_DatabasesCreate(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 
 	t.Run("minimal", func(t *testing.T) {
-		databaseID := randomAccountObjectIdentifier(t)
+		databaseID := sdk.randomAccountObjectIdentifier(t)
 		err := client.Databases.Create(ctx, databaseID, nil)
 		require.NoError(t, err)
 		database, err := client.Databases.ShowByID(ctx, databaseID)
@@ -27,14 +28,14 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	})
 
 	t.Run("as clone", func(t *testing.T) {
-		cloneDatabase, cloneDatabaseCleanup := createDatabase(t, client)
+		cloneDatabase, cloneDatabaseCleanup := sdk.createDatabase(t, client)
 		t.Cleanup(cloneDatabaseCleanup)
-		databaseID := randomAccountObjectIdentifier(t)
-		opts := &CreateDatabaseOptions{
-			Clone: &Clone{
+		databaseID := sdk.randomAccountObjectIdentifier(t)
+		opts := &sdk.CreateDatabaseOptions{
+			Clone: &sdk.Clone{
 				SourceObject: cloneDatabase.ID(),
-				At: &TimeTravel{
-					Offset: Int(0),
+				At: &sdk.TimeTravel{
+					Offset: sdk.Int(0),
 				},
 			},
 		}
@@ -50,25 +51,25 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	})
 
 	t.Run("complete", func(t *testing.T) {
-		databaseID := randomAccountObjectIdentifier(t)
+		databaseID := sdk.randomAccountObjectIdentifier(t)
 
-		databaseTest, databaseCleanup := createDatabase(t, client)
+		databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
 		t.Cleanup(schemaCleanup)
-		tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+		tagTest, tagCleanup := sdk.createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup)
-		tag2Test, tag2Cleanup := createTag(t, client, databaseTest, schemaTest)
+		tag2Test, tag2Cleanup := sdk.createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tag2Cleanup)
 
-		comment := randomComment(t)
-		opts := &CreateDatabaseOptions{
-			OrReplace:                  Bool(true),
-			Transient:                  Bool(true),
-			Comment:                    String(comment),
-			DataRetentionTimeInDays:    Int(1),
-			MaxDataExtensionTimeInDays: Int(1),
-			Tag: []TagAssociation{
+		comment := sdk.randomComment(t)
+		opts := &sdk.CreateDatabaseOptions{
+			OrReplace:                  sdk.Bool(true),
+			Transient:                  sdk.Bool(true),
+			Comment:                    sdk.String(comment),
+			DataRetentionTimeInDays:    sdk.Int(1),
+			MaxDataExtensionTimeInDays: sdk.Int(1),
+			Tag: []sdk.TagAssociation{
 				{
 					Name:  tagTest.ID(),
 					Value: "v1",
@@ -87,15 +88,15 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		assert.Equal(t, comment, database.Comment)
 		assert.Equal(t, 1, database.RetentionTime)
 		// MAX_DATA_EXTENSION_IN_DAYS is an object parameter, not in Database object
-		param, err := client.Parameters.ShowObjectParameter(ctx, "MAX_DATA_EXTENSION_TIME_IN_DAYS", Object{ObjectType: ObjectTypeDatabase, Name: databaseID})
+		param, err := client.Parameters.ShowObjectParameter(ctx, "MAX_DATA_EXTENSION_TIME_IN_DAYS", sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: databaseID})
 		assert.NoError(t, err)
 		assert.Equal(t, "1", param.Value)
 
 		// verify tags
-		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), database.ID(), ObjectTypeDatabase)
+		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), database.ID(), sdk.ObjectTypeDatabase)
 		require.NoError(t, err)
 		assert.Equal(t, "v1", tag1Value)
-		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2Test.ID(), database.ID(), ObjectTypeDatabase)
+		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2Test.ID(), database.ID(), sdk.ObjectTypeDatabase)
 		require.NoError(t, err)
 		assert.Equal(t, "v2", tag2Value)
 
@@ -107,35 +108,35 @@ func TestInt_DatabasesCreate(t *testing.T) {
 }
 
 func TestInt_CreateShared(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	shareTest, _ := createShare(t, client)
+	shareTest, _ := sdk.createShare(t, client)
 	// t.Cleanup(shareCleanup)
-	err := client.Grants.GrantPrivilegeToShare(ctx, ObjectPrivilegeUsage, &GrantPrivilegeToShareOn{
+	err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
 		Database: databaseTest.ID(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		err = client.Grants.RevokePrivilegeFromShare(ctx, ObjectPrivilegeUsage, &RevokePrivilegeFromShareOn{
+		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
 	})
 	require.NoError(t, err)
-	secondaryClient := testSecondaryClient(t)
-	accountsToSet := []AccountIdentifier{
-		getAccountIdentifier(t, secondaryClient),
+	secondaryClient := sdk.testSecondaryClient(t)
+	accountsToSet := []sdk.AccountIdentifier{
+		sdk.getAccountIdentifier(t, secondaryClient),
 	}
 	// first add the account.
-	err = client.Shares.Alter(ctx, shareTest.ID(), &AlterShareOptions{
-		IfExists: Bool(true),
-		Set: &ShareSet{
+	err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
+		IfExists: sdk.Bool(true),
+		Set: &sdk.ShareSet{
 			Accounts: accountsToSet,
 		},
 	})
 
-	databaseID := randomAccountObjectIdentifier(t)
+	databaseID := sdk.randomAccountObjectIdentifier(t)
 	err = secondaryClient.Databases.CreateShared(ctx, databaseID, shareTest.ExternalID(), nil)
 	require.NoError(t, err)
 	database, err := secondaryClient.Databases.ShowByID(ctx, databaseID)
@@ -152,9 +153,9 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 }
 
 func TestInt_DatabasesDrop(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	databaseTest, _ := createDatabase(t, client)
+	databaseTest, _ := sdk.createDatabase(t, client)
 	databaseID := databaseTest.ID()
 	t.Run("drop with nil options", func(t *testing.T) {
 		err := client.Databases.Drop(ctx, databaseID, nil)
@@ -183,10 +184,10 @@ this test keeps failing need to fix.
 	}
 */
 func TestInt_DatabasesDescribe(t *testing.T) {
-	client := testClient(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	client := sdk.testClient(t)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 	ctx := context.Background()
 	databaseDetails, err := client.Databases.Describe(ctx, databaseTest.ID())
@@ -202,13 +203,13 @@ func TestInt_DatabasesDescribe(t *testing.T) {
 }
 
 func TestInt_DatabasesAlter(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 
 	t.Run("renaming", func(t *testing.T) {
-		databaseTest, _ := createDatabase(t, client)
-		newName := randomAccountObjectIdentifier(t)
-		err := client.Databases.Alter(ctx, databaseTest.ID(), &AlterDatabaseOptions{
+		databaseTest, _ := sdk.createDatabase(t, client)
+		newName := sdk.randomAccountObjectIdentifier(t)
+		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			NewName: newName,
 		})
 		require.NoError(t, err)
@@ -221,22 +222,22 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	})
 
 	t.Run("swap with another database", func(t *testing.T) {
-		databaseTest, databaseCleanup := createDatabase(t, client)
+		databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
-		databaseTest2, databaseCleanup2 := createDatabase(t, client)
+		databaseTest2, databaseCleanup2 := sdk.createDatabase(t, client)
 		t.Cleanup(databaseCleanup2)
-		err := client.Databases.Alter(ctx, databaseTest.ID(), &AlterDatabaseOptions{
+		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			SwapWith: databaseTest2.ID(),
 		})
 		require.NoError(t, err)
 	})
 
 	t.Run("setting and unsetting retention time + comment ", func(t *testing.T) {
-		databaseTest, _ := createDatabase(t, client)
-		err := client.Databases.Alter(ctx, databaseTest.ID(), &AlterDatabaseOptions{
-			Set: &DatabaseSet{
-				DataRetentionTimeInDays: Int(42),
-				Comment:                 String("test comment"),
+		databaseTest, _ := sdk.createDatabase(t, client)
+		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
+			Set: &sdk.DatabaseSet{
+				DataRetentionTimeInDays: sdk.Int(42),
+				Comment:                 sdk.String("test comment"),
 			},
 		})
 		require.NoError(t, err)
@@ -244,10 +245,10 @@ func TestInt_DatabasesAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 42, database.RetentionTime)
 		assert.Equal(t, "test comment", database.Comment)
-		err = client.Databases.Alter(ctx, databaseTest.ID(), &AlterDatabaseOptions{
-			Unset: &DatabaseUnset{
-				DataRetentionTimeInDays: Bool(true),
-				Comment:                 Bool(true),
+		err = client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
+			Unset: &sdk.DatabaseUnset{
+				DataRetentionTimeInDays: sdk.Bool(true),
+				Comment:                 sdk.Bool(true),
 			},
 		})
 		require.NoError(t, err)
@@ -263,18 +264,18 @@ func TestInt_AlterReplication(t *testing.T) {
 }
 
 func TestInt_AlterFailover(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	secondaryClient := testSecondaryClient(t)
+	secondaryClient := sdk.testSecondaryClient(t)
 
-	toAccounts := []AccountIdentifier{
-		getAccountIdentifier(t, secondaryClient),
+	toAccounts := []sdk.AccountIdentifier{
+		sdk.getAccountIdentifier(t, secondaryClient),
 	}
 	t.Run("enable and disable failover", func(t *testing.T) {
-		opts := &AlterDatabaseFailoverOptions{
-			EnableFailover: &EnableFailover{
+		opts := &sdk.AlterDatabaseFailoverOptions{
+			EnableFailover: &sdk.EnableFailover{
 				ToAccounts: toAccounts,
 			},
 		}
@@ -283,15 +284,15 @@ func TestInt_AlterFailover(t *testing.T) {
 			t.Skip("Skipping test because secondary account not enabled for replication")
 		}
 		require.NoError(t, err)
-		opts = &AlterDatabaseFailoverOptions{
-			DisableFailover: &DisableFailover{
+		opts = &sdk.AlterDatabaseFailoverOptions{
+			DisableFailover: &sdk.DisableFailover{
 				ToAccounts: toAccounts,
 			},
 		}
 		err = client.Databases.AlterFailover(ctx, databaseTest.ID(), opts)
 		require.NoError(t, err)
-		opts = &AlterDatabaseFailoverOptions{
-			Primary: Bool(true),
+		opts = &sdk.AlterDatabaseFailoverOptions{
+			Primary: sdk.Bool(true),
 		}
 		err = client.Databases.AlterFailover(ctx, databaseTest.ID(), opts)
 		require.NoError(t, err)
@@ -299,18 +300,18 @@ func TestInt_AlterFailover(t *testing.T) {
 }
 
 func TestInt_DatabasesShow(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	databaseTest2, databaseCleanup2 := createDatabase(t, client)
+	databaseTest2, databaseCleanup2 := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup2)
 	t.Run("without show options", func(t *testing.T) {
 		databases, err := client.Databases.Show(ctx, nil)
 		require.NoError(t, err)
 		assert.GreaterOrEqual(t, len(databases), 2)
-		databaseIDs := make([]AccountObjectIdentifier, len(databases))
+		databaseIDs := make([]sdk.AccountObjectIdentifier, len(databases))
 		for i, database := range databases {
 			databaseIDs[i] = database.ID()
 		}
@@ -319,10 +320,10 @@ func TestInt_DatabasesShow(t *testing.T) {
 	})
 
 	t.Run("with terse", func(t *testing.T) {
-		showOptions := &ShowDatabasesOptions{
-			Terse: Bool(true),
-			Like: &Like{
-				Pattern: String(databaseTest.Name),
+		showOptions := &sdk.ShowDatabasesOptions{
+			Terse: sdk.Bool(true),
+			Like: &sdk.Like{
+				Pattern: sdk.String(databaseTest.Name),
 			},
 		}
 		databases, err := client.Databases.Show(ctx, showOptions)
@@ -354,10 +355,10 @@ func TestInt_DatabasesShow(t *testing.T) {
 	   	})
 	*/
 	t.Run("with like starts with", func(t *testing.T) {
-		showOptions := &ShowDatabasesOptions{
-			StartsWith: String(databaseTest.Name),
-			LimitFrom: &LimitFrom{
-				Rows: Int(1),
+		showOptions := &sdk.ShowDatabasesOptions{
+			StartsWith: sdk.String(databaseTest.Name),
+			LimitFrom: &sdk.LimitFrom{
+				Rows: sdk.Int(1),
 			},
 		}
 		databases, err := client.Databases.Show(ctx, showOptions)
@@ -368,9 +369,9 @@ func TestInt_DatabasesShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent database", func(t *testing.T) {
-		showOptions := &ShowDatabasesOptions{
-			Like: &Like{
-				Pattern: String("non-existent"),
+		showOptions := &sdk.ShowDatabasesOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String("non-existent"),
 			},
 		}
 		databases, err := client.Databases.Show(ctx, showOptions)

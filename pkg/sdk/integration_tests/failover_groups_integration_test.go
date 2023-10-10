@@ -1,7 +1,8 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"os"
 	"testing"
@@ -17,33 +18,33 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
 
 	t.Run("test complete", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
-		objectTypes := []PluralObjectType{
-			PluralObjectTypeShares,
-			PluralObjectTypeDatabases,
+		id := sdk.randomAccountObjectIdentifier(t)
+		objectTypes := []sdk.PluralObjectType{
+			sdk.PluralObjectTypeShares,
+			sdk.PluralObjectTypeDatabases,
 		}
-		allowedAccounts := []AccountIdentifier{
-			getSecondaryAccountIdentifier(t),
+		allowedAccounts := []sdk.AccountIdentifier{
+			sdk.getSecondaryAccountIdentifier(t),
 		}
 		replicationSchedule := "10 MINUTE"
-		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &CreateFailoverGroupOptions{
-			IfNotExists: Bool(true),
-			AllowedDatabases: []AccountObjectIdentifier{
+		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
+			IfNotExists: sdk.Bool(true),
+			AllowedDatabases: []sdk.AccountObjectIdentifier{
 				databaseTest.ID(),
 			},
-			AllowedShares: []AccountObjectIdentifier{
+			AllowedShares: []sdk.AccountObjectIdentifier{
 				shareTest.ID(),
 			},
-			IgnoreEditionCheck:  Bool(true),
-			ReplicationSchedule: String(replicationSchedule),
+			IgnoreEditionCheck:  sdk.Bool(true),
+			ReplicationSchedule: sdk.String(replicationSchedule),
 		})
 		require.NoError(t, err)
 		failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
@@ -77,18 +78,18 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	})
 
 	t.Run("test with allowed integration types", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
-		objectTypes := []PluralObjectType{
-			PluralObjectTypeIntegrations,
+		id := sdk.randomAccountObjectIdentifier(t)
+		objectTypes := []sdk.PluralObjectType{
+			sdk.PluralObjectTypeIntegrations,
 		}
-		allowedAccounts := []AccountIdentifier{
-			getSecondaryAccountIdentifier(t),
+		allowedAccounts := []sdk.AccountIdentifier{
+			sdk.getSecondaryAccountIdentifier(t),
 		}
-		allowedIntegrationTypes := []IntegrationType{
-			IntegrationTypeAPIIntegrations,
-			IntegrationTypeNotificationIntegrations,
+		allowedIntegrationTypes := []sdk.IntegrationType{
+			sdk.IntegrationTypeAPIIntegrations,
+			sdk.IntegrationTypeNotificationIntegrations,
 		}
-		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &CreateFailoverGroupOptions{
+		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
 			AllowedIntegrationTypes: allowedIntegrationTypes,
 		})
 		require.NoError(t, err)
@@ -110,31 +111,31 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	primaryAccountID := getAccountIdentifier(t, client)
-	secondaryClient := testSecondaryClient(t)
-	secondaryClientID := getAccountIdentifier(t, secondaryClient)
+	primaryAccountID := sdk.getAccountIdentifier(t, client)
+	secondaryClient := sdk.testSecondaryClient(t)
+	secondaryClientID := sdk.getAccountIdentifier(t, secondaryClient)
 
 	// create a temp share
-	shareTest, cleanupDatabase := createShare(t, client)
+	shareTest, cleanupDatabase := sdk.createShare(t, client)
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
-	id := randomAccountObjectIdentifier(t)
+	id := sdk.randomAccountObjectIdentifier(t)
 
-	opts := &CreateFailoverGroupOptions{
-		AllowedShares: []AccountObjectIdentifier{
+	opts := &sdk.CreateFailoverGroupOptions{
+		AllowedShares: []sdk.AccountObjectIdentifier{
 			shareTest.ID(),
 		},
-		ReplicationSchedule: String("10 MINUTE"),
+		ReplicationSchedule: sdk.String("10 MINUTE"),
 	}
-	allowedAccounts := []AccountIdentifier{
+	allowedAccounts := []sdk.AccountIdentifier{
 		primaryAccountID,
 		secondaryClientID,
 	}
-	objectTypes := []PluralObjectType{
-		PluralObjectTypeShares,
+	objectTypes := []sdk.PluralObjectType{
+		sdk.PluralObjectTypeShares,
 	}
 	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
 	require.NoError(t, err)
@@ -145,8 +146,8 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// create a replica of failover group in target account
-	err = secondaryClient.FailoverGroups.CreateSecondaryReplicationGroup(ctx, failoverGroup.ID(), failoverGroup.ExternalID(), &CreateSecondaryReplicationGroupOptions{
-		IfNotExists: Bool(true),
+	err = secondaryClient.FailoverGroups.CreateSecondaryReplicationGroup(ctx, failoverGroup.ID(), failoverGroup.ExternalID(), &sdk.CreateSecondaryReplicationGroupOptions{
+		IfNotExists: sdk.Bool(true),
 	})
 	require.NoError(t, err)
 
@@ -186,13 +187,13 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	t.Run("rename the failover group", func(t *testing.T) {
-		failoverGroup, _ := createFailoverGroup(t, client)
+		failoverGroup, _ := sdk.createFailoverGroup(t, client)
 		oldID := failoverGroup.ID()
-		newID := randomAccountObjectIdentifier(t)
-		opts := &AlterSourceFailoverGroupOptions{
+		newID := sdk.randomAccountObjectIdentifier(t)
+		opts := &sdk.AlterSourceFailoverGroupOptions{
 			NewName: newID,
 		}
 		err := client.FailoverGroups.AlterSource(ctx, oldID, opts)
@@ -208,13 +209,13 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("reset the list of specified object types enabled for replication and failover.", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
-		objectTypes := []PluralObjectType{
-			PluralObjectTypeDatabases,
+		objectTypes := []sdk.PluralObjectType{
+			sdk.PluralObjectTypeDatabases,
 		}
-		opts := &AlterSourceFailoverGroupOptions{
-			Set: &FailoverGroupSet{
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
 				ObjectTypes: objectTypes,
 			},
 		}
@@ -226,11 +227,11 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("set or update the replication schedule for automatic refresh of secondary failover groups.", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 		replicationSchedule := "USING CRON 0 0 10-20 * TUE,THU UTC"
-		opts := &AlterSourceFailoverGroupOptions{
-			Set: &FailoverGroupSet{
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
 				ReplicationSchedule: &replicationSchedule,
 			},
 		}
@@ -242,16 +243,16 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add and remove database account object", func(t *testing.T) {
-		databaseTest, cleanupDatabase := createDatabase(t, client)
+		databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
 		t.Cleanup(cleanupDatabase)
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 
 		// first add databases to allowed object types
-		opts := &AlterSourceFailoverGroupOptions{
-			Set: &FailoverGroupSet{
-				ObjectTypes: []PluralObjectType{
-					PluralObjectTypeDatabases,
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes: []sdk.PluralObjectType{
+					sdk.PluralObjectTypeDatabases,
 				},
 			},
 		}
@@ -260,12 +261,12 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(failoverGroup.ObjectTypes))
-		assert.Equal(t, PluralObjectTypeDatabases, failoverGroup.ObjectTypes[0])
+		assert.Equal(t, sdk.PluralObjectTypeDatabases, failoverGroup.ObjectTypes[0])
 
 		// now add database to allowed databases
-		opts = &AlterSourceFailoverGroupOptions{
-			Add: &FailoverGroupAdd{
-				AllowedDatabases: []AccountObjectIdentifier{
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Add: &sdk.FailoverGroupAdd{
+				AllowedDatabases: []sdk.AccountObjectIdentifier{
 					databaseTest.ID(),
 				},
 			},
@@ -278,9 +279,9 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		assert.Equal(t, databaseTest.ID().Name(), allowedDBs[0].Name())
 
 		// now remove database from allowed databases
-		opts = &AlterSourceFailoverGroupOptions{
-			Remove: &FailoverGroupRemove{
-				AllowedDatabases: []AccountObjectIdentifier{
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Remove: &sdk.FailoverGroupRemove{
+				AllowedDatabases: []sdk.AccountObjectIdentifier{
 					databaseTest.ID(),
 				},
 			},
@@ -293,16 +294,16 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add and remove share account object", func(t *testing.T) {
-		shareTest, cleanupDatabase := createShare(t, client)
+		shareTest, cleanupDatabase := sdk.createShare(t, client)
 		t.Cleanup(cleanupDatabase)
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 
 		// first add shares to allowed object types
-		opts := &AlterSourceFailoverGroupOptions{
-			Set: &FailoverGroupSet{
-				ObjectTypes: []PluralObjectType{
-					PluralObjectTypeShares,
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes: []sdk.PluralObjectType{
+					sdk.PluralObjectTypeShares,
 				},
 			},
 		}
@@ -313,9 +314,9 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		assert.Equal(t, 1, len(failoverGroup.ObjectTypes))
 		assert.Equal(t, shareTest.ObjectType().Plural(), failoverGroup.ObjectTypes[0])
 		// now add share to allowed shares
-		opts = &AlterSourceFailoverGroupOptions{
-			Add: &FailoverGroupAdd{
-				AllowedShares: []AccountObjectIdentifier{
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Add: &sdk.FailoverGroupAdd{
+				AllowedShares: []sdk.AccountObjectIdentifier{
 					shareTest.ID(),
 				},
 			},
@@ -328,9 +329,9 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		assert.Equal(t, shareTest.ID().Name(), allowedShares[0].Name())
 
 		// now remove share from allowed shares
-		opts = &AlterSourceFailoverGroupOptions{
-			Remove: &FailoverGroupRemove{
-				AllowedShares: []AccountObjectIdentifier{
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Remove: &sdk.FailoverGroupRemove{
+				AllowedShares: []sdk.AccountObjectIdentifier{
 					shareTest.ID(),
 				},
 			},
@@ -343,17 +344,17 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add and remove security integration account object", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 		// first add security integrations to allowed object types
-		opts := &AlterSourceFailoverGroupOptions{
-			Set: &FailoverGroupSet{
-				ObjectTypes: []PluralObjectType{
-					PluralObjectTypeIntegrations,
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes: []sdk.PluralObjectType{
+					sdk.PluralObjectTypeIntegrations,
 				},
-				AllowedIntegrationTypes: []IntegrationType{
-					IntegrationTypeAPIIntegrations,
-					IntegrationTypeNotificationIntegrations,
+				AllowedIntegrationTypes: []sdk.IntegrationType{
+					sdk.IntegrationTypeAPIIntegrations,
+					sdk.IntegrationTypeNotificationIntegrations,
 				},
 			},
 		}
@@ -362,19 +363,19 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(failoverGroup.AllowedIntegrationTypes))
-		assert.Equal(t, IntegrationTypeAPIIntegrations, failoverGroup.AllowedIntegrationTypes[0])
-		assert.Equal(t, IntegrationTypeNotificationIntegrations, failoverGroup.AllowedIntegrationTypes[1])
+		assert.Equal(t, sdk.IntegrationTypeAPIIntegrations, failoverGroup.AllowedIntegrationTypes[0])
+		assert.Equal(t, sdk.IntegrationTypeNotificationIntegrations, failoverGroup.AllowedIntegrationTypes[1])
 		assert.Equal(t, 1, len(failoverGroup.ObjectTypes))
-		assert.Equal(t, PluralObjectTypeIntegrations, failoverGroup.ObjectTypes[0])
+		assert.Equal(t, sdk.PluralObjectTypeIntegrations, failoverGroup.ObjectTypes[0])
 
 		// now remove security integration from allowed security integrations
-		opts = &AlterSourceFailoverGroupOptions{
-			Set: &FailoverGroupSet{
-				ObjectTypes: []PluralObjectType{
-					PluralObjectTypeIntegrations,
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes: []sdk.PluralObjectType{
+					sdk.PluralObjectTypeIntegrations,
 				},
-				AllowedIntegrationTypes: []IntegrationType{
-					IntegrationTypeAPIIntegrations,
+				AllowedIntegrationTypes: []sdk.IntegrationType{
+					sdk.IntegrationTypeAPIIntegrations,
 				},
 			},
 		}
@@ -383,18 +384,18 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(failoverGroup.AllowedIntegrationTypes))
-		assert.Equal(t, IntegrationTypeAPIIntegrations, failoverGroup.AllowedIntegrationTypes[0])
+		assert.Equal(t, sdk.IntegrationTypeAPIIntegrations, failoverGroup.AllowedIntegrationTypes[0])
 	})
 
 	t.Run("add or remove target accounts enabled for replication and failover", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 
-		secondaryAccountID := getSecondaryAccountIdentifier(t)
+		secondaryAccountID := sdk.getSecondaryAccountIdentifier(t)
 		// first add target account
-		opts := &AlterSourceFailoverGroupOptions{
-			Add: &FailoverGroupAdd{
-				AllowedAccounts: []AccountIdentifier{
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Add: &sdk.FailoverGroupAdd{
+				AllowedAccounts: []sdk.AccountIdentifier{
 					secondaryAccountID,
 				},
 			},
@@ -407,9 +408,9 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		assert.Contains(t, failoverGroup.AllowedAccounts, secondaryAccountID)
 
 		// now remove target accounts
-		opts = &AlterSourceFailoverGroupOptions{
-			Remove: &FailoverGroupRemove{
-				AllowedAccounts: []AccountIdentifier{
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Remove: &sdk.FailoverGroupRemove{
+				AllowedAccounts: []sdk.AccountIdentifier{
 					secondaryAccountID,
 				},
 			},
@@ -419,38 +420,38 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(failoverGroup.AllowedAccounts))
-		assert.Contains(t, failoverGroup.AllowedAccounts, getAccountIdentifier(t, client))
+		assert.Contains(t, failoverGroup.AllowedAccounts, sdk.getAccountIdentifier(t, client))
 	})
 
 	t.Run("move shares to another failover group", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 
 		// add "SHARES" to object types of both failover groups
-		opts := &AlterSourceFailoverGroupOptions{
-			Set: &FailoverGroupSet{
-				ObjectTypes: []PluralObjectType{
-					PluralObjectTypeShares,
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes: []sdk.PluralObjectType{
+					sdk.PluralObjectTypeShares,
 				},
 			},
 		}
 		err := client.FailoverGroups.AlterSource(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
 
-		failoverGroup2, cleanupFailoverGroup2 := createFailoverGroup(t, client)
+		failoverGroup2, cleanupFailoverGroup2 := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup2)
 
 		err = client.FailoverGroups.AlterSource(ctx, failoverGroup2.ID(), opts)
 		require.NoError(t, err)
 
 		// create a temp share
-		shareTest, cleanupShare := createShare(t, client)
+		shareTest, cleanupShare := sdk.createShare(t, client)
 		t.Cleanup(cleanupShare)
 
 		// now add share to allowed shares of failover group 1
-		opts = &AlterSourceFailoverGroupOptions{
-			Add: &FailoverGroupAdd{
-				AllowedShares: []AccountObjectIdentifier{
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Add: &sdk.FailoverGroupAdd{
+				AllowedShares: []sdk.AccountObjectIdentifier{
 					shareTest.ID(),
 				},
 			},
@@ -459,9 +460,9 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		require.NoError(t, err)
 
 		// now move share to failover group 2
-		opts = &AlterSourceFailoverGroupOptions{
-			Move: &FailoverGroupMove{
-				Shares: []AccountObjectIdentifier{
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Move: &sdk.FailoverGroupMove{
+				Shares: []sdk.AccountObjectIdentifier{
 					shareTest.ID(),
 				},
 				To: failoverGroup2.ID(),
@@ -482,34 +483,34 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("move database to another failover group", func(t *testing.T) {
-		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
+		failoverGroup, cleanupFailoverGroup := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 
 		// add "DATABASES" to object types of both failover groups
-		opts := &AlterSourceFailoverGroupOptions{
-			Set: &FailoverGroupSet{
-				ObjectTypes: []PluralObjectType{
-					PluralObjectTypeDatabases,
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes: []sdk.PluralObjectType{
+					sdk.PluralObjectTypeDatabases,
 				},
 			},
 		}
 		err := client.FailoverGroups.AlterSource(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
 
-		failoverGroup2, cleanupFailoverGroup2 := createFailoverGroup(t, client)
+		failoverGroup2, cleanupFailoverGroup2 := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup2)
 
 		err = client.FailoverGroups.AlterSource(ctx, failoverGroup2.ID(), opts)
 		require.NoError(t, err)
 
 		// create a temp database
-		databaseTest, cleanupDatabase := createDatabase(t, client)
+		databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
 		t.Cleanup(cleanupDatabase)
 
 		// now add database to allowed databases of failover group 1
-		opts = &AlterSourceFailoverGroupOptions{
-			Add: &FailoverGroupAdd{
-				AllowedDatabases: []AccountObjectIdentifier{
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Add: &sdk.FailoverGroupAdd{
+				AllowedDatabases: []sdk.AccountObjectIdentifier{
 					databaseTest.ID(),
 				},
 			},
@@ -518,9 +519,9 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		require.NoError(t, err)
 
 		// now move database to failover group 2
-		opts = &AlterSourceFailoverGroupOptions{
-			Move: &FailoverGroupMove{
-				Databases: []AccountObjectIdentifier{
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Move: &sdk.FailoverGroupMove{
+				Databases: []sdk.AccountObjectIdentifier{
 					databaseTest.ID(),
 				},
 				To: failoverGroup2.ID(),
@@ -545,31 +546,31 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	primaryAccountID := getAccountIdentifier(t, client)
-	secondaryClient := testSecondaryClient(t)
-	secondaryClientID := getAccountIdentifier(t, secondaryClient)
+	primaryAccountID := sdk.getAccountIdentifier(t, client)
+	secondaryClient := sdk.testSecondaryClient(t)
+	secondaryClientID := sdk.getAccountIdentifier(t, secondaryClient)
 
 	// create a temp database
-	databaseTest, cleanupDatabase := createDatabase(t, client)
+	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
-	id := randomAccountObjectIdentifier(t)
+	id := sdk.randomAccountObjectIdentifier(t)
 
-	opts := &CreateFailoverGroupOptions{
-		AllowedDatabases: []AccountObjectIdentifier{
+	opts := &sdk.CreateFailoverGroupOptions{
+		AllowedDatabases: []sdk.AccountObjectIdentifier{
 			databaseTest.ID(),
 		},
-		ReplicationSchedule: String("10 MINUTE"),
+		ReplicationSchedule: sdk.String("10 MINUTE"),
 	}
-	allowedAccounts := []AccountIdentifier{
+	allowedAccounts := []sdk.AccountIdentifier{
 		primaryAccountID,
 		secondaryClientID,
 	}
-	objectTypes := []PluralObjectType{
-		PluralObjectTypeDatabases,
+	objectTypes := []sdk.PluralObjectType{
+		sdk.PluralObjectTypeDatabases,
 	}
 	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
 	require.NoError(t, err)
@@ -580,8 +581,8 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// create a replica of failover group in target account
-	err = secondaryClient.FailoverGroups.CreateSecondaryReplicationGroup(ctx, failoverGroup.ID(), failoverGroup.ExternalID(), &CreateSecondaryReplicationGroupOptions{
-		IfNotExists: Bool(true),
+	err = secondaryClient.FailoverGroups.CreateSecondaryReplicationGroup(ctx, failoverGroup.ID(), failoverGroup.ExternalID(), &sdk.CreateSecondaryReplicationGroupOptions{
+		IfNotExists: sdk.Bool(true),
 	})
 	require.NoError(t, err)
 
@@ -618,8 +619,8 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 
 	t.Run("perform suspend and resume", func(t *testing.T) {
 		// suspend target failover group
-		opts := &AlterTargetFailoverGroupOptions{
-			Suspend: Bool(true),
+		opts := &sdk.AlterTargetFailoverGroupOptions{
+			Suspend: sdk.Bool(true),
 		}
 		err = secondaryClient.FailoverGroups.AlterTarget(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
@@ -627,11 +628,11 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 		// verify that target failover group is suspended
 		fg, err := secondaryClient.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
-		assert.Equal(t, FailoverGroupSecondaryStateSuspended, fg.SecondaryState)
+		assert.Equal(t, sdk.FailoverGroupSecondaryStateSuspended, fg.SecondaryState)
 
 		// resume target failover group
-		opts = &AlterTargetFailoverGroupOptions{
-			Resume: Bool(true),
+		opts = &sdk.AlterTargetFailoverGroupOptions{
+			Resume: sdk.Bool(true),
 		}
 		err = secondaryClient.FailoverGroups.AlterTarget(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
@@ -639,13 +640,13 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 		// verify that target failover group is resumed
 		failoverGroup, err = secondaryClient.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
-		assert.Equal(t, FailoverGroupSecondaryStateStarted, failoverGroup.SecondaryState)
+		assert.Equal(t, sdk.FailoverGroupSecondaryStateStarted, failoverGroup.SecondaryState)
 	})
 
 	t.Run("refresh target failover group", func(t *testing.T) {
 		// refresh target failover group
-		opts := &AlterTargetFailoverGroupOptions{
-			Refresh: Bool(true),
+		opts := &sdk.AlterTargetFailoverGroupOptions{
+			Refresh: sdk.Bool(true),
 		}
 		err = secondaryClient.FailoverGroups.AlterTarget(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
@@ -653,8 +654,8 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 
 	t.Run("promote secondary to primary", func(t *testing.T) {
 		// promote secondary to primary
-		opts := &AlterTargetFailoverGroupOptions{
-			Primary: Bool(true),
+		opts := &sdk.AlterTargetFailoverGroupOptions{
+			Primary: sdk.Bool(true),
 		}
 		err = secondaryClient.FailoverGroups.AlterTarget(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
@@ -670,18 +671,18 @@ func TestInt_FailoverGroupsDrop(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	t.Run("no options", func(t *testing.T) {
-		failoverGroup, _ := createFailoverGroup(t, client)
+		failoverGroup, _ := sdk.createFailoverGroup(t, client)
 		err := client.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil)
 		require.NoError(t, err)
 	})
 
 	t.Run("with IfExists", func(t *testing.T) {
-		failoverGroup, _ := createFailoverGroup(t, client)
-		opts := &DropFailoverGroupOptions{
-			IfExists: Bool(true),
+		failoverGroup, _ := sdk.createFailoverGroup(t, client)
+		opts := &sdk.DropFailoverGroupOptions{
+			IfExists: sdk.Bool(true),
 		}
 		err := client.FailoverGroups.Drop(ctx, failoverGroup.ID(), opts)
 		require.NoError(t, err)
@@ -692,9 +693,9 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
+	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -705,8 +706,8 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 	})
 
 	t.Run("with show options", func(t *testing.T) {
-		showOptions := &ShowFailoverGroupOptions{
-			InAccount: NewAccountIdentifierFromAccountLocator(client.accountLocator),
+		showOptions := &sdk.ShowFailoverGroupOptions{
+			InAccount: sdk.NewAccountIdentifierFromAccountLocator(client.accountLocator),
 		}
 		failoverGroups, err := client.FailoverGroups.Show(ctx, showOptions)
 		require.NoError(t, err)
@@ -715,8 +716,8 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent failover group", func(t *testing.T) {
-		_, err := client.FailoverGroups.ShowByID(ctx, NewAccountObjectIdentifier("does-not-exist"))
-		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		_, err := client.FailoverGroups.ShowByID(ctx, sdk.NewAccountObjectIdentifier("does-not-exist"))
+		require.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 	})
 }
 
@@ -724,25 +725,25 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
+	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	opts := &AlterSourceFailoverGroupOptions{
-		Set: &FailoverGroupSet{
-			ObjectTypes: []PluralObjectType{
-				PluralObjectTypeDatabases,
+	opts := &sdk.AlterSourceFailoverGroupOptions{
+		Set: &sdk.FailoverGroupSet{
+			ObjectTypes: []sdk.PluralObjectType{
+				sdk.PluralObjectTypeDatabases,
 			},
 		},
 	}
 	err := client.FailoverGroups.AlterSource(ctx, failoverGroupTest.ID(), opts)
 	require.NoError(t, err)
-	opts = &AlterSourceFailoverGroupOptions{
-		Add: &FailoverGroupAdd{
-			AllowedDatabases: []AccountObjectIdentifier{
+	opts = &sdk.AlterSourceFailoverGroupOptions{
+		Add: &sdk.FailoverGroupAdd{
+			AllowedDatabases: []sdk.AccountObjectIdentifier{
 				databaseTest.ID(),
 			},
 		},
@@ -759,25 +760,25 @@ func TestInt_FailoverGroupsShowShares(t *testing.T) {
 	if _, ok := os.LookupEnv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES"); !ok {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
+	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
-	shareTest, shareCleanup := createShare(t, client)
+	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
-	opts := &AlterSourceFailoverGroupOptions{
-		Set: &FailoverGroupSet{
-			ObjectTypes: []PluralObjectType{
-				PluralObjectTypeShares,
+	opts := &sdk.AlterSourceFailoverGroupOptions{
+		Set: &sdk.FailoverGroupSet{
+			ObjectTypes: []sdk.PluralObjectType{
+				sdk.PluralObjectTypeShares,
 			},
 		},
 	}
 	err := client.FailoverGroups.AlterSource(ctx, failoverGroupTest.ID(), opts)
 	require.NoError(t, err)
-	opts = &AlterSourceFailoverGroupOptions{
-		Add: &FailoverGroupAdd{
-			AllowedShares: []AccountObjectIdentifier{
+	opts = &sdk.AlterSourceFailoverGroupOptions{
+		Add: &sdk.FailoverGroupAdd{
+			AllowedShares: []sdk.AccountObjectIdentifier{
 				shareTest.ID(),
 			},
 		},

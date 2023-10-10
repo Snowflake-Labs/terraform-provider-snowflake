@@ -1,7 +1,8 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestInt_ShowReplicationFunctions(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	accounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
 	if err != nil {
@@ -19,7 +20,7 @@ func TestInt_ShowReplicationFunctions(t *testing.T) {
 }
 
 func TestInt_ShowRegions(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	t.Run("no options", func(t *testing.T) {
 		regions, err := client.ReplicationFunctions.ShowRegions(ctx, nil)
@@ -28,16 +29,16 @@ func TestInt_ShowRegions(t *testing.T) {
 	})
 
 	t.Run("with options", func(t *testing.T) {
-		regions, err := client.ReplicationFunctions.ShowRegions(ctx, &ShowRegionsOptions{
-			Like: &Like{
-				Pattern: String("AWS_US_WEST_2"),
+		regions, err := client.ReplicationFunctions.ShowRegions(ctx, &sdk.ShowRegionsOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String("AWS_US_WEST_2"),
 			},
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(regions))
 		region := regions[0]
 		assert.Equal(t, "AWS_US_WEST_2", region.SnowflakeRegion)
-		assert.Equal(t, CloudTypeAWS, region.CloudType)
+		assert.Equal(t, sdk.CloudTypeAWS, region.CloudType)
 		assert.Equal(t, "us-west-2", region.Region)
 		assert.Equal(t, "US West (Oregon)", region.DisplayName)
 	})

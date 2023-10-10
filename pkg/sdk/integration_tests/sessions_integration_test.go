@@ -1,7 +1,8 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,28 +10,28 @@ import (
 )
 
 func TestInt_AlterSession(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	opts := &AlterSessionOptions{
-		Set: &SessionSet{
-			&SessionParameters{
-				AbortDetachedQuery:    Bool(true),
-				Autocommit:            Bool(true),
-				GeographyOutputFormat: Pointer(GeographyOutputFormatGeoJSON),
-				WeekOfYearPolicy:      Int(1),
+	opts := &sdk.AlterSessionOptions{
+		Set: &sdk.SessionSet{
+			&sdk.SessionParameters{
+				AbortDetachedQuery:    sdk.Bool(true),
+				Autocommit:            sdk.Bool(true),
+				GeographyOutputFormat: sdk.Pointer(sdk.GeographyOutputFormatGeoJSON),
+				WeekOfYearPolicy:      sdk.Int(1),
 			},
 		},
 	}
 	err := client.Sessions.AlterSession(ctx, opts)
 	require.NoError(t, err)
 	cleanup := func() {
-		opts = &AlterSessionOptions{
-			Unset: &SessionUnset{
-				&SessionParametersUnset{
-					AbortDetachedQuery:    Bool(true),
-					Autocommit:            Bool(true),
-					GeographyOutputFormat: Bool(true),
-					WeekOfYearPolicy:      Bool(true),
+		opts = &sdk.AlterSessionOptions{
+			Unset: &sdk.SessionUnset{
+				&sdk.SessionParametersUnset{
+					AbortDetachedQuery:    sdk.Bool(true),
+					Autocommit:            sdk.Bool(true),
+					GeographyOutputFormat: sdk.Bool(true),
+					WeekOfYearPolicy:      sdk.Bool(true),
 				},
 			},
 		}
@@ -39,22 +40,22 @@ func TestInt_AlterSession(t *testing.T) {
 	}
 	t.Cleanup(cleanup)
 
-	parameter, err := client.Parameters.ShowSessionParameter(ctx, SessionParameterAbortDetachedQuery)
+	parameter, err := client.Parameters.ShowSessionParameter(ctx, sdk.SessionParameterAbortDetachedQuery)
 	require.NoError(t, err)
 	assert.Equal(t, "true", parameter.Value)
-	parameter, err = client.Parameters.ShowSessionParameter(ctx, SessionParameterAutocommit)
+	parameter, err = client.Parameters.ShowSessionParameter(ctx, sdk.SessionParameterAutocommit)
 	require.NoError(t, err)
 	assert.Equal(t, "true", parameter.Value)
-	parameter, err = client.Parameters.ShowSessionParameter(ctx, SessionParameterGeographyOutputFormat)
+	parameter, err = client.Parameters.ShowSessionParameter(ctx, sdk.SessionParameterGeographyOutputFormat)
 	require.NoError(t, err)
-	assert.Equal(t, string(GeographyOutputFormatGeoJSON), parameter.Value)
-	parameter, err = client.Parameters.ShowSessionParameter(ctx, SessionParameterWeekOfYearPolicy)
+	assert.Equal(t, string(sdk.GeographyOutputFormatGeoJSON), parameter.Value)
+	parameter, err = client.Parameters.ShowSessionParameter(ctx, sdk.SessionParameterWeekOfYearPolicy)
 	require.NoError(t, err)
 	assert.Equal(t, "1", parameter.Value)
 }
 
 func TestInt_ShowParameters(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	parameters, err := client.Parameters.ShowParameters(ctx, nil)
 	require.NoError(t, err)
@@ -62,56 +63,56 @@ func TestInt_ShowParameters(t *testing.T) {
 }
 
 func TestInt_ShowAccountParameter(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	parameter, err := client.Parameters.ShowAccountParameter(ctx, AccountParameterAutocommit)
+	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterAutocommit)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
 
 func TestInt_ShowSessionParameter(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	parameter, err := client.Parameters.ShowSessionParameter(ctx, SessionParameterAutocommit)
+	parameter, err := client.Parameters.ShowSessionParameter(ctx, sdk.SessionParameterAutocommit)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
 
 func TestInt_ShowObjectParameter(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	parameter, err := client.Parameters.ShowObjectParameter(ctx, ObjectParameterDataRetentionTimeInDays, Object{ObjectType: databaseTest.ObjectType(), Name: databaseTest.ID()})
+	parameter, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterDataRetentionTimeInDays, sdk.Object{ObjectType: databaseTest.ObjectType(), Name: databaseTest.ID()})
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
 
 func TestInt_ShowUserParameter(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
-	userID := NewAccountObjectIdentifier(user)
-	parameter, err := client.Parameters.ShowUserParameter(ctx, UserParameterAutocommit, userID)
+	userID := sdk.NewAccountObjectIdentifier(user)
+	parameter, err := client.Parameters.ShowUserParameter(ctx, sdk.UserParameterAutocommit, userID)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
 
 func TestInt_UseWarehouse(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	originalWH, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		originalWHIdentifier := NewAccountObjectIdentifier(originalWH)
-		if !validObjectidentifier(originalWHIdentifier) {
+		originalWHIdentifier := sdk.NewAccountObjectIdentifier(originalWH)
+		if !sdk.validObjectidentifier(originalWHIdentifier) {
 			return
 		}
 		err := client.Sessions.UseWarehouse(ctx, originalWHIdentifier)
 		require.NoError(t, err)
 	})
-	warehouseTest, warehouseCleanup := createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 	err = client.Sessions.UseWarehouse(ctx, warehouseTest.ID())
 	require.NoError(t, err)
@@ -122,19 +123,19 @@ func TestInt_UseWarehouse(t *testing.T) {
 }
 
 func TestInt_UseDatabase(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	originalDB, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		originalDBIdentifier := NewAccountObjectIdentifier(originalDB)
-		if !validObjectidentifier(originalDBIdentifier) {
+		originalDBIdentifier := sdk.NewAccountObjectIdentifier(originalDB)
+		if !sdk.validObjectidentifier(originalDBIdentifier) {
 			return
 		}
 		err := client.Sessions.UseDatabase(ctx, originalDBIdentifier)
 		require.NoError(t, err)
 	})
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	err = client.Sessions.UseDatabase(ctx, databaseTest.ID())
 	require.NoError(t, err)
@@ -145,19 +146,19 @@ func TestInt_UseDatabase(t *testing.T) {
 }
 
 func TestInt_UseSchema(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 	originalSchema, err := client.ContextFunctions.CurrentSchema(ctx)
 	require.NoError(t, err)
 	originalDB, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		originalSchemaIdentifier := NewDatabaseObjectIdentifier(originalDB, originalSchema)
-		if !validObjectidentifier(originalSchemaIdentifier) {
+		originalSchemaIdentifier := sdk.NewDatabaseObjectIdentifier(originalDB, originalSchema)
+		if !sdk.validObjectidentifier(originalSchemaIdentifier) {
 			return
 		}
 		err := client.Sessions.UseSchema(ctx, originalSchemaIdentifier)

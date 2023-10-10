@@ -1,7 +1,8 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,18 +10,18 @@ import (
 )
 
 func TestInt_Tasks(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 
-	database, databaseCleanup := createDatabase(t, client)
+	database, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := createSchema(t, client, database)
+	schema, schemaCleanup := sdk.createSchema(t, client, database)
 	t.Cleanup(schemaCleanup)
 
 	sql := "SELECT CURRENT_TIMESTAMP"
 
-	assertTask := func(t *testing.T, task *Task, id SchemaObjectIdentifier) {
+	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
@@ -45,7 +46,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Empty(t, task.Budget)
 	}
 
-	assertTaskWithOptions := func(t *testing.T, task *Task, id SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *SchemaObjectIdentifier) {
+	assertTaskWithOptions := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *sdk.SchemaObjectIdentifier) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
@@ -79,7 +80,7 @@ func TestInt_Tasks(t *testing.T) {
 		}
 	}
 
-	assertTaskTerse := func(t *testing.T, task *Task, id SchemaObjectIdentifier, schedule string) {
+	assertTaskTerse := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, schedule string) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
@@ -106,22 +107,22 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Empty(t, task.Budget)
 	}
 
-	cleanupTaskProvider := func(id SchemaObjectIdentifier) func() {
+	cleanupTaskProvider := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
-			err := client.Tasks.Drop(ctx, NewDropTaskRequest(id))
+			err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
 			require.NoError(t, err)
 		}
 	}
 
-	createTaskBasicRequest := func(t *testing.T) *CreateTaskRequest {
+	createTaskBasicRequest := func(t *testing.T) *sdk.CreateTaskRequest {
 		t.Helper()
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		name := sdk.randomString(t)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		return NewCreateTaskRequest(id, sql)
+		return sdk.NewCreateTaskRequest(id, sql)
 	}
 
-	createTaskWithRequest := func(t *testing.T, request *CreateTaskRequest) *Task {
+	createTaskWithRequest := func(t *testing.T, request *sdk.CreateTaskRequest) *sdk.Task {
 		t.Helper()
 		id := request.name
 
@@ -135,7 +136,7 @@ func TestInt_Tasks(t *testing.T) {
 		return task
 	}
 
-	createTask := func(t *testing.T) *Task {
+	createTask := func(t *testing.T) *sdk.Task {
 		t.Helper()
 		return createTaskWithRequest(t, createTaskBasicRequest(t))
 	}
@@ -150,7 +151,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	t.Run("create task: with initial warehouse", func(t *testing.T) {
 		request := createTaskBasicRequest(t).
-			WithWarehouse(NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(&WarehouseSizeXSmall))
+			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(&sdk.WarehouseSizeXSmall))
 
 		task := createTaskWithRequest(t, request)
 
@@ -158,22 +159,22 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create task: almost complete case", func(t *testing.T) {
-		warehouse, warehouseCleanup := createWarehouse(t, client)
+		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		request := createTaskBasicRequest(t).
-			WithOrReplace(Bool(true)).
-			WithWarehouse(NewCreateTaskWarehouseRequest().WithWarehouse(Pointer(warehouse.ID()))).
-			WithSchedule(String("10 MINUTE")).
-			WithConfig(String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
-			WithAllowOverlappingExecution(Bool(true)).
-			WithSessionParameters(&SessionParameters{
-				JSONIndent: Int(4),
+			WithOrReplace(sdk.Bool(true)).
+			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(warehouse.ID()))).
+			WithSchedule(sdk.String("10 MINUTE")).
+			WithConfig(sdk.String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
+			WithAllowOverlappingExecution(sdk.Bool(true)).
+			WithSessionParameters(&sdk.SessionParameters{
+				JSONIndent: sdk.Int(4),
 			}).
-			WithUserTaskTimeoutMs(Int(500)).
-			WithSuspendTaskAfterNumFailures(Int(3)).
-			WithComment(String("some comment")).
-			WithWhen(String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
+			WithUserTaskTimeoutMs(sdk.Int(500)).
+			WithSuspendTaskAfterNumFailures(sdk.Int(3)).
+			WithComment(sdk.String("some comment")).
+			WithWhen(sdk.String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
 		id := request.name
 
 		task := createTaskWithRequest(t, request)
@@ -182,15 +183,15 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
-		otherName := randomString(t)
-		otherId := NewSchemaObjectIdentifier(database.Name, schema.Name, otherName)
+		otherName := sdk.randomString(t)
+		otherId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, otherName)
 
-		request := NewCreateTaskRequest(otherId, sql).WithSchedule(String("10 MINUTE"))
+		request := sdk.NewCreateTaskRequest(otherId, sql).WithSchedule(sdk.String("10 MINUTE"))
 
 		createTaskWithRequest(t, request)
 
 		request = createTaskBasicRequest(t).
-			WithAfter([]SchemaObjectIdentifier{otherId})
+			WithAfter([]sdk.SchemaObjectIdentifier{otherId})
 
 		task := createTaskWithRequest(t, request)
 
@@ -218,18 +219,18 @@ func TestInt_Tasks(t *testing.T) {
 	// })
 
 	t.Run("create task: with tags", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, database, schema)
+		tag, tagCleanup := sdk.createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
 		request := createTaskBasicRequest(t).
-			WithTag([]TagAssociation{{
+			WithTag([]sdk.TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v1",
 			}})
 
 		task := createTaskWithRequest(t, request)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), ObjectTypeTask)
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), sdk.ObjectTypeTask)
 		require.NoError(t, err)
 
 		assert.Equal(t, "v1", returnedTagValue)
@@ -238,10 +239,10 @@ func TestInt_Tasks(t *testing.T) {
 	t.Run("clone task: default", func(t *testing.T) {
 		sourceTask := createTask(t)
 
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		name := sdk.randomString(t)
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
-		request := NewCloneTaskRequest(id, sourceTask.ID())
+		request := sdk.NewCloneTaskRequest(id, sourceTask.ID())
 
 		err := client.Tasks.Clone(ctx, request)
 		require.NoError(t, err)
@@ -260,25 +261,25 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.Create(ctx, request)
 		require.NoError(t, err)
 
-		err = client.Tasks.Drop(ctx, NewDropTaskRequest(id))
+		err = client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
 		require.NoError(t, err)
 
 		_, err = client.Tasks.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("drop task: non-existing", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(database.Name, schema.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, "does_not_exist")
 
-		err := client.Tasks.Drop(ctx, NewDropTaskRequest(id))
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
+		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("alter task: set value and unset value", func(t *testing.T) {
 		task := createTask(t)
 		id := task.ID()
 
-		alterRequest := NewAlterTaskRequest(id).WithSet(NewTaskSetRequest().WithComment(String("new comment")))
+		alterRequest := sdk.NewAlterTaskRequest(id).WithSet(sdk.NewTaskSetRequest().WithComment(sdk.String("new comment")))
 		err := client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -287,7 +288,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		assert.Equal(t, "new comment", alteredTask.Comment)
 
-		alterRequest = NewAlterTaskRequest(id).WithUnset(NewTaskUnsetRequest().WithComment(Bool(true)))
+		alterRequest = sdk.NewAlterTaskRequest(id).WithUnset(sdk.NewTaskUnsetRequest().WithComment(sdk.Bool(true)))
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -298,51 +299,51 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, database, schema)
+		tag, tagCleanup := sdk.createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
 		task := createTask(t)
 		id := task.ID()
 
 		tagValue := "abc"
-		tags := []TagAssociation{
+		tags := []sdk.TagAssociation{
 			{
 				Name:  tag.ID(),
 				Value: tagValue,
 			},
 		}
-		alterRequestSetTags := NewAlterTaskRequest(id).WithSetTags(tags)
+		alterRequestSetTags := sdk.NewAlterTaskRequest(id).WithSetTags(tags)
 
 		err := client.Tasks.Alter(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeTask)
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTask)
 		require.NoError(t, err)
 
 		assert.Equal(t, tagValue, returnedTagValue)
 
-		unsetTags := []ObjectIdentifier{
+		unsetTags := []sdk.ObjectIdentifier{
 			tag.ID(),
 		}
-		alterRequestUnsetTags := NewAlterTaskRequest(id).WithUnsetTags(unsetTags)
+		alterRequestUnsetTags := sdk.NewAlterTaskRequest(id).WithUnsetTags(unsetTags)
 
 		err = client.Tasks.Alter(ctx, alterRequestUnsetTags)
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeTask)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTask)
 		require.Error(t, err)
 	})
 
 	t.Run("alter task: resume and suspend", func(t *testing.T) {
 		request := createTaskBasicRequest(t).
-			WithSchedule(String("10 MINUTE"))
+			WithSchedule(sdk.String("10 MINUTE"))
 
 		task := createTaskWithRequest(t, request)
 		id := task.ID()
 
 		assert.Equal(t, "suspended", task.State)
 
-		alterRequest := NewAlterTaskRequest(id).WithResume(Bool(true))
+		alterRequest := sdk.NewAlterTaskRequest(id).WithResume(sdk.Bool(true))
 		err := client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -351,7 +352,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		assert.Equal(t, "started", alteredTask.State)
 
-		alterRequest = NewAlterTaskRequest(id).WithSuspend(Bool(true))
+		alterRequest = sdk.NewAlterTaskRequest(id).WithSuspend(sdk.Bool(true))
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -363,20 +364,20 @@ func TestInt_Tasks(t *testing.T) {
 
 	t.Run("alter task: remove after and add after", func(t *testing.T) {
 		request := createTaskBasicRequest(t).
-			WithSchedule(String("10 MINUTE"))
+			WithSchedule(sdk.String("10 MINUTE"))
 
 		otherTask := createTaskWithRequest(t, request)
 		otherId := otherTask.ID()
 
 		request = createTaskBasicRequest(t).
-			WithAfter([]SchemaObjectIdentifier{otherId})
+			WithAfter([]sdk.SchemaObjectIdentifier{otherId})
 
 		task := createTaskWithRequest(t, request)
 		id := task.ID()
 
 		assert.Contains(t, task.Predecessors, otherId.Name())
 
-		alterRequest := NewAlterTaskRequest(id).WithRemoveAfter([]SchemaObjectIdentifier{otherId})
+		alterRequest := sdk.NewAlterTaskRequest(id).WithRemoveAfter([]sdk.SchemaObjectIdentifier{otherId})
 
 		err := client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -386,7 +387,7 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "[]", task.Predecessors)
 
-		alterRequest = NewAlterTaskRequest(id).WithAddAfter([]SchemaObjectIdentifier{otherId})
+		alterRequest = sdk.NewAlterTaskRequest(id).WithAddAfter([]sdk.SchemaObjectIdentifier{otherId})
 
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -402,7 +403,7 @@ func TestInt_Tasks(t *testing.T) {
 		id := task.ID()
 
 		newSql := "SELECT CURRENT_DATE"
-		alterRequest := NewAlterTaskRequest(id).WithModifyAs(String(newSql))
+		alterRequest := sdk.NewAlterTaskRequest(id).WithModifyAs(sdk.String(newSql))
 		err := client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -412,7 +413,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, newSql, alteredTask.Definition)
 
 		newWhen := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
-		alterRequest = NewAlterTaskRequest(id).WithModifyWhen(String(newWhen))
+		alterRequest = sdk.NewAlterTaskRequest(id).WithModifyWhen(sdk.String(newWhen))
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -426,7 +427,7 @@ func TestInt_Tasks(t *testing.T) {
 		task1 := createTask(t)
 		task2 := createTask(t)
 
-		showRequest := NewShowTaskRequest()
+		showRequest := sdk.NewShowTaskRequest()
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 		require.NoError(t, err)
 
@@ -437,11 +438,11 @@ func TestInt_Tasks(t *testing.T) {
 
 	t.Run("show task: terse", func(t *testing.T) {
 		request := createTaskBasicRequest(t).
-			WithSchedule(String("10 MINUTE"))
+			WithSchedule(sdk.String("10 MINUTE"))
 
 		task := createTaskWithRequest(t, request)
 
-		showRequest := NewShowTaskRequest().WithTerse(Bool(true))
+		showRequest := sdk.NewShowTaskRequest().WithTerse(sdk.Bool(true))
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 		require.NoError(t, err)
 
@@ -453,10 +454,10 @@ func TestInt_Tasks(t *testing.T) {
 		task1 := createTask(t)
 		task2 := createTask(t)
 
-		showRequest := NewShowTaskRequest().
-			WithLike(&Like{&task1.Name}).
-			WithIn(&In{Schema: NewDatabaseObjectIdentifier(database.Name, schema.Name)}).
-			WithLimit(&LimitFrom{Rows: Int(5)})
+		showRequest := sdk.NewShowTaskRequest().
+			WithLike(&sdk.Like{&task1.Name}).
+			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(database.Name, schema.Name)}).
+			WithLimit(&sdk.LimitFrom{Rows: sdk.Int(5)})
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 
 		require.NoError(t, err)
@@ -477,7 +478,7 @@ func TestInt_Tasks(t *testing.T) {
 	t.Run("execute task: default", func(t *testing.T) {
 		task := createTask(t)
 
-		executeRequest := NewExecuteTaskRequest(task.ID())
+		executeRequest := sdk.NewExecuteTaskRequest(task.ID())
 		err := client.Tasks.Execute(ctx, executeRequest)
 		require.NoError(t, err)
 	})

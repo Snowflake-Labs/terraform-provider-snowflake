@@ -1,7 +1,8 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,18 +10,18 @@ import (
 )
 
 func TestInt_PasswordPoliciesShow(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
+	passwordPolicyTest, passwordPolicyCleanup := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
 	t.Cleanup(passwordPolicyCleanup)
 
-	passwordPolicy2Test, passwordPolicy2Cleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
+	passwordPolicy2Test, passwordPolicy2Cleanup := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
 	t.Cleanup(passwordPolicy2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -30,8 +31,8 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("with show options", func(t *testing.T) {
-		showOptions := &ShowPasswordPolicyOptions{
-			In: &In{
+		showOptions := &sdk.ShowPasswordPolicyOptions{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		}
@@ -43,11 +44,11 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("with show options and like", func(t *testing.T) {
-		showOptions := &ShowPasswordPolicyOptions{
-			Like: &Like{
-				Pattern: String(passwordPolicyTest.Name),
+		showOptions := &sdk.ShowPasswordPolicyOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(passwordPolicyTest.Name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Database: databaseTest.ID(),
 			},
 		}
@@ -58,9 +59,9 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent password policy", func(t *testing.T) {
-		showOptions := &ShowPasswordPolicyOptions{
-			Like: &Like{
-				Pattern: String("non-existent"),
+		showOptions := &sdk.ShowPasswordPolicyOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String("non-existent"),
 			},
 		}
 		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
@@ -83,27 +84,27 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 }
 
 func TestInt_PasswordPolicyCreate(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 	t.Run("test complete", func(t *testing.T) {
-		name := randomUUID(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.PasswordPolicies.Create(ctx, id, &CreatePasswordPolicyOptions{
-			OrReplace:                 Bool(true),
-			PasswordMinLength:         Int(10),
-			PasswordMaxLength:         Int(20),
-			PasswordMinUpperCaseChars: Int(1),
-			PasswordMinLowerCaseChars: Int(1),
-			PasswordMinNumericChars:   Int(1),
-			PasswordMinSpecialChars:   Int(1),
-			PasswordMaxAgeDays:        Int(30),
-			PasswordMaxRetries:        Int(5),
-			PasswordLockoutTimeMins:   Int(30),
+		name := sdk.randomUUID(t)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		err := client.PasswordPolicies.Create(ctx, id, &sdk.CreatePasswordPolicyOptions{
+			OrReplace:                 sdk.Bool(true),
+			PasswordMinLength:         sdk.Int(10),
+			PasswordMaxLength:         sdk.Int(20),
+			PasswordMinUpperCaseChars: sdk.Int(1),
+			PasswordMinLowerCaseChars: sdk.Int(1),
+			PasswordMinNumericChars:   sdk.Int(1),
+			PasswordMinSpecialChars:   sdk.Int(1),
+			PasswordMaxAgeDays:        sdk.Int(30),
+			PasswordMaxRetries:        sdk.Int(5),
+			PasswordLockoutTimeMins:   sdk.Int(30),
 			// todo [SNOW-928909]: uncomment this once comments are working again
 			// Comment:                   String("test comment"),
 		})
@@ -125,14 +126,14 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
-		name := randomUUID(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.PasswordPolicies.Create(ctx, id, &CreatePasswordPolicyOptions{
-			OrReplace:                 Bool(false),
-			IfNotExists:               Bool(true),
-			PasswordMinLength:         Int(10),
-			PasswordMaxLength:         Int(20),
-			PasswordMinUpperCaseChars: Int(5),
+		name := sdk.randomUUID(t)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		err := client.PasswordPolicies.Create(ctx, id, &sdk.CreatePasswordPolicyOptions{
+			OrReplace:                 sdk.Bool(false),
+			IfNotExists:               sdk.Bool(true),
+			PasswordMinLength:         sdk.Int(10),
+			PasswordMaxLength:         sdk.Int(20),
+			PasswordMinUpperCaseChars: sdk.Int(5),
 			// todo [SNOW-928909]: uncomment this once comments are working again
 			// Comment:                   String("test comment"),
 		})
@@ -148,8 +149,8 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := randomUUID(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		name := sdk.randomUUID(t)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		err := client.PasswordPolicies.Create(ctx, id, nil)
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
@@ -169,16 +170,16 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 }
 
 func TestInt_PasswordPolicyDescribe(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
+	passwordPolicy, passwordPolicyCleanup := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
 	t.Cleanup(passwordPolicyCleanup)
 
 	t.Run("when password policy exists", func(t *testing.T) {
@@ -189,30 +190,30 @@ func TestInt_PasswordPolicyDescribe(t *testing.T) {
 	})
 
 	t.Run("when password policy does not exist", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		_, err := client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 	})
 }
 
 func TestInt_PasswordPolicyAlter(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	t.Run("when setting new values", func(t *testing.T) {
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
+		passwordPolicy, passwordPolicyCleanup := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(passwordPolicyCleanup)
-		alterOptions := &AlterPasswordPolicyOptions{
-			Set: &PasswordPolicySet{
-				PasswordMinLength: Int(10),
-				PasswordMaxLength: Int(20),
-				Comment:           String("new comment"),
+		alterOptions := &sdk.AlterPasswordPolicyOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMinLength: sdk.Int(10),
+				PasswordMaxLength: sdk.Int(20),
+				Comment:           sdk.String("new comment"),
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, passwordPolicy.ID(), alterOptions)
@@ -226,12 +227,12 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("when renaming", func(t *testing.T) {
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
+		passwordPolicy, passwordPolicyCleanup := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
 		oldID := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
-		newName := randomUUID(t)
-		newID := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
-		alterOptions := &AlterPasswordPolicyOptions{
+		newName := sdk.randomUUID(t)
+		newID := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
+		alterOptions := &sdk.AlterPasswordPolicyOptions{
 			NewName: newID,
 		}
 		err := client.PasswordPolicies.Alter(ctx, oldID, alterOptions)
@@ -240,7 +241,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		// rename back to original name so it can be cleaned up
 		assert.Equal(t, newName, passwordPolicyDetails.Name.Value)
-		alterOptions = &AlterPasswordPolicyOptions{
+		alterOptions = &sdk.AlterPasswordPolicyOptions{
 			NewName: oldID,
 		}
 		err = client.PasswordPolicies.Alter(ctx, newID, alterOptions)
@@ -248,25 +249,25 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("when unsetting values", func(t *testing.T) {
-		createOptions := &CreatePasswordPolicyOptions{
-			PasswordMaxAgeDays: Int(20),
-			PasswordMaxRetries: Int(10),
+		createOptions := &sdk.CreatePasswordPolicyOptions{
+			PasswordMaxAgeDays: sdk.Int(20),
+			PasswordMaxRetries: sdk.Int(10),
 			// todo [SNOW-928909]: uncomment this once comments are working again
 			// Comment: String("test comment")
 		}
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
+		passwordPolicy, passwordPolicyCleanup := sdk.createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
 		id := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
-		alterOptions := &AlterPasswordPolicyOptions{
-			Unset: &PasswordPolicyUnset{
-				PasswordMaxRetries: Bool(true),
+		alterOptions := &sdk.AlterPasswordPolicyOptions{
+			Unset: &sdk.PasswordPolicyUnset{
+				PasswordMaxRetries: sdk.Bool(true),
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, id, alterOptions)
 		require.NoError(t, err)
-		alterOptions = &AlterPasswordPolicyOptions{
-			Unset: &PasswordPolicyUnset{
-				PasswordMaxAgeDays: Bool(true),
+		alterOptions = &sdk.AlterPasswordPolicyOptions{
+			Unset: &sdk.PasswordPolicyUnset{
+				PasswordMaxAgeDays: sdk.Bool(true),
 				// todo [SNOW-928909]: uncomment this once comments are working again
 				// Comment: Bool("true")
 			},
@@ -281,19 +282,19 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("when unsetting multiple values at same time", func(t *testing.T) {
-		createOptions := &CreatePasswordPolicyOptions{
-			PasswordMaxAgeDays: Int(20),
-			PasswordMaxRetries: Int(10),
+		createOptions := &sdk.CreatePasswordPolicyOptions{
+			PasswordMaxAgeDays: sdk.Int(20),
+			PasswordMaxRetries: sdk.Int(10),
 			// todo [SNOW-928909]: uncomment this once comments are working again
 			// Comment: String("test comment")
 		}
-		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
+		passwordPolicy, passwordPolicyCleanup := sdk.createPasswordPolicyWithOptions(t, client, databaseTest, schemaTest, createOptions)
 		id := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
-		alterOptions := &AlterPasswordPolicyOptions{
-			Unset: &PasswordPolicyUnset{
-				PasswordMaxAgeDays: Bool(true),
-				PasswordMaxRetries: Bool(true),
+		alterOptions := &sdk.AlterPasswordPolicyOptions{
+			Unset: &sdk.PasswordPolicyUnset{
+				PasswordMaxAgeDays: sdk.Bool(true),
+				PasswordMaxRetries: sdk.Bool(true),
 				// todo [SNOW-928909]: uncomment this once comments are working again
 				// Comment: Bool("true")
 			},
@@ -304,37 +305,37 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 }
 
 func TestInt_PasswordPolicyDrop(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	t.Run("when password policy exists", func(t *testing.T) {
-		passwordPolicy, _ := createPasswordPolicy(t, client, databaseTest, schemaTest)
+		passwordPolicy, _ := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
 		id := passwordPolicy.ID()
 		err := client.PasswordPolicies.Drop(ctx, id, nil)
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when password policy does not exist", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		err := client.PasswordPolicies.Drop(ctx, id, nil)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when password policy exists and if exists is true", func(t *testing.T) {
-		passwordPolicy, _ := createPasswordPolicy(t, client, databaseTest, schemaTest)
+		passwordPolicy, _ := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
 		id := passwordPolicy.ID()
-		dropOptions := &DropPasswordPolicyOptions{IfExists: Bool(true)}
+		dropOptions := &sdk.DropPasswordPolicyOptions{IfExists: sdk.Bool(true)}
 		err := client.PasswordPolicies.Drop(ctx, id, dropOptions)
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
 	})
 }

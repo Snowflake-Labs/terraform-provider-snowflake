@@ -1,7 +1,8 @@
-package sdk
+package sdk_integration_tests
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,40 +10,40 @@ import (
 
 func TestClient_NewClient(t *testing.T) {
 	t.Run("with default config", func(t *testing.T) {
-		config := DefaultConfig()
-		_, err := NewClient(config)
+		config := sdk.DefaultConfig()
+		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 	})
 	t.Run("uses env vars if values are missing", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
+		cleanupEnvVars := sdk.setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
 		t.Cleanup(cleanupEnvVars)
-		config := EnvConfig()
-		_, err := NewClient(config)
+		config := sdk.EnvConfig()
+		_, err := sdk.NewClient(config)
 		require.Error(t, err)
 	})
 }
 
 func TestClient_ping(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	err := client.Ping()
 	require.NoError(t, err)
 }
 
 func TestClient_close(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	err := client.Close()
 	require.NoError(t, err)
 }
 
 func TestClient_exec(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	_, err := client.exec(ctx, "SELECT 1")
 	require.NoError(t, err)
 }
 
 func TestClient_query(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	rows := []struct {
 		One int `db:"ONE"`
@@ -55,7 +56,7 @@ func TestClient_query(t *testing.T) {
 }
 
 func TestClient_queryOne(t *testing.T) {
-	client := testClient(t)
+	client := sdk.testClient(t)
 	ctx := context.Background()
 	row := struct {
 		One int `db:"ONE"`
