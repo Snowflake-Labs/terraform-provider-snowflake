@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_ToTimestampLTZ(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 		Set: &sdk.AccountSet{
@@ -49,7 +49,7 @@ func TestInt_ToTimestampLTZ(t *testing.T) {
 }
 
 func TestInt_ToTimestampNTZ(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 		Set: &sdk.AccountSet{

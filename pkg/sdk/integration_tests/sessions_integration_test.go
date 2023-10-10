@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_AlterSession(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	opts := &sdk.AlterSessionOptions{
 		Set: &sdk.SessionSet{
@@ -55,7 +55,7 @@ func TestInt_AlterSession(t *testing.T) {
 }
 
 func TestInt_ShowParameters(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	parameters, err := client.Parameters.ShowParameters(ctx, nil)
 	require.NoError(t, err)
@@ -63,7 +63,7 @@ func TestInt_ShowParameters(t *testing.T) {
 }
 
 func TestInt_ShowAccountParameter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterAutocommit)
 	require.NoError(t, err)
@@ -71,7 +71,7 @@ func TestInt_ShowAccountParameter(t *testing.T) {
 }
 
 func TestInt_ShowSessionParameter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	parameter, err := client.Parameters.ShowSessionParameter(ctx, sdk.SessionParameterAutocommit)
 	require.NoError(t, err)
@@ -79,7 +79,7 @@ func TestInt_ShowSessionParameter(t *testing.T) {
 }
 
 func TestInt_ShowObjectParameter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -89,7 +89,7 @@ func TestInt_ShowObjectParameter(t *testing.T) {
 }
 
 func TestInt_ShowUserParameter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
@@ -100,7 +100,7 @@ func TestInt_ShowUserParameter(t *testing.T) {
 }
 
 func TestInt_UseWarehouse(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	originalWH, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	require.NoError(t, err)
@@ -123,7 +123,7 @@ func TestInt_UseWarehouse(t *testing.T) {
 }
 
 func TestInt_UseDatabase(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	originalDB, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestInt_UseDatabase(t *testing.T) {
 }
 
 func TestInt_UseSchema(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)

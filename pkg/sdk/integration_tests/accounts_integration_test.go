@@ -16,7 +16,7 @@ import (
 )
 
 func TestInt_AccountShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	require.NoError(t, err)
@@ -38,7 +38,7 @@ func TestInt_AccountShow(t *testing.T) {
 }
 
 func TestInt_AccountShowByID(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	require.NoError(t, err)
@@ -51,7 +51,7 @@ func TestInt_AccountShowByID(t *testing.T) {
 }
 
 func TestInt_AccountCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	require.NoError(t, err)
@@ -162,7 +162,7 @@ func TestInt_AccountCreate(t *testing.T) {
 }
 
 func TestInt_AccountAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"))
 	require.NoError(t, err)

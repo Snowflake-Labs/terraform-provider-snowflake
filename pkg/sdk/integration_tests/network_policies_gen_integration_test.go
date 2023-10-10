@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_NetworkPolicies(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	allowedIP := sdk.NewIPRequest("123.0.0.1")

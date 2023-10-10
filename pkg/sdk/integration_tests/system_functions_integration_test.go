@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_GetTag(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)

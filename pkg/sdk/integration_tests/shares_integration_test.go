@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_SharesShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
@@ -60,7 +60,7 @@ func TestInt_SharesShow(t *testing.T) {
 }
 
 func TestInt_SharesCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("test complete", func(t *testing.T) {
@@ -108,7 +108,7 @@ func TestInt_SharesCreate(t *testing.T) {
 }
 
 func TestInt_SharesDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("when share exists", func(t *testing.T) {
@@ -124,7 +124,7 @@ func TestInt_SharesDrop(t *testing.T) {
 }
 
 func TestInt_SharesAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -335,7 +335,7 @@ func TestInt_SharesAlter(t *testing.T) {
 }
 
 func TestInt_ShareDescribeProvider(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("describe share", func(t *testing.T) {
@@ -370,7 +370,7 @@ func TestInt_ShareDescribeProvider(t *testing.T) {
 func TestInt_ShareDescribeConsumer(t *testing.T) {
 	consumerClient := sdk.testSecondaryClient(t)
 	ctx := context.Background()
-	providerClient := sdk.testClient(t)
+	providerClient := testClient(t)
 
 	t.Run("describe share", func(t *testing.T) {
 		shareTest, shareCleanup := sdk.createShare(t, providerClient)

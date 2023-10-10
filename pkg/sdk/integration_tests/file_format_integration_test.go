@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_FileFormatsCreateAndRead(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -359,7 +359,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 }
 
 func TestInt_FileFormatsAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
@@ -422,7 +422,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 }
 
 func TestInt_FileFormatsDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
@@ -451,7 +451,7 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 }
 
 func TestInt_FileFormatsShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
@@ -496,7 +496,7 @@ func TestInt_FileFormatsShow(t *testing.T) {
 }
 
 func TestInt_FileFormatsShowById(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)

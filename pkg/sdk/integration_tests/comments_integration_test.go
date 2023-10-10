@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_Comment(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	testWarehouse, warehouseCleanup := sdk.createWarehouse(t, client)

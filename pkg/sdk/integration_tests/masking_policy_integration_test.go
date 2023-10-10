@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_MaskingPoliciesShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -92,7 +92,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 }
 
 func TestInt_MaskingPolicyCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -254,7 +254,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 }
 
 func TestInt_MaskingPolicyDescribe(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -280,7 +280,7 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 }
 
 func TestInt_MaskingPolicyAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -396,7 +396,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 }
 
 func TestInt_MaskingPolicyDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)

@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 
 	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
@@ -70,7 +70,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 }
 
 func TestInt_DynamicTableDescribe(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	dynamicTable, dynamicTableCleanup := sdk.createDynamicTable(t, client)
@@ -89,7 +89,7 @@ func TestInt_DynamicTableDescribe(t *testing.T) {
 }
 
 func TestInt_DynamicTableAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("alter with suspend or resume", func(t *testing.T) {

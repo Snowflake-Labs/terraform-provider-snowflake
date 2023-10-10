@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_ExternalTables(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	db, cleanupDB := sdk.createDatabase(t, client)

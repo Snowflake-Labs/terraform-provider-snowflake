@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("on account", func(t *testing.T) {
@@ -218,7 +218,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 }
 
 func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	database, databaseCleanup := sdk.createDatabase(t, client)
@@ -420,7 +420,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 }
 
 func TestInt_GrantPrivilegeToShare(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
@@ -465,7 +465,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 }
 
 func TestInt_RevokePrivilegeToShare(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
@@ -488,7 +488,7 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 }
 
 func TestInt_GrantOwnership(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	database, databaseCleanup := sdk.createDatabase(t, client)
@@ -609,7 +609,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 }
 
 func TestInt_ShowGrants(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)

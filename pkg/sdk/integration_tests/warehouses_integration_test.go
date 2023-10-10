@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_WarehousesShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	testWarehouse, warehouseCleanup := sdk.createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{
@@ -53,7 +53,7 @@ func TestInt_WarehousesShow(t *testing.T) {
 }
 
 func TestInt_WarehouseCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -163,7 +163,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 }
 
 func TestInt_WarehouseDescribe(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
@@ -185,7 +185,7 @@ func TestInt_WarehouseDescribe(t *testing.T) {
 }
 
 func TestInt_WarehouseAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	database, dbCleanup := sdk.createDatabase(t, client)
@@ -512,7 +512,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 }
 
 func TestInt_WarehouseDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("when warehouse exists", func(t *testing.T) {

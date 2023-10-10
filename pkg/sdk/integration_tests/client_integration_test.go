@@ -24,26 +24,26 @@ func TestClient_NewClient(t *testing.T) {
 }
 
 func TestClient_ping(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	err := client.Ping()
 	require.NoError(t, err)
 }
 
 func TestClient_close(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	err := client.Close()
 	require.NoError(t, err)
 }
 
 func TestClient_exec(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	_, err := client.exec(ctx, "SELECT 1")
 	require.NoError(t, err)
 }
 
 func TestClient_query(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	rows := []struct {
 		One int `db:"ONE"`
@@ -56,7 +56,7 @@ func TestClient_query(t *testing.T) {
 }
 
 func TestClient_queryOne(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	row := struct {
 		One int `db:"ONE"`

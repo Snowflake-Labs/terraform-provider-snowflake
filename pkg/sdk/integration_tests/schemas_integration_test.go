@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_SchemasCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	db, cleanupDb := sdk.createDatabase(t, client)
@@ -115,7 +115,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 }
 
 func TestInt_SchemasAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	db, cleanupDb := sdk.createDatabase(t, client)
@@ -296,7 +296,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 }
 
 func TestInt_SchemasShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	db, cleanupDb := sdk.createDatabase(t, client)
@@ -340,7 +340,7 @@ func TestInt_SchemasShow(t *testing.T) {
 }
 
 func TestInt_SchemasDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	db, cleanupDb := sdk.createDatabase(t, client)

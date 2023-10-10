@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_ShowReplicationFunctions(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	accounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
 	if err != nil {
@@ -20,7 +20,7 @@ func TestInt_ShowReplicationFunctions(t *testing.T) {
 }
 
 func TestInt_ShowRegions(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	t.Run("no options", func(t *testing.T) {
 		regions, err := client.ReplicationFunctions.ShowRegions(ctx, nil)

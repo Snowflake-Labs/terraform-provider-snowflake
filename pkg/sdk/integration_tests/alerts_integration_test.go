@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_AlertsShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -88,7 +88,7 @@ func TestInt_AlertsShow(t *testing.T) {
 }
 
 func TestInt_AlertCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -241,7 +241,7 @@ func TestInt_AlertCreate(t *testing.T) {
 }
 
 func TestInt_AlertDescribe(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -270,7 +270,7 @@ func TestInt_AlertDescribe(t *testing.T) {
 }
 
 func TestInt_AlertAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -395,7 +395,7 @@ func TestInt_AlertAlter(t *testing.T) {
 }
 
 func TestInt_AlertDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)

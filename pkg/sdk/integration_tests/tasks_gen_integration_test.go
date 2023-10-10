@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_Tasks(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	database, databaseCleanup := sdk.createDatabase(t, client)

@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_DatabasesCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("minimal", func(t *testing.T) {
@@ -108,7 +108,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 }
 
 func TestInt_CreateShared(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -153,7 +153,7 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 }
 
 func TestInt_DatabasesDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, _ := sdk.createDatabase(t, client)
 	databaseID := databaseTest.ID()
@@ -184,7 +184,7 @@ this test keeps failing need to fix.
 	}
 */
 func TestInt_DatabasesDescribe(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
@@ -203,7 +203,7 @@ func TestInt_DatabasesDescribe(t *testing.T) {
 }
 
 func TestInt_DatabasesAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("renaming", func(t *testing.T) {
@@ -264,7 +264,7 @@ func TestInt_AlterReplication(t *testing.T) {
 }
 
 func TestInt_AlterFailover(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -300,7 +300,7 @@ func TestInt_AlterFailover(t *testing.T) {
 }
 
 func TestInt_DatabasesShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)

@@ -11,7 +11,7 @@ import (
 )
 
 func TestInt_UsersShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	userTest, userCleanup := sdk.createUserWithName(t, client, "USER_FOO")
@@ -77,7 +77,7 @@ func TestInt_UsersShow(t *testing.T) {
 }
 
 func TestInt_UserCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -201,7 +201,7 @@ func TestInt_UserCreate(t *testing.T) {
 }
 
 func TestInt_UserDescribe(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	user, userCleanup := sdk.createUser(t, client)
@@ -221,7 +221,7 @@ func TestInt_UserDescribe(t *testing.T) {
 }
 
 func TestInt_UserDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("when user exists", func(t *testing.T) {

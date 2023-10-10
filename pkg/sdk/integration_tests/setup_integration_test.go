@@ -61,3 +61,9 @@ func timer(name string) func() {
 		log.Printf("[DEBUG] %s took %v\n", name, time.Since(start))
 	}
 }
+
+// TODO: remove.
+// This is temporary way to move all integration tests to this package without doing revolution in a single PR.
+func testClient(t *testing.T) *sdk.Client {
+	return itc.client
+}

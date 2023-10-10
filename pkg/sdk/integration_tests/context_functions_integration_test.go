@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_CurrentAccount(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	account, err := client.ContextFunctions.CurrentAccount(ctx)
@@ -19,7 +19,7 @@ func TestInt_CurrentAccount(t *testing.T) {
 }
 
 func TestInt_CurrentRole(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	role, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
@@ -27,7 +27,7 @@ func TestInt_CurrentRole(t *testing.T) {
 }
 
 func TestInt_CurrentRegion(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	region, err := client.ContextFunctions.CurrentRegion(ctx)
 	require.NoError(t, err)
@@ -35,7 +35,7 @@ func TestInt_CurrentRegion(t *testing.T) {
 }
 
 func TestInt_CurrentSession(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	session, err := client.ContextFunctions.CurrentSession(ctx)
 	require.NoError(t, err)
@@ -43,7 +43,7 @@ func TestInt_CurrentSession(t *testing.T) {
 }
 
 func TestInt_CurrentUser(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
@@ -51,7 +51,7 @@ func TestInt_CurrentUser(t *testing.T) {
 }
 
 func TestInt_CurrentDatabase(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -63,7 +63,7 @@ func TestInt_CurrentDatabase(t *testing.T) {
 }
 
 func TestInt_CurrentSchema(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -78,7 +78,7 @@ func TestInt_CurrentSchema(t *testing.T) {
 }
 
 func TestInt_CurrentWarehouse(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
@@ -91,7 +91,7 @@ func TestInt_CurrentWarehouse(t *testing.T) {
 }
 
 func TestInt_IsRoleInSession(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
@@ -101,7 +101,7 @@ func TestInt_IsRoleInSession(t *testing.T) {
 }
 
 func TestInt_RolesUse(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	currentRoleID := sdk.NewAccountObjectIdentifier(currentRole)
@@ -127,7 +127,7 @@ func TestInt_RolesUse(t *testing.T) {
 }
 
 func TestInt_RolesUseSecondaryRoles(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)

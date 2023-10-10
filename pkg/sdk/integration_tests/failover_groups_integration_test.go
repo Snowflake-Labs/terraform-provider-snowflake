@@ -18,7 +18,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -111,7 +111,7 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	primaryAccountID := sdk.getAccountIdentifier(t, client)
 	secondaryClient := sdk.testSecondaryClient(t)
@@ -187,7 +187,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	t.Run("rename the failover group", func(t *testing.T) {
 		failoverGroup, _ := sdk.createFailoverGroup(t, client)
@@ -546,7 +546,7 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	primaryAccountID := sdk.getAccountIdentifier(t, client)
 	secondaryClient := sdk.testSecondaryClient(t)
@@ -671,7 +671,7 @@ func TestInt_FailoverGroupsDrop(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	t.Run("no options", func(t *testing.T) {
 		failoverGroup, _ := sdk.createFailoverGroup(t, client)
@@ -693,7 +693,7 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
@@ -725,7 +725,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
@@ -760,7 +760,7 @@ func TestInt_FailoverGroupsShowShares(t *testing.T) {
 	if _, ok := os.LookupEnv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES"); !ok {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)

@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_PasswordPoliciesShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -84,7 +84,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 }
 
 func TestInt_PasswordPolicyCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -170,7 +170,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 }
 
 func TestInt_PasswordPolicyDescribe(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -197,7 +197,7 @@ func TestInt_PasswordPolicyDescribe(t *testing.T) {
 }
 
 func TestInt_PasswordPolicyAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -305,7 +305,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 }
 
 func TestInt_PasswordPolicyDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)

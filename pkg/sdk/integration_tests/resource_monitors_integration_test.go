@@ -10,7 +10,7 @@ import (
 )
 
 func TestInt_ResourceMonitorsShow(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	resourceMonitorTest, resourceMonitorCleanup := sdk.createResourceMonitor(t, client)
@@ -41,7 +41,7 @@ func TestInt_ResourceMonitorsShow(t *testing.T) {
 }
 
 func TestInt_ResourceMonitorCreate(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("test complete case", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 }
 
 func TestInt_ResourceMonitorAlter(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("when adding a new trigger", func(t *testing.T) {
@@ -245,7 +245,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 }
 
 func TestInt_ResourceMonitorDrop(t *testing.T) {
-	client := sdk.testClient(t)
+	client := testClient(t)
 	ctx := context.Background()
 
 	t.Run("when resource monitor exists", func(t *testing.T) {
