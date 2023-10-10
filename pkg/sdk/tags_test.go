@@ -174,7 +174,7 @@ func TestTagShow(t *testing.T) {
 	t.Run("show with in", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.In = &In{
-			Account:  Bool(true),
+			Account: Bool(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW TAGS IN ACCOUNT`)
 	})
