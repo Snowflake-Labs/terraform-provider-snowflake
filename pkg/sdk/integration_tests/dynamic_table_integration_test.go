@@ -72,7 +72,7 @@ func TestInt_DynamicTableDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	dynamicTable, dynamicTableCleanup := sdk.createDynamicTable(t, client)
+	dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
 	t.Cleanup(dynamicTableCleanup)
 
 	t.Run("when dynamic table exists", func(t *testing.T) {
@@ -92,7 +92,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("alter with suspend or resume", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := sdk.createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
 		t.Cleanup(dynamicTableCleanup)
 
 		entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(dynamicTable.Name)}))
@@ -118,7 +118,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter with refresh", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := sdk.createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
 		t.Cleanup(dynamicTableCleanup)
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithRefresh(sdk.Bool(true)))
@@ -130,7 +130,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter with suspend and resume", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := sdk.createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
 		t.Cleanup(dynamicTableCleanup)
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(sdk.Bool(true)).WithResume(sdk.Bool(true)))
@@ -140,7 +140,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter with set", func(t *testing.T) {
-		dynamicTable, dynamicTableCleanup := sdk.createDynamicTable(t, client)
+		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
 		t.Cleanup(dynamicTableCleanup)
 
 		targetLagCases := []string{"10 minutes", "DOWNSTREAM"}

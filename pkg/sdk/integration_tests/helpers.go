@@ -158,6 +158,58 @@ func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schem
 		}
 }
 
+func createDynamicTable(t *testing.T, client *sdk.Client) (*sdk.DynamicTable, func()) {
+	t.Helper()
+	return createDynamicTableWithOptions(t, client, nil, nil, nil, nil)
+}
+
+func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *sdk.Warehouse, database *sdk.Database, schema *sdk.Schema, table *sdk.Table) (*sdk.DynamicTable, func()) {
+	t.Helper()
+	var warehouseCleanup func()
+	if warehouse == nil {
+		warehouse, warehouseCleanup = createWarehouse(t, client)
+	}
+	var databaseCleanup func()
+	if database == nil {
+		database, databaseCleanup = createDatabase(t, client)
+	}
+	var schemaCleanup func()
+	if schema == nil {
+		schema, schemaCleanup = createSchema(t, client, database)
+	}
+	var tableCleanup func()
+	if table == nil {
+		table, tableCleanup = createTable(t, client, database, schema)
+	}
+	name := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, randomString(t))
+	targetLag := sdk.TargetLag{
+		Lagtime: sdk.String("2 minutes"),
+	}
+	query := "select id from " + table.ID().FullyQualifiedName()
+	comment := randomComment(t)
+	ctx := context.Background()
+	err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouse.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
+	require.NoError(t, err)
+	entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(name.Name())}).WithIn(&sdk.In{Schema: schema.ID()}))
+	require.NoError(t, err)
+	require.Equal(t, 1, len(entities))
+	return &entities[0], func() {
+		require.NoError(t, client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(name)))
+		if tableCleanup != nil {
+			tableCleanup()
+		}
+		if schemaCleanup != nil {
+			schemaCleanup()
+		}
+		if databaseCleanup != nil {
+			databaseCleanup()
+		}
+		if warehouseCleanup != nil {
+			warehouseCleanup()
+		}
+	}
+}
+
 func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Tag, func()) {
 	t.Helper()
 	return createTagWithOptions(t, client, database, schema, &sdk.CreateTagOptions{})
