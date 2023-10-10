@@ -154,6 +154,12 @@ func TestTagShow(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
 	})
 
+	t.Run("validation: empty in", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.In = &In{}
+		assertOptsInvalidJoinedErrors(t, opts, errScopeRequiredForInKeyword)
+	})
+
 	t.Run("show with empty options", func(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `SHOW TAGS`)
@@ -163,6 +169,14 @@ func TestTagShow(t *testing.T) {
 		opts := defaultOpts()
 		opts.Like = &Like{Pattern: String("test")}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW TAGS LIKE 'test'`)
+	})
+
+	t.Run("show with in", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.In = &In{
+			Account:  Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TAGS IN ACCOUNT`)
 	})
 }
 

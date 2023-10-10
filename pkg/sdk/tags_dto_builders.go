@@ -165,8 +165,8 @@ func NewDropTagRequest(name SchemaObjectIdentifier) *DropTagRequest {
 	return &s
 }
 
-func (s *DropTagRequest) WithIfNotExists(ifNotExists bool) *DropTagRequest {
-	s.ifExists = ifNotExists
+func (s *DropTagRequest) WithIfExists(ifExists bool) *DropTagRequest {
+	s.ifExists = ifExists
 	return s
 }
 

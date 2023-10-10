@@ -98,12 +98,11 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("drop tag: existing", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.Tags.Create(ctx, NewCreateTagRequest(id))
-		require.NoError(t, err)
+		tag := createTagHandle(t)
+		id := tag.ID()
+		t.Cleanup(cleanupTagHandle(id))
 
-		err = client.Tags.Drop(ctx, NewDropTagRequest(id))
+		err := client.Tags.Drop(ctx, NewDropTagRequest(id))
 		require.NoError(t, err)
 
 		_, err = client.Tags.ShowByID(ctx, id)
@@ -119,13 +118,11 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("undrop tag: existing", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.Tags.Create(ctx, NewCreateTagRequest(id))
-		require.NoError(t, err)
+		tag := createTagHandle(t)
+		id := tag.ID()
 		t.Cleanup(cleanupTagHandle(id))
 
-		err = client.Tags.Drop(ctx, NewDropTagRequest(id))
+		err := client.Tags.Drop(ctx, NewDropTagRequest(id))
 		require.NoError(t, err)
 		_, err = client.Tags.ShowByID(ctx, id)
 		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
@@ -137,19 +134,17 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("alter tag: set and unset comment", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.Tags.Create(ctx, NewCreateTagRequest(id))
-		require.NoError(t, err)
+		tag := createTagHandle(t)
+		id := tag.ID()
 		t.Cleanup(cleanupTagHandle(id))
 
 		// alter tag with set comment
 		comment := randomComment(t)
 		set := NewTagSetRequest().WithComment(comment)
-		err = client.Tags.Alter(ctx, NewAlterTagRequest(id).WithSet(set))
+		err := client.Tags.Alter(ctx, NewAlterTagRequest(id).WithSet(set))
 		require.NoError(t, err)
 
-		tag, err := client.Tags.ShowByID(ctx, id)
+		tag, err = client.Tags.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, comment, tag.Comment)
 
@@ -164,19 +159,16 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("alter tag: set and unset masking policies", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-
 		policyTest, policyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(policyCleanup)
 
-		err := client.Tags.Create(ctx, NewCreateTagRequest(id))
-		require.NoError(t, err)
+		tag := createTagHandle(t)
+		id := tag.ID()
 		t.Cleanup(cleanupTagHandle(id))
 
 		policies := []string{policyTest.Name}
 		set := NewTagSetRequest().WithMaskingPolicies(policies)
-		err = client.Tags.Alter(ctx, NewAlterTagRequest(id).WithSet(set))
+		err := client.Tags.Alter(ctx, NewAlterTagRequest(id).WithSet(set))
 		require.NoError(t, err)
 
 		unset := NewTagUnsetRequest().WithMaskingPolicies(policies)
@@ -185,17 +177,15 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("alter tag: add and drop allowed values", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.Tags.Create(ctx, NewCreateTagRequest(id))
-		require.NoError(t, err)
+		tag := createTagHandle(t)
+		id := tag.ID()
 		t.Cleanup(cleanupTagHandle(id))
 
 		values := []string{"value1", "value2"}
-		err = client.Tags.Alter(ctx, NewAlterTagRequest(id).WithAdd(values))
+		err := client.Tags.Alter(ctx, NewAlterTagRequest(id).WithAdd(values))
 		require.NoError(t, err)
 
-		tag, err := client.Tags.ShowByID(ctx, id)
+		tag, err = client.Tags.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, values, tag.AllowedValues)
 
@@ -208,13 +198,11 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("alter tag: rename", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.Tags.Create(ctx, NewCreateTagRequest(id))
-		require.NoError(t, err)
+		tag := createTagHandle(t)
+		id := tag.ID()
 
 		nid := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, randomString(t))
-		err = client.Tags.Alter(ctx, NewAlterTagRequest(id).WithRename(nid))
+		err := client.Tags.Alter(ctx, NewAlterTagRequest(id).WithRename(nid))
 		if err != nil {
 			t.Cleanup(cleanupTagHandle(id))
 		} else {
@@ -225,23 +213,21 @@ func TestInt_Tags(t *testing.T) {
 		_, err = client.Tags.ShowByID(ctx, id)
 		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
 
-		tag, err := client.Tags.ShowByID(ctx, nid)
+		tag, err = client.Tags.ShowByID(ctx, nid)
 		require.NoError(t, err)
 		assertTagHandle(t, tag, nid.Name(), "", nil)
 	})
 
 	t.Run("alter tag: unset allowed values", func(t *testing.T) {
-		name := randomString(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.Tags.Create(ctx, NewCreateTagRequest(id))
-		require.NoError(t, err)
+		tag := createTagHandle(t)
+		id := tag.ID()
 		t.Cleanup(cleanupTagHandle(id))
 
 		values := []string{"value1", "value2"}
-		err = client.Tags.Alter(ctx, NewAlterTagRequest(id).WithAdd(values))
+		err := client.Tags.Alter(ctx, NewAlterTagRequest(id).WithAdd(values))
 		require.NoError(t, err)
 
-		tag, err := client.Tags.ShowByID(ctx, id)
+		tag, err = client.Tags.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, values, tag.AllowedValues)
 

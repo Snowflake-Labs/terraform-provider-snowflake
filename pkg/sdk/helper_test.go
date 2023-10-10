@@ -404,7 +404,7 @@ func createTag(t *testing.T, client *Client, database *Database, schema *Schema)
 	tag, err := client.Tags.ShowByID(ctx, tagID)
 	require.NoError(t, err)
 	return tag, func() {
-		req := NewDropTagRequest(tagID).WithIfNotExists(true)
+		req := NewDropTagRequest(tagID).WithIfExists(true)
 		err := client.Tags.Drop(ctx, req)
 		require.NoError(t, err)
 	}

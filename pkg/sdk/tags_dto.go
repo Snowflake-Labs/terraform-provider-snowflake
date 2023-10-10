@@ -2,6 +2,7 @@ package sdk
 
 var (
 	_ optionsProvider[createTagOptions] = new(CreateTagRequest)
+	_ optionsProvider[alterTagOptions] = new(AlterTagRequest)
 	_ optionsProvider[showTagOptions]   = new(ShowTagRequest)
 	_ optionsProvider[dropTagOptions]   = new(DropTagRequest)
 	_ optionsProvider[undropTagOptions] = new(UndropTagRequest)
