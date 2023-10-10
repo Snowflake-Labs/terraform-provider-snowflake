@@ -189,16 +189,16 @@ func TestInt_AccountAlter(t *testing.T) {
 		require.NoError(t, err)
 		p, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterClientEncryptionKeySize)
 		require.NoError(t, err)
-		assert.Equal(t, 128, sdk.toInt(p.Value))
+		assert.Equal(t, 128, sdk.ToInt(p.Value))
 		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterPreventUnloadToInternalStages)
 		require.NoError(t, err)
-		assert.Equal(t, true, sdk.toBool(p.Value))
+		assert.Equal(t, true, sdk.ToBool(p.Value))
 		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterJSONIndent)
 		require.NoError(t, err)
-		assert.Equal(t, 16, sdk.toInt(p.Value))
+		assert.Equal(t, 16, sdk.ToInt(p.Value))
 		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterMaxDataExtensionTimeInDays)
 		require.NoError(t, err)
-		assert.Equal(t, 30, sdk.toInt(p.Value))
+		assert.Equal(t, 30, sdk.ToInt(p.Value))
 
 		opts = &sdk.AlterAccountOptions{
 			Unset: &sdk.AccountUnset{
