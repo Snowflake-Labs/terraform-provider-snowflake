@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"os"
@@ -19,7 +18,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	shareTest, shareCleanup := sdk.createShare(t, client)
@@ -112,7 +111,7 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	primaryAccountID := sdk.getAccountIdentifier(t, client)
 	secondaryClient := sdk.testSecondaryClient(t)
 	secondaryClientID := sdk.getAccountIdentifier(t, secondaryClient)
@@ -188,7 +187,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	t.Run("rename the failover group", func(t *testing.T) {
 		failoverGroup, _ := sdk.createFailoverGroup(t, client)
 		oldID := failoverGroup.ID()
@@ -547,7 +546,7 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	primaryAccountID := sdk.getAccountIdentifier(t, client)
 	secondaryClient := sdk.testSecondaryClient(t)
 	secondaryClientID := sdk.getAccountIdentifier(t, secondaryClient)
@@ -672,7 +671,7 @@ func TestInt_FailoverGroupsDrop(t *testing.T) {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	t.Run("no options", func(t *testing.T) {
 		failoverGroup, _ := sdk.createFailoverGroup(t, client)
 		err := client.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil)
@@ -694,7 +693,7 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
@@ -726,7 +725,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
@@ -761,7 +760,7 @@ func TestInt_FailoverGroupsShowShares(t *testing.T) {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 

@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 	"time"
@@ -12,7 +11,7 @@ import (
 
 func TestInt_WarehousesShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	testWarehouse, warehouseCleanup := sdk.createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{
 		WarehouseSize: &sdk.WarehouseSizeSmall,
@@ -54,7 +53,7 @@ func TestInt_WarehousesShow(t *testing.T) {
 
 func TestInt_WarehouseCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
@@ -164,7 +163,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 
 func TestInt_WarehouseDescribe(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
@@ -186,7 +185,7 @@ func TestInt_WarehouseDescribe(t *testing.T) {
 
 func TestInt_WarehouseAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	database, dbCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(dbCleanup)
@@ -513,7 +512,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 func TestInt_WarehouseDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("when warehouse exists", func(t *testing.T) {
 		warehouse, _ := sdk.createWarehouse(t, client)

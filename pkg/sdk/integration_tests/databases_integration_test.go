@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
 	"testing"
@@ -12,7 +11,7 @@ import (
 
 func TestInt_DatabasesCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("minimal", func(t *testing.T) {
 		databaseID := sdk.randomAccountObjectIdentifier(t)
@@ -109,7 +108,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 
 func TestInt_CreateShared(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	shareTest, _ := sdk.createShare(t, client)
@@ -154,7 +153,7 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 
 func TestInt_DatabasesDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, _ := sdk.createDatabase(t, client)
 	databaseID := databaseTest.ID()
 	t.Run("drop with nil options", func(t *testing.T) {
@@ -168,7 +167,7 @@ this test keeps failing need to fix.
 
 	func TestInt_DatabasesUndrop(t *testing.T) {
 		client := testClient(t)
-		ctx := context.Background()
+		ctx := testContext(t)
 		databaseTest, databaseCleanup := createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
 		databaseID := databaseTest.ID()
@@ -189,7 +188,7 @@ func TestInt_DatabasesDescribe(t *testing.T) {
 	t.Cleanup(databaseCleanup)
 	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseDetails, err := client.Databases.Describe(ctx, databaseTest.ID())
 	require.NoError(t, err)
 	rows := databaseDetails.Rows
@@ -204,7 +203,7 @@ func TestInt_DatabasesDescribe(t *testing.T) {
 
 func TestInt_DatabasesAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("renaming", func(t *testing.T) {
 		databaseTest, _ := sdk.createDatabase(t, client)
@@ -265,7 +264,7 @@ func TestInt_AlterReplication(t *testing.T) {
 
 func TestInt_AlterFailover(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	secondaryClient := sdk.testSecondaryClient(t)
@@ -301,7 +300,7 @@ func TestInt_AlterFailover(t *testing.T) {
 
 func TestInt_DatabasesShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 

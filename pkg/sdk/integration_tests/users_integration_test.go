@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
 	"testing"
@@ -12,7 +11,7 @@ import (
 
 func TestInt_UsersShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	userTest, userCleanup := sdk.createUserWithName(t, client, "USER_FOO")
 	t.Cleanup(userCleanup)
@@ -78,7 +77,7 @@ func TestInt_UsersShow(t *testing.T) {
 
 func TestInt_UserCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
@@ -202,7 +201,7 @@ func TestInt_UserCreate(t *testing.T) {
 
 func TestInt_UserDescribe(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	user, userCleanup := sdk.createUser(t, client)
 	t.Cleanup(userCleanup)
@@ -222,7 +221,7 @@ func TestInt_UserDescribe(t *testing.T) {
 
 func TestInt_UserDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("when user exists", func(t *testing.T) {
 		user, _ := sdk.createUser(t, client)

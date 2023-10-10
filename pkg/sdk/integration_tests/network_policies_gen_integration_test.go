@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
@@ -12,7 +11,7 @@ import (
 
 func TestInt_NetworkPolicies(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	allowedIP := sdk.NewIPRequest("123.0.0.1")
 	blockedIP := sdk.NewIPRequest("125.0.0.1")

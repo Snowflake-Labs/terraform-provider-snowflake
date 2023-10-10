@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 func TestInt_Comment(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	testWarehouse, warehouseCleanup := sdk.createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)

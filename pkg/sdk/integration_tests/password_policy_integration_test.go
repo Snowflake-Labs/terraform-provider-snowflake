@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 func TestInt_PasswordPoliciesShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
@@ -85,7 +84,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 
 func TestInt_PasswordPolicyCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
@@ -171,7 +170,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 
 func TestInt_PasswordPolicyDescribe(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -198,7 +197,7 @@ func TestInt_PasswordPolicyDescribe(t *testing.T) {
 
 func TestInt_PasswordPolicyAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -306,7 +305,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 
 func TestInt_PasswordPolicyDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)

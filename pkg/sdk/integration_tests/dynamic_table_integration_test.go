@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -21,7 +20,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	tableTest, tableCleanup := sdk.createTable(t, client, databaseTest, schemaTest)
 	t.Cleanup(tableCleanup)
 
-	ctx := context.Background()
+	ctx := testContext(t)
 	t.Run("test complete", func(t *testing.T) {
 		name := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, sdk.randomString(t))
 		targetLag := sdk.TargetLag{
@@ -71,7 +70,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 func TestInt_DynamicTableDescribe(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	dynamicTable, dynamicTableCleanup := sdk.createDynamicTable(t, client)
 	t.Cleanup(dynamicTableCleanup)
@@ -90,7 +89,7 @@ func TestInt_DynamicTableDescribe(t *testing.T) {
 
 func TestInt_DynamicTableAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("alter with suspend or resume", func(t *testing.T) {
 		dynamicTable, dynamicTableCleanup := sdk.createDynamicTable(t, client)

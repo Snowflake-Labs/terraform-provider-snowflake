@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 func TestInt_SharesShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
 
@@ -61,7 +60,7 @@ func TestInt_SharesShow(t *testing.T) {
 
 func TestInt_SharesCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("test complete", func(t *testing.T) {
 		id := sdk.randomAccountObjectIdentifier(t)
@@ -109,7 +108,7 @@ func TestInt_SharesCreate(t *testing.T) {
 
 func TestInt_SharesDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("when share exists", func(t *testing.T) {
 		shareTest, _ := sdk.createShare(t, client)
@@ -125,7 +124,7 @@ func TestInt_SharesDrop(t *testing.T) {
 
 func TestInt_SharesAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -336,7 +335,7 @@ func TestInt_SharesAlter(t *testing.T) {
 
 func TestInt_ShareDescribeProvider(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("describe share", func(t *testing.T) {
 		shareTest, shareCleanup := sdk.createShare(t, client)
@@ -369,7 +368,7 @@ func TestInt_ShareDescribeProvider(t *testing.T) {
 
 func TestInt_ShareDescribeConsumer(t *testing.T) {
 	consumerClient := sdk.testSecondaryClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	providerClient := testClient(t)
 
 	t.Run("describe share", func(t *testing.T) {

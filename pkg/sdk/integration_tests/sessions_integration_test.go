@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 func TestInt_AlterSession(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	opts := &sdk.AlterSessionOptions{
 		Set: &sdk.SessionSet{
 			&sdk.SessionParameters{
@@ -56,7 +55,7 @@ func TestInt_AlterSession(t *testing.T) {
 
 func TestInt_ShowParameters(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	parameters, err := client.Parameters.ShowParameters(ctx, nil)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameters)
@@ -64,7 +63,7 @@ func TestInt_ShowParameters(t *testing.T) {
 
 func TestInt_ShowAccountParameter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterAutocommit)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
@@ -72,7 +71,7 @@ func TestInt_ShowAccountParameter(t *testing.T) {
 
 func TestInt_ShowSessionParameter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	parameter, err := client.Parameters.ShowSessionParameter(ctx, sdk.SessionParameterAutocommit)
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
@@ -80,7 +79,7 @@ func TestInt_ShowSessionParameter(t *testing.T) {
 
 func TestInt_ShowObjectParameter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	parameter, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterDataRetentionTimeInDays, sdk.Object{ObjectType: databaseTest.ObjectType(), Name: databaseTest.ID()})
@@ -90,7 +89,7 @@ func TestInt_ShowObjectParameter(t *testing.T) {
 
 func TestInt_ShowUserParameter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
 	userID := sdk.NewAccountObjectIdentifier(user)
@@ -101,7 +100,7 @@ func TestInt_ShowUserParameter(t *testing.T) {
 
 func TestInt_UseWarehouse(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	originalWH, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -124,7 +123,7 @@ func TestInt_UseWarehouse(t *testing.T) {
 
 func TestInt_UseDatabase(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	originalDB, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -147,7 +146,7 @@ func TestInt_UseDatabase(t *testing.T) {
 
 func TestInt_UseSchema(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)

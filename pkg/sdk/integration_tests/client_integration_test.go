@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -37,14 +36,14 @@ func TestClient_close(t *testing.T) {
 
 func TestClient_exec(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	_, err := client.exec(ctx, "SELECT 1")
 	require.NoError(t, err)
 }
 
 func TestClient_query(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	rows := []struct {
 		One int `db:"ONE"`
 	}{}
@@ -57,7 +56,7 @@ func TestClient_query(t *testing.T) {
 
 func TestClient_queryOne(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	row := struct {
 		One int `db:"ONE"`
 	}{}

@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 	"time"
@@ -12,7 +11,7 @@ import (
 
 func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	schema, schemaCleanup := sdk.createSchema(t, client, databaseTest)
@@ -360,7 +359,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 func TestInt_FileFormatsAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
@@ -423,7 +422,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 
 func TestInt_FileFormatsDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
@@ -452,7 +451,7 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 
 func TestInt_FileFormatsShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
@@ -497,7 +496,7 @@ func TestInt_FileFormatsShow(t *testing.T) {
 
 func TestInt_FileFormatsShowById(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)

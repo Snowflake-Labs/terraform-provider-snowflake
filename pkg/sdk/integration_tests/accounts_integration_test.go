@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
@@ -17,7 +16,7 @@ import (
 
 func TestInt_AccountShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	require.NoError(t, err)
 	if !ok {
@@ -39,7 +38,7 @@ func TestInt_AccountShow(t *testing.T) {
 
 func TestInt_AccountShowByID(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	require.NoError(t, err)
 	if !ok {
@@ -52,7 +51,7 @@ func TestInt_AccountShowByID(t *testing.T) {
 
 func TestInt_AccountCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	require.NoError(t, err)
 	if !ok {
@@ -163,7 +162,7 @@ func TestInt_AccountCreate(t *testing.T) {
 
 func TestInt_AccountAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"))
 	require.NoError(t, err)
 	if !ok {

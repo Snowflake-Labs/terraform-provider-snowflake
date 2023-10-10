@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 func TestInt_ShowReplicationFunctions(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	accounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
 	if err != nil {
 		t.Skip("replication not enabled in this account")
@@ -21,7 +20,7 @@ func TestInt_ShowReplicationFunctions(t *testing.T) {
 
 func TestInt_ShowRegions(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	t.Run("no options", func(t *testing.T) {
 		regions, err := client.ReplicationFunctions.ShowRegions(ctx, nil)
 		require.NoError(t, err)

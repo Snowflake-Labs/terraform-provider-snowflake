@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 	"time"
@@ -12,7 +11,7 @@ import (
 
 func TestInt_ToTimestampLTZ(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 		Set: &sdk.AccountSet{
 			Parameters: &sdk.AccountLevelParameters{
@@ -50,7 +49,7 @@ func TestInt_ToTimestampLTZ(t *testing.T) {
 
 func TestInt_ToTimestampNTZ(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 		Set: &sdk.AccountSet{
 			Parameters: &sdk.AccountLevelParameters{

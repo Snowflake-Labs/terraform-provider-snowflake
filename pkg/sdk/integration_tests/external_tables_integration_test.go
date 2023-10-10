@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
@@ -12,7 +11,7 @@ import (
 
 func TestInt_ExternalTables(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDB := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDB)

@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 func TestInt_CurrentAccount(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	account, err := client.ContextFunctions.CurrentAccount(ctx)
 	require.NoError(t, err)
@@ -20,7 +19,7 @@ func TestInt_CurrentAccount(t *testing.T) {
 
 func TestInt_CurrentRole(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	role, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, role)
@@ -28,7 +27,7 @@ func TestInt_CurrentRole(t *testing.T) {
 
 func TestInt_CurrentRegion(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	region, err := client.ContextFunctions.CurrentRegion(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, region)
@@ -36,7 +35,7 @@ func TestInt_CurrentRegion(t *testing.T) {
 
 func TestInt_CurrentSession(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	session, err := client.ContextFunctions.CurrentSession(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, session)
@@ -44,7 +43,7 @@ func TestInt_CurrentSession(t *testing.T) {
 
 func TestInt_CurrentUser(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, user)
@@ -52,7 +51,7 @@ func TestInt_CurrentUser(t *testing.T) {
 
 func TestInt_CurrentDatabase(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	err := client.Sessions.UseDatabase(ctx, databaseTest.ID())
@@ -64,7 +63,7 @@ func TestInt_CurrentDatabase(t *testing.T) {
 
 func TestInt_CurrentSchema(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -79,7 +78,7 @@ func TestInt_CurrentSchema(t *testing.T) {
 
 func TestInt_CurrentWarehouse(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
@@ -92,7 +91,7 @@ func TestInt_CurrentWarehouse(t *testing.T) {
 
 func TestInt_IsRoleInSession(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 	role, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier(currentRole))
@@ -102,7 +101,7 @@ func TestInt_IsRoleInSession(t *testing.T) {
 
 func TestInt_RolesUse(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	currentRoleID := sdk.NewAccountObjectIdentifier(currentRole)
 	require.NoError(t, err)
@@ -128,7 +127,7 @@ func TestInt_RolesUse(t *testing.T) {
 
 func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 

@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 func TestInt_ResourceMonitorsShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	resourceMonitorTest, resourceMonitorCleanup := sdk.createResourceMonitor(t, client)
 	t.Cleanup(resourceMonitorCleanup)
@@ -42,7 +41,7 @@ func TestInt_ResourceMonitorsShow(t *testing.T) {
 
 func TestInt_ResourceMonitorCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("test complete case", func(t *testing.T) {
 		name := sdk.randomString(t)
@@ -147,7 +146,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 
 func TestInt_ResourceMonitorAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("when adding a new trigger", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := sdk.createResourceMonitor(t, client)
@@ -246,7 +245,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 
 func TestInt_ResourceMonitorDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("when resource monitor exists", func(t *testing.T) {
 		resourceMonitor, _ := sdk.createResourceMonitor(t, client)

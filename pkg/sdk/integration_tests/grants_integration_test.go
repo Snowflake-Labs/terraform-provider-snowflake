@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 
 func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("on account", func(t *testing.T) {
 		roleTest, roleCleanup := sdk.createRole(t, client)
@@ -219,7 +218,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 
 func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	database, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -421,7 +420,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 
 func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -466,7 +465,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 
 func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
@@ -489,7 +488,7 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 
 func TestInt_GrantOwnership(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	database, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -610,7 +609,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 
 func TestInt_ShowGrants(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)

@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,7 @@ func createDatabaseWithIdentifier(t *testing.T, client *sdk.Client, id sdk.Accou
 
 func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, _ *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
 	t.Helper()
-	ctx := context.Background()
+	ctx := testContext(t)
 	err := client.Databases.Create(ctx, id, nil)
 	require.NoError(t, err)
 	database, err := client.Databases.ShowByID(ctx, id)
@@ -34,7 +33,7 @@ func createSchema(t *testing.T, client *sdk.Client, database *sdk.Database) (*sd
 
 func createSchemaWithIdentifier(t *testing.T, client *sdk.Client, database *sdk.Database, name string) (*sdk.Schema, func()) {
 	t.Helper()
-	ctx := context.Background()
+	ctx := testContext(t)
 	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE SCHEMA \"%s\".\"%s\"", database.Name, name))
 	require.NoError(t, err)
 	return &sdk.Schema{
@@ -48,7 +47,7 @@ func createSchemaWithIdentifier(t *testing.T, client *sdk.Client, database *sdk.
 
 func useDatabase(t *testing.T, client *sdk.Client, databaseID sdk.AccountObjectIdentifier) func() {
 	t.Helper()
-	ctx := context.Background()
+	ctx := testContext(t)
 	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
 	err = client.Sessions.UseDatabase(ctx, databaseID)
@@ -61,7 +60,7 @@ func useDatabase(t *testing.T, client *sdk.Client, databaseID sdk.AccountObjectI
 
 func useSchema(t *testing.T, client *sdk.Client, schemaID sdk.DatabaseObjectIdentifier) func() {
 	t.Helper()
-	ctx := context.Background()
+	ctx := testContext(t)
 	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
 	orgSchema, err := client.ContextFunctions.CurrentSchema(ctx)
@@ -77,7 +76,7 @@ func useSchema(t *testing.T, client *sdk.Client, schemaID sdk.DatabaseObjectIden
 func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
-	ctx := context.Background()
+	ctx := testContext(t)
 	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE TABLE \"%s\".\"%s\".\"%s\" (id NUMBER)", database.Name, schema.Name, name))
 	require.NoError(t, err)
 	return &sdk.Table{
@@ -98,7 +97,7 @@ func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema 
 func createTagWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, _ *sdk.CreateTagOptions) (*sdk.Tag, func()) {
 	t.Helper()
 	name := randomStringRange(t, 8, 28)
-	ctx := context.Background()
+	ctx := testContext(t)
 	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
 	require.NoError(t, err)
 	return &sdk.Tag{
@@ -117,7 +116,7 @@ func createStage(t *testing.T, client *sdk.Client, database *sdk.Database, schem
 	require.NotNil(t, schema, "schema has to be created")
 
 	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	stageCleanup := func() {
 		_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP STAGE %s", id.FullyQualifiedName()))
@@ -143,7 +142,7 @@ func createPipe(t *testing.T, client *sdk.Client, database *sdk.Database, schema
 	require.NotNil(t, schema, "schema has to be created")
 
 	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	pipeCleanup := func() {
 		err := client.Pipes.Drop(ctx, id)

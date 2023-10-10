@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
 	"testing"
@@ -12,7 +11,7 @@ import (
 
 func TestInt_MaskingPoliciesShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
@@ -93,7 +92,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 
 func TestInt_MaskingPolicyCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
@@ -255,7 +254,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 
 func TestInt_MaskingPolicyDescribe(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -281,7 +280,7 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 
 func TestInt_MaskingPolicyAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -397,7 +396,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 
 func TestInt_MaskingPolicyDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
 	t.Cleanup(databaseCleanup)

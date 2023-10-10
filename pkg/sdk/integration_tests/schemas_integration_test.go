@@ -1,7 +1,6 @@
 package sdk_integration_tests
 
 import (
-	"context"
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
@@ -12,7 +11,7 @@ import (
 
 func TestInt_SchemasCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDb)
@@ -116,7 +115,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 func TestInt_SchemasAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDb)
@@ -297,7 +296,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 func TestInt_SchemasShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDb)
@@ -341,7 +340,7 @@ func TestInt_SchemasShow(t *testing.T) {
 
 func TestInt_SchemasDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := sdk.createDatabase(t, client)
 	t.Cleanup(cleanupDb)
@@ -368,7 +367,7 @@ func TestInt_SchemasDrop(t *testing.T) {
 todo: this test is failing, need to fix
 func TestInt_SchemasUndrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)
