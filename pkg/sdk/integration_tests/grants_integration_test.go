@@ -60,7 +60,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on account object", func(t *testing.T) {
 		roleTest, roleCleanup := sdk.createRole(t, client)
 		t.Cleanup(roleCleanup)
-		resourceMonitorTest, resourceMonitorCleanup := sdk.createResourceMonitor(t, client)
+		resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
 		privileges := &sdk.AccountRoleGrantPrivileges{
 			AccountObjectPrivileges: []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeMonitor},

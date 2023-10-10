@@ -12,7 +12,7 @@ func TestInt_ResourceMonitorsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	resourceMonitorTest, resourceMonitorCleanup := sdk.createResourceMonitor(t, client)
+	resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
 	t.Cleanup(resourceMonitorCleanup)
 
 	t.Run("with like", func(t *testing.T) {
@@ -149,7 +149,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when adding a new trigger", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := sdk.createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
 
 		var oldNotifyTriggers []sdk.TriggerDefinition
@@ -188,7 +188,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 	})
 
 	t.Run("when setting credit quota", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := sdk.createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
 		creditQuota := 100
 		alterOptions := &sdk.AlterResourceMonitorOptions{
@@ -209,7 +209,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 	})
 	t.Run("when changing scheduling info", func(t *testing.T) {
-		resourceMonitor, resourceMonitorCleanup := sdk.createResourceMonitor(t, client)
+		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
 		frequency, err := sdk.FrequencyFromString("NEVER")
 		require.NoError(t, err)
@@ -248,7 +248,7 @@ func TestInt_ResourceMonitorDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when resource monitor exists", func(t *testing.T) {
-		resourceMonitor, _ := sdk.createResourceMonitor(t, client)
+		resourceMonitor, _ := createResourceMonitor(t, client)
 		id := resourceMonitor.ID()
 		err := client.ResourceMonitors.Drop(ctx, id)
 		require.NoError(t, err)

@@ -221,7 +221,7 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set resource monitor", func(t *testing.T) {
-		resourceMonitorTest, resourceMonitorCleanup := sdk.createResourceMonitor(t, client)
+		resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -262,7 +262,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		t.Cleanup(databaseCleanup)
 		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 		t.Cleanup(schemaCleanup)
-		sessionPolicyTest, sessionPolicyCleanup := sdk.createSessionPolicy(t, client, databaseTest, schemaTest)
+		sessionPolicyTest, sessionPolicyCleanup := createSessionPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(sessionPolicyCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
