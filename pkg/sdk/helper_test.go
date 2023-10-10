@@ -395,11 +395,6 @@ func createTable(t *testing.T, client *Client, database *Database, schema *Schem
 
 func createTag(t *testing.T, client *Client, database *Database, schema *Schema) (*Tag, func()) {
 	t.Helper()
-	return createTagWithOptions(t, client, database, schema)
-}
-
-func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema) (*Tag, func()) {
-	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	ctx := context.Background()
 	tagID := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
