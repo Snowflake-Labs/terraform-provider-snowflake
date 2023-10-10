@@ -10,6 +10,7 @@ import (
 )
 
 // todo: remove the rest of these which are not used. also this file should be renamed for clarity to make it clear it is for testing only
+// https://snowflakecomputing.atlassian.net/browse/SNOW-936093
 type grantType int
 
 const (
