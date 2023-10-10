@@ -5,7 +5,7 @@ package sdk
 import ()
 
 func NewCreateExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	location string,
 	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateExternalTableRequest {
@@ -402,7 +402,7 @@ func NewTagAssociationRequest(
 }
 
 func NewCreateWithManualPartitioningExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	location string,
 	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateWithManualPartitioningExternalTableRequest {
@@ -464,7 +464,7 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithTag(tag []*TagAss
 }
 
 func NewCreateDeltaLakeExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	location string,
 	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateDeltaLakeExternalTableRequest {
@@ -541,7 +541,7 @@ func (s *CreateDeltaLakeExternalTableRequest) WithTag(tag []*TagAssociationReque
 }
 
 func NewCreateExternalTableUsingTemplateRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	location string,
 	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateExternalTableUsingTemplateRequest {
@@ -613,7 +613,7 @@ func (s *CreateExternalTableUsingTemplateRequest) WithTag(tag []*TagAssociationR
 }
 
 func NewAlterExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *AlterExternalTableRequest {
 	s := AlterExternalTableRequest{}
 	s.name = name
@@ -672,7 +672,7 @@ func NewExternalTableFileRequest(
 }
 
 func NewAlterExternalTablePartitionRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *AlterExternalTablePartitionRequest {
 	s := AlterExternalTablePartitionRequest{}
 	s.name = name
@@ -710,7 +710,7 @@ func NewPartitionRequest(
 }
 
 func NewDropExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DropExternalTableRequest {
 	s := DropExternalTableRequest{}
 	s.name = name
@@ -804,7 +804,7 @@ func (s *LimitFromRequest) WithFrom(from *string) *LimitFromRequest {
 }
 
 func NewShowExternalTableByIDRequest(
-	id AccountObjectIdentifier,
+	id SchemaObjectIdentifier,
 ) *ShowExternalTableByIDRequest {
 	s := ShowExternalTableByIDRequest{}
 	s.id = id
@@ -812,7 +812,7 @@ func NewShowExternalTableByIDRequest(
 }
 
 func NewDescribeExternalTableColumnsRequest(
-	id AccountObjectIdentifier,
+	id SchemaObjectIdentifier,
 ) *DescribeExternalTableColumnsRequest {
 	s := DescribeExternalTableColumnsRequest{}
 	s.id = id
@@ -820,7 +820,7 @@ func NewDescribeExternalTableColumnsRequest(
 }
 
 func NewDescribeExternalTableStageRequest(
-	id AccountObjectIdentifier,
+	id SchemaObjectIdentifier,
 ) *DescribeExternalTableStageRequest {
 	s := DescribeExternalTableStageRequest{}
 	s.id = id

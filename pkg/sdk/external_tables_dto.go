@@ -18,7 +18,7 @@ var (
 type CreateExternalTableRequest struct {
 	orReplace           *bool
 	ifNotExists         *bool
-	name                AccountObjectIdentifier // required
+	name                SchemaObjectIdentifier // required
 	columns             []*ExternalTableColumnRequest
 	cloudProviderParams *CloudProviderParamsRequest
 	partitionBy         []string
@@ -302,7 +302,7 @@ func (s *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
 type CreateWithManualPartitioningExternalTableRequest struct {
 	orReplace                  *bool
 	ifNotExists                *bool
-	name                       AccountObjectIdentifier // required
+	name                       SchemaObjectIdentifier // required
 	columns                    []*ExternalTableColumnRequest
 	cloudProviderParams        *CloudProviderParamsRequest
 	partitionBy                []string
@@ -365,7 +365,7 @@ func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithM
 type CreateDeltaLakeExternalTableRequest struct {
 	orReplace                  *bool
 	ifNotExists                *bool
-	name                       AccountObjectIdentifier // required
+	name                       SchemaObjectIdentifier // required
 	columns                    []*ExternalTableColumnRequest
 	cloudProviderParams        *CloudProviderParamsRequest
 	partitionBy                []string
@@ -433,7 +433,7 @@ func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalT
 
 type CreateExternalTableUsingTemplateRequest struct {
 	orReplace           *bool
-	name                AccountObjectIdentifier // required
+	name                SchemaObjectIdentifier // required
 	copyGrants          *bool
 	query               string
 	cloudProviderParams *CloudProviderParamsRequest
@@ -493,7 +493,7 @@ func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableU
 
 type AlterExternalTableRequest struct {
 	ifExists    *bool
-	name        AccountObjectIdentifier // required
+	name        SchemaObjectIdentifier // required
 	refresh     *RefreshExternalTableRequest
 	addFiles    []*ExternalTableFileRequest
 	removeFiles []*ExternalTableFileRequest
@@ -557,7 +557,7 @@ func (v *AlterExternalTableRequest) toOpts() *AlterExternalTableOptions {
 
 type AlterExternalTablePartitionRequest struct {
 	ifExists      *bool
-	name          AccountObjectIdentifier // required
+	name          SchemaObjectIdentifier // required
 	addPartitions []*PartitionRequest
 	dropPartition *bool
 	location      string
@@ -590,7 +590,7 @@ func (v *AlterExternalTablePartitionRequest) toOpts() *AlterExternalTablePartiti
 
 type DropExternalTableRequest struct {
 	ifExists   *bool
-	name       AccountObjectIdentifier // required
+	name       SchemaObjectIdentifier // required
 	dropOption *ExternalTableDropOptionRequest
 }
 
@@ -681,15 +681,15 @@ func (v *ShowExternalTableRequest) toOpts() *ShowExternalTableOptions {
 }
 
 type ShowExternalTableByIDRequest struct {
-	id AccountObjectIdentifier // required
+	id SchemaObjectIdentifier // required
 }
 
 type DescribeExternalTableColumnsRequest struct {
-	id AccountObjectIdentifier // required
+	id SchemaObjectIdentifier // required
 }
 
 type DescribeExternalTableStageRequest struct {
-	id AccountObjectIdentifier // required
+	id SchemaObjectIdentifier // required
 }
 
 func (v *DescribeExternalTableColumnsRequest) toOpts() *describeExternalTableColumnsOptions {
