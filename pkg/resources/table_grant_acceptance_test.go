@@ -22,8 +22,8 @@ func TestAccTableGrant_onAll(t *testing.T) {
 				Config: tableGrantConfig(name, onAll, "SELECT"),
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "on_all", "true"),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "privilege", "SELECT"),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "with_grant_option", "false"),
@@ -57,8 +57,8 @@ func TestAccTableGrant_onFuture(t *testing.T) {
 				Config: tableGrantConfig(name, onFuture, "SELECT"),
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "privilege", "SELECT"),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "with_grant_option", "false"),
@@ -94,8 +94,8 @@ func TestAccTableGrant_defaults(t *testing.T) {
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "table_name", name),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "privilege", "SELECT"),
 					testRolesAndShares(t, "snowflake_table_grant.g", []string{name}),
@@ -106,12 +106,9 @@ func TestAccTableGrant_defaults(t *testing.T) {
 				Config: tableGrantConfig(name, normal, "ALL PRIVILEGES"),
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.d", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "database", name),
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "table_name", name),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "privilege", "ALL PRIVILEGES"),
 					testRolesAndShares(t, "snowflake_table_grant.g", []string{name}),
