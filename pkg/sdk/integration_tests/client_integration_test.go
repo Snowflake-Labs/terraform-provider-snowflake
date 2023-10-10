@@ -29,7 +29,8 @@ func TestClient_ping(t *testing.T) {
 }
 
 func TestClient_close(t *testing.T) {
-	client := testClient(t)
+	// new client is initialized because we don't want to close the one used throughout other integration tests.
+	client, _ := sdk.NewDefaultClient()
 	err := client.Close()
 	require.NoError(t, err)
 }
