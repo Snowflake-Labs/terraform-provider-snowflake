@@ -2,12 +2,46 @@ package sdk_integration_tests
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
+
+func useDatabase(t *testing.T, client *sdk.Client, databaseID sdk.AccountObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
+	require.NoError(t, err)
+	err = client.Sessions.UseDatabase(ctx, databaseID)
+	require.NoError(t, err)
+	return func() {
+		err := client.Sessions.UseDatabase(ctx, sdk.NewAccountObjectIdentifier(orgDB))
+		require.NoError(t, err)
+	}
+}
+
+func useSchema(t *testing.T, client *sdk.Client, schemaID sdk.DatabaseObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
+	require.NoError(t, err)
+	orgSchema, err := client.ContextFunctions.CurrentSchema(ctx)
+	require.NoError(t, err)
+	err = client.Sessions.UseSchema(ctx, schemaID)
+	require.NoError(t, err)
+	return func() {
+		err := client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(orgDB, orgSchema))
+		require.NoError(t, err)
+	}
+}
+
+func createDatabase(t *testing.T, client *sdk.Client) (*sdk.Database, func()) {
+	t.Helper()
+	return createDatabaseWithOptions(t, client, randomAccountObjectIdentifier(t), &sdk.CreateDatabaseOptions{})
+}
 
 func createDatabaseWithIdentifier(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
 	t.Helper()
@@ -35,41 +69,16 @@ func createSchema(t *testing.T, client *sdk.Client, database *sdk.Database) (*sd
 func createSchemaWithIdentifier(t *testing.T, client *sdk.Client, database *sdk.Database, name string) (*sdk.Schema, func()) {
 	t.Helper()
 	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE SCHEMA \"%s\".\"%s\"", database.Name, name))
+	schemaID := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+	err := client.Schemas.Create(ctx, schemaID, nil)
 	require.NoError(t, err)
-	return &sdk.Schema{
-			DatabaseName: database.Name,
-			Name:         name,
-		}, func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP SCHEMA \"%s\".\"%s\"", database.Name, name))
-			require.NoError(t, err)
+	schema, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(database.Name, name))
+	require.NoError(t, err)
+	return schema, func() {
+		err := client.Schemas.Drop(ctx, schemaID, nil)
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			return
 		}
-}
-
-func useDatabase(t *testing.T, client *sdk.Client, databaseID sdk.AccountObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseDatabase(ctx, databaseID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseDatabase(ctx, sdk.NewAccountObjectIdentifier(orgDB))
-		require.NoError(t, err)
-	}
-}
-
-func useSchema(t *testing.T, client *sdk.Client, schemaID sdk.DatabaseObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	orgSchema, err := client.ContextFunctions.CurrentSchema(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseSchema(ctx, schemaID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(orgDB, orgSchema))
 		require.NoError(t, err)
 	}
 }
@@ -109,6 +118,21 @@ func createTagWithOptions(t *testing.T, client *sdk.Client, database *sdk.Databa
 			_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
 			require.NoError(t, err)
 		}
+}
+
+func createStageWithName(t *testing.T, client *sdk.Client, name string) (*string, func()) {
+	t.Helper()
+	ctx := context.Background()
+	stageCleanup := func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP STAGE %s", name))
+		require.NoError(t, err)
+	}
+	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE STAGE %s", name))
+	if err != nil {
+		return nil, stageCleanup
+	}
+	require.NoError(t, err)
+	return &name, stageCleanup
 }
 
 func createStage(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {

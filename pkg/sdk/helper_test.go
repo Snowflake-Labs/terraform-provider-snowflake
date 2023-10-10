@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/brianvoe/gofakeit/v6"
-	"github.com/hashicorp/go-uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,53 +42,53 @@ func getSecondaryAccountIdentifier(t *testing.T) AccountIdentifier {
 	return getAccountIdentifier(t, client)
 }
 
-func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
-	t.Helper()
-	return NewSchemaObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12), randomStringN(t, 12))
-}
+//func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
+//	t.Helper()
+//	return NewSchemaObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12), randomStringN(t, 12))
+//}
+//
+//func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
+//	t.Helper()
+//	return NewDatabaseObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12))
+//}
+//
+//func alphanumericDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
+//	t.Helper()
+//	return NewDatabaseObjectIdentifier(randomAlphanumericN(t, 12), randomAlphanumericN(t, 12))
+//}
+//
+//func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
+//	t.Helper()
+//	return NewAccountObjectIdentifier(randomStringN(t, 12))
+//}
 
-func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
-	t.Helper()
-	return NewDatabaseObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12))
-}
-
-func alphanumericDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
-	t.Helper()
-	return NewDatabaseObjectIdentifier(randomAlphanumericN(t, 12), randomAlphanumericN(t, 12))
-}
-
-func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
-	t.Helper()
-	return NewAccountObjectIdentifier(randomStringN(t, 12))
-}
-
-func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseDatabase(ctx, databaseID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseDatabase(ctx, NewAccountObjectIdentifier(orgDB))
-		require.NoError(t, err)
-	}
-}
-
-func useSchema(t *testing.T, client *Client, schemaID DatabaseObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	orgSchema, err := client.ContextFunctions.CurrentSchema(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseSchema(ctx, schemaID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseSchema(ctx, NewDatabaseObjectIdentifier(orgDB, orgSchema))
-		require.NoError(t, err)
-	}
-}
+//func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifier) func() {
+//	t.Helper()
+//	ctx := context.Background()
+//	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
+//	require.NoError(t, err)
+//	err = client.Sessions.UseDatabase(ctx, databaseID)
+//	require.NoError(t, err)
+//	return func() {
+//		err := client.Sessions.UseDatabase(ctx, NewAccountObjectIdentifier(orgDB))
+//		require.NoError(t, err)
+//	}
+//}
+//
+//func useSchema(t *testing.T, client *Client, schemaID DatabaseObjectIdentifier) func() {
+//	t.Helper()
+//	ctx := context.Background()
+//	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
+//	require.NoError(t, err)
+//	orgSchema, err := client.ContextFunctions.CurrentSchema(ctx)
+//	require.NoError(t, err)
+//	err = client.Sessions.UseSchema(ctx, schemaID)
+//	require.NoError(t, err)
+//	return func() {
+//		err := client.Sessions.UseSchema(ctx, NewDatabaseObjectIdentifier(orgDB, orgSchema))
+//		require.NoError(t, err)
+//	}
+//}
 
 func useWarehouse(t *testing.T, client *Client, warehouseID AccountObjectIdentifier) func() {
 	t.Helper()
@@ -140,53 +138,53 @@ func testClientFromProfile(t *testing.T, profile string) (*Client, error) {
 	return NewClient(config)
 }
 
-func randomUUID(t *testing.T) string {
-	t.Helper()
-	v, err := uuid.GenerateUUID()
-	require.NoError(t, err)
-	return v
-}
-
-func randomComment(t *testing.T) string {
-	t.Helper()
-	return gofakeit.Sentence(10)
-}
-
-func randomBool(t *testing.T) bool {
-	t.Helper()
-	return gofakeit.Bool()
-}
-
-func randomString(t *testing.T) string {
-	t.Helper()
-	return gofakeit.Password(true, true, true, true, false, 28)
-}
-
-func randomStringN(t *testing.T, num int) string {
-	t.Helper()
-	return gofakeit.Password(true, true, true, true, false, num)
-}
-
-func randomAlphanumericN(t *testing.T, num int) string {
-	t.Helper()
-	return gofakeit.Password(true, true, true, false, false, num)
-}
-
-func randomStringRange(t *testing.T, min, max int) string {
-	t.Helper()
-	if min > max {
-		t.Errorf("min %d is greater than max %d", min, max)
-	}
-	return gofakeit.Password(true, true, true, true, false, randomIntRange(t, min, max))
-}
-
-func randomIntRange(t *testing.T, min, max int) int {
-	t.Helper()
-	if min > max {
-		t.Errorf("min %d is greater than max %d", min, max)
-	}
-	return gofakeit.IntRange(min, max)
-}
+//func randomUUID(t *testing.T) string {
+//	t.Helper()
+//	v, err := uuid.GenerateUUID()
+//	require.NoError(t, err)
+//	return v
+//}
+//
+//func randomComment(t *testing.T) string {
+//	t.Helper()
+//	return gofakeit.Sentence(10)
+//}
+//
+//func randomBool(t *testing.T) bool {
+//	t.Helper()
+//	return gofakeit.Bool()
+//}
+//
+//func randomString(t *testing.T) string {
+//	t.Helper()
+//	return gofakeit.Password(true, true, true, true, false, 28)
+//}
+//
+//func randomStringN(t *testing.T, num int) string {
+//	t.Helper()
+//	return gofakeit.Password(true, true, true, true, false, num)
+//}
+//
+//func randomAlphanumericN(t *testing.T, num int) string {
+//	t.Helper()
+//	return gofakeit.Password(true, true, true, false, false, num)
+//}
+//
+//func randomStringRange(t *testing.T, min, max int) string {
+//	t.Helper()
+//	if min > max {
+//		t.Errorf("min %d is greater than max %d", min, max)
+//	}
+//	return gofakeit.Password(true, true, true, true, false, randomIntRange(t, min, max))
+//}
+//
+//func randomIntRange(t *testing.T, min, max int) int {
+//	t.Helper()
+//	if min > max {
+//		t.Errorf("min %d is greater than max %d", min, max)
+//	}
+//	return gofakeit.IntRange(min, max)
+//}
 
 func createSessionPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*SessionPolicy, func()) {
 	t.Helper()
@@ -329,90 +327,90 @@ func createWarehouseWithOptions(t *testing.T, client *Client, opts *CreateWareho
 		}
 }
 
-func createDatabase(t *testing.T, client *Client) (*Database, func()) {
-	t.Helper()
-	return createDatabaseWithOptions(t, client, randomAccountObjectIdentifier(t), &CreateDatabaseOptions{})
-}
+//func createDatabase(t *testing.T, client *Client) (*Database, func()) {
+//	t.Helper()
+//	return createDatabaseWithOptions(t, client, randomAccountObjectIdentifier(t), &CreateDatabaseOptions{})
+//}
+//
+//func createDatabaseWithIdentifier(t *testing.T, client *Client, id AccountObjectIdentifier) (*Database, func()) {
+//	t.Helper()
+//	return createDatabaseWithOptions(t, client, id, &CreateDatabaseOptions{})
+//}
+//
+//func createDatabaseWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, opts *CreateDatabaseOptions) (*Database, func()) {
+//	t.Helper()
+//	ctx := context.Background()
+//	err := client.Databases.Create(ctx, id, opts)
+//	require.NoError(t, err)
+//	database, err := client.Databases.ShowByID(ctx, id)
+//	require.NoError(t, err)
+//	return database, func() {
+//		err := client.Databases.Drop(ctx, id, nil)
+//		if errors.Is(err, errObjectNotExistOrAuthorized) {
+//			return
+//		}
+//		require.NoError(t, err)
+//	}
+//}
 
-func createDatabaseWithIdentifier(t *testing.T, client *Client, id AccountObjectIdentifier) (*Database, func()) {
-	t.Helper()
-	return createDatabaseWithOptions(t, client, id, &CreateDatabaseOptions{})
-}
+//func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {
+//	t.Helper()
+//	return createSchemaWithIdentifier(t, client, database, randomStringRange(t, 8, 28))
+//}
+//
+//func createSchemaWithIdentifier(t *testing.T, client *Client, database *Database, name string) (*Schema, func()) {
+//	t.Helper()
+//	ctx := context.Background()
+//	schemaID := NewDatabaseObjectIdentifier(database.Name, name)
+//	err := client.Schemas.Create(ctx, schemaID, nil)
+//	require.NoError(t, err)
+//	schema, err := client.Schemas.ShowByID(ctx, NewDatabaseObjectIdentifier(database.Name, name))
+//	require.NoError(t, err)
+//	return schema, func() {
+//		err := client.Schemas.Drop(ctx, schemaID, nil)
+//		if errors.Is(err, errObjectNotExistOrAuthorized) {
+//			return
+//		}
+//		require.NoError(t, err)
+//	}
+//}
 
-func createDatabaseWithOptions(t *testing.T, client *Client, id AccountObjectIdentifier, opts *CreateDatabaseOptions) (*Database, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Databases.Create(ctx, id, opts)
-	require.NoError(t, err)
-	database, err := client.Databases.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return database, func() {
-		err := client.Databases.Drop(ctx, id, nil)
-		if errors.Is(err, errObjectNotExistOrAuthorized) {
-			return
-		}
-		require.NoError(t, err)
-	}
-}
+//func createTable(t *testing.T, client *Client, database *Database, schema *Schema) (*Table, func()) {
+//	t.Helper()
+//	name := randomStringRange(t, 8, 28)
+//	ctx := context.Background()
+//	_, err := client.exec(ctx, fmt.Sprintf("CREATE TABLE \"%s\".\"%s\".\"%s\" (id NUMBER)", database.Name, schema.Name, name))
+//	require.NoError(t, err)
+//	return &Table{
+//			DatabaseName: database.Name,
+//			SchemaName:   schema.Name,
+//			Name:         name,
+//		}, func() {
+//			_, err := client.exec(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
+//			require.NoError(t, err)
+//		}
+//}
 
-func createSchema(t *testing.T, client *Client, database *Database) (*Schema, func()) {
-	t.Helper()
-	return createSchemaWithIdentifier(t, client, database, randomStringRange(t, 8, 28))
-}
-
-func createSchemaWithIdentifier(t *testing.T, client *Client, database *Database, name string) (*Schema, func()) {
-	t.Helper()
-	ctx := context.Background()
-	schemaID := NewDatabaseObjectIdentifier(database.Name, name)
-	err := client.Schemas.Create(ctx, schemaID, nil)
-	require.NoError(t, err)
-	schema, err := client.Schemas.ShowByID(ctx, NewDatabaseObjectIdentifier(database.Name, name))
-	require.NoError(t, err)
-	return schema, func() {
-		err := client.Schemas.Drop(ctx, schemaID, nil)
-		if errors.Is(err, errObjectNotExistOrAuthorized) {
-			return
-		}
-		require.NoError(t, err)
-	}
-}
-
-func createTable(t *testing.T, client *Client, database *Database, schema *Schema) (*Table, func()) {
-	t.Helper()
-	name := randomStringRange(t, 8, 28)
-	ctx := context.Background()
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE TABLE \"%s\".\"%s\".\"%s\" (id NUMBER)", database.Name, schema.Name, name))
-	require.NoError(t, err)
-	return &Table{
-			DatabaseName: database.Name,
-			SchemaName:   schema.Name,
-			Name:         name,
-		}, func() {
-			_, err := client.exec(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
-			require.NoError(t, err)
-		}
-}
-
-func createTag(t *testing.T, client *Client, database *Database, schema *Schema) (*Tag, func()) {
-	t.Helper()
-	return createTagWithOptions(t, client, database, schema, &CreateTagOptions{})
-}
-
-func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *CreateTagOptions) (*Tag, func()) {
-	t.Helper()
-	name := randomStringRange(t, 8, 28)
-	ctx := context.Background()
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
-	require.NoError(t, err)
-	return &Tag{
-			Name:         name,
-			DatabaseName: database.Name,
-			SchemaName:   schema.Name,
-		}, func() {
-			_, err := client.exec(ctx, fmt.Sprintf("DROP TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
-			require.NoError(t, err)
-		}
-}
+//func createTag(t *testing.T, client *Client, database *Database, schema *Schema) (*Tag, func()) {
+//	t.Helper()
+//	return createTagWithOptions(t, client, database, schema, &CreateTagOptions{})
+//}
+//
+//func createTagWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, _ *CreateTagOptions) (*Tag, func()) {
+//	t.Helper()
+//	name := randomStringRange(t, 8, 28)
+//	ctx := context.Background()
+//	_, err := client.exec(ctx, fmt.Sprintf("CREATE TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
+//	require.NoError(t, err)
+//	return &Tag{
+//			Name:         name,
+//			DatabaseName: database.Name,
+//			SchemaName:   schema.Name,
+//		}, func() {
+//			_, err := client.exec(ctx, fmt.Sprintf("DROP TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
+//			require.NoError(t, err)
+//		}
+//}
 
 func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, options *CreatePasswordPolicyOptions) (*PasswordPolicy, func()) {
 	t.Helper()
@@ -649,74 +647,74 @@ func createUserWithOptions(t *testing.T, client *Client, id AccountObjectIdentif
 	}
 }
 
-func createPipe(t *testing.T, client *Client, database *Database, schema *Schema, name string, copyStatement string) (*Pipe, func()) {
-	t.Helper()
-	require.NotNil(t, database, "database has to be created")
-	require.NotNil(t, schema, "schema has to be created")
+//func createPipe(t *testing.T, client *Client, database *Database, schema *Schema, name string, copyStatement string) (*Pipe, func()) {
+//	t.Helper()
+//	require.NotNil(t, database, "database has to be created")
+//	require.NotNil(t, schema, "schema has to be created")
+//
+//	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+//	ctx := context.Background()
+//
+//	pipeCleanup := func() {
+//		err := client.Pipes.Drop(ctx, id)
+//		require.NoError(t, err)
+//	}
+//
+//	err := client.Pipes.Create(ctx, id, copyStatement, &CreatePipeOptions{})
+//	if err != nil {
+//		return nil, pipeCleanup
+//	}
+//	require.NoError(t, err)
+//
+//	createdPipe, errDescribe := client.Pipes.Describe(ctx, id)
+//	if errDescribe != nil {
+//		return nil, pipeCleanup
+//	}
+//	require.NoError(t, errDescribe)
+//
+//	return createdPipe, pipeCleanup
+//}
 
-	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	ctx := context.Background()
-
-	pipeCleanup := func() {
-		err := client.Pipes.Drop(ctx, id)
-		require.NoError(t, err)
-	}
-
-	err := client.Pipes.Create(ctx, id, copyStatement, &CreatePipeOptions{})
-	if err != nil {
-		return nil, pipeCleanup
-	}
-	require.NoError(t, err)
-
-	createdPipe, errDescribe := client.Pipes.Describe(ctx, id)
-	if errDescribe != nil {
-		return nil, pipeCleanup
-	}
-	require.NoError(t, errDescribe)
-
-	return createdPipe, pipeCleanup
-}
-
-func createStageWithName(t *testing.T, client *Client, name string) (*string, func()) {
-	t.Helper()
-	ctx := context.Background()
-	stageCleanup := func() {
-		_, err := client.exec(ctx, fmt.Sprintf("DROP STAGE %s", name))
-		require.NoError(t, err)
-	}
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE STAGE %s", name))
-	if err != nil {
-		return nil, stageCleanup
-	}
-	require.NoError(t, err)
-	return &name, stageCleanup
-}
-
-func createStage(t *testing.T, client *Client, database *Database, schema *Schema, name string) (*Stage, func()) {
-	t.Helper()
-	require.NotNil(t, database, "database has to be created")
-	require.NotNil(t, schema, "schema has to be created")
-
-	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	ctx := context.Background()
-
-	stageCleanup := func() {
-		_, err := client.exec(ctx, fmt.Sprintf("DROP STAGE %s", id.FullyQualifiedName()))
-		require.NoError(t, err)
-	}
-
-	_, err := client.exec(ctx, fmt.Sprintf("CREATE STAGE %s", id.FullyQualifiedName()))
-	if err != nil {
-		return nil, stageCleanup
-	}
-	require.NoError(t, err)
-
-	return &Stage{
-		DatabaseName: database.Name,
-		SchemaName:   schema.Name,
-		Name:         name,
-	}, stageCleanup
-}
+//func createStageWithName(t *testing.T, client *Client, name string) (*string, func()) {
+//	t.Helper()
+//	ctx := context.Background()
+//	stageCleanup := func() {
+//		_, err := client.exec(ctx, fmt.Sprintf("DROP STAGE %s", name))
+//		require.NoError(t, err)
+//	}
+//	_, err := client.exec(ctx, fmt.Sprintf("CREATE STAGE %s", name))
+//	if err != nil {
+//		return nil, stageCleanup
+//	}
+//	require.NoError(t, err)
+//	return &name, stageCleanup
+//}
+//
+//func createStage(t *testing.T, client *Client, database *Database, schema *Schema, name string) (*Stage, func()) {
+//	t.Helper()
+//	require.NotNil(t, database, "database has to be created")
+//	require.NotNil(t, schema, "schema has to be created")
+//
+//	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+//	ctx := context.Background()
+//
+//	stageCleanup := func() {
+//		_, err := client.exec(ctx, fmt.Sprintf("DROP STAGE %s", id.FullyQualifiedName()))
+//		require.NoError(t, err)
+//	}
+//
+//	_, err := client.exec(ctx, fmt.Sprintf("CREATE STAGE %s", id.FullyQualifiedName()))
+//	if err != nil {
+//		return nil, stageCleanup
+//	}
+//	require.NoError(t, err)
+//
+//	return &Stage{
+//		DatabaseName: database.Name,
+//		SchemaName:   schema.Name,
+//		Name:         name,
+//	}, stageCleanup
+//}
 
 func createDynamicTable(t *testing.T, client *Client) (*DynamicTable, func()) {
 	t.Helper()
