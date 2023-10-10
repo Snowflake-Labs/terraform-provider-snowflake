@@ -105,7 +105,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Create: infer schema", func(t *testing.T) {
 		fileFormat, _ := sdk.createFileFormat(t, client, schema.ID())
-		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		err = client.Sessions.UseWarehouse(ctx, warehouse.ID())

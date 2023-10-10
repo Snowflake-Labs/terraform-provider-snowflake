@@ -13,11 +13,11 @@ func TestInt_WarehousesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	testWarehouse, warehouseCleanup := sdk.createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{
+	testWarehouse, warehouseCleanup := createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{
 		WarehouseSize: &sdk.WarehouseSizeSmall,
 	})
 	t.Cleanup(warehouseCleanup)
-	_, warehouse2Cleanup := sdk.createWarehouse(t, client)
+	_, warehouse2Cleanup := createWarehouse(t, client)
 	t.Cleanup(warehouse2Cleanup)
 
 	t.Run("show without options", func(t *testing.T) {
@@ -165,7 +165,7 @@ func TestInt_WarehouseDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+	warehouse, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("when warehouse exists", func(t *testing.T) {
@@ -254,7 +254,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("set", func(t *testing.T) {
-		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -280,7 +280,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		oldID := warehouse.ID()
 		t.Cleanup(warehouseCleanup)
 
@@ -307,7 +307,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 			Comment:         sdk.String("test comment"),
 			MaxClusterCount: sdk.Int(10),
 		}
-		warehouse, warehouseCleanup := sdk.createWarehouseWithOptions(t, client, createOptions)
+		warehouse, warehouseCleanup := createWarehouseWithOptions(t, client, createOptions)
 		t.Cleanup(warehouseCleanup)
 		id := warehouse.ID()
 
@@ -333,7 +333,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("suspend & resume", func(t *testing.T) {
-		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -368,7 +368,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("resume without suspending", func(t *testing.T) {
-		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -389,10 +389,10 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("abort all queries", func(t *testing.T) {
-		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
-		resetWarehouse := sdk.useWarehouse(t, client, warehouse.ID())
+		resetWarehouse := useWarehouse(t, client, warehouse.ID())
 		t.Cleanup(resetWarehouse)
 
 		// Start a long query
@@ -435,7 +435,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("set tags", func(t *testing.T) {
-		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -464,7 +464,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
-		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
@@ -515,7 +515,7 @@ func TestInt_WarehouseDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when warehouse exists", func(t *testing.T) {
-		warehouse, _ := sdk.createWarehouse(t, client)
+		warehouse, _ := createWarehouse(t, client)
 
 		err := client.Warehouses.Drop(ctx, warehouse.ID(), nil)
 		require.NoError(t, err)
@@ -530,7 +530,7 @@ func TestInt_WarehouseDrop(t *testing.T) {
 	})
 
 	t.Run("when warehouse exists and if exists is true", func(t *testing.T) {
-		warehouse, _ := sdk.createWarehouse(t, client)
+		warehouse, _ := createWarehouse(t, client)
 
 		dropOptions := &sdk.DropWarehouseOptions{IfExists: sdk.Bool(true)}
 		err := client.Warehouses.Drop(ctx, warehouse.ID(), dropOptions)

@@ -158,7 +158,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create task: almost complete case", func(t *testing.T) {
-		warehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		request := createTaskBasicRequest(t).

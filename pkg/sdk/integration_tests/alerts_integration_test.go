@@ -19,7 +19,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	testWarehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+	testWarehouse, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	alertTest, alertCleanup := sdk.createAlert(t, client, databaseTest, schemaTest, testWarehouse)
@@ -95,7 +95,7 @@ func TestInt_AlertCreate(t *testing.T) {
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	testWarehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+	testWarehouse, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("test complete case", func(t *testing.T) {
@@ -249,7 +249,7 @@ func TestInt_AlertDescribe(t *testing.T) {
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	alert, alertCleanup := sdk.createAlert(t, client, databaseTest, schemaTest, warehouseTest)
@@ -278,7 +278,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
@@ -403,7 +403,7 @@ func TestInt_AlertDrop(t *testing.T) {
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("when alert exists", func(t *testing.T) {

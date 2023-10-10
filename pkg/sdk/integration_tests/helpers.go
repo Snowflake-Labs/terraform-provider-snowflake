@@ -38,6 +38,19 @@ func useSchema(t *testing.T, client *sdk.Client, schemaID sdk.DatabaseObjectIden
 	}
 }
 
+func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+	orgWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	require.NoError(t, err)
+	err = client.Sessions.UseWarehouse(ctx, warehouseID)
+	require.NoError(t, err)
+	return func() {
+		err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(orgWarehouse))
+		require.NoError(t, err)
+	}
+}
+
 func createDatabase(t *testing.T, client *sdk.Client) (*sdk.Database, func()) {
 	t.Helper()
 	return createDatabaseWithOptions(t, client, randomAccountObjectIdentifier(t), &sdk.CreateDatabaseOptions{})
@@ -81,6 +94,26 @@ func createSchemaWithIdentifier(t *testing.T, client *sdk.Client, database *sdk.
 		}
 		require.NoError(t, err)
 	}
+}
+
+func createWarehouse(t *testing.T, client *sdk.Client) (*sdk.Warehouse, func()) {
+	t.Helper()
+	return createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{})
+}
+
+func createWarehouseWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateWarehouseOptions) (*sdk.Warehouse, func()) {
+	t.Helper()
+	name := randomStringRange(t, 8, 28)
+	id := sdk.NewAccountObjectIdentifier(name)
+	ctx := context.Background()
+	err := client.Warehouses.Create(ctx, id, opts)
+	require.NoError(t, err)
+	return &sdk.Warehouse{
+			Name: name,
+		}, func() {
+			err := client.Warehouses.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		}
 }
 
 func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
@@ -187,4 +220,48 @@ func createPipe(t *testing.T, client *sdk.Client, database *sdk.Database, schema
 	require.NoError(t, errDescribe)
 
 	return createdPipe, pipeCleanup
+}
+
+func createPasswordPolicy(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.PasswordPolicy, func()) {
+	t.Helper()
+	return createPasswordPolicyWithOptions(t, client, database, schema, nil)
+}
+
+func createPasswordPolicyWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, options *sdk.CreatePasswordPolicyOptions) (*sdk.PasswordPolicy, func()) {
+	t.Helper()
+	var databaseCleanup func()
+	if database == nil {
+		database, databaseCleanup = createDatabase(t, client)
+	}
+	var schemaCleanup func()
+	if schema == nil {
+		schema, schemaCleanup = createSchema(t, client, database)
+	}
+	name := randomUUID(t)
+	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+	ctx := context.Background()
+	err := client.PasswordPolicies.Create(ctx, id, options)
+	require.NoError(t, err)
+
+	showOptions := &sdk.ShowPasswordPolicyOptions{
+		Like: &sdk.Like{
+			Pattern: sdk.String(name),
+		},
+		In: &sdk.In{
+			Schema: schema.ID(),
+		},
+	}
+	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, showOptions)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(passwordPolicyList))
+	return &passwordPolicyList[0], func() {
+		err := client.PasswordPolicies.Drop(ctx, id, nil)
+		require.NoError(t, err)
+		if schemaCleanup != nil {
+			schemaCleanup()
+		}
+		if databaseCleanup != nil {
+			databaseCleanup()
+		}
+	}
 }

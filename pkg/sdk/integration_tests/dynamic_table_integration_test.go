@@ -11,7 +11,7 @@ import (
 func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	client := testClient(t)
 
-	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)

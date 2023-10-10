@@ -237,7 +237,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		t.Cleanup(databaseCleanup)
 		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 		t.Cleanup(schemaCleanup)
-		passwordPolicyTest, passwordPolicyCleanup := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
+		passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(passwordPolicyCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{

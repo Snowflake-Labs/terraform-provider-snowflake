@@ -12,7 +12,7 @@ func TestInt_Comment(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	testWarehouse, warehouseCleanup := sdk.createWarehouse(t, client)
+	testWarehouse, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("set", func(t *testing.T) {

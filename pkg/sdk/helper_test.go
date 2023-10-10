@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -90,18 +89,18 @@ func getSecondaryAccountIdentifier(t *testing.T) AccountIdentifier {
 //	}
 //}
 
-func useWarehouse(t *testing.T, client *Client, warehouseID AccountObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseWarehouse(ctx, warehouseID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseWarehouse(ctx, NewAccountObjectIdentifier(orgWarehouse))
-		require.NoError(t, err)
-	}
-}
+//func useWarehouse(t *testing.T, client *Client, warehouseID AccountObjectIdentifier) func() {
+//	t.Helper()
+//	ctx := context.Background()
+//	orgWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+//	require.NoError(t, err)
+//	err = client.Sessions.UseWarehouse(ctx, warehouseID)
+//	require.NoError(t, err)
+//	return func() {
+//		err := client.Sessions.UseWarehouse(ctx, NewAccountObjectIdentifier(orgWarehouse))
+//		require.NoError(t, err)
+//	}
+//}
 
 func testClient(t *testing.T) *Client {
 	t.Helper()
@@ -307,25 +306,25 @@ func createFileFormatWithOptions(t *testing.T, client *Client, schema DatabaseOb
 	}
 }
 
-func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
-	t.Helper()
-	return createWarehouseWithOptions(t, client, &CreateWarehouseOptions{})
-}
-
-func createWarehouseWithOptions(t *testing.T, client *Client, opts *CreateWarehouseOptions) (*Warehouse, func()) {
-	t.Helper()
-	name := randomStringRange(t, 8, 28)
-	id := NewAccountObjectIdentifier(name)
-	ctx := context.Background()
-	err := client.Warehouses.Create(ctx, id, opts)
-	require.NoError(t, err)
-	return &Warehouse{
-			Name: name,
-		}, func() {
-			err := client.Warehouses.Drop(ctx, id, nil)
-			require.NoError(t, err)
-		}
-}
+//func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
+//	t.Helper()
+//	return createWarehouseWithOptions(t, client, &CreateWarehouseOptions{})
+//}
+//
+//func createWarehouseWithOptions(t *testing.T, client *Client, opts *CreateWarehouseOptions) (*Warehouse, func()) {
+//	t.Helper()
+//	name := randomStringRange(t, 8, 28)
+//	id := NewAccountObjectIdentifier(name)
+//	ctx := context.Background()
+//	err := client.Warehouses.Create(ctx, id, opts)
+//	require.NoError(t, err)
+//	return &Warehouse{
+//			Name: name,
+//		}, func() {
+//			err := client.Warehouses.Drop(ctx, id, nil)
+//			require.NoError(t, err)
+//		}
+//}
 
 //func createDatabase(t *testing.T, client *Client) (*Database, func()) {
 //	t.Helper()
@@ -412,49 +411,49 @@ func createWarehouseWithOptions(t *testing.T, client *Client, opts *CreateWareho
 //		}
 //}
 
-func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, options *CreatePasswordPolicyOptions) (*PasswordPolicy, func()) {
-	t.Helper()
-	var databaseCleanup func()
-	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
-	}
-	var schemaCleanup func()
-	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
-	}
-	name := randomUUID(t)
-	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
-	ctx := context.Background()
-	err := client.PasswordPolicies.Create(ctx, id, options)
-	require.NoError(t, err)
-
-	showOptions := &ShowPasswordPolicyOptions{
-		Like: &Like{
-			Pattern: String(name),
-		},
-		In: &In{
-			Schema: schema.ID(),
-		},
-	}
-	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, showOptions)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(passwordPolicyList))
-	return &passwordPolicyList[0], func() {
-		err := client.PasswordPolicies.Drop(ctx, id, nil)
-		require.NoError(t, err)
-		if schemaCleanup != nil {
-			schemaCleanup()
-		}
-		if databaseCleanup != nil {
-			databaseCleanup()
-		}
-	}
-}
-
-func createPasswordPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*PasswordPolicy, func()) {
-	t.Helper()
-	return createPasswordPolicyWithOptions(t, client, database, schema, nil)
-}
+//func createPasswordPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, options *CreatePasswordPolicyOptions) (*PasswordPolicy, func()) {
+//	t.Helper()
+//	var databaseCleanup func()
+//	if database == nil {
+//		database, databaseCleanup = createDatabase(t, client)
+//	}
+//	var schemaCleanup func()
+//	if schema == nil {
+//		schema, schemaCleanup = createSchema(t, client, database)
+//	}
+//	name := randomUUID(t)
+//	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+//	ctx := context.Background()
+//	err := client.PasswordPolicies.Create(ctx, id, options)
+//	require.NoError(t, err)
+//
+//	showOptions := &ShowPasswordPolicyOptions{
+//		Like: &Like{
+//			Pattern: String(name),
+//		},
+//		In: &In{
+//			Schema: schema.ID(),
+//		},
+//	}
+//	passwordPolicyList, err := client.PasswordPolicies.Show(ctx, showOptions)
+//	require.NoError(t, err)
+//	require.Equal(t, 1, len(passwordPolicyList))
+//	return &passwordPolicyList[0], func() {
+//		err := client.PasswordPolicies.Drop(ctx, id, nil)
+//		require.NoError(t, err)
+//		if schemaCleanup != nil {
+//			schemaCleanup()
+//		}
+//		if databaseCleanup != nil {
+//			databaseCleanup()
+//		}
+//	}
+//}
+//
+//func createPasswordPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*PasswordPolicy, func()) {
+//	t.Helper()
+//	return createPasswordPolicyWithOptions(t, client, database, schema, nil)
+//}
 
 func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, signature []TableColumnSignature, returns DataType, expression string, options *CreateMaskingPolicyOptions) (*MaskingPolicy, func()) {
 	t.Helper()

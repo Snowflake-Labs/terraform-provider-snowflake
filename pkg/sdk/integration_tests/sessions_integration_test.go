@@ -111,7 +111,7 @@ func TestInt_UseWarehouse(t *testing.T) {
 		err := client.Sessions.UseWarehouse(ctx, originalWHIdentifier)
 		require.NoError(t, err)
 	})
-	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 	err = client.Sessions.UseWarehouse(ctx, warehouseTest.ID())
 	require.NoError(t, err)
