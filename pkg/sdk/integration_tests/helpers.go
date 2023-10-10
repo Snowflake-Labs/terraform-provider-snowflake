@@ -534,3 +534,110 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 		}
 	}
 }
+
+func createRole(t *testing.T, client *sdk.Client) (*sdk.Role, func()) {
+	t.Helper()
+	return createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(randomAccountObjectIdentifier(t)))
+}
+
+func createRoleWithRequest(t *testing.T, client *sdk.Client, req *sdk.CreateRoleRequest) (*sdk.Role, func()) {
+	t.Helper()
+	require.True(t, sdk.ValidObjectIdentifier(req.GetName()))
+	ctx := context.Background()
+	err := client.Roles.Create(ctx, req)
+	require.NoError(t, err)
+	role, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(req.GetName()))
+	require.NoError(t, err)
+	return role, func() {
+		err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(req.GetName()))
+		require.NoError(t, err)
+	}
+}
+
+func createDatabaseRole(t *testing.T, client *sdk.Client, database *sdk.Database) (*sdk.DatabaseRole, func()) {
+	t.Helper()
+	name := randomString(t)
+	id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+	ctx := context.Background()
+
+	err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
+	require.NoError(t, err)
+
+	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return databaseRole, cleanupDatabaseRoleProvider(t, ctx, client, id)
+}
+
+func cleanupDatabaseRoleProvider(t *testing.T, ctx context.Context, client *sdk.Client, id sdk.DatabaseObjectIdentifier) func() {
+	t.Helper()
+	return func() {
+		err := client.DatabaseRoles.Drop(ctx, sdk.NewDropDatabaseRoleRequest(id))
+		require.NoError(t, err)
+	}
+}
+
+func createFailoverGroup(t *testing.T, client *sdk.Client) (*sdk.FailoverGroup, func()) {
+	t.Helper()
+	objectTypes := []sdk.PluralObjectType{sdk.PluralObjectTypeRoles}
+	ctx := context.Background()
+	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
+	require.NoError(t, err)
+	accountID := sdk.NewAccountIdentifierFromAccountLocator(currentAccount)
+	allowedAccounts := []sdk.AccountIdentifier{accountID}
+	return createFailoverGroupWithOptions(t, client, objectTypes, allowedAccounts, nil)
+}
+
+func createFailoverGroupWithOptions(t *testing.T, client *sdk.Client, objectTypes []sdk.PluralObjectType, allowedAccounts []sdk.AccountIdentifier, opts *sdk.CreateFailoverGroupOptions) (*sdk.FailoverGroup, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
+	require.NoError(t, err)
+	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return failoverGroup, func() {
+		err := client.FailoverGroups.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
+
+func createShare(t *testing.T, client *sdk.Client) (*sdk.Share, func()) {
+	t.Helper()
+	return createShareWithOptions(t, client, &sdk.CreateShareOptions{})
+}
+
+func createShareWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateShareOptions) (*sdk.Share, func()) {
+	t.Helper()
+	id := randomAccountObjectIdentifier(t)
+	ctx := context.Background()
+	err := client.Shares.Create(ctx, id, opts)
+	require.NoError(t, err)
+	share, err := client.Shares.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return share, func() {
+		err := client.Shares.Drop(ctx, id)
+		require.NoError(t, err)
+	}
+}
+
+func createFileFormat(t *testing.T, client *sdk.Client, schema sdk.DatabaseObjectIdentifier) (*sdk.FileFormat, func()) {
+	t.Helper()
+	return createFileFormatWithOptions(t, client, schema, &sdk.CreateFileFormatOptions{
+		Type: sdk.FileFormatTypeCSV,
+	})
+}
+
+func createFileFormatWithOptions(t *testing.T, client *sdk.Client, schema sdk.DatabaseObjectIdentifier, opts *sdk.CreateFileFormatOptions) (*sdk.FileFormat, func()) {
+	t.Helper()
+	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName(), schema.Name(), randomString(t))
+	ctx := context.Background()
+	err := client.FileFormats.Create(ctx, id, opts)
+	require.NoError(t, err)
+	fileFormat, err := client.FileFormats.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return fileFormat, func() {
+		err := client.FileFormats.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}

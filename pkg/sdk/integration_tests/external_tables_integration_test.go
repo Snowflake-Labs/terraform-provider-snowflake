@@ -104,7 +104,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Create: infer schema", func(t *testing.T) {
-		fileFormat, _ := sdk.createFileFormat(t, client, schema.ID())
+		fileFormat, _ := createFileFormat(t, client, schema.ID())
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 

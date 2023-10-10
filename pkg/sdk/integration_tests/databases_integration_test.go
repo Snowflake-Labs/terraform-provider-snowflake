@@ -111,7 +111,7 @@ func TestInt_CreateShared(t *testing.T) {
 	ctx := testContext(t)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	shareTest, _ := sdk.createShare(t, client)
+	shareTest, _ := createShare(t, client)
 	// t.Cleanup(shareCleanup)
 	err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
 		Database: databaseTest.ID(),

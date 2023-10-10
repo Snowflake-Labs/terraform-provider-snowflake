@@ -238,7 +238,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role := createDatabaseRole(t)
 		roleId := sdk.NewDatabaseObjectIdentifier(database.Name, role.Name)
 
-		accountRole, accountRoleCleanup := sdk.createRole(t, client)
+		accountRole, accountRoleCleanup := createRole(t, client)
 		t.Cleanup(accountRoleCleanup)
 
 		grantRequest := sdk.NewGrantDatabaseRoleRequest(roleId).WithAccountRole(accountRole.ID())
@@ -260,7 +260,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role := createDatabaseRole(t)
 		roleId := sdk.NewDatabaseObjectIdentifier(database.Name, role.Name)
 
-		share, shareCleanup := sdk.createShare(t, client)
+		share, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{Database: database.ID()}, share.ID())

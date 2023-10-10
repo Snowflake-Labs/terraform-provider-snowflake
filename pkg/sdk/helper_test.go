@@ -233,70 +233,70 @@ func testClientFromProfile(t *testing.T, profile string) (*Client, error) {
 //	}
 //}
 
-func createFailoverGroup(t *testing.T, client *Client) (*FailoverGroup, func()) {
-	t.Helper()
-	objectTypes := []PluralObjectType{PluralObjectTypeRoles}
-	ctx := context.Background()
-	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
-	accountID := NewAccountIdentifierFromAccountLocator(currentAccount)
-	allowedAccounts := []AccountIdentifier{accountID}
-	return createFailoverGroupWithOptions(t, client, objectTypes, allowedAccounts, nil)
-}
+//func createFailoverGroup(t *testing.T, client *Client) (*FailoverGroup, func()) {
+//	t.Helper()
+//	objectTypes := []PluralObjectType{PluralObjectTypeRoles}
+//	ctx := context.Background()
+//	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
+//	require.NoError(t, err)
+//	accountID := NewAccountIdentifierFromAccountLocator(currentAccount)
+//	allowedAccounts := []AccountIdentifier{accountID}
+//	return createFailoverGroupWithOptions(t, client, objectTypes, allowedAccounts, nil)
+//}
+//
+//func createFailoverGroupWithOptions(t *testing.T, client *Client, objectTypes []PluralObjectType, allowedAccounts []AccountIdentifier, opts *CreateFailoverGroupOptions) (*FailoverGroup, func()) {
+//	t.Helper()
+//	id := randomAccountObjectIdentifier(t)
+//	ctx := context.Background()
+//	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
+//	require.NoError(t, err)
+//	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
+//	require.NoError(t, err)
+//	return failoverGroup, func() {
+//		err := client.FailoverGroups.Drop(ctx, id, nil)
+//		require.NoError(t, err)
+//	}
+//}
 
-func createFailoverGroupWithOptions(t *testing.T, client *Client, objectTypes []PluralObjectType, allowedAccounts []AccountIdentifier, opts *CreateFailoverGroupOptions) (*FailoverGroup, func()) {
-	t.Helper()
-	id := randomAccountObjectIdentifier(t)
-	ctx := context.Background()
-	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
-	require.NoError(t, err)
-	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return failoverGroup, func() {
-		err := client.FailoverGroups.Drop(ctx, id, nil)
-		require.NoError(t, err)
-	}
-}
+//func createShare(t *testing.T, client *Client) (*Share, func()) {
+//	t.Helper()
+//	return createShareWithOptions(t, client, &CreateShareOptions{})
+//}
+//
+//func createShareWithOptions(t *testing.T, client *Client, opts *CreateShareOptions) (*Share, func()) {
+//	t.Helper()
+//	id := randomAccountObjectIdentifier(t)
+//	ctx := context.Background()
+//	err := client.Shares.Create(ctx, id, opts)
+//	require.NoError(t, err)
+//	share, err := client.Shares.ShowByID(ctx, id)
+//	require.NoError(t, err)
+//	return share, func() {
+//		err := client.Shares.Drop(ctx, id)
+//		require.NoError(t, err)
+//	}
+//}
 
-func createShare(t *testing.T, client *Client) (*Share, func()) {
-	t.Helper()
-	return createShareWithOptions(t, client, &CreateShareOptions{})
-}
-
-func createShareWithOptions(t *testing.T, client *Client, opts *CreateShareOptions) (*Share, func()) {
-	t.Helper()
-	id := randomAccountObjectIdentifier(t)
-	ctx := context.Background()
-	err := client.Shares.Create(ctx, id, opts)
-	require.NoError(t, err)
-	share, err := client.Shares.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return share, func() {
-		err := client.Shares.Drop(ctx, id)
-		require.NoError(t, err)
-	}
-}
-
-func createFileFormat(t *testing.T, client *Client, schema DatabaseObjectIdentifier) (*FileFormat, func()) {
-	t.Helper()
-	return createFileFormatWithOptions(t, client, schema, &CreateFileFormatOptions{
-		Type: FileFormatTypeCSV,
-	})
-}
-
-func createFileFormatWithOptions(t *testing.T, client *Client, schema DatabaseObjectIdentifier, opts *CreateFileFormatOptions) (*FileFormat, func()) {
-	t.Helper()
-	id := NewSchemaObjectIdentifier(schema.databaseName, schema.name, randomString(t))
-	ctx := context.Background()
-	err := client.FileFormats.Create(ctx, id, opts)
-	require.NoError(t, err)
-	fileFormat, err := client.FileFormats.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return fileFormat, func() {
-		err := client.FileFormats.Drop(ctx, id, nil)
-		require.NoError(t, err)
-	}
-}
+//func createFileFormat(t *testing.T, client *Client, schema DatabaseObjectIdentifier) (*FileFormat, func()) {
+//	t.Helper()
+//	return createFileFormatWithOptions(t, client, schema, &CreateFileFormatOptions{
+//		Type: FileFormatTypeCSV,
+//	})
+//}
+//
+//func createFileFormatWithOptions(t *testing.T, client *Client, schema DatabaseObjectIdentifier, opts *CreateFileFormatOptions) (*FileFormat, func()) {
+//	t.Helper()
+//	id := NewSchemaObjectIdentifier(schema.databaseName, schema.name, randomString(t))
+//	ctx := context.Background()
+//	err := client.FileFormats.Create(ctx, id, opts)
+//	require.NoError(t, err)
+//	fileFormat, err := client.FileFormats.ShowByID(ctx, id)
+//	require.NoError(t, err)
+//	return fileFormat, func() {
+//		err := client.FileFormats.Drop(ctx, id, nil)
+//		require.NoError(t, err)
+//	}
+//}
 
 //func createWarehouse(t *testing.T, client *Client) (*Warehouse, func()) {
 //	t.Helper()
@@ -485,48 +485,48 @@ func createFileFormatWithOptions(t *testing.T, client *Client, schema DatabaseOb
 //		}
 //	}
 //}
+//
+//func createRole(t *testing.T, client *Client) (*Role, func()) {
+//	t.Helper()
+//	return createRoleWithRequest(t, client, NewCreateRoleRequest(randomAccountObjectIdentifier(t)))
+//}
+//
+//func createRoleWithRequest(t *testing.T, client *Client, req *CreateRoleRequest) (*Role, func()) {
+//	t.Helper()
+//	require.True(t, validObjectidentifier(req.name))
+//	ctx := context.Background()
+//	err := client.Roles.Create(ctx, req)
+//	require.NoError(t, err)
+//	role, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(req.name))
+//	require.NoError(t, err)
+//	return role, func() {
+//		err = client.Roles.Drop(ctx, NewDropRoleRequest(req.name))
+//		require.NoError(t, err)
+//	}
+//}
 
-func createRole(t *testing.T, client *Client) (*Role, func()) {
-	t.Helper()
-	return createRoleWithRequest(t, client, NewCreateRoleRequest(randomAccountObjectIdentifier(t)))
-}
-
-func createRoleWithRequest(t *testing.T, client *Client, req *CreateRoleRequest) (*Role, func()) {
-	t.Helper()
-	require.True(t, validObjectidentifier(req.name))
-	ctx := context.Background()
-	err := client.Roles.Create(ctx, req)
-	require.NoError(t, err)
-	role, err := client.Roles.ShowByID(ctx, NewShowByIdRoleRequest(req.name))
-	require.NoError(t, err)
-	return role, func() {
-		err = client.Roles.Drop(ctx, NewDropRoleRequest(req.name))
-		require.NoError(t, err)
-	}
-}
-
-func createDatabaseRole(t *testing.T, client *Client, database *Database) (*DatabaseRole, func()) {
-	t.Helper()
-	name := randomString(t)
-	id := NewDatabaseObjectIdentifier(database.Name, name)
-	ctx := context.Background()
-
-	err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
-	require.NoError(t, err)
-
-	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return databaseRole, cleanupDatabaseRoleProvider(t, ctx, client, id)
-}
-
-func cleanupDatabaseRoleProvider(t *testing.T, ctx context.Context, client *Client, id DatabaseObjectIdentifier) func() {
-	t.Helper()
-	return func() {
-		err := client.DatabaseRoles.Drop(ctx, NewDropDatabaseRoleRequest(id))
-		require.NoError(t, err)
-	}
-}
+//func createDatabaseRole(t *testing.T, client *Client, database *Database) (*DatabaseRole, func()) {
+//	t.Helper()
+//	name := randomString(t)
+//	id := NewDatabaseObjectIdentifier(database.Name, name)
+//	ctx := context.Background()
+//
+//	err := client.DatabaseRoles.Create(ctx, NewCreateDatabaseRoleRequest(id))
+//	require.NoError(t, err)
+//
+//	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
+//	require.NoError(t, err)
+//
+//	return databaseRole, cleanupDatabaseRoleProvider(t, ctx, client, id)
+//}
+//
+//func cleanupDatabaseRoleProvider(t *testing.T, ctx context.Context, client *Client, id DatabaseObjectIdentifier) func() {
+//	t.Helper()
+//	return func() {
+//		err := client.DatabaseRoles.Drop(ctx, NewDropDatabaseRoleRequest(id))
+//		require.NoError(t, err)
+//	}
+//}
 
 //func createMaskingPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*MaskingPolicy, func()) {
 //	t.Helper()
