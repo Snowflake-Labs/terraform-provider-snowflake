@@ -18,10 +18,10 @@ func TestInt_Streams(t *testing.T) {
 	t.Cleanup(cleanupSchema)
 
 	t.Run("CreateOnTable", func(t *testing.T) {
-		table, cleanupTable := createTableWithTimeTravel(t, client, db, schema, 1)
+		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
-		id := randomAccountObjectIdentifier(t)
+		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
 		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
@@ -36,13 +36,39 @@ func TestInt_Streams(t *testing.T) {
 		assert.Equal(t, db.Name, s.DatabaseName)
 		assert.Equal(t, schema.Name, s.SchemaName)
 		assert.Equal(t, "some comment", s.Comment)
-		assert.Equal(t, table.Name, s.TableName)
-		assert.Equal(t, "TABLE", s.SourceType)
+		assert.Equal(t, table.ID().FullyQualifiedName(), s.TableName)
+		assert.Equal(t, "Table", s.SourceType)
 		assert.Equal(t, "DEFAULT", s.Mode)
 	})
 
 	t.Run("CreateOnExternalTable", func(t *testing.T) {
-		// TODO: fill me
+		externalTableId := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		// TODO Location
+		err := client.ExternalTables.Create(ctx, NewCreateExternalTableRequest(externalTableId, "", NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeJSON)))
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.ExternalTables.Drop(ctx, NewDropExternalTableRequest(externalTableId))
+			require.NoError(t, err)
+		})
+
+		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := NewCreateOnTableStreamRequest(id, externalTableId).WithComment(String("some comment"))
+		err = client.Streams.CreateOnTable(ctx, req)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			require.NoError(t, err)
+		})
+
+		s, err := client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		require.NoError(t, err)
+		assert.Equal(t, id.Name(), s.Name)
+		assert.Equal(t, db.Name, s.DatabaseName)
+		assert.Equal(t, schema.Name, s.SchemaName)
+		assert.Equal(t, "some comment", s.Comment)
+		assert.Equal(t, externalTableId.FullyQualifiedName(), s.TableName)
+		assert.Equal(t, "Table", s.SourceType)
+		assert.Equal(t, "DEFAULT", s.Mode)
 	})
 
 	t.Run("CreateOnStage", func(t *testing.T) {

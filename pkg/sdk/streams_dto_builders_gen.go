@@ -5,7 +5,7 @@ package sdk
 import ()
 
 func NewCreateOnTableStreamRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	TableId SchemaObjectIdentifier,
 ) *CreateOnTableStreamRequest {
 	s := CreateOnTableStreamRequest{}
@@ -93,7 +93,7 @@ func (s *OnStreamStatementRequest) WithStream(Stream *string) *OnStreamStatement
 }
 
 func NewCreateOnExternalTableStreamRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	ExternalTableId SchemaObjectIdentifier,
 ) *CreateOnExternalTableStreamRequest {
 	s := CreateOnExternalTableStreamRequest{}
@@ -133,7 +133,7 @@ func (s *CreateOnExternalTableStreamRequest) WithComment(Comment *string) *Creat
 }
 
 func NewCreateOnStageStreamRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	StageId SchemaObjectIdentifier,
 ) *CreateOnStageStreamRequest {
 	s := CreateOnStageStreamRequest{}
@@ -163,7 +163,7 @@ func (s *CreateOnStageStreamRequest) WithComment(Comment *string) *CreateOnStage
 }
 
 func NewCreateOnViewStreamRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	ViewId SchemaObjectIdentifier,
 ) *CreateOnViewStreamRequest {
 	s := CreateOnViewStreamRequest{}
@@ -208,7 +208,7 @@ func (s *CreateOnViewStreamRequest) WithComment(Comment *string) *CreateOnViewSt
 }
 
 func NewCloneStreamRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	sourceStream AccountObjectIdentifier,
 ) *CloneStreamRequest {
 	s := CloneStreamRequest{}
@@ -228,7 +228,7 @@ func (s *CloneStreamRequest) WithCopyGrants(CopyGrants *bool) *CloneStreamReques
 }
 
 func NewAlterStreamRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *AlterStreamRequest {
 	s := AlterStreamRequest{}
 	s.name = name
@@ -261,7 +261,7 @@ func (s *AlterStreamRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterS
 }
 
 func NewDropStreamRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DropStreamRequest {
 	s := DropStreamRequest{}
 	s.name = name
@@ -303,7 +303,7 @@ func (s *ShowStreamRequest) WithLimit(Limit *LimitFrom) *ShowStreamRequest {
 }
 
 func NewShowByIdStreamRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *ShowByIdStreamRequest {
 	s := ShowByIdStreamRequest{}
 	s.name = name
@@ -311,7 +311,7 @@ func NewShowByIdStreamRequest(
 }
 
 func NewDescribeStreamRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DescribeStreamRequest {
 	s := DescribeStreamRequest{}
 	s.name = name

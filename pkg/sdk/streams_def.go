@@ -15,7 +15,7 @@ var (
 			g.QueryStruct("OnStreamStatement").
 				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals()).
 				OptionalTextAssignment("OFFSET", g.ParameterOptions().ArrowEquals()).
-				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals().SingleQuotes()).
+				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals()).
 				OptionalTextAssignment("STREAM", g.ParameterOptions().ArrowEquals().SingleQuotes()).
 				WithValidation(g.ExactlyOneValueSet, "Timestamp", "Offset", "Statement", "Stream"),
 			g.ListOptions().Parentheses(),
@@ -59,7 +59,7 @@ var (
 	StreamsDef = g.NewInterface(
 		"Streams",
 		"Stream",
-		g.KindOfT[AccountObjectIdentifier](),
+		g.KindOfT[SchemaObjectIdentifier](),
 	).
 		CustomOperation(
 			"CreateOnTable",

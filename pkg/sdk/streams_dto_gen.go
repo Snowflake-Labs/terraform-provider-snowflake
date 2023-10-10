@@ -17,7 +17,7 @@ var (
 type CreateOnTableStreamRequest struct {
 	OrReplace       *bool
 	IfNotExists     *bool
-	name            AccountObjectIdentifier // required
+	name            SchemaObjectIdentifier // required
 	CopyGrants      *bool
 	TableId         SchemaObjectIdentifier // required
 	On              *OnStreamRequest
@@ -42,7 +42,7 @@ type OnStreamStatementRequest struct {
 type CreateOnExternalTableStreamRequest struct {
 	OrReplace       *bool
 	IfNotExists     *bool
-	name            AccountObjectIdentifier // required
+	name            SchemaObjectIdentifier // required
 	CopyGrants      *bool
 	ExternalTableId SchemaObjectIdentifier // required
 	On              *OnStreamRequest
@@ -53,7 +53,7 @@ type CreateOnExternalTableStreamRequest struct {
 type CreateOnStageStreamRequest struct {
 	OrReplace   *bool
 	IfNotExists *bool
-	name        AccountObjectIdentifier // required
+	name        SchemaObjectIdentifier // required
 	CopyGrants  *bool
 	StageId     SchemaObjectIdentifier // required
 	Comment     *string
@@ -62,7 +62,7 @@ type CreateOnStageStreamRequest struct {
 type CreateOnViewStreamRequest struct {
 	OrReplace       *bool
 	IfNotExists     *bool
-	name            AccountObjectIdentifier // required
+	name            SchemaObjectIdentifier // required
 	CopyGrants      *bool
 	ViewId          SchemaObjectIdentifier // required
 	On              *OnStreamRequest
@@ -73,14 +73,14 @@ type CreateOnViewStreamRequest struct {
 
 type CloneStreamRequest struct {
 	OrReplace    *bool
-	name         AccountObjectIdentifier // required
+	name         SchemaObjectIdentifier  // required
 	sourceStream AccountObjectIdentifier // required
 	CopyGrants   *bool
 }
 
 type AlterStreamRequest struct {
 	IfExists     *bool
-	name         AccountObjectIdentifier // required
+	name         SchemaObjectIdentifier // required
 	SetComment   *string
 	UnsetComment *bool
 	SetTags      []TagAssociation
@@ -89,7 +89,7 @@ type AlterStreamRequest struct {
 
 type DropStreamRequest struct {
 	IfExists *bool
-	name     AccountObjectIdentifier // required
+	name     SchemaObjectIdentifier // required
 }
 
 type ShowStreamRequest struct {
@@ -101,9 +101,9 @@ type ShowStreamRequest struct {
 }
 
 type ShowByIdStreamRequest struct {
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
 }
 
 type DescribeStreamRequest struct {
-	name AccountObjectIdentifier // required
+	name SchemaObjectIdentifier // required
 }

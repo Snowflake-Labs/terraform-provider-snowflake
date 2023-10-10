@@ -54,7 +54,11 @@ func (v *streams) Show(ctx context.Context, request *ShowStreamRequest) ([]Strea
 }
 
 func (v *streams) ShowByID(ctx context.Context, request *ShowByIdStreamRequest) (*Stream, error) {
-	streams, err := v.Show(ctx, NewShowStreamRequest().WithLike(&Like{Pattern: String(request.name.Name())}))
+	streams, err := v.Show(ctx, NewShowStreamRequest().
+		WithIn(&In{
+			Schema: NewDatabaseObjectIdentifier(request.name.DatabaseName(), request.name.SchemaName()),
+		}).
+		WithLike(&Like{Pattern: String(request.name.Name())}))
 	if err != nil {
 		return nil, err
 	}
@@ -206,8 +210,26 @@ func (r *ShowStreamRequest) toOpts() *ShowStreamOptions {
 }
 
 func (r showStreamsDbRow) convert() *Stream {
-	// TODO: Mapping
-	return &Stream{}
+	s := &Stream{
+		CreatedOn:     r.CreatedOn,
+		Name:          r.Name,
+		DatabaseName:  r.DatabaseName,
+		SchemaName:    r.SchemaName,
+		Owner:         r.Owner,
+		Comment:       r.Comment,
+		TableName:     r.TableName,
+		SourceType:    r.SourceType,
+		BaseTables:    r.BaseTables,
+		Type:          r.Type,
+		Stale:         r.Stale,
+		Mode:          r.Mode,
+		InvalidReason: r.InvalidReason,
+		OwnerRoleType: r.OwnerRoleType,
+	}
+	if r.StaleAfter.Valid {
+		s.StaleAfter = &r.StaleAfter.Time
+	}
+	return s
 }
 
 func (r *DescribeStreamRequest) toOpts() *DescribeStreamOptions {
