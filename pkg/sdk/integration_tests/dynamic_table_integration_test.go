@@ -83,7 +83,7 @@ func TestInt_DynamicTableDescribe(t *testing.T) {
 	t.Run("when dynamic table does not exist", func(t *testing.T) {
 		name := sdk.NewSchemaObjectIdentifier("my_db", "my_schema", "does_not_exist")
 		_, err := client.DynamicTables.Describe(ctx, sdk.NewDescribeDynamicTableRequest(name))
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
 

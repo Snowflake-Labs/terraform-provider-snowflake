@@ -191,7 +191,7 @@ func TestInt_PasswordPolicyDescribe(t *testing.T) {
 	t.Run("when password policy does not exist", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		_, err := client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
 
@@ -319,13 +319,13 @@ func TestInt_PasswordPolicyDrop(t *testing.T) {
 		err := client.PasswordPolicies.Drop(ctx, id, nil)
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when password policy does not exist", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		err := client.PasswordPolicies.Drop(ctx, id, nil)
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when password policy exists and if exists is true", func(t *testing.T) {
@@ -335,6 +335,6 @@ func TestInt_PasswordPolicyDrop(t *testing.T) {
 		err := client.PasswordPolicies.Drop(ctx, id, dropOptions)
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

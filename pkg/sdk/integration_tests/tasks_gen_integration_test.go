@@ -264,14 +264,14 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.Tasks.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("drop task: non-existing", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, "does_not_exist")
 
 		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("alter task: set value and unset value", func(t *testing.T) {

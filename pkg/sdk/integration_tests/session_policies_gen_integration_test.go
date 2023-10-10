@@ -113,14 +113,14 @@ func TestInt_SessionPolicies(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.SessionPolicies.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("drop session_policy: non-existing", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, "does_not_exist")
 
 		err := client.SessionPolicies.Drop(ctx, sdk.NewDropSessionPolicyRequest(id))
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("alter session_policy: set value and unset value", func(t *testing.T) {
@@ -210,7 +210,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.SessionPolicies.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 
 		sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, newId)
 		require.NoError(t, err)
