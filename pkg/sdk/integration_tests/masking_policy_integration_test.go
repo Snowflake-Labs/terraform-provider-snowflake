@@ -18,10 +18,10 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	maskingPolicyTest, maskingPolicyCleanup := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
+	maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 	t.Cleanup(maskingPolicyCleanup)
 
-	maskingPolicy2Test, maskingPolicy2Cleanup := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
+	maskingPolicy2Test, maskingPolicy2Cleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 	t.Cleanup(maskingPolicy2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -262,7 +262,7 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	maskingPolicy, maskingPolicyCleanup := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
+	maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 	t.Cleanup(maskingPolicyCleanup)
 
 	t.Run("when masking policy exists", func(t *testing.T) {
@@ -289,7 +289,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	t.Cleanup(schemaCleanup)
 
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
+		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(maskingPolicyCleanup)
 		comment := randomComment(t)
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
@@ -334,7 +334,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("when renaming", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
+		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		oldID := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
 		newName := randomString(t)
@@ -356,7 +356,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("setting and unsetting tags", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
+		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		id := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
 
@@ -405,7 +405,7 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 	t.Cleanup(schemaCleanup)
 
 	t.Run("when masking policy exists", func(t *testing.T) {
-		maskingPolicy, _ := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
+		maskingPolicy, _ := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		id := maskingPolicy.ID()
 		err := client.MaskingPolicies.Drop(ctx, id)
 		require.NoError(t, err)

@@ -369,3 +369,116 @@ func createResourceMonitorWithOptions(t *testing.T, client *sdk.Client, opts *sd
 		require.NoError(t, err)
 	}
 }
+
+func createMaskingPolicy(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.MaskingPolicy, func()) {
+	t.Helper()
+	signature := []sdk.TableColumnSignature{
+		{
+			Name: randomString(t),
+			Type: sdk.DataTypeVARCHAR,
+		},
+	}
+	n := randomIntRange(t, 0, 5)
+	for i := 0; i < n; i++ {
+		signature = append(signature, sdk.TableColumnSignature{
+			Name: randomString(t),
+			Type: sdk.DataTypeVARCHAR,
+		})
+	}
+	expression := "REPLACE('X', 1, 2)"
+	return createMaskingPolicyWithOptions(t, client, database, schema, signature, sdk.DataTypeVARCHAR, expression, &sdk.CreateMaskingPolicyOptions{})
+}
+
+func createMaskingPolicyWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, signature []sdk.TableColumnSignature, returns sdk.DataType, expression string, options *sdk.CreateMaskingPolicyOptions) (*sdk.MaskingPolicy, func()) {
+	t.Helper()
+	var databaseCleanup func()
+	if database == nil {
+		database, databaseCleanup = createDatabase(t, client)
+	}
+	var schemaCleanup func()
+	if schema == nil {
+		schema, schemaCleanup = createSchema(t, client, database)
+	}
+	name := randomString(t)
+	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+	ctx := context.Background()
+	err := client.MaskingPolicies.Create(ctx, id, signature, returns, expression, options)
+	require.NoError(t, err)
+
+	showOptions := &sdk.ShowMaskingPolicyOptions{
+		Like: &sdk.Like{
+			Pattern: sdk.String(name),
+		},
+		In: &sdk.In{
+			Schema: schema.ID(),
+		},
+	}
+	maskingPolicyList, err := client.MaskingPolicies.Show(ctx, showOptions)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(maskingPolicyList))
+	return &maskingPolicyList[0], func() {
+		err := client.MaskingPolicies.Drop(ctx, id)
+		require.NoError(t, err)
+		if schemaCleanup != nil {
+			schemaCleanup()
+		}
+		if databaseCleanup != nil {
+			databaseCleanup()
+		}
+	}
+}
+
+func createAlert(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, warehouse *sdk.Warehouse) (*sdk.Alert, func()) {
+	t.Helper()
+	schedule := "USING CRON * * * * * UTC"
+	condition := "SELECT 1"
+	action := "SELECT 1"
+	return createAlertWithOptions(t, client, database, schema, warehouse, schedule, condition, action, &sdk.CreateAlertOptions{})
+}
+
+func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, warehouse *sdk.Warehouse, schedule string, condition string, action string, opts *sdk.CreateAlertOptions) (*sdk.Alert, func()) {
+	t.Helper()
+	var databaseCleanup func()
+	if database == nil {
+		database, databaseCleanup = createDatabase(t, client)
+	}
+	var schemaCleanup func()
+	if schema == nil {
+		schema, schemaCleanup = createSchema(t, client, database)
+	}
+	var warehouseCleanup func()
+	if warehouse == nil {
+		warehouse, warehouseCleanup = createWarehouse(t, client)
+	}
+
+	name := randomString(t)
+	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+	ctx := context.Background()
+	err := client.Alerts.Create(ctx, id, warehouse.ID(), schedule, condition, action, opts)
+	require.NoError(t, err)
+
+	showOptions := &sdk.ShowAlertOptions{
+		Like: &sdk.Like{
+			Pattern: sdk.String(name),
+		},
+		In: &sdk.In{
+			Schema: schema.ID(),
+		},
+	}
+	alertList, err := client.Alerts.Show(ctx, showOptions)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(alertList))
+	return &alertList[0], func() {
+		err := client.Alerts.Drop(ctx, id)
+		require.NoError(t, err)
+		if schemaCleanup != nil {
+			schemaCleanup()
+		}
+		if databaseCleanup != nil {
+			databaseCleanup()
+		}
+		if warehouseCleanup != nil {
+			warehouseCleanup()
+		}
+	}
+}

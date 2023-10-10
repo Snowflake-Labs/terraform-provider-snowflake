@@ -448,44 +448,44 @@ func createFileFormatWithOptions(t *testing.T, client *Client, schema DatabaseOb
 //	return createPasswordPolicyWithOptions(t, client, database, schema, nil)
 //}
 
-func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, signature []TableColumnSignature, returns DataType, expression string, options *CreateMaskingPolicyOptions) (*MaskingPolicy, func()) {
-	t.Helper()
-	var databaseCleanup func()
-	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
-	}
-	var schemaCleanup func()
-	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
-	}
-	name := randomString(t)
-	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
-	ctx := context.Background()
-	err := client.MaskingPolicies.Create(ctx, id, signature, returns, expression, options)
-	require.NoError(t, err)
-
-	showOptions := &ShowMaskingPolicyOptions{
-		Like: &Like{
-			Pattern: String(name),
-		},
-		In: &In{
-			Schema: schema.ID(),
-		},
-	}
-	maskingPolicyList, err := client.MaskingPolicies.Show(ctx, showOptions)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(maskingPolicyList))
-	return &maskingPolicyList[0], func() {
-		err := client.MaskingPolicies.Drop(ctx, id)
-		require.NoError(t, err)
-		if schemaCleanup != nil {
-			schemaCleanup()
-		}
-		if databaseCleanup != nil {
-			databaseCleanup()
-		}
-	}
-}
+//func createMaskingPolicyWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, signature []TableColumnSignature, returns DataType, expression string, options *CreateMaskingPolicyOptions) (*MaskingPolicy, func()) {
+//	t.Helper()
+//	var databaseCleanup func()
+//	if database == nil {
+//		database, databaseCleanup = createDatabase(t, client)
+//	}
+//	var schemaCleanup func()
+//	if schema == nil {
+//		schema, schemaCleanup = createSchema(t, client, database)
+//	}
+//	name := randomString(t)
+//	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+//	ctx := context.Background()
+//	err := client.MaskingPolicies.Create(ctx, id, signature, returns, expression, options)
+//	require.NoError(t, err)
+//
+//	showOptions := &ShowMaskingPolicyOptions{
+//		Like: &Like{
+//			Pattern: String(name),
+//		},
+//		In: &In{
+//			Schema: schema.ID(),
+//		},
+//	}
+//	maskingPolicyList, err := client.MaskingPolicies.Show(ctx, showOptions)
+//	require.NoError(t, err)
+//	require.Equal(t, 1, len(maskingPolicyList))
+//	return &maskingPolicyList[0], func() {
+//		err := client.MaskingPolicies.Drop(ctx, id)
+//		require.NoError(t, err)
+//		if schemaCleanup != nil {
+//			schemaCleanup()
+//		}
+//		if databaseCleanup != nil {
+//			databaseCleanup()
+//		}
+//	}
+//}
 
 func createRole(t *testing.T, client *Client) (*Role, func()) {
 	t.Helper()
@@ -529,79 +529,79 @@ func cleanupDatabaseRoleProvider(t *testing.T, ctx context.Context, client *Clie
 	}
 }
 
-func createMaskingPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*MaskingPolicy, func()) {
-	t.Helper()
-	signature := []TableColumnSignature{
-		{
-			Name: randomString(t),
-			Type: DataTypeVARCHAR,
-		},
-	}
-	n := randomIntRange(t, 0, 5)
-	for i := 0; i < n; i++ {
-		signature = append(signature, TableColumnSignature{
-			Name: randomString(t),
-			Type: DataTypeVARCHAR,
-		})
-	}
-	expression := "REPLACE('X', 1, 2)"
-	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{})
-}
+//func createMaskingPolicy(t *testing.T, client *Client, database *Database, schema *Schema) (*MaskingPolicy, func()) {
+//	t.Helper()
+//	signature := []TableColumnSignature{
+//		{
+//			Name: randomString(t),
+//			Type: DataTypeVARCHAR,
+//		},
+//	}
+//	n := randomIntRange(t, 0, 5)
+//	for i := 0; i < n; i++ {
+//		signature = append(signature, TableColumnSignature{
+//			Name: randomString(t),
+//			Type: DataTypeVARCHAR,
+//		})
+//	}
+//	expression := "REPLACE('X', 1, 2)"
+//	return createMaskingPolicyWithOptions(t, client, database, schema, signature, DataTypeVARCHAR, expression, &CreateMaskingPolicyOptions{})
+//}
 
-func createAlertWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse, schedule string, condition string, action string, opts *CreateAlertOptions) (*Alert, func()) {
-	t.Helper()
-	var databaseCleanup func()
-	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
-	}
-	var schemaCleanup func()
-	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
-	}
-	var warehouseCleanup func()
-	if warehouse == nil {
-		warehouse, warehouseCleanup = createWarehouse(t, client)
-	}
-
-	name := randomString(t)
-	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
-	ctx := context.Background()
-	err := client.Alerts.Create(ctx, id, warehouse.ID(), schedule, condition, action, opts)
-	require.NoError(t, err)
-
-	showOptions := &ShowAlertOptions{
-		Like: &Like{
-			Pattern: String(name),
-		},
-		In: &In{
-			Schema: schema.ID(),
-		},
-	}
-	alertList, err := client.Alerts.Show(ctx, showOptions)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(alertList))
-	return &alertList[0], func() {
-		err := client.Alerts.Drop(ctx, id)
-		require.NoError(t, err)
-		if schemaCleanup != nil {
-			schemaCleanup()
-		}
-		if databaseCleanup != nil {
-			databaseCleanup()
-		}
-		if warehouseCleanup != nil {
-			warehouseCleanup()
-		}
-	}
-}
-
-func createAlert(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse) (*Alert, func()) {
-	t.Helper()
-	schedule := "USING CRON * * * * * UTC"
-	condition := "SELECT 1"
-	action := "SELECT 1"
-	return createAlertWithOptions(t, client, database, schema, warehouse, schedule, condition, action, &CreateAlertOptions{})
-}
+//func createAlertWithOptions(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse, schedule string, condition string, action string, opts *CreateAlertOptions) (*Alert, func()) {
+//	t.Helper()
+//	var databaseCleanup func()
+//	if database == nil {
+//		database, databaseCleanup = createDatabase(t, client)
+//	}
+//	var schemaCleanup func()
+//	if schema == nil {
+//		schema, schemaCleanup = createSchema(t, client, database)
+//	}
+//	var warehouseCleanup func()
+//	if warehouse == nil {
+//		warehouse, warehouseCleanup = createWarehouse(t, client)
+//	}
+//
+//	name := randomString(t)
+//	id := NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
+//	ctx := context.Background()
+//	err := client.Alerts.Create(ctx, id, warehouse.ID(), schedule, condition, action, opts)
+//	require.NoError(t, err)
+//
+//	showOptions := &ShowAlertOptions{
+//		Like: &Like{
+//			Pattern: String(name),
+//		},
+//		In: &In{
+//			Schema: schema.ID(),
+//		},
+//	}
+//	alertList, err := client.Alerts.Show(ctx, showOptions)
+//	require.NoError(t, err)
+//	require.Equal(t, 1, len(alertList))
+//	return &alertList[0], func() {
+//		err := client.Alerts.Drop(ctx, id)
+//		require.NoError(t, err)
+//		if schemaCleanup != nil {
+//			schemaCleanup()
+//		}
+//		if databaseCleanup != nil {
+//			databaseCleanup()
+//		}
+//		if warehouseCleanup != nil {
+//			warehouseCleanup()
+//		}
+//	}
+//}
+//
+//func createAlert(t *testing.T, client *Client, database *Database, schema *Schema, warehouse *Warehouse) (*Alert, func()) {
+//	t.Helper()
+//	schedule := "USING CRON * * * * * UTC"
+//	condition := "SELECT 1"
+//	action := "SELECT 1"
+//	return createAlertWithOptions(t, client, database, schema, warehouse, schedule, condition, action, &CreateAlertOptions{})
+//}
 
 func ParseTimestampWithOffset(s string) (*time.Time, error) {
 	t, err := time.Parse("2006-01-02T15:04:05-07:00", s)
