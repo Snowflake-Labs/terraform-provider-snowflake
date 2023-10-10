@@ -155,13 +155,14 @@ resource snowflake_table t {
 }
 
 resource snowflake_table_grant g {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
+	database_name = "terraform_test_database"
+	schema_name   = "terraform_test_schema"
+	%s
 	privilege = "%s"
 	roles = [
 		snowflake_role.r.name
 	]
 }
 
-`, name, tableNameConfig, privilege)
+`, name, name, tableNameConfig, privilege)
 }
