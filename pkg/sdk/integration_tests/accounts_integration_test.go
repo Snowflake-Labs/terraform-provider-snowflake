@@ -2,12 +2,12 @@ package sdk_integration_tests
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/avast/retry-go"
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/assert"
