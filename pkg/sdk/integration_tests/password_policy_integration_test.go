@@ -11,10 +11,10 @@ import (
 func TestInt_PasswordPoliciesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	passwordPolicyTest, passwordPolicyCleanup := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
@@ -85,10 +85,10 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 func TestInt_PasswordPolicyCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 	t.Run("test complete", func(t *testing.T) {
 		name := randomUUID(t)
@@ -172,10 +172,10 @@ func TestInt_PasswordPolicyDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	passwordPolicy, passwordPolicyCleanup := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
@@ -199,10 +199,10 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	t.Run("when setting new values", func(t *testing.T) {
@@ -307,10 +307,10 @@ func TestInt_PasswordPolicyDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	t.Run("when password policy exists", func(t *testing.T) {

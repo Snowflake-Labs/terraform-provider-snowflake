@@ -126,7 +126,7 @@ func TestInt_SharesAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
 	t.Run("add and remove accounts", func(t *testing.T) {
@@ -285,11 +285,11 @@ func TestInt_SharesAlter(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 		t.Cleanup(schemaCleanup)
-		tagTest, tagCleanup := sdk.createTag(t, client, databaseTest, schemaTest)
+		tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup)
-		tagTest2, tagCleanup2 := sdk.createTag(t, client, databaseTest, schemaTest)
+		tagTest2, tagCleanup2 := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup2)
 		tagAssociations := []sdk.TagAssociation{
 			{
@@ -341,7 +341,7 @@ func TestInt_ShareDescribeProvider(t *testing.T) {
 		shareTest, shareCleanup := sdk.createShare(t, client)
 		t.Cleanup(shareCleanup)
 
-		databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+		databaseTest, databaseCleanup := createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
 
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
@@ -375,7 +375,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		shareTest, shareCleanup := sdk.createShare(t, providerClient)
 		t.Cleanup(shareCleanup)
 
-		databaseTest, databaseCleanup := sdk.createDatabase(t, providerClient)
+		databaseTest, databaseCleanup := createDatabase(t, providerClient)
 		t.Cleanup(databaseCleanup)
 
 		err := providerClient.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{

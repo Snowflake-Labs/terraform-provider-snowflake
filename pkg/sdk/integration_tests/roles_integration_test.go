@@ -12,11 +12,11 @@ func TestInt_Roles(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, databaseCleanup := sdk.createDatabase(t, client)
+	database, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	schema, _ := sdk.createSchema(t, client, database)
-	tag, _ := sdk.createTag(t, client, database, schema)
-	tag2, _ := sdk.createTag(t, client, database, schema)
+	schema, _ := createSchema(t, client, database)
+	tag, _ := createTag(t, client, database, schema)
+	tag2, _ := createTag(t, client, database, schema)
 
 	t.Run("create no options", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)

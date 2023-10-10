@@ -12,10 +12,10 @@ func TestInt_SessionPolicies(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, databaseCleanup := sdk.createDatabase(t, client)
+	database, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := sdk.createSchema(t, client, database)
+	schema, schemaCleanup := createSchema(t, client, database)
 	t.Cleanup(schemaCleanup)
 
 	assertSessionPolicy := func(t *testing.T, sessionPolicy *sdk.SessionPolicy, id sdk.SchemaObjectIdentifier, expectedComment string) {
@@ -151,7 +151,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := sdk.createTag(t, client, database, schema)
+		tag, tagCleanup := createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
 		name := randomString(t)

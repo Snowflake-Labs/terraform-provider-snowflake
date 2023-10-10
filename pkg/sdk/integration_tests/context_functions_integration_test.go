@@ -52,7 +52,7 @@ func TestInt_CurrentUser(t *testing.T) {
 func TestInt_CurrentDatabase(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	err := client.Sessions.UseDatabase(ctx, databaseTest.ID())
 	require.NoError(t, err)
@@ -65,9 +65,9 @@ func TestInt_CurrentSchema(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 	err := client.Sessions.UseSchema(ctx, schemaTest.ID())
 	require.NoError(t, err)

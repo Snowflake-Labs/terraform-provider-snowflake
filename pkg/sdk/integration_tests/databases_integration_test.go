@@ -27,7 +27,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	})
 
 	t.Run("as clone", func(t *testing.T) {
-		cloneDatabase, cloneDatabaseCleanup := sdk.createDatabase(t, client)
+		cloneDatabase, cloneDatabaseCleanup := createDatabase(t, client)
 		t.Cleanup(cloneDatabaseCleanup)
 		databaseID := randomAccountObjectIdentifier(t)
 		opts := &sdk.CreateDatabaseOptions{
@@ -52,13 +52,13 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	t.Run("complete", func(t *testing.T) {
 		databaseID := randomAccountObjectIdentifier(t)
 
-		databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+		databaseTest, databaseCleanup := createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 		t.Cleanup(schemaCleanup)
-		tagTest, tagCleanup := sdk.createTag(t, client, databaseTest, schemaTest)
+		tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup)
-		tag2Test, tag2Cleanup := sdk.createTag(t, client, databaseTest, schemaTest)
+		tag2Test, tag2Cleanup := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tag2Cleanup)
 
 		comment := randomComment(t)
@@ -109,7 +109,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 func TestInt_CreateShared(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	shareTest, _ := sdk.createShare(t, client)
 	// t.Cleanup(shareCleanup)
@@ -154,7 +154,7 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 func TestInt_DatabasesDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, _ := sdk.createDatabase(t, client)
+	databaseTest, _ := createDatabase(t, client)
 	databaseID := databaseTest.ID()
 	t.Run("drop with nil options", func(t *testing.T) {
 		err := client.Databases.Drop(ctx, databaseID, nil)
@@ -184,9 +184,9 @@ this test keeps failing need to fix.
 */
 func TestInt_DatabasesDescribe(t *testing.T) {
 	client := testClient(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 	ctx := testContext(t)
 	databaseDetails, err := client.Databases.Describe(ctx, databaseTest.ID())
@@ -206,7 +206,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("renaming", func(t *testing.T) {
-		databaseTest, _ := sdk.createDatabase(t, client)
+		databaseTest, _ := createDatabase(t, client)
 		newName := randomAccountObjectIdentifier(t)
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			NewName: newName,
@@ -221,9 +221,9 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	})
 
 	t.Run("swap with another database", func(t *testing.T) {
-		databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+		databaseTest, databaseCleanup := createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
-		databaseTest2, databaseCleanup2 := sdk.createDatabase(t, client)
+		databaseTest2, databaseCleanup2 := createDatabase(t, client)
 		t.Cleanup(databaseCleanup2)
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			SwapWith: databaseTest2.ID(),
@@ -232,7 +232,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	})
 
 	t.Run("setting and unsetting retention time + comment ", func(t *testing.T) {
-		databaseTest, _ := sdk.createDatabase(t, client)
+		databaseTest, _ := createDatabase(t, client)
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			Set: &sdk.DatabaseSet{
 				DataRetentionTimeInDays: sdk.Int(42),
@@ -265,7 +265,7 @@ func TestInt_AlterReplication(t *testing.T) {
 func TestInt_AlterFailover(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	secondaryClient := sdk.testSecondaryClient(t)
 
@@ -301,10 +301,10 @@ func TestInt_AlterFailover(t *testing.T) {
 func TestInt_DatabasesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	databaseTest2, databaseCleanup2 := sdk.createDatabase(t, client)
+	databaseTest2, databaseCleanup2 := createDatabase(t, client)
 	t.Cleanup(databaseCleanup2)
 	t.Run("without show options", func(t *testing.T) {
 		databases, err := client.Databases.Show(ctx, nil)

@@ -11,13 +11,13 @@ import (
 func TestInt_GetTag(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
-	tagTest, tagCleanup := sdk.createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
 	t.Cleanup(tagCleanup)
 
 	t.Run("masking policy tag", func(t *testing.T) {

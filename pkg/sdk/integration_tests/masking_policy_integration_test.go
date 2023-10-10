@@ -12,10 +12,10 @@ import (
 func TestInt_MaskingPoliciesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	maskingPolicyTest, maskingPolicyCleanup := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
@@ -93,10 +93,10 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 func TestInt_MaskingPolicyCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	t.Run("test complete case", func(t *testing.T) {
@@ -256,10 +256,10 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	maskingPolicy, maskingPolicyCleanup := sdk.createMaskingPolicy(t, client, databaseTest, schemaTest)
@@ -282,10 +282,10 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
@@ -360,10 +360,10 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		id := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
 
-		tag, tagCleanup := sdk.createTag(t, client, databaseTest, schemaTest)
+		tag, tagCleanup := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup)
 
-		tag2, tag2Cleanup := sdk.createTag(t, client, databaseTest, schemaTest)
+		tag2, tag2Cleanup := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tag2Cleanup)
 
 		tagAssociations := []sdk.TagAssociation{{Name: tag.ID(), Value: "value1"}, {Name: tag2.ID(), Value: "value2"}}
@@ -398,10 +398,10 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	t.Run("when masking policy exists", func(t *testing.T) {

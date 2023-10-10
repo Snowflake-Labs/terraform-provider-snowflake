@@ -19,7 +19,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	}
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	shareTest, shareCleanup := sdk.createShare(t, client)
 	t.Cleanup(shareCleanup)
@@ -242,7 +242,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add and remove database account object", func(t *testing.T) {
-		databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
+		databaseTest, cleanupDatabase := createDatabase(t, client)
 		t.Cleanup(cleanupDatabase)
 		failoverGroup, cleanupFailoverGroup := sdk.createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
@@ -503,7 +503,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		require.NoError(t, err)
 
 		// create a temp database
-		databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
+		databaseTest, cleanupDatabase := createDatabase(t, client)
 		t.Cleanup(cleanupDatabase)
 
 		// now add database to allowed databases of failover group 1
@@ -552,7 +552,7 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	secondaryClientID := sdk.getAccountIdentifier(t, secondaryClient)
 
 	// create a temp database
-	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
+	databaseTest, cleanupDatabase := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
@@ -729,7 +729,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	failoverGroupTest, failoverGroupCleanup := sdk.createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	opts := &sdk.AlterSourceFailoverGroupOptions{
 		Set: &sdk.FailoverGroupSet{

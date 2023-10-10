@@ -12,9 +12,9 @@ import (
 func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	schema, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schema, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	t.Run("CSV", func(t *testing.T) {
@@ -361,9 +361,9 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
+	databaseTest, cleanupDatabase := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
-	schemaTest, cleanupSchema := sdk.createSchema(t, client, databaseTest)
+	schemaTest, cleanupSchema := createSchema(t, client, databaseTest)
 	t.Cleanup(cleanupSchema)
 
 	t.Run("rename", func(t *testing.T) {
@@ -424,9 +424,9 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
+	databaseTest, cleanupDatabase := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
-	schemaTest, cleanupSchema := sdk.createSchema(t, client, databaseTest)
+	schemaTest, cleanupSchema := createSchema(t, client, databaseTest)
 	t.Cleanup(cleanupSchema)
 	t.Run("no options", func(t *testing.T) {
 		fileFormat, _ := sdk.createFileFormat(t, client, schemaTest.ID())
@@ -453,9 +453,9 @@ func TestInt_FileFormatsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
+	databaseTest, cleanupDatabase := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
-	schemaTest, cleanupSchema := sdk.createSchema(t, client, databaseTest)
+	schemaTest, cleanupSchema := createSchema(t, client, databaseTest)
 	t.Cleanup(cleanupSchema)
 	fileFormatTest, cleanupFileFormat := sdk.createFileFormat(t, client, schemaTest.ID())
 	t.Cleanup(cleanupFileFormat)
@@ -498,16 +498,16 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, cleanupDatabase := sdk.createDatabase(t, client)
+	databaseTest, cleanupDatabase := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
-	schemaTest, cleanupSchema := sdk.createSchema(t, client, databaseTest)
+	schemaTest, cleanupSchema := createSchema(t, client, databaseTest)
 	t.Cleanup(cleanupSchema)
 	fileFormatTest, cleanupFileFormat := sdk.createFileFormat(t, client, schemaTest.ID())
 	t.Cleanup(cleanupFileFormat)
 
-	databaseTest2, cleanupDatabase2 := sdk.createDatabase(t, client)
+	databaseTest2, cleanupDatabase2 := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase2)
-	schemaTest2, cleanupSchema2 := sdk.createSchema(t, client, databaseTest2)
+	schemaTest2, cleanupSchema2 := createSchema(t, client, databaseTest2)
 	t.Cleanup(cleanupSchema2)
 
 	t.Run("show format in different schema", func(t *testing.T) {

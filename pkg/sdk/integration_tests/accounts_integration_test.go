@@ -233,9 +233,9 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset password policy", func(t *testing.T) {
-		databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+		databaseTest, databaseCleanup := createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 		t.Cleanup(schemaCleanup)
 		passwordPolicyTest, passwordPolicyCleanup := sdk.createPasswordPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(passwordPolicyCleanup)
@@ -258,9 +258,9 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset session policy", func(t *testing.T) {
-		databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+		databaseTest, databaseCleanup := createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 		t.Cleanup(schemaCleanup)
 		sessionPolicyTest, sessionPolicyCleanup := sdk.createSessionPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(sessionPolicyCleanup)
@@ -283,13 +283,13 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+		databaseTest, databaseCleanup := createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 		t.Cleanup(schemaCleanup)
-		tagTest1, tagCleanup1 := sdk.createTag(t, client, databaseTest, schemaTest)
+		tagTest1, tagCleanup1 := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup1)
-		tagTest2, tagCleanup2 := sdk.createTag(t, client, databaseTest, schemaTest)
+		tagTest2, tagCleanup2 := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup2)
 
 		opts := &sdk.AlterAccountOptions{

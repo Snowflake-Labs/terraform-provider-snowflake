@@ -13,11 +13,11 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
-	tableTest, tableCleanup := sdk.createTable(t, client, databaseTest, schemaTest)
+	tableTest, tableCleanup := createTable(t, client, databaseTest, schemaTest)
 	t.Cleanup(tableCleanup)
 
 	ctx := testContext(t)

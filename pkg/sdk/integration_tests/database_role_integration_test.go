@@ -12,7 +12,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, databaseCleanup := sdk.createDatabase(t, client)
+	database, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
 	assertDatabaseRole := func(t *testing.T, databaseRole *sdk.DatabaseRole, expectedName string, expectedComment string) {
@@ -155,7 +155,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("alter database_role: rename to other database", func(t *testing.T) {
-		secondDatabase, secondDatabaseCleanup := sdk.createDatabase(t, client)
+		secondDatabase, secondDatabaseCleanup := createDatabase(t, client)
 		t.Cleanup(secondDatabaseCleanup)
 
 		name := randomString(t)

@@ -12,10 +12,10 @@ func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, databaseCleanup := sdk.createDatabase(t, client)
+	database, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schema, schemaCleanup := sdk.createSchema(t, client, database)
+	schema, schemaCleanup := createSchema(t, client, database)
 	t.Cleanup(schemaCleanup)
 
 	sql := "SELECT CURRENT_TIMESTAMP"
@@ -218,7 +218,7 @@ func TestInt_Tasks(t *testing.T) {
 	// })
 
 	t.Run("create task: with tags", func(t *testing.T) {
-		tag, tagCleanup := sdk.createTag(t, client, database, schema)
+		tag, tagCleanup := createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
 		request := createTaskBasicRequest(t).
@@ -298,7 +298,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := sdk.createTag(t, client, database, schema)
+		tag, tagCleanup := createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
 		task := createTask(t)

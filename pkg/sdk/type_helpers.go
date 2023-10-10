@@ -37,7 +37,7 @@ func toInt(s string) int {
 	return i
 }
 
-// Int64 returns a pointer to the given int64.
+// Float64 returns a pointer to the given float64.
 func Float64(f float64) *float64 {
 	return &f
 }

@@ -13,10 +13,10 @@ func TestInt_AlertsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	testWarehouse, warehouseCleanup := sdk.createWarehouse(t, client)
@@ -89,10 +89,10 @@ func TestInt_AlertsShow(t *testing.T) {
 func TestInt_AlertCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	testWarehouse, warehouseCleanup := sdk.createWarehouse(t, client)
@@ -243,10 +243,10 @@ func TestInt_AlertDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
@@ -272,10 +272,10 @@ func TestInt_AlertAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)
@@ -397,10 +397,10 @@ func TestInt_AlertDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := sdk.createDatabase(t, client)
+	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := sdk.createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	warehouseTest, warehouseCleanup := sdk.createWarehouse(t, client)

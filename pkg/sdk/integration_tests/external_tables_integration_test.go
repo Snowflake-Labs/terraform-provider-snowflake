@@ -13,10 +13,10 @@ func TestInt_ExternalTables(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	db, cleanupDB := sdk.createDatabase(t, client)
+	db, cleanupDB := createDatabase(t, client)
 	t.Cleanup(cleanupDB)
 
-	schema, _ := sdk.createSchema(t, client, db)
+	schema, _ := createSchema(t, client, db)
 
 	err := client.Sessions.UseDatabase(ctx, db.ID())
 	require.NoError(t, err)
@@ -27,7 +27,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	stageLocation := "@external_table_stage"
 	_, _ = sdk.createStageWithURL(t, client, stageID, "s3://snowflake-workshop-lab/weather-nyc")
 
-	tag, _ := sdk.createTag(t, client, db, schema)
+	tag, _ := createTag(t, client, db, schema)
 
 	defaultColumns := func() []*sdk.ExternalTableColumnRequest {
 		return []*sdk.ExternalTableColumnRequest{

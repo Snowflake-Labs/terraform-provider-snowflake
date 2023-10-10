@@ -13,10 +13,10 @@ func TestInt_SchemasCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	db, cleanupDb := sdk.createDatabase(t, client)
+	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)
 
-	schema, cleanupSchema := sdk.createSchema(t, client, db)
+	schema, cleanupSchema := createSchema(t, client, db)
 	t.Cleanup(cleanupSchema)
 
 	t.Run("replace", func(t *testing.T) {
@@ -117,11 +117,11 @@ func TestInt_SchemasAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	db, cleanupDb := sdk.createDatabase(t, client)
+	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)
 
 	t.Run("rename to", func(t *testing.T) {
-		schema, _ := sdk.createSchema(t, client, db)
+		schema, _ := createSchema(t, client, db)
 		newID := sdk.NewDatabaseObjectIdentifier(db.Name, randomString(t))
 		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
 			NewName: newID,
@@ -137,13 +137,13 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("swap with", func(t *testing.T) {
-		schema, cleanupSchema := sdk.createSchema(t, client, db)
+		schema, cleanupSchema := createSchema(t, client, db)
 		t.Cleanup(cleanupSchema)
 
-		swapSchema, cleanupSwapSchema := sdk.createSchema(t, client, db)
+		swapSchema, cleanupSwapSchema := createSchema(t, client, db)
 		t.Cleanup(cleanupSwapSchema)
 
-		table, _ := sdk.createTable(t, client, db, schema)
+		table, _ := createTable(t, client, db, schema)
 		t.Cleanup(func() {
 			_, err := client.exec(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", db.Name, swapSchema.Name, table.Name))
 			require.NoError(t, err)
@@ -162,7 +162,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("set", func(t *testing.T) {
-		schema, cleanupSchema := sdk.createSchema(t, client, db)
+		schema, cleanupSchema := createSchema(t, client, db)
 		t.Cleanup(cleanupSchema)
 
 		comment := randomComment(t)
@@ -218,7 +218,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		s, err := client.Schemas.ShowByID(ctx, schemaID)
 		require.NoError(t, err)
 
-		tag, cleanupTag := sdk.createTag(t, client, db, s)
+		tag, cleanupTag := createTag(t, client, db, s)
 		t.Cleanup(cleanupTag)
 
 		tagValue := "tag-value"
@@ -279,7 +279,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("enable managed access", func(t *testing.T) {
-		schema, cleanupSchema := sdk.createSchema(t, client, db)
+		schema, cleanupSchema := createSchema(t, client, db)
 		t.Cleanup(cleanupSchema)
 
 		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
@@ -298,10 +298,10 @@ func TestInt_SchemasShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	db, cleanupDb := sdk.createDatabase(t, client)
+	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)
 
-	schema, cleanupSchema := sdk.createSchema(t, client, db)
+	schema, cleanupSchema := createSchema(t, client, db)
 	t.Cleanup(cleanupSchema)
 
 	t.Run("no options", func(t *testing.T) {
@@ -342,10 +342,10 @@ func TestInt_SchemasDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	db, cleanupDb := sdk.createDatabase(t, client)
+	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)
 
-	schema, _ := sdk.createSchema(t, client, db)
+	schema, _ := createSchema(t, client, db)
 
 	s, err := client.Schemas.ShowByID(ctx, schema.ID())
 	require.NoError(t, err)
