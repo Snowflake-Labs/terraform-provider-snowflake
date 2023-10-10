@@ -302,6 +302,14 @@ func (s *ShowStreamRequest) WithLimit(Limit *LimitFrom) *ShowStreamRequest {
 	return s
 }
 
+func NewShowByIdStreamRequest(
+	name AccountObjectIdentifier,
+) *ShowByIdStreamRequest {
+	s := ShowByIdStreamRequest{}
+	s.name = name
+	return &s
+}
+
 func NewDescribeStreamRequest(
 	name AccountObjectIdentifier,
 ) *DescribeStreamRequest {

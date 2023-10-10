@@ -13,9 +13,9 @@ var (
 			// TODO: Rename
 			"Statement",
 			g.QueryStruct("OnStreamStatement").
-				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals().DoubleQuotes()).
-				OptionalTextAssignment("OFFSET", g.ParameterOptions().ArrowEquals().DoubleQuotes()).
-				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals().DoubleQuotes()).
+				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals()).
+				OptionalTextAssignment("OFFSET", g.ParameterOptions().ArrowEquals()).
+				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals().SingleQuotes()).
 				OptionalTextAssignment("STREAM", g.ParameterOptions().ArrowEquals().SingleQuotes()).
 				WithValidation(g.ExactlyOneValueSet, "Timestamp", "Offset", "Statement", "Stream"),
 			g.ListOptions().Parentheses(),

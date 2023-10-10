@@ -54,8 +54,7 @@ func (v *streams) Show(ctx context.Context, request *ShowStreamRequest) ([]Strea
 }
 
 func (v *streams) ShowByID(ctx context.Context, request *ShowByIdStreamRequest) (*Stream, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	streams, err := v.Show(ctx, NewShowStreamRequest())
+	streams, err := v.Show(ctx, NewShowStreamRequest().WithLike(&Like{Pattern: String(request.name.Name())}))
 	if err != nil {
 		return nil, err
 	}

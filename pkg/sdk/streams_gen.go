@@ -42,9 +42,9 @@ type OnStream struct {
 }
 
 type OnStreamStatement struct {
-	Timestamp *string `ddl:"parameter,double_quotes,arrow_equals" sql:"TIMESTAMP"`
-	Offset    *string `ddl:"parameter,double_quotes,arrow_equals" sql:"OFFSET"`
-	Statement *string `ddl:"parameter,double_quotes,arrow_equals" sql:"STATEMENT"`
+	Timestamp *string `ddl:"parameter,arrow_equals" sql:"TIMESTAMP"`
+	Offset    *string `ddl:"parameter,arrow_equals" sql:"OFFSET"`
+	Statement *string `ddl:"parameter,arrow_equals" sql:"STATEMENT"`
 	Stream    *string `ddl:"parameter,single_quotes,arrow_equals" sql:"STREAM"`
 }
 
