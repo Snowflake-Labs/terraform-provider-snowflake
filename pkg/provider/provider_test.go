@@ -85,7 +85,7 @@ func TestDSN(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, tt.args.warehouse, tt.args.insecureMode, tt.args.profile, make(map[string]*string), "", false)
+			got, err := provider.DSN(tt.args.account, tt.args.user, tt.args.password, tt.args.browserAuth, "", "", "", "", tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, tt.args.warehouse, tt.args.insecureMode, tt.args.profile, make(map[string]*string), "", false, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DSN() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -135,7 +135,7 @@ func TestOAuthDSN(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := provider.DSN(tt.args.account, tt.args.user, "", false, "", "", "", tt.args.oauthAccessToken, tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, "", false, "default", make(map[string]*string), "", false)
+			got, err := provider.DSN(tt.args.account, tt.args.user, "", false, "", "", "", tt.args.oauthAccessToken, tt.args.region, tt.args.role, tt.args.host, tt.args.protocol, tt.args.port, "", false, "default", make(map[string]*string), "", false, "")
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DSN() error = %v, dsn = %v, wantErr %v", err, got, tt.wantErr)

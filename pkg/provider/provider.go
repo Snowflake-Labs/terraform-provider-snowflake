@@ -111,6 +111,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Sensitive:     false,
+				Deprecated:    "Use `authenticator` instead",
 				ConflictsWith: []string{"password", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
 			},
 			"private_key_path": {
@@ -201,6 +202,20 @@ func Provider() *schema.Provider {
 				Description:   "False by default. Set to true if the MFA passcode is embedded in the login password. Appends the MFA passcode to the end of the password.",
 				Optional:      true,
 				ConflictsWith: []string{"passcode"},
+			},
+			"authenticator": {
+				Type:        schema.TypeString,
+				Description: "Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA",
+				Optional:    true,
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					switch val.(string) {
+					case "Snowflake", "OAuth", "ExternalBrowser", "Okta", "JWT", "TokenAccessor", "UsernamePasswordMFA":
+						return nil, nil
+					default:
+						errs := append(errs, fmt.Errorf("%q must be one of Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor or UsernamePasswordMFA", key))
+						return warns, errs
+					}
+				},
 			},
 		},
 		ResourcesMap:   getResources(),
@@ -370,6 +385,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	session_params := s.Get("session_params").(map[string]interface{})
 	passcode := s.Get("passcode").(string)
 	passcodeInPassword := s.Get("passcode_in_password").(bool)
+	authenticator := s.Get("authenticator").(string)
 
 	if oauthRefreshToken != "" {
 		accessToken, err := GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, GetOauthData(oauthRefreshToken, oauthRedirectURL))
@@ -407,6 +423,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		params,
 		passcode,
 		passcodeInPassword,
+		authenticator,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not build dsn for snowflake connection err = %w", err)
@@ -450,6 +467,7 @@ func DSN(
 	params map[string]*string,
 	passcode string,
 	passcodeInPassword bool,
+	authenticator string,
 ) (string, error) {
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
 	//  https://github.com/snowflakedb/gosnowflake/blob/52137ce8c32eaf93b0bd22fc5c7297beff339812/dsn.go#L61
@@ -487,6 +505,27 @@ func DSN(
 		config.PasscodeInPassword = passcodeInPassword
 	}
 
+	if authenticator != "" {
+		switch authenticator {
+		case "Snowflake":
+			config.Authenticator = gosnowflake.AuthTypeSnowflake
+		case "OAuth":
+			config.Authenticator = gosnowflake.AuthTypeOAuth
+		case "ExternalBrowser":
+			config.Authenticator = gosnowflake.AuthTypeExternalBrowser
+		case "Okta":
+			config.Authenticator = gosnowflake.AuthTypeOkta
+		case "JWT":
+			config.Authenticator = gosnowflake.AuthTypeJwt
+		case "TokenAccessor":
+			config.Authenticator = gosnowflake.AuthTypeTokenAccessor
+		case "UsernamePasswordMFA":
+			config.Authenticator = gosnowflake.AuthTypeUsernamePasswordMFA
+		default:
+			return "", fmt.Errorf("invalid authenticator %s", authenticator)
+		}
+	}
+
 	if privateKeyPath != "" { //nolint:gocritic // todo: please fix this to pass gocritic
 		privateKeyBytes, err := ReadPrivateKeyFile(privateKeyPath)
 		if err != nil {
@@ -518,7 +557,7 @@ func DSN(
 		if profile == "default" {
 			defaultConfig := sdk.DefaultConfig()
 			if defaultConfig.Account == "" || defaultConfig.User == "" {
-				return "", errors.New("Account and User must be set in provider config, ~/.snowflake/config, or as an environment variable.")
+				return "", errors.New("account and User must be set in provider config, ~/.snowflake/config, or as an environment variable")
 			}
 			config = sdk.MergeConfig(config, defaultConfig)
 		} else {
@@ -687,6 +726,7 @@ func GetDatabaseHandleFromEnv() (db *sql.DB, err error) {
 		params,
 		"",
 		false,
+		"",
 	)
 	if err != nil {
 		return nil, err
