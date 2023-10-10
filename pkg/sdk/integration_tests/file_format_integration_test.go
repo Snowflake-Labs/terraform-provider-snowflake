@@ -58,7 +58,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
 		assert.Equal(t, sdk.FileFormatTypeCSV, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 		assert.Equal(t, &sdk.CSVCompressionBz2, result.Options.CSVCompression)
@@ -141,7 +141,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
 		assert.Equal(t, sdk.FileFormatTypeJSON, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
@@ -203,7 +203,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
 		assert.Equal(t, sdk.FileFormatTypeAvro, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
@@ -244,7 +244,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
 		assert.Equal(t, sdk.FileFormatTypeORC, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
@@ -285,7 +285,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
 		assert.Equal(t, sdk.FileFormatTypeParquet, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
@@ -332,7 +332,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
 		assert.Equal(t, sdk.FileFormatTypeXML, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
@@ -370,7 +370,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 		fileFormat, fileFormatCleanup := createFileFormat(t, client, schemaTest.ID())
 		t.Cleanup(fileFormatCleanup)
 		oldId := fileFormat.ID()
-		newId := sdk.NewSchemaObjectIdentifier(oldId.databaseName, oldId.schemaName, randomString(t))
+		newId := sdk.NewSchemaObjectIdentifier(oldId.DatabaseName(), oldId.SchemaName(), randomString(t))
 
 		err := client.FileFormats.Alter(ctx, oldId, &sdk.AlterFileFormatOptions{
 			Rename: &sdk.AlterFileFormatRenameOptions{
@@ -473,7 +473,7 @@ func TestInt_FileFormatsShow(t *testing.T) {
 	t.Run("LIKE", func(t *testing.T) {
 		fileFormats, err := client.FileFormats.Show(ctx, &sdk.ShowFileFormatsOptions{
 			Like: &sdk.Like{
-				Pattern: sdk.String(fileFormatTest.Name.name),
+				Pattern: sdk.String(fileFormatTest.Name.Name()),
 			},
 		})
 		require.NoError(t, err)
@@ -518,8 +518,8 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 
 		fileFormat, err := client.FileFormats.ShowByID(ctx, fileFormatTest.ID())
 		require.NoError(t, err)
-		assert.Equal(t, databaseTest.Name, fileFormat.Name.databaseName)
-		assert.Equal(t, schemaTest.Name, fileFormat.Name.schemaName)
-		assert.Equal(t, fileFormatTest.Name.name, fileFormat.Name.name)
+		assert.Equal(t, databaseTest.Name, fileFormat.Name.DatabaseName())
+		assert.Equal(t, schemaTest.Name, fileFormat.Name.SchemaName())
+		assert.Equal(t, fileFormatTest.Name.Name(), fileFormat.Name.Name())
 	})
 }

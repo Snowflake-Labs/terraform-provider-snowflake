@@ -123,9 +123,9 @@ func TestInt_CreateShared(t *testing.T) {
 		}, shareTest.ID())
 	})
 	require.NoError(t, err)
-	secondaryClient := sdk.testSecondaryClient(t)
+	secondaryClient := testSecondaryClient(t)
 	accountsToSet := []sdk.AccountIdentifier{
-		sdk.getAccountIdentifier(t, secondaryClient),
+		getAccountIdentifier(t, secondaryClient),
 	}
 	// first add the account.
 	err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
@@ -267,10 +267,10 @@ func TestInt_AlterFailover(t *testing.T) {
 	ctx := testContext(t)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
-	secondaryClient := sdk.testSecondaryClient(t)
+	secondaryClient := testSecondaryClient(t)
 
 	toAccounts := []sdk.AccountIdentifier{
-		sdk.getAccountIdentifier(t, secondaryClient),
+		getAccountIdentifier(t, secondaryClient),
 	}
 	t.Run("enable and disable failover", func(t *testing.T) {
 		opts := &sdk.AlterDatabaseFailoverOptions{

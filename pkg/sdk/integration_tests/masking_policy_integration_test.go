@@ -25,9 +25,9 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	t.Cleanup(maskingPolicy2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
-		useDatabaseCleanup := sdk.useDatabase(t, client, databaseTest.ID())
+		useDatabaseCleanup := useDatabase(t, client, databaseTest.ID())
 		t.Cleanup(useDatabaseCleanup)
-		useSchemaCleanup := sdk.useSchema(t, client, schemaTest.ID())
+		useSchemaCleanup := useSchema(t, client, schemaTest.ID())
 		t.Cleanup(useSchemaCleanup)
 
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, nil)

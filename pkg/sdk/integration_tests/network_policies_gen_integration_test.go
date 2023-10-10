@@ -27,7 +27,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 	}
 
 	findNetworkPolicy := func(nps []sdk.NetworkPolicy, name string) (*sdk.NetworkPolicy, error) {
-		return sdk.findOne[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
+		return sdk.FindOne[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
 			return t.Name == name
 		})
 	}
@@ -41,7 +41,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, *req.Comment, np.Comment)
 		assert.Equal(t, len(req.AllowedIpList), np.EntriesInAllowedIpList)
@@ -54,14 +54,14 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
-		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.name).
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
 			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedIpList([]sdk.IPRequest{{IP: "123.0.0.1"}, {IP: "125.0.0.1"}})))
 		require.NoError(t, err)
 
 		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, 2, np.EntriesInAllowedIpList)
 	})
@@ -72,14 +72,14 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
-		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.name).
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
 			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedIpList([]sdk.IPRequest{{IP: "123.0.0.1"}})))
 		require.NoError(t, err)
 
 		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, 1, np.EntriesInBlockedIpList)
 	})
@@ -91,14 +91,14 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		t.Cleanup(dropNetworkPolicy)
 
 		alteredComment := "altered_comment"
-		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.name).
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
 			WithSet(sdk.NewNetworkPolicySetRequest().WithComment(&alteredComment)))
 		require.NoError(t, err)
 
 		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, alteredComment, np.Comment)
 	})
@@ -109,13 +109,13 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
-		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.name).WithUnsetComment(sdk.Bool(true)))
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).WithUnsetComment(sdk.Bool(true)))
 		require.NoError(t, err)
 
 		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, "", np.Comment)
 	})
@@ -133,7 +133,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		})
 
 		newID := randomAccountObjectIdentifier(t)
-		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.name).WithRenameTo(&newID))
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).WithRenameTo(&newID))
 		require.NoError(t, err)
 		altered = true
 		t.Cleanup(func() {
@@ -160,7 +160,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
-		desc, err := client.NetworkPolicies.Describe(ctx, req.name)
+		desc, err := client.NetworkPolicies.Describe(ctx, req.GetName())
 		require.NoError(t, err)
 
 		assert.Equal(t, 2, len(desc))

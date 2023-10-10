@@ -365,7 +365,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		d, err := client.ExternalTables.DescribeColumns(ctx, sdk.NewDescribeExternalTableColumnsRequest(externalTableID))
 		require.NoError(t, err)
 
-		assert.Equal(t, len(req.columns)+1, len(d)) // +1 because there's underlying Value column
+		assert.Equal(t, len(req.GetColumns())+1, len(d)) // +1 because there's underlying Value column
 		assert.Contains(t, d, sdk.ExternalTableColumnDetails{
 			Name:       "VALUE",
 			Type:       "VARIANT",

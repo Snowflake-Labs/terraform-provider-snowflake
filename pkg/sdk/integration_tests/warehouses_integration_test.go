@@ -396,7 +396,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		t.Cleanup(resetWarehouse)
 
 		// Start a long query
-		go client.exec(ctx, "CALL SYSTEM$WAIT(30);") //nolint:errcheck // we don't care if this eventually errors, as long as it runs for a little while
+		go client.ExecForTests(ctx, "CALL SYSTEM$WAIT(30);") //nolint:errcheck // we don't care if this eventually errors, as long as it runs for a little while
 		time.Sleep(5 * time.Second)
 
 		// Check that query is running

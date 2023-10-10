@@ -101,7 +101,6 @@ func TestInt_UserCreate(t *testing.T) {
 
 		opts := &sdk.CreateUserOptions{
 			OrReplace: sdk.Bool(true),
-			name:      id,
 			ObjectProperties: &sdk.UserObjectProperties{
 				Password:  &password,
 				LoginName: &loginName,
@@ -119,17 +118,17 @@ func TestInt_UserCreate(t *testing.T) {
 		require.NoError(t, err)
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.name, userDetails.Name.Value)
+		assert.Equal(t, id.Name(), userDetails.Name.Value)
 		assert.Equal(t, strings.ToUpper(loginName), userDetails.LoginName.Value)
 
 		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
 			Like: &sdk.Like{
-				Pattern: &id.name,
+				Pattern: sdk.Pointer(id.Name()),
 			},
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(user))
-		assert.Equal(t, id.name, user[0].Name)
+		assert.Equal(t, id.Name(), user[0].Name)
 	})
 
 	t.Run("test if not exists", func(t *testing.T) {
@@ -146,7 +145,6 @@ func TestInt_UserCreate(t *testing.T) {
 
 		opts := &sdk.CreateUserOptions{
 			IfNotExists: sdk.Bool(true),
-			name:        id,
 			ObjectProperties: &sdk.UserObjectProperties{
 				Password:  &password,
 				LoginName: &loginName,
@@ -164,17 +162,17 @@ func TestInt_UserCreate(t *testing.T) {
 		require.NoError(t, err)
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.name, userDetails.Name.Value)
+		assert.Equal(t, id.Name(), userDetails.Name.Value)
 		assert.Equal(t, strings.ToUpper(loginName), userDetails.LoginName.Value)
 
 		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
 			Like: &sdk.Like{
-				Pattern: &id.name,
+				Pattern: sdk.Pointer(id.Name()),
 			},
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(user))
-		assert.Equal(t, id.name, user[0].Name)
+		assert.Equal(t, id.Name(), user[0].Name)
 	})
 
 	t.Run("test no options", func(t *testing.T) {
@@ -184,18 +182,18 @@ func TestInt_UserCreate(t *testing.T) {
 		require.NoError(t, err)
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.name, userDetails.Name.Value)
-		assert.Equal(t, strings.ToUpper(id.name), userDetails.LoginName.Value)
+		assert.Equal(t, id.Name(), userDetails.Name.Value)
+		assert.Equal(t, strings.ToUpper(id.Name()), userDetails.LoginName.Value)
 		assert.Empty(t, userDetails.Password.Value)
 
 		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
 			Like: &sdk.Like{
-				Pattern: &id.name,
+				Pattern: sdk.Pointer(id.Name()),
 			},
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(user))
-		assert.Equal(t, id.name, user[0].Name)
+		assert.Equal(t, id.Name(), user[0].Name)
 	})
 }
 

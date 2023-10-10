@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"database/sql"
+
+	"github.com/snowflakedb/gosnowflake"
 )
 
 // TODO: do not export this method (it was just a quick workaround to move integration tests in separate package)
@@ -29,4 +31,34 @@ func (r *CreateNetworkPolicyRequest) GetName() AccountObjectIdentifier {
 // TODO: temporary; used in integration test helper
 func (s *CreateRoleRequest) GetName() AccountObjectIdentifier {
 	return s.name
+}
+
+// TODO: temporary; used in integration tests
+func (r *CreateTaskRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
+// TODO: temporary; used in integration tests
+func (r *CloneTaskRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
+// TODO: temporary; used in integration tests
+func (s *CreateExternalTableRequest) GetColumns() []*ExternalTableColumnRequest {
+	return s.columns
+}
+
+// TODO: temporary; used in integration tests
+func (c *Client) GetAccountLocator() string {
+	return c.accountLocator
+}
+
+// TODO: temporary; used in integration tests
+func (c *Client) GetConfig() *gosnowflake.Config {
+	return c.config
+}
+
+// TODO: temporary; used in integration tests
+func FindOne[T any](collection []T, condition func(T) bool) (*T, error) {
+	return findOne(collection, condition)
 }

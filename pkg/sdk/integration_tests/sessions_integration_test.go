@@ -105,7 +105,7 @@ func TestInt_UseWarehouse(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		originalWHIdentifier := sdk.NewAccountObjectIdentifier(originalWH)
-		if !sdk.validObjectidentifier(originalWHIdentifier) {
+		if !sdk.ValidObjectIdentifier(originalWHIdentifier) {
 			return
 		}
 		err := client.Sessions.UseWarehouse(ctx, originalWHIdentifier)
@@ -128,7 +128,7 @@ func TestInt_UseDatabase(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		originalDBIdentifier := sdk.NewAccountObjectIdentifier(originalDB)
-		if !sdk.validObjectidentifier(originalDBIdentifier) {
+		if !sdk.ValidObjectIdentifier(originalDBIdentifier) {
 			return
 		}
 		err := client.Sessions.UseDatabase(ctx, originalDBIdentifier)
@@ -157,7 +157,7 @@ func TestInt_UseSchema(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		originalSchemaIdentifier := sdk.NewDatabaseObjectIdentifier(originalDB, originalSchema)
-		if !sdk.validObjectidentifier(originalSchemaIdentifier) {
+		if !sdk.ValidObjectIdentifier(originalSchemaIdentifier) {
 			return
 		}
 		err := client.Sessions.UseSchema(ctx, originalSchemaIdentifier)

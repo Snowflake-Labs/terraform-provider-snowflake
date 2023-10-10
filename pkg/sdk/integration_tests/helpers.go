@@ -10,6 +10,54 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
+// the account locator and by filtering the list of accounts in replication accounts by the account locator
+func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifier {
+	t.Helper()
+	ctx := context.Background()
+	currentAccountLocator, err := client.ContextFunctions.CurrentAccount(ctx)
+	require.NoError(t, err)
+	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
+	require.NoError(t, err)
+	for _, replicationAccount := range replicationAccounts {
+		if replicationAccount.AccountLocator == currentAccountLocator {
+			return sdk.NewAccountIdentifier(replicationAccount.OrganizationName, replicationAccount.AccountName)
+		}
+	}
+	return sdk.AccountIdentifier{}
+}
+
+func getSecondaryAccountIdentifier(t *testing.T) sdk.AccountIdentifier {
+	t.Helper()
+	client := testSecondaryClient(t)
+	return getAccountIdentifier(t, client)
+}
+
+const (
+	secondaryAccountProfile = "secondary_test_account"
+)
+
+// TODO: for now we leave it as is, later it would be nice to configure it also once
+func testSecondaryClient(t *testing.T) *sdk.Client {
+	t.Helper()
+
+	client, err := testClientFromProfile(t, secondaryAccountProfile)
+	if err != nil {
+		t.Skipf("Snowflake secondary account not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
+	}
+
+	return client
+}
+
+func testClientFromProfile(t *testing.T, profile string) (*sdk.Client, error) {
+	t.Helper()
+	config, err := sdk.ProfileConfig(profile)
+	if err != nil {
+		return nil, err
+	}
+	return sdk.NewClient(config)
+}
+
 func useDatabase(t *testing.T, client *sdk.Client, databaseID sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

@@ -31,7 +31,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 			sdk.PluralObjectTypeDatabases,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			sdk.getSecondaryAccountIdentifier(t),
+			getSecondaryAccountIdentifier(t),
 		}
 		replicationSchedule := "10 MINUTE"
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
@@ -82,7 +82,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 			sdk.PluralObjectTypeIntegrations,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			sdk.getSecondaryAccountIdentifier(t),
+			getSecondaryAccountIdentifier(t),
 		}
 		allowedIntegrationTypes := []sdk.IntegrationType{
 			sdk.IntegrationTypeAPIIntegrations,
@@ -112,9 +112,9 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	}
 	client := testClient(t)
 	ctx := testContext(t)
-	primaryAccountID := sdk.getAccountIdentifier(t, client)
-	secondaryClient := sdk.testSecondaryClient(t)
-	secondaryClientID := sdk.getAccountIdentifier(t, secondaryClient)
+	primaryAccountID := getAccountIdentifier(t, client)
+	secondaryClient := testSecondaryClient(t)
+	secondaryClientID := getAccountIdentifier(t, secondaryClient)
 
 	// create a temp share
 	shareTest, cleanupDatabase := createShare(t, client)
@@ -390,7 +390,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 
-		secondaryAccountID := sdk.getSecondaryAccountIdentifier(t)
+		secondaryAccountID := getSecondaryAccountIdentifier(t)
 		// first add target account
 		opts := &sdk.AlterSourceFailoverGroupOptions{
 			Add: &sdk.FailoverGroupAdd{
@@ -419,7 +419,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, err = client.FailoverGroups.ShowByID(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(failoverGroup.AllowedAccounts))
-		assert.Contains(t, failoverGroup.AllowedAccounts, sdk.getAccountIdentifier(t, client))
+		assert.Contains(t, failoverGroup.AllowedAccounts, getAccountIdentifier(t, client))
 	})
 
 	t.Run("move shares to another failover group", func(t *testing.T) {
@@ -547,9 +547,9 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	}
 	client := testClient(t)
 	ctx := testContext(t)
-	primaryAccountID := sdk.getAccountIdentifier(t, client)
-	secondaryClient := sdk.testSecondaryClient(t)
-	secondaryClientID := sdk.getAccountIdentifier(t, secondaryClient)
+	primaryAccountID := getAccountIdentifier(t, client)
+	secondaryClient := testSecondaryClient(t)
+	secondaryClientID := getAccountIdentifier(t, secondaryClient)
 
 	// create a temp database
 	databaseTest, cleanupDatabase := createDatabase(t, client)
@@ -706,7 +706,7 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowFailoverGroupOptions{
-			InAccount: sdk.NewAccountIdentifierFromAccountLocator(client.accountLocator),
+			InAccount: sdk.NewAccountIdentifierFromAccountLocator(client.GetAccountLocator()),
 		}
 		failoverGroups, err := client.FailoverGroups.Show(ctx, showOptions)
 		require.NoError(t, err)

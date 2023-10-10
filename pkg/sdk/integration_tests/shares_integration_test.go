@@ -142,9 +142,9 @@ func TestInt_SharesAlter(t *testing.T) {
 			}, shareTest.ID())
 		})
 		require.NoError(t, err)
-		secondaryClient := sdk.testSecondaryClient(t)
+		secondaryClient := testSecondaryClient(t)
 		accountsToAdd := []sdk.AccountIdentifier{
-			sdk.getAccountIdentifier(t, secondaryClient),
+			getAccountIdentifier(t, secondaryClient),
 		}
 		// first add the account.
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
@@ -197,9 +197,9 @@ func TestInt_SharesAlter(t *testing.T) {
 			}, shareTest.ID())
 		})
 		require.NoError(t, err)
-		secondaryClient := sdk.testSecondaryClient(t)
+		secondaryClient := testSecondaryClient(t)
 		accountsToSet := []sdk.AccountIdentifier{
-			sdk.getAccountIdentifier(t, secondaryClient),
+			getAccountIdentifier(t, secondaryClient),
 		}
 		// first add the account.
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
@@ -367,7 +367,7 @@ func TestInt_ShareDescribeProvider(t *testing.T) {
 }
 
 func TestInt_ShareDescribeConsumer(t *testing.T) {
-	consumerClient := sdk.testSecondaryClient(t)
+	consumerClient := testSecondaryClient(t)
 	ctx := testContext(t)
 	providerClient := testClient(t)
 
@@ -393,7 +393,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		err = providerClient.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 			Add: &sdk.ShareAdd{
 				Accounts: []sdk.AccountIdentifier{
-					sdk.getAccountIdentifier(t, consumerClient),
+					getAccountIdentifier(t, consumerClient),
 				},
 			},
 		})

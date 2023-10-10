@@ -24,7 +24,7 @@ func TestInt_Tasks(t *testing.T) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.name, task.Name)
+		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
 		assert.Equal(t, database.Name, task.DatabaseName)
 		assert.Equal(t, schema.Name, task.SchemaName)
@@ -49,7 +49,7 @@ func TestInt_Tasks(t *testing.T) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.name, task.Name)
+		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
 		assert.Equal(t, database.Name, task.DatabaseName)
 		assert.Equal(t, schema.Name, task.SchemaName)
@@ -83,7 +83,7 @@ func TestInt_Tasks(t *testing.T) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.name, task.Name)
+		assert.Equal(t, id.Name(), task.Name)
 		assert.Equal(t, database.Name, task.DatabaseName)
 		assert.Equal(t, schema.Name, task.SchemaName)
 		assert.Equal(t, schedule, task.Schedule)
@@ -123,7 +123,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	createTaskWithRequest := func(t *testing.T, request *sdk.CreateTaskRequest) *sdk.Task {
 		t.Helper()
-		id := request.name
+		id := request.GetName()
 
 		err := client.Tasks.Create(ctx, request)
 		require.NoError(t, err)
@@ -145,7 +145,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		task := createTaskWithRequest(t, request)
 
-		assertTask(t, task, request.name)
+		assertTask(t, task, request.GetName())
 	})
 
 	t.Run("create task: with initial warehouse", func(t *testing.T) {
@@ -154,7 +154,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		task := createTaskWithRequest(t, request)
 
-		assertTask(t, task, request.name)
+		assertTask(t, task, request.GetName())
 	})
 
 	t.Run("create task: almost complete case", func(t *testing.T) {
@@ -174,7 +174,7 @@ func TestInt_Tasks(t *testing.T) {
 			WithSuspendTaskAfterNumFailures(sdk.Int(3)).
 			WithComment(sdk.String("some comment")).
 			WithWhen(sdk.String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
-		id := request.name
+		id := request.GetName()
 
 		task := createTaskWithRequest(t, request)
 
@@ -194,7 +194,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		task := createTaskWithRequest(t, request)
 
-		assertTaskWithOptions(t, task, request.name, "", "", "", "", false, "", &otherId)
+		assertTaskWithOptions(t, task, request.GetName(), "", "", "", "", false, "", &otherId)
 	})
 
 	// TODO: this fails with `syntax error line 1 at position 89 unexpected 'GRANTS'`.
@@ -250,12 +250,12 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertTask(t, task, request.name)
+		assertTask(t, task, request.GetName())
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
 		request := createTaskBasicRequest(t)
-		id := request.name
+		id := request.GetName()
 
 		err := client.Tasks.Create(ctx, request)
 		require.NoError(t, err)
