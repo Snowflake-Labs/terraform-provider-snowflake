@@ -6,11 +6,9 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 var (
 	onStreamDef = g.QueryStruct("OnStream").
-		// TODO: AT / BEFORE enum
-		OptionalSQL("AT").
-		OptionalSQL("BEFORE").
-		QueryStructField(
-			// TODO: Rename
+			OptionalSQL("AT").
+			OptionalSQL("BEFORE").
+			QueryStructField(
 			"Statement",
 			g.QueryStruct("OnStreamStatement").
 				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals()).

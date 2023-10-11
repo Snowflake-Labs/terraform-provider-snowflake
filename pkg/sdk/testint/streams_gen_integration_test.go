@@ -1,9 +1,11 @@
-package sdk
+package testint
 
 import (
 	"context"
 	"fmt"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,16 +25,16 @@ func TestInt_Streams(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), s.Name)
 		assert.Equal(t, db.Name, s.DatabaseName)
@@ -44,28 +46,28 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnExternalTable", func(t *testing.T) {
-		stageID := NewAccountObjectIdentifier("EXTERNAL_TABLE_STAGE")
+		stageID := sdk.NewAccountObjectIdentifier("EXTERNAL_TABLE_STAGE")
 		stageLocation := "@external_table_stage"
 		_, _ = createStageWithURL(t, client, stageID, "s3://snowflake-workshop-lab/weather-nyc")
 
-		externalTableId := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		err := client.ExternalTables.Create(ctx, NewCreateExternalTableRequest(externalTableId, stageLocation, NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeJSON)))
+		externalTableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(externalTableId, stageLocation, sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON)))
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.ExternalTables.Drop(ctx, NewDropExternalTableRequest(externalTableId))
+			err := client.ExternalTables.Drop(ctx, sdk.NewDropExternalTableRequest(externalTableId))
 			require.NoError(t, err)
 		})
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnExternalTableStreamRequest(id, externalTableId).WithInsertOnly(Bool(true)).WithComment(String("some comment"))
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnExternalTableStreamRequest(id, externalTableId).WithInsertOnly(sdk.Bool(true)).WithComment(sdk.String("some comment"))
 		err = client.Streams.CreateOnExternalTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), s.Name)
 		assert.Equal(t, db.Name, s.DatabaseName)
@@ -77,20 +79,20 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnStage", func(t *testing.T) {
-		stage, cleanupStage := createStageWithDirectory(t, client, db, schema, "test_stage", true)
-		stageId := NewSchemaObjectIdentifier(db.Name, schema.Name, stage.Name)
+		stage, cleanupStage := createStageWithDirectory(t, client, db, schema, "test_stage")
+		stageId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, stage.Name)
 		t.Cleanup(cleanupStage)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnStageStreamRequest(id, stageId).WithComment(String("some comment"))
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnStageStreamRequest(id, stageId).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnStage(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), s.Name)
 		assert.Equal(t, db.Name, s.DatabaseName)
@@ -102,23 +104,23 @@ func TestInt_Streams(t *testing.T) {
 
 	t.Run("CreateOnView", func(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
-		tableId := NewSchemaObjectIdentifier(db.Name, schema.Name, table.Name)
+		tableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, table.Name)
 		t.Cleanup(cleanupTable)
 
-		viewId := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		viewId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
 		cleanupView := createView(t, client, viewId, fmt.Sprintf("SELECT id FROM %s", tableId.FullyQualifiedName()))
 		t.Cleanup(cleanupView)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnViewStreamRequest(id, viewId).WithComment(String("some comment"))
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnViewStreamRequest(id, viewId).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnView(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), s.Name)
 		assert.Equal(t, db.Name, s.DatabaseName)
@@ -132,24 +134,24 @@ func TestInt_Streams(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
-		cloneId := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		err = client.Streams.Clone(ctx, NewCloneStreamRequest(cloneId, id))
+		cloneId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		err = client.Streams.Clone(ctx, sdk.NewCloneStreamRequest(cloneId, id))
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(cloneId))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(cloneId))
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(cloneId))
+		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(cloneId))
 		require.NoError(t, err)
 		assert.Equal(t, cloneId.Name(), s.Name)
 		assert.Equal(t, db.Name, s.DatabaseName)
@@ -164,22 +166,22 @@ func TestInt_Streams(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnTableStreamRequest(id, table.ID())
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID())
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
 		tag, cleanupTag := createTag(t, client, db, schema)
 		t.Cleanup(cleanupTag)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeStream)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStream)
 		require.Error(t, err)
 
-		err = client.Streams.Alter(ctx, NewAlterStreamRequest(id).WithSetTags([]TagAssociation{
+		err = client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithSetTags([]sdk.TagAssociation{
 			{
 				Name:  tag.ID(),
 				Value: "tag_value",
@@ -187,17 +189,17 @@ func TestInt_Streams(t *testing.T) {
 		}))
 		require.NoError(t, err)
 
-		tagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeStream)
+		tagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStream)
 		require.NoError(t, err)
 		assert.Equal(t, "tag_value", tagValue)
 
-		err = client.Streams.Alter(ctx, NewAlterStreamRequest(id).WithUnsetTags([]ObjectIdentifier{tag.ID()}))
+		err = client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithUnsetTags([]sdk.ObjectIdentifier{tag.ID()}))
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, ObjectTypeStream)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStream)
 		require.Error(t, err)
 
-		_, err = client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		_, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 	})
 
@@ -205,34 +207,34 @@ func TestInt_Streams(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnTableStreamRequest(id, table.ID())
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID())
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 		assert.Equal(t, "", *s.Comment)
 
-		err = client.Streams.Alter(ctx, NewAlterStreamRequest(id).WithSetComment(String("some_comment")))
+		err = client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithSetComment(sdk.String("some_comment")))
 		require.NoError(t, err)
 
-		s, err = client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		s, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 		assert.Equal(t, "some_comment", *s.Comment)
 
-		err = client.Streams.Alter(ctx, NewAlterStreamRequest(id).WithUnsetComment(Bool(true)))
+		err = client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithUnsetComment(sdk.Bool(true)))
 		require.NoError(t, err)
 
-		s, err = client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		s, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 		assert.Equal(t, "", *s.Comment)
 
-		_, err = client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		_, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 	})
 
@@ -240,18 +242,18 @@ func TestInt_Streams(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
 
-		_, err = client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		_, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
 
-		err = client.Streams.Drop(ctx, NewDropStreamRequest(id))
+		err = client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 		require.NoError(t, err)
 
-		_, err = client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		_, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.Error(t, err)
 	})
 
@@ -259,19 +261,19 @@ func TestInt_Streams(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.Show(ctx, NewShowStreamRequest().WithTerse(Bool(true)))
+		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().WithTerse(sdk.Bool(true)))
 		require.NoError(t, err)
 
-		stream, err := findOne[Stream](s, func(stream Stream) bool { return id.Name() == stream.Name })
+		stream, err := sdk.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assert.Equal(t, id.Name(), stream.Name)
@@ -284,31 +286,31 @@ func TestInt_Streams(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.Show(ctx, NewShowStreamRequest().
-			WithTerse(Bool(false)).
-			WithIn(&In{
-				Schema: NewDatabaseObjectIdentifier(db.Name, schema.Name),
+		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
+			WithTerse(sdk.Bool(false)).
+			WithIn(&sdk.In{
+				Schema: sdk.NewDatabaseObjectIdentifier(db.Name, schema.Name),
 			}).
-			WithLike(&Like{
-				Pattern: String(id.Name()),
+			WithLike(&sdk.Like{
+				Pattern: sdk.String(id.Name()),
 			}).
-			WithStartsWith(String(id.Name())).
-			WithLimit(&LimitFrom{
-				Rows: Int(1),
+			WithStartsWith(sdk.String(id.Name())).
+			WithLimit(&sdk.LimitFrom{
+				Rows: sdk.Int(1),
 			}))
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(s))
 
-		stream, err := findOne[Stream](s, func(stream Stream) bool { return id.Name() == stream.Name })
+		stream, err := sdk.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assert.Equal(t, id.Name(), stream.Name)
@@ -325,16 +327,16 @@ func TestInt_Streams(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
-		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment(sdk.String("some comment"))
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.Describe(ctx, NewDescribeStreamRequest(id))
+		s, err := client.Streams.Describe(ctx, sdk.NewDescribeStreamRequest(id))
 		require.NoError(t, err)
 		assert.NotNil(t, s)
 
