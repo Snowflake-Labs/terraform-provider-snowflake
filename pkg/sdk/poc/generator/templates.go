@@ -115,7 +115,11 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").
 		return &{{ .To.KindNoPtr }}{}
 	}
 {{ end }}
-import "context"
+import (
+"context"
+
+"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+)
 
 {{ $impl := .NameLowerCased }}
 var _ {{ .Name }} = (*{{ $impl }})(nil)
@@ -141,7 +145,7 @@ type {{ $impl }} struct {
 			if err != nil {
 				return nil, err
 			}
-			return internal.findOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
+			return internal.FindOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
 		}
 	{{ else if and (eq .Name "Describe") .DescribeMapping }}
 		{{ if .DescribeKind }}
