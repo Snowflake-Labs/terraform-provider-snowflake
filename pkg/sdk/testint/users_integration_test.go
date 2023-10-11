@@ -89,15 +89,15 @@ func TestInt_UserCreate(t *testing.T) {
 
 	t.Run("test complete case", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
-		tagValue := randomString(t)
+		tagValue := sdk.RandomString(t)
 		tags := []sdk.TagAssociation{
 			{
 				Name:  tag.ID(),
 				Value: tagValue,
 			},
 		}
-		password := randomString(t)
-		loginName := randomString(t)
+		password := sdk.RandomString(t)
+		loginName := sdk.RandomString(t)
 
 		opts := &sdk.CreateUserOptions{
 			OrReplace: sdk.Bool(true),
@@ -133,15 +133,15 @@ func TestInt_UserCreate(t *testing.T) {
 
 	t.Run("test if not exists", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
-		tagValue := randomString(t)
+		tagValue := sdk.RandomString(t)
 		tags := []sdk.TagAssociation{
 			{
 				Name:  sdk.NewAccountObjectIdentifier(tag.Name),
 				Value: tagValue,
 			},
 		}
-		password := randomString(t)
-		loginName := randomString(t)
+		password := sdk.RandomString(t)
+		loginName := sdk.RandomString(t)
 
 		opts := &sdk.CreateUserOptions{
 			IfNotExists: sdk.Bool(true),

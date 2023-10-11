@@ -82,7 +82,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 	})
 
 	t.Run("with tags", func(t *testing.T) {
-		tagName := randomString(t)
+		tagName := sdk.RandomString(t)
 		tagID := sdk.NewAccountObjectIdentifier(tagName)
 		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
 		require.NoError(t, err)
@@ -92,7 +92,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 		})
 
 		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).Name())
-		tagValue := randomString(t)
+		tagValue := sdk.RandomString(t)
 		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{
 				{
@@ -122,7 +122,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 	t.Run("rename to", func(t *testing.T) {
 		schema, _ := createSchema(t, client, db)
-		newID := sdk.NewDatabaseObjectIdentifier(db.Name, randomString(t))
+		newID := sdk.NewDatabaseObjectIdentifier(db.Name, sdk.RandomString(t))
 		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
 			NewName: newID,
 		})
@@ -165,7 +165,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		schema, cleanupSchema := createSchema(t, client, db)
 		t.Cleanup(cleanupSchema)
 
-		comment := randomComment(t)
+		comment := sdk.RandomComment(t)
 		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
 			Set: &sdk.SchemaSet{
 				DataRetentionTimeInDays:    sdk.Int(3),
@@ -182,8 +182,8 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("unset", func(t *testing.T) {
-		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomString(t))
-		comment := randomComment(t)
+		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, sdk.RandomString(t))
+		comment := sdk.RandomComment(t)
 		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Comment: sdk.String(comment),
 		})
@@ -207,7 +207,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("set tags", func(t *testing.T) {
-		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomString(t))
+		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, sdk.RandomString(t))
 		err := client.Schemas.Create(ctx, schemaID, nil)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -240,7 +240,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
-		tagName := randomString(t)
+		tagName := sdk.RandomString(t)
 		tagID := sdk.NewAccountObjectIdentifier(tagName)
 		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
 		require.NoError(t, err)
@@ -250,7 +250,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		})
 
 		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).Name())
-		tagValue := randomString(t)
+		tagValue := sdk.RandomString(t)
 		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
 			Tag: []sdk.TagAssociation{
 				{

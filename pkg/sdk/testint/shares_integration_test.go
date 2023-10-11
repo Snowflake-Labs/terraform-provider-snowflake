@@ -234,7 +234,7 @@ func TestInt_SharesAlter(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		comment := randomComment(t)
+		comment := sdk.RandomComment(t)
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 			IfExists: sdk.Bool(true),
 			Set: &sdk.ShareSet{
@@ -294,11 +294,11 @@ func TestInt_SharesAlter(t *testing.T) {
 		tagAssociations := []sdk.TagAssociation{
 			{
 				Name:  tagTest.ID(),
-				Value: randomString(t),
+				Value: sdk.RandomString(t),
 			},
 			{
 				Name:  tagTest2.ID(),
-				Value: randomString(t),
+				Value: sdk.RandomString(t),
 			},
 		}
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{

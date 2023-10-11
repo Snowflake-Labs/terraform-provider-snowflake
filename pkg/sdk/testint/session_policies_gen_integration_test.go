@@ -52,7 +52,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 
 	createSessionPolicy := func(t *testing.T) *sdk.SessionPolicy {
 		t.Helper()
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
@@ -66,9 +66,9 @@ func TestInt_SessionPolicies(t *testing.T) {
 	}
 
 	t.Run("create session_policy: complete case", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		comment := randomComment(t)
+		comment := sdk.RandomComment(t)
 
 		request := sdk.NewCreateSessionPolicyRequest(id).
 			WithSessionIdleTimeoutMins(sdk.Int(5)).
@@ -87,7 +87,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("create session_policy: no optionals", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		request := sdk.NewCreateSessionPolicyRequest(id)
@@ -103,7 +103,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("drop session_policy: existing", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
@@ -124,7 +124,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("alter session_policy: set value and unset value", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
@@ -154,7 +154,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		tag, tagCleanup := createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
@@ -191,13 +191,13 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("alter session_policy: rename", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
 
-		newName := randomString(t)
+		newName := sdk.RandomString(t)
 		newId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, newName)
 		alterRequest := sdk.NewAlterSessionPolicyRequest(id).WithRenameTo(&newId)
 

@@ -35,7 +35,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	createDatabaseRole := func(t *testing.T) *sdk.DatabaseRole {
 		t.Helper()
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
@@ -49,9 +49,9 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	}
 
 	t.Run("create database_role: complete case", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
-		comment := randomComment(t)
+		comment := sdk.RandomComment(t)
 
 		request := sdk.NewCreateDatabaseRoleRequest(id).WithComment(&comment).WithIfNotExists(true)
 		err := client.DatabaseRoles.Create(ctx, request)
@@ -65,7 +65,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("create database_role: no optionals", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
@@ -79,7 +79,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("drop database_role: existing", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
@@ -100,7 +100,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("alter database_role: set value and unset value", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
@@ -127,13 +127,13 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("alter database_role: rename", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
 
-		newName := randomString(t)
+		newName := sdk.RandomString(t)
 		newId := sdk.NewDatabaseObjectIdentifier(database.Name, newName)
 		alterRequest := sdk.NewAlterDatabaseRoleRequest(id).WithRename(newId)
 
@@ -158,14 +158,14 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		secondDatabase, secondDatabaseCleanup := createDatabase(t, client)
 		t.Cleanup(secondDatabaseCleanup)
 
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupDatabaseRoleProvider(id))
 
-		newName := randomString(t)
+		newName := sdk.RandomString(t)
 		newId := sdk.NewDatabaseObjectIdentifier(secondDatabase.Name, newName)
 		alterRequest := sdk.NewAlterDatabaseRoleRequest(id).WithRename(newId)
 

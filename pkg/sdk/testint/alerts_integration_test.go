@@ -99,11 +99,11 @@ func TestInt_AlertCreate(t *testing.T) {
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("test complete case", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := "SELECT 1"
-		comment := randomComment(t)
+		comment := sdk.RandomComment(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, &sdk.CreateAlertOptions{
 			OrReplace:   sdk.Bool(true),
@@ -135,11 +135,11 @@ func TestInt_AlertCreate(t *testing.T) {
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := "SELECT 1"
-		comment := randomComment(t)
+		comment := sdk.RandomComment(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, &sdk.CreateAlertOptions{
 			OrReplace:   sdk.Bool(false),
@@ -171,7 +171,7 @@ func TestInt_AlertCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := "SELECT 1"
@@ -201,7 +201,7 @@ func TestInt_AlertCreate(t *testing.T) {
 	})
 
 	t.Run("test multiline action", func(t *testing.T) {
-		name := randomString(t)
+		name := sdk.RandomString(t)
 		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := `
