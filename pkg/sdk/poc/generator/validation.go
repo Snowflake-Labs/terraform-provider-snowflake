@@ -55,9 +55,9 @@ func (v *Validation) fieldsWithPath(field *Field) []string {
 func (v *Validation) Condition(field *Field) string {
 	switch v.Type {
 	case ValidIdentifier:
-		return fmt.Sprintf("!validObjectidentifier(%s)", strings.Join(v.fieldsWithPath(field), ","))
+		return fmt.Sprintf("!ValidObjectIdentifier(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ValidIdentifierIfSet:
-		return fmt.Sprintf("valueSet(%s) && !validObjectidentifier(%s)", strings.Join(v.fieldsWithPath(field), ","), strings.Join(v.fieldsWithPath(field), ","))
+		return fmt.Sprintf("valueSet(%s) && !ValidObjectIdentifier(%s)", strings.Join(v.fieldsWithPath(field), ","), strings.Join(v.fieldsWithPath(field), ","))
 	case ConflictingFields:
 		return fmt.Sprintf("everyValueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ExactlyOneValueSet:
@@ -73,9 +73,9 @@ func (v *Validation) Condition(field *Field) string {
 func (v *Validation) ReturnedError(field *Field) string {
 	switch v.Type {
 	case ValidIdentifier:
-		return "errInvalidObjectIdentifier"
+		return "ErrInvalidObjectIdentifier"
 	case ValidIdentifierIfSet:
-		return "errInvalidObjectIdentifier"
+		return "ErrInvalidObjectIdentifier"
 	case ConflictingFields:
 		return fmt.Sprintf(`errOneOf("%s", %s)`, field.Name, strings.Join(v.paramsQuoted(), ","))
 	case ExactlyOneValueSet:

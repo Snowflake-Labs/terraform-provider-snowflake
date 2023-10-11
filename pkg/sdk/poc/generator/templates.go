@@ -118,7 +118,7 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").
 import (
 "context"
 
-"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 {{ $impl := .NameLowerCased }}
@@ -145,7 +145,7 @@ type {{ $impl }} struct {
 			if err != nil {
 				return nil, err
 			}
-			return internal.FindOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
+			return collections.FindOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
 		}
 	{{ else if and (eq .Name "Describe") .DescribeMapping }}
 		{{ if .DescribeKind }}
@@ -223,7 +223,7 @@ import "testing"
 {{ range .Operations }}
 	{{- if .OptsField }}
 	func Test{{ .ObjectInterface.Name }}_{{ .Name }}(t *testing.T) {
-		id := random{{ .ObjectInterface.IdentifierKind }}(t)
+		id := Random{{ .ObjectInterface.IdentifierKind }}(t)
 
 		// Minimal valid {{ .OptsField.KindNoPtr }}
 		defaultOpts := func() *{{ .OptsField.KindNoPtr }} {
@@ -234,7 +234,7 @@ import "testing"
 
 		t.Run("validation: nil options", func(t *testing.T) {
 			var opts *{{ .OptsField.KindNoPtr }} = nil
-			assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+			assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 		})
 
 		{{- template "VALIDATIONS" .OptsField }}
@@ -285,7 +285,7 @@ var (
 	{{- if .OptsField }}
 	func (opts *{{ .OptsField.KindNoPtr }}) validate() error {
 		if opts == nil {
-			return errors.Join(errNilOptions)
+			return errors.Join(ErrNilOptions)
 		}
 		var errs []error
 		{{- template "VALIDATIONS" .OptsField }}

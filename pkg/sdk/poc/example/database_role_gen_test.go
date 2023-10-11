@@ -3,7 +3,7 @@ package example
 import "testing"
 
 func TestDatabaseRoles_Create(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
+	id := RandomDatabaseObjectIdentifier(t)
 
 	// Minimal valid CreateDatabaseRoleOptions
 	defaultOpts := func() *CreateDatabaseRoleOptions {
@@ -14,13 +14,13 @@ func TestDatabaseRoles_Create(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
@@ -43,7 +43,7 @@ func TestDatabaseRoles_Create(t *testing.T) {
 }
 
 func TestDatabaseRoles_Alter(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
+	id := RandomDatabaseObjectIdentifier(t)
 
 	// Minimal valid AlterDatabaseRoleOptions
 	defaultOpts := func() *AlterDatabaseRoleOptions {
@@ -54,13 +54,13 @@ func TestDatabaseRoles_Alter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.Rename opts.Set opts.Unset] should be present", func(t *testing.T) {
@@ -72,7 +72,7 @@ func TestDatabaseRoles_Alter(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.Rename.Name]", func(t *testing.T) {
 		opts := defaultOpts()
 		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.NestedThirdLevel.Field] should be set", func(t *testing.T) {
