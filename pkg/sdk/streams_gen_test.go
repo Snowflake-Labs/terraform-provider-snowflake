@@ -287,7 +287,7 @@ func TestStreams_CreateOnView(t *testing.T) {
 
 func TestStreams_Clone(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
-	sourceId := randomAccountObjectIdentifier(t)
+	sourceId := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid CloneStreamOptions
 	defaultOpts := func() *CloneStreamOptions {

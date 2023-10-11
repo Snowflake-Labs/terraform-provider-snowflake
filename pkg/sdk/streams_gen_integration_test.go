@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -100,15 +101,16 @@ func TestInt_Streams(t *testing.T) {
 
 	t.Run("CreateOnView", func(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
+		tableId := NewSchemaObjectIdentifier(db.Name, schema.Name, table.Name)
 		t.Cleanup(cleanupTable)
 
 		viewId := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		cleanupView := createView(t, client, viewId, "")
+		cleanupView := createView(t, client, viewId, fmt.Sprintf("SELECT id FROM %s", tableId.FullyQualifiedName()))
 		t.Cleanup(cleanupView)
 
 		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
-		req := NewCreateOnStageStreamRequest(id, stageId).WithComment(String("some comment"))
-		err := client.Streams.CreateOnStage(ctx, req)
+		req := NewCreateOnViewStreamRequest(id, viewId).WithComment(String("some comment"))
+		err := client.Streams.CreateOnView(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err := client.Streams.Drop(ctx, NewDropStreamRequest(id))
@@ -121,12 +123,32 @@ func TestInt_Streams(t *testing.T) {
 		assert.Equal(t, db.Name, s.DatabaseName)
 		assert.Equal(t, schema.Name, s.SchemaName)
 		assert.Equal(t, "some comment", s.Comment)
-		assert.Equal(t, "Stage", s.SourceType)
+		assert.Equal(t, "View", s.SourceType)
 		assert.Equal(t, "DEFAULT", s.Mode)
 	})
 
 	t.Run("Clone", func(t *testing.T) {
-		// TODO: fill me
+		table, cleanupTable := createTable(t, client, db, schema)
+		t.Cleanup(cleanupTable)
+
+		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
+		err := client.Streams.CreateOnTable(ctx, req)
+		require.NoError(t, err)
+
+		cloneId := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		err = client.Streams.Clone(ctx, NewCloneStreamRequest(cloneId, id))
+		require.NoError(t, err)
+
+		s, err := client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(cloneId))
+		require.NoError(t, err)
+		assert.Equal(t, id.Name(), s.Name)
+		assert.Equal(t, db.Name, s.DatabaseName)
+		assert.Equal(t, schema.Name, s.SchemaName)
+		assert.Equal(t, "some comment", s.Comment)
+		assert.Equal(t, table.ID().FullyQualifiedName(), s.TableName)
+		assert.Equal(t, "Table", s.SourceType)
+		assert.Equal(t, "DEFAULT", s.Mode)
 	})
 
 	t.Run("Alter", func(t *testing.T) {
@@ -134,15 +156,34 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		// TODO: fill me
+		table, cleanupTable := createTable(t, client, db, schema)
+		t.Cleanup(cleanupTable)
+
+		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
+		err := client.Streams.CreateOnTable(ctx, req)
+		require.NoError(t, err)
+
+		_, err = client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		require.NoError(t, err)
+
+		err = client.Streams.Drop(ctx, NewDropStreamRequest(id))
+		require.NoError(t, err)
+
+		_, err = client.Streams.ShowByID(ctx, NewShowByIdStreamRequest(id))
+		require.NoError(t, err)
 	})
 
 	t.Run("Show", func(t *testing.T) {
-		// TODO: fill me
-	})
+		table, cleanupTable := createTable(t, client, db, schema)
+		t.Cleanup(cleanupTable)
 
-	t.Run("ShowByID", func(t *testing.T) {
-		// TODO: fill me
+		id := NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := NewCreateOnTableStreamRequest(id, table.ID()).WithComment(String("some comment"))
+		err := client.Streams.CreateOnTable(ctx, req)
+		require.NoError(t, err)
+
+		//client.Streams.Show(ctx, NewShowStreamRequest().)
 	})
 
 	t.Run("Describe", func(t *testing.T) {

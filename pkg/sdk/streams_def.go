@@ -27,34 +27,36 @@ var (
 				Field("name", "string").
 				Field("database_name", "string").
 				Field("schema_name", "string").
-				Field("owner", "string").
-				Field("comment", "string").
-				Field("table_name", "string").
-				Field("source_type", "string").
-				Field("base_tables", "string").
-				Field("type", "string").
-				Field("stale", "string").
-				Field("mode", "string").
+				Field("tableOn", "sql.NullString").
+				Field("owner", "sql.NullString").
+				Field("comment", "sql.NullString").
+				Field("table_name", "sql.NullString").
+				Field("source_type", "sql.NullString").
+				Field("base_tables", "sql.NullString").
+				Field("type", "sql.NullString").
+				Field("stale", "sql.NullString").
+				Field("mode", "sql.NullString").
 				Field("stale_after", "sql.NullTime").
-				Field("invalid_reason", "string").
-				Field("owner_role_type", "string")
+				Field("invalid_reason", "sql.NullString").
+				Field("owner_role_type", "sql.NullString")
 
 	streamPlainStructDef = g.PlainStruct("Stream").
 				Field("CreatedOn", "time.Time").
 				Field("Name", "string").
 				Field("DatabaseName", "string").
 				Field("SchemaName", "string").
-				Field("Owner", "string").
-				Field("Comment", "string").
-				Field("TableName", "string").
-				Field("SourceType", "string").
-				Field("BaseTables", "string").
-				Field("Type", "string").
-				Field("Stale", "string").
-				Field("Mode", "string").
+				Field("TableOn", "*string").
+				Field("Owner", "*string").
+				Field("Comment", "*string").
+				Field("TableName", "*string").
+				Field("SourceType", "*string").
+				Field("BaseTables", "*string").
+				Field("Type", "*string").
+				Field("Stale", "*string").
+				Field("Mode", "*string").
 				Field("StaleAfter", "*time.Time").
-				Field("InvalidReason", "string").
-				Field("OwnerRoleType", "string")
+				Field("InvalidReason", "*string").
+				Field("OwnerRoleType", "*string")
 
 	StreamsDef = g.NewInterface(
 		"Streams",
@@ -145,7 +147,7 @@ var (
 				OrReplace().
 				SQL("STREAM").
 				Name().
-				Identifier("sourceStream", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("CLONE").Required()).
+				Identifier("sourceStream", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("CLONE").Required()).
 				OptionalCopyGrants().
 				WithValidation(g.ValidIdentifier, "name"),
 		).

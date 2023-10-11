@@ -209,7 +209,7 @@ func (s *CreateOnViewStreamRequest) WithComment(Comment *string) *CreateOnViewSt
 
 func NewCloneStreamRequest(
 	name SchemaObjectIdentifier,
-	sourceStream AccountObjectIdentifier,
+	sourceStream SchemaObjectIdentifier,
 ) *CloneStreamRequest {
 	s := CloneStreamRequest{}
 	s.name = name

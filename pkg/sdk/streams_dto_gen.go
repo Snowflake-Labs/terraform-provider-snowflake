@@ -73,8 +73,8 @@ type CreateOnViewStreamRequest struct {
 
 type CloneStreamRequest struct {
 	OrReplace    *bool
-	name         SchemaObjectIdentifier  // required
-	sourceStream AccountObjectIdentifier // required
+	name         SchemaObjectIdentifier // required
+	sourceStream SchemaObjectIdentifier // required
 	CopyGrants   *bool
 }
 
