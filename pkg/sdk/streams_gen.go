@@ -134,21 +134,22 @@ type ShowStreamOptions struct {
 }
 
 type showStreamsDbRow struct {
-	CreatedOn     time.Time    `db:"created_on"`
-	Name          string       `db:"name"`
-	DatabaseName  string       `db:"database_name"`
-	SchemaName    string       `db:"schema_name"`
-	Owner         string       `db:"owner"`
-	Comment       string       `db:"comment"`
-	TableName     string       `db:"table_name"`
-	SourceType    string       `db:"source_type"`
-	BaseTables    string       `db:"base_tables"`
-	Type          string       `db:"type"`
-	Stale         string       `db:"stale"`
-	Mode          string       `db:"mode"`
-	StaleAfter    sql.NullTime `db:"stale_after"`
-	InvalidReason string       `db:"invalid_reason"`
-	OwnerRoleType string       `db:"owner_role_type"`
+	CreatedOn     time.Time      `db:"created_on"`
+	Name          string         `db:"name"`
+	DatabaseName  string         `db:"database_name"`
+	SchemaName    string         `db:"schema_name"`
+	TableOn       sql.NullString `db:"tableOn"`
+	Owner         sql.NullString `db:"owner"`
+	Comment       sql.NullString `db:"comment"`
+	TableName     sql.NullString `db:"table_name"`
+	SourceType    sql.NullString `db:"source_type"`
+	BaseTables    sql.NullString `db:"base_tables"`
+	Type          sql.NullString `db:"type"`
+	Stale         sql.NullString `db:"stale"`
+	Mode          sql.NullString `db:"mode"`
+	StaleAfter    sql.NullTime   `db:"stale_after"`
+	InvalidReason sql.NullString `db:"invalid_reason"`
+	OwnerRoleType sql.NullString `db:"owner_role_type"`
 }
 
 type Stream struct {
@@ -156,17 +157,18 @@ type Stream struct {
 	Name          string
 	DatabaseName  string
 	SchemaName    string
-	Owner         string
-	Comment       string
-	TableName     string
-	SourceType    string
-	BaseTables    string
-	Type          string
-	Stale         string
-	Mode          string
+	TableOn       *string
+	Owner         *string
+	Comment       *string
+	TableName     *string
+	SourceType    *string
+	BaseTables    *string
+	Type          *string
+	Stale         *string
+	Mode          *string
 	StaleAfter    *time.Time
-	InvalidReason string
-	OwnerRoleType string
+	InvalidReason *string
+	OwnerRoleType *string
 }
 
 // DescribeStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-stream.

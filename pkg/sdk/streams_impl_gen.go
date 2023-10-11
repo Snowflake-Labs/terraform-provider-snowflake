@@ -211,23 +211,46 @@ func (r *ShowStreamRequest) toOpts() *ShowStreamOptions {
 
 func (r showStreamsDbRow) convert() *Stream {
 	s := &Stream{
-		CreatedOn:     r.CreatedOn,
-		Name:          r.Name,
-		DatabaseName:  r.DatabaseName,
-		SchemaName:    r.SchemaName,
-		Owner:         r.Owner,
-		Comment:       r.Comment,
-		TableName:     r.TableName,
-		SourceType:    r.SourceType,
-		BaseTables:    r.BaseTables,
-		Type:          r.Type,
-		Stale:         r.Stale,
-		Mode:          r.Mode,
-		InvalidReason: r.InvalidReason,
-		OwnerRoleType: r.OwnerRoleType,
+		CreatedOn:    r.CreatedOn,
+		Name:         r.Name,
+		DatabaseName: r.DatabaseName,
+		SchemaName:   r.SchemaName,
 	}
 	if r.StaleAfter.Valid {
 		s.StaleAfter = &r.StaleAfter.Time
+	}
+	if r.TableOn.Valid {
+		s.TableOn = &r.TableOn.String
+	}
+	if r.Owner.Valid {
+		s.Owner = &r.Owner.String
+	}
+	if r.Comment.Valid {
+		s.Comment = &r.Comment.String
+	}
+	if r.TableName.Valid {
+		s.TableName = &r.TableName.String
+	}
+	if r.SourceType.Valid {
+		s.SourceType = &r.SourceType.String
+	}
+	if r.BaseTables.Valid {
+		s.BaseTables = &r.BaseTables.String
+	}
+	if r.Type.Valid {
+		s.Type = &r.Type.String
+	}
+	if r.Stale.Valid {
+		s.Stale = &r.Stale.String
+	}
+	if r.Mode.Valid {
+		s.Mode = &r.Mode.String
+	}
+	if r.InvalidReason.Valid {
+		s.InvalidReason = &r.InvalidReason.String
+	}
+	if r.OwnerRoleType.Valid {
+		s.OwnerRoleType = &r.OwnerRoleType.String
 	}
 	return s
 }
