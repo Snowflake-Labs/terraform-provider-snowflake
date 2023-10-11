@@ -311,7 +311,7 @@ func TestTagAlter(t *testing.T) {
 		opts.Rename = &TagRename{
 			Name: newId,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errDifferentDatabase)
+		assertOptsValid(t, opts)
 	})
 
 	t.Run("validation: no property to unset", func(t *testing.T) {
