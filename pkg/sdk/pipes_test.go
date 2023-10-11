@@ -5,7 +5,7 @@ import (
 )
 
 func TestPipesCreate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 
 	defaultOpts := func() *CreatePipeOptions {
 		return &CreatePipeOptions{
@@ -49,7 +49,7 @@ func TestPipesCreate(t *testing.T) {
 }
 
 func TestPipesAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 
 	defaultOpts := func() *AlterPipeOptions {
 		return &AlterPipeOptions{
@@ -202,7 +202,7 @@ func TestPipesAlter(t *testing.T) {
 }
 
 func TestPipesDrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 
 	defaultOpts := func() *DropPipeOptions {
 		return &DropPipeOptions{
@@ -234,7 +234,7 @@ func TestPipesDrop(t *testing.T) {
 }
 
 func TestPipesShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 	databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
 	schemaIdentifier := NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())
 
@@ -340,7 +340,7 @@ func TestPipesShow(t *testing.T) {
 }
 
 func TestPipesDescribe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 
 	defaultOpts := func() *describePipeOptions {
 		return &describePipeOptions{

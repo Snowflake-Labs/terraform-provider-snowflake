@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestSessionPolicies_Create(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 
 	// Minimal valid CreateSessionPolicyOptions
 	defaultOpts := func() *CreateSessionPolicyOptions {
@@ -46,7 +46,7 @@ func TestSessionPolicies_Create(t *testing.T) {
 }
 
 func TestSessionPolicies_Alter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 
 	// Minimal valid AlterSessionPolicyOptions
 	defaultOpts := func() *AlterSessionPolicyOptions {
@@ -112,7 +112,7 @@ func TestSessionPolicies_Alter(t *testing.T) {
 
 	t.Run("alter rename", func(t *testing.T) {
 		opts := defaultOpts()
-		newId := randomSchemaObjectIdentifier(t)
+		newId := RandomSchemaObjectIdentifier(t)
 		opts.RenameTo = &newId
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SESSION POLICY %s RENAME TO %s", id.FullyQualifiedName(), newId.FullyQualifiedName())
 	})
@@ -143,7 +143,7 @@ func TestSessionPolicies_Alter(t *testing.T) {
 }
 
 func TestSessionPolicies_Drop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 
 	// Minimal valid DropSessionPolicyOptions
 	defaultOpts := func() *DropSessionPolicyOptions {
@@ -187,7 +187,7 @@ func TestSessionPolicies_Show(t *testing.T) {
 }
 
 func TestSessionPolicies_Describe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 
 	// Minimal valid DescribeSessionPolicyOptions
 	defaultOpts := func() *DescribeSessionPolicyOptions {

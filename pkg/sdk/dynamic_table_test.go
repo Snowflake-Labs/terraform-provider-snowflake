@@ -5,7 +5,7 @@ import (
 )
 
 func TestDynamicTableCreate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 	defaultOpts := func() *createDynamicTableOptions {
 		return &createDynamicTableOptions{
 			name: id,
@@ -44,7 +44,7 @@ func TestDynamicTableCreate(t *testing.T) {
 }
 
 func TestDynamicTableAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 	defaultOpts := func() *alterDynamicTableOptions {
 		return &alterDynamicTableOptions{
 			name: id,
@@ -106,7 +106,7 @@ func TestDynamicTableAlter(t *testing.T) {
 }
 
 func TestDynamicTableDrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 	defaultOpts := func() *dropDynamicTableOptions {
 		return &dropDynamicTableOptions{
 			name: id,
@@ -131,7 +131,7 @@ func TestDynamicTableDrop(t *testing.T) {
 }
 
 func TestDynamicTableShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 	defaultOpts := func() *showDynamicTableOptions {
 		return &showDynamicTableOptions{}
 	}
@@ -176,7 +176,7 @@ func TestDynamicTableShow(t *testing.T) {
 }
 
 func TestDynamicTableDescribe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier(t)
 	defaultOpts := func() *describeDynamicTableOptions {
 		return &describeDynamicTableOptions{
 			name: id,

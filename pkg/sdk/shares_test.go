@@ -19,7 +19,7 @@ func TestSharesCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		comment := randomComment(t)
+		comment := RandomComment(t)
 		opts := &CreateShareOptions{
 			OrReplace: Bool(true),
 			name:      NewAccountObjectIdentifier("complete_share"),
@@ -76,7 +76,7 @@ func TestShareAlter(t *testing.T) {
 
 	t.Run("with set", func(t *testing.T) {
 		accounts := []AccountIdentifier{NewAccountIdentifier("my-org", "myaccount")}
-		comment := randomComment(t)
+		comment := RandomComment(t)
 		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),

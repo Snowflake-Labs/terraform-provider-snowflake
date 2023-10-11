@@ -32,7 +32,7 @@ func TestIsValidWarehouseSize(t *testing.T) {
 
 func TestValidObjectidentifier(t *testing.T) {
 	t.Run("with valid object identifier", func(t *testing.T) {
-		ok := ValidObjectIdentifier(randomAccountObjectIdentifier(t))
+		ok := ValidObjectIdentifier(RandomAccountObjectIdentifier(t))
 		assert.Equal(t, ok, true)
 	})
 
@@ -42,12 +42,12 @@ func TestValidObjectidentifier(t *testing.T) {
 	})
 
 	t.Run("over 255 characters", func(t *testing.T) {
-		ok := ValidObjectIdentifier(NewAccountObjectIdentifier(randomStringN(t, 256)))
+		ok := ValidObjectIdentifier(NewAccountObjectIdentifier(RandomStringN(t, 256)))
 		assert.Equal(t, ok, false)
 	})
 
 	t.Run("with 255 charcters in each of db, schema and name", func(t *testing.T) {
-		ok := ValidObjectIdentifier(NewSchemaObjectIdentifier(randomStringN(t, 255), randomStringN(t, 255), randomStringN(t, 255)))
+		ok := ValidObjectIdentifier(NewSchemaObjectIdentifier(RandomStringN(t, 255), RandomStringN(t, 255), RandomStringN(t, 255)))
 		assert.Equal(t, ok, true)
 	})
 }
