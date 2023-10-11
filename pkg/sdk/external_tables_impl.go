@@ -1,6 +1,10 @@
 package sdk
 
-import "context"
+import (
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+)
 
 var _ ExternalTables = (*externalTables)(nil)
 
@@ -55,7 +59,7 @@ func (v *externalTables) ShowByID(ctx context.Context, req *ShowExternalTableByI
 		return nil, err
 	}
 
-	return findOne(externalTables, func(t ExternalTable) bool { return t.ID().FullyQualifiedName() == req.id.FullyQualifiedName() })
+	return internal.FindOne(externalTables, func(t ExternalTable) bool { return t.ID().FullyQualifiedName() == req.id.FullyQualifiedName() })
 }
 
 func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error) {

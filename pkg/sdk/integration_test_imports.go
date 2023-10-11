@@ -11,7 +11,7 @@ import (
 // - do we expose the field/method
 // - do we keep the workaround
 // - do we copy the code (e.g. ExecForTests)
-// - do we move the code to other place and use it from both places (e.g. findOne)
+// - do we move the code to other place and use it from both places
 // - something else.
 // This will be handled in subsequent PRs, so that the main difficulty (moving) is already merged.
 
@@ -21,9 +21,4 @@ func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, erro
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	result, err := c.db.ExecContext(ctx, sql)
 	return result, decodeDriverError(err)
-}
-
-// FindOne just delegates to our util findOne from SDK
-func FindOne[T any](collection []T, condition func(T) bool) (*T, error) {
-	return findOne(collection, condition)
 }
