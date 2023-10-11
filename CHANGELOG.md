@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.73.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.72.0...v0.73.0) (2023-10-11)
+
+
+### Features
+
+* add authenticator ([#2109](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2109)) ([4f3a551](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4f3a5519484b0aab91ff5fa08f37a8cf512d1ec0))
+* Add task clone to sdk ([#2105](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2105)) ([acddb2c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/acddb2cd6bfb1a7ffaf6dbb3c8349f7bc550c124))
+* Add task to SDK ([#2099](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2099)) ([d52f334](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d52f3347f091f0edff5e6daded1120542f1e9bd1))
+
+
+### Misc
+
+* **deps:** bump golang.org/x/crypto from 0.13.0 to 0.14.0 ([#2100](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2100)) ([060750f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/060750f668b986d690619cd2d915a7a945350ec5))
+* **deps:** bump golang.org/x/tools from 0.13.0 to 0.14.0 ([#2101](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2101)) ([45a14d9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/45a14d96d5fd6b051a73ced2fb03cab8659ded84))
+
 ## [0.72.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.71.0...v0.72.0) (2023-10-04)
 
 
