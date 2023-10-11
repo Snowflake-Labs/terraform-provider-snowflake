@@ -250,50 +250,50 @@ func (v TagAssociationRequest) toOpts() TagAssociation {
 	}
 }
 
-func (v *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
-	columns := make([]ExternalTableColumn, len(v.columns))
-	if v.columns != nil {
-		for i, c := range v.columns {
+func (s *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
+	columns := make([]ExternalTableColumn, len(s.columns))
+	if s.columns != nil {
+		for i, c := range s.columns {
 			columns[i] = c.toOpts()
 		}
 	}
 
 	var fileFormat []ExternalTableFileFormat
-	if v.fileFormat != nil {
-		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
+	if s.fileFormat != nil {
+		fileFormat = []ExternalTableFileFormat{s.fileFormat.toOpts()}
 	}
 
 	var cloudProviderParams *CloudProviderParams
-	if v.cloudProviderParams != nil {
-		cloudProviderParams = v.cloudProviderParams.toOpts()
+	if s.cloudProviderParams != nil {
+		cloudProviderParams = s.cloudProviderParams.toOpts()
 	}
 
 	var rowAccessPolicy *RowAccessPolicy
-	if v.rowAccessPolicy != nil {
-		rowAccessPolicy = v.rowAccessPolicy.toOpts()
+	if s.rowAccessPolicy != nil {
+		rowAccessPolicy = s.rowAccessPolicy.toOpts()
 	}
 
-	tag := make([]TagAssociation, len(v.tag))
-	if v.tag != nil {
-		for i, t := range v.tag {
+	tag := make([]TagAssociation, len(s.tag))
+	if s.tag != nil {
+		for i, t := range s.tag {
 			tag[i] = t.toOpts()
 		}
 	}
 
 	return &CreateExternalTableOptions{
-		OrReplace:           v.orReplace,
-		IfNotExists:         v.ifNotExists,
-		name:                v.name,
+		OrReplace:           s.orReplace,
+		IfNotExists:         s.ifNotExists,
+		name:                s.name,
 		Columns:             columns,
 		CloudProviderParams: cloudProviderParams,
-		Location:            v.location,
-		RefreshOnCreate:     v.refreshOnCreate,
-		AutoRefresh:         v.autoRefresh,
-		Pattern:             v.pattern,
+		Location:            s.location,
+		RefreshOnCreate:     s.refreshOnCreate,
+		AutoRefresh:         s.autoRefresh,
+		Pattern:             s.pattern,
 		FileFormat:          fileFormat,
-		AwsSnsTopic:         v.awsSnsTopic,
-		CopyGrants:          v.copyGrants,
-		Comment:             v.comment,
+		AwsSnsTopic:         s.awsSnsTopic,
+		CopyGrants:          s.copyGrants,
+		Comment:             s.comment,
 		RowAccessPolicy:     rowAccessPolicy,
 		Tag:                 tag,
 	}

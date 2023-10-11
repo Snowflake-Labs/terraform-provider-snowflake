@@ -37,7 +37,7 @@ const (
 	secondaryAccountProfile = "secondary_test_account"
 )
 
-// TODO: for now we leave it as is, later it would be nice to configure it also once
+// TODO: for now we leave it as is, later it would be nice to configure it also once in TestMain
 func testSecondaryClient(t *testing.T) *sdk.Client {
 	t.Helper()
 

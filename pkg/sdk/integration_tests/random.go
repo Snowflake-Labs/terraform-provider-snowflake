@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// All functions in this file exist also in SDK (they are used also there).
+// They were copied to allow easier extraction of all integration tests to separate package.
+// This will be dealt with in subsequent PRs.
+
 func randomUUID(t *testing.T) string {
 	t.Helper()
 	v, err := uuid.GenerateUUID()

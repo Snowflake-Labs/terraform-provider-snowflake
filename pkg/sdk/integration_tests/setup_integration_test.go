@@ -45,6 +45,7 @@ type integrationTestContext struct {
 }
 
 func (itc *integrationTestContext) initialize() error {
+	log.Println("Initializing integration test context")
 	var err error
 	itc.client, err = sdk.NewDefaultClient()
 	itc.ctx = context.Background()
@@ -62,14 +63,14 @@ func timer(name string) func() {
 	}
 }
 
-// TODO: remove.
+// TODO: Discuss after this initial change is merged.
 // This is temporary way to move all integration tests to this package without doing revolution in a single PR.
 func testClient(t *testing.T) *sdk.Client {
 	t.Helper()
 	return itc.client
 }
 
-// TODO: remove.
+// TODO: Discuss after this initial change is merged.
 // This is temporary way to move all integration tests to this package without doing revolution in a single PR.
 func testContext(t *testing.T) context.Context {
 	t.Helper()

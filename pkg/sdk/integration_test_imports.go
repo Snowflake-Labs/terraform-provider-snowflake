@@ -7,60 +7,69 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-// TODO: temporary solution to move integration tests in separate package
+// All the contents of this file were added to be able to use them outside the sdk package (i.e. integration tests package).
+// It was easier to do it that way, so that we do not include big rename changes in the first moving PR.
+// For each of them we will have to decide what do we do:
+// - do we expose the field/method (e.g. errors or ValidObjectIdentifier)
+// - do we keep the workaround
+// - do we copy the code (e.g. ExecForTests)
+// - do we move the code to other place and use it from both places (e.g. findOne)
+// - something else.
+// This will be handled in subsequent PRs, so that the main difficulty (moving) is already merged.
+
 var (
 	ErrObjectNotExistOrAuthorized = errObjectNotExistOrAuthorized
 	ErrDifferentDatabase          = errDifferentDatabase
 )
 
-// TODO: do not export this method (it was just a quick workaround to move integration tests in separate package)
+// ExecForTests is an exact copy of exec (that is unexported), that some integration tests/helpers were using
 func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, error) {
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	result, err := c.db.ExecContext(ctx, sql)
 	return result, decodeDriverError(err)
 }
 
-// TODO: do not export this method (it was just a quick workaround to move integration tests in separate package)
+// ValidObjectIdentifier is just a delegate to existing unexported validObjectidentifier
 func ValidObjectIdentifier(objectIdentifier ObjectIdentifier) bool {
 	return validObjectidentifier(objectIdentifier)
 }
 
-// TODO: temporary; used in integration test helper
+// GetName is just an accessor to unexported name field
 func (r *CreateNetworkPolicyRequest) GetName() AccountObjectIdentifier {
 	return r.name
 }
 
-// TODO: temporary; used in integration test helper
+// GetName is just an accessor to unexported name field
 func (s *CreateRoleRequest) GetName() AccountObjectIdentifier {
 	return s.name
 }
 
-// TODO: temporary; used in integration tests
+// GetName is just an accessor to unexported name field
 func (r *CreateTaskRequest) GetName() SchemaObjectIdentifier {
 	return r.name
 }
 
-// TODO: temporary; used in integration tests
+// GetName is just an accessor to unexported name field
 func (r *CloneTaskRequest) GetName() SchemaObjectIdentifier {
 	return r.name
 }
 
-// TODO: temporary; used in integration tests
+// GetColumns is just an accessor to unexported name field
 func (s *CreateExternalTableRequest) GetColumns() []*ExternalTableColumnRequest {
 	return s.columns
 }
 
-// TODO: temporary; used in integration tests
+// GetAccountLocator is an accessor to unexported accountLocator, which is needed in some tests
 func (c *Client) GetAccountLocator() string {
 	return c.accountLocator
 }
 
-// TODO: temporary; used in integration tests
+// GetConfig is an accessor to unexported config, which is needed in some tests
 func (c *Client) GetConfig() *gosnowflake.Config {
 	return c.config
 }
 
-// TODO: temporary; used in integration tests
+// FindOne just delegates to our util findOne from SDK
 func FindOne[T any](collection []T, condition func(T) bool) (*T, error) {
 	return findOne(collection, condition)
 }
