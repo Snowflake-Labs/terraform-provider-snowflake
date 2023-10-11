@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -101,7 +101,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	t.Cleanup(schemaCleanup)
 
 	t.Run("test complete case", func(t *testing.T) {
-		name := internal.RandomString(t)
+		name := random.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
@@ -114,8 +114,8 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := "REPLACE('X', 1, 2)"
-		comment := internal.RandomComment(t)
-		exemptOtherPolicies := internal.RandomBool(t)
+		comment := random.RandomComment(t)
+		exemptOtherPolicies := random.RandomBool(t)
 		err := client.MaskingPolicies.Create(ctx, id, signature, sdk.DataTypeVARCHAR, expression, &sdk.CreateMaskingPolicyOptions{
 			OrReplace:           sdk.Bool(true),
 			IfNotExists:         sdk.Bool(false),
@@ -146,7 +146,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
-		name := internal.RandomString(t)
+		name := random.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
@@ -159,7 +159,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := "REPLACE('X', 1, 2)"
-		comment := internal.RandomComment(t)
+		comment := random.RandomComment(t)
 		err := client.MaskingPolicies.Create(ctx, id, signature, sdk.DataTypeVARCHAR, expression, &sdk.CreateMaskingPolicyOptions{
 			OrReplace:           sdk.Bool(false),
 			IfNotExists:         sdk.Bool(true),
@@ -190,7 +190,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := internal.RandomString(t)
+		name := random.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
@@ -224,7 +224,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test multiline expression", func(t *testing.T) {
-		name := internal.RandomString(t)
+		name := random.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
@@ -292,7 +292,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(maskingPolicyCleanup)
-		comment := internal.RandomComment(t)
+		comment := random.RandomComment(t)
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
 			Set: &sdk.MaskingPolicySet{
 				Comment: sdk.String(comment),
@@ -338,7 +338,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		oldID := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
-		newName := internal.RandomString(t)
+		newName := random.RandomString(t)
 		newID := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
 			NewName: newID,

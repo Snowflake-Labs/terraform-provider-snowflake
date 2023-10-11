@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -32,7 +32,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := "REPLACE('X', 1, 2)"
-		comment := internal.RandomString(t)
+		comment := random.RandomString(t)
 
 		opts := &CreateMaskingPolicyOptions{
 			OrReplace:           Bool(true),
@@ -74,7 +74,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		newComment := internal.RandomString(t)
+		newComment := random.RandomString(t)
 		opts := &AlterMaskingPolicyOptions{
 			name: id,
 			Set: &MaskingPolicySet{
@@ -101,7 +101,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, internal.RandomUUID(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.RandomUUID(t))
 		opts := &AlterMaskingPolicyOptions{
 			name:    id,
 			NewName: newID,

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -92,7 +92,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 	t.Run("test complete", func(t *testing.T) {
-		name := internal.RandomUUID(t)
+		name := random.RandomUUID(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		err := client.PasswordPolicies.Create(ctx, id, &sdk.CreatePasswordPolicyOptions{
 			OrReplace:                 sdk.Bool(true),
@@ -126,7 +126,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
-		name := internal.RandomUUID(t)
+		name := random.RandomUUID(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		err := client.PasswordPolicies.Create(ctx, id, &sdk.CreatePasswordPolicyOptions{
 			OrReplace:                 sdk.Bool(false),
@@ -149,7 +149,7 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := internal.RandomUUID(t)
+		name := random.RandomUUID(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		err := client.PasswordPolicies.Create(ctx, id, nil)
 		require.NoError(t, err)
@@ -230,7 +230,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
 		oldID := passwordPolicy.ID()
 		t.Cleanup(passwordPolicyCleanup)
-		newName := internal.RandomUUID(t)
+		newName := random.RandomUUID(t)
 		newID := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
 			NewName: newID,

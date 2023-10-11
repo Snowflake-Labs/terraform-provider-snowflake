@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -50,7 +50,7 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("create complete", func(t *testing.T) {
 		roleID := randomAccountObjectIdentifier(t)
-		comment := internal.RandomComment(t)
+		comment := random.RandomComment(t)
 		createReq := sdk.NewCreateRoleRequest(roleID).
 			WithOrReplace(true).
 			WithTag([]sdk.TagAssociation{
@@ -153,7 +153,7 @@ func TestInt_Roles(t *testing.T) {
 		role, cleanupRole := createRole(t, client)
 		t.Cleanup(cleanupRole)
 
-		comment := internal.RandomComment(t)
+		comment := random.RandomComment(t)
 		err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithSetComment(comment))
 		require.NoError(t, err)
 
@@ -163,7 +163,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("alter unset comment", func(t *testing.T) {
-		comment := internal.RandomComment(t)
+		comment := random.RandomComment(t)
 		id := randomAccountObjectIdentifier(t)
 		role, cleanup := createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(id).WithComment(comment))
 		t.Cleanup(cleanup)

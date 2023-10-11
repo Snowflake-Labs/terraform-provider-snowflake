@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ DynamicTables = (*dynamicTables)(nil)
@@ -52,7 +52,7 @@ func (v *dynamicTables) ShowByID(ctx context.Context, id AccountObjectIdentifier
 	if err != nil {
 		return nil, err
 	}
-	return internal.FindOne(dynamicTables, func(r DynamicTable) bool { return r.Name == id.Name() })
+	return collections.FindOne(dynamicTables, func(r DynamicTable) bool { return r.Name == id.Name() })
 }
 
 func (s *CreateDynamicTableRequest) toOpts() *createDynamicTableOptions {

@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var (
@@ -41,7 +41,7 @@ func (v *roles) ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, 
 	if err != nil {
 		return nil, err
 	}
-	return internal.FindOne(roleList, func(r Role) bool { return r.ID().name == req.id.Name() })
+	return collections.FindOne(roleList, func(r Role) bool { return r.ID().name == req.id.Name() })
 }
 
 func (v *roles) Grant(ctx context.Context, req *GrantRoleRequest) error {

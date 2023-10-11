@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -116,7 +116,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	createTaskBasicRequest := func(t *testing.T) *sdk.CreateTaskRequest {
 		t.Helper()
-		name := internal.RandomString(t)
+		name := random.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		return sdk.NewCreateTaskRequest(id, sql)
@@ -183,7 +183,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
-		otherName := internal.RandomString(t)
+		otherName := random.RandomString(t)
 		otherId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, otherName)
 
 		request := sdk.NewCreateTaskRequest(otherId, sql).WithSchedule(sdk.String("10 MINUTE"))
@@ -239,7 +239,7 @@ func TestInt_Tasks(t *testing.T) {
 	t.Run("clone task: default", func(t *testing.T) {
 		sourceTask := createTask(t)
 
-		name := internal.RandomString(t)
+		name := random.RandomString(t)
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		request := sdk.NewCloneTaskRequest(id, sourceTask.ID())

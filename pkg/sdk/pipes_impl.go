@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ Pipes = (*pipes)(nil)
@@ -56,7 +56,7 @@ func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 		return nil, err
 	}
 
-	return internal.FindOne(pipes, func(p Pipe) bool { return p.ID().name == id.Name() })
+	return collections.FindOne(pipes, func(p Pipe) bool { return p.ID().name == id.Name() })
 }
 
 func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {

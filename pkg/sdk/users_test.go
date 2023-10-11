@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,8 +27,8 @@ func TestUserCreate(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		password := internal.RandomString(t)
-		loginName := internal.RandomString(t)
+		password := random.RandomString(t)
+		loginName := random.RandomString(t)
 
 		opts := &CreateUserOptions{
 			OrReplace:   Bool(true),
@@ -113,7 +113,7 @@ func TestUserAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("with setting properties and parameters", func(t *testing.T) {
-		password := internal.RandomString(t)
+		password := random.RandomString(t)
 		objectProperties := UserObjectProperties{
 			Password:             &password,
 			DefaultSeconaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
@@ -182,7 +182,7 @@ func TestUserAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("rename", func(t *testing.T) {
-		newID := NewAccountObjectIdentifier(internal.RandomString(t))
+		newID := NewAccountObjectIdentifier(random.RandomString(t))
 		opts := &AlterUserOptions{
 			name:    id,
 			NewName: newID,
@@ -315,7 +315,7 @@ func TestUserShow(t *testing.T) {
 	})
 
 	t.Run("with like and from", func(t *testing.T) {
-		fromPatern := internal.RandomString(t)
+		fromPatern := random.RandomString(t)
 		opts := &ShowUserOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
@@ -343,8 +343,8 @@ func TestUserShow(t *testing.T) {
 	})
 
 	t.Run("with starts with and from", func(t *testing.T) {
-		fromPattern := internal.RandomString(t)
-		startsWithPattern := internal.RandomString(t)
+		fromPattern := random.RandomString(t)
+		startsWithPattern := random.RandomString(t)
 
 		opts := &ShowUserOptions{
 			StartsWith: &startsWithPattern,

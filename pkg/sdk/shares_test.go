@@ -3,7 +3,7 @@ package sdk
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +20,7 @@ func TestSharesCreate(t *testing.T) {
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		comment := internal.RandomComment(t)
+		comment := random.RandomComment(t)
 		opts := &CreateShareOptions{
 			OrReplace: Bool(true),
 			name:      NewAccountObjectIdentifier("complete_share"),
@@ -77,7 +77,7 @@ func TestShareAlter(t *testing.T) {
 
 	t.Run("with set", func(t *testing.T) {
 		accounts := []AccountIdentifier{NewAccountIdentifier("my-org", "myaccount")}
-		comment := internal.RandomComment(t)
+		comment := random.RandomComment(t)
 		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),

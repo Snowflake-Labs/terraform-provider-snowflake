@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -235,7 +235,7 @@ func TestInt_SharesAlter(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		comment := internal.RandomComment(t)
+		comment := random.RandomComment(t)
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 			IfExists: sdk.Bool(true),
 			Set: &sdk.ShareSet{
@@ -295,11 +295,11 @@ func TestInt_SharesAlter(t *testing.T) {
 		tagAssociations := []sdk.TagAssociation{
 			{
 				Name:  tagTest.ID(),
-				Value: internal.RandomString(t),
+				Value: random.RandomString(t),
 			},
 			{
 				Name:  tagTest2.ID(),
-				Value: internal.RandomString(t),
+				Value: random.RandomString(t),
 			},
 		}
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
