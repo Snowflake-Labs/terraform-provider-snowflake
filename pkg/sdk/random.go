@@ -16,11 +16,6 @@ func RandomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 	return NewDatabaseObjectIdentifier(internal.RandomStringN(t, 12), internal.RandomStringN(t, 12))
 }
 
-func AlphanumericDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
-	t.Helper()
-	return NewDatabaseObjectIdentifier(internal.RandomAlphanumericN(t, 12), internal.RandomAlphanumericN(t, 12))
-}
-
 func RandomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	t.Helper()
 	return NewAccountObjectIdentifier(internal.RandomStringN(t, 12))
