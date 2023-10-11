@@ -3,9 +3,10 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInt_Streams(t *testing.T) {
@@ -268,6 +269,8 @@ func TestInt_Streams(t *testing.T) {
 		})
 
 		s, err := client.Streams.Show(ctx, NewShowStreamRequest().WithTerse(Bool(true)))
+		require.NoError(t, err)
+
 		stream, err := findOne[Stream](s, func(stream Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
@@ -306,6 +309,7 @@ func TestInt_Streams(t *testing.T) {
 		assert.Equal(t, 1, len(s))
 
 		stream, err := findOne[Stream](s, func(stream Stream) bool { return id.Name() == stream.Name })
+		require.NoError(t, err)
 
 		assert.Equal(t, id.Name(), stream.Name)
 		assert.Equal(t, db.Name, stream.DatabaseName)
