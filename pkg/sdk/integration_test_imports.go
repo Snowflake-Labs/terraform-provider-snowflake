@@ -18,6 +18,7 @@ import (
 // This will be handled in subsequent PRs, so that the main difficulty (moving) is already merged.
 
 // ExecForTests is an exact copy of exec (that is unexported), that some integration tests/helpers were using
+// TODO: remove after we have all usages covered by SDK (for now it means implementing stages, tables, and tags)
 func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, error) {
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	result, err := c.db.ExecContext(ctx, sql)
