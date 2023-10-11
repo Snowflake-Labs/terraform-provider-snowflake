@@ -1,17 +1,17 @@
-package sdk
+package testint
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_ExternalTables(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDB := createDatabase(t, client)
 	t.Cleanup(cleanupDB)
@@ -23,48 +23,48 @@ func TestInt_ExternalTables(t *testing.T) {
 	err = client.Sessions.UseSchema(ctx, schema.ID())
 	require.NoError(t, err)
 
-	stageID := NewAccountObjectIdentifier("EXTERNAL_TABLE_STAGE")
+	stageID := sdk.NewAccountObjectIdentifier("EXTERNAL_TABLE_STAGE")
 	stageLocation := "@external_table_stage"
 	_, _ = createStageWithURL(t, client, stageID, "s3://snowflake-workshop-lab/weather-nyc")
 
 	tag, _ := createTag(t, client, db, schema)
 
-	defaultColumns := func() []*ExternalTableColumnRequest {
-		return []*ExternalTableColumnRequest{
-			NewExternalTableColumnRequest("filename", DataTypeString, "metadata$filename::string"),
-			NewExternalTableColumnRequest("city", DataTypeString, "value:city:findname::string"),
-			NewExternalTableColumnRequest("time", DataTypeTimestamp, "to_timestamp(value:time::int)"),
-			NewExternalTableColumnRequest("weather", DataTypeVariant, "value:weather::variant"),
+	defaultColumns := func() []*sdk.ExternalTableColumnRequest {
+		return []*sdk.ExternalTableColumnRequest{
+			sdk.NewExternalTableColumnRequest("filename", sdk.DataTypeString, "metadata$filename::string"),
+			sdk.NewExternalTableColumnRequest("city", sdk.DataTypeString, "value:city:findname::string"),
+			sdk.NewExternalTableColumnRequest("time", sdk.DataTypeTimestamp, "to_timestamp(value:time::int)"),
+			sdk.NewExternalTableColumnRequest("weather", sdk.DataTypeVariant, "value:weather::variant"),
 		}
 	}
 
 	columns := defaultColumns()
-	columnsWithPartition := append(defaultColumns(), []*ExternalTableColumnRequest{
-		NewExternalTableColumnRequest("weather_date", DataTypeDate, "to_date(to_timestamp(value:time::int))"),
-		NewExternalTableColumnRequest("part_date", DataTypeDate, "parse_json(metadata$external_table_partition):weather_date::date"),
+	columnsWithPartition := append(defaultColumns(), []*sdk.ExternalTableColumnRequest{
+		sdk.NewExternalTableColumnRequest("weather_date", sdk.DataTypeDate, "to_date(to_timestamp(value:time::int))"),
+		sdk.NewExternalTableColumnRequest("part_date", sdk.DataTypeDate, "parse_json(metadata$external_table_partition):weather_date::date"),
 	}...)
 
-	minimalCreateExternalTableReq := func(id AccountObjectIdentifier) *CreateExternalTableRequest {
-		return NewCreateExternalTableRequest(
+	minimalCreateExternalTableReq := func(id sdk.AccountObjectIdentifier) *sdk.CreateExternalTableRequest {
+		return sdk.NewCreateExternalTableRequest(
 			id,
 			stageLocation,
-			NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeJSON),
+			sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON),
 		)
 	}
 
-	createExternalTableWithManualPartitioningReq := func(id AccountObjectIdentifier) *CreateWithManualPartitioningExternalTableRequest {
-		return NewCreateWithManualPartitioningExternalTableRequest(
+	createExternalTableWithManualPartitioningReq := func(id sdk.AccountObjectIdentifier) *sdk.CreateWithManualPartitioningExternalTableRequest {
+		return sdk.NewCreateWithManualPartitioningExternalTableRequest(
 			id,
 			stageLocation,
-			NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeJSON),
+			sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON),
 		).
-			WithOrReplace(Bool(true)).
+			WithOrReplace(sdk.Bool(true)).
 			WithColumns(columnsWithPartition).
-			WithUserSpecifiedPartitionType(Bool(true)).
+			WithUserSpecifiedPartitionType(sdk.Bool(true)).
 			WithPartitionBy([]string{"part_date"}).
-			WithCopyGrants(Bool(true)).
-			WithComment(String("some_comment")).
-			WithTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), "tag-value")})
+			WithCopyGrants(sdk.Bool(true)).
+			WithComment(sdk.String("some_comment")).
+			WithTag([]*sdk.TagAssociationRequest{sdk.NewTagAssociationRequest(tag.ID(), "tag-value")})
 	}
 
 	t.Run("Create: minimal", func(t *testing.T) {
@@ -72,7 +72,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
 		require.NoError(t, err)
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
@@ -81,24 +81,24 @@ func TestInt_ExternalTables(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
 		err := client.ExternalTables.Create(
 			ctx,
-			NewCreateExternalTableRequest(
+			sdk.NewCreateExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeJSON),
+				sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON),
 			).
-				WithOrReplace(Bool(true)).
+				WithOrReplace(sdk.Bool(true)).
 				WithColumns(columns).
 				WithPartitionBy([]string{"filename"}).
-				WithRefreshOnCreate(Bool(false)).
-				WithAutoRefresh(Bool(false)).
-				WithPattern(String("weather-nyc/weather_2_3_0.json.gz")).
-				WithCopyGrants(Bool(true)).
-				WithComment(String("some_comment")).
-				WithTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), "tag-value")}),
+				WithRefreshOnCreate(sdk.Bool(false)).
+				WithAutoRefresh(sdk.Bool(false)).
+				WithPattern(sdk.String("weather-nyc/weather_2_3_0.json.gz")).
+				WithCopyGrants(sdk.Bool(true)).
+				WithComment(sdk.String("some_comment")).
+				WithTag([]*sdk.TagAssociationRequest{sdk.NewTagAssociationRequest(tag.ID(), "tag-value")}),
 		)
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
 		require.NoError(t, err)
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
@@ -115,16 +115,16 @@ func TestInt_ExternalTables(t *testing.T) {
 		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '%s', FILE_FORMAT=>'%s', ignore_case => true))`, stageLocation, fileFormat.ID().FullyQualifiedName())
 		err = client.ExternalTables.CreateUsingTemplate(
 			ctx,
-			NewCreateExternalTableUsingTemplateRequest(
+			sdk.NewCreateExternalTableUsingTemplateRequest(
 				id,
 				stageLocation,
-				NewExternalTableFileFormatRequest().WithName(String(fileFormat.ID().FullyQualifiedName())),
+				sdk.NewExternalTableFileFormatRequest().WithName(sdk.String(fileFormat.ID().FullyQualifiedName())),
 			).
 				WithQuery(query).
-				WithAutoRefresh(Bool(false)))
+				WithAutoRefresh(sdk.Bool(false)))
 		require.NoError(t, err)
 
-		_, err = client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(id))
+		_, err = client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id))
 		require.NoError(t, err)
 	})
 
@@ -133,7 +133,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(externalTableID))
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
 		require.NoError(t, err)
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
@@ -142,24 +142,24 @@ func TestInt_ExternalTables(t *testing.T) {
 		externalTableID := randomAccountObjectIdentifier(t)
 		err := client.ExternalTables.CreateDeltaLake(
 			ctx,
-			NewCreateDeltaLakeExternalTableRequest(
+			sdk.NewCreateDeltaLakeExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				NewExternalTableFileFormatRequest().WithFileFormatType(&ExternalTableFileFormatTypeParquet),
+				sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeParquet),
 			).
-				WithOrReplace(Bool(true)).
+				WithOrReplace(sdk.Bool(true)).
 				WithColumns(columnsWithPartition).
 				WithPartitionBy([]string{"filename"}).
-				WithDeltaTableFormat(Bool(true)).
-				WithAutoRefresh(Bool(false)).
-				WithRefreshOnCreate(Bool(false)).
-				WithCopyGrants(Bool(true)).
-				WithComment(String("some_comment")).
-				WithTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), "tag-value")}),
+				WithDeltaTableFormat(sdk.Bool(true)).
+				WithAutoRefresh(sdk.Bool(false)).
+				WithRefreshOnCreate(sdk.Bool(false)).
+				WithCopyGrants(sdk.Bool(true)).
+				WithComment(sdk.String("some_comment")).
+				WithTag([]*sdk.TagAssociationRequest{sdk.NewTagAssociationRequest(tag.ID(), "tag-value")}),
 		)
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
 		require.NoError(t, err)
 		assert.Equal(t, externalTableID.Name(), externalTable.Name)
 	})
@@ -171,9 +171,9 @@ func TestInt_ExternalTables(t *testing.T) {
 
 		err = client.ExternalTables.Alter(
 			ctx,
-			NewAlterExternalTableRequest(externalTableID).
-				WithIfExists(Bool(true)).
-				WithRefresh(NewRefreshExternalTableRequest("weather-nyc")),
+			sdk.NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithRefresh(sdk.NewRefreshExternalTableRequest("weather-nyc")),
 		)
 		require.NoError(t, err)
 	})
@@ -183,15 +183,15 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.Create(
 			ctx,
 			minimalCreateExternalTableReq(externalTableID).
-				WithPattern(String("weather-nyc/weather_2_3_0.json.gz")),
+				WithPattern(sdk.String("weather-nyc/weather_2_3_0.json.gz")),
 		)
 		require.NoError(t, err)
 
 		err = client.ExternalTables.Alter(
 			ctx,
-			NewAlterExternalTableRequest(externalTableID).
-				WithIfExists(Bool(true)).
-				WithAddFiles([]*ExternalTableFileRequest{NewExternalTableFileRequest("weather-nyc/weather_0_0_0.json.gz")}),
+			sdk.NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithAddFiles([]*sdk.ExternalTableFileRequest{sdk.NewExternalTableFileRequest("weather-nyc/weather_0_0_0.json.gz")}),
 		)
 		require.NoError(t, err)
 	})
@@ -201,23 +201,23 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.Create(
 			ctx,
 			minimalCreateExternalTableReq(externalTableID).
-				WithPattern(String("weather-nyc/weather_2_3_0.json.gz")),
+				WithPattern(sdk.String("weather-nyc/weather_2_3_0.json.gz")),
 		)
 		require.NoError(t, err)
 
 		err = client.ExternalTables.Alter(
 			ctx,
-			NewAlterExternalTableRequest(externalTableID).
-				WithIfExists(Bool(true)).
-				WithAddFiles([]*ExternalTableFileRequest{NewExternalTableFileRequest("weather-nyc/weather_0_0_0.json.gz")}),
+			sdk.NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithAddFiles([]*sdk.ExternalTableFileRequest{sdk.NewExternalTableFileRequest("weather-nyc/weather_0_0_0.json.gz")}),
 		)
 		require.NoError(t, err)
 
 		err = client.ExternalTables.Alter(
 			ctx,
-			NewAlterExternalTableRequest(externalTableID).
-				WithIfExists(Bool(true)).
-				WithRemoveFiles([]*ExternalTableFileRequest{NewExternalTableFileRequest("weather-nyc/weather_0_0_0.json.gz")}),
+			sdk.NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithRemoveFiles([]*sdk.ExternalTableFileRequest{sdk.NewExternalTableFileRequest("weather-nyc/weather_0_0_0.json.gz")}),
 		)
 		require.NoError(t, err)
 	})
@@ -229,9 +229,9 @@ func TestInt_ExternalTables(t *testing.T) {
 
 		err = client.ExternalTables.Alter(
 			ctx,
-			NewAlterExternalTableRequest(externalTableID).
-				WithIfExists(Bool(true)).
-				WithAutoRefresh(Bool(true)),
+			sdk.NewAlterExternalTableRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithAutoRefresh(sdk.Bool(true)),
 		)
 		require.NoError(t, err)
 	})
@@ -288,9 +288,9 @@ func TestInt_ExternalTables(t *testing.T) {
 
 		err = client.ExternalTables.AlterPartitions(
 			ctx,
-			NewAlterExternalTablePartitionRequest(externalTableID).
-				WithIfExists(Bool(true)).
-				WithAddPartitions([]*PartitionRequest{NewPartitionRequest("part_date", "2019-06-25")}).
+			sdk.NewAlterExternalTablePartitionRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithAddPartitions([]*sdk.PartitionRequest{sdk.NewPartitionRequest("part_date", "2019-06-25")}).
 				WithLocation("2019/06"),
 		)
 		require.NoError(t, err)
@@ -303,18 +303,18 @@ func TestInt_ExternalTables(t *testing.T) {
 
 		err = client.ExternalTables.AlterPartitions(
 			ctx,
-			NewAlterExternalTablePartitionRequest(externalTableID).
-				WithIfExists(Bool(true)).
-				WithAddPartitions([]*PartitionRequest{NewPartitionRequest("part_date", "2019-06-25")}).
+			sdk.NewAlterExternalTablePartitionRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithAddPartitions([]*sdk.PartitionRequest{sdk.NewPartitionRequest("part_date", "2019-06-25")}).
 				WithLocation("2019/06"),
 		)
 		require.NoError(t, err)
 
 		err = client.ExternalTables.AlterPartitions(
 			ctx,
-			NewAlterExternalTablePartitionRequest(externalTableID).
-				WithIfExists(Bool(true)).
-				WithDropPartition(Bool(true)).
+			sdk.NewAlterExternalTablePartitionRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithDropPartition(sdk.Bool(true)).
 				WithLocation("2019/06"),
 		)
 		require.NoError(t, err)
@@ -327,14 +327,14 @@ func TestInt_ExternalTables(t *testing.T) {
 
 		err = client.ExternalTables.Drop(
 			ctx,
-			NewDropExternalTableRequest(externalTableID).
-				WithIfExists(Bool(true)).
-				WithDropOption(NewExternalTableDropOptionRequest().WithCascade(Bool(true))),
+			sdk.NewDropExternalTableRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithDropOption(sdk.NewExternalTableDropOptionRequest().WithCascade(sdk.Bool(true))),
 		)
 		require.NoError(t, err)
 
-		_, err = client.ExternalTables.ShowByID(ctx, NewShowExternalTableByIDRequest(externalTableID))
-		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		_, err = client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("Show", func(t *testing.T) {
@@ -344,12 +344,12 @@ func TestInt_ExternalTables(t *testing.T) {
 
 		et, err := client.ExternalTables.Show(
 			ctx,
-			NewShowExternalTableRequest().
-				WithTerse(Bool(true)).
-				WithLike(String(externalTableID.Name())).
-				WithIn(NewShowExternalTableInRequest().WithDatabase(db.ID())).
-				WithStartsWith(String(externalTableID.Name())).
-				WithLimitFrom(NewLimitFromRequest().WithRows(Int(1))),
+			sdk.NewShowExternalTableRequest().
+				WithTerse(sdk.Bool(true)).
+				WithLike(sdk.String(externalTableID.Name())).
+				WithIn(sdk.NewShowExternalTableInRequest().WithDatabase(db.ID())).
+				WithStartsWith(sdk.String(externalTableID.Name())).
+				WithLimitFrom(sdk.NewLimitFromRequest().WithRows(sdk.Int(1))),
 		)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(et))
@@ -362,11 +362,11 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.Create(ctx, req)
 		require.NoError(t, err)
 
-		d, err := client.ExternalTables.DescribeColumns(ctx, NewDescribeExternalTableColumnsRequest(externalTableID))
+		d, err := client.ExternalTables.DescribeColumns(ctx, sdk.NewDescribeExternalTableColumnsRequest(externalTableID))
 		require.NoError(t, err)
 
-		assert.Equal(t, len(req.columns)+1, len(d)) // +1 because there's underlying Value column
-		assert.Contains(t, d, ExternalTableColumnDetails{
+		assert.Equal(t, len(req.GetColumns())+1, len(d)) // +1 because there's underlying Value column
+		assert.Contains(t, d, sdk.ExternalTableColumnDetails{
 			Name:       "VALUE",
 			Type:       "VARIANT",
 			Kind:       "COLUMN",
@@ -376,7 +376,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			IsUnique:   false,
 			Check:      nil,
 			Expression: nil,
-			Comment:    String("The value of this row"),
+			Comment:    sdk.String("The value of this row"),
 			PolicyName: nil,
 		})
 	})
@@ -386,10 +386,10 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
 		require.NoError(t, err)
 
-		d, err := client.ExternalTables.DescribeStage(ctx, NewDescribeExternalTableStageRequest(externalTableID))
+		d, err := client.ExternalTables.DescribeStage(ctx, sdk.NewDescribeExternalTableStageRequest(externalTableID))
 		require.NoError(t, err)
 
-		assert.Contains(t, d, ExternalTableStageDetails{
+		assert.Contains(t, d, sdk.ExternalTableStageDetails{
 			ParentProperty:  "STAGE_FILE_FORMAT",
 			Property:        "TIME_FORMAT",
 			PropertyType:    "String",

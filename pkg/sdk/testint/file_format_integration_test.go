@@ -1,49 +1,49 @@
-package sdk
+package testint
 
 import (
-	"context"
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	schema, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
 
 	t.Run("CSV", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
-		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeCSV,
-			FileFormatTypeOptions: FileFormatTypeOptions{
-				CSVCompression:                &CSVCompressionBz2,
-				CSVRecordDelimiter:            String("\\123"),
-				CSVFieldDelimiter:             String("0x42"),
-				CSVFileExtension:              String("c"),
-				CSVParseHeader:                Bool(true),
-				CSVSkipBlankLines:             Bool(true),
-				CSVDateFormat:                 String("d"),
-				CSVTimeFormat:                 String("e"),
-				CSVTimestampFormat:            String("f"),
-				CSVBinaryFormat:               &BinaryFormatBase64,
-				CSVEscape:                     String(`\`),
-				CSVEscapeUnenclosedField:      String("h"),
-				CSVTrimSpace:                  Bool(true),
-				CSVFieldOptionallyEnclosedBy:  String("'"),
-				CSVNullIf:                     &[]NullString{{"j"}, {"k"}},
-				CSVErrorOnColumnCountMismatch: Bool(true),
-				CSVReplaceInvalidCharacters:   Bool(true),
-				CSVEmptyFieldAsNull:           Bool(true),
-				CSVSkipByteOrderMark:          Bool(true),
-				CSVEncoding:                   &CSVEncodingGB18030,
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
+			Type: sdk.FileFormatTypeCSV,
+			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
+				CSVCompression:                &sdk.CSVCompressionBz2,
+				CSVRecordDelimiter:            sdk.String("\\123"),
+				CSVFieldDelimiter:             sdk.String("0x42"),
+				CSVFileExtension:              sdk.String("c"),
+				CSVParseHeader:                sdk.Bool(true),
+				CSVSkipBlankLines:             sdk.Bool(true),
+				CSVDateFormat:                 sdk.String("d"),
+				CSVTimeFormat:                 sdk.String("e"),
+				CSVTimestampFormat:            sdk.String("f"),
+				CSVBinaryFormat:               &sdk.BinaryFormatBase64,
+				CSVEscape:                     sdk.String(`\`),
+				CSVEscapeUnenclosedField:      sdk.String("h"),
+				CSVTrimSpace:                  sdk.Bool(true),
+				CSVFieldOptionallyEnclosedBy:  sdk.String("'"),
+				CSVNullIf:                     &[]sdk.NullString{{S: "j"}, {S: "k"}},
+				CSVErrorOnColumnCountMismatch: sdk.Bool(true),
+				CSVReplaceInvalidCharacters:   sdk.Bool(true),
+				CSVEmptyFieldAsNull:           sdk.Bool(true),
+				CSVSkipByteOrderMark:          sdk.Bool(true),
+				CSVEncoding:                   &sdk.CSVEncodingGB18030,
 
-				Comment: String("test comment"),
+				Comment: sdk.String("test comment"),
 			},
 		})
 		require.NoError(t, err)
@@ -57,11 +57,11 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeCSV, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, sdk.FileFormatTypeCSV, result.Type)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
-		assert.Equal(t, &CSVCompressionBz2, result.Options.CSVCompression)
+		assert.Equal(t, &sdk.CSVCompressionBz2, result.Options.CSVCompression)
 		assert.Equal(t, "S", *result.Options.CSVRecordDelimiter) // o123 == 83 == 'S' (ASCII)
 		assert.Equal(t, "B", *result.Options.CSVFieldDelimiter)  // 0x42 == 66 == 'B' (ASCII)
 		assert.Equal(t, "c", *result.Options.CSVFileExtension)
@@ -70,22 +70,22 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, "d", *result.Options.CSVDateFormat)
 		assert.Equal(t, "e", *result.Options.CSVTimeFormat)
 		assert.Equal(t, "f", *result.Options.CSVTimestampFormat)
-		assert.Equal(t, &BinaryFormatBase64, result.Options.CSVBinaryFormat)
+		assert.Equal(t, &sdk.BinaryFormatBase64, result.Options.CSVBinaryFormat)
 		assert.Equal(t, `\`, *result.Options.CSVEscape)
 		assert.Equal(t, "h", *result.Options.CSVEscapeUnenclosedField)
 		assert.Equal(t, true, *result.Options.CSVTrimSpace)
-		assert.Equal(t, String("'"), result.Options.CSVFieldOptionallyEnclosedBy)
-		assert.Equal(t, &[]NullString{{"j"}, {"k"}}, result.Options.CSVNullIf)
+		assert.Equal(t, sdk.String("'"), result.Options.CSVFieldOptionallyEnclosedBy)
+		assert.Equal(t, &[]sdk.NullString{{S: "j"}, {S: "k"}}, result.Options.CSVNullIf)
 		assert.Equal(t, true, *result.Options.CSVErrorOnColumnCountMismatch)
 		assert.Equal(t, true, *result.Options.CSVReplaceInvalidCharacters)
 		assert.Equal(t, true, *result.Options.CSVEmptyFieldAsNull)
 		assert.Equal(t, true, *result.Options.CSVSkipByteOrderMark)
-		assert.Equal(t, &CSVEncodingGB18030, result.Options.CSVEncoding)
+		assert.Equal(t, &sdk.CSVEncodingGB18030, result.Options.CSVEncoding)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeCSV, describeResult.Type)
-		assert.Equal(t, &CSVCompressionBz2, describeResult.Options.CSVCompression)
+		assert.Equal(t, sdk.FileFormatTypeCSV, describeResult.Type)
+		assert.Equal(t, &sdk.CSVCompressionBz2, describeResult.Options.CSVCompression)
 		assert.Equal(t, "S", *describeResult.Options.CSVRecordDelimiter) // o123 == 83 == 'S' (ASCII)
 		assert.Equal(t, "B", *describeResult.Options.CSVFieldDelimiter)  // 0x42 == 66 == 'B' (ASCII)
 		assert.Equal(t, "c", *describeResult.Options.CSVFileExtension)
@@ -94,39 +94,39 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, "d", *describeResult.Options.CSVDateFormat)
 		assert.Equal(t, "e", *describeResult.Options.CSVTimeFormat)
 		assert.Equal(t, "f", *describeResult.Options.CSVTimestampFormat)
-		assert.Equal(t, &BinaryFormatBase64, describeResult.Options.CSVBinaryFormat)
+		assert.Equal(t, &sdk.BinaryFormatBase64, describeResult.Options.CSVBinaryFormat)
 		assert.Equal(t, `\\`, *describeResult.Options.CSVEscape) // Describe does not un-escape backslashes, but show does ....
 		assert.Equal(t, "h", *describeResult.Options.CSVEscapeUnenclosedField)
 		assert.Equal(t, true, *describeResult.Options.CSVTrimSpace)
-		assert.Equal(t, String("'"), describeResult.Options.CSVFieldOptionallyEnclosedBy)
-		assert.Equal(t, &[]NullString{{"j"}, {"k"}}, describeResult.Options.CSVNullIf)
+		assert.Equal(t, sdk.String("'"), describeResult.Options.CSVFieldOptionallyEnclosedBy)
+		assert.Equal(t, &[]sdk.NullString{{S: "j"}, {S: "k"}}, describeResult.Options.CSVNullIf)
 		assert.Equal(t, true, *describeResult.Options.CSVErrorOnColumnCountMismatch)
 		assert.Equal(t, true, *describeResult.Options.CSVReplaceInvalidCharacters)
 		assert.Equal(t, true, *describeResult.Options.CSVEmptyFieldAsNull)
 		assert.Equal(t, true, *describeResult.Options.CSVSkipByteOrderMark)
-		assert.Equal(t, &CSVEncodingGB18030, describeResult.Options.CSVEncoding)
+		assert.Equal(t, &sdk.CSVEncodingGB18030, describeResult.Options.CSVEncoding)
 	})
 	t.Run("JSON", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
-		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeJSON,
-			FileFormatTypeOptions: FileFormatTypeOptions{
-				JSONCompression:       &JSONCompressionBrotli,
-				JSONDateFormat:        String("a"),
-				JSONTimeFormat:        String("b"),
-				JSONTimestampFormat:   String("c"),
-				JSONBinaryFormat:      &BinaryFormatHex,
-				JSONTrimSpace:         Bool(true),
-				JSONNullIf:            &[]NullString{{"d"}, {"e"}},
-				JSONFileExtension:     String("f"),
-				JSONEnableOctal:       Bool(true),
-				JSONAllowDuplicate:    Bool(true),
-				JSONStripOuterArray:   Bool(true),
-				JSONStripNullValues:   Bool(true),
-				JSONIgnoreUTF8Errors:  Bool(true),
-				JSONSkipByteOrderMark: Bool(true),
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
+			Type: sdk.FileFormatTypeJSON,
+			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
+				JSONCompression:       &sdk.JSONCompressionBrotli,
+				JSONDateFormat:        sdk.String("a"),
+				JSONTimeFormat:        sdk.String("b"),
+				JSONTimestampFormat:   sdk.String("c"),
+				JSONBinaryFormat:      &sdk.BinaryFormatHex,
+				JSONTrimSpace:         sdk.Bool(true),
+				JSONNullIf:            &[]sdk.NullString{{S: "d"}, {S: "e"}},
+				JSONFileExtension:     sdk.String("f"),
+				JSONEnableOctal:       sdk.Bool(true),
+				JSONAllowDuplicate:    sdk.Bool(true),
+				JSONStripOuterArray:   sdk.Bool(true),
+				JSONStripNullValues:   sdk.Bool(true),
+				JSONIgnoreUTF8Errors:  sdk.Bool(true),
+				JSONSkipByteOrderMark: sdk.Bool(true),
 
-				Comment: String("test comment"),
+				Comment: sdk.String("test comment"),
 			},
 		})
 		require.NoError(t, err)
@@ -140,18 +140,18 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeJSON, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, sdk.FileFormatTypeJSON, result.Type)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
-		assert.Equal(t, JSONCompressionBrotli, *result.Options.JSONCompression)
+		assert.Equal(t, sdk.JSONCompressionBrotli, *result.Options.JSONCompression)
 		assert.Equal(t, "a", *result.Options.JSONDateFormat)
 		assert.Equal(t, "b", *result.Options.JSONTimeFormat)
 		assert.Equal(t, "c", *result.Options.JSONTimestampFormat)
-		assert.Equal(t, BinaryFormatHex, *result.Options.JSONBinaryFormat)
+		assert.Equal(t, sdk.BinaryFormatHex, *result.Options.JSONBinaryFormat)
 		assert.Equal(t, true, *result.Options.JSONTrimSpace)
-		assert.Equal(t, []NullString{{"d"}, {"e"}}, *result.Options.JSONNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "d"}, {S: "e"}}, *result.Options.JSONNullIf)
 		assert.Equal(t, "f", *result.Options.JSONFileExtension)
 		assert.Equal(t, true, *result.Options.JSONEnableOctal)
 		assert.Equal(t, true, *result.Options.JSONAllowDuplicate)
@@ -162,14 +162,14 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeJSON, describeResult.Type)
-		assert.Equal(t, JSONCompressionBrotli, *describeResult.Options.JSONCompression)
+		assert.Equal(t, sdk.FileFormatTypeJSON, describeResult.Type)
+		assert.Equal(t, sdk.JSONCompressionBrotli, *describeResult.Options.JSONCompression)
 		assert.Equal(t, "a", *describeResult.Options.JSONDateFormat)
 		assert.Equal(t, "b", *describeResult.Options.JSONTimeFormat)
 		assert.Equal(t, "c", *describeResult.Options.JSONTimestampFormat)
-		assert.Equal(t, BinaryFormatHex, *describeResult.Options.JSONBinaryFormat)
+		assert.Equal(t, sdk.BinaryFormatHex, *describeResult.Options.JSONBinaryFormat)
 		assert.Equal(t, true, *describeResult.Options.JSONTrimSpace)
-		assert.Equal(t, []NullString{{"d"}, {"e"}}, *describeResult.Options.JSONNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "d"}, {S: "e"}}, *describeResult.Options.JSONNullIf)
 		assert.Equal(t, "f", *describeResult.Options.JSONFileExtension)
 		assert.Equal(t, true, *describeResult.Options.JSONEnableOctal)
 		assert.Equal(t, true, *describeResult.Options.JSONAllowDuplicate)
@@ -179,16 +179,16 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, true, *describeResult.Options.JSONSkipByteOrderMark)
 	})
 	t.Run("AVRO", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
-		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeAvro,
-			FileFormatTypeOptions: FileFormatTypeOptions{
-				AvroCompression:              &AvroCompressionGzip,
-				AvroTrimSpace:                Bool(true),
-				AvroReplaceInvalidCharacters: Bool(true),
-				AvroNullIf:                   &[]NullString{{"a"}, {"b"}},
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
+			Type: sdk.FileFormatTypeAvro,
+			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
+				AvroCompression:              &sdk.AvroCompressionGzip,
+				AvroTrimSpace:                sdk.Bool(true),
+				AvroReplaceInvalidCharacters: sdk.Bool(true),
+				AvroNullIf:                   &[]sdk.NullString{{S: "a"}, {S: "b"}},
 
-				Comment: String("test comment"),
+				Comment: sdk.String("test comment"),
 			},
 		})
 		require.NoError(t, err)
@@ -202,34 +202,34 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeAvro, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, sdk.FileFormatTypeAvro, result.Type)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
-		assert.Equal(t, AvroCompressionGzip, *result.Options.AvroCompression)
+		assert.Equal(t, sdk.AvroCompressionGzip, *result.Options.AvroCompression)
 		assert.Equal(t, true, *result.Options.AvroTrimSpace)
 		assert.Equal(t, true, *result.Options.AvroReplaceInvalidCharacters)
-		assert.Equal(t, []NullString{{"a"}, {"b"}}, *result.Options.AvroNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *result.Options.AvroNullIf)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeAvro, describeResult.Type)
-		assert.Equal(t, AvroCompressionGzip, *describeResult.Options.AvroCompression)
+		assert.Equal(t, sdk.FileFormatTypeAvro, describeResult.Type)
+		assert.Equal(t, sdk.AvroCompressionGzip, *describeResult.Options.AvroCompression)
 		assert.Equal(t, true, *describeResult.Options.AvroTrimSpace)
 		assert.Equal(t, true, *describeResult.Options.AvroReplaceInvalidCharacters)
-		assert.Equal(t, []NullString{{"a"}, {"b"}}, *describeResult.Options.AvroNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.AvroNullIf)
 	})
 	t.Run("ORC", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
-		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeORC,
-			FileFormatTypeOptions: FileFormatTypeOptions{
-				ORCTrimSpace:                Bool(true),
-				ORCReplaceInvalidCharacters: Bool(true),
-				ORCNullIf:                   &[]NullString{{"a"}, {"b"}},
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
+			Type: sdk.FileFormatTypeORC,
+			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
+				ORCTrimSpace:                sdk.Bool(true),
+				ORCReplaceInvalidCharacters: sdk.Bool(true),
+				ORCNullIf:                   &[]sdk.NullString{{S: "a"}, {S: "b"}},
 
-				Comment: String("test comment"),
+				Comment: sdk.String("test comment"),
 			},
 		})
 		require.NoError(t, err)
@@ -243,34 +243,34 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeORC, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, sdk.FileFormatTypeORC, result.Type)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
 		assert.Equal(t, true, *result.Options.ORCTrimSpace)
 		assert.Equal(t, true, *result.Options.ORCReplaceInvalidCharacters)
-		assert.Equal(t, []NullString{{"a"}, {"b"}}, *result.Options.ORCNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *result.Options.ORCNullIf)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeORC, describeResult.Type)
+		assert.Equal(t, sdk.FileFormatTypeORC, describeResult.Type)
 		assert.Equal(t, true, *describeResult.Options.ORCTrimSpace)
 		assert.Equal(t, true, *describeResult.Options.ORCReplaceInvalidCharacters)
-		assert.Equal(t, []NullString{{"a"}, {"b"}}, *describeResult.Options.ORCNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ORCNullIf)
 	})
 	t.Run("PARQUET", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
-		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeParquet,
-			FileFormatTypeOptions: FileFormatTypeOptions{
-				ParquetCompression:              &ParquetCompressionLzo,
-				ParquetBinaryAsText:             Bool(true),
-				ParquetTrimSpace:                Bool(true),
-				ParquetReplaceInvalidCharacters: Bool(true),
-				ParquetNullIf:                   &[]NullString{{"a"}, {"b"}},
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
+			Type: sdk.FileFormatTypeParquet,
+			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
+				ParquetCompression:              &sdk.ParquetCompressionLzo,
+				ParquetBinaryAsText:             sdk.Bool(true),
+				ParquetTrimSpace:                sdk.Bool(true),
+				ParquetReplaceInvalidCharacters: sdk.Bool(true),
+				ParquetNullIf:                   &[]sdk.NullString{{S: "a"}, {S: "b"}},
 
-				Comment: String("test comment"),
+				Comment: sdk.String("test comment"),
 			},
 		})
 		require.NoError(t, err)
@@ -284,40 +284,40 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeParquet, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, sdk.FileFormatTypeParquet, result.Type)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
-		assert.Equal(t, ParquetCompressionLzo, *result.Options.ParquetCompression)
+		assert.Equal(t, sdk.ParquetCompressionLzo, *result.Options.ParquetCompression)
 		assert.Equal(t, true, *result.Options.ParquetBinaryAsText)
 		assert.Equal(t, true, *result.Options.ParquetTrimSpace)
 		assert.Equal(t, true, *result.Options.ParquetReplaceInvalidCharacters)
-		assert.Equal(t, []NullString{{"a"}, {"b"}}, *result.Options.ParquetNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *result.Options.ParquetNullIf)
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeParquet, describeResult.Type)
-		assert.Equal(t, ParquetCompressionLzo, *describeResult.Options.ParquetCompression)
+		assert.Equal(t, sdk.FileFormatTypeParquet, describeResult.Type)
+		assert.Equal(t, sdk.ParquetCompressionLzo, *describeResult.Options.ParquetCompression)
 		assert.Equal(t, true, *describeResult.Options.ParquetBinaryAsText)
 		assert.Equal(t, true, *describeResult.Options.ParquetTrimSpace)
 		assert.Equal(t, true, *describeResult.Options.ParquetReplaceInvalidCharacters)
-		assert.Equal(t, []NullString{{"a"}, {"b"}}, *describeResult.Options.ParquetNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ParquetNullIf)
 	})
 	t.Run("XML", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
-		err := client.FileFormats.Create(ctx, id, &CreateFileFormatOptions{
-			Type: FileFormatTypeXML,
-			FileFormatTypeOptions: FileFormatTypeOptions{
-				XMLCompression:          &XMLCompressionDeflate,
-				XMLIgnoreUTF8Errors:     Bool(true),
-				XMLPreserveSpace:        Bool(true),
-				XMLStripOuterElement:    Bool(true),
-				XMLDisableSnowflakeData: Bool(true),
-				XMLDisableAutoConvert:   Bool(true),
-				XMLSkipByteOrderMark:    Bool(true),
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
+			Type: sdk.FileFormatTypeXML,
+			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
+				XMLCompression:          &sdk.XMLCompressionDeflate,
+				XMLIgnoreUTF8Errors:     sdk.Bool(true),
+				XMLPreserveSpace:        sdk.Bool(true),
+				XMLStripOuterElement:    sdk.Bool(true),
+				XMLDisableSnowflakeData: sdk.Bool(true),
+				XMLDisableAutoConvert:   sdk.Bool(true),
+				XMLSkipByteOrderMark:    sdk.Bool(true),
 
-				Comment: String("test comment"),
+				Comment: sdk.String("test comment"),
 			},
 		})
 		require.NoError(t, err)
@@ -331,12 +331,12 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		assert.Equal(t, id, result.Name)
 		assert.WithinDuration(t, time.Now(), result.CreatedOn, 5*time.Second)
-		assert.Equal(t, FileFormatTypeXML, result.Type)
-		assert.Equal(t, client.config.Role, result.Owner)
+		assert.Equal(t, sdk.FileFormatTypeXML, result.Type)
+		assert.Equal(t, client.GetConfig().Role, result.Owner)
 		assert.Equal(t, "test comment", result.Comment)
 		assert.Equal(t, "ROLE", result.OwnerRoleType)
 
-		assert.Equal(t, XMLCompressionDeflate, *result.Options.XMLCompression)
+		assert.Equal(t, sdk.XMLCompressionDeflate, *result.Options.XMLCompression)
 		assert.Equal(t, true, *result.Options.XMLIgnoreUTF8Errors)
 		assert.Equal(t, true, *result.Options.XMLPreserveSpace)
 		assert.Equal(t, true, *result.Options.XMLStripOuterElement)
@@ -346,8 +346,8 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 		describeResult, err := client.FileFormats.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, FileFormatTypeXML, describeResult.Type)
-		assert.Equal(t, XMLCompressionDeflate, *describeResult.Options.XMLCompression)
+		assert.Equal(t, sdk.FileFormatTypeXML, describeResult.Type)
+		assert.Equal(t, sdk.XMLCompressionDeflate, *describeResult.Options.XMLCompression)
 		assert.Equal(t, true, *describeResult.Options.XMLIgnoreUTF8Errors)
 		assert.Equal(t, true, *describeResult.Options.XMLPreserveSpace)
 		assert.Equal(t, true, *describeResult.Options.XMLStripOuterElement)
@@ -359,7 +359,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 
 func TestInt_FileFormatsAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, cleanupDatabase := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
@@ -370,25 +370,25 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 		fileFormat, fileFormatCleanup := createFileFormat(t, client, schemaTest.ID())
 		t.Cleanup(fileFormatCleanup)
 		oldId := fileFormat.ID()
-		newId := NewSchemaObjectIdentifier(oldId.databaseName, oldId.schemaName, randomString(t))
+		newId := sdk.NewSchemaObjectIdentifier(oldId.DatabaseName(), oldId.SchemaName(), randomString(t))
 
-		err := client.FileFormats.Alter(ctx, oldId, &AlterFileFormatOptions{
-			Rename: &AlterFileFormatRenameOptions{
+		err := client.FileFormats.Alter(ctx, oldId, &sdk.AlterFileFormatOptions{
+			Rename: &sdk.AlterFileFormatRenameOptions{
 				NewName: newId,
 			},
 		})
 		require.NoError(t, err)
 
 		_, err = client.FileFormats.ShowByID(ctx, oldId)
-		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 
 		result, err := client.FileFormats.ShowByID(ctx, newId)
 		require.NoError(t, err)
 		assert.Equal(t, newId, result.Name)
 
 		// Undo rename so we can clean up
-		err = client.FileFormats.Alter(ctx, newId, &AlterFileFormatOptions{
-			Rename: &AlterFileFormatRenameOptions{
+		err = client.FileFormats.Alter(ctx, newId, &sdk.AlterFileFormatOptions{
+			Rename: &sdk.AlterFileFormatRenameOptions{
 				NewName: oldId,
 			},
 		})
@@ -396,33 +396,33 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 	})
 
 	t.Run("set", func(t *testing.T) {
-		fileFormat, fileFormatCleanup := createFileFormatWithOptions(t, client, schemaTest.ID(), &CreateFileFormatOptions{
-			Type: FileFormatTypeCSV,
-			FileFormatTypeOptions: FileFormatTypeOptions{
-				CSVCompression: &CSVCompressionAuto,
-				CSVParseHeader: Bool(false),
+		fileFormat, fileFormatCleanup := createFileFormatWithOptions(t, client, schemaTest.ID(), &sdk.CreateFileFormatOptions{
+			Type: sdk.FileFormatTypeCSV,
+			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
+				CSVCompression: &sdk.CSVCompressionAuto,
+				CSVParseHeader: sdk.Bool(false),
 			},
 		})
 		t.Cleanup(fileFormatCleanup)
 
-		err := client.FileFormats.Alter(ctx, fileFormat.ID(), &AlterFileFormatOptions{
-			Set: &FileFormatTypeOptions{
-				CSVCompression: &CSVCompressionBz2,
-				CSVParseHeader: Bool(true),
+		err := client.FileFormats.Alter(ctx, fileFormat.ID(), &sdk.AlterFileFormatOptions{
+			Set: &sdk.FileFormatTypeOptions{
+				CSVCompression: &sdk.CSVCompressionBz2,
+				CSVParseHeader: sdk.Bool(true),
 			},
 		})
 		require.NoError(t, err)
 
 		result, err := client.FileFormats.ShowByID(ctx, fileFormat.ID())
 		require.NoError(t, err)
-		assert.Equal(t, CSVCompressionBz2, *result.Options.CSVCompression)
+		assert.Equal(t, sdk.CSVCompressionBz2, *result.Options.CSVCompression)
 		assert.Equal(t, true, *result.Options.CSVParseHeader)
 	})
 }
 
 func TestInt_FileFormatsDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, cleanupDatabase := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
@@ -434,24 +434,24 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.FileFormats.ShowByID(ctx, fileFormat.ID())
-		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("with IfExists", func(t *testing.T) {
 		fileFormat, _ := createFileFormat(t, client, schemaTest.ID())
-		err := client.FileFormats.Drop(ctx, fileFormat.ID(), &DropFileFormatOptions{
-			IfExists: Bool(true),
+		err := client.FileFormats.Drop(ctx, fileFormat.ID(), &sdk.DropFileFormatOptions{
+			IfExists: sdk.Bool(true),
 		})
 		require.NoError(t, err)
 
 		_, err = client.FileFormats.ShowByID(ctx, fileFormat.ID())
-		require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
 
 func TestInt_FileFormatsShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, cleanupDatabase := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
@@ -471,9 +471,9 @@ func TestInt_FileFormatsShow(t *testing.T) {
 	})
 
 	t.Run("LIKE", func(t *testing.T) {
-		fileFormats, err := client.FileFormats.Show(ctx, &ShowFileFormatsOptions{
-			Like: &Like{
-				Pattern: String(fileFormatTest.Name.name),
+		fileFormats, err := client.FileFormats.Show(ctx, &sdk.ShowFileFormatsOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(fileFormatTest.Name.Name()),
 			},
 		})
 		require.NoError(t, err)
@@ -482,8 +482,8 @@ func TestInt_FileFormatsShow(t *testing.T) {
 	})
 
 	t.Run("IN", func(t *testing.T) {
-		fileFormats, err := client.FileFormats.Show(ctx, &ShowFileFormatsOptions{
-			In: &In{
+		fileFormats, err := client.FileFormats.Show(ctx, &sdk.ShowFileFormatsOptions{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
@@ -496,7 +496,7 @@ func TestInt_FileFormatsShow(t *testing.T) {
 
 func TestInt_FileFormatsShowById(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, cleanupDatabase := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase)
@@ -518,8 +518,8 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 
 		fileFormat, err := client.FileFormats.ShowByID(ctx, fileFormatTest.ID())
 		require.NoError(t, err)
-		assert.Equal(t, databaseTest.Name, fileFormat.Name.databaseName)
-		assert.Equal(t, schemaTest.Name, fileFormat.Name.schemaName)
-		assert.Equal(t, fileFormatTest.Name.name, fileFormat.Name.name)
+		assert.Equal(t, databaseTest.Name, fileFormat.Name.DatabaseName())
+		assert.Equal(t, schemaTest.Name, fileFormat.Name.SchemaName())
+		assert.Equal(t, fileFormatTest.Name.Name(), fileFormat.Name.Name())
 	})
 }

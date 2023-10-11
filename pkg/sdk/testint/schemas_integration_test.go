@@ -1,17 +1,17 @@
-package sdk
+package testint
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_SchemasCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)
@@ -21,13 +21,13 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("replace", func(t *testing.T) {
 		comment := "replaced"
-		err := client.Schemas.Create(ctx, schema.ID(), &CreateSchemaOptions{
-			OrReplace:                  Bool(true),
-			DataRetentionTimeInDays:    Int(10),
-			MaxDataExtensionTimeInDays: Int(10),
-			DefaultDDLCollation:        String("en_US-trim"),
-			WithManagedAccess:          Bool(true),
-			Comment:                    String(comment),
+		err := client.Schemas.Create(ctx, schema.ID(), &sdk.CreateSchemaOptions{
+			OrReplace:                  sdk.Bool(true),
+			DataRetentionTimeInDays:    sdk.Int(10),
+			MaxDataExtensionTimeInDays: sdk.Int(10),
+			DefaultDDLCollation:        sdk.String("en_US-trim"),
+			WithManagedAccess:          sdk.Bool(true),
+			Comment:                    sdk.String(comment),
 		})
 		require.NoError(t, err)
 		s, err := client.Schemas.ShowByID(ctx, schema.ID())
@@ -39,9 +39,9 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("if not exists", func(t *testing.T) {
 		comment := "some_comment"
-		err := client.Schemas.Create(ctx, schema.ID(), &CreateSchemaOptions{
-			IfNotExists: Bool(true),
-			Comment:     String(comment),
+		err := client.Schemas.Create(ctx, schema.ID(), &sdk.CreateSchemaOptions{
+			IfNotExists: sdk.Bool(true),
+			Comment:     sdk.String(comment),
 		})
 		require.NoError(t, err)
 		s, err := client.Schemas.ShowByID(ctx, schema.ID())
@@ -51,16 +51,16 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("clone", func(t *testing.T) {
 		comment := "some_comment"
-		schemaID := NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
-		err := client.Schemas.Create(ctx, schemaID, &CreateSchemaOptions{
-			Comment: String(comment),
+		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).Name())
+		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
+			Comment: sdk.String(comment),
 		})
 		require.NoError(t, err)
 
-		clonedSchemaID := NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
-		err = client.Schemas.Create(ctx, clonedSchemaID, &CreateSchemaOptions{
-			Comment: String(comment),
-			Clone: &Clone{
+		clonedSchemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).Name())
+		err = client.Schemas.Create(ctx, clonedSchemaID, &sdk.CreateSchemaOptions{
+			Comment: sdk.String(comment),
+			Clone: &sdk.Clone{
 				SourceObject: schemaID,
 			},
 		})
@@ -83,18 +83,18 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 	t.Run("with tags", func(t *testing.T) {
 		tagName := randomString(t)
-		tagID := NewAccountObjectIdentifier(tagName)
-		_, err := client.exec(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
+		tagID := sdk.NewAccountObjectIdentifier(tagName)
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			_, err := client.exec(ctx, fmt.Sprintf(`DROP TAG "%s"`, tagName))
+			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP TAG "%s"`, tagName))
 			require.NoError(t, err)
 		})
 
-		schemaID := NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
+		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).Name())
 		tagValue := randomString(t)
-		err = client.Schemas.Create(ctx, schemaID, &CreateSchemaOptions{
-			Tag: []TagAssociation{
+		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
+			Tag: []sdk.TagAssociation{
 				{
 					Name:  tagID,
 					Value: tagValue,
@@ -107,7 +107,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		tv, err := client.SystemFunctions.GetTag(ctx, tagID, schemaID, ObjectTypeSchema)
+		tv, err := client.SystemFunctions.GetTag(ctx, tagID, schemaID, sdk.ObjectTypeSchema)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, tv)
 	})
@@ -115,15 +115,15 @@ func TestInt_SchemasCreate(t *testing.T) {
 
 func TestInt_SchemasAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)
 
 	t.Run("rename to", func(t *testing.T) {
 		schema, _ := createSchema(t, client, db)
-		newID := NewDatabaseObjectIdentifier(db.Name, randomString(t))
-		err := client.Schemas.Alter(ctx, schema.ID(), &AlterSchemaOptions{
+		newID := sdk.NewDatabaseObjectIdentifier(db.Name, randomString(t))
+		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
 			NewName: newID,
 		})
 		require.NoError(t, err)
@@ -145,11 +145,11 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 		table, _ := createTable(t, client, db, schema)
 		t.Cleanup(func() {
-			_, err := client.exec(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", db.Name, swapSchema.Name, table.Name))
+			_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", db.Name, swapSchema.Name, table.Name))
 			require.NoError(t, err)
 		})
 
-		err := client.Schemas.Alter(ctx, schema.ID(), &AlterSchemaOptions{
+		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
 			SwapWith: swapSchema.ID(),
 		})
 		require.NoError(t, err)
@@ -166,12 +166,12 @@ func TestInt_SchemasAlter(t *testing.T) {
 		t.Cleanup(cleanupSchema)
 
 		comment := randomComment(t)
-		err := client.Schemas.Alter(ctx, schema.ID(), &AlterSchemaOptions{
-			Set: &SchemaSet{
-				DataRetentionTimeInDays:    Int(3),
-				MaxDataExtensionTimeInDays: Int(3),
-				DefaultDDLCollation:        String("en_US-trim"),
-				Comment:                    String(comment),
+		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
+			Set: &sdk.SchemaSet{
+				DataRetentionTimeInDays:    sdk.Int(3),
+				MaxDataExtensionTimeInDays: sdk.Int(3),
+				DefaultDDLCollation:        sdk.String("en_US-trim"),
+				Comment:                    sdk.String(comment),
 			},
 		})
 		require.NoError(t, err)
@@ -182,16 +182,16 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("unset", func(t *testing.T) {
-		schemaID := NewDatabaseObjectIdentifier(db.Name, randomString(t))
+		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomString(t))
 		comment := randomComment(t)
-		err := client.Schemas.Create(ctx, schemaID, &CreateSchemaOptions{
-			Comment: String(comment),
+		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
+			Comment: sdk.String(comment),
 		})
 		require.NoError(t, err)
 
-		err = client.Schemas.Alter(ctx, schemaID, &AlterSchemaOptions{
-			Unset: &SchemaUnset{
-				Comment: Bool(true),
+		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
+			Unset: &sdk.SchemaUnset{
+				Comment: sdk.Bool(true),
 			},
 		})
 		require.NoError(t, err)
@@ -207,7 +207,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 	})
 
 	t.Run("set tags", func(t *testing.T) {
-		schemaID := NewDatabaseObjectIdentifier(db.Name, randomString(t))
+		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomString(t))
 		err := client.Schemas.Create(ctx, schemaID, nil)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -222,9 +222,9 @@ func TestInt_SchemasAlter(t *testing.T) {
 		t.Cleanup(cleanupTag)
 
 		tagValue := "tag-value"
-		err = client.Schemas.Alter(ctx, schemaID, &AlterSchemaOptions{
-			Set: &SchemaSet{
-				Tag: []TagAssociation{
+		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
+			Set: &sdk.SchemaSet{
+				Tag: []sdk.TagAssociation{
 					{
 						Name:  tag.ID(),
 						Value: tagValue,
@@ -234,25 +234,25 @@ func TestInt_SchemasAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), s.ID(), ObjectTypeSchema)
+		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), s.ID(), sdk.ObjectTypeSchema)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, tv)
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
 		tagName := randomString(t)
-		tagID := NewAccountObjectIdentifier(tagName)
-		_, err := client.exec(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
+		tagID := sdk.NewAccountObjectIdentifier(tagName)
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE TAG "%s"`, tagName))
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			_, err := client.exec(ctx, fmt.Sprintf(`DROP TAG "%s"`, tagName))
+			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP TAG "%s"`, tagName))
 			require.NoError(t, err)
 		})
 
-		schemaID := NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).name)
+		schemaID := sdk.NewDatabaseObjectIdentifier(db.Name, randomAccountObjectIdentifier(t).Name())
 		tagValue := randomString(t)
-		err = client.Schemas.Create(ctx, schemaID, &CreateSchemaOptions{
-			Tag: []TagAssociation{
+		err = client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
+			Tag: []sdk.TagAssociation{
 				{
 					Name:  tagID,
 					Value: tagValue,
@@ -265,16 +265,16 @@ func TestInt_SchemasAlter(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		err = client.Schemas.Alter(ctx, schemaID, &AlterSchemaOptions{
-			Unset: &SchemaUnset{
-				Tag: []ObjectIdentifier{
+		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
+			Unset: &sdk.SchemaUnset{
+				Tag: []sdk.ObjectIdentifier{
 					tagID,
 				},
 			},
 		})
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tagID, schemaID, ObjectTypeSchema)
+		_, err = client.SystemFunctions.GetTag(ctx, tagID, schemaID, sdk.ObjectTypeSchema)
 		require.Error(t, err)
 	})
 
@@ -282,8 +282,8 @@ func TestInt_SchemasAlter(t *testing.T) {
 		schema, cleanupSchema := createSchema(t, client, db)
 		t.Cleanup(cleanupSchema)
 
-		err := client.Schemas.Alter(ctx, schema.ID(), &AlterSchemaOptions{
-			EnableManagedAccess: Bool(true),
+		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
+			EnableManagedAccess: sdk.Bool(true),
 		})
 		require.NoError(t, err)
 
@@ -296,7 +296,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 func TestInt_SchemasShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)
@@ -315,18 +315,18 @@ func TestInt_SchemasShow(t *testing.T) {
 	})
 
 	t.Run("with options", func(t *testing.T) {
-		schemas, err := client.Schemas.Show(ctx, &ShowSchemaOptions{
-			Terse:   Bool(true),
-			History: Bool(true),
-			Like: &Like{
-				Pattern: String(schema.Name),
+		schemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaOptions{
+			Terse:   sdk.Bool(true),
+			History: sdk.Bool(true),
+			Like: &sdk.Like{
+				Pattern: sdk.String(schema.Name),
 			},
-			In: &SchemaIn{
-				Account: Bool(true),
+			In: &sdk.SchemaIn{
+				Account: sdk.Bool(true),
 			},
-			StartsWith: String(schema.Name),
-			LimitFrom: &LimitFrom{
-				Rows: Int(1),
+			StartsWith: sdk.String(schema.Name),
+			LimitFrom: &sdk.LimitFrom{
+				Rows: sdk.Int(1),
 			},
 		})
 		require.NoError(t, err)
@@ -340,7 +340,7 @@ func TestInt_SchemasShow(t *testing.T) {
 
 func TestInt_SchemasDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)
@@ -354,8 +354,8 @@ func TestInt_SchemasDrop(t *testing.T) {
 	err = client.Schemas.Drop(ctx, schema.ID(), nil)
 	require.NoError(t, err)
 
-	schemas, err := client.Schemas.Show(ctx, &ShowSchemaOptions{
-		Like: &Like{
+	schemas, err := client.Schemas.Show(ctx, &sdk.ShowSchemaOptions{
+		Like: &sdk.Like{
 			Pattern: &schema.Name,
 		},
 	})
@@ -367,7 +367,7 @@ func TestInt_SchemasDrop(t *testing.T) {
 todo: this test is failing, need to fix
 func TestInt_SchemasUndrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	db, cleanupDb := createDatabase(t, client)
 	t.Cleanup(cleanupDb)

@@ -1,17 +1,17 @@
-package sdk
+package testint
 
 import (
-	"context"
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_AlertsShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -35,8 +35,8 @@ func TestInt_AlertsShow(t *testing.T) {
 	})
 
 	t.Run("with show options", func(t *testing.T) {
-		showOptions := &ShowAlertOptions{
-			In: &In{
+		showOptions := &sdk.ShowAlertOptions{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		}
@@ -48,11 +48,11 @@ func TestInt_AlertsShow(t *testing.T) {
 	})
 
 	t.Run("with show options and like", func(t *testing.T) {
-		showOptions := &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(alertTest.Name),
+		showOptions := &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(alertTest.Name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Database: databaseTest.ID(),
 			},
 		}
@@ -63,9 +63,9 @@ func TestInt_AlertsShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent alert", func(t *testing.T) {
-		showOptions := &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String("non-existent"),
+		showOptions := &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String("non-existent"),
 			},
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
@@ -74,11 +74,11 @@ func TestInt_AlertsShow(t *testing.T) {
 	})
 
 	t.Run("when limiting the number of results", func(t *testing.T) {
-		showOptions := &ShowAlertOptions{
-			In: &In{
+		showOptions := &sdk.ShowAlertOptions{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
-			Limit: Int(1),
+			Limit: sdk.Int(1),
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
 		require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestInt_AlertsShow(t *testing.T) {
 
 func TestInt_AlertCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
@@ -104,11 +104,11 @@ func TestInt_AlertCreate(t *testing.T) {
 		condition := "SELECT 1"
 		action := "SELECT 1"
 		comment := randomComment(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, &CreateAlertOptions{
-			OrReplace:   Bool(true),
-			IfNotExists: Bool(false),
-			Comment:     String(comment),
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, &sdk.CreateAlertOptions{
+			OrReplace:   sdk.Bool(true),
+			IfNotExists: sdk.Bool(false),
+			Comment:     sdk.String(comment),
 		})
 		require.NoError(t, err)
 		alertDetails, err := client.Alerts.Describe(ctx, id)
@@ -120,11 +120,11 @@ func TestInt_AlertCreate(t *testing.T) {
 		assert.Equal(t, condition, alertDetails.Condition)
 		assert.Equal(t, action, alertDetails.Action)
 
-		alert, err := client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(name),
+		alert, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
@@ -140,11 +140,11 @@ func TestInt_AlertCreate(t *testing.T) {
 		condition := "SELECT 1"
 		action := "SELECT 1"
 		comment := randomComment(t)
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, &CreateAlertOptions{
-			OrReplace:   Bool(false),
-			IfNotExists: Bool(true),
-			Comment:     String(comment),
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, &sdk.CreateAlertOptions{
+			OrReplace:   sdk.Bool(false),
+			IfNotExists: sdk.Bool(true),
+			Comment:     sdk.String(comment),
 		})
 		require.NoError(t, err)
 		alertDetails, err := client.Alerts.Describe(ctx, id)
@@ -156,11 +156,11 @@ func TestInt_AlertCreate(t *testing.T) {
 		assert.Equal(t, condition, alertDetails.Condition)
 		assert.Equal(t, action, alertDetails.Action)
 
-		alert, err := client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(name),
+		alert, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
@@ -175,7 +175,7 @@ func TestInt_AlertCreate(t *testing.T) {
 		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := "SELECT 1"
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, nil)
 		require.NoError(t, err)
 		alertDetails, err := client.Alerts.Describe(ctx, id)
@@ -186,11 +186,11 @@ func TestInt_AlertCreate(t *testing.T) {
 		assert.Equal(t, condition, alertDetails.Condition)
 		assert.Equal(t, action, alertDetails.Action)
 
-		alert, err := client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(name),
+		alert, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
@@ -213,7 +213,7 @@ func TestInt_AlertCreate(t *testing.T) {
 						2
 				end
 		`
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, nil)
 		require.NoError(t, err)
 		alertDetails, err := client.Alerts.Describe(ctx, id)
@@ -224,11 +224,11 @@ func TestInt_AlertCreate(t *testing.T) {
 		assert.Equal(t, condition, alertDetails.Condition)
 		assert.Equal(t, strings.TrimSpace(action), alertDetails.Action)
 
-		alert, err := client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(name),
+		alert, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
@@ -241,7 +241,7 @@ func TestInt_AlertCreate(t *testing.T) {
 
 func TestInt_AlertDescribe(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -262,15 +262,15 @@ func TestInt_AlertDescribe(t *testing.T) {
 	})
 
 	t.Run("when alert does not exist", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		_, err := client.Alerts.Describe(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
 
 func TestInt_AlertAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -286,19 +286,19 @@ func TestInt_AlertAlter(t *testing.T) {
 		t.Cleanup(alertCleanup)
 		newSchedule := "USING CRON * * * * TUE,FRI GMT"
 
-		alterOptions := &AlterAlertOptions{
-			Set: &AlertSet{
+		alterOptions := &sdk.AlterAlertOptions{
+			Set: &sdk.AlertSet{
 				Schedule: &newSchedule,
 			},
 		}
 
 		err := client.Alerts.Alter(ctx, alert.ID(), alterOptions)
 		require.NoError(t, err)
-		alerts, err := client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(alert.Name),
+		alerts, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(alert.Name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
@@ -312,17 +312,17 @@ func TestInt_AlertAlter(t *testing.T) {
 		t.Cleanup(alertCleanup)
 		newCondition := "select * from DUAL where false"
 
-		alterOptions := &AlterAlertOptions{
+		alterOptions := &sdk.AlterAlertOptions{
 			ModifyCondition: &[]string{newCondition},
 		}
 
 		err := client.Alerts.Alter(ctx, alert.ID(), alterOptions)
 		require.NoError(t, err)
-		alerts, err := client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(alert.Name),
+		alerts, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(alert.Name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
@@ -332,17 +332,17 @@ func TestInt_AlertAlter(t *testing.T) {
 
 		newAction := "create table FOO(ID INT)"
 
-		alterOptions = &AlterAlertOptions{
+		alterOptions = &sdk.AlterAlertOptions{
 			ModifyAction: &newAction,
 		}
 
 		err = client.Alerts.Alter(ctx, alert.ID(), alterOptions)
 		require.NoError(t, err)
-		alerts, err = client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(alert.Name),
+		alerts, err = client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(alert.Name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
@@ -355,47 +355,47 @@ func TestInt_AlertAlter(t *testing.T) {
 		alert, alertCleanup := createAlert(t, client, databaseTest, schemaTest, warehouseTest)
 		t.Cleanup(alertCleanup)
 
-		alterOptions := &AlterAlertOptions{
-			Action: &AlertActionResume,
+		alterOptions := &sdk.AlterAlertOptions{
+			Action: &sdk.AlertActionResume,
 		}
 
 		err := client.Alerts.Alter(ctx, alert.ID(), alterOptions)
 		require.NoError(t, err)
-		alerts, err := client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(alert.Name),
+		alerts, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(alert.Name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
-		assert.True(t, alerts[0].State == AlertStateStarted)
+		assert.True(t, alerts[0].State == sdk.AlertStateStarted)
 
-		alterOptions = &AlterAlertOptions{
-			Action: &AlertActionSuspend,
+		alterOptions = &sdk.AlterAlertOptions{
+			Action: &sdk.AlertActionSuspend,
 		}
 
 		err = client.Alerts.Alter(ctx, alert.ID(), alterOptions)
 		require.NoError(t, err)
-		alerts, err = client.Alerts.Show(ctx, &ShowAlertOptions{
-			Like: &Like{
-				Pattern: String(alert.Name),
+		alerts, err = client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(alert.Name),
 			},
-			In: &In{
+			In: &sdk.In{
 				Schema: schemaTest.ID(),
 			},
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
-		assert.True(t, alerts[0].State == AlertStateSuspended)
+		assert.True(t, alerts[0].State == sdk.AlertStateSuspended)
 	})
 }
 
 func TestInt_AlertDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -412,12 +412,12 @@ func TestInt_AlertDrop(t *testing.T) {
 		err := client.Alerts.Drop(ctx, id)
 		require.NoError(t, err)
 		_, err = client.PasswordPolicies.Describe(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when alert does not exist", func(t *testing.T) {
-		id := NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "does_not_exist")
 		err := client.Alerts.Drop(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

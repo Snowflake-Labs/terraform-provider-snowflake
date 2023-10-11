@@ -1,13 +1,13 @@
-package sdk
+package testint
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/avast/retry-go"
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/assert"
@@ -16,17 +16,17 @@ import (
 
 func TestInt_AccountShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
-	ok, err := client.ContextFunctions.IsRoleInSession(ctx, NewAccountObjectIdentifier("ORGADMIN"))
+	ctx := testContext(t)
+	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	require.NoError(t, err)
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
 	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
 	require.NoError(t, err)
-	opts := &ShowAccountOptions{
-		Like: &Like{
-			Pattern: String(currentAccount),
+	opts := &sdk.ShowAccountOptions{
+		Like: &sdk.Like{
+			Pattern: sdk.String(currentAccount),
 		},
 	}
 	accounts, err := client.Accounts.Show(ctx, opts)
@@ -38,45 +38,45 @@ func TestInt_AccountShow(t *testing.T) {
 
 func TestInt_AccountShowByID(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
-	ok, err := client.ContextFunctions.IsRoleInSession(ctx, NewAccountObjectIdentifier("ORGADMIN"))
+	ctx := testContext(t)
+	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	require.NoError(t, err)
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
 	require.NoError(t, err)
-	_, err = client.Accounts.ShowByID(ctx, NewAccountObjectIdentifier("NOT_EXISTING_ACCOUNT"))
-	require.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+	_, err = client.Accounts.ShowByID(ctx, sdk.NewAccountObjectIdentifier("NOT_EXISTING_ACCOUNT"))
+	require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 }
 
 func TestInt_AccountCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
-	ok, err := client.ContextFunctions.IsRoleInSession(ctx, NewAccountObjectIdentifier("ORGADMIN"))
+	ctx := testContext(t)
+	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	require.NoError(t, err)
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
 	t.Run("complete case", func(t *testing.T) {
-		accountID := NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Fruit()) + "_" + fmt.Sprintf("%d", (randomIntRange(t, 100, 999))))
+		accountID := sdk.NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Fruit()) + "_" + fmt.Sprintf("%d", randomIntRange(t, 100, 999)))
 		region, err := client.ContextFunctions.CurrentRegion(ctx)
 		require.NoError(t, err)
 
-		opts := &CreateAccountOptions{
+		opts := &sdk.CreateAccountOptions{
 			AdminName:          "someadmin",
-			AdminPassword:      String(randomStringN(t, 12)),
-			FirstName:          String("Ad"),
-			LastName:           String("Min"),
+			AdminPassword:      sdk.String(randomStringN(t, 12)),
+			FirstName:          sdk.String("Ad"),
+			LastName:           sdk.String("Min"),
 			Email:              "admin@example.com",
-			MustChangePassword: Bool(false),
-			Edition:            EditionBusinessCritical,
-			Comment:            String("Please delete me!"),
-			Region:             String(region),
+			MustChangePassword: sdk.Bool(false),
+			Edition:            sdk.EditionBusinessCritical,
+			Comment:            sdk.String("Please delete me!"),
+			Region:             sdk.String(region),
 		}
 		err = client.Accounts.Create(ctx, accountID, opts)
 		require.NoError(t, err)
 
-		var account *Account
+		var account *sdk.Account
 		err = retry.Do(
 			func() error {
 				account, err = client.Accounts.ShowByID(ctx, accountID)
@@ -90,17 +90,17 @@ func TestInt_AccountCreate(t *testing.T) {
 		)
 		require.NoError(t, err)
 		assert.Equal(t, accountID.Name(), account.AccountName)
-		assert.Equal(t, EditionBusinessCritical, account.Edition)
+		assert.Equal(t, sdk.EditionBusinessCritical, account.Edition)
 		assert.Equal(t, "Please delete me!", account.Comment)
 		assert.Equal(t, region, account.SnowflakeRegion)
 
 		// rename
-		newAccountID := NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Animal()) + "_" + fmt.Sprintf("%d", (randomIntRange(t, 100, 999))))
-		alterOpts := &AlterAccountOptions{
-			Rename: &AccountRename{
+		newAccountID := sdk.NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Animal()) + "_" + fmt.Sprintf("%d", randomIntRange(t, 100, 999)))
+		alterOpts := &sdk.AlterAccountOptions{
+			Rename: &sdk.AccountRename{
 				Name:       accountID,
 				NewName:    newAccountID,
-				SaveOldURL: Bool(true),
+				SaveOldURL: sdk.Bool(true),
 			},
 		}
 		err = client.Accounts.Alter(ctx, alterOpts)
@@ -121,10 +121,10 @@ func TestInt_AccountCreate(t *testing.T) {
 		assert.Equal(t, newAccountID.Name(), account.AccountName)
 
 		// drop old url
-		alterOpts = &AlterAccountOptions{
-			Drop: &AccountDrop{
+		alterOpts = &sdk.AlterAccountOptions{
+			Drop: &sdk.AccountDrop{
 				Name:   newAccountID,
-				OldURL: Bool(true),
+				OldURL: sdk.Bool(true),
 			},
 		}
 		err = client.Accounts.Alter(ctx, alterOpts)
@@ -133,8 +133,8 @@ func TestInt_AccountCreate(t *testing.T) {
 		require.NoError(t, err)
 
 		// drop account
-		err = client.Accounts.Drop(ctx, newAccountID, 3, &DropAccountOptions{
-			IfExists: Bool(true),
+		err = client.Accounts.Drop(ctx, newAccountID, 3, &sdk.DropAccountOptions{
+			IfExists: sdk.Bool(true),
 		})
 		require.NoError(t, err)
 
@@ -162,56 +162,56 @@ func TestInt_AccountCreate(t *testing.T) {
 
 func TestInt_AccountAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
-	ok, err := client.ContextFunctions.IsRoleInSession(ctx, NewAccountObjectIdentifier("ACCOUNTADMIN"))
+	ctx := testContext(t)
+	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"))
 	require.NoError(t, err)
 	if !ok {
 		t.Skip("ACCOUNTADMIN role is not in current session")
 	}
 	t.Run("set and unset params", func(t *testing.T) {
-		opts := &AlterAccountOptions{
-			Set: &AccountSet{
-				Parameters: &AccountLevelParameters{
-					AccountParameters: &AccountParameters{
-						ClientEncryptionKeySize:       Int(128),
-						PreventUnloadToInternalStages: Bool(true),
+		opts := &sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				Parameters: &sdk.AccountLevelParameters{
+					AccountParameters: &sdk.AccountParameters{
+						ClientEncryptionKeySize:       sdk.Int(128),
+						PreventUnloadToInternalStages: sdk.Bool(true),
 					},
-					SessionParameters: &SessionParameters{
-						JSONIndent: Int(16),
+					SessionParameters: &sdk.SessionParameters{
+						JSONIndent: sdk.Int(16),
 					},
-					ObjectParameters: &ObjectParameters{
-						MaxDataExtensionTimeInDays: Int(30),
+					ObjectParameters: &sdk.ObjectParameters{
+						MaxDataExtensionTimeInDays: sdk.Int(30),
 					},
 				},
 			},
 		}
 		err := client.Accounts.Alter(ctx, opts)
 		require.NoError(t, err)
-		p, err := client.Parameters.ShowAccountParameter(ctx, AccountParameterClientEncryptionKeySize)
+		p, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterClientEncryptionKeySize)
 		require.NoError(t, err)
-		assert.Equal(t, 128, toInt(p.Value))
-		p, err = client.Parameters.ShowAccountParameter(ctx, AccountParameterPreventUnloadToInternalStages)
+		assert.Equal(t, 128, sdk.ToInt(p.Value))
+		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterPreventUnloadToInternalStages)
 		require.NoError(t, err)
-		assert.Equal(t, true, toBool(p.Value))
-		p, err = client.Parameters.ShowAccountParameter(ctx, AccountParameterJSONIndent)
+		assert.Equal(t, true, sdk.ToBool(p.Value))
+		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterJSONIndent)
 		require.NoError(t, err)
-		assert.Equal(t, 16, toInt(p.Value))
-		p, err = client.Parameters.ShowAccountParameter(ctx, AccountParameterMaxDataExtensionTimeInDays)
+		assert.Equal(t, 16, sdk.ToInt(p.Value))
+		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterMaxDataExtensionTimeInDays)
 		require.NoError(t, err)
-		assert.Equal(t, 30, toInt(p.Value))
+		assert.Equal(t, 30, sdk.ToInt(p.Value))
 
-		opts = &AlterAccountOptions{
-			Unset: &AccountUnset{
-				Parameters: &AccountLevelParametersUnset{
-					AccountParameters: &AccountParametersUnset{
-						ClientEncryptionKeySize:       Bool(true),
-						PreventUnloadToInternalStages: Bool(true),
+		opts = &sdk.AlterAccountOptions{
+			Unset: &sdk.AccountUnset{
+				Parameters: &sdk.AccountLevelParametersUnset{
+					AccountParameters: &sdk.AccountParametersUnset{
+						ClientEncryptionKeySize:       sdk.Bool(true),
+						PreventUnloadToInternalStages: sdk.Bool(true),
 					},
-					SessionParameters: &SessionParametersUnset{
-						JSONIndent: Bool(true),
+					SessionParameters: &sdk.SessionParametersUnset{
+						JSONIndent: sdk.Bool(true),
 					},
-					ObjectParameters: &ObjectParametersUnset{
-						MaxDataExtensionTimeInDays: Bool(true),
+					ObjectParameters: &sdk.ObjectParametersUnset{
+						MaxDataExtensionTimeInDays: sdk.Bool(true),
 					},
 				},
 			},
@@ -223,8 +223,8 @@ func TestInt_AccountAlter(t *testing.T) {
 	t.Run("set resource monitor", func(t *testing.T) {
 		resourceMonitorTest, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
-		opts := &AlterAccountOptions{
-			Set: &AccountSet{
+		opts := &sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
 				ResourceMonitor: resourceMonitorTest.ID(),
 			},
 		}
@@ -239,8 +239,8 @@ func TestInt_AccountAlter(t *testing.T) {
 		t.Cleanup(schemaCleanup)
 		passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(passwordPolicyCleanup)
-		opts := &AlterAccountOptions{
-			Set: &AccountSet{
+		opts := &sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
 				PasswordPolicy: passwordPolicyTest.ID(),
 			},
 		}
@@ -248,9 +248,9 @@ func TestInt_AccountAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		// now unset
-		opts = &AlterAccountOptions{
-			Unset: &AccountUnset{
-				PasswordPolicy: Bool(true),
+		opts = &sdk.AlterAccountOptions{
+			Unset: &sdk.AccountUnset{
+				PasswordPolicy: sdk.Bool(true),
 			},
 		}
 		err = client.Accounts.Alter(ctx, opts)
@@ -264,8 +264,8 @@ func TestInt_AccountAlter(t *testing.T) {
 		t.Cleanup(schemaCleanup)
 		sessionPolicyTest, sessionPolicyCleanup := createSessionPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(sessionPolicyCleanup)
-		opts := &AlterAccountOptions{
-			Set: &AccountSet{
+		opts := &sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
 				SessionPolicy: sessionPolicyTest.ID(),
 			},
 		}
@@ -273,9 +273,9 @@ func TestInt_AccountAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		// now unset
-		opts = &AlterAccountOptions{
-			Unset: &AccountUnset{
-				SessionPolicy: Bool(true),
+		opts = &sdk.AlterAccountOptions{
+			Unset: &sdk.AccountUnset{
+				SessionPolicy: sdk.Bool(true),
 			},
 		}
 		err = client.Accounts.Alter(ctx, opts)
@@ -292,9 +292,9 @@ func TestInt_AccountAlter(t *testing.T) {
 		tagTest2, tagCleanup2 := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup2)
 
-		opts := &AlterAccountOptions{
-			Set: &AccountSet{
-				Tag: []TagAssociation{
+		opts := &sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				Tag: []sdk.TagAssociation{
 					{
 						Name:  tagTest1.ID(),
 						Value: "abc",
@@ -310,10 +310,10 @@ func TestInt_AccountAlter(t *testing.T) {
 		require.NoError(t, err)
 		currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
 		require.NoError(t, err)
-		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest1.ID(), NewAccountObjectIdentifier(currentAccount), ObjectTypeAccount)
+		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest1.ID(), sdk.NewAccountObjectIdentifier(currentAccount), sdk.ObjectTypeAccount)
 		require.NoError(t, err)
 		assert.Equal(t, "abc", tagValue)
-		tagValue, err = client.SystemFunctions.GetTag(ctx, tagTest2.ID(), NewAccountObjectIdentifier(currentAccount), ObjectTypeAccount)
+		tagValue, err = client.SystemFunctions.GetTag(ctx, tagTest2.ID(), sdk.NewAccountObjectIdentifier(currentAccount), sdk.ObjectTypeAccount)
 		require.NoError(t, err)
 		assert.Equal(t, "123", tagValue)
 	})

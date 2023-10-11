@@ -1,16 +1,16 @@
-package sdk
+package testint
 
 import (
-	"context"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_CurrentAccount(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	account, err := client.ContextFunctions.CurrentAccount(ctx)
 	require.NoError(t, err)
@@ -19,7 +19,7 @@ func TestInt_CurrentAccount(t *testing.T) {
 
 func TestInt_CurrentRole(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	role, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, role)
@@ -27,7 +27,7 @@ func TestInt_CurrentRole(t *testing.T) {
 
 func TestInt_CurrentRegion(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	region, err := client.ContextFunctions.CurrentRegion(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, region)
@@ -35,7 +35,7 @@ func TestInt_CurrentRegion(t *testing.T) {
 
 func TestInt_CurrentSession(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	session, err := client.ContextFunctions.CurrentSession(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, session)
@@ -43,7 +43,7 @@ func TestInt_CurrentSession(t *testing.T) {
 
 func TestInt_CurrentUser(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
 	assert.NotEmpty(t, user)
@@ -51,7 +51,7 @@ func TestInt_CurrentUser(t *testing.T) {
 
 func TestInt_CurrentDatabase(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	err := client.Sessions.UseDatabase(ctx, databaseTest.ID())
@@ -63,7 +63,7 @@ func TestInt_CurrentDatabase(t *testing.T) {
 
 func TestInt_CurrentSchema(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
@@ -78,7 +78,7 @@ func TestInt_CurrentSchema(t *testing.T) {
 
 func TestInt_CurrentWarehouse(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
@@ -91,26 +91,26 @@ func TestInt_CurrentWarehouse(t *testing.T) {
 
 func TestInt_IsRoleInSession(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
-	role, err := client.ContextFunctions.IsRoleInSession(ctx, NewAccountObjectIdentifier(currentRole))
+	role, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier(currentRole))
 	require.NoError(t, err)
 	assert.True(t, role)
 }
 
 func TestInt_RolesUse(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-	currentRoleID := NewAccountObjectIdentifier(currentRole)
+	currentRoleID := sdk.NewAccountObjectIdentifier(currentRole)
 	require.NoError(t, err)
 
 	role, cleanup := createRole(t, client)
 	t.Cleanup(cleanup)
 	require.NotEqual(t, currentRole, role.Name)
 
-	err = client.Roles.Grant(ctx, NewGrantRoleRequest(role.ID(), GrantRole{Role: &currentRoleID}))
+	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{Role: &currentRoleID}))
 	require.NoError(t, err)
 
 	err = client.Sessions.UseRole(ctx, role.ID())
@@ -127,7 +127,7 @@ func TestInt_RolesUse(t *testing.T) {
 
 func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 
@@ -137,15 +137,15 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 
 	user, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
-	userID := NewAccountObjectIdentifier(user)
+	userID := sdk.NewAccountObjectIdentifier(user)
 
-	err = client.Roles.Grant(ctx, NewGrantRoleRequest(role.ID(), GrantRole{User: &userID}))
+	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{User: &userID}))
 	require.NoError(t, err)
 
 	err = client.Sessions.UseRole(ctx, role.ID())
 	require.NoError(t, err)
 
-	err = client.Sessions.UseSecondaryRoles(ctx, SecondaryRolesAll)
+	err = client.Sessions.UseSecondaryRoles(ctx, sdk.SecondaryRolesAll)
 	require.NoError(t, err)
 
 	r, err := client.ContextFunctions.CurrentSecondaryRoles(ctx)
@@ -155,20 +155,20 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 	for i, v := range r.Roles {
 		names[i] = v.Name()
 	}
-	assert.Equal(t, SecondaryRolesAll, r.Value)
+	assert.Equal(t, sdk.SecondaryRolesAll, r.Value)
 	assert.Contains(t, names, currentRole)
 
-	err = client.Sessions.UseSecondaryRoles(ctx, SecondaryRolesNone)
+	err = client.Sessions.UseSecondaryRoles(ctx, sdk.SecondaryRolesNone)
 	require.NoError(t, err)
 
 	secondaryRolesAfter, err := client.ContextFunctions.CurrentSecondaryRoles(ctx)
 	require.NoError(t, err)
 
-	assert.Equal(t, SecondaryRolesNone, secondaryRolesAfter.Value)
+	assert.Equal(t, sdk.SecondaryRolesNone, secondaryRolesAfter.Value)
 	assert.Equal(t, 0, len(secondaryRolesAfter.Roles))
 
 	t.Cleanup(func() {
-		err = client.Sessions.UseRole(ctx, NewAccountObjectIdentifier(currentRole))
+		err = client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(currentRole))
 		require.NoError(t, err)
 	})
 }

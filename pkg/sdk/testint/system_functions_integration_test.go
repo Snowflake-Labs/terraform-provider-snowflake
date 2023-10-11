@@ -1,16 +1,16 @@
-package sdk
+package testint
 
 import (
-	"context"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_GetTag(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
@@ -25,9 +25,9 @@ func TestInt_GetTag(t *testing.T) {
 		t.Cleanup(maskingPolicyCleanup)
 
 		tagValue := randomString(t)
-		err := client.MaskingPolicies.Alter(ctx, maskingPolicyTest.ID(), &AlterMaskingPolicyOptions{
-			Set: &MaskingPolicySet{
-				Tag: []TagAssociation{
+		err := client.MaskingPolicies.Alter(ctx, maskingPolicyTest.ID(), &sdk.AlterMaskingPolicyOptions{
+			Set: &sdk.MaskingPolicySet{
+				Tag: []sdk.TagAssociation{
 					{
 						Name:  tagTest.ID(),
 						Value: tagValue,
@@ -36,7 +36,7 @@ func TestInt_GetTag(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), ObjectTypeMaskingPolicy)
+		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), sdk.ObjectTypeMaskingPolicy)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, s)
 	})
@@ -45,7 +45,7 @@ func TestInt_GetTag(t *testing.T) {
 		maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(maskingPolicyCleanup)
 
-		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), ObjectTypeMaskingPolicy)
+		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), sdk.ObjectTypeMaskingPolicy)
 		require.Error(t, err)
 		assert.Equal(t, "", s)
 	})
