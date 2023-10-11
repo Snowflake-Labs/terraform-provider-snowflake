@@ -30,20 +30,20 @@ import (
 
 func RandomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	t.Helper()
-	return NewSchemaObjectIdentifier(random.RandomStringN(t, 12), random.RandomStringN(t, 12), random.RandomStringN(t, 12))
+	return NewSchemaObjectIdentifier(random.StringN(t, 12), random.StringN(t, 12), random.StringN(t, 12))
 }
 
 func RandomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 	t.Helper()
-	return NewDatabaseObjectIdentifier(random.RandomStringN(t, 12), random.RandomStringN(t, 12))
+	return NewDatabaseObjectIdentifier(random.StringN(t, 12), random.StringN(t, 12))
 }
 
 func RandomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	t.Helper()
-	return NewAccountObjectIdentifier(random.RandomStringN(t, 12))
+	return NewAccountObjectIdentifier(random.StringN(t, 12))
 }
 
 func AlphanumericDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 	t.Helper()
-	return NewDatabaseObjectIdentifier(random.RandomAlphanumericN(t, 12), random.RandomAlphanumericN(t, 12))
+	return NewDatabaseObjectIdentifier(random.AlphanumericN(t, 12), random.AlphanumericN(t, 12))
 }

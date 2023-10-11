@@ -103,7 +103,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.RandomUUID(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.Uuid(t))
 		opts := &AlterPasswordPolicyOptions{
 			name:    id,
 			NewName: newID,

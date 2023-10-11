@@ -62,7 +62,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		tag2Test, tag2Cleanup := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tag2Cleanup)
 
-		comment := random.RandomComment(t)
+		comment := random.Comment(t)
 		opts := &sdk.CreateDatabaseOptions{
 			OrReplace:                  sdk.Bool(true),
 			Transient:                  sdk.Bool(true),

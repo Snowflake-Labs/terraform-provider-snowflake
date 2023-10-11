@@ -50,7 +50,7 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("create complete", func(t *testing.T) {
 		roleID := sdk.RandomAccountObjectIdentifier(t)
-		comment := random.RandomComment(t)
+		comment := random.Comment(t)
 		createReq := sdk.NewCreateRoleRequest(roleID).
 			WithOrReplace(true).
 			WithTag([]sdk.TagAssociation{
@@ -153,7 +153,7 @@ func TestInt_Roles(t *testing.T) {
 		role, cleanupRole := createRole(t, client)
 		t.Cleanup(cleanupRole)
 
-		comment := random.RandomComment(t)
+		comment := random.Comment(t)
 		err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithSetComment(comment))
 		require.NoError(t, err)
 
@@ -163,7 +163,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("alter unset comment", func(t *testing.T) {
-		comment := random.RandomComment(t)
+		comment := random.Comment(t)
 		id := sdk.RandomAccountObjectIdentifier(t)
 		role, cleanup := createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(id).WithComment(comment))
 		t.Cleanup(cleanup)

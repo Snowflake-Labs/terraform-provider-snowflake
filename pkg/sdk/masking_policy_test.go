@@ -32,7 +32,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := "REPLACE('X', 1, 2)"
-		comment := random.RandomString(t)
+		comment := random.String(t)
 
 		opts := &CreateMaskingPolicyOptions{
 			OrReplace:           Bool(true),
@@ -74,7 +74,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		newComment := random.RandomString(t)
+		newComment := random.String(t)
 		opts := &AlterMaskingPolicyOptions{
 			name: id,
 			Set: &MaskingPolicySet{
@@ -101,7 +101,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.RandomUUID(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.Uuid(t))
 		opts := &AlterMaskingPolicyOptions{
 			name:    id,
 			NewName: newID,

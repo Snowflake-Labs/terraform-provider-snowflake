@@ -27,8 +27,8 @@ func TestUserCreate(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		password := random.RandomString(t)
-		loginName := random.RandomString(t)
+		password := random.String(t)
+		loginName := random.String(t)
 
 		opts := &CreateUserOptions{
 			OrReplace:   Bool(true),
@@ -113,7 +113,7 @@ func TestUserAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("with setting properties and parameters", func(t *testing.T) {
-		password := random.RandomString(t)
+		password := random.String(t)
 		objectProperties := UserObjectProperties{
 			Password:             &password,
 			DefaultSeconaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
@@ -182,7 +182,7 @@ func TestUserAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("rename", func(t *testing.T) {
-		newID := NewAccountObjectIdentifier(random.RandomString(t))
+		newID := NewAccountObjectIdentifier(random.String(t))
 		opts := &AlterUserOptions{
 			name:    id,
 			NewName: newID,
@@ -315,7 +315,7 @@ func TestUserShow(t *testing.T) {
 	})
 
 	t.Run("with like and from", func(t *testing.T) {
-		fromPatern := random.RandomString(t)
+		fromPatern := random.String(t)
 		opts := &ShowUserOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
@@ -343,8 +343,8 @@ func TestUserShow(t *testing.T) {
 	})
 
 	t.Run("with starts with and from", func(t *testing.T) {
-		fromPattern := random.RandomString(t)
-		startsWithPattern := random.RandomString(t)
+		fromPattern := random.String(t)
+		startsWithPattern := random.String(t)
 
 		opts := &ShowUserOptions{
 			StartsWith: &startsWithPattern,

@@ -101,7 +101,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	t.Cleanup(schemaCleanup)
 
 	t.Run("test complete case", func(t *testing.T) {
-		name := random.RandomString(t)
+		name := random.String(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
@@ -114,8 +114,8 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := "REPLACE('X', 1, 2)"
-		comment := random.RandomComment(t)
-		exemptOtherPolicies := random.RandomBool(t)
+		comment := random.Comment(t)
+		exemptOtherPolicies := random.Bool(t)
 		err := client.MaskingPolicies.Create(ctx, id, signature, sdk.DataTypeVARCHAR, expression, &sdk.CreateMaskingPolicyOptions{
 			OrReplace:           sdk.Bool(true),
 			IfNotExists:         sdk.Bool(false),
@@ -146,7 +146,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
-		name := random.RandomString(t)
+		name := random.String(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
@@ -159,7 +159,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := "REPLACE('X', 1, 2)"
-		comment := random.RandomComment(t)
+		comment := random.Comment(t)
 		err := client.MaskingPolicies.Create(ctx, id, signature, sdk.DataTypeVARCHAR, expression, &sdk.CreateMaskingPolicyOptions{
 			OrReplace:           sdk.Bool(false),
 			IfNotExists:         sdk.Bool(true),
@@ -190,7 +190,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := random.RandomString(t)
+		name := random.String(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
@@ -224,7 +224,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	})
 
 	t.Run("test multiline expression", func(t *testing.T) {
-		name := random.RandomString(t)
+		name := random.String(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
@@ -292,7 +292,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		t.Cleanup(maskingPolicyCleanup)
-		comment := random.RandomComment(t)
+		comment := random.Comment(t)
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
 			Set: &sdk.MaskingPolicySet{
 				Comment: sdk.String(comment),
@@ -338,7 +338,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, databaseTest, schemaTest)
 		oldID := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
-		newName := random.RandomString(t)
+		newName := random.String(t)
 		newID := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, newName)
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
 			NewName: newID,
