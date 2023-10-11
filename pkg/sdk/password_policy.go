@@ -54,7 +54,7 @@ type CreatePasswordPolicyOptions struct {
 
 func (opts *CreatePasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 
 	return nil
@@ -89,12 +89,12 @@ type AlterPasswordPolicyOptions struct {
 
 func (opts *AlterPasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 
 	if everyValueNil(opts.Set, opts.Unset) {
 		if !validObjectidentifier(opts.NewName) {
-			return errInvalidObjectIdentifier
+			return ErrInvalidObjectIdentifier
 		}
 	}
 
@@ -215,7 +215,7 @@ type DropPasswordPolicyOptions struct {
 
 func (opts *DropPasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -334,7 +334,7 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 			return &passwordPolicy, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describePasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-password-policy.
@@ -346,7 +346,7 @@ type describePasswordPolicyOptions struct {
 
 func (v *describePasswordPolicyOptions) validate() error {
 	if !validObjectidentifier(v.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }

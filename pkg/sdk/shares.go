@@ -302,7 +302,7 @@ func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Sha
 			return &share, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type ShareDetails struct {
@@ -349,7 +349,7 @@ type describeShareOptions struct {
 
 func (opts *describeShareOptions) validate() error {
 	if ok := validObjectidentifier(opts.name); !ok {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }

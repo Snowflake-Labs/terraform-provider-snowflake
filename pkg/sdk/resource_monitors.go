@@ -197,7 +197,7 @@ type ResourceMonitorWith struct {
 
 func (opts *CreateResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -282,7 +282,7 @@ type AlterResourceMonitorOptions struct {
 
 func (opts *AlterResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	if opts.Set == nil {
 		return nil
@@ -328,7 +328,7 @@ type dropResourceMonitorOptions struct {
 
 func (opts *dropResourceMonitorOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -398,5 +398,5 @@ func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentif
 			return &resourceMonitor, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }

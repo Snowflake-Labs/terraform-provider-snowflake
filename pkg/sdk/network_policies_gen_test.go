@@ -20,13 +20,13 @@ func TestNetworkPolicies_Create(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -48,14 +48,14 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
 		opts.UnsetComment = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.Set opts.UnsetComment opts.RenameTo] should be present", func(t *testing.T) {
@@ -119,13 +119,13 @@ func TestNetworkPolicies_Drop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DropNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -143,7 +143,7 @@ func TestNetworkPolicies_Show(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ShowNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -164,13 +164,13 @@ func TestNetworkPolicies_Describe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DescribeNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {

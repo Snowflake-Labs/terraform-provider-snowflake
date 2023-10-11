@@ -120,7 +120,7 @@ type CreateWarehouseOptions struct {
 
 func (opts *CreateWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
 		return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
@@ -166,7 +166,7 @@ type AlterWarehouseOptions struct {
 
 func (opts *AlterWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	if ok := exactlyOneValueSet(
 		opts.Suspend,
@@ -299,7 +299,7 @@ type DropWarehouseOptions struct {
 
 func (opts *DropWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -476,7 +476,7 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 			return &warehouse, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describeWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-warehouse.
@@ -488,7 +488,7 @@ type describeWarehouseOptions struct {
 
 func (opts *describeWarehouseOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }

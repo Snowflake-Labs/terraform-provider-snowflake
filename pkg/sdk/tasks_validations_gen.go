@@ -14,11 +14,11 @@ var (
 
 func (opts *CreateTaskOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateTaskOptions", "OrReplace", "IfNotExists"))
@@ -38,25 +38,25 @@ func (opts *CreateTaskOptions) validate() error {
 
 func (opts *CloneTaskOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !validObjectidentifier(opts.sourceTask) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *AlterTaskOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(opts.Resume, opts.Suspend, opts.RemoveAfter, opts.AddAfter, opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags, opts.ModifyAs, opts.ModifyWhen); !ok {
 		errs = append(errs, errExactlyOneOf("Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
@@ -86,18 +86,18 @@ func (opts *AlterTaskOptions) validate() error {
 
 func (opts *DropTaskOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *ShowTaskOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	return errors.Join(errs...)
@@ -105,22 +105,22 @@ func (opts *ShowTaskOptions) validate() error {
 
 func (opts *DescribeTaskOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *ExecuteTaskOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }

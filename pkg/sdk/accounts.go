@@ -386,7 +386,7 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 			return &account, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // DropAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-account.

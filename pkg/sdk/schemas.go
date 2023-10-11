@@ -108,7 +108,7 @@ type CreateSchemaOptions struct {
 func (opts *CreateSchemaOptions) validate() error {
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.Clone) {
 		if err := opts.Clone.validate(); err != nil {
@@ -155,7 +155,7 @@ type AlterSchemaOptions struct {
 func (opts *AlterSchemaOptions) validate() error {
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.EnableManagedAccess, opts.DisableManagedAccess) {
 		errs = append(errs, errOneOf("NewName", "SwapWith", "Set", "Unset", "EnableManagedAccess", "DisableManagedAccess"))
@@ -233,7 +233,7 @@ type DropSchemaOptions struct {
 func (opts *DropSchemaOptions) validate() error {
 	var errs []error
 	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.Cascade, opts.Restrict) {
 		errs = append(errs, errors.New("only one of the fields [ Cascade | Restrict ] can be set at once"))
@@ -266,7 +266,7 @@ type undropSchemaOptions struct {
 
 func (opts *undropSchemaOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -295,7 +295,7 @@ type describeSchemaOptions struct {
 
 func (opts *describeSchemaOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -381,7 +381,7 @@ func (v *schemas) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*S
 			return &s, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 func (v *schemas) Use(ctx context.Context, id DatabaseObjectIdentifier) error {

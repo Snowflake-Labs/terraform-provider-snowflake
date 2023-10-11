@@ -96,7 +96,7 @@ func (opts *AlterMaskingPolicyOptions) validate() error {
 
 	if everyValueNil(opts.Set, opts.Unset) {
 		if !validObjectidentifier(opts.NewName) {
-			return errInvalidObjectIdentifier
+			return ErrInvalidObjectIdentifier
 		}
 	}
 
@@ -169,7 +169,7 @@ type DropMaskingPolicyOptions struct {
 
 func (opts *DropMaskingPolicyOptions) validate() error {
 	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -285,7 +285,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 			return &maskingPolicy, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.
@@ -297,7 +297,7 @@ type describeMaskingPolicyOptions struct {
 
 func (v *describeMaskingPolicyOptions) validate() error {
 	if !validObjectidentifier(v.name) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }

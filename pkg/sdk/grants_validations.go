@@ -115,7 +115,7 @@ func (opts *RevokePrivilegesFromAccountRoleOptions) validate() error {
 		return err
 	}
 	if !validObjectidentifier(opts.accountRole) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	if everyValueSet(opts.Restrict, opts.Cascade) {
 		return fmt.Errorf("either Restrict or Cascade can be set, or neither but not both")
@@ -190,7 +190,7 @@ func (opts *RevokePrivilegesFromDatabaseRoleOptions) validate() error {
 		return err
 	}
 	if !validObjectidentifier(opts.databaseRole) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	if everyValueSet(opts.Restrict, opts.Cascade) {
 		return fmt.Errorf("either Restrict or Cascade can be set, or neither but not both")
@@ -200,7 +200,7 @@ func (opts *RevokePrivilegesFromDatabaseRoleOptions) validate() error {
 
 func (opts *grantPrivilegeToShareOptions) validate() error {
 	if !validObjectidentifier(opts.to) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	if !valueSet(opts.On) || opts.privilege == "" {
 		return fmt.Errorf("on and privilege are required")
@@ -232,7 +232,7 @@ func (v *OnTable) validate() error {
 
 func (opts *revokePrivilegeFromShareOptions) validate() error {
 	if !validObjectidentifier(opts.from) {
-		return errInvalidObjectIdentifier
+		return ErrInvalidObjectIdentifier
 	}
 	if !valueSet(opts.On) || opts.privilege == "" {
 		return fmt.Errorf("on and privilege are required")
