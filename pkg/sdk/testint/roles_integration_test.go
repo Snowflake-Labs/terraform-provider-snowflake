@@ -20,7 +20,7 @@ func TestInt_Roles(t *testing.T) {
 	tag2, _ := createTag(t, client, database, schema)
 
 	t.Run("create no options", func(t *testing.T) {
-		roleID := randomAccountObjectIdentifier(t)
+		roleID := sdk.RandomAccountObjectIdentifier(t)
 		err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleID))
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -35,7 +35,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("create if not exists", func(t *testing.T) {
-		roleID := randomAccountObjectIdentifier(t)
+		roleID := sdk.RandomAccountObjectIdentifier(t)
 		err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleID).WithIfNotExists(true))
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -49,7 +49,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("create complete", func(t *testing.T) {
-		roleID := randomAccountObjectIdentifier(t)
+		roleID := sdk.RandomAccountObjectIdentifier(t)
 		comment := random.RandomComment(t)
 		createReq := sdk.NewCreateRoleRequest(roleID).
 			WithOrReplace(true).
@@ -88,7 +88,7 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("alter rename to", func(t *testing.T) {
 		role, _ := createRole(t, client)
-		newName := randomAccountObjectIdentifier(t)
+		newName := sdk.RandomAccountObjectIdentifier(t)
 		t.Cleanup(func() {
 			err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(newName))
 			if err != nil {
@@ -128,7 +128,7 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("alter unset tags", func(t *testing.T) {
 		tagValue := "tag-value"
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier(t)
 		role, cleanup := createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(id).
 			WithTag([]sdk.TagAssociation{
 				{
@@ -164,7 +164,7 @@ func TestInt_Roles(t *testing.T) {
 
 	t.Run("alter unset comment", func(t *testing.T) {
 		comment := random.RandomComment(t)
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier(t)
 		role, cleanup := createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(id).WithComment(comment))
 		t.Cleanup(cleanup)
 

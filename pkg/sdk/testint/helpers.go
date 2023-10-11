@@ -102,7 +102,7 @@ func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjec
 
 func createDatabase(t *testing.T, client *sdk.Client) (*sdk.Database, func()) {
 	t.Helper()
-	return createDatabaseWithOptions(t, client, randomAccountObjectIdentifier(t), &sdk.CreateDatabaseOptions{})
+	return createDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(t), &sdk.CreateDatabaseOptions{})
 }
 
 func createDatabaseWithIdentifier(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
@@ -459,7 +459,7 @@ func createResourceMonitor(t *testing.T, client *sdk.Client) (*sdk.ResourceMonit
 
 func createResourceMonitorWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateResourceMonitorOptions) (*sdk.ResourceMonitor, func()) {
 	t.Helper()
-	id := randomAccountObjectIdentifier(t)
+	id := sdk.RandomAccountObjectIdentifier(t)
 	ctx := context.Background()
 	err := client.ResourceMonitors.Create(ctx, id, opts)
 	require.NoError(t, err)
@@ -586,7 +586,7 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 
 func createRole(t *testing.T, client *sdk.Client) (*sdk.Role, func()) {
 	t.Helper()
-	return createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(randomAccountObjectIdentifier(t)))
+	return createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier(t)))
 }
 
 func createRoleWithRequest(t *testing.T, client *sdk.Client, req *sdk.CreateRoleRequest) (*sdk.Role, func()) {
@@ -639,7 +639,7 @@ func createFailoverGroup(t *testing.T, client *sdk.Client) (*sdk.FailoverGroup, 
 
 func createFailoverGroupWithOptions(t *testing.T, client *sdk.Client, objectTypes []sdk.PluralObjectType, allowedAccounts []sdk.AccountIdentifier, opts *sdk.CreateFailoverGroupOptions) (*sdk.FailoverGroup, func()) {
 	t.Helper()
-	id := randomAccountObjectIdentifier(t)
+	id := sdk.RandomAccountObjectIdentifier(t)
 	ctx := context.Background()
 	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
 	require.NoError(t, err)
@@ -658,7 +658,7 @@ func createShare(t *testing.T, client *sdk.Client) (*sdk.Share, func()) {
 
 func createShareWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateShareOptions) (*sdk.Share, func()) {
 	t.Helper()
-	id := randomAccountObjectIdentifier(t)
+	id := sdk.RandomAccountObjectIdentifier(t)
 	ctx := context.Background()
 	err := client.Shares.Create(ctx, id, opts)
 	require.NoError(t, err)

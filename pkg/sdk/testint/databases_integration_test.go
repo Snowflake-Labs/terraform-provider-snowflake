@@ -15,7 +15,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("minimal", func(t *testing.T) {
-		databaseID := randomAccountObjectIdentifier(t)
+		databaseID := sdk.RandomAccountObjectIdentifier(t)
 		err := client.Databases.Create(ctx, databaseID, nil)
 		require.NoError(t, err)
 		database, err := client.Databases.ShowByID(ctx, databaseID)
@@ -30,7 +30,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	t.Run("as clone", func(t *testing.T) {
 		cloneDatabase, cloneDatabaseCleanup := createDatabase(t, client)
 		t.Cleanup(cloneDatabaseCleanup)
-		databaseID := randomAccountObjectIdentifier(t)
+		databaseID := sdk.RandomAccountObjectIdentifier(t)
 		opts := &sdk.CreateDatabaseOptions{
 			Clone: &sdk.Clone{
 				SourceObject: cloneDatabase.ID(),
@@ -51,7 +51,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	})
 
 	t.Run("complete", func(t *testing.T) {
-		databaseID := randomAccountObjectIdentifier(t)
+		databaseID := sdk.RandomAccountObjectIdentifier(t)
 
 		databaseTest, databaseCleanup := createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
@@ -136,7 +136,7 @@ func TestInt_CreateShared(t *testing.T) {
 		},
 	})
 
-	databaseID := randomAccountObjectIdentifier(t)
+	databaseID := sdk.RandomAccountObjectIdentifier(t)
 	err = secondaryClient.Databases.CreateShared(ctx, databaseID, shareTest.ExternalID(), nil)
 	require.NoError(t, err)
 	database, err := secondaryClient.Databases.ShowByID(ctx, databaseID)
@@ -208,7 +208,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 
 	t.Run("renaming", func(t *testing.T) {
 		databaseTest, _ := createDatabase(t, client)
-		newName := randomAccountObjectIdentifier(t)
+		newName := sdk.RandomAccountObjectIdentifier(t)
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			NewName: newName,
 		})

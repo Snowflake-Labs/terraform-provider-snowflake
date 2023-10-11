@@ -89,7 +89,7 @@ func TestInt_UserCreate(t *testing.T) {
 	t.Cleanup(tagCleanup)
 
 	t.Run("test complete case", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier(t)
 		tagValue := random.RandomString(t)
 		tags := []sdk.TagAssociation{
 			{
@@ -133,7 +133,7 @@ func TestInt_UserCreate(t *testing.T) {
 	})
 
 	t.Run("test if not exists", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier(t)
 		tagValue := random.RandomString(t)
 		tags := []sdk.TagAssociation{
 			{
@@ -177,7 +177,7 @@ func TestInt_UserCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier(t)
 
 		err := client.Users.Create(ctx, id, nil)
 		require.NoError(t, err)

@@ -70,7 +70,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 }
 
 func TestInt_PipesShowAndDescribe(t *testing.T) {
-	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
+	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
@@ -161,7 +161,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 }
 
 func TestInt_PipeCreate(t *testing.T) {
-	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
+	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
@@ -240,7 +240,7 @@ func TestInt_PipeCreate(t *testing.T) {
 }
 
 func TestInt_PipeDrop(t *testing.T) {
-	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
+	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
@@ -275,7 +275,7 @@ func TestInt_PipeDrop(t *testing.T) {
 }
 
 func TestInt_PipeAlter(t *testing.T) {
-	schemaIdentifier := alphanumericDatabaseObjectIdentifier(t)
+	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier(t)
 	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 

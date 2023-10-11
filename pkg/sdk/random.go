@@ -6,6 +6,8 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 )
 
+// TODO: describe why it stays here
+
 func RandomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	t.Helper()
 	return NewSchemaObjectIdentifier(random.RandomStringN(t, 12), random.RandomStringN(t, 12), random.RandomStringN(t, 12))
@@ -19,4 +21,9 @@ func RandomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 func RandomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	t.Helper()
 	return NewAccountObjectIdentifier(random.RandomStringN(t, 12))
+}
+
+func AlphanumericDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
+	t.Helper()
+	return NewDatabaseObjectIdentifier(random.RandomAlphanumericN(t, 12), random.RandomAlphanumericN(t, 12))
 }

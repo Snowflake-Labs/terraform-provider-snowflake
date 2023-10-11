@@ -64,7 +64,7 @@ func TestInt_SharesCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("test complete", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier(t)
 		err := client.Shares.Create(ctx, id, &sdk.CreateShareOptions{
 			OrReplace: sdk.Bool(true),
 			Comment:   sdk.String("test comment"),
@@ -90,7 +90,7 @@ func TestInt_SharesCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier(t)
 		err := client.Shares.Create(ctx, id, &sdk.CreateShareOptions{
 			OrReplace: sdk.Bool(true),
 			Comment:   sdk.String("test comment"),

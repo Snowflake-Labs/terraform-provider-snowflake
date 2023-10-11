@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -63,7 +64,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	}
 
 	t.Run("Create: minimal", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
 		require.NoError(t, err)
@@ -74,7 +75,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Create: complete", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.Create(
 			ctx,
@@ -108,7 +109,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.Sessions.UseWarehouse(ctx, warehouse.ID())
 		require.NoError(t, err)
 
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '%s', FILE_FORMAT=>'%s', ignore_case => true))`, stageLocation, fileFormat.ID().FullyQualifiedName())
 		err = client.ExternalTables.CreateUsingTemplate(
@@ -127,7 +128,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Create with manual partitioning: complete", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(name))
 		require.NoError(t, err)
@@ -138,7 +139,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Create delta lake: complete", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.CreateDeltaLake(
 			ctx,
@@ -165,7 +166,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Alter: refresh", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
 		require.NoError(t, err)
@@ -180,7 +181,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Alter: add files", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.Create(
 			ctx,
@@ -199,7 +200,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Alter: remove files", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.Create(
 			ctx,
@@ -226,7 +227,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Alter: set auto refresh", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
 		require.NoError(t, err)
@@ -286,7 +287,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	// })
 
 	t.Run("Alter: add partitions", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(name))
 		require.NoError(t, err)
@@ -302,7 +303,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Alter: drop partitions", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(name))
 		require.NoError(t, err)
@@ -327,7 +328,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
 		require.NoError(t, err)
@@ -345,7 +346,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Show", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
 		require.NoError(t, err)
@@ -365,7 +366,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Describe: columns", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		req := minimalCreateExternalTableReq(name)
 		err := client.ExternalTables.Create(ctx, req)
@@ -391,7 +392,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	})
 
 	t.Run("Describe: stage", func(t *testing.T) {
-		name := randomAlphanumericN(t, 32)
+		name := random.RandomAlphanumericN(t, 32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, name)
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
 		require.NoError(t, err)
