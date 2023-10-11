@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -61,7 +62,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		tag2Test, tag2Cleanup := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tag2Cleanup)
 
-		comment := sdk.RandomComment(t)
+		comment := internal.RandomComment(t)
 		opts := &sdk.CreateDatabaseOptions{
 			OrReplace:                  sdk.Bool(true),
 			Transient:                  sdk.Bool(true),

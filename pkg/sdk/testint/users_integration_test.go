@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -89,15 +90,15 @@ func TestInt_UserCreate(t *testing.T) {
 
 	t.Run("test complete case", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
-		tagValue := sdk.RandomString(t)
+		tagValue := internal.RandomString(t)
 		tags := []sdk.TagAssociation{
 			{
 				Name:  tag.ID(),
 				Value: tagValue,
 			},
 		}
-		password := sdk.RandomString(t)
-		loginName := sdk.RandomString(t)
+		password := internal.RandomString(t)
+		loginName := internal.RandomString(t)
 
 		opts := &sdk.CreateUserOptions{
 			OrReplace: sdk.Bool(true),
@@ -133,15 +134,15 @@ func TestInt_UserCreate(t *testing.T) {
 
 	t.Run("test if not exists", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
-		tagValue := sdk.RandomString(t)
+		tagValue := internal.RandomString(t)
 		tags := []sdk.TagAssociation{
 			{
 				Name:  sdk.NewAccountObjectIdentifier(tag.Name),
 				Value: tagValue,
 			},
 		}
-		password := sdk.RandomString(t)
-		loginName := sdk.RandomString(t)
+		password := internal.RandomString(t)
+		loginName := internal.RandomString(t)
 
 		opts := &sdk.CreateUserOptions{
 			IfNotExists: sdk.Bool(true),

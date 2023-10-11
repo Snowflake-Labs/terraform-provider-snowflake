@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -103,7 +103,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, RandomUUID(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, internal.RandomUUID(t))
 		opts := &AlterPasswordPolicyOptions{
 			name:    id,
 			NewName: newID,

@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
 )
 
 func TestDatabaseRoleCreate(t *testing.T) {
@@ -98,7 +100,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	})
 
 	t.Run("validation: new name from different db", func(t *testing.T) {
-		newId := NewDatabaseObjectIdentifier(id.DatabaseName()+RandomStringN(t, 1), RandomStringN(t, 12))
+		newId := NewDatabaseObjectIdentifier(id.DatabaseName()+internal.RandomStringN(t, 1), internal.RandomStringN(t, 12))
 
 		opts := defaultOpts()
 		opts.Rename = &DatabaseRoleRename{
@@ -116,7 +118,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newId := NewDatabaseObjectIdentifier(id.DatabaseName(), RandomStringN(t, 12))
+		newId := NewDatabaseObjectIdentifier(id.DatabaseName(), internal.RandomStringN(t, 12))
 
 		opts := defaultOpts()
 		opts.Rename = &DatabaseRoleRename{

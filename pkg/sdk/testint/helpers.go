@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
 	"github.com/stretchr/testify/require"
 )
 
@@ -124,7 +125,7 @@ func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountO
 
 func createSchema(t *testing.T, client *sdk.Client, database *sdk.Database) (*sdk.Schema, func()) {
 	t.Helper()
-	return createSchemaWithIdentifier(t, client, database, sdk.RandomStringRange(t, 8, 28))
+	return createSchemaWithIdentifier(t, client, database, internal.RandomStringRange(t, 8, 28))
 }
 
 func createSchemaWithIdentifier(t *testing.T, client *sdk.Client, database *sdk.Database, name string) (*sdk.Schema, func()) {
@@ -151,7 +152,7 @@ func createWarehouse(t *testing.T, client *sdk.Client) (*sdk.Warehouse, func()) 
 
 func createWarehouseWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateWarehouseOptions) (*sdk.Warehouse, func()) {
 	t.Helper()
-	name := sdk.RandomStringRange(t, 8, 28)
+	name := internal.RandomStringRange(t, 8, 28)
 	id := sdk.NewAccountObjectIdentifier(name)
 	ctx := context.Background()
 	err := client.Warehouses.Create(ctx, id, opts)
@@ -166,7 +167,7 @@ func createWarehouseWithOptions(t *testing.T, client *sdk.Client, opts *sdk.Crea
 
 func createUser(t *testing.T, client *sdk.Client) (*sdk.User, func()) {
 	t.Helper()
-	name := sdk.RandomStringRange(t, 8, 28)
+	name := internal.RandomStringRange(t, 8, 28)
 	id := sdk.NewAccountObjectIdentifier(name)
 	return createUserWithOptions(t, client, id, &sdk.CreateUserOptions{})
 }
@@ -192,7 +193,7 @@ func createUserWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjec
 
 func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
 	t.Helper()
-	name := sdk.RandomStringRange(t, 8, 28)
+	name := internal.RandomStringRange(t, 8, 28)
 	ctx := context.Background()
 	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE TABLE \"%s\".\"%s\".\"%s\" (id NUMBER)", database.Name, schema.Name, name))
 	require.NoError(t, err)
@@ -229,12 +230,12 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	if table == nil {
 		table, tableCleanup = createTable(t, client, database, schema)
 	}
-	name := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, sdk.RandomString(t))
+	name := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, internal.RandomString(t))
 	targetLag := sdk.TargetLag{
 		Lagtime: sdk.String("2 minutes"),
 	}
 	query := "select id from " + table.ID().FullyQualifiedName()
-	comment := sdk.RandomComment(t)
+	comment := internal.RandomComment(t)
 	ctx := context.Background()
 	err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouse.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
 	require.NoError(t, err)
@@ -265,7 +266,7 @@ func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema 
 
 func createTagWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, _ *sdk.CreateTagOptions) (*sdk.Tag, func()) {
 	t.Helper()
-	name := sdk.RandomStringRange(t, 8, 28)
+	name := internal.RandomStringRange(t, 8, 28)
 	ctx := context.Background()
 	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
 	require.NoError(t, err)
@@ -375,7 +376,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *sdk.Client, database 
 	if schema == nil {
 		schema, schemaCleanup = createSchema(t, client, database)
 	}
-	name := sdk.RandomUUID(t)
+	name := internal.RandomUUID(t)
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
 	ctx := context.Background()
 	err := client.PasswordPolicies.Create(ctx, id, options)
@@ -416,7 +417,7 @@ func createNetworkPolicy(t *testing.T, client *sdk.Client, req *sdk.CreateNetwor
 
 func createSessionPolicy(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.SessionPolicy, func()) {
 	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, sdk.RandomStringN(t, 12))
+	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, internal.RandomStringN(t, 12))
 	return createSessionPolicyWithOptions(t, client, id, sdk.NewCreateSessionPolicyRequest(id))
 }
 
@@ -474,14 +475,14 @@ func createMaskingPolicy(t *testing.T, client *sdk.Client, database *sdk.Databas
 	t.Helper()
 	signature := []sdk.TableColumnSignature{
 		{
-			Name: sdk.RandomString(t),
+			Name: internal.RandomString(t),
 			Type: sdk.DataTypeVARCHAR,
 		},
 	}
-	n := sdk.RandomIntRange(t, 0, 5)
+	n := internal.RandomIntRange(t, 0, 5)
 	for i := 0; i < n; i++ {
 		signature = append(signature, sdk.TableColumnSignature{
-			Name: sdk.RandomString(t),
+			Name: internal.RandomString(t),
 			Type: sdk.DataTypeVARCHAR,
 		})
 	}
@@ -499,7 +500,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *sdk.Client, database *
 	if schema == nil {
 		schema, schemaCleanup = createSchema(t, client, database)
 	}
-	name := sdk.RandomString(t)
+	name := internal.RandomString(t)
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
 	ctx := context.Background()
 	err := client.MaskingPolicies.Create(ctx, id, signature, returns, expression, options)
@@ -551,7 +552,7 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 		warehouse, warehouseCleanup = createWarehouse(t, client)
 	}
 
-	name := sdk.RandomString(t)
+	name := internal.RandomString(t)
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
 	ctx := context.Background()
 	err := client.Alerts.Create(ctx, id, warehouse.ID(), schedule, condition, action, opts)
@@ -604,7 +605,7 @@ func createRoleWithRequest(t *testing.T, client *sdk.Client, req *sdk.CreateRole
 
 func createDatabaseRole(t *testing.T, client *sdk.Client, database *sdk.Database) (*sdk.DatabaseRole, func()) {
 	t.Helper()
-	name := sdk.RandomString(t)
+	name := internal.RandomString(t)
 	id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
 	ctx := context.Background()
 
@@ -678,7 +679,7 @@ func createFileFormat(t *testing.T, client *sdk.Client, schema sdk.DatabaseObjec
 
 func createFileFormatWithOptions(t *testing.T, client *sdk.Client, schema sdk.DatabaseObjectIdentifier, opts *sdk.CreateFileFormatOptions) (*sdk.FileFormat, func()) {
 	t.Helper()
-	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName(), schema.Name(), sdk.RandomString(t))
+	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName(), schema.Name(), internal.RandomString(t))
 	ctx := context.Background()
 	err := client.FileFormats.Create(ctx, id, opts)
 	require.NoError(t, err)

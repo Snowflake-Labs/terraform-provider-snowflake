@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +13,7 @@ func TestAlertCreate(t *testing.T) {
 	id := RandomSchemaObjectIdentifier(t)
 
 	t.Run("with complete options", func(t *testing.T) {
-		newComment := RandomString(t)
+		newComment := internal.RandomString(t)
 		warehouse := AccountObjectIdentifier{"warehouse"}
 		existsCondition := "SELECT 1"
 		condition := AlertCondition{[]string{existsCondition}}
@@ -50,7 +50,7 @@ func TestAlertAlter(t *testing.T) {
 	})
 
 	t.Run("fail when 2 alter actions specified", func(t *testing.T) {
-		newComment := RandomString(t)
+		newComment := internal.RandomString(t)
 		opts := &AlterAlertOptions{
 			name:   id,
 			Action: &AlertActionResume,
@@ -91,7 +91,7 @@ func TestAlertAlter(t *testing.T) {
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		newComment := RandomString(t)
+		newComment := internal.RandomString(t)
 		opts := &AlterAlertOptions{
 			name: id,
 			Set: &AlertSet{
