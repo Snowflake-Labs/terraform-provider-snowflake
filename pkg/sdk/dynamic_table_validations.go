@@ -29,10 +29,10 @@ func (opts *createDynamicTableOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !validObjectidentifier(opts.warehouse) {
+	if !ValidObjectIdentifier(opts.warehouse) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -45,7 +45,7 @@ func (dts *DynamicTableSet) validate() error {
 	}
 
 	if valueSet(dts.Warehouse) {
-		if !validObjectidentifier(*dts.Warehouse) {
+		if !ValidObjectIdentifier(*dts.Warehouse) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 	}
@@ -57,7 +57,7 @@ func (opts *alterDynamicTableOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(
@@ -97,7 +97,7 @@ func (opts *dropDynamicTableOptions) validate() error {
 	}
 	var errs []error
 
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -108,7 +108,7 @@ func (opts *describeDynamicTableOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)

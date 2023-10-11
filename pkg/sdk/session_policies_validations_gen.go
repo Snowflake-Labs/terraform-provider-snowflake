@@ -15,7 +15,7 @@ func (opts *CreateSessionPolicyOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
@@ -29,7 +29,7 @@ func (opts *AlterSessionPolicyOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(opts.RenameTo, opts.Set, opts.SetTags, opts.UnsetTags, opts.Unset); !ok {
@@ -53,7 +53,7 @@ func (opts *DropSessionPolicyOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -72,7 +72,7 @@ func (opts *DescribeSessionPolicyOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)

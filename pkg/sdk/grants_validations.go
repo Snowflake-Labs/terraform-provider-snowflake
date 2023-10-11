@@ -114,7 +114,7 @@ func (opts *RevokePrivilegesFromAccountRoleOptions) validate() error {
 	if err := opts.on.validate(); err != nil {
 		return err
 	}
-	if !validObjectidentifier(opts.accountRole) {
+	if !ValidObjectIdentifier(opts.accountRole) {
 		return ErrInvalidObjectIdentifier
 	}
 	if everyValueSet(opts.Restrict, opts.Cascade) {
@@ -189,7 +189,7 @@ func (opts *RevokePrivilegesFromDatabaseRoleOptions) validate() error {
 	if err := opts.on.validate(); err != nil {
 		return err
 	}
-	if !validObjectidentifier(opts.databaseRole) {
+	if !ValidObjectIdentifier(opts.databaseRole) {
 		return ErrInvalidObjectIdentifier
 	}
 	if everyValueSet(opts.Restrict, opts.Cascade) {
@@ -199,7 +199,7 @@ func (opts *RevokePrivilegesFromDatabaseRoleOptions) validate() error {
 }
 
 func (opts *grantPrivilegeToShareOptions) validate() error {
-	if !validObjectidentifier(opts.to) {
+	if !ValidObjectIdentifier(opts.to) {
 		return ErrInvalidObjectIdentifier
 	}
 	if !valueSet(opts.On) || opts.privilege == "" {
@@ -231,7 +231,7 @@ func (v *OnTable) validate() error {
 }
 
 func (opts *revokePrivilegeFromShareOptions) validate() error {
-	if !validObjectidentifier(opts.from) {
+	if !ValidObjectIdentifier(opts.from) {
 		return ErrInvalidObjectIdentifier
 	}
 	if !valueSet(opts.On) || opts.privilege == "" {

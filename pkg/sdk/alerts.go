@@ -55,7 +55,7 @@ type AlertCondition struct {
 }
 
 func (opts *CreateAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 
@@ -115,7 +115,7 @@ type AlterAlertOptions struct {
 }
 
 func (opts *AlterAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 
@@ -175,7 +175,7 @@ type dropAlertOptions struct {
 }
 
 func (opts *dropAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -308,7 +308,7 @@ type describeAlertOptions struct {
 }
 
 func (v *describeAlertOptions) validate() error {
-	if !validObjectidentifier(v.name) {
+	if !ValidObjectIdentifier(v.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

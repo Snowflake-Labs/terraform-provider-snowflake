@@ -53,7 +53,7 @@ type CreatePasswordPolicyOptions struct {
 }
 
 func (opts *CreatePasswordPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 
@@ -88,12 +88,12 @@ type AlterPasswordPolicyOptions struct {
 }
 
 func (opts *AlterPasswordPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 
 	if everyValueNil(opts.Set, opts.Unset) {
-		if !validObjectidentifier(opts.NewName) {
+		if !ValidObjectIdentifier(opts.NewName) {
 			return ErrInvalidObjectIdentifier
 		}
 	}
@@ -214,7 +214,7 @@ type DropPasswordPolicyOptions struct {
 }
 
 func (opts *DropPasswordPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -345,7 +345,7 @@ type describePasswordPolicyOptions struct {
 }
 
 func (v *describePasswordPolicyOptions) validate() error {
-	if !validObjectidentifier(v.name) {
+	if !ValidObjectIdentifier(v.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

@@ -107,7 +107,7 @@ type CreateSchemaOptions struct {
 
 func (opts *CreateSchemaOptions) validate() error {
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.Clone) {
@@ -154,7 +154,7 @@ type AlterSchemaOptions struct {
 
 func (opts *AlterSchemaOptions) validate() error {
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.EnableManagedAccess, opts.DisableManagedAccess) {
@@ -232,7 +232,7 @@ type DropSchemaOptions struct {
 
 func (opts *DropSchemaOptions) validate() error {
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.Cascade, opts.Restrict) {
@@ -265,7 +265,7 @@ type undropSchemaOptions struct {
 }
 
 func (opts *undropSchemaOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -294,7 +294,7 @@ type describeSchemaOptions struct {
 }
 
 func (opts *describeSchemaOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

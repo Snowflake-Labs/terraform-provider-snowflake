@@ -68,7 +68,7 @@ type CreateFailoverGroupOptions struct {
 }
 
 func (opts *CreateFailoverGroupOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -102,10 +102,10 @@ type CreateSecondaryReplicationGroupOptions struct {
 }
 
 func (opts *CreateSecondaryReplicationGroupOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
-	if !validObjectidentifier(opts.primaryFailoverGroup) {
+	if !ValidObjectIdentifier(opts.primaryFailoverGroup) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -142,7 +142,7 @@ type AlterSourceFailoverGroupOptions struct {
 }
 
 func (opts *AlterSourceFailoverGroupOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Add, opts.Move, opts.Remove, opts.NewName) {
@@ -248,7 +248,7 @@ type AlterTargetFailoverGroupOptions struct {
 }
 
 func (opts *AlterTargetFailoverGroupOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if !exactlyOneValueSet(opts.Refresh, opts.Primary, opts.Suspend, opts.Resume) {
@@ -282,7 +282,7 @@ type DropFailoverGroupOptions struct {
 }
 
 func (opts *DropFailoverGroupOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -486,7 +486,7 @@ type showFailoverGroupDatabasesOptions struct {
 }
 
 func (opts *showFailoverGroupDatabasesOptions) validate() error {
-	if !validObjectidentifier(opts.in) {
+	if !ValidObjectIdentifier(opts.in) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -525,7 +525,7 @@ type showFailoverGroupSharesOptions struct {
 }
 
 func (opts *showFailoverGroupSharesOptions) validate() error {
-	if !validObjectidentifier(opts.in) {
+	if !ValidObjectIdentifier(opts.in) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

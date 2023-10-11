@@ -185,10 +185,10 @@ type CreateSharedDatabaseOptions struct {
 }
 
 func (opts *CreateSharedDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
-	if !validObjectidentifier(opts.fromShare) {
+	if !ValidObjectIdentifier(opts.fromShare) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -223,10 +223,10 @@ type CreateSecondaryDatabaseOptions struct {
 }
 
 func (opts *CreateSecondaryDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
-	if !validObjectidentifier(opts.primaryDatabase) {
+	if !ValidObjectIdentifier(opts.primaryDatabase) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -262,14 +262,14 @@ type AlterDatabaseOptions struct {
 }
 
 func (opts *AlterDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
-	if validObjectidentifier(opts.NewName) && anyValueSet(opts.Set, opts.Unset, opts.SwapWith) {
+	if ValidObjectIdentifier(opts.NewName) && anyValueSet(opts.Set, opts.Unset, opts.SwapWith) {
 		return errors.New("RENAME TO cannot be set with other options")
 	}
 
-	if validObjectidentifier(opts.SwapWith) && anyValueSet(opts.Set, opts.Unset, opts.NewName) {
+	if ValidObjectIdentifier(opts.SwapWith) && anyValueSet(opts.Set, opts.Unset, opts.NewName) {
 		return errors.New("SWAP WITH cannot be set with other options")
 	}
 
@@ -344,7 +344,7 @@ type AlterDatabaseReplicationOptions struct {
 }
 
 func (opts *AlterDatabaseReplicationOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if everyValueNil(opts.EnableReplication, opts.DisableReplication, opts.Refresh) {
@@ -410,7 +410,7 @@ type AlterDatabaseFailoverOptions struct {
 }
 
 func (opts *AlterDatabaseFailoverOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if everyValueNil(opts.EnableFailover, opts.DisableFailover, opts.Primary) {
@@ -473,7 +473,7 @@ type DropDatabaseOptions struct {
 }
 
 func (opts *DropDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -503,7 +503,7 @@ type undropDatabaseOptions struct {
 }
 
 func (opts *undropDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -584,7 +584,7 @@ type describeDatabaseOptions struct {
 }
 
 func (opts *describeDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

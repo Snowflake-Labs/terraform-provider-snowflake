@@ -8,7 +8,7 @@ import (
 // All the contents of this file were added to be able to use them outside the sdk package (i.e. integration tests package).
 // It was easier to do it that way, so that we do not include big rename changes in the first moving PR.
 // For each of them we will have to decide what do we do:
-// - do we expose the field/method (e.g. ValidObjectIdentifier)
+// - do we expose the field/method
 // - do we keep the workaround
 // - do we copy the code (e.g. ExecForTests)
 // - do we move the code to other place and use it from both places (e.g. findOne)
@@ -21,11 +21,6 @@ func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, erro
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	result, err := c.db.ExecContext(ctx, sql)
 	return result, decodeDriverError(err)
-}
-
-// ValidObjectIdentifier is just a delegate to existing unexported validObjectidentifier
-func ValidObjectIdentifier(objectIdentifier ObjectIdentifier) bool {
-	return validObjectidentifier(objectIdentifier)
 }
 
 // FindOne just delegates to our util findOne from SDK

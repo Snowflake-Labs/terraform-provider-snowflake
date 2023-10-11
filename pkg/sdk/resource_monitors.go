@@ -196,7 +196,7 @@ type ResourceMonitorWith struct {
 }
 
 func (opts *CreateResourceMonitorOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -281,7 +281,7 @@ type AlterResourceMonitorOptions struct {
 }
 
 func (opts *AlterResourceMonitorOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if opts.Set == nil {
@@ -327,7 +327,7 @@ type dropResourceMonitorOptions struct {
 }
 
 func (opts *dropResourceMonitorOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

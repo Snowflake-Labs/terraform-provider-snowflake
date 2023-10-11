@@ -237,10 +237,10 @@ type AccountRename struct {
 }
 
 func (opts *AccountRename) validate() error {
-	if !validObjectidentifier(opts.Name) {
+	if !ValidObjectIdentifier(opts.Name) {
 		return fmt.Errorf("Name must be set")
 	}
-	if !validObjectidentifier(opts.NewName) {
+	if !ValidObjectIdentifier(opts.NewName) {
 		return fmt.Errorf("NewName must be set")
 	}
 	return nil
@@ -252,7 +252,7 @@ type AccountDrop struct {
 }
 
 func (opts *AccountDrop) validate() error {
-	if !validObjectidentifier(opts.Name) {
+	if !ValidObjectIdentifier(opts.Name) {
 		return fmt.Errorf("Name must be set")
 	}
 	if valueSet(opts.OldURL) {
@@ -399,7 +399,7 @@ type DropAccountOptions struct {
 }
 
 func (opts *DropAccountOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return fmt.Errorf("Name must be set")
 	}
 	if !validateIntGreaterThanOrEqual(opts.gracePeriodInDays, 3) {

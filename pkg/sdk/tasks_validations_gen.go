@@ -17,7 +17,7 @@ func (opts *CreateTaskOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
@@ -41,10 +41,10 @@ func (opts *CloneTaskOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !validObjectidentifier(opts.sourceTask) {
+	if !ValidObjectIdentifier(opts.sourceTask) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -55,7 +55,7 @@ func (opts *AlterTaskOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(opts.Resume, opts.Suspend, opts.RemoveAfter, opts.AddAfter, opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags, opts.ModifyAs, opts.ModifyWhen); !ok {
@@ -89,7 +89,7 @@ func (opts *DropTaskOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -108,7 +108,7 @@ func (opts *DescribeTaskOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -119,7 +119,7 @@ func (opts *ExecuteTaskOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)

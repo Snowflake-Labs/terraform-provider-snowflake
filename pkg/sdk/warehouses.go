@@ -119,7 +119,7 @@ type CreateWarehouseOptions struct {
 }
 
 func (opts *CreateWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
@@ -165,7 +165,7 @@ type AlterWarehouseOptions struct {
 }
 
 func (opts *AlterWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if ok := exactlyOneValueSet(
@@ -298,7 +298,7 @@ type DropWarehouseOptions struct {
 }
 
 func (opts *DropWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -487,7 +487,7 @@ type describeWarehouseOptions struct {
 }
 
 func (opts *describeWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

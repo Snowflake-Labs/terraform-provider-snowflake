@@ -52,7 +52,7 @@ type CreateMaskingPolicyOptions struct {
 }
 
 func (opts *CreateMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 
@@ -90,12 +90,12 @@ type AlterMaskingPolicyOptions struct {
 }
 
 func (opts *AlterMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 
 	if everyValueNil(opts.Set, opts.Unset) {
-		if !validObjectidentifier(opts.NewName) {
+		if !ValidObjectIdentifier(opts.NewName) {
 			return ErrInvalidObjectIdentifier
 		}
 	}
@@ -168,7 +168,7 @@ type DropMaskingPolicyOptions struct {
 }
 
 func (opts *DropMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -296,7 +296,7 @@ type describeMaskingPolicyOptions struct {
 }
 
 func (v *describeMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(v.name) {
+	if !ValidObjectIdentifier(v.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

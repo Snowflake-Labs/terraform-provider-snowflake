@@ -16,7 +16,7 @@ func (opts *CreatePipeOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if opts.copyStatement == "" {
@@ -29,7 +29,7 @@ func (opts *AlterPipeOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	if ok := exactlyOneValueSet(
@@ -68,7 +68,7 @@ func (opts *DropPipeOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -91,7 +91,7 @@ func (opts *describePipeOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

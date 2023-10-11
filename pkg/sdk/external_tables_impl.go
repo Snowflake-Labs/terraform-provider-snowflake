@@ -46,7 +46,7 @@ func (v *externalTables) Show(ctx context.Context, req *ShowExternalTableRequest
 }
 
 func (v *externalTables) ShowByID(ctx context.Context, req *ShowExternalTableByIDRequest) (*ExternalTable, error) {
-	if !validObjectidentifier(req.id) {
+	if !ValidObjectIdentifier(req.id) {
 		return nil, ErrInvalidObjectIdentifier
 	}
 

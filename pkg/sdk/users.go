@@ -170,7 +170,7 @@ type UserTag struct {
 }
 
 func (opts *CreateUserOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 	return nil
@@ -273,7 +273,7 @@ type AlterUserOptions struct {
 }
 
 func (opts *AlterUserOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 	if ok := exactlyOneValueSet(
@@ -392,7 +392,7 @@ type DropUserOptions struct {
 }
 
 func (opts *DropUserOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -527,7 +527,7 @@ type describeUserOptions struct {
 }
 
 func (v *describeUserOptions) validate() error {
-	if !validObjectidentifier(v.name) {
+	if !ValidObjectIdentifier(v.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil

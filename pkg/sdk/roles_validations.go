@@ -16,7 +16,7 @@ func (opts *CreateRoleOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
@@ -30,7 +30,7 @@ func (opts *AlterRoleOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueNil(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetTags, opts.UnsetTags) {
@@ -47,7 +47,7 @@ func (opts *DropRoleOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
 	return nil
@@ -61,7 +61,7 @@ func (opts *ShowRoleOptions) validate() error {
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
 		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
-	if valueSet(opts.InClass) && !validObjectidentifier(opts.InClass.Class) {
+	if valueSet(opts.InClass) && !ValidObjectIdentifier(opts.InClass.Class) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -72,16 +72,16 @@ func (opts *GrantRoleOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if (opts.Grant.Role != nil && opts.Grant.User != nil) || (opts.Grant.Role == nil && opts.Grant.User == nil) {
 		errs = append(errs, errors.New("only one grant option can be set [TO ROLE or TO USER]"))
 	}
-	if opts.Grant.Role != nil && !validObjectidentifier(opts.Grant.Role) {
+	if opts.Grant.Role != nil && !ValidObjectIdentifier(opts.Grant.Role) {
 		errs = append(errs, errors.New("invalid object identifier for granted role"))
 	}
-	if opts.Grant.User != nil && !validObjectidentifier(opts.Grant.User) {
+	if opts.Grant.User != nil && !ValidObjectIdentifier(opts.Grant.User) {
 		errs = append(errs, errors.New("invalid object identifier for granted user"))
 	}
 	return errors.Join(errs...)
@@ -92,7 +92,7 @@ func (opts *RevokeRoleOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if (opts.Revoke.Role != nil && opts.Revoke.User != nil) || (opts.Revoke.Role == nil && opts.Revoke.User == nil) {
