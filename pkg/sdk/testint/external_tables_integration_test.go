@@ -407,3 +407,14 @@ func TestInt_ExternalTables(t *testing.T) {
 		})
 	})
 }
+
+type AllowedValue struct {
+	Value string `ddl:"keyword,single_quotes"`
+}
+
+func TestT(t *testing.T) {
+	a := AllowedValue{Value: "123"}
+	b, err := structToSQL(a)
+	require.NoError(t, err)
+	assert.Equal(t, `'123'`, b)
+}
