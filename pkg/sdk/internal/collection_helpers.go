@@ -1,7 +1,11 @@
 package internal
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"errors"
+)
+
+var (
+	ErrObjectNotFound = errors.New("object does not exist")
 )
 
 func FindOne[T any](collection []T, condition func(T) bool) (*T, error) {
@@ -10,5 +14,5 @@ func FindOne[T any](collection []T, condition func(T) bool) (*T, error) {
 			return &o, nil
 		}
 	}
-	return nil, sdk.ErrObjectNotExistOrAuthorized
+	return nil, ErrObjectNotFound
 }
