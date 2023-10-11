@@ -199,13 +199,15 @@ func TestTagAlter(t *testing.T) {
 			},
 		}
 	}
+	mp1ID := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), "policy1")
+	mp2ID := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), "policy2")
 	defaultMaskingPolicies := func() []TagMaskingPolicy {
 		return []TagMaskingPolicy{
 			{
-				Name: "policy1",
+				Name: mp1ID,
 			},
 			{
-				Name: "policy2",
+				Name: mp2ID,
 			},
 		}
 	}
@@ -242,7 +244,7 @@ func TestTagAlter(t *testing.T) {
 				Force:           Bool(true),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s SET MASKING POLICY "policy1", MASKING POLICY "policy2" FORCE`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s SET MASKING POLICY %s, MASKING POLICY %s FORCE`, id.FullyQualifiedName(), mp1ID.FullyQualifiedName(), mp2ID.FullyQualifiedName())
 	})
 
 	t.Run("alter with unset masking policies", func(t *testing.T) {
@@ -252,7 +254,7 @@ func TestTagAlter(t *testing.T) {
 				MaskingPolicies: defaultMaskingPolicies(),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s UNSET MASKING POLICY "policy1", MASKING POLICY "policy2"`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s UNSET MASKING POLICY %s, MASKING POLICY %s`, id.FullyQualifiedName(), mp1ID.FullyQualifiedName(), mp2ID.FullyQualifiedName())
 	})
 
 	t.Run("alter with set comment", func(t *testing.T) {

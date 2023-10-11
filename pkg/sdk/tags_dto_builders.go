@@ -64,7 +64,7 @@ func NewTagSetRequest() *TagSetRequest {
 	return &TagSetRequest{}
 }
 
-func (s *TagSetRequest) WithMaskingPolicies(maskingPolicies []string) *TagSetRequest {
+func (s *TagSetRequest) WithMaskingPolicies(maskingPolicies []SchemaObjectIdentifier) *TagSetRequest {
 	s.maskingPolicies = maskingPolicies
 	return s
 }
@@ -79,11 +79,11 @@ func (s *TagSetRequest) WithComment(comment string) *TagSetRequest {
 	return s
 }
 
-func createTagMaskingPolicies(policies []string) []TagMaskingPolicy {
-	items := make([]TagMaskingPolicy, 0, len(policies))
-	for _, policy := range policies {
+func createTagMaskingPolicies(maskingPolicies []SchemaObjectIdentifier) []TagMaskingPolicy {
+	items := make([]TagMaskingPolicy, 0, len(maskingPolicies))
+	for _, value := range maskingPolicies {
 		items = append(items, TagMaskingPolicy{
-			Name: policy,
+			Name: value,
 		})
 	}
 	return items
@@ -107,7 +107,7 @@ func NewTagUnsetRequest() *TagUnsetRequest {
 	return &TagUnsetRequest{}
 }
 
-func (s *TagUnsetRequest) WithMaskingPolicies(maskingPolicies []string) *TagUnsetRequest {
+func (s *TagUnsetRequest) WithMaskingPolicies(maskingPolicies []SchemaObjectIdentifier) *TagUnsetRequest {
 	s.maskingPolicies = maskingPolicies
 	return s
 }
@@ -165,8 +165,8 @@ func NewDropTagRequest(name SchemaObjectIdentifier) *DropTagRequest {
 	return &s
 }
 
-func (s *DropTagRequest) WithIfNotExists(ifNotExists bool) *DropTagRequest {
-	s.ifNotExists = ifNotExists
+func (s *DropTagRequest) WithIfExists(ifExists bool) *DropTagRequest {
+	s.ifExists = ifExists
 	return s
 }
 

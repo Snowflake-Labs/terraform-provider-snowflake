@@ -31,13 +31,13 @@ type AlterTagRequest struct {
 }
 
 type TagSetRequest struct {
-	maskingPolicies []string
+	maskingPolicies []SchemaObjectIdentifier
 	force           *bool
 	comment         *string
 }
 
 type TagUnsetRequest struct {
-	maskingPolicies []string
+	maskingPolicies []SchemaObjectIdentifier
 	allowedValues   *bool
 	comment         *bool
 }
@@ -48,7 +48,7 @@ type ShowTagRequest struct {
 }
 
 type DropTagRequest struct {
-	ifNotExists bool
+	ifExists bool
 
 	name SchemaObjectIdentifier // required
 }

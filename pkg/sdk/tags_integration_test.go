@@ -166,7 +166,7 @@ func TestInt_Tags(t *testing.T) {
 		id := tag.ID()
 		t.Cleanup(cleanupTagHandle(id))
 
-		policies := []string{policyTest.Name}
+		policies := []SchemaObjectIdentifier{policyTest.ID()}
 		set := NewTagSetRequest().WithMaskingPolicies(policies)
 		err := client.Tags.Alter(ctx, NewAlterTagRequest(id).WithSet(set))
 		require.NoError(t, err)

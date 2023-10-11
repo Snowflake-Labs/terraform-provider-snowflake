@@ -100,11 +100,11 @@ type TagSetMaskingPolicies struct {
 }
 
 type TagUnsetMaskingPolicies struct {
-	MaskingPolicies []TagMaskingPolicy `ddl:"list,comma,single_quotes"`
+	MaskingPolicies []TagMaskingPolicy `ddl:"list,comma,no_quotes"`
 }
 
 type TagMaskingPolicy struct {
-	Name string `ddl:"parameter,no_equals,double_quotes" sql:"MASKING POLICY"`
+	Name SchemaObjectIdentifier `ddl:"identifier" sql:"MASKING POLICY"`
 }
 
 type TagSet struct {

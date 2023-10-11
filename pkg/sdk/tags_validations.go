@@ -103,20 +103,17 @@ func (opts *alterTagOptions) validate() error {
 			errs = append(errs, err)
 		}
 	}
-	if unset := opts.Unset; valueSet(opts.Unset) {
+	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
 			errs = append(errs, err)
 		}
-		if !anyValueSet(unset.MaskingPolicies, unset.AllowedValues, unset.Comment) {
+		if !anyValueSet(opts.Unset.MaskingPolicies, opts.Unset.AllowedValues, opts.Unset.Comment) {
 			errs = append(errs, errAlterNeedsAtLeastOneProperty)
 		}
 	}
 	if valueSet(opts.Rename) {
 		if !validObjectidentifier(opts.Rename.Name) {
 			errs = append(errs, errInvalidObjectIdentifier)
-		}
-		if opts.name.DatabaseName() != opts.Rename.Name.DatabaseName() {
-			errs = append(errs, errDifferentDatabase)
 		}
 	}
 	return errors.Join(errs...)
