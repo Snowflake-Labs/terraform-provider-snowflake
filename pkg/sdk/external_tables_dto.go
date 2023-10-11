@@ -34,6 +34,10 @@ type CreateExternalTableRequest struct {
 	tag                 []*TagAssociationRequest
 }
 
+func (s *CreateExternalTableRequest) GetColumns() []*ExternalTableColumnRequest {
+	return s.columns
+}
+
 type ExternalTableColumnRequest struct {
 	name             string   // required
 	dataType         DataType // required

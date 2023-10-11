@@ -97,6 +97,8 @@ find a better solution to solve the issue (add more logic to the templates ?)
 - generate full tests for common types (e.g. setting/unsetting tags)
 - generate common resources for integration tests
 - cleanup the design of builders in DSL (e.g. why transformer has to be always added?)
+- generate getters for requests, at least for identifier/name
+- generate integration tests in child package (because now we keep them in `testint` package)
 
 ##### Known issues
 - generating two converts when Show and Desc use the same data structure

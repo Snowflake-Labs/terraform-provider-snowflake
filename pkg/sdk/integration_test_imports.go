@@ -3,8 +3,6 @@ package sdk
 import (
 	"context"
 	"database/sql"
-
-	"github.com/snowflakedb/gosnowflake"
 )
 
 // All the contents of this file were added to be able to use them outside the sdk package (i.e. integration tests package).
@@ -28,41 +26,6 @@ func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, erro
 // ValidObjectIdentifier is just a delegate to existing unexported validObjectidentifier
 func ValidObjectIdentifier(objectIdentifier ObjectIdentifier) bool {
 	return validObjectidentifier(objectIdentifier)
-}
-
-// GetName is just an accessor to unexported name field
-func (r *CreateNetworkPolicyRequest) GetName() AccountObjectIdentifier {
-	return r.name
-}
-
-// GetName is just an accessor to unexported name field
-func (s *CreateRoleRequest) GetName() AccountObjectIdentifier {
-	return s.name
-}
-
-// GetName is just an accessor to unexported name field
-func (r *CreateTaskRequest) GetName() SchemaObjectIdentifier {
-	return r.name
-}
-
-// GetName is just an accessor to unexported name field
-func (r *CloneTaskRequest) GetName() SchemaObjectIdentifier {
-	return r.name
-}
-
-// GetColumns is just an accessor to unexported name field
-func (s *CreateExternalTableRequest) GetColumns() []*ExternalTableColumnRequest {
-	return s.columns
-}
-
-// GetAccountLocator is an accessor to unexported accountLocator, which is needed in some tests
-func (c *Client) GetAccountLocator() string {
-	return c.accountLocator
-}
-
-// GetConfig is an accessor to unexported config, which is needed in some tests
-func (c *Client) GetConfig() *gosnowflake.Config {
-	return c.config
 }
 
 // FindOne just delegates to our util findOne from SDK

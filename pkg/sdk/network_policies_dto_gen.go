@@ -18,6 +18,10 @@ type CreateNetworkPolicyRequest struct {
 	Comment       *string
 }
 
+func (r *CreateNetworkPolicyRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
 type IPRequest struct {
 	IP string // required
 }
