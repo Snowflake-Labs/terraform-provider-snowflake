@@ -1,17 +1,17 @@
-package sdk
+package testint
 
 import (
-	"context"
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_UsersShow(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	userTest, userCleanup := createUserWithName(t, client, "USER_FOO")
 	t.Cleanup(userCleanup)
@@ -20,9 +20,9 @@ func TestInt_UsersShow(t *testing.T) {
 	t.Cleanup(user2Cleanup)
 
 	t.Run("with like options", func(t *testing.T) {
-		showOptions := &ShowUserOptions{
-			Like: &Like{
-				Pattern: String(userTest.Name),
+		showOptions := &sdk.ShowUserOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(userTest.Name),
 			},
 		}
 		users, err := client.Users.Show(ctx, showOptions)
@@ -32,8 +32,8 @@ func TestInt_UsersShow(t *testing.T) {
 	})
 
 	t.Run("with starts with options", func(t *testing.T) {
-		showOptions := &ShowUserOptions{
-			StartsWith: String("USER"),
+		showOptions := &sdk.ShowUserOptions{
+			StartsWith: sdk.String("USER"),
 		}
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
@@ -42,10 +42,10 @@ func TestInt_UsersShow(t *testing.T) {
 		assert.Equal(t, 2, len(users))
 	})
 	t.Run("with starts with, limit and from options", func(t *testing.T) {
-		showOptions := &ShowUserOptions{
-			Limit:      Int(10),
-			From:       String("USER_C"),
-			StartsWith: String("USER"),
+		showOptions := &sdk.ShowUserOptions{
+			Limit:      sdk.Int(10),
+			From:       sdk.String("USER_C"),
+			StartsWith: sdk.String("USER"),
 		}
 
 		users, err := client.Users.Show(ctx, showOptions)
@@ -55,9 +55,9 @@ func TestInt_UsersShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent user", func(t *testing.T) {
-		showOptions := &ShowUserOptions{
-			Like: &Like{
-				Pattern: String("non-existent"),
+		showOptions := &sdk.ShowUserOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String("non-existent"),
 			},
 		}
 		users, err := client.Users.Show(ctx, showOptions)
@@ -66,8 +66,8 @@ func TestInt_UsersShow(t *testing.T) {
 	})
 
 	t.Run("when limiting the number of results", func(t *testing.T) {
-		showOptions := &ShowUserOptions{
-			Limit: Int(1),
+		showOptions := &sdk.ShowUserOptions{
+			Limit: sdk.Int(1),
 		}
 		users, err := client.Users.Show(ctx, showOptions)
 		require.NoError(t, err)
@@ -77,7 +77,7 @@ func TestInt_UsersShow(t *testing.T) {
 
 func TestInt_UserCreate(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 
@@ -90,7 +90,7 @@ func TestInt_UserCreate(t *testing.T) {
 	t.Run("test complete case", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
 		tagValue := randomString(t)
-		tags := []TagAssociation{
+		tags := []sdk.TagAssociation{
 			{
 				Name:  tag.ID(),
 				Value: tagValue,
@@ -99,82 +99,80 @@ func TestInt_UserCreate(t *testing.T) {
 		password := randomString(t)
 		loginName := randomString(t)
 
-		opts := &CreateUserOptions{
-			OrReplace: Bool(true),
-			name:      id,
-			ObjectProperties: &UserObjectProperties{
+		opts := &sdk.CreateUserOptions{
+			OrReplace: sdk.Bool(true),
+			ObjectProperties: &sdk.UserObjectProperties{
 				Password:  &password,
 				LoginName: &loginName,
 			},
-			ObjectParameters: &UserObjectParameters{
-				EnableUnredactedQuerySyntaxError: Bool(true),
+			ObjectParameters: &sdk.UserObjectParameters{
+				EnableUnredactedQuerySyntaxError: sdk.Bool(true),
 			},
-			SessionParameters: &SessionParameters{
-				Autocommit: Bool(true),
+			SessionParameters: &sdk.SessionParameters{
+				Autocommit: sdk.Bool(true),
 			},
-			With: Bool(true),
+			With: sdk.Bool(true),
 			Tags: tags,
 		}
 		err := client.Users.Create(ctx, id, opts)
 		require.NoError(t, err)
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.name, userDetails.Name.Value)
+		assert.Equal(t, id.Name(), userDetails.Name.Value)
 		assert.Equal(t, strings.ToUpper(loginName), userDetails.LoginName.Value)
 
-		user, err := client.Users.Show(ctx, &ShowUserOptions{
-			Like: &Like{
-				Pattern: &id.name,
+		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.Pointer(id.Name()),
 			},
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(user))
-		assert.Equal(t, id.name, user[0].Name)
+		assert.Equal(t, id.Name(), user[0].Name)
 	})
 
 	t.Run("test if not exists", func(t *testing.T) {
 		id := randomAccountObjectIdentifier(t)
 		tagValue := randomString(t)
-		tags := []TagAssociation{
+		tags := []sdk.TagAssociation{
 			{
-				Name:  NewAccountObjectIdentifier(tag.Name),
+				Name:  sdk.NewAccountObjectIdentifier(tag.Name),
 				Value: tagValue,
 			},
 		}
 		password := randomString(t)
 		loginName := randomString(t)
 
-		opts := &CreateUserOptions{
-			IfNotExists: Bool(true),
-			name:        id,
-			ObjectProperties: &UserObjectProperties{
+		opts := &sdk.CreateUserOptions{
+			IfNotExists: sdk.Bool(true),
+			ObjectProperties: &sdk.UserObjectProperties{
 				Password:  &password,
 				LoginName: &loginName,
 			},
-			ObjectParameters: &UserObjectParameters{
-				EnableUnredactedQuerySyntaxError: Bool(true),
+			ObjectParameters: &sdk.UserObjectParameters{
+				EnableUnredactedQuerySyntaxError: sdk.Bool(true),
 			},
-			SessionParameters: &SessionParameters{
-				Autocommit: Bool(true),
+			SessionParameters: &sdk.SessionParameters{
+				Autocommit: sdk.Bool(true),
 			},
-			With: Bool(true),
+			With: sdk.Bool(true),
 			Tags: tags,
 		}
 		err := client.Users.Create(ctx, id, opts)
 		require.NoError(t, err)
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.name, userDetails.Name.Value)
+		assert.Equal(t, id.Name(), userDetails.Name.Value)
 		assert.Equal(t, strings.ToUpper(loginName), userDetails.LoginName.Value)
 
-		user, err := client.Users.Show(ctx, &ShowUserOptions{
-			Like: &Like{
-				Pattern: &id.name,
+		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.Pointer(id.Name()),
 			},
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(user))
-		assert.Equal(t, id.name, user[0].Name)
+		assert.Equal(t, id.Name(), user[0].Name)
 	})
 
 	t.Run("test no options", func(t *testing.T) {
@@ -184,24 +182,24 @@ func TestInt_UserCreate(t *testing.T) {
 		require.NoError(t, err)
 		userDetails, err := client.Users.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, id.name, userDetails.Name.Value)
-		assert.Equal(t, strings.ToUpper(id.name), userDetails.LoginName.Value)
+		assert.Equal(t, id.Name(), userDetails.Name.Value)
+		assert.Equal(t, strings.ToUpper(id.Name()), userDetails.LoginName.Value)
 		assert.Empty(t, userDetails.Password.Value)
 
-		user, err := client.Users.Show(ctx, &ShowUserOptions{
-			Like: &Like{
-				Pattern: &id.name,
+		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.Pointer(id.Name()),
 			},
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(user))
-		assert.Equal(t, id.name, user[0].Name)
+		assert.Equal(t, id.Name(), user[0].Name)
 	})
 }
 
 func TestInt_UserDescribe(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	user, userCleanup := createUser(t, client)
 	t.Cleanup(userCleanup)
@@ -213,15 +211,15 @@ func TestInt_UserDescribe(t *testing.T) {
 	})
 
 	t.Run("when user does not exist", func(t *testing.T) {
-		id := NewAccountObjectIdentifier("does_not_exist")
+		id := sdk.NewAccountObjectIdentifier("does_not_exist")
 		_, err := client.Users.Describe(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
 
 func TestInt_UserDrop(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
 	t.Run("when user exists", func(t *testing.T) {
 		user, _ := createUser(t, client)
@@ -229,12 +227,12 @@ func TestInt_UserDrop(t *testing.T) {
 		err := client.Users.Drop(ctx, id)
 		require.NoError(t, err)
 		_, err = client.Users.Describe(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("when user does not exist", func(t *testing.T) {
-		id := NewAccountObjectIdentifier("does_not_exist")
+		id := sdk.NewAccountObjectIdentifier("does_not_exist")
 		err := client.Users.Drop(ctx, id)
-		assert.ErrorIs(t, err, errObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

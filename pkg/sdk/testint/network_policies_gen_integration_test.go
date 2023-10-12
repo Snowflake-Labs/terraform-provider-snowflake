@@ -1,33 +1,33 @@
-package sdk
+package testint
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_NetworkPolicies(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
-	allowedIP := NewIPRequest("123.0.0.1")
-	blockedIP := NewIPRequest("125.0.0.1")
-	blockedIP2 := NewIPRequest("124.0.0.1")
-	defaultCreateRequest := func() *CreateNetworkPolicyRequest {
+	allowedIP := sdk.NewIPRequest("123.0.0.1")
+	blockedIP := sdk.NewIPRequest("125.0.0.1")
+	blockedIP2 := sdk.NewIPRequest("124.0.0.1")
+	defaultCreateRequest := func() *sdk.CreateNetworkPolicyRequest {
 		id := randomAccountObjectIdentifier(t)
 		comment := "some_comment"
-		return NewCreateNetworkPolicyRequest(id).
-			WithOrReplace(Bool(true)).
-			WithAllowedIpList([]IPRequest{*allowedIP}).
-			WithBlockedIpList([]IPRequest{*blockedIP, *blockedIP2}).
+		return sdk.NewCreateNetworkPolicyRequest(id).
+			WithOrReplace(sdk.Bool(true)).
+			WithAllowedIpList([]sdk.IPRequest{*allowedIP}).
+			WithBlockedIpList([]sdk.IPRequest{*blockedIP, *blockedIP2}).
 			WithComment(&comment)
 	}
 
-	findNetworkPolicy := func(nps []NetworkPolicy, name string) (*NetworkPolicy, error) {
-		return findOne[NetworkPolicy](nps, func(t NetworkPolicy) bool {
+	findNetworkPolicy := func(nps []sdk.NetworkPolicy, name string) (*sdk.NetworkPolicy, error) {
+		return sdk.FindOne[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
 			return t.Name == name
 		})
 	}
@@ -38,10 +38,10 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
-		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
+		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, *req.Comment, np.Comment)
 		assert.Equal(t, len(req.AllowedIpList), np.EntriesInAllowedIpList)
@@ -54,14 +54,14 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
-		err = client.NetworkPolicies.Alter(ctx, NewAlterNetworkPolicyRequest(req.name).
-			WithSet(NewNetworkPolicySetRequest().WithAllowedIpList([]IPRequest{{IP: "123.0.0.1"}, {IP: "125.0.0.1"}})))
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
+			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedIpList([]sdk.IPRequest{{IP: "123.0.0.1"}, {IP: "125.0.0.1"}})))
 		require.NoError(t, err)
 
-		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
+		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, 2, np.EntriesInAllowedIpList)
 	})
@@ -72,14 +72,14 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
-		err = client.NetworkPolicies.Alter(ctx, NewAlterNetworkPolicyRequest(req.name).
-			WithSet(NewNetworkPolicySetRequest().WithBlockedIpList([]IPRequest{{IP: "123.0.0.1"}})))
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
+			WithSet(sdk.NewNetworkPolicySetRequest().WithBlockedIpList([]sdk.IPRequest{{IP: "123.0.0.1"}})))
 		require.NoError(t, err)
 
-		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
+		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, 1, np.EntriesInBlockedIpList)
 	})
@@ -91,14 +91,14 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		t.Cleanup(dropNetworkPolicy)
 
 		alteredComment := "altered_comment"
-		err = client.NetworkPolicies.Alter(ctx, NewAlterNetworkPolicyRequest(req.name).
-			WithSet(NewNetworkPolicySetRequest().WithComment(&alteredComment)))
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
+			WithSet(sdk.NewNetworkPolicySetRequest().WithComment(&alteredComment)))
 		require.NoError(t, err)
 
-		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
+		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, alteredComment, np.Comment)
 	})
@@ -109,13 +109,13 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
-		err = client.NetworkPolicies.Alter(ctx, NewAlterNetworkPolicyRequest(req.name).WithUnsetComment(Bool(true)))
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).WithUnsetComment(sdk.Bool(true)))
 		require.NoError(t, err)
 
-		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
+		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
-		np, err := findNetworkPolicy(nps, req.name.Name())
+		np, err := findNetworkPolicy(nps, req.GetName().Name())
 		require.NoError(t, err)
 		assert.Equal(t, "", np.Comment)
 	})
@@ -133,17 +133,17 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		})
 
 		newID := randomAccountObjectIdentifier(t)
-		err = client.NetworkPolicies.Alter(ctx, NewAlterNetworkPolicyRequest(req.name).WithRenameTo(&newID))
+		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).WithRenameTo(&newID))
 		require.NoError(t, err)
 		altered = true
 		t.Cleanup(func() {
 			if altered {
-				err = client.NetworkPolicies.Drop(ctx, NewDropNetworkPolicyRequest(newID))
+				err = client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(newID))
 				require.NoError(t, err)
 			}
 		})
 
-		nps, err := client.NetworkPolicies.Show(ctx, NewShowNetworkPolicyRequest())
+		nps, err := client.NetworkPolicies.Show(ctx, sdk.NewShowNetworkPolicyRequest())
 		require.NoError(t, err)
 
 		np, err := findNetworkPolicy(nps, newID.Name())
@@ -160,11 +160,11 @@ func TestInt_NetworkPolicies(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
-		desc, err := client.NetworkPolicies.Describe(ctx, req.name)
+		desc, err := client.NetworkPolicies.Describe(ctx, req.GetName())
 		require.NoError(t, err)
 
 		assert.Equal(t, 2, len(desc))
-		assert.Contains(t, desc, NetworkPolicyDescription{Name: "ALLOWED_IP_LIST", Value: allowedIP.IP})
-		assert.Contains(t, desc, NetworkPolicyDescription{Name: "BLOCKED_IP_LIST", Value: fmt.Sprintf("%s,%s", blockedIP.IP, blockedIP2.IP)})
+		assert.Contains(t, desc, sdk.NetworkPolicyDescription{Name: "ALLOWED_IP_LIST", Value: allowedIP.IP})
+		assert.Contains(t, desc, sdk.NetworkPolicyDescription{Name: "BLOCKED_IP_LIST", Value: fmt.Sprintf("%s,%s", blockedIP.IP, blockedIP2.IP)})
 	})
 }
