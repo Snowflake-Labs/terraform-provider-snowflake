@@ -10,7 +10,7 @@ import (
 )
 
 func TestPasswordPolicyCreate(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &CreatePasswordPolicyOptions{}
@@ -54,7 +54,7 @@ func TestPasswordPolicyCreate(t *testing.T) {
 }
 
 func TestPasswordPolicyAlter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &AlterPasswordPolicyOptions{}
@@ -103,7 +103,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.Uuid(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.UUID())
 		opts := &AlterPasswordPolicyOptions{
 			name:    id,
 			NewName: newID,
@@ -116,7 +116,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 }
 
 func TestPasswordPolicyDrop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &DropPasswordPolicyOptions{}
@@ -149,7 +149,7 @@ func TestPasswordPolicyDrop(t *testing.T) {
 }
 
 func TestPasswordPolicyShow(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowPasswordPolicyOptions{}
@@ -230,7 +230,7 @@ func TestPasswordPolicyShow(t *testing.T) {
 }
 
 func TestPasswordPolicyDescribe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &describePasswordPolicyOptions{}

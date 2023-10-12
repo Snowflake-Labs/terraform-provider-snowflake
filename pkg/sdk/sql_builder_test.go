@@ -364,7 +364,7 @@ func TestBuilder_parseStruct(t *testing.T) {
 	t.Run("test struct with all fields", func(t *testing.T) {
 		s := &structTestHelper{
 			static: true,
-			name:   RandomAccountObjectIdentifier(t),
+			name:   RandomAccountObjectIdentifier(),
 			Param:  String("example"),
 		}
 		clauses, err := builder.parseStruct(s)

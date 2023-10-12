@@ -116,7 +116,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	createTaskBasicRequest := func(t *testing.T) *sdk.CreateTaskRequest {
 		t.Helper()
-		name := random.String(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		return sdk.NewCreateTaskRequest(id, sql)
@@ -183,7 +183,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
-		otherName := random.String(t)
+		otherName := random.String()
 		otherId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, otherName)
 
 		request := sdk.NewCreateTaskRequest(otherId, sql).WithSchedule(sdk.String("10 MINUTE"))
@@ -239,7 +239,7 @@ func TestInt_Tasks(t *testing.T) {
 	t.Run("clone task: default", func(t *testing.T) {
 		sourceTask := createTask(t)
 
-		name := random.String(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		request := sdk.NewCloneTaskRequest(id, sourceTask.ID())

@@ -11,7 +11,7 @@ import (
 )
 
 func TestResourceMonitorCreate(t *testing.T) {
-	id := RandomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &CreateResourceMonitorOptions{}
@@ -63,7 +63,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 }
 
 func TestResourceMonitorAlter(t *testing.T) {
-	id := RandomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &AlterResourceMonitorOptions{}
@@ -117,7 +117,7 @@ func TestResourceMonitorAlter(t *testing.T) {
 }
 
 func TestResourceMonitorDrop(t *testing.T) {
-	id := RandomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &dropResourceMonitorOptions{}
@@ -139,7 +139,7 @@ func TestResourceMonitorDrop(t *testing.T) {
 }
 
 func TestResourceMonitorShow(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowResourceMonitorOptions{}

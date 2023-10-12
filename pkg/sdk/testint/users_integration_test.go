@@ -89,16 +89,16 @@ func TestInt_UserCreate(t *testing.T) {
 	t.Cleanup(tagCleanup)
 
 	t.Run("test complete case", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier(t)
-		tagValue := random.String(t)
+		id := sdk.RandomAccountObjectIdentifier()
+		tagValue := random.String()
 		tags := []sdk.TagAssociation{
 			{
 				Name:  tag.ID(),
 				Value: tagValue,
 			},
 		}
-		password := random.String(t)
-		loginName := random.String(t)
+		password := random.String()
+		loginName := random.String()
 
 		opts := &sdk.CreateUserOptions{
 			OrReplace: sdk.Bool(true),
@@ -133,16 +133,16 @@ func TestInt_UserCreate(t *testing.T) {
 	})
 
 	t.Run("test if not exists", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier(t)
-		tagValue := random.String(t)
+		id := sdk.RandomAccountObjectIdentifier()
+		tagValue := random.String()
 		tags := []sdk.TagAssociation{
 			{
 				Name:  sdk.NewAccountObjectIdentifier(tag.Name),
 				Value: tagValue,
 			},
 		}
-		password := random.String(t)
-		loginName := random.String(t)
+		password := random.String()
+		loginName := random.String()
 
 		opts := &sdk.CreateUserOptions{
 			IfNotExists: sdk.Bool(true),
@@ -177,7 +177,7 @@ func TestInt_UserCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		id := sdk.RandomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier()
 
 		err := client.Users.Create(ctx, id, nil)
 		require.NoError(t, err)

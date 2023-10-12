@@ -1,8 +1,6 @@
 package sdk
 
 import (
-	"testing"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 )
 
@@ -28,22 +26,18 @@ import (
 // 4. Do nothing
 //    Just leave these helpers exported.
 
-func RandomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
-	t.Helper()
-	return NewSchemaObjectIdentifier(random.StringN(t, 12), random.StringN(t, 12), random.StringN(t, 12))
+func RandomSchemaObjectIdentifier() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(random.StringN(12), random.StringN(12), random.StringN(12))
 }
 
-func RandomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
-	t.Helper()
-	return NewDatabaseObjectIdentifier(random.StringN(t, 12), random.StringN(t, 12))
+func RandomDatabaseObjectIdentifier() DatabaseObjectIdentifier {
+	return NewDatabaseObjectIdentifier(random.StringN(12), random.StringN(12))
 }
 
-func RandomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
-	t.Helper()
-	return NewAccountObjectIdentifier(random.StringN(t, 12))
+func RandomAccountObjectIdentifier() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(random.StringN(12))
 }
 
-func AlphanumericDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
-	t.Helper()
-	return NewDatabaseObjectIdentifier(random.AlphanumericN(t, 12), random.AlphanumericN(t, 12))
+func AlphanumericDatabaseObjectIdentifier() DatabaseObjectIdentifier {
+	return NewDatabaseObjectIdentifier(random.AlphanumericN(12), random.AlphanumericN(12))
 }

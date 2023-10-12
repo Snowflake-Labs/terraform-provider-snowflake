@@ -223,7 +223,7 @@ import "testing"
 {{ range .Operations }}
 	{{- if .OptsField }}
 	func Test{{ .ObjectInterface.Name }}_{{ .Name }}(t *testing.T) {
-		id := Random{{ .ObjectInterface.IdentifierKind }}(t)
+		id := Random{{ .ObjectInterface.IdentifierKind }}()
 
 		// Minimal valid {{ .OptsField.KindNoPtr }}
 		defaultOpts := func() *{{ .OptsField.KindNoPtr }} {

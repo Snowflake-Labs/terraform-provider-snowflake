@@ -59,13 +59,13 @@ func TestInt_AccountCreate(t *testing.T) {
 		t.Skip("ORGADMIN role is not in current session")
 	}
 	t.Run("complete case", func(t *testing.T) {
-		accountID := sdk.NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Fruit()) + "_" + fmt.Sprintf("%d", random.IntRange(t, 100, 999)))
+		accountID := sdk.NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Fruit()) + "_" + fmt.Sprintf("%d", random.IntRange(100, 999)))
 		region, err := client.ContextFunctions.CurrentRegion(ctx)
 		require.NoError(t, err)
 
 		opts := &sdk.CreateAccountOptions{
 			AdminName:          "someadmin",
-			AdminPassword:      sdk.String(random.StringN(t, 12)),
+			AdminPassword:      sdk.String(random.StringN(12)),
 			FirstName:          sdk.String("Ad"),
 			LastName:           sdk.String("Min"),
 			Email:              "admin@example.com",
@@ -96,7 +96,7 @@ func TestInt_AccountCreate(t *testing.T) {
 		assert.Equal(t, region, account.SnowflakeRegion)
 
 		// rename
-		newAccountID := sdk.NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Animal()) + "_" + fmt.Sprintf("%d", random.IntRange(t, 100, 999)))
+		newAccountID := sdk.NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Animal()) + "_" + fmt.Sprintf("%d", random.IntRange(100, 999)))
 		alterOpts := &sdk.AlterAccountOptions{
 			Rename: &sdk.AccountRename{
 				Name:       accountID,

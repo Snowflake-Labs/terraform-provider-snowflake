@@ -28,14 +28,14 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	table, tableCleanup := createTable(t, itc.client, database, schema)
 	t.Cleanup(tableCleanup)
 
-	stageName := random.AlphanumericN(t, 20)
+	stageName := random.AlphanumericN(20)
 	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
 	t.Cleanup(stageCleanup)
 
 	t.Run("if we have special characters in db or schema name, create pipe returns error in copy <> from <> section", func(t *testing.T) {
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphanumericN(t, 20)),
+			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphanumericN(20)),
 			createPipeCopyStatement(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
@@ -60,7 +60,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphanumericN(t, 20)),
+			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphanumericN(20)),
 			createCopyStatementWithoutQualifiersForStage(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
@@ -70,7 +70,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 }
 
 func TestInt_PipesShowAndDescribe(t *testing.T) {
-	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier(t)
+	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier()
 	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
@@ -83,16 +83,16 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	table2, table2Cleanup := createTable(t, itc.client, database, schema)
 	t.Cleanup(table2Cleanup)
 
-	stageName := random.AlphanumericN(t, 20)
+	stageName := random.AlphanumericN(20)
 	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
 	t.Cleanup(stageCleanup)
 
-	pipe1Name := random.AlphanumericN(t, 20)
+	pipe1Name := random.AlphanumericN(20)
 	pipe1CopyStatement := createPipeCopyStatement(t, table1, stage)
 	pipe1, pipe1Cleanup := createPipe(t, itc.client, database, schema, pipe1Name, pipe1CopyStatement)
 	t.Cleanup(pipe1Cleanup)
 
-	pipe2Name := random.AlphanumericN(t, 20)
+	pipe2Name := random.AlphanumericN(20)
 	pipe2CopyStatement := createPipeCopyStatement(t, table2, stage)
 	pipe2, pipe2Cleanup := createPipe(t, itc.client, database, schema, pipe2Name, pipe2CopyStatement)
 	t.Cleanup(pipe2Cleanup)
@@ -161,7 +161,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 }
 
 func TestInt_PipeCreate(t *testing.T) {
-	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier(t)
+	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier()
 	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
@@ -171,7 +171,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	table, tableCleanup := createTable(t, itc.client, database, schema)
 	t.Cleanup(tableCleanup)
 
-	stageName := random.AlphanumericN(t, 20)
+	stageName := random.AlphanumericN(20)
 	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
 	t.Cleanup(stageCleanup)
 
@@ -196,9 +196,9 @@ func TestInt_PipeCreate(t *testing.T) {
 
 	// TODO: test error integration, aws sns topic and integration when we have them in project
 	t.Run("test complete case", func(t *testing.T) {
-		name := random.String(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		comment := random.Comment(t)
+		comment := random.Comment()
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, &sdk.CreatePipeOptions{
 			OrReplace:   sdk.Bool(false),
@@ -215,7 +215,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	})
 
 	t.Run("test if not exists and or replace are incompatible", func(t *testing.T) {
-		name := random.String(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, &sdk.CreatePipeOptions{
@@ -226,7 +226,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		name := random.String(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, nil)
@@ -240,7 +240,7 @@ func TestInt_PipeCreate(t *testing.T) {
 }
 
 func TestInt_PipeDrop(t *testing.T) {
-	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier(t)
+	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier()
 	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
@@ -250,12 +250,12 @@ func TestInt_PipeDrop(t *testing.T) {
 	table, tableCleanup := createTable(t, itc.client, database, schema)
 	t.Cleanup(tableCleanup)
 
-	stageName := random.AlphanumericN(t, 20)
+	stageName := random.AlphanumericN(20)
 	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
 	t.Cleanup(stageCleanup)
 
 	t.Run("pipe exists", func(t *testing.T) {
-		pipeName := random.AlphanumericN(t, 20)
+		pipeName := random.AlphanumericN(20)
 		pipeCopyStatement := createPipeCopyStatement(t, table, stage)
 		pipe, _ := createPipe(t, itc.client, database, schema, pipeName, pipeCopyStatement)
 
@@ -275,7 +275,7 @@ func TestInt_PipeDrop(t *testing.T) {
 }
 
 func TestInt_PipeAlter(t *testing.T) {
-	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier(t)
+	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier()
 	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
 	t.Cleanup(databaseCleanup)
 
@@ -285,7 +285,7 @@ func TestInt_PipeAlter(t *testing.T) {
 	table, tableCleanup := createTable(t, itc.client, database, schema)
 	t.Cleanup(tableCleanup)
 
-	stageName := random.AlphanumericN(t, 20)
+	stageName := random.AlphanumericN(20)
 	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
 	t.Cleanup(stageCleanup)
 
@@ -293,7 +293,7 @@ func TestInt_PipeAlter(t *testing.T) {
 
 	// TODO: test error integration when we have them in project
 	t.Run("set value and unset value", func(t *testing.T) {
-		pipeName := random.AlphanumericN(t, 20)
+		pipeName := random.AlphanumericN(20)
 		pipe, pipeCleanup := createPipe(t, itc.client, database, schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
@@ -332,7 +332,7 @@ func TestInt_PipeAlter(t *testing.T) {
 		tag, tagCleanup := createTag(t, itc.client, database, schema)
 		t.Cleanup(tagCleanup)
 
-		pipeName := random.AlphanumericN(t, 20)
+		pipeName := random.AlphanumericN(20)
 		pipe, pipeCleanup := createPipe(t, itc.client, database, schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
@@ -372,7 +372,7 @@ func TestInt_PipeAlter(t *testing.T) {
 	})
 
 	t.Run("refresh with all", func(t *testing.T) {
-		pipeName := random.AlphanumericN(t, 20)
+		pipeName := random.AlphanumericN(20)
 		pipe, pipeCleanup := createPipe(t, itc.client, database, schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 

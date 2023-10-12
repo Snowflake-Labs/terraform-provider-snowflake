@@ -6,7 +6,7 @@ import (
 )
 
 func TestTasks_Create(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	sql := "SELECT CURRENT_TIMESTAMP"
 
 	// Minimal valid CreateTaskOptions
@@ -61,9 +61,9 @@ func TestTasks_Create(t *testing.T) {
 	})
 
 	t.Run("all options", func(t *testing.T) {
-		warehouseId := RandomAccountObjectIdentifier(t)
-		otherTaskId := RandomSchemaObjectIdentifier(t)
-		tagId := RandomSchemaObjectIdentifier(t)
+		warehouseId := RandomAccountObjectIdentifier()
+		otherTaskId := RandomSchemaObjectIdentifier()
+		tagId := RandomSchemaObjectIdentifier()
 
 		req := NewCreateTaskRequest(id, sql).
 			WithOrReplace(Bool(true)).
@@ -91,8 +91,8 @@ func TestTasks_Create(t *testing.T) {
 }
 
 func TestTasks_Clone(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
-	sourceId := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	sourceId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid CloneTaskOptions
 	defaultOpts := func() *CloneTaskOptions {
@@ -133,8 +133,8 @@ func TestTasks_Clone(t *testing.T) {
 }
 
 func TestTasks_Alter(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
-	otherTaskId := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	otherTaskId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid AlterTaskOptions
 	defaultOpts := func() *AlterTaskOptions {
@@ -282,7 +282,7 @@ func TestTasks_Alter(t *testing.T) {
 }
 
 func TestTasks_Drop(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DropTaskOptions
 	defaultOpts := func() *DropTaskOptions {
@@ -341,7 +341,7 @@ func TestTasks_Show(t *testing.T) {
 }
 
 func TestTasks_Describe(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeTaskOptions
 	defaultOpts := func() *DescribeTaskOptions {
@@ -368,7 +368,7 @@ func TestTasks_Describe(t *testing.T) {
 }
 
 func TestTasks_Execute(t *testing.T) {
-	id := RandomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid ExecuteTaskOptions
 	defaultOpts := func() *ExecuteTaskOptions {

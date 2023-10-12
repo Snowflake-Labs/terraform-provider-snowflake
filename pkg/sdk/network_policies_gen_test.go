@@ -5,7 +5,7 @@ import (
 )
 
 func TestNetworkPolicies_Create(t *testing.T) {
-	id := RandomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	// Minimal valid CreateNetworkPolicyOptions
 	defaultOpts := func() *CreateNetworkPolicyOptions {
@@ -36,7 +36,7 @@ func TestNetworkPolicies_Create(t *testing.T) {
 }
 
 func TestNetworkPolicies_Alter(t *testing.T) {
-	id := RandomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	// Minimal valid AlterNetworkPolicyOptions
 	defaultOpts := func() *AlterNetworkPolicyOptions {
@@ -101,14 +101,14 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 
 	t.Run("rename to", func(t *testing.T) {
 		opts := defaultOpts()
-		newName := RandomAccountObjectIdentifier(t)
+		newName := RandomAccountObjectIdentifier()
 		opts.RenameTo = &newName
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s RENAME TO %s", id.FullyQualifiedName(), newName.FullyQualifiedName())
 	})
 }
 
 func TestNetworkPolicies_Drop(t *testing.T) {
-	id := RandomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	// Minimal valid DropNetworkPolicyOptions
 	defaultOpts := func() *DropNetworkPolicyOptions {
@@ -153,7 +153,7 @@ func TestNetworkPolicies_Show(t *testing.T) {
 }
 
 func TestNetworkPolicies_Describe(t *testing.T) {
-	id := RandomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	// Minimal valid DescribeNetworkPolicyOptions
 	defaultOpts := func() *DescribeNetworkPolicyOptions {

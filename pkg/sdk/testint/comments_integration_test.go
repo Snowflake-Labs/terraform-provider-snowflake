@@ -17,7 +17,7 @@ func TestInt_Comment(t *testing.T) {
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("set", func(t *testing.T) {
-		comment := random.Comment(t)
+		comment := random.Comment()
 		err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
 			ObjectType: sdk.ObjectTypeWarehouse,
 			ObjectName: testWarehouse.ID(),
