@@ -55,7 +55,11 @@ type integrationTestContext struct {
 func (itc *integrationTestContext) initialize() error {
 	log.Println("Initializing integration test context")
 	var err error
-	itc.client, err = sdk.NewDefaultClient()
+	c, err := sdk.NewDefaultClient()
+	if err != nil {
+		return err
+	}
+	itc.client = c
 	itc.ctx = context.Background()
 
 	db, dbCleanup, err := createDb(itc.client, itc.ctx)
