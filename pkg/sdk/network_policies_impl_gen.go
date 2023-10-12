@@ -33,6 +33,15 @@ func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRe
 	return resultList, nil
 }
 
+func (v *networkPolicies) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error) {
+	networkPolicies, err := v.Show(ctx, NewShowNetworkPolicyRequest())
+	if err != nil {
+		return nil, err
+	}
+
+	return findOne(networkPolicies, func(r NetworkPolicy) bool { return r.Name == id.Name() })
+}
+
 func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyDescription, error) {
 	opts := &DescribeNetworkPolicyOptions{
 		name: id,
