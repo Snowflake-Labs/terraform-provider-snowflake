@@ -234,11 +234,9 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset password policy", func(t *testing.T) {
-		databaseTest, databaseCleanup := createDatabase(t, client)
-		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 		t.Cleanup(schemaCleanup)
-		passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, databaseTest, schemaTest)
+		passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, testDb(t), schemaTest)
 		t.Cleanup(passwordPolicyCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -259,11 +257,9 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset session policy", func(t *testing.T) {
-		databaseTest, databaseCleanup := createDatabase(t, client)
-		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 		t.Cleanup(schemaCleanup)
-		sessionPolicyTest, sessionPolicyCleanup := createSessionPolicy(t, client, databaseTest, schemaTest)
+		sessionPolicyTest, sessionPolicyCleanup := createSessionPolicy(t, client, testDb(t), schemaTest)
 		t.Cleanup(sessionPolicyCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -284,13 +280,11 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		databaseTest, databaseCleanup := createDatabase(t, client)
-		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 		t.Cleanup(schemaCleanup)
-		tagTest1, tagCleanup1 := createTag(t, client, databaseTest, schemaTest)
+		tagTest1, tagCleanup1 := createTag(t, client, testDb(t), schemaTest)
 		t.Cleanup(tagCleanup1)
-		tagTest2, tagCleanup2 := createTag(t, client, databaseTest, schemaTest)
+		tagTest2, tagCleanup2 := createTag(t, client, testDb(t), schemaTest)
 		t.Cleanup(tagCleanup2)
 
 		opts := &sdk.AlterAccountOptions{

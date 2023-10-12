@@ -127,19 +127,16 @@ func TestInt_SharesAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
 	t.Run("add and remove accounts", func(t *testing.T) {
 		shareTest, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
-				Database: databaseTest.ID(),
+				Database: testDb(t).ID(),
 			}, shareTest.ID())
 		})
 		require.NoError(t, err)
@@ -189,12 +186,12 @@ func TestInt_SharesAlter(t *testing.T) {
 		shareTest, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
-				Database: databaseTest.ID(),
+				Database: testDb(t).ID(),
 			}, shareTest.ID())
 		})
 		require.NoError(t, err)
@@ -225,12 +222,12 @@ func TestInt_SharesAlter(t *testing.T) {
 		shareTest, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
-				Database: databaseTest.ID(),
+				Database: testDb(t).ID(),
 			}, shareTest.ID())
 			require.NoError(t, err)
 		})
@@ -276,21 +273,21 @@ func TestInt_SharesAlter(t *testing.T) {
 		shareTest, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
-				Database: databaseTest.ID(),
+				Database: testDb(t).ID(),
 			}, shareTest.ID())
 			require.NoError(t, err)
 		})
 
-		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 		t.Cleanup(schemaCleanup)
-		tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+		tagTest, tagCleanup := createTag(t, client, testDb(t), schemaTest)
 		t.Cleanup(tagCleanup)
-		tagTest2, tagCleanup2 := createTag(t, client, databaseTest, schemaTest)
+		tagTest2, tagCleanup2 := createTag(t, client, testDb(t), schemaTest)
 		t.Cleanup(tagCleanup2)
 		tagAssociations := []sdk.TagAssociation{
 			{
@@ -342,16 +339,13 @@ func TestInt_ShareDescribeProvider(t *testing.T) {
 		shareTest, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 
-		databaseTest, databaseCleanup := createDatabase(t, client)
-		t.Cleanup(databaseCleanup)
-
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
-				Database: databaseTest.ID(),
+				Database: testDb(t).ID(),
 			}, shareTest.ID())
 			require.NoError(t, err)
 		})
@@ -362,7 +356,7 @@ func TestInt_ShareDescribeProvider(t *testing.T) {
 			assert.Equal(t, 1, len(shareDetails.SharedObjects))
 			sharedObject := shareDetails.SharedObjects[0]
 			assert.Equal(t, sdk.ObjectTypeDatabase, sharedObject.Kind)
-			assert.Equal(t, databaseTest.ID(), sharedObject.Name)
+			assert.Equal(t, testDb(t).ID(), sharedObject.Name)
 		})
 	})
 }
@@ -376,16 +370,13 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 		shareTest, shareCleanup := createShare(t, providerClient)
 		t.Cleanup(shareCleanup)
 
-		databaseTest, databaseCleanup := createDatabase(t, providerClient)
-		t.Cleanup(databaseCleanup)
-
 		err := providerClient.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = providerClient.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
-				Database: databaseTest.ID(),
+				Database: testDb(t).ID(),
 			}, shareTest.ID())
 			require.NoError(t, err)
 		})

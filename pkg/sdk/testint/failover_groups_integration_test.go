@@ -19,8 +19,6 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	}
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
 	shareTest, shareCleanup := createShare(t, client)
 	t.Cleanup(shareCleanup)
 
@@ -37,7 +35,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
 			IfNotExists: sdk.Bool(true),
 			AllowedDatabases: []sdk.AccountObjectIdentifier{
-				databaseTest.ID(),
+				testDb(t).ID(),
 			},
 			AllowedShares: []sdk.AccountObjectIdentifier{
 				shareTest.ID(),
@@ -68,7 +66,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		fgDBS, err := client.FailoverGroups.ShowDatabases(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(fgDBS))
-		assert.Equal(t, databaseTest.ID().Name(), fgDBS[0].Name())
+		assert.Equal(t, testDb(t).ID().Name(), fgDBS[0].Name())
 
 		fgShares, err := client.FailoverGroups.ShowShares(ctx, id)
 		require.NoError(t, err)
@@ -242,8 +240,6 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 
 	t.Run("add and remove database account object", func(t *testing.T) {
-		databaseTest, cleanupDatabase := createDatabase(t, client)
-		t.Cleanup(cleanupDatabase)
 		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 
@@ -266,7 +262,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		opts = &sdk.AlterSourceFailoverGroupOptions{
 			Add: &sdk.FailoverGroupAdd{
 				AllowedDatabases: []sdk.AccountObjectIdentifier{
-					databaseTest.ID(),
+					testDb(t).ID(),
 				},
 			},
 		}
@@ -275,13 +271,13 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		allowedDBs, err := client.FailoverGroups.ShowDatabases(ctx, failoverGroup.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(allowedDBs))
-		assert.Equal(t, databaseTest.ID().Name(), allowedDBs[0].Name())
+		assert.Equal(t, testDb(t).ID().Name(), allowedDBs[0].Name())
 
 		// now remove database from allowed databases
 		opts = &sdk.AlterSourceFailoverGroupOptions{
 			Remove: &sdk.FailoverGroupRemove{
 				AllowedDatabases: []sdk.AccountObjectIdentifier{
-					databaseTest.ID(),
+					testDb(t).ID(),
 				},
 			},
 		}
@@ -729,8 +725,6 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
 	t.Cleanup(failoverGroupCleanup)
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
 	opts := &sdk.AlterSourceFailoverGroupOptions{
 		Set: &sdk.FailoverGroupSet{
 			ObjectTypes: []sdk.PluralObjectType{
@@ -743,7 +737,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	opts = &sdk.AlterSourceFailoverGroupOptions{
 		Add: &sdk.FailoverGroupAdd{
 			AllowedDatabases: []sdk.AccountObjectIdentifier{
-				databaseTest.ID(),
+				testDb(t).ID(),
 			},
 		},
 	}
@@ -752,7 +746,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	databases, err := client.FailoverGroups.ShowDatabases(ctx, failoverGroupTest.ID())
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(databases))
-	assert.Equal(t, databaseTest.ID(), databases[0])
+	assert.Equal(t, testDb(t).ID(), databases[0])
 }
 
 func TestInt_FailoverGroupsShowShares(t *testing.T) {

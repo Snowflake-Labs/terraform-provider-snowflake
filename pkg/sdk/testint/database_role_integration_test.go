@@ -14,9 +14,6 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
 	assertDatabaseRole := func(t *testing.T, databaseRole *sdk.DatabaseRole, expectedName string, expectedComment string) {
 		t.Helper()
 		assert.NotEmpty(t, databaseRole.CreatedOn)
@@ -38,7 +35,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	createDatabaseRole := func(t *testing.T) *sdk.DatabaseRole {
 		t.Helper()
 		name := random.String()
-		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+		id := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
@@ -52,7 +49,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("create database_role: complete case", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+		id := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, name)
 		comment := random.Comment()
 
 		request := sdk.NewCreateDatabaseRoleRequest(id).WithComment(&comment).WithIfNotExists(true)
@@ -68,7 +65,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("create database_role: no optionals", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+		id := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
@@ -82,7 +79,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("drop database_role: existing", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+		id := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
@@ -95,7 +92,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("drop database_role: non-existing", func(t *testing.T) {
-		id := sdk.NewDatabaseObjectIdentifier(database.Name, "does_not_exist")
+		id := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "does_not_exist")
 
 		err := client.DatabaseRoles.Drop(ctx, sdk.NewDropDatabaseRoleRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -103,7 +100,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("alter database_role: set value and unset value", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+		id := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
@@ -130,13 +127,13 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("alter database_role: rename", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+		id := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
 
 		newName := random.String()
-		newId := sdk.NewDatabaseObjectIdentifier(database.Name, newName)
+		newId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, newName)
 		alterRequest := sdk.NewAlterDatabaseRoleRequest(id).WithRename(newId)
 
 		err = client.DatabaseRoles.Alter(ctx, alterRequest)
@@ -161,7 +158,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		t.Cleanup(secondDatabaseCleanup)
 
 		name := random.String()
-		id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+		id := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, name)
 
 		err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
 		require.NoError(t, err)
@@ -179,7 +176,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role1 := createDatabaseRole(t)
 		role2 := createDatabaseRole(t)
 
-		showRequest := sdk.NewShowDatabaseRoleRequest(database.ID())
+		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID())
 		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 		require.NoError(t, err)
 
@@ -192,7 +189,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role1 := createDatabaseRole(t)
 		role2 := createDatabaseRole(t)
 
-		showRequest := sdk.NewShowDatabaseRoleRequest(database.ID()).WithLike(role1.Name)
+		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID()).WithLike(role1.Name)
 		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 
 		require.NoError(t, err)
@@ -202,7 +199,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("show database_role: no matches", func(t *testing.T) {
-		showRequest := sdk.NewShowDatabaseRoleRequest(database.ID()).WithLike("non-existent")
+		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID()).WithLike("non-existent")
 		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 
 		require.NoError(t, err)
@@ -211,9 +208,9 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("grant and revoke database_role: to database role", func(t *testing.T) {
 		role1 := createDatabaseRole(t)
-		id1 := sdk.NewDatabaseObjectIdentifier(database.Name, role1.Name)
+		id1 := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role1.Name)
 		role2 := createDatabaseRole(t)
-		id2 := sdk.NewDatabaseObjectIdentifier(database.Name, role2.Name)
+		id2 := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role2.Name)
 
 		grantRequest := sdk.NewGrantDatabaseRoleRequest(id1).WithDatabaseRole(id2)
 		err := client.DatabaseRoles.Grant(ctx, grantRequest)
@@ -238,7 +235,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("grant and revoke database_role: to account role", func(t *testing.T) {
 		role := createDatabaseRole(t)
-		roleId := sdk.NewDatabaseObjectIdentifier(database.Name, role.Name)
+		roleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name)
 
 		accountRole, accountRoleCleanup := createRole(t, client)
 		t.Cleanup(accountRoleCleanup)
@@ -260,12 +257,12 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 	t.Run("grant and revoke database_role: to share", func(t *testing.T) {
 		role := createDatabaseRole(t)
-		roleId := sdk.NewDatabaseObjectIdentifier(database.Name, role.Name)
+		roleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name)
 
 		share, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 
-		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{Database: database.ID()}, share.ID())
+		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{Database: testDb(t).ID()}, share.ID())
 		require.NoError(t, err)
 
 		grantRequest := sdk.NewGrantDatabaseRoleToShareRequest(roleId, share.ID())

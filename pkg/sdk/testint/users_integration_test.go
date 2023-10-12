@@ -79,13 +79,11 @@ func TestInt_UsersShow(t *testing.T) {
 func TestInt_UserCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
 
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 	t.Cleanup(schemaCleanup)
 
-	tag, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+	tag, tagCleanup := createTag(t, client, testDb(t), schemaTest)
 	t.Cleanup(tagCleanup)
 
 	t.Run("test complete case", func(t *testing.T) {

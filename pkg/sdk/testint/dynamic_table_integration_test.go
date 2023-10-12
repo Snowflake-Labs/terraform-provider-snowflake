@@ -14,16 +14,14 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 	t.Cleanup(schemaCleanup)
-	tableTest, tableCleanup := createTable(t, client, databaseTest, schemaTest)
+	tableTest, tableCleanup := createTable(t, client, testDb(t), schemaTest)
 	t.Cleanup(tableCleanup)
 
 	ctx := testContext(t)
 	t.Run("test complete", func(t *testing.T) {
-		name := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
+		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, random.String())
 		targetLag := sdk.TargetLag{
 			Lagtime: sdk.String("2 minutes"),
 		}
@@ -46,7 +44,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {
-		name := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
+		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, random.String())
 		targetLag := sdk.TargetLag{
 			Downstream: sdk.Bool(true),
 		}

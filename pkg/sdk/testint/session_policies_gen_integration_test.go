@@ -14,10 +14,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
-	schema, schemaCleanup := createSchema(t, client, database)
+	schema, schemaCleanup := createSchema(t, client, testDb(t))
 	t.Cleanup(schemaCleanup)
 
 	assertSessionPolicy := func(t *testing.T, sessionPolicy *sdk.SessionPolicy, id sdk.SchemaObjectIdentifier, expectedComment string) {
@@ -55,7 +52,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	createSessionPolicy := func(t *testing.T) *sdk.SessionPolicy {
 		t.Helper()
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
@@ -69,7 +66,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 
 	t.Run("create session_policy: complete case", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 		comment := random.Comment()
 
 		request := sdk.NewCreateSessionPolicyRequest(id).
@@ -90,7 +87,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 
 	t.Run("create session_policy: no optionals", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		request := sdk.NewCreateSessionPolicyRequest(id)
 
@@ -106,7 +103,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 
 	t.Run("drop session_policy: existing", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
@@ -119,7 +116,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("drop session_policy: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, "does_not_exist")
 
 		err := client.SessionPolicies.Drop(ctx, sdk.NewDropSessionPolicyRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -127,7 +124,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 
 	t.Run("alter session_policy: set value and unset value", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
@@ -153,11 +150,11 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, database, schema)
+		tag, tagCleanup := createTag(t, client, testDb(t), schema)
 		t.Cleanup(tagCleanup)
 
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
@@ -194,13 +191,13 @@ func TestInt_SessionPolicies(t *testing.T) {
 
 	t.Run("alter session_policy: rename", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
 
 		newName := random.String()
-		newId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, newName)
+		newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, newName)
 		alterRequest := sdk.NewAlterSessionPolicyRequest(id).WithRenameTo(&newId)
 
 		err = client.SessionPolicies.Alter(ctx, alterRequest)
