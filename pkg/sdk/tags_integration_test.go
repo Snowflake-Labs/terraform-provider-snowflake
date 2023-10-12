@@ -28,6 +28,9 @@ func TestInt_Tags(t *testing.T) {
 	cleanupTagHandle := func(id SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.Tags.Drop(ctx, NewDropTagRequest(id))
+			if err == errObjectNotExistOrAuthorized {
+				return
+			}
 			require.NoError(t, err)
 		}
 	}
@@ -100,8 +103,6 @@ func TestInt_Tags(t *testing.T) {
 	t.Run("drop tag: existing", func(t *testing.T) {
 		tag := createTagHandle(t)
 		id := tag.ID()
-		t.Cleanup(cleanupTagHandle(id))
-
 		err := client.Tags.Drop(ctx, NewDropTagRequest(id))
 		require.NoError(t, err)
 
@@ -120,8 +121,6 @@ func TestInt_Tags(t *testing.T) {
 	t.Run("undrop tag: existing", func(t *testing.T) {
 		tag := createTagHandle(t)
 		id := tag.ID()
-		t.Cleanup(cleanupTagHandle(id))
-
 		err := client.Tags.Drop(ctx, NewDropTagRequest(id))
 		require.NoError(t, err)
 		_, err = client.Tags.ShowByID(ctx, id)
@@ -136,7 +135,6 @@ func TestInt_Tags(t *testing.T) {
 	t.Run("alter tag: set and unset comment", func(t *testing.T) {
 		tag := createTagHandle(t)
 		id := tag.ID()
-		t.Cleanup(cleanupTagHandle(id))
 
 		// alter tag with set comment
 		comment := randomComment(t)
@@ -164,7 +162,6 @@ func TestInt_Tags(t *testing.T) {
 
 		tag := createTagHandle(t)
 		id := tag.ID()
-		t.Cleanup(cleanupTagHandle(id))
 
 		policies := []SchemaObjectIdentifier{policyTest.ID()}
 		set := NewTagSetRequest().WithMaskingPolicies(policies)
@@ -179,7 +176,6 @@ func TestInt_Tags(t *testing.T) {
 	t.Run("alter tag: add and drop allowed values", func(t *testing.T) {
 		tag := createTagHandle(t)
 		id := tag.ID()
-		t.Cleanup(cleanupTagHandle(id))
 
 		values := []string{"value1", "value2"}
 		err := client.Tags.Alter(ctx, NewAlterTagRequest(id).WithAdd(values))
