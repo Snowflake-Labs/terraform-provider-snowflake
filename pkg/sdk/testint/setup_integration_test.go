@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/stretchr/testify/require"
 )
 
 var itc integrationTestContext
@@ -37,11 +38,14 @@ func setup() {
 
 func cleanup() {
 	log.Println("Running integration tests cleanup")
+
 }
 
 type integrationTestContext struct {
 	client *sdk.Client
 	ctx    context.Context
+
+	database *sdk.Database
 }
 
 func (itc *integrationTestContext) initialize() error {
@@ -49,7 +53,27 @@ func (itc *integrationTestContext) initialize() error {
 	var err error
 	itc.client, err = sdk.NewDefaultClient()
 	itc.ctx = context.Background()
+
+	db, dbCleanup := createDatabase(itc.client)
+	t.Cleanup(databaseCleanup)
 	return err
+}
+
+func createDatabase(client *sdk.Client) (*sdk.Database, func()) {
+	return createDatabaseWithOptions(client, sdk.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
+}
+
+func createDatabaseWithOptions(client *sdk.Client, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.Databases.Create(ctx, id, nil)
+	require.NoError(t, err)
+	database, err := client.Databases.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return database, func() {
+		err := client.Databases.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
 }
 
 // timer measures time from invocation point to the end of method.
