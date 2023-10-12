@@ -347,11 +347,8 @@ func (opts *AlterDatabaseReplicationOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		return ErrInvalidObjectIdentifier
 	}
-	if everyValueNil(opts.EnableReplication, opts.DisableReplication, opts.Refresh) {
-		return errors.New("one of ENABLE REPLICATION, DISABLE REPLICATION or REFRESH must be set")
-	}
-	if anyValueSet(opts.EnableReplication, opts.DisableReplication) {
-		return errors.New("only one of ENABLE REPLICATION or DISABLE REPLICATION can be set")
+	if !exactlyOneValueSet(opts.EnableReplication, opts.DisableReplication, opts.Refresh) {
+		return errExactlyOneOf("EnableReplication", "DisableReplication", "Refresh")
 	}
 	if valueSet(opts.EnableReplication) {
 		if err := opts.EnableReplication.validate(); err != nil {
