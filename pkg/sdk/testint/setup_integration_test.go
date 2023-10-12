@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/stretchr/testify/require"
+	"github.com/hashicorp/go-uuid"
 )
 
 var itc integrationTestContext
@@ -32,20 +32,24 @@ func setup() {
 	err := itc.initialize()
 	if err != nil {
 		log.Printf("Integration test context initialisation failed with %s\n", err)
+		cleanup()
 		os.Exit(1)
 	}
 }
 
 func cleanup() {
 	log.Println("Running integration tests cleanup")
-
+	if itc.databaseCleanup != nil {
+		defer itc.databaseCleanup()
+	}
 }
 
 type integrationTestContext struct {
 	client *sdk.Client
 	ctx    context.Context
 
-	database *sdk.Database
+	database        *sdk.Database
+	databaseCleanup func()
 }
 
 func (itc *integrationTestContext) initialize() error {
@@ -54,26 +58,27 @@ func (itc *integrationTestContext) initialize() error {
 	itc.client, err = sdk.NewDefaultClient()
 	itc.ctx = context.Background()
 
-	db, dbCleanup := createDatabase(itc.client)
-	t.Cleanup(databaseCleanup)
+	db, dbCleanup, err := createDb(itc.client, itc.ctx)
+	itc.database = db
+	itc.databaseCleanup = dbCleanup
+
 	return err
 }
 
-func createDatabase(client *sdk.Client) (*sdk.Database, func()) {
-	return createDatabaseWithOptions(client, sdk.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
-}
-
-func createDatabaseWithOptions(client *sdk.Client, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Databases.Create(ctx, id, nil)
-	require.NoError(t, err)
-	database, err := client.Databases.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return database, func() {
-		err := client.Databases.Drop(ctx, id, nil)
-		require.NoError(t, err)
+func createDb(client *sdk.Client, ctx context.Context) (*sdk.Database, func(), error) {
+	u, err := uuid.GenerateUUID()
+	if err != nil {
+		return nil, nil, err
 	}
+	id := sdk.NewAccountObjectIdentifier("int_test_db_" + u)
+	err = client.Databases.Create(ctx, id, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	database, err := client.Databases.ShowByID(ctx, id)
+	return database, func() {
+		_ = client.Databases.Drop(ctx, id, nil)
+	}, err
 }
 
 // timer measures time from invocation point to the end of method.
@@ -99,4 +104,11 @@ func testClient(t *testing.T) *sdk.Client {
 func testContext(t *testing.T) context.Context {
 	t.Helper()
 	return itc.ctx
+}
+
+// TODO: Discuss after this initial change is merged.
+// This is temporary way to move all integration tests to this package without doing revolution in a single PR.
+func testDb(t *testing.T) *sdk.Database {
+	t.Helper()
+	return itc.database
 }
