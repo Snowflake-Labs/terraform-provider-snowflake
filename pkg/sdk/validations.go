@@ -14,7 +14,7 @@ func IsValidWarehouseSize(v string) bool {
 	return err == nil
 }
 
-func validObjectidentifier(objectIdentifier ObjectIdentifier) bool {
+func ValidObjectIdentifier(objectIdentifier ObjectIdentifier) bool {
 	// https://docs.snowflake.com/en/sql-reference/identifiers-syntax#double-quoted-identifiers
 	l := len(objectIdentifier.Name())
 	if l == 0 || l > 255 {
@@ -85,7 +85,7 @@ func valueSet(value interface{}) bool {
 		return false
 	case reflect.Struct:
 		if _, ok := reflectedValue.Interface().(ObjectIdentifier); ok {
-			return validObjectidentifier(reflectedValue.Interface().(ObjectIdentifier))
+			return ValidObjectIdentifier(reflectedValue.Interface().(ObjectIdentifier))
 		}
 		return reflectedValue.Interface() != nil
 	}

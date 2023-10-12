@@ -1,6 +1,10 @@
 package sdk
 
-import "context"
+import (
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+)
 
 var _ SessionPolicies = (*sessionPolicies)(nil)
 
@@ -39,7 +43,7 @@ func (v *sessionPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 		return nil, err
 	}
 
-	return findOne(sessionPolicies, func(r SessionPolicy) bool { return r.Name == id.Name() })
+	return collections.FindOne(sessionPolicies, func(r SessionPolicy) bool { return r.Name == id.Name() })
 }
 
 func (v *sessionPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicyDescription, error) {

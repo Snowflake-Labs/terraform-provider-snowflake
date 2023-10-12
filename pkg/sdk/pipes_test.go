@@ -5,7 +5,7 @@ import (
 )
 
 func TestPipesCreate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreatePipeOptions {
 		return &CreatePipeOptions{
@@ -16,13 +16,13 @@ func TestPipesCreate(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreatePipeOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: copy statement required", func(t *testing.T) {
@@ -49,7 +49,7 @@ func TestPipesCreate(t *testing.T) {
 }
 
 func TestPipesAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterPipeOptions {
 		return &AlterPipeOptions{
@@ -59,13 +59,13 @@ func TestPipesAlter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterPipeOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: no alter action", func(t *testing.T) {
@@ -202,7 +202,7 @@ func TestPipesAlter(t *testing.T) {
 }
 
 func TestPipesDrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *DropPipeOptions {
 		return &DropPipeOptions{
@@ -212,13 +212,13 @@ func TestPipesDrop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DropPipeOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("empty options", func(t *testing.T) {
@@ -234,7 +234,7 @@ func TestPipesDrop(t *testing.T) {
 }
 
 func TestPipesShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	databaseIdentifier := NewAccountObjectIdentifier(id.DatabaseName())
 	schemaIdentifier := NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())
 
@@ -244,13 +244,13 @@ func TestPipesShow(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ShowPipeOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: empty like", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Like = &Like{}
-		assertOptsInvalid(t, opts, errPatternRequiredForLikeKeyword)
+		assertOptsInvalid(t, opts, ErrPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("validation: empty in", func(t *testing.T) {
@@ -340,7 +340,7 @@ func TestPipesShow(t *testing.T) {
 }
 
 func TestPipesDescribe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *describePipeOptions {
 		return &describePipeOptions{
@@ -350,13 +350,13 @@ func TestPipesDescribe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *describePipeOptions = nil
-		assertOptsInvalid(t, opts, errNilOptions)
+		assertOptsInvalid(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("with name", func(t *testing.T) {

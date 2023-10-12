@@ -89,7 +89,7 @@ func TestExternalTablesCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(
 			t, opts,
 			errOneOf("CreateExternalTableOptions", "OrReplace", "IfNotExists"),
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errNotSet("CreateExternalTableOptions", "Location"),
 			errNotSet("CreateExternalTableOptions", "FileFormat"),
 		)
@@ -151,7 +151,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 		assertOptsInvalidJoinedErrors(
 			t, opts,
 			errOneOf("CreateWithManualPartitioningExternalTableOptions", "OrReplace", "IfNotExists"),
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errNotSet("CreateWithManualPartitioningExternalTableOptions", "Location"),
 			errNotSet("CreateWithManualPartitioningExternalTableOptions", "FileFormat"),
 		)
@@ -211,7 +211,7 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 		assertOptsInvalidJoinedErrors(
 			t, opts,
 			errOneOf("CreateDeltaLakeExternalTableOptions", "OrReplace", "IfNotExists"),
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errNotSet("CreateDeltaLakeExternalTableOptions", "Location"),
 			errNotSet("CreateDeltaLakeExternalTableOptions", "FileFormat"),
 		)
@@ -260,7 +260,7 @@ func TestExternalTableUsingTemplateOpts(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errNotSet("CreateExternalTableUsingTemplateOptions", "Query"),
 			errNotSet("CreateExternalTableUsingTemplateOptions", "Location"),
 			errNotSet("CreateExternalTableUsingTemplateOptions", "FileFormat"),
@@ -355,7 +355,7 @@ func TestExternalTablesAlter(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errOneOf("AlterExternalTableOptions", "Refresh", "AddFiles", "RemoveFiles", "AutoRefresh", "SetTag", "UnsetTag"),
 		)
 	})
@@ -399,7 +399,7 @@ func TestExternalTablesAlterPartitions(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errOneOf("AlterExternalTablePartitionOptions", "AddPartitions", "DropPartition"),
 		)
 	})
@@ -439,7 +439,7 @@ func TestExternalTablesDrop(t *testing.T) {
 
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errOneOf("ExternalTableDropOption", "Restrict", "Cascade"),
 		)
 	})
@@ -495,7 +495,7 @@ func TestExternalTablesShow(t *testing.T) {
 
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errOneOf("ExternalTableDropOption", "Restrict", "Cascade"),
 		)
 	})

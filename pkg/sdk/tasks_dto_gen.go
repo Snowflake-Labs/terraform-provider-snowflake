@@ -32,6 +32,10 @@ type CreateTaskRequest struct {
 	sql                         string // required
 }
 
+func (r *CreateTaskRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
 type CreateTaskWarehouseRequest struct {
 	Warehouse                           *AccountObjectIdentifier
 	UserTaskManagedInitialWarehouseSize *WarehouseSize
@@ -42,6 +46,10 @@ type CloneTaskRequest struct {
 	name       SchemaObjectIdentifier // required
 	sourceTask SchemaObjectIdentifier // required
 	CopyGrants *bool
+}
+
+func (r *CloneTaskRequest) GetName() SchemaObjectIdentifier {
+	return r.name
 }
 
 type AlterTaskRequest struct {

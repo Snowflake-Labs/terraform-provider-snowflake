@@ -6,7 +6,7 @@ import (
 )
 
 func TestTasks_Create(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	sql := "SELECT CURRENT_TIMESTAMP"
 
 	// Minimal valid CreateTaskOptions
@@ -19,13 +19,13 @@ func TestTasks_Create(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
@@ -61,9 +61,9 @@ func TestTasks_Create(t *testing.T) {
 	})
 
 	t.Run("all options", func(t *testing.T) {
-		warehouseId := randomAccountObjectIdentifier(t)
-		otherTaskId := randomSchemaObjectIdentifier(t)
-		tagId := randomSchemaObjectIdentifier(t)
+		warehouseId := RandomAccountObjectIdentifier()
+		otherTaskId := RandomSchemaObjectIdentifier()
+		tagId := RandomSchemaObjectIdentifier()
 
 		req := NewCreateTaskRequest(id, sql).
 			WithOrReplace(Bool(true)).
@@ -91,8 +91,8 @@ func TestTasks_Create(t *testing.T) {
 }
 
 func TestTasks_Clone(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
-	sourceId := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	sourceId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid CloneTaskOptions
 	defaultOpts := func() *CloneTaskOptions {
@@ -104,19 +104,19 @@ func TestTasks_Clone(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CloneTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.sourceTask]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.sourceTask = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -133,8 +133,8 @@ func TestTasks_Clone(t *testing.T) {
 }
 
 func TestTasks_Alter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
-	otherTaskId := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	otherTaskId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid AlterTaskOptions
 	defaultOpts := func() *AlterTaskOptions {
@@ -145,13 +145,13 @@ func TestTasks_Alter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.Resume opts.Suspend opts.RemoveAfter opts.AddAfter opts.Set opts.Unset opts.SetTags opts.UnsetTags opts.ModifyAs opts.ModifyWhen] should be present", func(t *testing.T) {
@@ -282,7 +282,7 @@ func TestTasks_Alter(t *testing.T) {
 }
 
 func TestTasks_Drop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DropTaskOptions
 	defaultOpts := func() *DropTaskOptions {
@@ -293,13 +293,13 @@ func TestTasks_Drop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DropTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -316,7 +316,7 @@ func TestTasks_Show(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ShowTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -341,7 +341,7 @@ func TestTasks_Show(t *testing.T) {
 }
 
 func TestTasks_Describe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeTaskOptions
 	defaultOpts := func() *DescribeTaskOptions {
@@ -352,13 +352,13 @@ func TestTasks_Describe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DescribeTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -368,7 +368,7 @@ func TestTasks_Describe(t *testing.T) {
 }
 
 func TestTasks_Execute(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid ExecuteTaskOptions
 	defaultOpts := func() *ExecuteTaskOptions {
@@ -379,13 +379,13 @@ func TestTasks_Execute(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ExecuteTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {

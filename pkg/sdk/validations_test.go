@@ -3,6 +3,7 @@ package sdk
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,24 +31,24 @@ func TestIsValidWarehouseSize(t *testing.T) {
 	})
 }
 
-func TestValidObjectidentifier(t *testing.T) {
+func TestValidObjectIdentifier(t *testing.T) {
 	t.Run("with valid object identifier", func(t *testing.T) {
-		ok := validObjectidentifier(randomAccountObjectIdentifier(t))
+		ok := ValidObjectIdentifier(RandomAccountObjectIdentifier())
 		assert.Equal(t, ok, true)
 	})
 
 	t.Run("with invalid object identifier", func(t *testing.T) {
-		ok := validObjectidentifier(NewAccountObjectIdentifier(""))
+		ok := ValidObjectIdentifier(NewAccountObjectIdentifier(""))
 		assert.Equal(t, ok, false)
 	})
 
 	t.Run("over 255 characters", func(t *testing.T) {
-		ok := validObjectidentifier(NewAccountObjectIdentifier(randomStringN(t, 256)))
+		ok := ValidObjectIdentifier(NewAccountObjectIdentifier(random.StringN(256)))
 		assert.Equal(t, ok, false)
 	})
 
 	t.Run("with 255 charcters in each of db, schema and name", func(t *testing.T) {
-		ok := validObjectidentifier(NewSchemaObjectIdentifier(randomStringN(t, 255), randomStringN(t, 255), randomStringN(t, 255)))
+		ok := ValidObjectIdentifier(NewSchemaObjectIdentifier(random.StringN(255), random.StringN(255), random.StringN(255)))
 		assert.Equal(t, ok, true)
 	})
 }

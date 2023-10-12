@@ -25,7 +25,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	t.Cleanup(shareCleanup)
 
 	t.Run("test complete", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeShares,
 			sdk.PluralObjectTypeDatabases,
@@ -77,7 +77,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	})
 
 	t.Run("test with allowed integration types", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeIntegrations,
 		}
@@ -121,7 +121,7 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
-	id := randomAccountObjectIdentifier(t)
+	id := sdk.RandomAccountObjectIdentifier()
 
 	opts := &sdk.CreateFailoverGroupOptions{
 		AllowedShares: []sdk.AccountObjectIdentifier{
@@ -191,7 +191,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	t.Run("rename the failover group", func(t *testing.T) {
 		failoverGroup, _ := createFailoverGroup(t, client)
 		oldID := failoverGroup.ID()
-		newID := randomAccountObjectIdentifier(t)
+		newID := sdk.RandomAccountObjectIdentifier()
 		opts := &sdk.AlterSourceFailoverGroupOptions{
 			NewName: newID,
 		}
@@ -556,7 +556,7 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account
-	id := randomAccountObjectIdentifier(t)
+	id := sdk.RandomAccountObjectIdentifier()
 
 	opts := &sdk.CreateFailoverGroupOptions{
 		AllowedDatabases: []sdk.AccountObjectIdentifier{

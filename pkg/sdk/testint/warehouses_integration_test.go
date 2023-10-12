@@ -64,7 +64,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 	t.Cleanup(tag2Cleanup)
 
 	t.Run("test complete", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier()
 		err := client.Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{
 			OrReplace:                       sdk.Bool(true),
 			WarehouseType:                   &sdk.WarehouseTypeStandard,
@@ -129,7 +129,7 @@ func TestInt_WarehouseCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier()
 		err := client.Warehouses.Create(ctx, id, nil)
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -197,7 +197,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	t.Cleanup(tagCleanup2)
 
 	t.Run("terraform acc test", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier()
 		opts := &sdk.CreateWarehouseOptions{
 			Comment:            sdk.String("test comment"),
 			WarehouseSize:      &sdk.WarehouseSizeXSmall,
@@ -228,7 +228,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		assert.Equal(t, sdk.WarehouseSizeXSmall, warehouse.Size)
 
 		// rename
-		newID := randomAccountObjectIdentifier(t)
+		newID := sdk.RandomAccountObjectIdentifier()
 		alterOptions := &sdk.AlterWarehouseOptions{
 			NewName: newID,
 		}
@@ -284,7 +284,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		oldID := warehouse.ID()
 		t.Cleanup(warehouseCleanup)
 
-		newID := randomAccountObjectIdentifier(t)
+		newID := sdk.RandomAccountObjectIdentifier()
 		alterOptions := &sdk.AlterWarehouseOptions{
 			NewName: newID,
 		}

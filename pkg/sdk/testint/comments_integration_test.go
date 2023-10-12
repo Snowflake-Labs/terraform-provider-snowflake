@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +17,7 @@ func TestInt_Comment(t *testing.T) {
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("set", func(t *testing.T) {
-		comment := randomComment(t)
+		comment := random.Comment()
 		err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
 			ObjectType: sdk.ObjectTypeWarehouse,
 			ObjectName: testWarehouse.ID(),

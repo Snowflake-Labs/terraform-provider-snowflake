@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,12 +23,12 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 	ctx := testContext(t)
 	t.Run("test complete", func(t *testing.T) {
-		name := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, randomString(t))
+		name := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
 		targetLag := sdk.TargetLag{
 			Lagtime: sdk.String("2 minutes"),
 		}
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
-		comment := randomComment(t)
+		comment := random.Comment()
 		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouseTest.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -45,12 +46,12 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {
-		name := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, randomString(t))
+		name := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
 		targetLag := sdk.TargetLag{
 			Downstream: sdk.Bool(true),
 		}
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
-		comment := randomComment(t)
+		comment := random.Comment()
 		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouseTest.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
 		require.NoError(t, err)
 		t.Cleanup(func() {

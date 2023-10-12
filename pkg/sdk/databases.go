@@ -185,11 +185,11 @@ type CreateSharedDatabaseOptions struct {
 }
 
 func (opts *CreateSharedDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
-	if !validObjectidentifier(opts.fromShare) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.fromShare) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -223,11 +223,11 @@ type CreateSecondaryDatabaseOptions struct {
 }
 
 func (opts *CreateSecondaryDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
-	if !validObjectidentifier(opts.primaryDatabase) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.primaryDatabase) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -262,14 +262,14 @@ type AlterDatabaseOptions struct {
 }
 
 func (opts *AlterDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
-	if validObjectidentifier(opts.NewName) && anyValueSet(opts.Set, opts.Unset, opts.SwapWith) {
+	if ValidObjectIdentifier(opts.NewName) && anyValueSet(opts.Set, opts.Unset, opts.SwapWith) {
 		return errors.New("RENAME TO cannot be set with other options")
 	}
 
-	if validObjectidentifier(opts.SwapWith) && anyValueSet(opts.Set, opts.Unset, opts.NewName) {
+	if ValidObjectIdentifier(opts.SwapWith) && anyValueSet(opts.Set, opts.Unset, opts.NewName) {
 		return errors.New("SWAP WITH cannot be set with other options")
 	}
 
@@ -344,8 +344,8 @@ type AlterDatabaseReplicationOptions struct {
 }
 
 func (opts *AlterDatabaseReplicationOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	if everyValueNil(opts.EnableReplication, opts.DisableReplication, opts.Refresh) {
 		return errors.New("one of ENABLE REPLICATION, DISABLE REPLICATION or REFRESH must be set")
@@ -410,8 +410,8 @@ type AlterDatabaseFailoverOptions struct {
 }
 
 func (opts *AlterDatabaseFailoverOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	if everyValueNil(opts.EnableFailover, opts.DisableFailover, opts.Primary) {
 		return errors.New("one of ENABLE FAILOVER, DISABLE FAILOVER or PRIMARY must be set")
@@ -473,8 +473,8 @@ type DropDatabaseOptions struct {
 }
 
 func (opts *DropDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -503,8 +503,8 @@ type undropDatabaseOptions struct {
 }
 
 func (opts *undropDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -563,7 +563,7 @@ func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*
 			return &database, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type DatabaseDetails struct {
@@ -584,8 +584,8 @@ type describeDatabaseOptions struct {
 }
 
 func (opts *describeDatabaseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
