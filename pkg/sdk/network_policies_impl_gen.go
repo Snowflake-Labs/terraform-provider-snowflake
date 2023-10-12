@@ -1,6 +1,10 @@
 package sdk
 
-import "context"
+import (
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+)
 
 var _ NetworkPolicies = (*networkPolicies)(nil)
 
@@ -39,7 +43,7 @@ func (v *networkPolicies) ShowByID(ctx context.Context, id AccountObjectIdentifi
 		return nil, err
 	}
 
-	return findOne(networkPolicies, func(r NetworkPolicy) bool { return r.Name == id.Name() })
+	return collections.FindOne(networkPolicies, func(r NetworkPolicy) bool { return r.Name == id.Name() })
 }
 
 func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyDescription, error) {
