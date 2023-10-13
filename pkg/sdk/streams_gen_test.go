@@ -3,8 +3,8 @@ package sdk
 import "testing"
 
 func TestStreams_CreateOnTable(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
-	tableId := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	tableId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnTableStreamOptions
 	defaultOpts := func() *CreateOnTableStreamOptions {
@@ -22,19 +22,19 @@ func TestStreams_CreateOnTable(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateOnTableStreamOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.TableId]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.TableId = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
@@ -81,8 +81,8 @@ func TestStreams_CreateOnTable(t *testing.T) {
 }
 
 func TestStreams_CreateOnExternalTable(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
-	externalTableId := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	externalTableId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnExternalTableStreamOptions
 	defaultOpts := func() *CreateOnExternalTableStreamOptions {
@@ -100,19 +100,19 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateOnExternalTableStreamOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.ExternalTableId]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ExternalTableId = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
@@ -158,8 +158,8 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 }
 
 func TestStreams_CreateOnDirectoryTable(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
-	stageId := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	stageId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnStageStreamOptions
 	defaultOpts := func() *CreateOnDirectoryTableStreamOptions {
@@ -171,19 +171,19 @@ func TestStreams_CreateOnDirectoryTable(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateOnDirectoryTableStreamOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.StageId]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.StageId = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
@@ -208,8 +208,8 @@ func TestStreams_CreateOnDirectoryTable(t *testing.T) {
 }
 
 func TestStreams_CreateOnView(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
-	viewId := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	viewId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid CreateOnViewStreamOptions
 	defaultOpts := func() *CreateOnViewStreamOptions {
@@ -227,19 +227,19 @@ func TestStreams_CreateOnView(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateOnViewStreamOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: valid identifier for [opts.viewId]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ViewId = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
@@ -286,8 +286,8 @@ func TestStreams_CreateOnView(t *testing.T) {
 }
 
 func TestStreams_Clone(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
-	sourceId := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	sourceId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid CloneStreamOptions
 	defaultOpts := func() *CloneStreamOptions {
@@ -299,13 +299,13 @@ func TestStreams_Clone(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CloneStreamOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -322,7 +322,7 @@ func TestStreams_Clone(t *testing.T) {
 }
 
 func TestStreams_Alter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid AlterStreamOptions
 	defaultOpts := func() *AlterStreamOptions {
@@ -333,19 +333,19 @@ func TestStreams_Alter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterStreamOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfExists opts.UnsetTags]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
-		opts.UnsetTags = []ObjectIdentifier{randomAccountObjectIdentifier(t)}
+		opts.UnsetTags = []ObjectIdentifier{RandomAccountObjectIdentifier()}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterStreamOptions", "IfExists", "UnsetTags"))
 	})
 
@@ -395,7 +395,7 @@ func TestStreams_Alter(t *testing.T) {
 }
 
 func TestStreams_Drop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DropStreamOptions
 	defaultOpts := func() *DropStreamOptions {
@@ -406,13 +406,13 @@ func TestStreams_Drop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DropStreamOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -430,7 +430,7 @@ func TestStreams_Show(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ShowStreamOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -442,7 +442,7 @@ func TestStreams_Show(t *testing.T) {
 		opts := defaultOpts()
 		opts.Terse = Bool(true)
 		opts.Like = &Like{Pattern: String("pattern")}
-		schemaId := randomDatabaseObjectIdentifier(t)
+		schemaId := RandomDatabaseObjectIdentifier()
 		opts.In = &In{Schema: schemaId}
 		opts.StartsWith = String("starts with pattern")
 		opts.Limit = &LimitFrom{Rows: Int(123), From: String("from pattern")}
@@ -451,7 +451,7 @@ func TestStreams_Show(t *testing.T) {
 }
 
 func TestStreams_Describe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeStreamOptions
 	defaultOpts := func() *DescribeStreamOptions {
@@ -462,13 +462,13 @@ func TestStreams_Describe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DescribeStreamOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("valid sql", func(t *testing.T) {
