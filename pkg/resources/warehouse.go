@@ -286,7 +286,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("name"); ok {
 			newName := sdk.NewAccountObjectIdentifier(v.(string))
 			err := client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
-				NewName: newName,
+				NewName: &newName,
 			})
 			if err != nil {
 				return err
