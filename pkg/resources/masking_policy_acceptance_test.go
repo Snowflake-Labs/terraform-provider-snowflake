@@ -54,7 +54,7 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 			{
 				Config: maskingPolicyConfigMultiline(accName, accName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case \n\twhen current_role() in ('ROLE_A') then \n\t\tval \n\twhen is_role_in_session( 'ROLE_B' ) then \n\t\t'ABC123'\n\telse\n\t\t'******'\nend"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case\n\twhen current_role() in ('ROLE_A') then\n\t\tval\n\twhen is_role_in_session( 'ROLE_B' ) then\n\t\t'ABC123'\n\telse\n\t\t'******'\nend"),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", ""),
 				),
 			},
