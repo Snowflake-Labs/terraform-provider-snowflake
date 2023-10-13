@@ -8,7 +8,7 @@ import (
 )
 
 func TestSetObjectParameterOnObject(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	defaultOpts := func() *setParameterOnObject {
 		return &setParameterOnObject{

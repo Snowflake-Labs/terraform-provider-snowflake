@@ -8,15 +8,16 @@ import (
 )
 
 var (
-	errNilOptions                    = errors.New("options cannot be nil")
-	errPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
+	ErrNilOptions                    = errors.New("options cannot be nil")
+	ErrPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
 
 	// go-snowflake errors.
-	errObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
-	errAccountIsEmpty             = errors.New("account is empty")
+	ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
+	ErrAccountIsEmpty             = errors.New("account is empty")
 
 	// snowflake-sdk errors.
-	errInvalidObjectIdentifier = errors.New("invalid object identifier")
+	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
+	ErrDifferentDatabase       = errors.New("database must be the same")
 )
 
 func errOneOf(structName string, fieldNames ...string) error {
@@ -41,8 +42,8 @@ func decodeDriverError(err error) error {
 	}
 	log.Printf("[DEBUG] err: %v\n", err)
 	m := map[string]error{
-		"does not exist or not authorized": errObjectNotExistOrAuthorized,
-		"account is empty":                 errAccountIsEmpty,
+		"does not exist or not authorized": ErrObjectNotExistOrAuthorized,
+		"account is empty":                 ErrAccountIsEmpty,
 	}
 	for k, v := range m {
 		if strings.Contains(err.Error(), k) {

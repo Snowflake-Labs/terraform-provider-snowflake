@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
 
 func TestMaskingPolicyCreate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &CreateMaskingPolicyOptions{}
@@ -32,7 +32,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 			},
 		}
 		expression := "REPLACE('X', 1, 2)"
-		comment := randomString(t)
+		comment := random.String()
 
 		opts := &CreateMaskingPolicyOptions{
 			OrReplace:           Bool(true),
@@ -53,7 +53,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 }
 
 func TestMaskingPolicyAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &AlterMaskingPolicyOptions{}
@@ -74,7 +74,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		newComment := randomString(t)
+		newComment := random.String()
 		opts := &AlterMaskingPolicyOptions{
 			name: id,
 			Set: &MaskingPolicySet{
@@ -101,7 +101,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.UUID())
 		opts := &AlterMaskingPolicyOptions{
 			name:    id,
 			NewName: newID,
@@ -114,7 +114,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 }
 
 func TestMaskingPolicyDrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &DropMaskingPolicyOptions{}
@@ -136,7 +136,7 @@ func TestMaskingPolicyDrop(t *testing.T) {
 }
 
 func TestMaskingPolicyShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowMaskingPolicyOptions{}
@@ -217,7 +217,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 }
 
 func TestMaskingPolicyDescribe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &describeMaskingPolicyOptions{}

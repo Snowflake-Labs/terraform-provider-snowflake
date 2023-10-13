@@ -1,109 +1,8 @@
 package sdk
 
 import (
-	"context"
-	"errors"
-	"fmt"
 	"testing"
-	"time"
-
-	"github.com/brianvoe/gofakeit/v6"
-	"github.com/hashicorp/go-uuid"
-	"github.com/stretchr/testify/require"
 )
-
-// there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
-// the account locator and by filtering the list of accounts in replication accounts by the account locator
-func getAccountIdentifier(t *testing.T, client *Client) AccountIdentifier {
-	t.Helper()
-	ctx := context.Background()
-	currentAccountLocator, err := client.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
-	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
-	require.NoError(t, err)
-	for _, replicationAccount := range replicationAccounts {
-		if replicationAccount.AccountLocator == currentAccountLocator {
-			return AccountIdentifier{
-				organizationName: replicationAccount.OrganizationName,
-				accountName:      replicationAccount.AccountName,
-			}
-		}
-	}
-	return AccountIdentifier{}
-}
-
-func getPrimaryAccountIdentifier(t *testing.T) AccountIdentifier {
-	t.Helper()
-	client := testClient(t)
-	return getAccountIdentifier(t, client)
-}
-
-func getSecondaryAccountIdentifier(t *testing.T) AccountIdentifier {
-	t.Helper()
-	client := testSecondaryClient(t)
-	return getAccountIdentifier(t, client)
-}
-
-func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
-	t.Helper()
-	return NewSchemaObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12), randomStringN(t, 12))
-}
-
-func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
-	t.Helper()
-	return NewDatabaseObjectIdentifier(randomStringN(t, 12), randomStringN(t, 12))
-}
-
-func alphanumericDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
-	t.Helper()
-	return NewDatabaseObjectIdentifier(randomAlphanumericN(t, 12), randomAlphanumericN(t, 12))
-}
-
-func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
-	t.Helper()
-	return NewAccountObjectIdentifier(randomStringN(t, 12))
-}
-
-func useDatabase(t *testing.T, client *Client, databaseID AccountObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseDatabase(ctx, databaseID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseDatabase(ctx, NewAccountObjectIdentifier(orgDB))
-		require.NoError(t, err)
-	}
-}
-
-func useSchema(t *testing.T, client *Client, schemaID DatabaseObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	orgSchema, err := client.ContextFunctions.CurrentSchema(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseSchema(ctx, schemaID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseSchema(ctx, NewDatabaseObjectIdentifier(orgDB, orgSchema))
-		require.NoError(t, err)
-	}
-}
-
-func useWarehouse(t *testing.T, client *Client, warehouseID AccountObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseWarehouse(ctx, warehouseID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseWarehouse(ctx, NewAccountObjectIdentifier(orgWarehouse))
-		require.NoError(t, err)
-	}
-}
 
 func testClient(t *testing.T) *Client {
 	t.Helper()
@@ -139,6 +38,7 @@ func testClientFromProfile(t *testing.T, profile string) (*Client, error) {
 	}
 	return NewClient(config)
 }
+<<<<<<< HEAD
 
 func randomUUID(t *testing.T) string {
 	t.Helper()
@@ -791,3 +691,5 @@ func createNetworkPolicy(t *testing.T, client *Client, req *CreateNetworkPolicyR
 		require.NoError(t, err)
 	}
 }
+=======
+>>>>>>> 3f528a87f4c0b3bc95a0dfb35d93d22251b5112e
