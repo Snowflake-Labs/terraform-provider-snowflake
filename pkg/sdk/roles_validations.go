@@ -79,10 +79,10 @@ func (opts *GrantRoleOptions) validate() error {
 		errs = append(errs, errOneOf("GrantRoleOptions", "Grant.Role", "Grant.User"))
 	}
 	if opts.Grant.Role != nil && !ValidObjectIdentifier(opts.Grant.Role) {
-		errs = append(errs, errInvalidIdentifier("Grant.Role"))
+		errs = append(errs, errInvalidIdentifier("GrantRoleOptions", "Grant.Role"))
 	}
 	if opts.Grant.User != nil && !ValidObjectIdentifier(opts.Grant.User) {
-		errs = append(errs, errInvalidIdentifier("Grant.User"))
+		errs = append(errs, errInvalidIdentifier("GrantRoleOptions", "Grant.User"))
 	}
 	return errors.Join(errs...)
 }

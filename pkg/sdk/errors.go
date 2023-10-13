@@ -20,8 +20,22 @@ var (
 	ErrDifferentDatabase       = errors.New("database must be the same")
 )
 
-func errInvalidIdentifier(identifierField string) error {
-	return fmt.Errorf("invalid object identifier in field: %s", identifierField)
+type IntErrType string
+
+const (
+	IntErrEqual          IntErrType = "equal to"
+	IntErrGreaterOrEqual IntErrType = "greater than or equal to"
+	IntErrGreater        IntErrType = "greater than"
+	IntErrLessOrEqual    IntErrType = "less than or equal to"
+	IntErrLess           IntErrType = "less than"
+)
+
+func errIntValue(intErrType IntErrType, structName string, fieldName string, limit int) error {
+	return fmt.Errorf("%s field: %s must be %s %d", structName, fieldName, string(intErrType), limit)
+}
+
+func errInvalidIdentifier(structName string, identifierField string) error {
+	return fmt.Errorf("invalid object identifier of %s field: %s", structName, identifierField)
 }
 
 func errOneOf(structName string, fieldNames ...string) error {
