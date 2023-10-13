@@ -176,7 +176,7 @@ func (opts *AlterShareOptions) validate() error {
 		return fmt.Errorf("not a valid object identifier: %s", opts.name)
 	}
 	if ok := exactlyOneValueSet(opts.Add, opts.Remove, opts.Set, opts.Unset); !ok {
-		return fmt.Errorf("exactly one of add, remove, set, unset must be set")
+		return errExactlyOneOf("Add", "Remove", "Set", "Unset")
 	}
 	if valueSet(opts.Add) {
 		if err := opts.Add.validate(); err != nil {
