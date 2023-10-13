@@ -13,10 +13,7 @@ func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
-	schema, schemaCleanup := createSchema(t, client, database)
+	schema, schemaCleanup := createSchema(t, client, testDb(t))
 	t.Cleanup(schemaCleanup)
 
 	sql := "SELECT CURRENT_TIMESTAMP"
@@ -27,7 +24,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, database.Name, task.DatabaseName)
+		assert.Equal(t, testDb(t).Name, task.DatabaseName)
 		assert.Equal(t, schema.Name, task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, "", task.Comment)
@@ -52,7 +49,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, database.Name, task.DatabaseName)
+		assert.Equal(t, testDb(t).Name, task.DatabaseName)
 		assert.Equal(t, schema.Name, task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, comment, task.Comment)
@@ -85,7 +82,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
-		assert.Equal(t, database.Name, task.DatabaseName)
+		assert.Equal(t, testDb(t).Name, task.DatabaseName)
 		assert.Equal(t, schema.Name, task.SchemaName)
 		assert.Equal(t, schedule, task.Schedule)
 
@@ -117,7 +114,7 @@ func TestInt_Tasks(t *testing.T) {
 	createTaskBasicRequest := func(t *testing.T) *sdk.CreateTaskRequest {
 		t.Helper()
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		return sdk.NewCreateTaskRequest(id, sql)
 	}
@@ -184,7 +181,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	t.Run("create task: with after", func(t *testing.T) {
 		otherName := random.String()
-		otherId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, otherName)
+		otherId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, otherName)
 
 		request := sdk.NewCreateTaskRequest(otherId, sql).WithSchedule(sdk.String("10 MINUTE"))
 
@@ -219,7 +216,7 @@ func TestInt_Tasks(t *testing.T) {
 	// })
 
 	t.Run("create task: with tags", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, database, schema)
+		tag, tagCleanup := createTag(t, client, testDb(t), schema)
 		t.Cleanup(tagCleanup)
 
 		request := createTaskBasicRequest(t).
@@ -240,7 +237,7 @@ func TestInt_Tasks(t *testing.T) {
 		sourceTask := createTask(t)
 
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		request := sdk.NewCloneTaskRequest(id, sourceTask.ID())
 
@@ -269,7 +266,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("drop task: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, "does_not_exist")
 
 		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -299,7 +296,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, database, schema)
+		tag, tagCleanup := createTag(t, client, testDb(t), schema)
 		t.Cleanup(tagCleanup)
 
 		task := createTask(t)
@@ -456,7 +453,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		showRequest := sdk.NewShowTaskRequest().
 			WithLike(&sdk.Like{Pattern: &task1.Name}).
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(database.Name, schema.Name)}).
+			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name)}).
 			WithLimit(&sdk.LimitFrom{Rows: sdk.Int(5)})
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 
