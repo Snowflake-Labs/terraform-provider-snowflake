@@ -45,24 +45,11 @@ func TestAccProviders() map[string]*schema.Provider {
 	}
 }
 
-var testObjects *TestObjects
-
-type TestObjects struct {
-	DatabaseId  sdk.AccountObjectIdentifier
-	SchemaId    sdk.DatabaseObjectIdentifier
-	WarehouseId sdk.AccountObjectIdentifier
-}
-
-var lock = &sync.Mutex{}
+var once sync.Once
 
 func TestAccPreCheck(t *testing.T) {
 	// use singleton design pattern to ensure we only create these resources once
-	if testObjects == nil {
-		lock.Lock()
-		defer lock.Unlock()
-		if testObjects != nil {
-			return
-		}
+	once.Do(func() {
 		client, err := sdk.NewDefaultClient()
 		if err != nil {
 			t.Fatal(err)
@@ -89,11 +76,5 @@ func TestAccPreCheck(t *testing.T) {
 		}); err != nil {
 			t.Fatal(err)
 		}
-
-		testObjects = &TestObjects{
-			DatabaseId:  dbId,
-			SchemaId:    schemaId,
-			WarehouseId: warehouseId,
-		}
-	}
+	})
 }
