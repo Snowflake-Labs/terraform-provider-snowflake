@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ Tags = (*tags)(nil)
@@ -36,7 +38,7 @@ func (v *tags) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, e
 	if err != nil {
 		return nil, err
 	}
-	return findOne(tags, func(r Tag) bool { return r.Name == id.Name() })
+	return collections.FindOne(tags, func(r Tag) bool { return r.Name == id.Name() })
 }
 
 func (v *tags) Drop(ctx context.Context, request *DropTagRequest) error {

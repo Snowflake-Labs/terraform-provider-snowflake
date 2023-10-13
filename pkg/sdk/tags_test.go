@@ -2,10 +2,12 @@ package sdk
 
 import (
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 )
 
 func TestTagCreate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *createTagOptions {
 		return &createTagOptions{
 			name: id,
@@ -45,13 +47,13 @@ func TestTagCreate(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		opts := (*createTagOptions)(nil)
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: both AllowedValues and Comment present", func(t *testing.T) {
@@ -79,12 +81,12 @@ func TestTagCreate(t *testing.T) {
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier, errOneOf("OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("OrReplace", "IfNotExists"))
 	})
 }
 
 func TestTagDrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *dropTagOptions {
 		return &dropTagOptions{
 			name: id,
@@ -93,13 +95,13 @@ func TestTagDrop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *dropTagOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("drop with name", func(t *testing.T) {
@@ -115,7 +117,7 @@ func TestTagDrop(t *testing.T) {
 }
 
 func TestTagUndrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *undropTagOptions {
 		return &undropTagOptions{
 			name: id,
@@ -123,13 +125,13 @@ func TestTagUndrop(t *testing.T) {
 	}
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *dropTagOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("undrop with name", func(t *testing.T) {
@@ -145,13 +147,13 @@ func TestTagShow(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *showTagOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: empty like", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Like = &Like{}
-		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
+		assertOptsInvalidJoinedErrors(t, opts, ErrPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("validation: empty in", func(t *testing.T) {
@@ -181,7 +183,7 @@ func TestTagShow(t *testing.T) {
 }
 
 func TestTagAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *alterTagOptions {
 		return &alterTagOptions{
 			name: id,
@@ -214,7 +216,7 @@ func TestTagAlter(t *testing.T) {
 
 	t.Run("alter with rename to", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Rename = &TagRename{Name: NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), randomStringN(t, 12))}
+		opts.Rename = &TagRename{Name: NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), random.StringN(12))}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s RENAME TO %s`, id.FullyQualifiedName(), opts.Rename.Name.FullyQualifiedName())
 	})
 
@@ -271,13 +273,13 @@ func TestTagAlter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		opts := (*createTagOptions)(nil)
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: no alter action", func(t *testing.T) {
@@ -301,11 +303,11 @@ func TestTagAlter(t *testing.T) {
 		opts.Rename = &TagRename{
 			Name: NewSchemaObjectIdentifier("", "", ""),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: new name from different db", func(t *testing.T) {
-		newId := NewSchemaObjectIdentifier(id.DatabaseName()+randomStringN(t, 1), randomStringN(t, 12), randomStringN(t, 12))
+		newId := NewSchemaObjectIdentifier(id.DatabaseName()+random.StringN(1), random.StringN(12), random.StringN(12))
 
 		opts := defaultOpts()
 		opts.Rename = &TagRename{

@@ -18,11 +18,11 @@ var (
 
 func (opts *createTagOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
 		errs = append(errs, errOneOf("OrReplace", "IfNotExists"))
@@ -73,11 +73,11 @@ func (v *TagUnset) validate() error {
 
 func (opts *alterTagOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(
 		opts.Add,
@@ -112,8 +112,8 @@ func (opts *alterTagOptions) validate() error {
 		}
 	}
 	if valueSet(opts.Rename) {
-		if !validObjectidentifier(opts.Rename.Name) {
-			errs = append(errs, errInvalidObjectIdentifier)
+		if !ValidObjectIdentifier(opts.Rename.Name) {
+			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 	}
 	return errors.Join(errs...)
@@ -121,11 +121,11 @@ func (opts *alterTagOptions) validate() error {
 
 func (opts *showTagOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		errs = append(errs, errPatternRequiredForLikeKeyword)
+		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
 	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
 		errs = append(errs, errScopeRequiredForInKeyword)
@@ -135,22 +135,22 @@ func (opts *showTagOptions) validate() error {
 
 func (opts *dropTagOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *undropTagOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
