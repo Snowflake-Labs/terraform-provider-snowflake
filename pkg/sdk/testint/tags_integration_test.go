@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -110,7 +111,7 @@ func TestInt_Tags(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.Tags.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
 	t.Run("drop tag: non-existing", func(t *testing.T) {
@@ -127,7 +128,7 @@ func TestInt_Tags(t *testing.T) {
 		err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
 		require.NoError(t, err)
 		_, err = client.Tags.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 
 		err = client.Tags.Undrop(ctx, sdk.NewUndropTagRequest(id))
 		require.NoError(t, err)
@@ -210,7 +211,7 @@ func TestInt_Tags(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.Tags.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 
 		tag, err = client.Tags.ShowByID(ctx, nid)
 		require.NoError(t, err)
