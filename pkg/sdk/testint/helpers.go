@@ -105,11 +105,6 @@ func createDatabase(t *testing.T, client *sdk.Client) (*sdk.Database, func()) {
 	return createDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
 }
 
-func createDatabaseWithIdentifier(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
-	t.Helper()
-	return createDatabaseWithOptions(t, client, id, &sdk.CreateDatabaseOptions{})
-}
-
 func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, _ *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
 	t.Helper()
 	ctx := context.Background()
