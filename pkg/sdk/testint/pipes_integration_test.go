@@ -21,11 +21,9 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	databaseIdentifier := sdk.NewAccountObjectIdentifier(random.AlphanumericN(10))
 	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(databaseIdentifier.Name(), "tcK1>AJ+")
 
-	// creating new database on purpose
+	// creating new database and schema on purpose
 	database, databaseCleanup := createDatabaseWithOptions(t, testClient(t), databaseIdentifier, nil)
 	t.Cleanup(databaseCleanup)
-
-	// creating new schema on purpose
 	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, database, schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
