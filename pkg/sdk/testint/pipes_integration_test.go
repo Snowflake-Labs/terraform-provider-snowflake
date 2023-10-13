@@ -18,35 +18,33 @@ func createPipeCopyStatement(t *testing.T, table *sdk.Table, stage *sdk.Stage) s
 }
 
 func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
-	schemaIdentifier := sdk.NewDatabaseObjectIdentifier("TXR@=9,TBnLj", "tcK1>AJ+")
-	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
-	t.Cleanup(databaseCleanup)
+	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "tcK1>AJ+")
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, database, schemaIdentifier.Name())
+	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := createTable(t, itc.client, database, schema)
+	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
+	stage, stageCleanup := createStage(t, itc.client, testDb(t), schema, stageName)
 	t.Cleanup(stageCleanup)
 
 	t.Run("if we have special characters in db or schema name, create pipe returns error in copy <> from <> section", func(t *testing.T) {
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphanumericN(20)),
+			sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphanumericN(20)),
 			createPipeCopyStatement(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
 
 		require.ErrorContains(t, err, "(42000): SQL compilation error:\nsyntax error line")
 		require.ErrorContains(t, err, "at position")
-		require.ErrorContains(t, err, "unexpected ','")
+		require.ErrorContains(t, err, "unexpected '>'")
 	})
 
 	t.Run("the same works with using db and schema statements", func(t *testing.T) {
-		useDatabaseCleanup := useDatabase(t, itc.client, database.ID())
+		useDatabaseCleanup := useDatabase(t, itc.client, testDb(t).ID())
 		t.Cleanup(useDatabaseCleanup)
 		useSchemaCleanup := useSchema(t, itc.client, schema.ID())
 		t.Cleanup(useSchemaCleanup)
@@ -60,7 +58,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphanumericN(20)),
+			sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphanumericN(20)),
 			createCopyStatementWithoutQualifiersForStage(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
@@ -70,31 +68,29 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 }
 
 func TestInt_PipesShowAndDescribe(t *testing.T) {
-	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier()
-	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
-	t.Cleanup(databaseCleanup)
+	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, random.AlphanumericN(12))
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, database, schemaIdentifier.Name())
+	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
-	table1, table1Cleanup := createTable(t, itc.client, database, schema)
+	table1, table1Cleanup := createTable(t, itc.client, testDb(t), schema)
 	t.Cleanup(table1Cleanup)
 
-	table2, table2Cleanup := createTable(t, itc.client, database, schema)
+	table2, table2Cleanup := createTable(t, itc.client, testDb(t), schema)
 	t.Cleanup(table2Cleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
+	stage, stageCleanup := createStage(t, itc.client, testDb(t), schema, stageName)
 	t.Cleanup(stageCleanup)
 
 	pipe1Name := random.AlphanumericN(20)
 	pipe1CopyStatement := createPipeCopyStatement(t, table1, stage)
-	pipe1, pipe1Cleanup := createPipe(t, itc.client, database, schema, pipe1Name, pipe1CopyStatement)
+	pipe1, pipe1Cleanup := createPipe(t, itc.client, testDb(t), schema, pipe1Name, pipe1CopyStatement)
 	t.Cleanup(pipe1Cleanup)
 
 	pipe2Name := random.AlphanumericN(20)
 	pipe2CopyStatement := createPipeCopyStatement(t, table2, stage)
-	pipe2, pipe2Cleanup := createPipe(t, itc.client, database, schema, pipe2Name, pipe2CopyStatement)
+	pipe2, pipe2Cleanup := createPipe(t, itc.client, testDb(t), schema, pipe2Name, pipe2CopyStatement)
 	t.Cleanup(pipe2Cleanup)
 
 	t.Run("show: without options", func(t *testing.T) {
@@ -153,7 +149,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	})
 
 	t.Run("describe: non-existing pipe", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testDb(t).Name, "does_not_exist")
 
 		_, err := itc.client.Pipes.Describe(itc.ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -161,18 +157,16 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 }
 
 func TestInt_PipeCreate(t *testing.T) {
-	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier()
-	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
-	t.Cleanup(databaseCleanup)
+	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, random.AlphanumericN(12))
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, database, schemaIdentifier.Name())
+	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := createTable(t, itc.client, database, schema)
+	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
+	stage, stageCleanup := createStage(t, itc.client, testDb(t), schema, stageName)
 	t.Cleanup(stageCleanup)
 
 	copyStatement := createPipeCopyStatement(t, table, stage)
@@ -181,7 +175,7 @@ func TestInt_PipeCreate(t *testing.T) {
 		t.Helper()
 		assert.NotEmpty(t, pipeDetails.CreatedOn)
 		assert.Equal(t, expectedName, pipeDetails.Name)
-		assert.Equal(t, database.Name, pipeDetails.DatabaseName)
+		assert.Equal(t, testDb(t).Name, pipeDetails.DatabaseName)
 		assert.Equal(t, schema.Name, pipeDetails.SchemaName)
 		assert.Equal(t, copyStatement, pipeDetails.Definition)
 		assert.Equal(t, "ACCOUNTADMIN", pipeDetails.Owner)
@@ -197,7 +191,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	// TODO: test error integration, aws sns topic and integration when we have them in project
 	t.Run("test complete case", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 		comment := random.Comment()
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, &sdk.CreatePipeOptions{
@@ -216,7 +210,7 @@ func TestInt_PipeCreate(t *testing.T) {
 
 	t.Run("test if not exists and or replace are incompatible", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, &sdk.CreatePipeOptions{
 			OrReplace:   sdk.Bool(true),
@@ -227,7 +221,7 @@ func TestInt_PipeCreate(t *testing.T) {
 
 	t.Run("test no options", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
 
 		err := itc.client.Pipes.Create(itc.ctx, id, copyStatement, nil)
 		require.NoError(t, err)
@@ -240,24 +234,22 @@ func TestInt_PipeCreate(t *testing.T) {
 }
 
 func TestInt_PipeDrop(t *testing.T) {
-	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier()
-	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
-	t.Cleanup(databaseCleanup)
+	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, random.AlphanumericN(12))
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, database, schemaIdentifier.Name())
+	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := createTable(t, itc.client, database, schema)
+	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
+	stage, stageCleanup := createStage(t, itc.client, testDb(t), schema, stageName)
 	t.Cleanup(stageCleanup)
 
 	t.Run("pipe exists", func(t *testing.T) {
 		pipeName := random.AlphanumericN(20)
 		pipeCopyStatement := createPipeCopyStatement(t, table, stage)
-		pipe, _ := createPipe(t, itc.client, database, schema, pipeName, pipeCopyStatement)
+		pipe, _ := createPipe(t, itc.client, testDb(t), schema, pipeName, pipeCopyStatement)
 
 		err := itc.client.Pipes.Drop(itc.ctx, pipe.ID())
 
@@ -267,7 +259,7 @@ func TestInt_PipeDrop(t *testing.T) {
 	})
 
 	t.Run("pipe does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(database.Name, database.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testDb(t).Name, "does_not_exist")
 
 		err := itc.client.Alerts.Drop(itc.ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -275,18 +267,16 @@ func TestInt_PipeDrop(t *testing.T) {
 }
 
 func TestInt_PipeAlter(t *testing.T) {
-	schemaIdentifier := sdk.AlphanumericDatabaseObjectIdentifier()
-	database, databaseCleanup := createDatabaseWithIdentifier(t, itc.client, sdk.NewAccountObjectIdentifier(schemaIdentifier.DatabaseName()))
-	t.Cleanup(databaseCleanup)
+	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, random.AlphanumericN(12))
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, database, schemaIdentifier.Name())
+	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := createTable(t, itc.client, database, schema)
+	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
+	stage, stageCleanup := createStage(t, itc.client, testDb(t), schema, stageName)
 	t.Cleanup(stageCleanup)
 
 	pipeCopyStatement := createPipeCopyStatement(t, table, stage)
@@ -294,7 +284,7 @@ func TestInt_PipeAlter(t *testing.T) {
 	// TODO: test error integration when we have them in project
 	t.Run("set value and unset value", func(t *testing.T) {
 		pipeName := random.AlphanumericN(20)
-		pipe, pipeCleanup := createPipe(t, itc.client, database, schema, pipeName, pipeCopyStatement)
+		pipe, pipeCleanup := createPipe(t, itc.client, testDb(t), schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
 		alterOptions := &sdk.AlterPipeOptions{
@@ -329,11 +319,11 @@ func TestInt_PipeAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, itc.client, database, schema)
+		tag, tagCleanup := createTag(t, itc.client, testDb(t), schema)
 		t.Cleanup(tagCleanup)
 
 		pipeName := random.AlphanumericN(20)
-		pipe, pipeCleanup := createPipe(t, itc.client, database, schema, pipeName, pipeCopyStatement)
+		pipe, pipeCleanup := createPipe(t, itc.client, testDb(t), schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
 		tagValue := "abc"
@@ -373,7 +363,7 @@ func TestInt_PipeAlter(t *testing.T) {
 
 	t.Run("refresh with all", func(t *testing.T) {
 		pipeName := random.AlphanumericN(20)
-		pipe, pipeCleanup := createPipe(t, itc.client, database, schema, pipeName, pipeCopyStatement)
+		pipe, pipeCleanup := createPipe(t, itc.client, testDb(t), schema, pipeName, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)
 
 		alterOptions := &sdk.AlterPipeOptions{
