@@ -138,6 +138,10 @@ Errors:
 	)
 }
 
+// TODO: error distinction (go-snowflake, validation, etc.)
+// 	-
+// 	-
+
 type SDKError struct { //nolint:all
 	file         string
 	line         int
@@ -162,6 +166,8 @@ func (e *SDKError) Error() string {
 func NewError(message string) error {
 	return newSDKError(message, 2)
 }
+
+// TODO: new error with error as a parameter
 
 // NewPredefinedError Lets you predefine factory method for given sdk.SDKError which is convenient
 // when given error must be returned multiple times
