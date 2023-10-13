@@ -2,9 +2,7 @@
 
 package sdk
 
-import ()
-
-func NewCreateOnTableStreamRequest(
+func NewCreateStreamOnTableRequest(
 	name SchemaObjectIdentifier,
 	TableId SchemaObjectIdentifier,
 ) *CreateOnTableStreamRequest {
@@ -92,7 +90,7 @@ func (s *OnStreamStatementRequest) WithStream(Stream *string) *OnStreamStatement
 	return s
 }
 
-func NewCreateOnExternalTableStreamRequest(
+func NewCreateStreamOnExternalTableRequest(
 	name SchemaObjectIdentifier,
 	ExternalTableId SchemaObjectIdentifier,
 ) *CreateOnExternalTableStreamRequest {
@@ -132,37 +130,37 @@ func (s *CreateOnExternalTableStreamRequest) WithComment(Comment *string) *Creat
 	return s
 }
 
-func NewCreateOnStageStreamRequest(
+func NewCreateStreamOnDirectoryTableRequest(
 	name SchemaObjectIdentifier,
 	StageId SchemaObjectIdentifier,
-) *CreateOnStageStreamRequest {
-	s := CreateOnStageStreamRequest{}
+) *CreateOnDirectoryTableStreamRequest {
+	s := CreateOnDirectoryTableStreamRequest{}
 	s.name = name
 	s.StageId = StageId
 	return &s
 }
 
-func (s *CreateOnStageStreamRequest) WithOrReplace(OrReplace *bool) *CreateOnStageStreamRequest {
+func (s *CreateOnDirectoryTableStreamRequest) WithOrReplace(OrReplace *bool) *CreateOnDirectoryTableStreamRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateOnStageStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateOnStageStreamRequest {
+func (s *CreateOnDirectoryTableStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateOnDirectoryTableStreamRequest {
 	s.IfNotExists = IfNotExists
 	return s
 }
 
-func (s *CreateOnStageStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnStageStreamRequest {
+func (s *CreateOnDirectoryTableStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnDirectoryTableStreamRequest {
 	s.CopyGrants = CopyGrants
 	return s
 }
 
-func (s *CreateOnStageStreamRequest) WithComment(Comment *string) *CreateOnStageStreamRequest {
+func (s *CreateOnDirectoryTableStreamRequest) WithComment(Comment *string) *CreateOnDirectoryTableStreamRequest {
 	s.Comment = Comment
 	return s
 }
 
-func NewCreateOnViewStreamRequest(
+func NewCreateStreamOnViewRequest(
 	name SchemaObjectIdentifier,
 	ViewId SchemaObjectIdentifier,
 ) *CreateOnViewStreamRequest {

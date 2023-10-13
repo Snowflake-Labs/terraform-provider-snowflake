@@ -18,7 +18,7 @@ func (v *streams) CreateOnExternalTable(ctx context.Context, request *CreateOnEx
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *streams) CreateOnStage(ctx context.Context, request *CreateOnStageStreamRequest) error {
+func (v *streams) CreateOnDirectoryTable(ctx context.Context, request *CreateOnDirectoryTableStreamRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -129,8 +129,8 @@ func (r *CreateOnExternalTableStreamRequest) toOpts() *CreateOnExternalTableStre
 	return opts
 }
 
-func (r *CreateOnStageStreamRequest) toOpts() *CreateOnStageStreamOptions {
-	opts := &CreateOnStageStreamOptions{
+func (r *CreateOnDirectoryTableStreamRequest) toOpts() *CreateOnDirectoryTableStreamOptions {
+	opts := &CreateOnDirectoryTableStreamOptions{
 		OrReplace:   r.OrReplace,
 		IfNotExists: r.IfNotExists,
 		name:        r.name,

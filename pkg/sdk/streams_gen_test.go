@@ -157,20 +157,20 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 	})
 }
 
-func TestStreams_CreateOnStage(t *testing.T) {
+func TestStreams_CreateOnDirectoryTable(t *testing.T) {
 	id := randomSchemaObjectIdentifier(t)
 	stageId := randomSchemaObjectIdentifier(t)
 
 	// Minimal valid CreateOnStageStreamOptions
-	defaultOpts := func() *CreateOnStageStreamOptions {
-		return &CreateOnStageStreamOptions{
+	defaultOpts := func() *CreateOnDirectoryTableStreamOptions {
+		return &CreateOnDirectoryTableStreamOptions{
 			name:    id,
 			StageId: stageId,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateOnStageStreamOptions = nil
+		var opts *CreateOnDirectoryTableStreamOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
 	})
 
@@ -190,7 +190,7 @@ func TestStreams_CreateOnStage(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnStageStreamOptions", "IfNotExists", "OrReplace"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnDirectoryTableStreamOptions", "IfNotExists", "OrReplace"))
 	})
 
 	t.Run("basic", func(t *testing.T) {

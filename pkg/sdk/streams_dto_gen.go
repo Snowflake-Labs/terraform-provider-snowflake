@@ -3,15 +3,15 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateOnTableStreamOptions]         = new(CreateOnTableStreamRequest)
-	_ optionsProvider[CreateOnExternalTableStreamOptions] = new(CreateOnExternalTableStreamRequest)
-	_ optionsProvider[CreateOnStageStreamOptions]         = new(CreateOnStageStreamRequest)
-	_ optionsProvider[CreateOnViewStreamOptions]          = new(CreateOnViewStreamRequest)
-	_ optionsProvider[CloneStreamOptions]                 = new(CloneStreamRequest)
-	_ optionsProvider[AlterStreamOptions]                 = new(AlterStreamRequest)
-	_ optionsProvider[DropStreamOptions]                  = new(DropStreamRequest)
-	_ optionsProvider[ShowStreamOptions]                  = new(ShowStreamRequest)
-	_ optionsProvider[DescribeStreamOptions]              = new(DescribeStreamRequest)
+	_ optionsProvider[CreateOnTableStreamOptions]          = new(CreateOnTableStreamRequest)
+	_ optionsProvider[CreateOnExternalTableStreamOptions]  = new(CreateOnExternalTableStreamRequest)
+	_ optionsProvider[CreateOnDirectoryTableStreamOptions] = new(CreateOnDirectoryTableStreamRequest)
+	_ optionsProvider[CreateOnViewStreamOptions]           = new(CreateOnViewStreamRequest)
+	_ optionsProvider[CloneStreamOptions]                  = new(CloneStreamRequest)
+	_ optionsProvider[AlterStreamOptions]                  = new(AlterStreamRequest)
+	_ optionsProvider[DropStreamOptions]                   = new(DropStreamRequest)
+	_ optionsProvider[ShowStreamOptions]                   = new(ShowStreamRequest)
+	_ optionsProvider[DescribeStreamOptions]               = new(DescribeStreamRequest)
 )
 
 type CreateOnTableStreamRequest struct {
@@ -50,7 +50,7 @@ type CreateOnExternalTableStreamRequest struct {
 	Comment         *string
 }
 
-type CreateOnStageStreamRequest struct {
+type CreateOnDirectoryTableStreamRequest struct {
 	OrReplace   *bool
 	IfNotExists *bool
 	name        SchemaObjectIdentifier // required

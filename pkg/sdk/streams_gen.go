@@ -9,7 +9,7 @@ import (
 type Streams interface {
 	CreateOnTable(ctx context.Context, request *CreateOnTableStreamRequest) error
 	CreateOnExternalTable(ctx context.Context, request *CreateOnExternalTableStreamRequest) error
-	CreateOnStage(ctx context.Context, request *CreateOnStageStreamRequest) error
+	CreateOnDirectoryTable(ctx context.Context, request *CreateOnDirectoryTableStreamRequest) error
 	CreateOnView(ctx context.Context, request *CreateOnViewStreamRequest) error
 	Clone(ctx context.Context, request *CloneStreamRequest) error
 	Alter(ctx context.Context, request *AlterStreamRequest) error
@@ -63,8 +63,8 @@ type CreateOnExternalTableStreamOptions struct {
 	Comment         *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-// CreateOnStageStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream.
-type CreateOnStageStreamOptions struct {
+// CreateOnDirectoryTableStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream.
+type CreateOnDirectoryTableStreamOptions struct {
 	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
 	stream      bool                   `ddl:"static" sql:"STREAM"`

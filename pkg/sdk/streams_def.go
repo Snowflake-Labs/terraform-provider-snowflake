@@ -101,7 +101,7 @@ var (
 				WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace"),
 		).
 		CustomOperation(
-			"CreateOnStage",
+			"CreateOnDirectoryTable",
 			"https://docs.snowflake.com/en/sql-reference/sql/create-stream",
 			g.QueryStruct("CreateStreamOnDirectoryTable").
 				Create().

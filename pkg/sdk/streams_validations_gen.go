@@ -5,7 +5,7 @@ import "errors"
 var (
 	_ validatable = new(CreateOnTableStreamOptions)
 	_ validatable = new(CreateOnExternalTableStreamOptions)
-	_ validatable = new(CreateOnStageStreamOptions)
+	_ validatable = new(CreateOnDirectoryTableStreamOptions)
 	_ validatable = new(CreateOnViewStreamOptions)
 	_ validatable = new(CloneStreamOptions)
 	_ validatable = new(AlterStreamOptions)
@@ -68,7 +68,7 @@ func (opts *CreateOnExternalTableStreamOptions) validate() error {
 	return errors.Join(errs...)
 }
 
-func (opts *CreateOnStageStreamOptions) validate() error {
+func (opts *CreateOnDirectoryTableStreamOptions) validate() error {
 	if opts == nil {
 		return errors.Join(errNilOptions)
 	}
@@ -80,7 +80,7 @@ func (opts *CreateOnStageStreamOptions) validate() error {
 		errs = append(errs, errInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
-		errs = append(errs, errOneOf("CreateOnStageStreamOptions", "IfNotExists", "OrReplace"))
+		errs = append(errs, errOneOf("CreateOnDirectoryTableStreamOptions", "IfNotExists", "OrReplace"))
 	}
 	return errors.Join(errs...)
 }
