@@ -80,7 +80,7 @@ Integration status - indicates if given resource / datasource is using new SDK.
 | Notification Integration            | ❌                    | snowflake_notification_integration             | snowflake_integrations        | ❌                  |
 | Security Integration                | ❌                    | snowflake_security_integration                 | snowflake_integrations        | ❌                  |
 | Storage Integration                 | ❌                    | snowflake_storage_integration                  | snowflake_integrations        | ❌                  |
-| Network Policy                      | ✅                    | snowflake_network_policy                       | snowflake_network_policy      | ❌                  |
+| Network Policy                      | ✅                    | snowflake_network_policy                       | snowflake_network_policy      | ✅                  |
 | Password Policy                     | ✅                    | snowflake_password_policy                      | snowflake_password_policy     | ✅                  |
 | Session Policy                      | ✅                    | snowflake_session_policy                       | snowflake_session_policy      | ❌                  |
 | Replication Group                   | ❌                    | snowflake_replication_group                    | snowflake_replication_group   | ❌                  |

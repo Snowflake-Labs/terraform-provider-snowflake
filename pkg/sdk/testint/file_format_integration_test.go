@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +19,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 	t.Cleanup(schemaCleanup)
 
 	t.Run("CSV", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeCSV,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -107,7 +108,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, &sdk.CSVEncodingGB18030, describeResult.Options.CSVEncoding)
 	})
 	t.Run("JSON", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeJSON,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -179,7 +180,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, true, *describeResult.Options.JSONSkipByteOrderMark)
 	})
 	t.Run("AVRO", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeAvro,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -221,7 +222,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.AvroNullIf)
 	})
 	t.Run("ORC", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeORC,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -260,7 +261,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ORCNullIf)
 	})
 	t.Run("PARQUET", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeParquet,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -305,7 +306,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ParquetNullIf)
 	})
 	t.Run("XML", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, randomString(t))
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeXML,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -370,7 +371,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 		fileFormat, fileFormatCleanup := createFileFormat(t, client, schemaTest.ID())
 		t.Cleanup(fileFormatCleanup)
 		oldId := fileFormat.ID()
-		newId := sdk.NewSchemaObjectIdentifier(oldId.DatabaseName(), oldId.SchemaName(), randomString(t))
+		newId := sdk.NewSchemaObjectIdentifier(oldId.DatabaseName(), oldId.SchemaName(), random.String())
 
 		err := client.FileFormats.Alter(ctx, oldId, &sdk.AlterFileFormatOptions{
 			Rename: &sdk.AlterFileFormatRenameOptions{

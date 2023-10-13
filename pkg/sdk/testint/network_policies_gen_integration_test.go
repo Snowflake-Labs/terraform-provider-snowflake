@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +18,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 	blockedIP := sdk.NewIPRequest("125.0.0.1")
 	blockedIP2 := sdk.NewIPRequest("124.0.0.1")
 	defaultCreateRequest := func() *sdk.CreateNetworkPolicyRequest {
-		id := randomAccountObjectIdentifier(t)
+		id := sdk.RandomAccountObjectIdentifier()
 		comment := "some_comment"
 		return sdk.NewCreateNetworkPolicyRequest(id).
 			WithOrReplace(sdk.Bool(true)).
@@ -27,7 +28,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 	}
 
 	findNetworkPolicy := func(nps []sdk.NetworkPolicy, name string) (*sdk.NetworkPolicy, error) {
-		return sdk.FindOne[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
+		return collections.FindOne[sdk.NetworkPolicy](nps, func(t sdk.NetworkPolicy) bool {
 			return t.Name == name
 		})
 	}
@@ -132,7 +133,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 			}
 		})
 
-		newID := randomAccountObjectIdentifier(t)
+		newID := sdk.RandomAccountObjectIdentifier()
 		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).WithRenameTo(&newID))
 		require.NoError(t, err)
 		altered = true

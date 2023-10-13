@@ -55,7 +55,7 @@ type AlertCondition struct {
 }
 
 func (opts *CreateAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 
@@ -115,7 +115,7 @@ type AlterAlertOptions struct {
 }
 
 func (opts *AlterAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 
@@ -175,8 +175,8 @@ type dropAlertOptions struct {
 }
 
 func (opts *dropAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -297,7 +297,7 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 			return &alert, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describeAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-alert.
@@ -308,8 +308,8 @@ type describeAlertOptions struct {
 }
 
 func (v *describeAlertOptions) validate() error {
-	if !validObjectidentifier(v.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(v.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }

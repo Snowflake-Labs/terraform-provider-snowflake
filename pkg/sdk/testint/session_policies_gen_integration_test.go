@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,7 +54,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 
 	createSessionPolicy := func(t *testing.T) *sdk.SessionPolicy {
 		t.Helper()
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
@@ -66,9 +68,9 @@ func TestInt_SessionPolicies(t *testing.T) {
 	}
 
 	t.Run("create session_policy: complete case", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		comment := randomComment(t)
+		comment := random.Comment()
 
 		request := sdk.NewCreateSessionPolicyRequest(id).
 			WithSessionIdleTimeoutMins(sdk.Int(5)).
@@ -87,7 +89,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("create session_policy: no optionals", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		request := sdk.NewCreateSessionPolicyRequest(id)
@@ -103,7 +105,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("drop session_policy: existing", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
@@ -113,7 +115,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.SessionPolicies.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
 	t.Run("drop session_policy: non-existing", func(t *testing.T) {
@@ -124,7 +126,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("alter session_policy: set value and unset value", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
@@ -154,7 +156,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		tag, tagCleanup := createTag(t, client, database, schema)
 		t.Cleanup(tagCleanup)
 
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
@@ -191,13 +193,13 @@ func TestInt_SessionPolicies(t *testing.T) {
 	})
 
 	t.Run("alter session_policy: rename", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 
 		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
 		require.NoError(t, err)
 
-		newName := randomString(t)
+		newName := random.String()
 		newId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, newName)
 		alterRequest := sdk.NewAlterSessionPolicyRequest(id).WithRenameTo(&newId)
 
@@ -210,7 +212,7 @@ func TestInt_SessionPolicies(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.SessionPolicies.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 
 		sessionPolicy, err := client.SessionPolicies.ShowByID(ctx, newId)
 		require.NoError(t, err)

@@ -29,25 +29,25 @@ type (
 	TableColumnIdentifier    struct{}
 )
 
-func randomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
+func RandomAccountObjectIdentifier(t *testing.T) AccountObjectIdentifier {
 	t.Helper()
 	_ = t
 	return AccountObjectIdentifier{}
 }
 
-func randomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
+func RandomDatabaseObjectIdentifier(t *testing.T) DatabaseObjectIdentifier {
 	t.Helper()
 	_ = t
 	return DatabaseObjectIdentifier{}
 }
 
-func randomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
+func RandomSchemaObjectIdentifier(t *testing.T) SchemaObjectIdentifier {
 	t.Helper()
 	_ = t
 	return SchemaObjectIdentifier{}
 }
 
-func validObjectidentifier(objectIdentifier ObjectIdentifier) bool {
+func ValidObjectIdentifier(objectIdentifier ObjectIdentifier) bool {
 	_ = objectIdentifier
 	return true
 }
@@ -85,8 +85,8 @@ func errAtLeastOneOf(fieldNames ...string) error {
 }
 
 var (
-	errNilOptions              = errors.New("options cannot be nil")
-	errInvalidObjectIdentifier = errors.New("invalid object identifier")
+	ErrNilOptions              = errors.New("options cannot be nil")
+	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
 )
 
 func validateAndExec(client *Client, ctx context.Context, opts validatable) error {

@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
 
 func TestAlertCreate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("with complete options", func(t *testing.T) {
-		newComment := randomString(t)
+		newComment := random.String()
 		warehouse := AccountObjectIdentifier{"warehouse"}
 		existsCondition := "SELECT 1"
 		condition := AlertCondition{[]string{existsCondition}}
@@ -39,7 +39,7 @@ func TestAlertCreate(t *testing.T) {
 }
 
 func TestAlertAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("fail without alter action specified", func(t *testing.T) {
 		opts := &AlterAlertOptions{
@@ -50,7 +50,7 @@ func TestAlertAlter(t *testing.T) {
 	})
 
 	t.Run("fail when 2 alter actions specified", func(t *testing.T) {
-		newComment := randomString(t)
+		newComment := random.String()
 		opts := &AlterAlertOptions{
 			name:   id,
 			Action: &AlertActionResume,
@@ -91,7 +91,7 @@ func TestAlertAlter(t *testing.T) {
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		newComment := randomString(t)
+		newComment := random.String()
 		opts := &AlterAlertOptions{
 			name: id,
 			Set: &AlertSet{
@@ -150,7 +150,7 @@ func TestAlertAlter(t *testing.T) {
 }
 
 func TestAlertDrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &dropAlertOptions{}
@@ -172,7 +172,7 @@ func TestAlertDrop(t *testing.T) {
 }
 
 func TestAlertShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowAlertOptions{}
@@ -271,7 +271,7 @@ func TestAlertShow(t *testing.T) {
 }
 
 func TestAlertDescribe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &describeAlertOptions{}

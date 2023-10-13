@@ -53,6 +53,14 @@ type Client struct {
 	Warehouses       Warehouses
 }
 
+func (c *Client) GetAccountLocator() string {
+	return c.accountLocator
+}
+
+func (c *Client) GetConfig() *gosnowflake.Config {
+	return c.config
+}
+
 func NewDefaultClient() (*Client, error) {
 	return NewClient(nil)
 }

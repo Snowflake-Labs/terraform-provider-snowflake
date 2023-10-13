@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
 
 func TestUserCreate(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &CreateUserOptions{}
@@ -27,8 +27,8 @@ func TestUserCreate(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		password := randomString(t)
-		loginName := randomString(t)
+		password := random.String()
+		loginName := random.String()
 
 		opts := &CreateUserOptions{
 			OrReplace:   Bool(true),
@@ -56,7 +56,7 @@ func TestUserCreate(t *testing.T) {
 }
 
 func TestUserAlter(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &AlterUserOptions{}
@@ -113,7 +113,7 @@ func TestUserAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("with setting properties and parameters", func(t *testing.T) {
-		password := randomString(t)
+		password := random.String()
 		objectProperties := UserObjectProperties{
 			Password:             &password,
 			DefaultSeconaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
@@ -160,7 +160,7 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("reset password", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := RandomAccountObjectIdentifier()
 		opts := &AlterUserOptions{
 			name:          id,
 			ResetPassword: Bool(true),
@@ -171,7 +171,7 @@ func TestUserAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("abort all queries", func(t *testing.T) {
-		id := randomAccountObjectIdentifier(t)
+		id := RandomAccountObjectIdentifier()
 		opts := &AlterUserOptions{
 			name:            id,
 			AbortAllQueries: Bool(true),
@@ -182,7 +182,7 @@ func TestUserAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 	t.Run("rename", func(t *testing.T) {
-		newID := NewAccountObjectIdentifier(randomString(t))
+		newID := NewAccountObjectIdentifier(random.String())
 		opts := &AlterUserOptions{
 			name:    id,
 			NewName: newID,
@@ -270,7 +270,7 @@ func TestUserAlter(t *testing.T) {
 }
 
 func TestUserDrop(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &DropUserOptions{}
@@ -292,7 +292,7 @@ func TestUserDrop(t *testing.T) {
 }
 
 func TestUserShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowUserOptions{}
@@ -315,7 +315,7 @@ func TestUserShow(t *testing.T) {
 	})
 
 	t.Run("with like and from", func(t *testing.T) {
-		fromPatern := randomString(t)
+		fromPatern := random.String()
 		opts := &ShowUserOptions{
 			Like: &Like{
 				Pattern: String(id.Name()),
@@ -343,8 +343,8 @@ func TestUserShow(t *testing.T) {
 	})
 
 	t.Run("with starts with and from", func(t *testing.T) {
-		fromPattern := randomString(t)
-		startsWithPattern := randomString(t)
+		fromPattern := random.String()
+		startsWithPattern := random.String()
 
 		opts := &ShowUserOptions{
 			StartsWith: &startsWithPattern,
@@ -358,7 +358,7 @@ func TestUserShow(t *testing.T) {
 }
 
 func TestUserDescribe(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &describeUserOptions{}
