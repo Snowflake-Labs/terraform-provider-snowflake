@@ -260,23 +260,17 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 
 func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Tag, func()) {
 	t.Helper()
-	return createTagWithOptions(t, client, database, schema, &sdk.CreateTagOptions{})
-}
-
-func createTagWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, _ *sdk.CreateTagOptions) (*sdk.Tag, func()) {
-	t.Helper()
 	name := randomStringRange(t, 8, 28)
 	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
+	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+	err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
 	require.NoError(t, err)
-	return &sdk.Tag{
-			Name:         name,
-			DatabaseName: database.Name,
-			SchemaName:   schema.Name,
-		}, func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP TAG \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
-			require.NoError(t, err)
-		}
+	tag, err := client.Tags.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return tag, func() {
+		err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
+		require.NoError(t, err)
+	}
 }
 
 func createStageWithName(t *testing.T, client *sdk.Client, name string) (*string, func()) {
