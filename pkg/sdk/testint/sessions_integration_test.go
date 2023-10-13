@@ -80,9 +80,7 @@ func TestInt_ShowSessionParameter(t *testing.T) {
 func TestInt_ShowObjectParameter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	parameter, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterDataRetentionTimeInDays, sdk.Object{ObjectType: databaseTest.ObjectType(), Name: databaseTest.ID()})
+	parameter, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterDataRetentionTimeInDays, sdk.Object{ObjectType: testDb(t).ObjectType(), Name: testDb(t).ID()})
 	require.NoError(t, err)
 	assert.NotEmpty(t, parameter)
 }
@@ -134,22 +132,18 @@ func TestInt_UseDatabase(t *testing.T) {
 		err := client.Sessions.UseDatabase(ctx, originalDBIdentifier)
 		require.NoError(t, err)
 	})
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	err = client.Sessions.UseDatabase(ctx, databaseTest.ID())
+	err = client.Sessions.UseDatabase(ctx, testDb(t).ID())
 	require.NoError(t, err)
 	actual, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
-	expected := databaseTest.Name
+	expected := testDb(t).Name
 	assert.Equal(t, expected, actual)
 }
 
 func TestInt_UseSchema(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 	t.Cleanup(schemaCleanup)
 	originalSchema, err := client.ContextFunctions.CurrentSchema(ctx)
 	require.NoError(t, err)

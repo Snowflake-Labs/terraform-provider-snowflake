@@ -97,9 +97,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on schema", func(t *testing.T) {
 		roleTest, roleCleanup := createRole(t, client)
 		t.Cleanup(roleCleanup)
-		databaseTest, databaseCleanup := createDatabase(t, client)
-		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 		t.Cleanup(schemaCleanup)
 		privileges := &sdk.AccountRoleGrantPrivileges{
 			SchemaPrivileges: []sdk.SchemaPrivilege{sdk.SchemaPrivilegeCreateAlert},
@@ -135,11 +133,9 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on schema object", func(t *testing.T) {
 		roleTest, roleCleanup := createRole(t, client)
 		t.Cleanup(roleCleanup)
-		databaseTest, databaseCleanup := createDatabase(t, client)
-		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 		t.Cleanup(schemaCleanup)
-		tableTest, tableTestCleanup := createTable(t, client, databaseTest, schemaTest)
+		tableTest, tableTestCleanup := createTable(t, client, testDb(t), schemaTest)
 		t.Cleanup(tableTestCleanup)
 		privileges := &sdk.AccountRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
@@ -179,8 +175,6 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on future schema object", func(t *testing.T) {
 		roleTest, roleCleanup := createRole(t, client)
 		t.Cleanup(roleCleanup)
-		databaseTest, databaseCleanup := createDatabase(t, client)
-		t.Cleanup(databaseCleanup)
 		privileges := &sdk.AccountRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
 		}
@@ -188,7 +182,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeExternalTables,
-					InDatabase:       sdk.Pointer(databaseTest.ID()),
+					InDatabase:       sdk.Pointer(testDb(t).ID()),
 				},
 			},
 		}
@@ -221,18 +215,15 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
 	t.Run("on database", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, database)
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(database.Name, databaseRole.Name)
+		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
 			DatabasePrivileges: []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
 		}
 		on := &sdk.DatabaseRoleGrantOn{
-			Database: sdk.Pointer(database.ID()),
+			Database: sdk.Pointer(testDb(t).ID()),
 		}
 
 		err := client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
@@ -271,9 +262,9 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("on schema", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, database)
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(database.Name, databaseRole.Name)
-		schema, _ := createSchema(t, client, database)
+		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+		schema, _ := createSchema(t, client, testDb(t))
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
 			SchemaPrivileges: []sdk.SchemaPrivilege{sdk.SchemaPrivilegeCreateAlert},
@@ -320,10 +311,10 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("on schema object", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, database)
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(database.Name, databaseRole.Name)
-		schema, _ := createSchema(t, client, database)
-		table, _ := createTable(t, client, database, schema)
+		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+		schema, _ := createSchema(t, client, testDb(t))
+		table, _ := createTable(t, client, testDb(t), schema)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
@@ -374,8 +365,8 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("on future schema object", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, database)
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(database.Name, databaseRole.Name)
+		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
@@ -384,7 +375,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeExternalTables,
-					InDatabase:       sdk.Pointer(database.ID()),
+					InDatabase:       sdk.Pointer(testDb(t).ID()),
 				},
 			},
 		}
@@ -424,22 +415,20 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	ctx := testContext(t)
 	shareTest, shareCleanup := createShare(t, client)
 	t.Cleanup(shareCleanup)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
 	t.Run("without options", func(t *testing.T) {
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, nil, shareTest.ID())
 		require.Error(t, err)
 	})
 	t.Run("with options", func(t *testing.T) {
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 			On: &sdk.ShowGrantsOn{
 				Object: &sdk.Object{
 					ObjectType: sdk.ObjectTypeDatabase,
-					Name:       databaseTest.ID(),
+					Name:       testDb(t).ID(),
 				},
 			},
 		})
@@ -456,9 +445,9 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		assert.Equal(t, string(sdk.ObjectPrivilegeUsage), shareGrant.Privilege)
 		assert.Equal(t, sdk.ObjectTypeDatabase, shareGrant.GrantedOn)
 		assert.Equal(t, sdk.ObjectTypeShare, shareGrant.GrantedTo)
-		assert.Equal(t, databaseTest.ID().Name(), shareGrant.Name.Name())
+		assert.Equal(t, testDb(t).ID().Name(), shareGrant.Name.Name())
 		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
@@ -469,10 +458,8 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	ctx := testContext(t)
 	shareTest, shareCleanup := createShare(t, client)
 	t.Cleanup(shareCleanup)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
 	err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-		Database: databaseTest.ID(),
+		Database: testDb(t).ID(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Run("without options", func(t *testing.T) {
@@ -481,7 +468,7 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	})
 	t.Run("with options", func(t *testing.T) {
 		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
@@ -491,14 +478,11 @@ func TestInt_GrantOwnership(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-
 	t.Run("on schema object to database role", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, database)
-		databaseRoleId := sdk.NewDatabaseObjectIdentifier(database.Name, databaseRole.Name)
-		schema, _ := createSchema(t, client, database)
-		table, _ := createTable(t, client, database, schema)
+		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+		schema, _ := createSchema(t, client, testDb(t))
+		table, _ := createTable(t, client, testDb(t), schema)
 
 		on := sdk.OwnershipGrantOn{
 			Object: &sdk.Object{
@@ -541,7 +525,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		on := sdk.OwnershipGrantOn{
 			Future: &sdk.GrantOnSchemaObjectIn{
 				PluralObjectType: sdk.PluralObjectTypeExternalTables,
-				InDatabase:       sdk.Pointer(database.ID()),
+				InDatabase:       sdk.Pointer(testDb(t).ID()),
 			},
 		}
 		to := sdk.OwnershipGrantTo{
@@ -613,15 +597,13 @@ func TestInt_ShowGrants(t *testing.T) {
 	ctx := testContext(t)
 	shareTest, shareCleanup := createShare(t, client)
 	t.Cleanup(shareCleanup)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
 	err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-		Database: databaseTest.ID(),
+		Database: testDb(t).ID(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
-			Database: databaseTest.ID(),
+			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
@@ -634,7 +616,7 @@ func TestInt_ShowGrants(t *testing.T) {
 			On: &sdk.ShowGrantsOn{
 				Object: &sdk.Object{
 					ObjectType: sdk.ObjectTypeDatabase,
-					Name:       databaseTest.ID(),
+					Name:       testDb(t).ID(),
 				},
 			},
 		})

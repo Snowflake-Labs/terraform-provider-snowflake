@@ -54,13 +54,11 @@ func TestInt_WarehousesShow(t *testing.T) {
 func TestInt_WarehouseCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
 	t.Cleanup(schemaCleanup)
-	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
+	tagTest, tagCleanup := createTag(t, client, testDb(t), schemaTest)
 	t.Cleanup(tagCleanup)
-	tag2Test, tag2Cleanup := createTag(t, client, databaseTest, schemaTest)
+	tag2Test, tag2Cleanup := createTag(t, client, testDb(t), schemaTest)
 	t.Cleanup(tag2Cleanup)
 
 	t.Run("test complete", func(t *testing.T) {
@@ -187,13 +185,11 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	database, dbCleanup := createDatabase(t, client)
-	t.Cleanup(dbCleanup)
-	schema, schemaCleanup := createSchema(t, client, database)
+	schema, schemaCleanup := createSchema(t, client, testDb(t))
 	t.Cleanup(schemaCleanup)
-	tag, tagCleanup := createTag(t, client, database, schema)
+	tag, tagCleanup := createTag(t, client, testDb(t), schema)
 	t.Cleanup(tagCleanup)
-	tag2, tagCleanup2 := createTag(t, client, database, schema)
+	tag2, tagCleanup2 := createTag(t, client, testDb(t), schema)
 	t.Cleanup(tagCleanup2)
 
 	t.Run("terraform acc test", func(t *testing.T) {
