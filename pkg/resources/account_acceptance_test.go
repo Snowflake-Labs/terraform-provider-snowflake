@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_Account_complete(t *testing.T) {
@@ -19,7 +20,8 @@ func TestAcc_Account_complete(t *testing.T) {
 	password := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "123ABC"
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		// this errors with: Error running post-test destroy, there may be dangling resources: exit status 1
 		// unless we change the resource to return nil on destroy then this is unavoidable

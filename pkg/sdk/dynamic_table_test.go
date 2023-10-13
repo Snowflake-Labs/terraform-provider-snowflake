@@ -10,7 +10,7 @@ func TestDynamicTableCreate(t *testing.T) {
 		return &createDynamicTableOptions{
 			name: id,
 			targetLag: TargetLag{
-				Lagtime: String("1 minutes"),
+				MaximumDuration: String("1 minutes"),
 			},
 			warehouse: AccountObjectIdentifier{
 				name: "warehouse_name",
@@ -95,7 +95,7 @@ func TestDynamicTableAlter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DynamicTableSet{
 			TargetLag: &TargetLag{
-				Lagtime: String("1 minutes"),
+				MaximumDuration: String("1 minutes"),
 			},
 			Warehouse: &AccountObjectIdentifier{
 				name: "warehouse_name",

@@ -18,8 +18,8 @@ func (tl *TargetLag) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if everyValueSet(tl.Lagtime, tl.Downstream) {
-		errs = append(errs, errOneOf("Lagtime", "Downstream"))
+	if everyValueSet(tl.MaximumDuration, tl.Downstream) {
+		errs = append(errs, errOneOf("MaximumDuration", "Downstream"))
 	}
 	return errors.Join(errs...)
 }

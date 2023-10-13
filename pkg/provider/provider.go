@@ -218,9 +218,10 @@ func Provider() *schema.Provider {
 				},
 			},
 		},
-		ResourcesMap:   getResources(),
-		DataSourcesMap: getDataSources(),
-		ConfigureFunc:  ConfigureProvider,
+		ResourcesMap:       getResources(),
+		DataSourcesMap:     getDataSources(),
+		ConfigureFunc:      ConfigureProvider,
+		ProviderMetaSchema: map[string]*schema.Schema{},
 	}
 }
 
@@ -263,6 +264,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_api_integration":                         resources.APIIntegration(),
 		"snowflake_database":                                resources.Database(),
 		"snowflake_database_role":                           resources.DatabaseRole(),
+		"snowflake_dynamic_table":                           resources.DynamicTable(),
 		"snowflake_email_notification_integration":          resources.EmailNotificationIntegration(),
 		"snowflake_external_function":                       resources.ExternalFunction(),
 		"snowflake_external_oauth_integration":              resources.ExternalOauthIntegration(),
@@ -325,6 +327,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_database":                           datasources.Database(),
 		"snowflake_database_roles":                     datasources.DatabaseRoles(),
 		"snowflake_databases":                          datasources.Databases(),
+		"snowflake_dynamic_tables":                     datasources.DynamicTables(),
 		"snowflake_external_functions":                 datasources.ExternalFunctions(),
 		"snowflake_external_tables":                    datasources.ExternalTables(),
 		"snowflake_failover_groups":                    datasources.FailoverGroups(),

@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_Function(t *testing.T) {
@@ -25,7 +26,8 @@ func TestAcc_Function(t *testing.T) {
 	expBody4 := `class CoolFunc {public static String test(int n) {return "hello!";}}`
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -76,13 +78,13 @@ func functionConfig(db, schema, name string) string {
 		name    = "%s"
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource "snowflake_schema" "test_schema" {
 		name     = "%s"
 		database = snowflake_database.test_database.name
 		comment  = "Terraform acceptance test"
 	}
-	
+
 	resource "snowflake_function" "test_funct_simple" {
 		name = "%s"
 		database = snowflake_database.test_database.name
@@ -131,7 +133,7 @@ func functionConfig(db, schema, name string) string {
 		arguments {
 			name = "arg2"
 			type = "DATE"
-		}		
+		}
 		comment = "Table func with 2 args"
 		return_type = "table (x number, y number)"
 		statement = <<EOT
