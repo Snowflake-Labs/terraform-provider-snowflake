@@ -5,8 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_MaskingPolicy(t *testing.T) {
@@ -15,7 +16,8 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 	comment := "Terraform acceptance test"
 	comment2 := "Terraform acceptance test 2"
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +54,7 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 			{
 				Config: maskingPolicyConfigMultiline(accName, accName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case \n\twhen current_role() in ('ROLE_A') then \n\t\tval \n\twhen is_role_in_session( 'ROLE_B' ) then \n\t\t'ABC123'\n\telse\n\t\t'******'\nend"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case\n\twhen current_role() in ('ROLE_A') then\n\t\tval\n\twhen is_role_in_session( 'ROLE_B' ) then\n\t\t'ABC123'\n\telse\n\t\t'******'\nend"),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", ""),
 				),
 			},
@@ -102,13 +104,13 @@ func maskingPolicyConfigMultiline(n string, name string) string {
 		name = "%v"
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource "snowflake_schema" "test" {
 		name = "%v"
 		database = snowflake_database.test.name
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource "snowflake_masking_policy" "test" {
 		name = "%s"
 		database = snowflake_database.test.name
@@ -120,10 +122,10 @@ func maskingPolicyConfigMultiline(n string, name string) string {
 			}
 		}
 		masking_expression = <<-EOF
-			case 
-				when current_role() in ('ROLE_A') then 
-					val 
-				when is_role_in_session( 'ROLE_B' ) then 
+			case
+				when current_role() in ('ROLE_A') then
+					val
+				when is_role_in_session( 'ROLE_B' ) then
 					'ABC123'
 				else
 					'******'

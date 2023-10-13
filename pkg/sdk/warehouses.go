@@ -178,13 +178,13 @@ func (opts *AlterWarehouseOptions) validate() error {
 		return errExactlyOneOf("Suspend", "Resume", "AbortAllQueries", "NewName", "Set", "Unset")
 	}
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
-		return fmt.Errorf("Suspend and Resume cannot both be true")
+		return fmt.Errorf("suspend and Resume cannot both be true")
 	}
 	if (valueSet(opts.IfSuspended) && *opts.IfSuspended) && (!valueSet(opts.Resume) || !*opts.Resume) {
 		return fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`)
 	}
 	if everyValueSet(opts.Set, opts.Unset) {
-		return fmt.Errorf("Set and Unset cannot both be set")
+		return fmt.Errorf("set and Unset cannot both be set")
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
