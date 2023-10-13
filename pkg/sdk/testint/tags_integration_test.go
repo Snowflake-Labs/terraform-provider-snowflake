@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +40,7 @@ func TestInt_Tags(t *testing.T) {
 	createTagHandle := func(t *testing.T) *sdk.Tag {
 		t.Helper()
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, randomString(t))
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
 		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTagHandle(id))
@@ -50,9 +51,9 @@ func TestInt_Tags(t *testing.T) {
 	}
 
 	t.Run("create tag: comment", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-		comment := randomComment(t)
+		comment := random.Comment()
 
 		request := sdk.NewCreateTagRequest(id).WithComment(&comment)
 		err := client.Tags.Create(ctx, request)
@@ -65,7 +66,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("create tag: allowed values", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		values := []string{"value1", "value2"}
@@ -80,10 +81,10 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("create tag: comment and allowed values", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		comment := randomComment(t)
+		comment := random.Comment()
 		values := []string{"value1", "value2"}
 		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id).WithOrReplace(true).WithComment(&comment).WithAllowedValues(values))
 		expected := "Comment fields: [AllowedValues] are incompatible and cannot be set at the same time"
@@ -91,7 +92,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("create tag: no optionals", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
 		require.NoError(t, err)
@@ -113,7 +114,7 @@ func TestInt_Tags(t *testing.T) {
 	})
 
 	t.Run("drop tag: non-existing", func(t *testing.T) {
-		name := randomString(t)
+		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
@@ -139,7 +140,7 @@ func TestInt_Tags(t *testing.T) {
 		id := tag.ID()
 
 		// alter tag with set comment
-		comment := randomComment(t)
+		comment := random.Comment()
 		set := sdk.NewTagSetRequest().WithComment(comment)
 		err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithSet(set))
 		require.NoError(t, err)
@@ -199,7 +200,7 @@ func TestInt_Tags(t *testing.T) {
 		tag := createTagHandle(t)
 		id := tag.ID()
 
-		nid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, randomString(t))
+		nid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
 		err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithRename(nid))
 		if err != nil {
 			t.Cleanup(cleanupTagHandle(id))

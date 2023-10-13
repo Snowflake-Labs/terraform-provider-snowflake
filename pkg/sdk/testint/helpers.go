@@ -261,7 +261,7 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 
 func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Tag, func()) {
 	t.Helper()
-	name := randomStringRange(t, 8, 28)
+	name := random.StringRange(8, 28)
 	ctx := context.Background()
 	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 	err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
