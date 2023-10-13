@@ -156,8 +156,8 @@ var (
 				SQL("STREAM").
 				IfExists().
 				Name().
-				SetComment().
-				UnsetComment().
+				OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
+				OptionalSQL("UNSET COMMENT").
 				SetTags().
 				UnsetTags().
 				WithValidation(g.ValidIdentifier, "name").
