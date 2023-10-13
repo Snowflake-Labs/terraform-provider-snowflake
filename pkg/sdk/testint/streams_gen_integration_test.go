@@ -21,6 +21,18 @@ func TestInt_Streams(t *testing.T) {
 	schema, cleanupSchema := createSchema(t, client, db)
 	t.Cleanup(cleanupSchema)
 
+	assertStream := func(t *testing.T, s *sdk.Stream, id sdk.SchemaObjectIdentifier, sourceType string, mode string) {
+		t.Helper()
+		assert.NotNil(t, s)
+		assert.Nil(t, s.TableOn)
+		assert.Equal(t, id.Name(), s.Name)
+		assert.Equal(t, db.Name, s.DatabaseName)
+		assert.Equal(t, schema.Name, s.SchemaName)
+		assert.Equal(t, "some comment", *s.Comment)
+		assert.Equal(t, sourceType, *s.SourceType)
+		assert.Equal(t, mode, *s.Mode)
+	}
+
 	t.Run("CreateOnTable", func(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
@@ -36,19 +48,15 @@ func TestInt_Streams(t *testing.T) {
 
 		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
-		assert.Equal(t, id.Name(), s.Name)
-		assert.Equal(t, db.Name, s.DatabaseName)
-		assert.Equal(t, schema.Name, s.SchemaName)
-		assert.Equal(t, "some comment", *s.Comment)
+
 		assert.Equal(t, table.ID().FullyQualifiedName(), *s.TableName)
-		assert.Equal(t, "Table", *s.SourceType)
-		assert.Equal(t, "DEFAULT", *s.Mode)
+		assertStream(t, s, id, "Table", "DEFAULT")
 	})
 
 	t.Run("CreateOnExternalTable", func(t *testing.T) {
 		stageID := sdk.NewAccountObjectIdentifier("EXTERNAL_TABLE_STAGE")
 		stageLocation := "@external_table_stage"
-		_, _ = createStageWithURL(t, client, stageID, "s3://snowflake-workshop-lab/weather-nyc")
+		_, _ = createStageWithURL(t, client, stageID, nycWeatherDataURL)
 
 		externalTableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
 		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(externalTableId, stageLocation, sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON)))
@@ -69,13 +77,9 @@ func TestInt_Streams(t *testing.T) {
 
 		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
-		assert.Equal(t, id.Name(), s.Name)
-		assert.Equal(t, db.Name, s.DatabaseName)
-		assert.Equal(t, schema.Name, s.SchemaName)
-		assert.Equal(t, "some comment", *s.Comment)
+
 		assert.Equal(t, externalTableId.FullyQualifiedName(), *s.TableName)
-		assert.Equal(t, "External Table", *s.SourceType)
-		assert.Equal(t, "INSERT_ONLY", *s.Mode)
+		assertStream(t, s, id, "External Table", "INSERT_ONLY")
 	})
 
 	t.Run("CreateOnStage", func(t *testing.T) {
@@ -94,12 +98,8 @@ func TestInt_Streams(t *testing.T) {
 
 		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
-		assert.Equal(t, id.Name(), s.Name)
-		assert.Equal(t, db.Name, s.DatabaseName)
-		assert.Equal(t, schema.Name, s.SchemaName)
-		assert.Equal(t, "some comment", *s.Comment)
-		assert.Equal(t, "Stage", *s.SourceType)
-		assert.Equal(t, "DEFAULT", *s.Mode)
+
+		assertStream(t, s, id, "Stage", "DEFAULT")
 	})
 
 	t.Run("CreateOnView", func(t *testing.T) {
@@ -122,12 +122,8 @@ func TestInt_Streams(t *testing.T) {
 
 		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
 		require.NoError(t, err)
-		assert.Equal(t, id.Name(), s.Name)
-		assert.Equal(t, db.Name, s.DatabaseName)
-		assert.Equal(t, schema.Name, s.SchemaName)
-		assert.Equal(t, "some comment", *s.Comment)
-		assert.Equal(t, "View", *s.SourceType)
-		assert.Equal(t, "DEFAULT", *s.Mode)
+
+		assertStream(t, s, id, "View", "DEFAULT")
 	})
 
 	t.Run("Clone", func(t *testing.T) {
@@ -153,13 +149,9 @@ func TestInt_Streams(t *testing.T) {
 
 		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(cloneId))
 		require.NoError(t, err)
-		assert.Equal(t, cloneId.Name(), s.Name)
-		assert.Equal(t, db.Name, s.DatabaseName)
-		assert.Equal(t, schema.Name, s.SchemaName)
-		assert.Equal(t, "some comment", *s.Comment)
+
+		assertStream(t, s, cloneId, "Table", "DEFAULT")
 		assert.Equal(t, table.ID().FullyQualifiedName(), *s.TableName)
-		assert.Equal(t, "Table", *s.SourceType)
-		assert.Equal(t, "DEFAULT", *s.Mode)
 	})
 
 	t.Run("Alter tags", func(t *testing.T) {
@@ -276,13 +268,17 @@ func TestInt_Streams(t *testing.T) {
 		stream, err := sdk.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
+		assert.NotNil(t, stream)
 		assert.Equal(t, id.Name(), stream.Name)
 		assert.Equal(t, db.Name, stream.DatabaseName)
 		assert.Equal(t, schema.Name, stream.SchemaName)
 		assert.Equal(t, table.Name, *stream.TableOn)
+		assert.Nil(t, stream.Comment)
+		assert.Nil(t, stream.SourceType)
+		assert.Nil(t, stream.Mode)
 	})
 
-	t.Run("Show", func(t *testing.T) {
+	t.Run("Show single with options", func(t *testing.T) {
 		table, cleanupTable := createTable(t, client, db, schema)
 		t.Cleanup(cleanupTable)
 
@@ -313,14 +309,89 @@ func TestInt_Streams(t *testing.T) {
 		stream, err := sdk.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
-		assert.Equal(t, id.Name(), stream.Name)
-		assert.Equal(t, db.Name, stream.DatabaseName)
-		assert.Equal(t, schema.Name, stream.SchemaName)
-		assert.Nil(t, stream.TableOn)
-		assert.Equal(t, "some comment", *stream.Comment)
-		assert.Equal(t, table.ID().FullyQualifiedName(), *stream.TableName)
-		assert.Equal(t, "Table", *stream.SourceType)
-		assert.Equal(t, "DEFAULT", *stream.Mode)
+		assertStream(t, stream, id, "Table", "DEFAULT")
+	})
+
+	t.Run("Show multiple", func(t *testing.T) {
+		table, cleanupTable := createTable(t, client, db, schema)
+		t.Cleanup(cleanupTable)
+
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment(sdk.String("some comment"))
+		err := client.Streams.CreateOnTable(ctx, req)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
+			require.NoError(t, err)
+		})
+
+		id2 := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, randomAlphanumericN(t, 32))
+		req2 := sdk.NewCreateOnTableStreamRequest(id2, table.ID()).WithComment(sdk.String("some comment"))
+		err = client.Streams.CreateOnTable(ctx, req2)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id2))
+			require.NoError(t, err)
+		})
+
+		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest())
+		require.NoError(t, err)
+		assert.Equal(t, 2, len(s))
+
+		stream, err := sdk.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		require.NoError(t, err)
+
+		stream2, err := sdk.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
+		require.NoError(t, err)
+
+		assertStream(t, stream, id, "Table", "DEFAULT")
+		assertStream(t, stream2, id2, "Table", "DEFAULT")
+	})
+
+	t.Run("Show multiple with options", func(t *testing.T) {
+		table, cleanupTable := createTable(t, client, db, schema)
+		t.Cleanup(cleanupTable)
+
+		idPrefix := "stream_show_"
+
+		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, idPrefix+randomAlphanumericN(t, 32))
+		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment(sdk.String("some comment"))
+		err := client.Streams.CreateOnTable(ctx, req)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
+			require.NoError(t, err)
+		})
+
+		id2 := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, idPrefix+randomAlphanumericN(t, 32))
+		req2 := sdk.NewCreateOnTableStreamRequest(id2, table.ID()).WithComment(sdk.String("some comment"))
+		err = client.Streams.CreateOnTable(ctx, req2)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id2))
+			require.NoError(t, err)
+		})
+
+		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
+			WithTerse(sdk.Bool(false)).
+			WithIn(&sdk.In{
+				Schema: sdk.NewDatabaseObjectIdentifier(db.Name, schema.Name),
+			}).
+			WithStartsWith(sdk.String(idPrefix)).
+			WithLimit(&sdk.LimitFrom{
+				Rows: sdk.Int(2),
+			}))
+		require.NoError(t, err)
+		assert.Equal(t, 2, len(s))
+
+		stream, err := sdk.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		require.NoError(t, err)
+
+		stream2, err := sdk.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
+		require.NoError(t, err)
+
+		assertStream(t, stream, id, "Table", "DEFAULT")
+		assertStream(t, stream2, id2, "Table", "DEFAULT")
 	})
 
 	t.Run("Describe", func(t *testing.T) {

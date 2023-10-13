@@ -103,7 +103,7 @@ var (
 		CustomOperation(
 			"CreateOnStage",
 			"https://docs.snowflake.com/en/sql-reference/sql/create-stream",
-			g.QueryStruct("CreateStreamOnStage").
+			g.QueryStruct("CreateStreamOnDirectoryTable").
 				Create().
 				OrReplace().
 				SQL("STREAM").
