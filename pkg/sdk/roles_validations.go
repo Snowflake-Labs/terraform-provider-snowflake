@@ -13,49 +13,49 @@ var (
 
 func (opts *CreateRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateRoleOptions", "OrReplace", "IfNotExists"))
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *AlterRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueNil(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errors.New("no alter action specified"))
+		errs = append(errs, errAtLeastOneOf("CreateRoleOptions", "RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	}
 	if anyValueSet(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetTags, opts.UnsetTags) &&
 		!exactlyOneValueSet(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errOneOf("RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
+		errs = append(errs, errOneOf("CreateRoleOptions", "RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *DropRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(errNilOptions)
 	}
-	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if !validObjectidentifier(opts.name) {
+		return errors.Join(errInvalidObjectIdentifier)
 	}
 	return nil
 }
 
 func (opts *ShowRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
@@ -69,34 +69,34 @@ func (opts *ShowRoleOptions) validate() error {
 
 func (opts *GrantRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if (opts.Grant.Role != nil && opts.Grant.User != nil) || (opts.Grant.Role == nil && opts.Grant.User == nil) {
-		errs = append(errs, errors.New("only one grant option can be set [TO ROLE or TO USER]"))
+		errs = append(errs, errOneOf("GrantRoleOptions", "Grant.Role", "Grant.User"))
 	}
 	if opts.Grant.Role != nil && !ValidObjectIdentifier(opts.Grant.Role) {
-		errs = append(errs, errors.New("invalid object identifier for granted role"))
+		errs = append(errs, errInvalidIdentifier("Grant.Role"))
 	}
 	if opts.Grant.User != nil && !ValidObjectIdentifier(opts.Grant.User) {
-		errs = append(errs, errors.New("invalid object identifier for granted user"))
+		errs = append(errs, errInvalidIdentifier("Grant.User"))
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *RevokeRoleOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(errNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if (opts.Revoke.Role != nil && opts.Revoke.User != nil) || (opts.Revoke.Role == nil && opts.Revoke.User == nil) {
-		errs = append(errs, errors.New("only one revoke option can be set [FROM ROLE or FROM USER]"))
+		errs = append(errs, errOneOf("RevokeRoleOptions", "Revoke.Role", "Revoke.User"))
 	}
 	return errors.Join(errs...)
 }

@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -57,11 +58,15 @@ type CreateAccountOptions struct {
 }
 
 func (opts *CreateAccountOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	var errs []error
 	if opts.AdminName == "" {
-		return fmt.Errorf("AdminName is required")
+		errs = append(errs, errNotSet("CreateAccountOptions", "AdminName"))
 	}
 	if !anyValueSet(opts.AdminPassword, opts.AdminRSAPublicKey) {
-		return fmt.Errorf("at least one of AdminPassword or AdminRSAPublicKey must be set")
+		errs = append(errs, errAtLeastOneOf("CreateAccountOptions", "AdminPassword", "AdminRSAPublicKey"))
 	}
 	if opts.Email == "" {
 		return fmt.Errorf("email is required")
@@ -69,7 +74,7 @@ func (opts *CreateAccountOptions) validate() error {
 	if opts.Edition == "" {
 		return fmt.Errorf("edition is required")
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error {
@@ -92,6 +97,9 @@ type AlterAccountOptions struct {
 }
 
 func (opts *AlterAccountOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
 	if ok := exactlyOneValueSet(
 		opts.Set,
 		opts.Unset,
@@ -280,6 +288,9 @@ type ShowAccountOptions struct {
 }
 
 func (opts *ShowAccountOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
 	return nil
 }
 
@@ -399,6 +410,9 @@ type DropAccountOptions struct {
 }
 
 func (opts *DropAccountOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
 		return fmt.Errorf("Name must be set")
 	}

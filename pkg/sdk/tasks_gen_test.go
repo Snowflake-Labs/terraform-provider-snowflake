@@ -38,7 +38,7 @@ func TestTasks_Create(t *testing.T) {
 	t.Run("validation: exactly one field from [opts.Warehouse.Warehouse opts.Warehouse.UserTaskManagedInitialWarehouseSize] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Warehouse = &CreateTaskWarehouse{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Warehouse", "UserTaskManagedInitialWarehouseSize"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateTaskOptions.Warehouse", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
 	})
 
 	t.Run("validation: opts.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
@@ -156,20 +156,20 @@ func TestTasks_Alter(t *testing.T) {
 
 	t.Run("validation: exactly one field from [opts.Resume opts.Suspend opts.RemoveAfter opts.AddAfter opts.Set opts.Unset opts.SetTags opts.UnsetTags opts.ModifyAs opts.ModifyWhen] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterTaskOptions", "Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
 	})
 
 	t.Run("validation: exactly one field from [opts.Resume opts.Suspend opts.RemoveAfter opts.AddAfter opts.Set opts.Unset opts.SetTags opts.UnsetTags opts.ModifyAs opts.ModifyWhen] should be present - more present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Resume = Bool(true)
 		opts.Suspend = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterTaskOptions", "Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.Warehouse opts.Set.UserTaskManagedInitialWarehouseSize opts.Set.Schedule opts.Set.Config opts.Set.AllowOverlappingExecution opts.Set.UserTaskTimeoutMs opts.Set.SuspendTaskAfterNumFailures opts.Set.ErrorIntegration opts.Set.Comment opts.Set.SessionParameters] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &TaskSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterTaskOptions.Set", "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.Set.Warehouse opts.Set.UserTaskManagedInitialWarehouseSize]", func(t *testing.T) {
@@ -178,7 +178,7 @@ func TestTasks_Alter(t *testing.T) {
 		opts.Set = &TaskSet{}
 		opts.Set.Warehouse = &warehouseId
 		opts.Set.UserTaskManagedInitialWarehouseSize = &WarehouseSizeXSmall
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("Set", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterTaskOptions.Set", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
 	})
 
 	t.Run("validation: opts.Set.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
@@ -193,7 +193,7 @@ func TestTasks_Alter(t *testing.T) {
 	t.Run("validation: at least one of the fields [opts.Unset.Warehouse opts.Unset.Schedule opts.Unset.Config opts.Unset.AllowOverlappingExecution opts.Unset.UserTaskTimeoutMs opts.Unset.SuspendTaskAfterNumFailures opts.Unset.ErrorIntegration opts.Unset.Comment opts.Unset.SessionParametersUnset] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TaskUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterTaskOptions.Unset", "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset"))
 	})
 
 	t.Run("validation: opts.Unset.SessionParametersUnset.SessionParametersUnset should be valid", func(t *testing.T) {

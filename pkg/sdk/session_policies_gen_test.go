@@ -68,7 +68,7 @@ func TestSessionPolicies_Alter(t *testing.T) {
 
 	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.SetTags opts.UnsetTags opts.Unset] should be present - none present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSessionPolicyOptions", "RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
 	})
 
 	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.SetTags opts.UnsetTags opts.Unset] should be present - more present", func(t *testing.T) {
@@ -79,19 +79,19 @@ func TestSessionPolicies_Alter(t *testing.T) {
 		opts.Unset = &SessionPolicyUnset{
 			Comment: Bool(true),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSessionPolicyOptions", "RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.SessionIdleTimeoutMins opts.Set.SessionUiIdleTimeoutMins opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &SessionPolicySet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSessionPolicyOptions.Set", "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.SessionIdleTimeoutMins opts.Unset.SessionUiIdleTimeoutMins opts.Unset.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &SessionPolicyUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSessionPolicyOptions.Unset", "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
 	})
 
 	t.Run("alter set", func(t *testing.T) {
