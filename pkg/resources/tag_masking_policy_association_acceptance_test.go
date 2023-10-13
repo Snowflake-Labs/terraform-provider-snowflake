@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -68,7 +68,7 @@ resource "snowflake_masking_policy" "test" {
 resource "snowflake_tag_masking_policy_association" "test" {
 	tag_id = snowflake_tag.test.id
 	masking_policy_id = snowflake_masking_policy.test.id
-	
+
   }
 `, n)
 }

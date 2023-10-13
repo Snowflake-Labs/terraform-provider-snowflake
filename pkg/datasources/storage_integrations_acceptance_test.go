@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -28,7 +28,7 @@ func TestAcc_StorageIntegrations(t *testing.T) {
 
 func storageIntegrations(storageIntegrationName string) string {
 	return fmt.Sprintf(`
-	
+
 	resource snowflake_storage_integration i {
 		name = "%v"
 		storage_allowed_locations = ["s3://foo/"]

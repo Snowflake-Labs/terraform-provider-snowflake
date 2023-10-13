@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -104,13 +104,13 @@ func maskingPolicyConfigMultiline(n string, name string) string {
 		name = "%v"
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource "snowflake_schema" "test" {
 		name = "%v"
 		database = snowflake_database.test.name
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource "snowflake_masking_policy" "test" {
 		name = "%s"
 		database = snowflake_database.test.name
@@ -122,10 +122,10 @@ func maskingPolicyConfigMultiline(n string, name string) string {
 			}
 		}
 		masking_expression = <<-EOF
-			case 
-				when current_role() in ('ROLE_A') then 
-					val 
-				when is_role_in_session( 'ROLE_B' ) then 
+			case
+				when current_role() in ('ROLE_A') then
+					val
+				when is_role_in_session( 'ROLE_B' ) then
 					'ABC123'
 				else
 					'******'

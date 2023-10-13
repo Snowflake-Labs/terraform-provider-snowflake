@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -96,7 +96,7 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_sequence_grant" "test" {
-    database_name = snowflake_database.test.name	
+    database_name = snowflake_database.test.name
 	roles         = [snowflake_role.test.name]
 	schema_name   = snowflake_schema.test.name
 	%s

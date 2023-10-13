@@ -27,12 +27,11 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 			"database":   config.StringVariable(acc.TestDatabaseName),
 			"schema":     config.StringVariable(acc.TestSchemaName),
 			"warehouse":  config.StringVariable(acc.TestWarehouseName),
-			"query":      config.StringVariable(fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
+			"query":      config.StringVariable(fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)),
 			"comment":    config.StringVariable("Terraform acceptance test"),
 			"table_name": config.StringVariable(tableName),
 		}
 	}
-	variableSet1 := m()
 	variableSet2 := m()
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
@@ -46,7 +45,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
-				ConfigVariables: variableSet1,
+				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),

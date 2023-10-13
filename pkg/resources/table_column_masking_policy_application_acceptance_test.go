@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -64,7 +64,7 @@ resource "snowflake_table" "table" {
 	database = snowflake_database.test.name
 	schema   = snowflake_schema.test.name
 	name     = "table"
-  
+
 	column {
 	  name     = "secret"
 	  type     = "VARCHAR(16777216)"

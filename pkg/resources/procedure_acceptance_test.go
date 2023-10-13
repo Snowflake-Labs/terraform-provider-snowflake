@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -71,7 +71,7 @@ func procedureConfig(db, schema, name string) string {
 		name    = "%s"
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource "snowflake_schema" "test_schema" {
 		name     = "%s"
 		database = snowflake_database.test_database.name
@@ -117,7 +117,7 @@ func procedureConfig(db, schema, name string) string {
 		arguments {
 			name = "arg2"
 			type = "DATE"
-		}		
+		}
 		comment = "Proc with 2 args"
 		return_type = "VARCHAR"
 		execute_as = "CALLER"

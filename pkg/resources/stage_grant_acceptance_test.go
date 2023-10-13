@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -74,13 +74,13 @@ func stageGrantConfig(name string, grantType grantType, privilege string) string
 		name = "%s"
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource snowflake_schema s {
 		name = "%s"
 		database = snowflake_database.d.name
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource snowflake_stage s {
 		name = "%s"
 		database = snowflake_database.d.name

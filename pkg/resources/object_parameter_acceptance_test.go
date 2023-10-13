@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -62,7 +62,7 @@ func objectParameterConfigBasic(prefix, key, value string) string {
 	s := `
 resource "snowflake_database" "d" {
 	name = "%s"
-}	
+}
 resource "snowflake_object_parameter" "p" {
 	key = "%s"
 	value = "%s"
