@@ -143,8 +143,6 @@ func TestInt_UseDatabase(t *testing.T) {
 func TestInt_UseSchema(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
 	originalSchema, err := client.ContextFunctions.CurrentSchema(ctx)
 	require.NoError(t, err)
 	originalDB, err := client.ContextFunctions.CurrentDatabase(ctx)
@@ -157,10 +155,10 @@ func TestInt_UseSchema(t *testing.T) {
 		err := client.Sessions.UseSchema(ctx, originalSchemaIdentifier)
 		require.NoError(t, err)
 	})
-	err = client.Sessions.UseSchema(ctx, schemaTest.ID())
+	err = client.Sessions.UseSchema(ctx, testSchema(t).ID())
 	require.NoError(t, err)
 	actual, err := client.ContextFunctions.CurrentSchema(ctx)
 	require.NoError(t, err)
-	expected := schemaTest.Name
+	expected := testSchema(t).Name
 	assert.Equal(t, expected, actual)
 }

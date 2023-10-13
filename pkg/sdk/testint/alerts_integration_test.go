@@ -14,16 +14,13 @@ func TestInt_AlertsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
 	testWarehouse, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
-	alertTest, alertCleanup := createAlert(t, client, testDb(t), schemaTest, testWarehouse)
+	alertTest, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse)
 	t.Cleanup(alertCleanup)
 
-	alert2Test, alert2Cleanup := createAlert(t, client, testDb(t), schemaTest, testWarehouse)
+	alert2Test, alert2Cleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse)
 	t.Cleanup(alert2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
@@ -35,7 +32,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowAlertOptions{
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
@@ -74,7 +71,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	t.Run("when limiting the number of results", func(t *testing.T) {
 		showOptions := &sdk.ShowAlertOptions{
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 			Limit: sdk.Int(1),
 		}
@@ -88,9 +85,6 @@ func TestInt_AlertCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
 	testWarehouse, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
@@ -100,7 +94,7 @@ func TestInt_AlertCreate(t *testing.T) {
 		condition := "SELECT 1"
 		action := "SELECT 1"
 		comment := random.Comment()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, &sdk.CreateAlertOptions{
 			OrReplace:   sdk.Bool(true),
 			IfNotExists: sdk.Bool(false),
@@ -121,7 +115,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -136,7 +130,7 @@ func TestInt_AlertCreate(t *testing.T) {
 		condition := "SELECT 1"
 		action := "SELECT 1"
 		comment := random.Comment()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, &sdk.CreateAlertOptions{
 			OrReplace:   sdk.Bool(false),
 			IfNotExists: sdk.Bool(true),
@@ -157,7 +151,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -171,7 +165,7 @@ func TestInt_AlertCreate(t *testing.T) {
 		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := "SELECT 1"
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, nil)
 		require.NoError(t, err)
 		alertDetails, err := client.Alerts.Describe(ctx, id)
@@ -187,7 +181,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -209,7 +203,7 @@ func TestInt_AlertCreate(t *testing.T) {
 						2
 				end
 		`
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 		err := client.Alerts.Create(ctx, id, testWarehouse.ID(), schedule, condition, action, nil)
 		require.NoError(t, err)
 		alertDetails, err := client.Alerts.Describe(ctx, id)
@@ -225,7 +219,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -239,13 +233,10 @@ func TestInt_AlertDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
 	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
-	alert, alertCleanup := createAlert(t, client, testDb(t), schemaTest, warehouseTest)
+	alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), warehouseTest)
 	t.Cleanup(alertCleanup)
 
 	t.Run("when alert exists", func(t *testing.T) {
@@ -255,7 +246,7 @@ func TestInt_AlertDescribe(t *testing.T) {
 	})
 
 	t.Run("when alert does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
 		_, err := client.Alerts.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
@@ -265,14 +256,11 @@ func TestInt_AlertAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
 	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
-		alert, alertCleanup := createAlert(t, client, testDb(t), schemaTest, warehouseTest)
+		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), warehouseTest)
 		t.Cleanup(alertCleanup)
 		newSchedule := "USING CRON * * * * TUE,FRI GMT"
 
@@ -289,7 +277,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -298,7 +286,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	})
 
 	t.Run("when modifying condition and action", func(t *testing.T) {
-		alert, alertCleanup := createAlert(t, client, testDb(t), schemaTest, warehouseTest)
+		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), warehouseTest)
 		t.Cleanup(alertCleanup)
 		newCondition := "select * from DUAL where false"
 
@@ -313,7 +301,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -333,7 +321,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -342,7 +330,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	})
 
 	t.Run("resume and then suspend", func(t *testing.T) {
-		alert, alertCleanup := createAlert(t, client, testDb(t), schemaTest, warehouseTest)
+		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), warehouseTest)
 		t.Cleanup(alertCleanup)
 
 		alterOptions := &sdk.AlterAlertOptions{
@@ -356,7 +344,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -374,7 +362,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -387,14 +375,11 @@ func TestInt_AlertDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
 	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
 	t.Run("when alert exists", func(t *testing.T) {
-		alert, _ := createAlert(t, client, testDb(t), schemaTest, warehouseTest)
+		alert, _ := createAlert(t, client, testDb(t), testSchema(t), warehouseTest)
 		id := alert.ID()
 		err := client.Alerts.Drop(ctx, id)
 		require.NoError(t, err)
@@ -403,7 +388,7 @@ func TestInt_AlertDrop(t *testing.T) {
 	})
 
 	t.Run("when alert does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
 		err := client.Alerts.Drop(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})

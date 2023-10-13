@@ -53,6 +53,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	t.Run("complete", func(t *testing.T) {
 		databaseID := sdk.RandomAccountObjectIdentifier()
 
+		// new database and schema created on purpose
 		databaseTest, databaseCleanup := createDatabase(t, client)
 		t.Cleanup(databaseCleanup)
 		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
@@ -185,6 +186,8 @@ this test keeps failing need to fix.
 */
 func TestInt_DatabasesDescribe(t *testing.T) {
 	client := testClient(t)
+
+	// new database and schema created on purpose
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
