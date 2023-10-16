@@ -2,9 +2,6 @@ package sdk
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestFailoverGroupsCreate(t *testing.T) {
@@ -28,10 +25,7 @@ func TestFailoverGroupsCreate(t *testing.T) {
 			IgnoreEditionCheck:  Bool(true),
 			ReplicationSchedule: String("10 MINUTE"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE FAILOVER GROUP IF NOT EXISTS "fg1" OBJECT_TYPES = SHARES, DATABASES ALLOWED_DATABASES = "db1" ALLOWED_SHARES = "share1" ALLOWED_ACCOUNTS = "MY_ORG.MY_ACCOUNT" IGNORE EDITION CHECK REPLICATION_SCHEDULE = '10 MINUTE'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE FAILOVER GROUP IF NOT EXISTS "fg1" OBJECT_TYPES = SHARES, DATABASES ALLOWED_DATABASES = "db1" ALLOWED_SHARES = "share1" ALLOWED_ACCOUNTS = "MY_ORG.MY_ACCOUNT" IGNORE EDITION CHECK REPLICATION_SCHEDULE = '10 MINUTE'`)
 	})
 
 	t.Run("minimal", func(t *testing.T) {
@@ -45,10 +39,7 @@ func TestFailoverGroupsCreate(t *testing.T) {
 				NewAccountIdentifier("MY_ORG", "MY_ACCOUNT"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE FAILOVER GROUP IF NOT EXISTS "fg1" OBJECT_TYPES = ROLES ALLOWED_ACCOUNTS = "MY_ORG.MY_ACCOUNT"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE FAILOVER GROUP IF NOT EXISTS "fg1" OBJECT_TYPES = ROLES ALLOWED_ACCOUNTS = "MY_ORG.MY_ACCOUNT"`)
 	})
 }
 
@@ -58,92 +49,77 @@ func TestCreateSecondaryReplicationGroup(t *testing.T) {
 		name:                 NewAccountObjectIdentifier("fg1"),
 		primaryFailoverGroup: NewExternalObjectIdentifierFromFullyQualifiedName("myorg.myaccount.fg1"),
 	}
-	actual, err := structToSQL(opts)
-	require.NoError(t, err)
-	expected := `CREATE FAILOVER GROUP IF NOT EXISTS "fg1" AS REPLICA OF myorg.myaccount."fg1"`
-	assert.Equal(t, expected, actual)
+	assertOptsValidAndSQLEquals(t, opts, `CREATE FAILOVER GROUP IF NOT EXISTS "fg1" AS REPLICA OF myorg.myaccount."fg1"`)
 }
 
 func TestFailoverGroupAlterSource(t *testing.T) {
+	id := NewAccountObjectIdentifier("fg1")
+
 	t.Run("rename", func(t *testing.T) {
 		opts := &AlterSourceFailoverGroupOptions{
-			name:    NewAccountObjectIdentifier("fg1"),
+			name:    id,
 			NewName: NewAccountObjectIdentifier("myfg1"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER FAILOVER GROUP "fg1" RENAME TO "myfg1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" RENAME TO "myfg1"`)
 	})
 
 	t.Run("set object types and replication schedule", func(t *testing.T) {
 		opts := &AlterSourceFailoverGroupOptions{
-			name: NewAccountObjectIdentifier("fg1"),
+			name: id,
 			Set: &FailoverGroupSet{
 				ObjectTypes:         []PluralObjectType{PluralObjectTypeShares},
 				ReplicationSchedule: String("10 MINUTE"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER FAILOVER GROUP "fg1" SET OBJECT_TYPES = SHARES REPLICATION_SCHEDULE = '10 MINUTE'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" SET OBJECT_TYPES = SHARES REPLICATION_SCHEDULE = '10 MINUTE'`)
 	})
 
 	t.Run("add database account object", func(t *testing.T) {
 		opts := &AlterSourceFailoverGroupOptions{
+			name: id,
 			Add: &FailoverGroupAdd{
 				AllowedDatabases: []AccountObjectIdentifier{
 					NewAccountObjectIdentifier("db1"),
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER FAILOVER GROUP ADD "db1" TO ALLOWED_DATABASES`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" ADD "db1" TO ALLOWED_DATABASES`)
 	})
 
 	t.Run("remove database account object", func(t *testing.T) {
 		opts := &AlterSourceFailoverGroupOptions{
+			name: id,
 			Remove: &FailoverGroupRemove{
 				AllowedDatabases: []AccountObjectIdentifier{
 					NewAccountObjectIdentifier("db1"),
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER FAILOVER GROUP REMOVE "db1" FROM ALLOWED_DATABASES`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" REMOVE "db1" FROM ALLOWED_DATABASES`)
 	})
 
 	t.Run("add share account object", func(t *testing.T) {
 		opts := &AlterSourceFailoverGroupOptions{
+			name: id,
 			Add: &FailoverGroupAdd{
 				AllowedShares: []AccountObjectIdentifier{
 					NewAccountObjectIdentifier("share1"),
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER FAILOVER GROUP ADD "share1" TO ALLOWED_SHARES`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" ADD "share1" TO ALLOWED_SHARES`)
 	})
 
 	t.Run("remove share account object", func(t *testing.T) {
 		opts := &AlterSourceFailoverGroupOptions{
+			name: id,
 			Remove: &FailoverGroupRemove{
 				AllowedShares: []AccountObjectIdentifier{
 					NewAccountObjectIdentifier("share1"),
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER FAILOVER GROUP REMOVE "share1" FROM ALLOWED_SHARES`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" REMOVE "share1" FROM ALLOWED_SHARES`)
 	})
 
 	t.Run("move shares to another failover group", func(t *testing.T) {
@@ -156,10 +132,7 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 				To: NewAccountObjectIdentifier("fg2"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER FAILOVER GROUP "fg1" MOVE SHARES "share1" TO FAILOVER GROUP "fg2"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" MOVE SHARES "share1" TO FAILOVER GROUP "fg2"`)
 	})
 }
 
@@ -169,10 +142,7 @@ func TestFailoverGroupsAlterTarget(t *testing.T) {
 			name:   NewAccountObjectIdentifier("fg1"),
 			Resume: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER FAILOVER GROUP "fg1" RESUME`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" RESUME`)
 	})
 
 	t.Run("primary", func(t *testing.T) {
@@ -180,10 +150,7 @@ func TestFailoverGroupsAlterTarget(t *testing.T) {
 			name:    NewAccountObjectIdentifier("fg1"),
 			Primary: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER FAILOVER GROUP "fg1" PRIMARY`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" PRIMARY`)
 	})
 }
 
@@ -192,10 +159,7 @@ func TestFailoverGroupsDrop(t *testing.T) {
 		opts := &DropFailoverGroupOptions{
 			name: NewAccountObjectIdentifier("fg1"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP FAILOVER GROUP "fg1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP FAILOVER GROUP "fg1"`)
 	})
 
 	t.Run("with IfExists", func(t *testing.T) {
@@ -203,47 +167,34 @@ func TestFailoverGroupsDrop(t *testing.T) {
 			name:     NewAccountObjectIdentifier("fg1"),
 			IfExists: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP FAILOVER GROUP IF EXISTS "fg1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP FAILOVER GROUP IF EXISTS "fg1"`)
 	})
 }
 
 func TestFailoverGroupsShow(t *testing.T) {
 	t.Run("without show options", func(t *testing.T) {
 		opts := &ShowFailoverGroupOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW FAILOVER GROUPS`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW FAILOVER GROUPS`)
 	})
 
 	t.Run("with show options", func(t *testing.T) {
-		showOptions := &ShowFailoverGroupOptions{
+		opts := &ShowFailoverGroupOptions{
 			InAccount: NewAccountIdentifierFromAccountLocator("abcd123"),
 		}
-		actual, err := structToSQL(showOptions)
-		require.NoError(t, err)
-		expected := `SHOW FAILOVER GROUPS IN ACCOUNT "abcd123"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW FAILOVER GROUPS IN ACCOUNT "abcd123"`)
 	})
 }
 
 func TestFailoverGroupsShowDatabases(t *testing.T) {
-	opts := &showFailoverGroupDatabasesOptions{}
-	actual, err := structToSQL(opts)
-	require.NoError(t, err)
-	expected := `SHOW DATABASES`
-	assert.Equal(t, expected, actual)
+	opts := &showFailoverGroupDatabasesOptions{
+		in: NewAccountObjectIdentifier("fg1"),
+	}
+	assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASES IN FAILOVER GROUP "fg1"`)
 }
 
 func TestFailoverGroupsShowShares(t *testing.T) {
 	opts := &showFailoverGroupSharesOptions{
 		in: NewAccountObjectIdentifier("fg1"),
 	}
-	actual, err := structToSQL(opts)
-	require.NoError(t, err)
-	expected := `SHOW SHARES IN FAILOVER GROUP "fg1"`
-	assert.Equal(t, expected, actual)
+	assertOptsValidAndSQLEquals(t, opts, `SHOW SHARES IN FAILOVER GROUP "fg1"`)
 }

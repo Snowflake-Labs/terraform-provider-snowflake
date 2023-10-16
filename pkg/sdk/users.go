@@ -285,7 +285,7 @@ func (opts *AlterUserOptions) validate() error {
 		opts.Set,
 		opts.Unset,
 	); !ok {
-		return fmt.Errorf(`exactly one of reset password, abort all queries, add deletegated authorization, remove deletegated authorization, set [tag], unset [tag] must be set`)
+		return errExactlyOneOf("NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset")
 	}
 	if valueSet(opts.RemoveDelegatedAuthorization) {
 		if err := opts.RemoveDelegatedAuthorization.validate(); err != nil {

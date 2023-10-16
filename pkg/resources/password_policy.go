@@ -376,7 +376,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		newName := n.(string)
 		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName)
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
-			NewName: newID,
+			NewName: &newID,
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {

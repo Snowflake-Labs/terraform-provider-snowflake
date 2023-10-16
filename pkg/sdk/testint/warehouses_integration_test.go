@@ -226,7 +226,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		// rename
 		newID := sdk.RandomAccountObjectIdentifier()
 		alterOptions := &sdk.AlterWarehouseOptions{
-			NewName: newID,
+			NewName: &newID,
 		}
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
@@ -282,7 +282,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 		newID := sdk.RandomAccountObjectIdentifier()
 		alterOptions := &sdk.AlterWarehouseOptions{
-			NewName: newID,
+			NewName: &newID,
 		}
 		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
 		require.NoError(t, err)
@@ -292,7 +292,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 
 		// rename back to original name so it can be cleaned up
 		alterOptions = &sdk.AlterWarehouseOptions{
-			NewName: oldID,
+			NewName: &oldID,
 		}
 		err = client.Warehouses.Alter(ctx, newID, alterOptions)
 		require.NoError(t, err)

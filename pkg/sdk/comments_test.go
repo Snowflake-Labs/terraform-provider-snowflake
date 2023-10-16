@@ -2,10 +2,6 @@ package sdk
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestComments(t *testing.T) {
@@ -16,10 +12,7 @@ func TestComments(t *testing.T) {
 			ObjectName: &id,
 			Value:      String("mycomment"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `COMMENT ON SCHEMA "db1"."schema2" IS 'mycomment'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `COMMENT ON SCHEMA "db1"."schema2" IS 'mycomment'`)
 	})
 
 	t.Run("set if exists", func(t *testing.T) {
@@ -30,10 +23,7 @@ func TestComments(t *testing.T) {
 			ObjectName: &id,
 			Value:      String("mycomment2"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `COMMENT IF EXISTS ON MASKING POLICY "maskpol" IS 'mycomment2'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `COMMENT IF EXISTS ON MASKING POLICY "maskpol" IS 'mycomment2'`)
 	})
 
 	t.Run("set column comment", func(t *testing.T) {
@@ -41,9 +31,6 @@ func TestComments(t *testing.T) {
 			Column: NewDatabaseObjectIdentifier("table3", "column4"),
 			Value:  String("mycomment3"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `COMMENT ON COLUMN "table3"."column4" IS 'mycomment3'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `COMMENT ON COLUMN "table3"."column4" IS 'mycomment3'`)
 	})
 }
