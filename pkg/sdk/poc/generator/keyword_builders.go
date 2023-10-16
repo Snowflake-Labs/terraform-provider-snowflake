@@ -81,3 +81,7 @@ func (v *queryStruct) OptionalLimit() *queryStruct {
 	v.fields = append(v.fields, NewField("Limit", "*LimitFrom", Tags().Keyword().SQL("LIMIT"), nil))
 	return v
 }
+
+func (v *queryStruct) OptionalCopyGrants() *queryStruct {
+	return v.OptionalSQL("COPY GRANTS")
+}
