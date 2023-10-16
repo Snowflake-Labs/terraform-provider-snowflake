@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -62,9 +61,9 @@ func Provider() *schema.Provider {
 			},
 			"validate_default_parameters": {
 				Type:        schema.TypeBool,
-				Description: "ValidateDefaultParameters disable the validation checks for Database, Schema, Warehouse and Role at the time a connection is established. Can also be sourced from the `SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS` environment variable.",
+				Description: "If true, disables the validation checks for Database, Schema, Warehouse and Role at the time a connection is established. Can also be sourced from the `SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS` environment variable.",
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS", false),
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS", nil),
 			},
 			"params": {
 				Type:        schema.TypeMap,
@@ -83,7 +82,7 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROTOCOL", nil),
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					switch strings.ToLower(val.(string)) {
+					switch val.(string) {
 					case "http", "https":
 						return nil, nil
 					default:
@@ -289,9 +288,10 @@ func Provider() *schema.Provider {
 				https://github.com/snowflakedb/gosnowflake/blob/master/dsn.go#L103
 				"include_retry_reason": {
 					Type:        schema.TypeBool,
-					Description: "Should retried request contain retry reason",
+					Description: "Should retried request contain retry reason. Can also be sourced from the `SNOWFLAKE_INCLUDE_RETRY_REASON` environment variable.",
 					Optional:    true,
-				},*/
+				},
+			*/
 			"profile": {
 				Type:        schema.TypeString,
 				Description: "Sets the profile to read from ~/.snowflake/config file. Can also be sourced from the `SNOWFLAKE_PROFILE` environment variable.",
