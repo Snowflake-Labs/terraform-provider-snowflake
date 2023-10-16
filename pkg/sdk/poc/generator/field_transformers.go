@@ -83,6 +83,11 @@ func (v *ParameterTransformer) NoEquals() *ParameterTransformer {
 	return v
 }
 
+func (v *ParameterTransformer) ArrowEquals() *ParameterTransformer {
+	v.equals = "arrow_equals"
+	return v
+}
+
 func (v *ParameterTransformer) SingleQuotes() *ParameterTransformer {
 	v.quotes = "single_quotes"
 	return v
@@ -131,7 +136,12 @@ func (v *ListTransformer) Required() *ListTransformer {
 	return v
 }
 
-func (v *ListTransformer) NoParens() *ListTransformer {
+func (v *ListTransformer) Parentheses() *ListTransformer {
+	v.parentheses = "parentheses"
+	return v
+}
+
+func (v *ListTransformer) NoParentheses() *ListTransformer {
 	v.parentheses = "no_parentheses"
 	return v
 }

@@ -20,6 +20,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"network_policies_def.go": sdk.NetworkPoliciesDef,
 	"session_policies_def.go": sdk.SessionPoliciesDef,
 	"tasks_def.go":            sdk.TasksDef,
+	"streams_def.go":          sdk.StreamsDef,
 }
 
 func main() {
