@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_Streams(t *testing.T) {
@@ -59,7 +59,7 @@ func streams(databaseName string, schemaName string, tableName string, streamNam
 			type = "VARCHAR"
 		}
 	}
-	
+
 	resource snowflake_stream "test_stream" {
 		database = snowflake_database.test_database.name
 		schema   = snowflake_schema.test_schema.name

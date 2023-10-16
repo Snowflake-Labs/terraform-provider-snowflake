@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_Procedure(t *testing.T) {
@@ -23,7 +24,8 @@ func TestAcc_Procedure(t *testing.T) {
 	expBody3 := "var X=1\nreturn X\n"
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -69,7 +71,7 @@ func procedureConfig(db, schema, name string) string {
 		name    = "%s"
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource "snowflake_schema" "test_schema" {
 		name     = "%s"
 		database = snowflake_database.test_database.name
@@ -115,7 +117,7 @@ func procedureConfig(db, schema, name string) string {
 		arguments {
 			name = "arg2"
 			type = "DATE"
-		}		
+		}
 		comment = "Proc with 2 args"
 		return_type = "VARCHAR"
 		execute_as = "CALLER"

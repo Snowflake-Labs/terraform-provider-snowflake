@@ -11,8 +11,8 @@ type DynamicTables interface {
 	Alter(ctx context.Context, request *AlterDynamicTableRequest) error
 	Describe(ctx context.Context, request *DescribeDynamicTableRequest) (*DynamicTableDetails, error)
 	Drop(ctx context.Context, request *DropDynamicTableRequest) error
-	Show(ctx context.Context, opts *ShowDynamicTableRequest) ([]DynamicTable, error)
-	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*DynamicTable, error)
+	Show(ctx context.Context, request *ShowDynamicTableRequest) ([]DynamicTable, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*DynamicTable, error)
 }
 
 // createDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-dynamic-table
@@ -28,8 +28,8 @@ type createDynamicTableOptions struct {
 }
 
 type TargetLag struct {
-	Lagtime    *string `ddl:"keyword,single_quotes"`
-	Downstream *bool   `ddl:"keyword" sql:"DOWNSTREAM"`
+	MaximumDuration *string `ddl:"keyword,single_quotes"`
+	Downstream      *bool   `ddl:"keyword" sql:"DOWNSTREAM"`
 }
 
 type DynamicTableSet struct {

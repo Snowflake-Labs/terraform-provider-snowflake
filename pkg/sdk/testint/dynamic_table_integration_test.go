@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"context"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -19,11 +20,11 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	tableTest, tableCleanup := createTable(t, client, testDb(t), schemaTest)
 	t.Cleanup(tableCleanup)
 
-	ctx := testContext(t)
+	ctx := context.Background()
 	t.Run("test complete", func(t *testing.T) {
 		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, random.String())
 		targetLag := sdk.TargetLag{
-			Lagtime: sdk.String("2 minutes"),
+			MaximumDuration: sdk.String("2 minutes"),
 		}
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
 		comment := random.Comment()
@@ -40,7 +41,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		entity := entities[0]
 		require.Equal(t, name.Name(), entity.Name)
 		require.Equal(t, warehouseTest.ID().Name(), entity.Warehouse)
-		require.Equal(t, *targetLag.Lagtime, entity.TargetLag)
+		require.Equal(t, *targetLag.MaximumDuration, entity.TargetLag)
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {
@@ -69,7 +70,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 func TestInt_DynamicTableDescribe(t *testing.T) {
 	client := testClient(t)
-	ctx := testContext(t)
+	ctx := context.Background()
 
 	dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
 	t.Cleanup(dynamicTableCleanup)
@@ -88,7 +89,7 @@ func TestInt_DynamicTableDescribe(t *testing.T) {
 
 func TestInt_DynamicTableAlter(t *testing.T) {
 	client := testClient(t)
-	ctx := testContext(t)
+	ctx := context.Background()
 
 	t.Run("alter with suspend or resume", func(t *testing.T) {
 		dynamicTable, dynamicTableCleanup := createDynamicTable(t, client)
@@ -144,7 +145,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 
 		targetLagCases := []string{"10 minutes", "DOWNSTREAM"}
 		for _, value := range targetLagCases {
-			err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSet(sdk.NewDynamicTableSetRequest().WithTargetLag(&sdk.TargetLag{Lagtime: sdk.String(value)})))
+			err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSet(sdk.NewDynamicTableSetRequest().WithTargetLag(sdk.TargetLag{MaximumDuration: sdk.String(value)})))
 			require.NoError(t, err)
 			entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(dynamicTable.Name)}))
 			require.NoError(t, err)

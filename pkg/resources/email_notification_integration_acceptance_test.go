@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_EmailNotificationIntegration(t *testing.T) {
@@ -17,7 +18,8 @@ func TestAcc_EmailNotificationIntegration(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -42,9 +44,9 @@ resource "snowflake_email_notification_integration" "test" {
   enabled            = true
   allowed_recipients = ["joe@domain.com"] # Verified Email Addresses is required
   comment            = "test"
-  /* 
-Error: error creating notification integration: 394209 (22023): 
-Email recipients in the given list at indexes [1] are not allowed. 
+  /*
+Error: error creating notification integration: 394209 (22023):
+Email recipients in the given list at indexes [1] are not allowed.
 Either these email addresses are not yet validated or do not belong to any user in the current account.
   */
 }

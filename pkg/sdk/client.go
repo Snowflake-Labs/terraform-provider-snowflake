@@ -29,8 +29,8 @@ type Client struct {
 	Accounts         Accounts
 	Alerts           Alerts
 	Comments         Comments
-	Databases        Databases
 	DatabaseRoles    DatabaseRoles
+	Databases        Databases
 	DynamicTables    DynamicTables
 	ExternalTables   ExternalTables
 	FailoverGroups   FailoverGroups
@@ -43,12 +43,13 @@ type Client struct {
 	Pipes            Pipes
 	ResourceMonitors ResourceMonitors
 	Roles            Roles
+	Schemas          Schemas
 	SessionPolicies  SessionPolicies
 	Sessions         Sessions
 	Shares           Shares
+	Tags             Tags
 	Tasks            Tasks
 	Users            Users
-	Schemas          Schemas
 	Warehouses       Warehouses
 }
 
@@ -142,8 +143,8 @@ func (c *Client) initialize() {
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
-	c.Databases = &databases{client: c}
 	c.DatabaseRoles = &databaseRoles{client: c}
+	c.Databases = &databases{client: c}
 	c.DynamicTables = &dynamicTables{client: c}
 	c.ExternalTables = &externalTables{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
@@ -157,11 +158,12 @@ func (c *Client) initialize() {
 	c.ReplicationFunctions = &replicationFunctions{client: c}
 	c.ResourceMonitors = &resourceMonitors{client: c}
 	c.Roles = &roles{client: c}
+	c.Schemas = &schemas{client: c}
 	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}
-	c.Schemas = &schemas{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
+	c.Tags = &tags{client: c}
 	c.Tasks = &tasks{client: c}
 	c.Users = &users{client: c}
 	c.Warehouses = &warehouses{client: c}

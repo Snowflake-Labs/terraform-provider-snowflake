@@ -77,14 +77,16 @@ func (row schemaDBRow) toSchema() Schema {
 		options = &row.Options.String
 	}
 	return Schema{
-		CreatedOn:    row.CreatedOn,
-		Name:         row.Name,
-		IsDefault:    row.IsDefault == "Y",
-		IsCurrent:    row.IsCurrent == "Y",
-		DatabaseName: row.DatabaseName,
-		Owner:        row.Owner,
-		Comment:      comment,
-		Options:      options,
+		CreatedOn:     row.CreatedOn,
+		Name:          row.Name,
+		IsDefault:     row.IsDefault == "Y",
+		IsCurrent:     row.IsCurrent == "Y",
+		DatabaseName:  row.DatabaseName,
+		Owner:         row.Owner,
+		Comment:       comment,
+		Options:       options,
+		RetentionTime: row.RetentionTime,
+		OwnerRoleType: row.OwnerRoleType,
 	}
 }
 

@@ -138,8 +138,8 @@ type CreateDatabaseOptions struct {
 	OrReplace                  *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	Transient                  *bool                   `ddl:"keyword" sql:"TRANSIENT"`
 	database                   bool                    `ddl:"static" sql:"DATABASE"`
-	name                       AccountObjectIdentifier `ddl:"identifier"`
 	IfNotExists                *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       AccountObjectIdentifier `ddl:"identifier"`
 	Clone                      *Clone                  `ddl:"-"`
 	DataRetentionTimeInDays    *int                    `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	MaxDataExtensionTimeInDays *int                    `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
