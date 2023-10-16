@@ -223,7 +223,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		newName := random.UUID()
 		newID := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, newName)
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
-			NewName: newID,
+			NewName: &newID,
 		}
 		err := client.PasswordPolicies.Alter(ctx, oldID, alterOptions)
 		require.NoError(t, err)
@@ -232,7 +232,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		// rename back to original name so it can be cleaned up
 		assert.Equal(t, newName, passwordPolicyDetails.Name.Value)
 		alterOptions = &sdk.AlterPasswordPolicyOptions{
-			NewName: oldID,
+			NewName: &oldID,
 		}
 		err = client.PasswordPolicies.Alter(ctx, newID, alterOptions)
 		require.NoError(t, err)

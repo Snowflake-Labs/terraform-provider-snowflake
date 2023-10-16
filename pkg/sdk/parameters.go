@@ -13,6 +13,7 @@ var (
 	_ validatable = new(SessionParameters)
 	_ validatable = new(ObjectParameters)
 	_ validatable = new(UserParameters)
+	_ validatable = new(setParameterOnObject)
 )
 
 var _ Parameters = (*parameters)(nil)
@@ -568,12 +569,20 @@ type setParameterOnObject struct {
 	parameterValue   string           `ddl:"keyword"`
 }
 
+// TODO: add validations
+func (v *setParameterOnObject) validate() error {
+	return nil
+}
+
 func (parameters *parameters) SetObjectParameterOnObject(ctx context.Context, object Object, parameter ObjectParameter, value string) error {
 	opts := &setParameterOnObject{
 		objectType:       object.ObjectType,
 		objectIdentifier: object.Name,
 		parameterKey:     parameter,
 		parameterValue:   value,
+	}
+	if err := opts.validate(); err != nil {
+		return err
 	}
 	sql, err := structToSQL(opts)
 	if err != nil {

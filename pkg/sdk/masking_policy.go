@@ -55,6 +55,15 @@ func (opts *CreateMaskingPolicyOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
+	if !valueSet(opts.signature) {
+		return errNotSet("CreateMaskingPolicyOptions", "signature")
+	}
+	if !valueSet(opts.returns) {
+		return errNotSet("CreateMaskingPolicyOptions", "returns")
+	}
+	if !valueSet(opts.body) {
+		return errNotSet("CreateMaskingPolicyOptions", "body")
+	}
 
 	return nil
 }
@@ -80,13 +89,13 @@ func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 
 // AlterMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-masking-policy.
 type AlterMaskingPolicyOptions struct {
-	alter         bool                   `ddl:"static" sql:"ALTER"`
-	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
-	IfExists      *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name          SchemaObjectIdentifier `ddl:"identifier"`
-	NewName       SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set           *MaskingPolicySet      `ddl:"keyword" sql:"SET"`
-	Unset         *MaskingPolicyUnset    `ddl:"keyword" sql:"UNSET"`
+	alter         bool                    `ddl:"static" sql:"ALTER"`
+	maskingPolicy bool                    `ddl:"static" sql:"MASKING POLICY"`
+	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name          SchemaObjectIdentifier  `ddl:"identifier"`
+	NewName       *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Set           *MaskingPolicySet       `ddl:"keyword" sql:"SET"`
+	Unset         *MaskingPolicyUnset     `ddl:"keyword" sql:"UNSET"`
 }
 
 func (opts *AlterMaskingPolicyOptions) validate() error {
@@ -94,14 +103,8 @@ func (opts *AlterMaskingPolicyOptions) validate() error {
 		return errors.New("invalid object identifier")
 	}
 
-	if everyValueNil(opts.Set, opts.Unset) {
-		if !ValidObjectIdentifier(opts.NewName) {
-			return ErrInvalidObjectIdentifier
-		}
-	}
-
-	if !valueSet(opts.NewName) && !exactlyOneValueSet(opts.Set, opts.Unset) {
-		return errors.New("cannot use both set and unset")
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.NewName) {
+		return errExactlyOneOf("Set", "Unset", "NewName")
 	}
 
 	if valueSet(opts.Set) {

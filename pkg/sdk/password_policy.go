@@ -78,13 +78,13 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 
 // AlterPasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-password-policy.
 type AlterPasswordPolicyOptions struct {
-	alter          bool                   `ddl:"static" sql:"ALTER"`
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
-	IfExists       *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name           SchemaObjectIdentifier `ddl:"identifier"`
-	NewName        SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set            *PasswordPolicySet     `ddl:"keyword" sql:"SET"`
-	Unset          *PasswordPolicyUnset   `ddl:"keyword" sql:"UNSET"`
+	alter          bool                    `ddl:"static" sql:"ALTER"`
+	passwordPolicy bool                    `ddl:"static" sql:"PASSWORD POLICY"`
+	IfExists       *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name           SchemaObjectIdentifier  `ddl:"identifier"`
+	NewName        *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Set            *PasswordPolicySet      `ddl:"keyword" sql:"SET"`
+	Unset          *PasswordPolicyUnset    `ddl:"keyword" sql:"UNSET"`
 }
 
 func (opts *AlterPasswordPolicyOptions) validate() error {
@@ -92,15 +92,10 @@ func (opts *AlterPasswordPolicyOptions) validate() error {
 		return ErrInvalidObjectIdentifier
 	}
 
-	if everyValueNil(opts.Set, opts.Unset) {
-		if !ValidObjectIdentifier(opts.NewName) {
-			return ErrInvalidObjectIdentifier
-		}
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.NewName) {
+		return errExactlyOneOf("Set", "Unset", "NewName")
 	}
 
-	if !valueSet(opts.NewName) && !exactlyOneValueSet(opts.Set, opts.Unset) {
-		return errors.New("cannot set and unset parameters in the same ALTER statement")
-	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
 			return err

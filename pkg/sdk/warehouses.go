@@ -154,11 +154,11 @@ type AlterWarehouseOptions struct {
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 
-	Suspend         *bool                   `ddl:"keyword" sql:"SUSPEND"`
-	Resume          *bool                   `ddl:"keyword" sql:"RESUME"`
-	IfSuspended     *bool                   `ddl:"keyword" sql:"IF SUSPENDED"`
-	AbortAllQueries *bool                   `ddl:"keyword" sql:"ABORT ALL QUERIES"`
-	NewName         AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Suspend         *bool                    `ddl:"keyword" sql:"SUSPEND"`
+	Resume          *bool                    `ddl:"keyword" sql:"RESUME"`
+	IfSuspended     *bool                    `ddl:"keyword" sql:"IF SUSPENDED"`
+	AbortAllQueries *bool                    `ddl:"keyword" sql:"ABORT ALL QUERIES"`
+	NewName         *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 
 	Set   *WarehouseSet   `ddl:"keyword" sql:"SET"`
 	Unset *WarehouseUnset `ddl:"list,no_parentheses" sql:"UNSET"`
@@ -175,7 +175,7 @@ func (opts *AlterWarehouseOptions) validate() error {
 		opts.NewName,
 		opts.Set,
 		opts.Unset); !ok {
-		return fmt.Errorf("exactly one of Suspend, Resume, AbortAllQueries, NewName, Set, Unset must be set")
+		return errExactlyOneOf("Suspend", "Resume", "AbortAllQueries", "NewName", "Set", "Unset")
 	}
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
 		return fmt.Errorf("suspend and Resume cannot both be true")
@@ -224,7 +224,13 @@ type WarehouseSet struct {
 
 func (v *WarehouseSet) validate() error {
 	if v.MinClusterCount != nil {
-		if ok := validateIntInRange(*v.MinClusterCount, 1, *v.MaxClusterCount); !ok {
+		var max int
+		if valueSet(v.MaxClusterCount) {
+			max = *v.MaxClusterCount
+		} else {
+			max = 1
+		}
+		if ok := validateIntInRange(*v.MinClusterCount, 1, max); !ok {
 			return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
 		}
 	}

@@ -119,20 +119,8 @@ func (opts *AlterAlertOptions) validate() error {
 		return errors.New("invalid object identifier")
 	}
 
-	if everyValueNil(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
-		return errors.New("no alter action specified")
-	}
 	if !exactlyOneValueSet(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
-		return errors.New(`
-		Only one of the following actions can be performed at a time:
-		{
-			RESUME | SUSPEND,
-			SET,
-			UNSET,
-			MODIFY CONDITION EXISTS,
-			MODIFY ACTION
-		}
-		`)
+		return errExactlyOneOf("Action", "Set", "Unset", "ModifyCondition", "ModifyAction")
 	}
 
 	return nil

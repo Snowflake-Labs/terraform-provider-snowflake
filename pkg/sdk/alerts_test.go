@@ -1,12 +1,9 @@
 package sdk
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAlertCreate(t *testing.T) {
@@ -29,12 +26,7 @@ func TestAlertCreate(t *testing.T) {
 			Comment:   String(newComment),
 		}
 
-		err := opts.validate()
-		assert.NoError(t, err)
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf(`CREATE ALERT %s WAREHOUSE = "%s" SCHEDULE = '%s' COMMENT = '%s' IF (EXISTS (%s)) THEN %s`, id.FullyQualifiedName(), warehouse.name, schedule, newComment, existsCondition, action)
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ALERT %s WAREHOUSE = "%s" SCHEDULE = '%s' COMMENT = '%s' IF (EXISTS (%s)) THEN %s`, id.FullyQualifiedName(), warehouse.name, schedule, newComment, existsCondition, action)
 	})
 }
 
@@ -45,8 +37,7 @@ func TestAlertAlter(t *testing.T) {
 		opts := &AlterAlertOptions{
 			name: id,
 		}
-		err := opts.validate()
-		assert.Error(t, err)
+		assertOptsInvalid(t, opts, errExactlyOneOf("Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
 	})
 
 	t.Run("fail when 2 alter actions specified", func(t *testing.T) {
@@ -58,8 +49,7 @@ func TestAlertAlter(t *testing.T) {
 				Comment: String(newComment),
 			},
 		}
-		err := opts.validate()
-		assert.Error(t, err)
+		assertOptsInvalid(t, opts, errExactlyOneOf("Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
 	})
 
 	t.Run("with resume", func(t *testing.T) {
@@ -68,12 +58,7 @@ func TestAlertAlter(t *testing.T) {
 			Action: &AlertActionResume,
 		}
 
-		err := opts.validate()
-		assert.NoError(t, err)
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER ALERT %s RESUME", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s RESUME", id.FullyQualifiedName())
 	})
 
 	t.Run("with suspend", func(t *testing.T) {
@@ -82,12 +67,7 @@ func TestAlertAlter(t *testing.T) {
 			Action: &AlertActionSuspend,
 		}
 
-		err := opts.validate()
-		assert.NoError(t, err)
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER ALERT %s SUSPEND", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s SUSPEND", id.FullyQualifiedName())
 	})
 
 	t.Run("with set", func(t *testing.T) {
@@ -98,12 +78,8 @@ func TestAlertAlter(t *testing.T) {
 				Comment: String(newComment),
 			},
 		}
-		err := opts.validate()
-		assert.NoError(t, err)
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER ALERT %s SET COMMENT = '%s'", id.FullyQualifiedName(), newComment)
-		assert.Equal(t, expected, actual)
+
+		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s SET COMMENT = '%s'", id.FullyQualifiedName(), newComment)
 	})
 
 	t.Run("with unset", func(t *testing.T) {
@@ -113,12 +89,8 @@ func TestAlertAlter(t *testing.T) {
 				Comment: Bool(true),
 			},
 		}
-		err := opts.validate()
-		assert.NoError(t, err)
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER ALERT %s UNSET COMMENT", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+
+		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s UNSET COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("with modify condition", func(t *testing.T) {
@@ -127,25 +99,18 @@ func TestAlertAlter(t *testing.T) {
 			name:            id,
 			ModifyCondition: &[]string{modifyCondition},
 		}
-		err := opts.validate()
-		assert.NoError(t, err)
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER ALERT %s MODIFY CONDITION EXISTS (%s)", id.FullyQualifiedName(), modifyCondition)
-		assert.Equal(t, expected, actual)
+
+		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s MODIFY CONDITION EXISTS (%s)", id.FullyQualifiedName(), modifyCondition)
 	})
+
 	t.Run("with modify action", func(t *testing.T) {
 		modifyAction := String("INSERT INTO FOO VALUES (1)")
 		opts := &AlterAlertOptions{
 			name:         id,
 			ModifyAction: modifyAction,
 		}
-		err := opts.validate()
-		assert.NoError(t, err)
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER ALERT %s MODIFY ACTION %s", id.FullyQualifiedName(), *modifyAction)
-		assert.Equal(t, expected, actual)
+
+		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s MODIFY ACTION %s", id.FullyQualifiedName(), *modifyAction)
 	})
 }
 
@@ -154,20 +119,14 @@ func TestAlertDrop(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &dropAlertOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "DROP ALERT"
-		assert.Equal(t, expected, actual)
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &dropAlertOptions{
 			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("DROP ALERT %s", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "DROP ALERT %s", id.FullyQualifiedName())
 	})
 }
 
@@ -176,18 +135,12 @@ func TestAlertShow(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowAlertOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "SHOW ALERTS"
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW ALERTS")
 	})
 
 	t.Run("terse", func(t *testing.T) {
 		opts := &ShowAlertOptions{Terse: Bool(true)}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "SHOW TERSE ALERTS"
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW TERSE ALERTS")
 	})
 
 	t.Run("with like", func(t *testing.T) {
@@ -196,10 +149,7 @@ func TestAlertShow(t *testing.T) {
 				Pattern: String(id.Name()),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("SHOW ALERTS LIKE '%s'", id.Name())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW ALERTS LIKE '%s'", id.Name())
 	})
 
 	t.Run("with like and in account", func(t *testing.T) {
@@ -211,10 +161,7 @@ func TestAlertShow(t *testing.T) {
 				Account: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("SHOW ALERTS LIKE '%s' IN ACCOUNT", id.Name())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW ALERTS LIKE '%s' IN ACCOUNT", id.Name())
 	})
 
 	t.Run("with like and in database", func(t *testing.T) {
@@ -227,10 +174,7 @@ func TestAlertShow(t *testing.T) {
 				Database: databaseIdentifier,
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("SHOW ALERTS LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW ALERTS LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {
@@ -243,30 +187,21 @@ func TestAlertShow(t *testing.T) {
 				Schema: schemaIdentifier,
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("SHOW ALERTS LIKE '%s' IN SCHEMA %s", id.Name(), schemaIdentifier.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW ALERTS LIKE '%s' IN SCHEMA %s", id.Name(), schemaIdentifier.FullyQualifiedName())
 	})
 
 	t.Run("with 'starts with'", func(t *testing.T) {
 		opts := &ShowAlertOptions{
 			StartsWith: String("FOO"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "SHOW ALERTS STARTS WITH 'FOO'"
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW ALERTS STARTS WITH 'FOO'")
 	})
 
 	t.Run("with limit", func(t *testing.T) {
 		opts := &ShowAlertOptions{
 			Limit: Int(10),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "SHOW ALERTS LIMIT 10"
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW ALERTS LIMIT 10")
 	})
 }
 
@@ -275,19 +210,13 @@ func TestAlertDescribe(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &describeAlertOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "DESCRIBE ALERT"
-		assert.Equal(t, expected, actual)
+		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &describeAlertOptions{
 			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("DESCRIBE ALERT %s", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE ALERT %s", id.FullyQualifiedName())
 	})
 }
