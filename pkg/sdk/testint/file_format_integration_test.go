@@ -73,7 +73,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, `\`, *result.Options.CSVEscape)
 		assert.Equal(t, "h", *result.Options.CSVEscapeUnenclosedField)
 		assert.Equal(t, true, *result.Options.CSVTrimSpace)
-		assert.Equal(t, sdk.String("'"), result.Options.CSVFieldOptionallyEnclosedBy)
+		assert.Equal(t, "'", *result.Options.CSVFieldOptionallyEnclosedBy)
 		assert.Equal(t, &[]sdk.NullString{{S: "j"}, {S: "k"}}, result.Options.CSVNullIf)
 		assert.Equal(t, true, *result.Options.CSVErrorOnColumnCountMismatch)
 		assert.Equal(t, true, *result.Options.CSVReplaceInvalidCharacters)
@@ -97,7 +97,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, `\\`, *describeResult.Options.CSVEscape) // Describe does not un-escape backslashes, but show does ....
 		assert.Equal(t, "h", *describeResult.Options.CSVEscapeUnenclosedField)
 		assert.Equal(t, true, *describeResult.Options.CSVTrimSpace)
-		assert.Equal(t, sdk.String("'"), describeResult.Options.CSVFieldOptionallyEnclosedBy)
+		assert.Equal(t, "'", *describeResult.Options.CSVFieldOptionallyEnclosedBy)
 		assert.Equal(t, &[]sdk.NullString{{S: "j"}, {S: "k"}}, describeResult.Options.CSVNullIf)
 		assert.Equal(t, true, *describeResult.Options.CSVErrorOnColumnCountMismatch)
 		assert.Equal(t, true, *describeResult.Options.CSVReplaceInvalidCharacters)

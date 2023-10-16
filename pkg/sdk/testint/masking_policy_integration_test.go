@@ -331,7 +331,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		newName := random.String()
 		newID := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, newName)
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
-			NewName: newID,
+			NewName: &newID,
 		}
 		err := client.MaskingPolicies.Alter(ctx, oldID, alterOptions)
 		require.NoError(t, err)
@@ -340,7 +340,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		assert.Equal(t, newName, maskingPolicyDetails.Name)
 		// rename back to original name so it can be cleaned up
 		alterOptions = &sdk.AlterMaskingPolicyOptions{
-			NewName: oldID,
+			NewName: &oldID,
 		}
 		err = client.MaskingPolicies.Alter(ctx, newID, alterOptions)
 		require.NoError(t, err)

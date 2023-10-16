@@ -3,14 +3,14 @@ package sdk
 import (
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSchemasCreate(t *testing.T) {
+	id := RandomDatabaseObjectIdentifier()
+
 	t.Run("clone", func(t *testing.T) {
 		opts := &CreateSchemaOptions{
+			name:      id,
 			OrReplace: Bool(true),
 			Clone: &Clone{
 				SourceObject: NewAccountObjectIdentifier("sch1"),
@@ -19,14 +19,12 @@ func TestSchemasCreate(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE OR REPLACE SCHEMA CLONE "sch1" AT (TIMESTAMP => '2021-01-01 00:00:00 +0000 UTC')`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SCHEMA %s CLONE "sch1" AT (TIMESTAMP => '2021-01-01 00:00:00 +0000 UTC')`, id.FullyQualifiedName())
 	})
 
 	t.Run("complete", func(t *testing.T) {
 		opts := &CreateSchemaOptions{
+			name:                       id,
 			Transient:                  Bool(true),
 			IfNotExists:                Bool(true),
 			WithManagedAccess:          Bool(true),
@@ -41,10 +39,7 @@ func TestSchemasCreate(t *testing.T) {
 			},
 			Comment: String("comment"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE TRANSIENT SCHEMA IF NOT EXISTS WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 DEFAULT_DDL_COLLATION = 'en_US-trim' TAG ("db1"."schema1"."tag1" = 'v1') COMMENT = 'comment'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TRANSIENT SCHEMA IF NOT EXISTS %s WITH MANAGED ACCESS DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 DEFAULT_DDL_COLLATION = 'en_US-trim' TAG ("db1"."schema1"."tag1" = 'v1') COMMENT = 'comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -55,10 +50,7 @@ func TestSchemasAlter(t *testing.T) {
 			IfExists: Bool(true),
 			NewName:  NewDatabaseObjectIdentifier("database_name", "new_schema_name"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SCHEMA IF EXISTS "database_name"."schema_name" RENAME TO "database_name"."new_schema_name"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA IF EXISTS "database_name"."schema_name" RENAME TO "database_name"."new_schema_name"`)
 	})
 
 	t.Run("swap with", func(t *testing.T) {
@@ -67,10 +59,7 @@ func TestSchemasAlter(t *testing.T) {
 			IfExists: Bool(false),
 			SwapWith: NewDatabaseObjectIdentifier("database_name", "target_schema_name"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SCHEMA "database_name"."schema_name" SWAP WITH "database_name"."target_schema_name"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" SWAP WITH "database_name"."target_schema_name"`)
 	})
 
 	t.Run("set options", func(t *testing.T) {
@@ -83,10 +72,7 @@ func TestSchemasAlter(t *testing.T) {
 				Comment:                    String("comment"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SCHEMA "database_name"."schema_name" SET DATA_RETENTION_TIME_IN_DAYS = 3, MAX_DATA_EXTENSION_TIME_IN_DAYS = 2, DEFAULT_DDL_COLLATION = 'en_US-trim', COMMENT = 'comment'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" SET DATA_RETENTION_TIME_IN_DAYS = 3, MAX_DATA_EXTENSION_TIME_IN_DAYS = 2, DEFAULT_DDL_COLLATION = 'en_US-trim', COMMENT = 'comment'`)
 	})
 
 	t.Run("set tags", func(t *testing.T) {
@@ -105,10 +91,7 @@ func TestSchemasAlter(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SCHEMA "database_name"."schema_name" SET TAG "tag1" = 'value1', "tag2" = 'value2'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" SET TAG "tag1" = 'value1', "tag2" = 'value2'`)
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
@@ -121,10 +104,7 @@ func TestSchemasAlter(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SCHEMA "database_name"."schema_name" UNSET TAG "tag1", "tag2"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" UNSET TAG "tag1", "tag2"`)
 	})
 
 	t.Run("unset options", func(t *testing.T) {
@@ -137,10 +117,7 @@ func TestSchemasAlter(t *testing.T) {
 				Comment:                    Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SCHEMA "database_name"."schema_name" UNSET DATA_RETENTION_TIME_IN_DAYS, MAX_DATA_EXTENSION_TIME_IN_DAYS, DEFAULT_DDL_COLLATION, COMMENT`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" UNSET DATA_RETENTION_TIME_IN_DAYS, MAX_DATA_EXTENSION_TIME_IN_DAYS, DEFAULT_DDL_COLLATION, COMMENT`)
 	})
 
 	t.Run("enable managed access", func(t *testing.T) {
@@ -148,10 +125,7 @@ func TestSchemasAlter(t *testing.T) {
 			name:                NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			EnableManagedAccess: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SCHEMA "database_name"."schema_name" ENABLE MANAGED ACCESS`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" ENABLE MANAGED ACCESS`)
 	})
 
 	t.Run("disable managed access", func(t *testing.T) {
@@ -159,10 +133,7 @@ func TestSchemasAlter(t *testing.T) {
 			name:                 NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			DisableManagedAccess: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SCHEMA "database_name"."schema_name" DISABLE MANAGED ACCESS`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" DISABLE MANAGED ACCESS`)
 	})
 }
 
@@ -173,10 +144,7 @@ func TestSchemasDrop(t *testing.T) {
 			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			Cascade:  Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP SCHEMA IF EXISTS "database_name"."schema_name" CASCADE`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP SCHEMA IF EXISTS "database_name"."schema_name" CASCADE`)
 	})
 
 	t.Run("restrict", func(t *testing.T) {
@@ -184,10 +152,7 @@ func TestSchemasDrop(t *testing.T) {
 			name:     NewDatabaseObjectIdentifier("database_name", "schema_name"),
 			Restrict: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP SCHEMA "database_name"."schema_name" RESTRICT`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP SCHEMA "database_name"."schema_name" RESTRICT`)
 	})
 }
 
@@ -195,20 +160,14 @@ func TestSchemasUndrop(t *testing.T) {
 	opts := &undropSchemaOptions{
 		name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
 	}
-	actual, err := structToSQL(opts)
-	require.NoError(t, err)
-	expected := `UNDROP SCHEMA "database_name"."schema_name"`
-	assert.Equal(t, expected, actual)
+	assertOptsValidAndSQLEquals(t, opts, `UNDROP SCHEMA "database_name"."schema_name"`)
 }
 
 func TestSchemasDescribe(t *testing.T) {
 	opts := &describeSchemaOptions{
 		name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
 	}
-	actual, err := structToSQL(opts)
-	require.NoError(t, err)
-	expected := `DESCRIBE SCHEMA "database_name"."schema_name"`
-	assert.Equal(t, expected, actual)
+	assertOptsValidAndSQLEquals(t, opts, `DESCRIBE SCHEMA "database_name"."schema_name"`)
 }
 
 func TestSchemasShow(t *testing.T) {
@@ -220,10 +179,7 @@ func TestSchemasShow(t *testing.T) {
 				Pattern: String("schema_pattern"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW TERSE SCHEMAS HISTORY LIKE 'schema_pattern'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE SCHEMAS HISTORY LIKE 'schema_pattern'`)
 	})
 
 	t.Run("in account", func(t *testing.T) {
@@ -235,10 +191,7 @@ func TestSchemasShow(t *testing.T) {
 				Name:    NewAccountObjectIdentifier("account_name"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW TERSE SCHEMAS HISTORY IN ACCOUNT "account_name"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE SCHEMAS HISTORY IN ACCOUNT "account_name"`)
 	})
 
 	t.Run("in database", func(t *testing.T) {
@@ -250,10 +203,7 @@ func TestSchemasShow(t *testing.T) {
 				Name:     NewAccountObjectIdentifier("database_name"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW TERSE SCHEMAS HISTORY IN DATABASE "database_name"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE SCHEMAS HISTORY IN DATABASE "database_name"`)
 	})
 
 	t.Run("starts with", func(t *testing.T) {
@@ -262,10 +212,7 @@ func TestSchemasShow(t *testing.T) {
 			History:    Bool(true),
 			StartsWith: String("schema_pattern"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW TERSE SCHEMAS HISTORY STARTS WITH 'schema_pattern'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE SCHEMAS HISTORY STARTS WITH 'schema_pattern'`)
 	})
 
 	t.Run("limit", func(t *testing.T) {
@@ -277,9 +224,6 @@ func TestSchemasShow(t *testing.T) {
 				From: String("name_string"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW TERSE SCHEMAS HISTORY LIMIT 3 FROM 'name_string'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE SCHEMAS HISTORY LIMIT 3 FROM 'name_string'`)
 	})
 }

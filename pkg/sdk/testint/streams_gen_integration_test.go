@@ -1,7 +1,6 @@
 package testint
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -16,10 +15,9 @@ import (
 
 func TestInt_Streams(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
-	db, cleanupDb := createDatabase(t, client)
-	t.Cleanup(cleanupDb)
+	db := testDb(t)
 
 	schema, cleanupSchema := createSchema(t, client, db)
 	t.Cleanup(cleanupSchema)

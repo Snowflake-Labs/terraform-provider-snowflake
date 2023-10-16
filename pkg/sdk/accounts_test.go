@@ -2,10 +2,6 @@ package sdk
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestAccountCreate(t *testing.T) {
@@ -17,10 +13,7 @@ func TestAccountCreate(t *testing.T) {
 			Email:         "admin@example.com",
 			Edition:       EditionBusinessCritical,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE ACCOUNT "newaccount" ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = 'v3rys3cr3t' EMAIL = 'admin@example.com' EDITION = BUSINESS_CRITICAL`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT "newaccount" ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = 'v3rys3cr3t' EMAIL = 'admin@example.com' EDITION = BUSINESS_CRITICAL`)
 	})
 
 	t.Run("every option", func(t *testing.T) {
@@ -37,10 +30,7 @@ func TestAccountCreate(t *testing.T) {
 			Region:             String("regionid"),
 			Comment:            String("Test account"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE ACCOUNT "newaccount" ADMIN_NAME = 'someadmin' ADMIN_RSA_PUBLIC_KEY = 's3cr3tk3y' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = true EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT "newaccount" ADMIN_NAME = 'someadmin' ADMIN_RSA_PUBLIC_KEY = 's3cr3tk3y' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = true EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account'`)
 	})
 
 	t.Run("static password", func(t *testing.T) {
@@ -57,10 +47,7 @@ func TestAccountCreate(t *testing.T) {
 			Region:             String("regionid"),
 			Comment:            String("Test account"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE ACCOUNT "newaccount" ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = 'v3rys3cr3t' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = false EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT "newaccount" ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = 'v3rys3cr3t' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = false EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account'`)
 	})
 }
 
@@ -82,10 +69,7 @@ func TestAccountAlter(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT SET CLIENT_ENCRYPTION_KEY_SIZE = 128, PREVENT_UNLOAD_TO_INTERNAL_STAGES = true, JSON_INDENT = 16, MAX_DATA_EXTENSION_TIME_IN_DAYS = 30`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET CLIENT_ENCRYPTION_KEY_SIZE = 128, PREVENT_UNLOAD_TO_INTERNAL_STAGES = true, JSON_INDENT = 16, MAX_DATA_EXTENSION_TIME_IN_DAYS = 30`)
 	})
 
 	t.Run("with unset params", func(t *testing.T) {
@@ -106,10 +90,7 @@ func TestAccountAlter(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT UNSET INITIAL_REPLICATION_SIZE_LIMIT_IN_TB, SSO_LOGIN_PAGE, SIMULATED_DATA_SHARING_CONSUMER, TIMEZONE, DEFAULT_DDL_COLLATION`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT UNSET INITIAL_REPLICATION_SIZE_LIMIT_IN_TB, SSO_LOGIN_PAGE, SIMULATED_DATA_SHARING_CONSUMER, TIMEZONE, DEFAULT_DDL_COLLATION`)
 	})
 
 	t.Run("with set resource monitor", func(t *testing.T) {
@@ -118,10 +99,7 @@ func TestAccountAlter(t *testing.T) {
 				ResourceMonitor: NewAccountObjectIdentifier("mymonitor"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT SET RESOURCE_MONITOR = "mymonitor"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET RESOURCE_MONITOR = "mymonitor"`)
 	})
 
 	t.Run("with set password policy", func(t *testing.T) {
@@ -130,10 +108,7 @@ func TestAccountAlter(t *testing.T) {
 				PasswordPolicy: NewSchemaObjectIdentifier("db", "schema", "passpol"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT SET PASSWORD POLICY "db"."schema"."passpol"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET PASSWORD POLICY "db"."schema"."passpol"`)
 	})
 
 	t.Run("with set session policy", func(t *testing.T) {
@@ -142,10 +117,7 @@ func TestAccountAlter(t *testing.T) {
 				SessionPolicy: NewSchemaObjectIdentifier("db", "schema", "sesspol"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT SET SESSION POLICY "db"."schema"."sesspol"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET SESSION POLICY "db"."schema"."sesspol"`)
 	})
 
 	t.Run("with unset password policy", func(t *testing.T) {
@@ -154,10 +126,7 @@ func TestAccountAlter(t *testing.T) {
 				PasswordPolicy: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT UNSET PASSWORD POLICY`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT UNSET PASSWORD POLICY`)
 	})
 
 	t.Run("with unset session policy", func(t *testing.T) {
@@ -166,10 +135,7 @@ func TestAccountAlter(t *testing.T) {
 				SessionPolicy: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT UNSET SESSION POLICY`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT UNSET SESSION POLICY`)
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
@@ -187,10 +153,7 @@ func TestAccountAlter(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`)
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
@@ -201,10 +164,7 @@ func TestAccountAlter(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT UNSET TAG "db"."schema"."tag1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT UNSET TAG "db"."schema"."tag1"`)
 	})
 
 	t.Run("rename", func(t *testing.T) {
@@ -217,10 +177,7 @@ func TestAccountAlter(t *testing.T) {
 				SaveOldURL: Bool(false),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT "oldname" RENAME TO "newname" SAVE_OLD_URL = false`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT "oldname" RENAME TO "newname" SAVE_OLD_URL = false`)
 	})
 
 	t.Run("drop old url", func(t *testing.T) {
@@ -231,20 +188,14 @@ func TestAccountAlter(t *testing.T) {
 				OldURL: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER ACCOUNT "oldname" DROP OLD URL`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT "oldname" DROP OLD URL`)
 	})
 }
 
 func TestAccountShow(t *testing.T) {
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowAccountOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW ORGANIZATION ACCOUNTS`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW ORGANIZATION ACCOUNTS`)
 	})
 
 	t.Run("with like", func(t *testing.T) {
@@ -253,9 +204,6 @@ func TestAccountShow(t *testing.T) {
 				Pattern: String("myaccount"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW ORGANIZATION ACCOUNTS LIKE 'myaccount'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW ORGANIZATION ACCOUNTS LIKE 'myaccount'`)
 	})
 }
