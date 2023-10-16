@@ -61,3 +61,41 @@ func setBoolProperty(d *schema.ResourceData, key string, property *sdk.BoolPrope
 	}
 	return nil
 }
+
+func getTagObjectIdentifier(v map[string]any) sdk.ObjectIdentifier {
+	if _, ok := v["database"]; ok {
+		if _, ok := v["schema"]; ok {
+			return sdk.NewSchemaObjectIdentifier(v["database"].(string), v["schema"].(string), v["name"].(string))
+		}
+		return sdk.NewDatabaseObjectIdentifier(v["database"].(string), v["name"].(string))
+	}
+	return sdk.NewAccountObjectIdentifier(v["name"].(string))
+}
+
+func getPropertyTags(d *schema.ResourceData, key string) []sdk.TagAssociation {
+	if from, ok := d.GetOk(key); ok {
+		tags := from.([]any)
+		to := make([]sdk.TagAssociation, len(tags))
+		for i, t := range tags {
+			v := t.(map[string]any)
+			to[i] = sdk.TagAssociation{
+				Name:  getTagObjectIdentifier(v),
+				Value: v["value"].(string),
+			}
+		}
+		return to
+	}
+	return nil
+}
+
+func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
+	value, ok := d.GetOk(property)
+	if !ok {
+		return nil
+	}
+	typedValue, ok := value.(T)
+	if !ok {
+		return nil
+	}
+	return &typedValue
+}

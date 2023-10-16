@@ -11,6 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	nycWeatherDataURL = "s3://snowflake-workshop-lab/weather-nyc"
+)
+
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
 // the account locator and by filtering the list of accounts in replication accounts by the account locator
 func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifier {
@@ -269,19 +273,20 @@ func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema 
 	}
 }
 
-func createStageWithName(t *testing.T, client *sdk.Client, name string) (*string, func()) {
+func createStageWithDirectory(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
 	t.Helper()
 	ctx := context.Background()
-	stageCleanup := func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP STAGE %s", name))
-		require.NoError(t, err)
-	}
-	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE STAGE %s", name))
-	if err != nil {
-		return nil, stageCleanup
-	}
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE STAGE "%s" DIRECTORY = (ENABLE = TRUE)`, name))
 	require.NoError(t, err)
-	return &name, stageCleanup
+
+	return &sdk.Stage{
+			DatabaseName: database.Name,
+			SchemaName:   schema.Name,
+			Name:         name,
+		}, func() {
+			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name))
+			require.NoError(t, err)
+		}
 }
 
 func createStage(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
@@ -676,6 +681,18 @@ func createFileFormatWithOptions(t *testing.T, client *sdk.Client, schema sdk.Da
 	require.NoError(t, err)
 	return fileFormat, func() {
 		err := client.FileFormats.Drop(ctx, id, nil)
+		require.NoError(t, err)
+	}
+}
+
+func createView(t *testing.T, client *sdk.Client, viewId sdk.SchemaObjectIdentifier, asQuery string) func() {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE VIEW %s AS %s`, viewId.FullyQualifiedName(), asQuery))
+	require.NoError(t, err)
+
+	return func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP VIEW %s`, viewId.FullyQualifiedName()))
 		require.NoError(t, err)
 	}
 }
