@@ -60,6 +60,10 @@ func (c *Client) GetConfig() *gosnowflake.Config {
 	return c.config
 }
 
+func (c *Client) GetConn() *sqlx.DB {
+	return c.db
+}
+
 func NewDefaultClient() (*Client, error) {
 	return NewClient(nil)
 }
