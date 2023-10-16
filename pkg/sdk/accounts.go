@@ -388,7 +388,7 @@ func (opts *DropAccountOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !validateIntGreaterThanOrEqual(opts.gracePeriodInDays, 3) {
-		errs = append(errs, errIntValue(IntErrGreaterOrEqual, "DropAccountOptions", "gracePeriodInDays", 3))
+		errs = append(errs, errIntValue("DropAccountOptions", "gracePeriodInDays", IntErrGreaterOrEqual, 3))
 	}
 	return errors.Join(errs...)
 }

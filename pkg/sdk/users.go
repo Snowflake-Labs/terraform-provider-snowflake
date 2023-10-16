@@ -170,8 +170,11 @@ type UserTag struct {
 }
 
 func (opts *CreateUserOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -273,10 +276,14 @@ type AlterUserOptions struct {
 }
 
 func (opts *AlterUserOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-	if ok := exactlyOneValueSet(
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !exactlyOneValueSet(
 		opts.NewName,
 		opts.ResetPassword,
 		opts.AbortAllQueries,
@@ -284,26 +291,25 @@ func (opts *AlterUserOptions) validate() error {
 		opts.RemoveDelegatedAuthorization,
 		opts.Set,
 		opts.Unset,
-	); !ok {
-		return errExactlyOneOf("NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset")
+	) {
+		errs = append(errs, errExactlyOneOf("NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset"))
 	}
 	if valueSet(opts.RemoveDelegatedAuthorization) {
 		if err := opts.RemoveDelegatedAuthorization.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 func (v *users) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterUserOptions) error {
@@ -326,6 +332,7 @@ type AddDelegatedAuthorization struct {
 	Role        string `ddl:"parameter,no_equals" sql:"ADD DELEGATED AUTHORIZATION OF ROLE"`
 	Integration string `ddl:"parameter,no_equals" sql:"TO SECURITY INTEGRATION"`
 }
+
 type RemoveDelegatedAuthorization struct {
 	// one of
 	Role           *string `ddl:"parameter,no_equals" sql:"REMOVE DELEGATED AUTHORIZATION OF ROLE"`
@@ -335,13 +342,14 @@ type RemoveDelegatedAuthorization struct {
 }
 
 func (opts *RemoveDelegatedAuthorization) validate() error {
+	var errs []error
 	if !exactlyOneValueSet(opts.Role, opts.Authorizations) {
-		return fmt.Errorf("exactly one of role or authorizations must be set")
+		errs = append(errs, errOneOf("RemoveDelegatedAuthorization", "Role", "Authorization"))
 	}
 	if !valueSet(opts.Integration) {
-		return fmt.Errorf("integration name must be set")
+		errs = append(errs, errNotSet("RemoveDelegatedAuthorization", "Integration"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type UserSet struct {
@@ -354,18 +362,16 @@ type UserSet struct {
 }
 
 func (opts *UserSet) validate() error {
-	if !anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return fmt.Errorf("at least one of password policy, tag, object properties, object parameters, or session parameters must be set")
-	}
-	if moreThanOneValueSet(opts.SessionPolicy, opts.PasswordPolicy, opts.Tags) {
-		return fmt.Errorf("setting session policy, password policy and tags must be done separately")
+	var errs []error
+	if !exactlyOneValueSet(opts.SessionPolicy, opts.PasswordPolicy, opts.Tags) {
+		errs = append(errs, errExactlyOneOf("UserSet", "SessionPolicy", "PasswordPolicy", "Tags"))
 	}
 	if anyValueSet(opts.ObjectParameters, opts.SessionParameters, opts.ObjectProperties) {
 		if anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags) {
-			return fmt.Errorf("cannot set both {object parameters, session parameters,object properties} and password policy, session policy, or tag")
+			errs = append(errs, fmt.Errorf("cannot set both {object parameters, session parameters,object properties} and password policy, session policy, or tag"))
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type UserUnset struct {
@@ -379,7 +385,7 @@ type UserUnset struct {
 
 func (opts *UserUnset) validate() error {
 	if !exactlyOneValueSet(opts.Tags, opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return fmt.Errorf("exactly one of password policy, tag, object properties, object parameters, or session parameters must be set")
+		return errExactlyOneOf("UserUnset", "Tags", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
 	return nil
 }
@@ -392,8 +398,11 @@ type DropUserOptions struct {
 }
 
 func (opts *DropUserOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -401,7 +410,6 @@ func (opts *DropUserOptions) validate() error {
 func (v *users) Drop(ctx context.Context, id AccountObjectIdentifier) error {
 	opts := &DropUserOptions{}
 	opts.name = id
-
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate drop options: %w", err)
 	}
@@ -526,9 +534,12 @@ type describeUserOptions struct {
 	name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describeUserOptions) validate() error {
-	if !ValidObjectIdentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describeUserOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -565,7 +576,10 @@ type ShowUserOptions struct {
 	From       *string `ddl:"parameter,no_equals,single_quotes" sql:"FROM"`
 }
 
-func (input *ShowUserOptions) validate() error {
+func (opts *ShowUserOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 

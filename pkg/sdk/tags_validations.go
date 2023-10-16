@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"errors"
-	"fmt"
 )
 
 var (
@@ -25,10 +24,10 @@ func (opts *createTagOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
-		errs = append(errs, errOneOf("OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("createTagOptions", "OrReplace", "IfNotExists"))
 	}
 	if valueSet(opts.Comment) && valueSet(opts.AllowedValues) {
-		errs = append(errs, errOneOf("Comment", "AllowedValues"))
+		errs = append(errs, errOneOf("createTagOptions", "Comment", "AllowedValues"))
 	}
 	if valueSet(opts.AllowedValues) {
 		if err := opts.AllowedValues.validate(); err != nil {
@@ -40,7 +39,7 @@ func (opts *createTagOptions) validate() error {
 
 func (v *AllowedValues) validate() error {
 	if ok := validateIntInRange(len(v.Values), 1, 50); !ok {
-		return fmt.Errorf("number of the AllowedValues must be between 1 and 50")
+		return errIntBetween("AllowedValues", "Values", 1, 50)
 	}
 	return nil
 }
@@ -48,11 +47,11 @@ func (v *AllowedValues) validate() error {
 func (v *TagSet) validate() error {
 	var errs []error
 	if !exactlyOneValueSet(v.MaskingPolicies, v.Comment) {
-		errs = append(errs, errOneOf("MaskingPolicies", "Comment"))
+		errs = append(errs, errOneOf("TagSet", "MaskingPolicies", "Comment"))
 	}
 	if valueSet(v.MaskingPolicies) {
 		if ok := validateIntGreaterThanOrEqual(len(v.MaskingPolicies.MaskingPolicies), 1); !ok {
-			errs = append(errs, fmt.Errorf("number of the MaskingPolicies must be greater than zero"))
+			errs = append(errs, errIntValue("TagSet.MaskingPolicies", "MaskingPolicies", IntErrGreater, 0))
 		}
 	}
 	return errors.Join(errs...)
@@ -61,11 +60,11 @@ func (v *TagSet) validate() error {
 func (v *TagUnset) validate() error {
 	var errs []error
 	if !exactlyOneValueSet(v.MaskingPolicies, v.AllowedValues, v.Comment) {
-		errs = append(errs, errOneOf("MaskingPolicies", "AllowedValues", "Comment"))
+		errs = append(errs, errOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
 	}
 	if valueSet(v.MaskingPolicies) {
 		if ok := validateIntGreaterThanOrEqual(len(v.MaskingPolicies.MaskingPolicies), 1); !ok {
-			errs = append(errs, fmt.Errorf("number of the MaskingPolicies must be greater than zero"))
+			errs = append(errs, errIntValue("TagUnset.MaskingPolicies", "MaskingPolicies", IntErrGreater, 0))
 		}
 	}
 	return errors.Join(errs...)

@@ -196,8 +196,11 @@ type ResourceMonitorWith struct {
 }
 
 func (opts *CreateResourceMonitorOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -281,17 +284,21 @@ type AlterResourceMonitorOptions struct {
 }
 
 func (opts *AlterResourceMonitorOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if opts.Set == nil {
-		return nil
+	if valueSet(opts.Set) {
+		if (opts.Set.Frequency != nil && opts.Set.StartTimestamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimestamp != nil) {
+			errs = append(errs, errors.New("must specify frequency and start time together"))
+		}
+	} else {
+		errs = append(errs, errNotSet("AlterResourceMonitorOptions", "Set"))
 	}
-	if (opts.Set.Frequency != nil && opts.Set.StartTimestamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimestamp != nil) {
-		return errors.New("must specify frequency and start time together")
-	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error {
@@ -327,8 +334,11 @@ type dropResourceMonitorOptions struct {
 }
 
 func (opts *dropResourceMonitorOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -356,6 +366,9 @@ type ShowResourceMonitorOptions struct {
 }
 
 func (opts *ShowResourceMonitorOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 

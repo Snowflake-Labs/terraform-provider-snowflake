@@ -30,8 +30,12 @@ const (
 	IntErrLess           IntErrType = "less than"
 )
 
-func errIntValue(intErrType IntErrType, structName string, fieldName string, limit int) error {
+func errIntValue(structName string, fieldName string, intErrType IntErrType, limit int) error {
 	return fmt.Errorf("%s field: %s must be %s %d", structName, fieldName, string(intErrType), limit)
+}
+
+func errIntBetween(structName string, fieldName string, from int, to int) error {
+	return fmt.Errorf("%s field: %s must be between %d and %d", structName, fieldName, from, to)
 }
 
 func errInvalidIdentifier(structName string, identifierField string) error {

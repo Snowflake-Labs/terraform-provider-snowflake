@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -119,16 +120,20 @@ type CreateWarehouseOptions struct {
 }
 
 func (opts *CreateWarehouseOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
-		return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
+		errs = append(errs, fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount"))
 	}
 	if valueSet(opts.QueryAccelerationMaxScaleFactor) && !validateIntInRange(*opts.QueryAccelerationMaxScaleFactor, 0, 100) {
-		return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
+		errs = append(errs, errIntBetween("CreateWarehouseOptions", "QueryAccelerationMaxScaleFactor", 0, 100))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateWarehouseOptions) error {
@@ -165,38 +170,36 @@ type AlterWarehouseOptions struct {
 }
 
 func (opts *AlterWarehouseOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-	if ok := exactlyOneValueSet(
-		opts.Suspend,
-		opts.Resume,
-		opts.AbortAllQueries,
-		opts.NewName,
-		opts.Set,
-		opts.Unset); !ok {
-		return errExactlyOneOf("Suspend", "Resume", "AbortAllQueries", "NewName", "Set", "Unset")
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !exactlyOneValueSet(opts.Suspend, opts.Resume, opts.AbortAllQueries, opts.NewName, opts.Set, opts.Unset) {
+		errs = append(errs, errExactlyOneOf("AlterWarehouseOptions", "Suspend", "Resume", "AbortAllQueries", "NewName", "Set", "Unset"))
 	}
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
-		return fmt.Errorf("suspend and Resume cannot both be true")
+		errs = append(errs, errOneOf("AlterWarehouseOptions", "Suspend", "Resume"))
 	}
 	if (valueSet(opts.IfSuspended) && *opts.IfSuspended) && (!valueSet(opts.Resume) || !*opts.Resume) {
-		return fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`)
+		errs = append(errs, fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`))
 	}
 	if everyValueSet(opts.Set, opts.Unset) {
-		return fmt.Errorf("set and Unset cannot both be set")
+		errs = append(errs, errOneOf("AlterWarehouseOptions", "Set", "Unset"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type WarehouseSet struct {
@@ -304,8 +307,11 @@ type DropWarehouseOptions struct {
 }
 
 func (opts *DropWarehouseOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -339,6 +345,9 @@ type ShowWarehouseOptions struct {
 }
 
 func (opts *ShowWarehouseOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -493,8 +502,11 @@ type describeWarehouseOptions struct {
 }
 
 func (opts *describeWarehouseOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

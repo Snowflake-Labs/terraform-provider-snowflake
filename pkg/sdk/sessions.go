@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -37,20 +38,24 @@ type AlterSessionOptions struct {
 }
 
 func (opts *AlterSessionOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if everyValueNil(opts.Set, opts.Unset) {
-		return fmt.Errorf("either SET or UNSET must be set")
+		errs = append(errs, errOneOf("AlterSessionOptions", "Set", "Unset"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type SessionSet struct {
