@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"net"
@@ -16,13 +15,13 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-// Provider is a provider.
+// Provider returns a Terraform Provider using configuration from https://github.com/snowflakedb/gosnowflake/blob/master/dsn.go#L43
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"account": {
 				Type:        schema.TypeString,
-				Description: "The name of the Snowflake account. Can also come from the `SNOWFLAKE_ACCOUNT` environment variable. Required unless using profile.",
+				Description: "Specifies your Snowflake account identifier assigned, by Snowflake. For information about account identifiers, see the (Snowflake documentation)[https://docs.snowflake.com/en/user-guide/admin-account-identifier.html]. Can also be sourced from the `SNOWFLAKE_ACCOUNT` environment variable.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ACCOUNT", nil),
 			},
@@ -50,21 +49,22 @@ func Provider() *schema.Provider {
 			// todo: add database and schema once unqualified identifiers are supported
 			"warehouse": {
 				Type:        schema.TypeString,
-				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.",
+				Description: "Specifies the virtual warehouse to use by default for queries, loading, etc. in the client session. Can be sourced from SNOWFLAKE_WAREHOUSE environment variable.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_WAREHOUSE", nil),
 			},
 			"role": {
 				Type:        schema.TypeString,
-				Description: "Snowflake role to use for operations. If left unset, default role for user will be used. Can be sourced from the `SNOWFLAKE_ROLE` environment variable.",
+				Description: "Specifies the role to use by default for accessing Snowflake objects in the client session. Can be sourced from the `SNOWFLAKE_ROLE` environment variable.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ROLE", nil),
 			},
 			"region": {
 				Type:        schema.TypeString,
-				Description: "[Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use.  Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can be sourced from the `SNOWFLAKE_REGION` environment variable.",
-				Required:    true,
+				Description: "Snowflake region, such as \"eu-central-1\", with this parameter. However, since this parameter is deprecated, it is best to specify the region as part of the account parameter. For details, see the description of the account parameter. [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use.  Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can be sourced from the `SNOWFLAKE_REGION` environment variable.",
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REGION", "us-west-2"),
+				Optional:    true,
+				Deprecated:  "Specify the region as part of the account parameter",
 			},
 			"validate_default_parameters": {
 				Type:        schema.TypeBool,
@@ -107,7 +107,7 @@ func Provider() *schema.Provider {
 			},
 			"authenticator": {
 				Type:        schema.TypeString,
-				Description: "Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA",
+				Description: "Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA.",
 				Optional:    true,
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					switch val.(string) {
@@ -179,13 +179,15 @@ func Provider() *schema.Provider {
 			},
 			"token": {
 				Type:        schema.TypeString,
-				Description: "Token to use for OAuth other forms of token based auth",
+				Description: "Token to use for OAuth and other forms of token based auth",
 				Sensitive:   true,
+				Optional:    true,
 			},
 			"token_accessor": {
 				Type:     schema.TypeList,
+				Optional: true,
 				MaxItems: 1,
-				Elem: &schema.Provider{
+				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"token_endpoint": {
 							Type:        schema.TypeString,
@@ -262,6 +264,14 @@ func Provider() *schema.Provider {
 				Description: "Should HTAP query context cache be disabled",
 				Optional:    true,
 			},
+			/*
+				Feature not yet released as of latest gosnowflake release
+				https://github.com/snowflakedb/gosnowflake/blob/master/dsn.go#L103
+				"include_retry_reason": {
+					Type:        schema.TypeBool,
+					Description: "Should retried request contain retry reason",
+					Optional:    true,
+				},*/
 			"profile": {
 				Type:        schema.TypeString,
 				Description: "Sets the profile to read from ~/.snowflake/config file.",
@@ -492,11 +502,6 @@ func getDataSources() map[string]*schema.Resource {
 	return dataSources
 }
 
-type ProviderMeta struct {
-	client *sdk.Client
-	db     *sql.DB
-}
-
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	config := &gosnowflake.Config{
 		Application: "terraform-provider-snowflake",
@@ -688,6 +693,13 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		config.DisableQueryContextCache = v.(bool)
 	}
 
+	/*
+		Feature not yet released as of latest gosnowflake release
+		https://github.com/snowflakedb/gosnowflake/blob/master/dsn.go#L103
+		if v, ok := s.GetOk("include_retry_reason"); ok && v.(bool) {
+			config.IncludeRetryParameters = v.(bool)
+		}
+	*/
 	if v, ok := s.GetOk("profile"); ok && v.(string) != "" {
 		profile := v.(string)
 		if profile == "default" {
@@ -712,8 +724,5 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ProviderMeta{
-		client: client,
-		db:     client.GetConn().DB,
-	}, nil
+	return client.GetConn().DB, nil
 }
