@@ -92,7 +92,7 @@ Integration status - indicates if given resource / datasource is using new SDK.
 | Warehouse                           | ✅                    | snowflake_warehouse                            | snowflake_warehouse           | 🟨                 |
 | Resource Monitor                    | ✅                    | snowflake_resource_monitor                     | snowflake_resource_monitor    | ✅                  |
 | Database                            | ✅                    | snowflake_database                             | snowflake_database            | ✅                  |
-| Schema                              | ✅                    | snowflake_schema                               | snowflake_schema              | ❌                  |
+| Schema                              | ✅                    | snowflake_schema                               | snowflake_schema              | ✅                  |
 | Share                               | ✅                    | snowflake_share                                | snowflake_share               | ✅                  |
 | Table                               | 👨‍💻                | snowflake_table                                | snowflake_table               | ❌                  |
 | Dynamic Table                       | ✅                    | snowflake_dynamic_table                        | snowflake_dynamic_table       | ❌                  |
