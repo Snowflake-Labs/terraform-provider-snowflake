@@ -52,19 +52,12 @@ type CreateMaskingPolicyOptions struct {
 }
 
 func (opts *CreateMaskingPolicyOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(errNilOptions)
 	}
-	if !valueSet(opts.signature) {
-		return errNotSet("CreateMaskingPolicyOptions", "signature")
+	if !validObjectidentifier(opts.name) {
+		return errors.Join(errInvalidObjectIdentifier)
 	}
-	if !valueSet(opts.returns) {
-		return errNotSet("CreateMaskingPolicyOptions", "returns")
-	}
-	if !valueSet(opts.body) {
-		return errNotSet("CreateMaskingPolicyOptions", "body")
-	}
-
 	return nil
 }
 
@@ -99,27 +92,30 @@ type AlterMaskingPolicyOptions struct {
 }
 
 func (opts *AlterMaskingPolicyOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(errNilOptions)
 	}
-
-	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.NewName) {
-		return errExactlyOneOf("Set", "Unset", "NewName")
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, errInvalidObjectIdentifier)
 	}
-
+	if valueSet(opts.NewName) && !validObjectidentifier(opts.NewName) {
+		errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
+	}
+	if exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset) {
+		errs = append(errs, errExactlyOneOf("AlterMaskingPolicyOptions", "NewName", "Set", "Unset"))
+	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 type MaskingPolicySet struct {
@@ -130,7 +126,7 @@ type MaskingPolicySet struct {
 
 func (v *MaskingPolicySet) validate() error {
 	if !exactlyOneValueSet(v.Body, v.Tag, v.Comment) {
-		return errors.New("only one parameter can be set at a time")
+		return errExactlyOneOf("MaskingPolicySet", "Body", "Tag", "Comment")
 	}
 	return nil
 }
@@ -142,7 +138,7 @@ type MaskingPolicyUnset struct {
 
 func (v *MaskingPolicyUnset) validate() error {
 	if !exactlyOneValueSet(v.Tag, v.Comment) {
-		return errors.New("only one parameter can be unset at a time")
+		return errExactlyOneOf("MaskingPolicyUnset", "Tag", "Comment")
 	}
 	return nil
 }
@@ -171,8 +167,11 @@ type DropMaskingPolicyOptions struct {
 }
 
 func (opts *DropMaskingPolicyOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	if !validObjectidentifier(opts.name) {
+		return errors.Join(errInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -205,7 +204,10 @@ type ShowMaskingPolicyOptions struct {
 	Limit           *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-func (input *ShowMaskingPolicyOptions) validate() error {
+func (opts *ShowMaskingPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
 	return nil
 }
 
@@ -288,7 +290,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 			return &maskingPolicy, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 // describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.
@@ -298,9 +300,12 @@ type describeMaskingPolicyOptions struct {
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describeMaskingPolicyOptions) validate() error {
-	if !ValidObjectIdentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describeMaskingPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	if !validObjectidentifier(opts.name) {
+		return errors.Join(errInvalidObjectIdentifier)
 	}
 	return nil
 }

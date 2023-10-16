@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 )
 
 var (
@@ -31,6 +32,9 @@ type SetCommentOptions struct {
 }
 
 func (opts *SetCommentOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
 	return nil
 }
 
@@ -60,6 +64,9 @@ type SetColumnCommentOptions struct {
 }
 
 func (opts *SetColumnCommentOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
 	return nil
 }
 

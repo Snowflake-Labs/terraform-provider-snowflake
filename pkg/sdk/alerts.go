@@ -55,10 +55,12 @@ type AlertCondition struct {
 }
 
 func (opts *CreateAlertOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(errNilOptions)
 	}
-
+	if !validObjectidentifier(opts.name) {
+		return errors.Join(errInvalidObjectIdentifier)
+	}
 	return nil
 }
 
@@ -115,15 +117,17 @@ type AlterAlertOptions struct {
 }
 
 func (opts *AlterAlertOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(errNilOptions)
 	}
-
+	var errs []error
+	if !validObjectidentifier(opts.name) {
+		errs = append(errs, errInvalidObjectIdentifier)
+	}
 	if !exactlyOneValueSet(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
-		return errExactlyOneOf("Action", "Set", "Unset", "ModifyCondition", "ModifyAction")
+		errs = append(errs, errExactlyOneOf("AlterAlertOptions", "Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 type AlertSet struct {
@@ -163,8 +167,11 @@ type dropAlertOptions struct {
 }
 
 func (opts *dropAlertOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	if !validObjectidentifier(opts.name) {
+		return errors.Join(errInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -254,6 +261,9 @@ func (row alertDBRow) convert() *Alert {
 }
 
 func (opts *ShowAlertOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
 	return nil
 }
 
@@ -285,7 +295,7 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 			return &alert, nil
 		}
 	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return nil, errObjectNotExistOrAuthorized
 }
 
 // describeAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-alert.
@@ -295,9 +305,12 @@ type describeAlertOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describeAlertOptions) validate() error {
-	if !ValidObjectIdentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describeAlertOptions) validate() error {
+	if opts == nil {
+		return errors.Join(errNilOptions)
+	}
+	if !validObjectidentifier(opts.name) {
+		return errors.Join(errInvalidObjectIdentifier)
 	}
 	return nil
 }

@@ -28,7 +28,7 @@ func (opts *GrantPrivilegesToAccountRoleOptions) validate() error {
 		errs = append(errs, errNotSet("GrantPrivilegesToAccountRoleOptions", "privileges"))
 	} else {
 		if err := opts.privileges.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if !valueSet(opts.on) {
