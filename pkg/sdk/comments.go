@@ -33,7 +33,7 @@ type SetCommentOptions struct {
 
 func (opts *SetCommentOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	return nil
 }
@@ -65,7 +65,7 @@ type SetColumnCommentOptions struct {
 
 func (opts *SetColumnCommentOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	return nil
 }

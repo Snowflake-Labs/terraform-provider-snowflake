@@ -69,10 +69,10 @@ type CreateFailoverGroupOptions struct {
 
 func (opts *CreateFailoverGroupOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -106,13 +106,13 @@ type CreateSecondaryReplicationGroupOptions struct {
 
 func (opts *CreateSecondaryReplicationGroupOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !validObjectidentifier(opts.primaryFailoverGroup) {
+	if !ValidObjectIdentifier(opts.primaryFailoverGroup) {
 		errs = append(errs, errInvalidIdentifier("CreateSecondaryReplicationGroupOptions", "primaryFailoverGroup"))
 	}
 	return errors.Join(errs...)
@@ -150,11 +150,11 @@ type AlterSourceFailoverGroupOptions struct {
 
 func (opts *AlterSourceFailoverGroupOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Add, opts.Move, opts.Remove, opts.NewName) {
 		errs = append(errs, errExactlyOneOf("AlterSourceFailoverGroupOptions", "Set", "Add", "Move", "Remove", "NewName"))
@@ -260,11 +260,11 @@ type AlterTargetFailoverGroupOptions struct {
 
 func (opts *AlterTargetFailoverGroupOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Refresh, opts.Primary, opts.Suspend, opts.Resume) {
 		errs = append(errs, errExactlyOneOf("Refresh", "Primary", "Suspend", "Resume"))
@@ -298,10 +298,10 @@ type DropFailoverGroupOptions struct {
 
 func (opts *DropFailoverGroupOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -334,7 +334,7 @@ type ShowFailoverGroupOptions struct {
 
 func (opts *ShowFailoverGroupOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	return nil
 }
@@ -496,7 +496,7 @@ func (v *failoverGroups) ShowByID(ctx context.Context, id AccountObjectIdentifie
 			return &failoverGroup, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // showFailoverGroupDatabasesOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-databases-in-failover-group.
@@ -508,10 +508,10 @@ type showFailoverGroupDatabasesOptions struct {
 
 func (opts *showFailoverGroupDatabasesOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.in) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.in) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -550,10 +550,10 @@ type showFailoverGroupSharesOptions struct {
 
 func (opts *showFailoverGroupSharesOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.in) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.in) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

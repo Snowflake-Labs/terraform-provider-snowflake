@@ -59,7 +59,7 @@ type CreateAccountOptions struct {
 
 func (opts *CreateAccountOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if opts.AdminName == "" {
@@ -98,7 +98,7 @@ type AlterAccountOptions struct {
 
 func (opts *AlterAccountOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.Drop, opts.Rename) {
@@ -215,7 +215,7 @@ type AccountRename struct {
 func (opts *AccountRename) validate() error {
 	var errs []error
 	if !ValidObjectIdentifier(opts.Name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !ValidObjectIdentifier(opts.NewName) {
 		errs = append(errs, errInvalidIdentifier("AccountRename", "NewName"))
@@ -231,7 +231,7 @@ type AccountDrop struct {
 func (opts *AccountDrop) validate() error {
 	var errs []error
 	if !ValidObjectIdentifier(opts.Name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.OldURL) {
 		// TODO: Should this really be validated to be true ?
@@ -260,7 +260,7 @@ type ShowAccountOptions struct {
 
 func (opts *ShowAccountOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	return nil
 }
@@ -381,15 +381,14 @@ type DropAccountOptions struct {
 
 func (opts *DropAccountOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !validateIntGreaterThanOrEqual(opts.gracePeriodInDays, 3) {
 		errs = append(errs, errIntValue(IntErrGreaterOrEqual, "DropAccountOptions", "gracePeriodInDays", 3))
-		return fmt.Errorf("gracePeriodInDays must be greater than or equal to 3")
 	}
 	return errors.Join(errs...)
 }

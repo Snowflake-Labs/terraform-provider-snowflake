@@ -20,14 +20,14 @@ var (
 
 func (opts *CreateExternalTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateExternalTableOptions", "OrReplace", "IfNotExists"))
 	}
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateExternalTableOptions", "Location"))
@@ -49,14 +49,14 @@ func (opts *CreateExternalTableOptions) validate() error {
 
 func (opts *CreateWithManualPartitioningExternalTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateWithManualPartitioningExternalTableOptions", "OrReplace", "IfNotExists"))
 	}
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateWithManualPartitioningExternalTableOptions", "Location"))
@@ -78,14 +78,14 @@ func (opts *CreateWithManualPartitioningExternalTableOptions) validate() error {
 
 func (opts *CreateDeltaLakeExternalTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateDeltaLakeExternalTableOptions", "OrReplace", "IfNotExists"))
 	}
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOptions", "Location"))
@@ -107,11 +107,11 @@ func (opts *CreateDeltaLakeExternalTableOptions) validate() error {
 
 func (opts *CreateExternalTableUsingTemplateOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.Query) {
 		errs = append(errs, errNotSet("CreateExternalTableUsingTemplateOptions", "Query"))
@@ -136,11 +136,11 @@ func (opts *CreateExternalTableUsingTemplateOptions) validate() error {
 
 func (opts *AlterExternalTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Refresh, opts.AddFiles, opts.RemoveFiles, opts.AutoRefresh, opts.SetTag, opts.UnsetTag) {
 		errs = append(errs, errExactlyOneOf("AlterExternalTableOptions", "Refresh", "AddFiles", "RemoveFiles", "AutoRefresh", "SetTag", "UnsetTag"))
@@ -150,11 +150,11 @@ func (opts *AlterExternalTableOptions) validate() error {
 
 func (opts *AlterExternalTablePartitionOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.AddPartitions, opts.DropPartition) {
 		errs = append(errs, errOneOf("AlterExternalTablePartitionOptions", "AddPartitions", "DropPartition"))
@@ -164,11 +164,11 @@ func (opts *AlterExternalTablePartitionOptions) validate() error {
 
 func (opts *DropExternalTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.DropOption) {
 		if err := opts.DropOption.validate(); err != nil {
@@ -180,27 +180,27 @@ func (opts *DropExternalTableOptions) validate() error {
 
 func (opts *ShowExternalTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	return nil
 }
 
 func (opts *describeExternalTableColumnsOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
 
 func (opts *describeExternalTableStageOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -231,7 +231,7 @@ func (opts *ExternalTableFileFormat) validate() error {
 
 func (opts *ExternalTableDropOption) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	if anyValueSet(opts.Restrict, opts.Cascade) && !exactlyOneValueSet(opts.Restrict, opts.Cascade) {
 		return errors.Join(errOneOf("ExternalTableDropOption", "Restrict", "Cascade"))

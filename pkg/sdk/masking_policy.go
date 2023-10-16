@@ -53,10 +53,10 @@ type CreateMaskingPolicyOptions struct {
 
 func (opts *CreateMaskingPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -93,13 +93,13 @@ type AlterMaskingPolicyOptions struct {
 
 func (opts *AlterMaskingPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if valueSet(opts.NewName) && !validObjectidentifier(opts.NewName) {
+	if valueSet(opts.NewName) && !ValidObjectIdentifier(opts.NewName) {
 		errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
 	}
 	if exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset) {
@@ -168,10 +168,10 @@ type DropMaskingPolicyOptions struct {
 
 func (opts *DropMaskingPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -206,7 +206,7 @@ type ShowMaskingPolicyOptions struct {
 
 func (opts *ShowMaskingPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	return nil
 }
@@ -290,7 +290,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 			return &maskingPolicy, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.
@@ -302,10 +302,10 @@ type describeMaskingPolicyOptions struct {
 
 func (opts *describeMaskingPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

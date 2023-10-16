@@ -21,7 +21,7 @@ var (
 
 func (opts *GrantPrivilegesToAccountRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !valueSet(opts.privileges) {
@@ -112,7 +112,7 @@ func (v *GrantOnSchemaObjectIn) validate() error {
 
 func (opts *RevokePrivilegesFromAccountRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !valueSet(opts.privileges) {
@@ -129,8 +129,8 @@ func (opts *RevokePrivilegesFromAccountRoleOptions) validate() error {
 			errs = append(errs, err)
 		}
 	}
-	if !validObjectidentifier(opts.accountRole) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.accountRole) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.Restrict, opts.Cascade) {
 		errs = append(errs, errOneOf("RevokePrivilegesFromAccountRoleOptions", "Restrict", "Cascade"))
@@ -140,7 +140,7 @@ func (opts *RevokePrivilegesFromAccountRoleOptions) validate() error {
 
 func (opts *GrantPrivilegesToDatabaseRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !valueSet(opts.privileges) {
@@ -201,7 +201,7 @@ func (v *DatabaseRoleGrantOn) validate() error {
 
 func (opts *RevokePrivilegesFromDatabaseRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !valueSet(opts.privileges) {
@@ -218,8 +218,8 @@ func (opts *RevokePrivilegesFromDatabaseRoleOptions) validate() error {
 			errs = append(errs, err)
 		}
 	}
-	if !validObjectidentifier(opts.databaseRole) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.databaseRole) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.Restrict, opts.Cascade) {
 		errs = append(errs, errOneOf("RevokePrivilegesFromDatabaseRoleOptions", "Restrict", "Cascade"))
@@ -229,11 +229,11 @@ func (opts *RevokePrivilegesFromDatabaseRoleOptions) validate() error {
 
 func (opts *grantPrivilegeToShareOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.to) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.to) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.On) || opts.privilege == "" {
 		errs = append(errs, fmt.Errorf("on and privilege are required"))
@@ -268,11 +268,11 @@ func (v *OnTable) validate() error {
 
 func (opts *revokePrivilegeFromShareOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.from) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.from) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.On) || opts.privilege == "" {
 		errs = append(errs, errNotSet("revokePrivilegeFromShareOptions", "On", "privilege"))
@@ -315,7 +315,7 @@ func (v *OnView) validate() error {
 
 func (opts *GrantOwnershipOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if valueSet(opts.On) {
@@ -359,7 +359,7 @@ func (v *OwnershipGrantTo) validate() error {
 // TODO: add validations for ShowGrantsOn, ShowGrantsTo, ShowGrantsOf and ShowGrantsIn
 func (opts *ShowGrantOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if everyValueNil(opts.On, opts.To, opts.Of, opts.In) {

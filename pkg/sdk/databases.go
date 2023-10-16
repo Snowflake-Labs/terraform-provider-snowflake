@@ -149,7 +149,7 @@ type CreateDatabaseOptions struct {
 
 func (opts *CreateDatabaseOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if valueSet(opts.Clone) {
@@ -190,14 +190,14 @@ type CreateSharedDatabaseOptions struct {
 
 func (opts *CreateSharedDatabaseOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !validObjectidentifier(opts.fromShare) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.fromShare) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
@@ -232,16 +232,16 @@ type CreateSecondaryDatabaseOptions struct {
 
 func (opts *CreateSecondaryDatabaseOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !validObjectidentifier(opts.primaryDatabase) {
+	if !ValidObjectIdentifier(opts.primaryDatabase) {
 		errs = append(errs, errInvalidIdentifier("CreateSecondaryDatabaseOptions", "primaryDatabase"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (v *databases) CreateSecondary(ctx context.Context, id AccountObjectIdentifier, primaryID ExternalObjectIdentifier, opts *CreateSecondaryDatabaseOptions) error {
@@ -275,11 +275,11 @@ type AlterDatabaseOptions struct {
 
 func (opts *AlterDatabaseOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset, opts.SwapWith) {
 		errs = append(errs, errExactlyOneOf("AlterDatabaseOptions", "NewName", "Set", "Unset", "SwapWith"))
@@ -353,11 +353,11 @@ type AlterDatabaseReplicationOptions struct {
 
 func (opts *AlterDatabaseReplicationOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.EnableReplication, opts.DisableReplication, opts.Refresh) {
 		errs = append(errs, errExactlyOneOf("AlterDatabaseReplicationOptions", "EnableReplication", "DisableReplication", "Refresh"))
@@ -420,11 +420,11 @@ type AlterDatabaseFailoverOptions struct {
 
 func (opts *AlterDatabaseFailoverOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.EnableFailover, opts.DisableFailover, opts.Primary) {
 		errs = append(errs, errExactlyOneOf("AlterDatabaseFailoverOptions", "EnableFailover", "DisableFailover", "Primary"))
@@ -484,10 +484,10 @@ type DropDatabaseOptions struct {
 
 func (opts *DropDatabaseOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -517,10 +517,10 @@ type undropDatabaseOptions struct {
 
 func (opts *undropDatabaseOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -553,7 +553,7 @@ type ShowDatabasesOptions struct {
 
 func (opts *ShowDatabasesOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	return nil
 }
@@ -582,7 +582,7 @@ func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*
 			return &database, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type DatabaseDetails struct {
@@ -604,10 +604,10 @@ type describeDatabaseOptions struct {
 
 func (opts *describeDatabaseOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

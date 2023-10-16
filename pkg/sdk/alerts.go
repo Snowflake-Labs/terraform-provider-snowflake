@@ -56,10 +56,10 @@ type AlertCondition struct {
 
 func (opts *CreateAlertOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -118,11 +118,11 @@ type AlterAlertOptions struct {
 
 func (opts *AlterAlertOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
 		errs = append(errs, errExactlyOneOf("AlterAlertOptions", "Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
@@ -168,10 +168,10 @@ type dropAlertOptions struct {
 
 func (opts *dropAlertOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -262,7 +262,7 @@ func (row alertDBRow) convert() *Alert {
 
 func (opts *ShowAlertOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	return nil
 }
@@ -295,7 +295,7 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 			return &alert, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describeAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-alert.
@@ -307,10 +307,10 @@ type describeAlertOptions struct {
 
 func (opts *describeAlertOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

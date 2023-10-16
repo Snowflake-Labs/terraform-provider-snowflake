@@ -79,14 +79,8 @@ func (opts *alterTagOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if ok := exactlyOneValueSet(
-		opts.Add,
-		opts.Drop,
-		opts.Set,
-		opts.Unset,
-		opts.Rename,
-	); !ok {
-		errs = append(errs, errAlterNeedsExactlyOneAction)
+	if ok := exactlyOneValueSet(opts.Add, opts.Drop, opts.Set, opts.Unset, opts.Rename); !ok {
+		errs = append(errs, errExactlyOneOf("alterTagOptions", "Add", "Drop", "Set", "Unset", "Rename"))
 	}
 	if valueSet(opts.Add) && valueSet(opts.Add.AllowedValues) {
 		if err := opts.Add.AllowedValues.validate(); err != nil {
@@ -108,7 +102,7 @@ func (opts *alterTagOptions) validate() error {
 			errs = append(errs, err)
 		}
 		if !anyValueSet(opts.Unset.MaskingPolicies, opts.Unset.AllowedValues, opts.Unset.Comment) {
-			errs = append(errs, errAlterNeedsAtLeastOneProperty)
+			errs = append(errs, errAtLeastOneOf("alterTagOptions.Unset", "MaskingPolicies", "AllowedValues", "Comment"))
 		}
 	}
 	if valueSet(opts.Rename) {
@@ -128,7 +122,7 @@ func (opts *showTagOptions) validate() error {
 		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
 	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
-		errs = append(errs, errScopeRequiredForInKeyword)
+		errs = append(errs, errExactlyOneOf("showTagOptions.In", "Account", "Database", "Schema"))
 	}
 	return errors.Join(errs...)
 }

@@ -13,7 +13,7 @@ var (
 
 func (opts *CreateRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
@@ -27,7 +27,7 @@ func (opts *CreateRoleOptions) validate() error {
 
 func (opts *AlterRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
@@ -45,17 +45,17 @@ func (opts *AlterRoleOptions) validate() error {
 
 func (opts *DropRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
-	if !validObjectidentifier(opts.name) {
-		return errors.Join(errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
 
 func (opts *ShowRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
@@ -69,7 +69,7 @@ func (opts *ShowRoleOptions) validate() error {
 
 func (opts *GrantRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
@@ -89,7 +89,7 @@ func (opts *GrantRoleOptions) validate() error {
 
 func (opts *RevokeRoleOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {

@@ -77,7 +77,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 
 	t.Run("validation: no alter action", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset"))
 	})
 
 	t.Run("validation: multiple alter actions", func(t *testing.T) {
@@ -88,7 +88,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 		opts.Unset = &DatabaseRoleUnset{
 			Comment: true,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset"))
 	})
 
 	t.Run("validation: invalid new name", func(t *testing.T) {
@@ -114,7 +114,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 		opts.Unset = &DatabaseRoleUnset{
 			Comment: false,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsAtLeastOneProperty)
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("alterDatabaseRoleOptions.Unset", "Comment"))
 	})
 
 	t.Run("rename", func(t *testing.T) {

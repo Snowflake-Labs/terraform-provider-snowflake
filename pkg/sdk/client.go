@@ -3,12 +3,12 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"encoding/pem"
 	"fmt"
+	"log"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
 	"golang.org/x/exp/slices"
-	"log"
 
 	"github.com/snowflakedb/gosnowflake"
 )
@@ -100,8 +100,6 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open snowflake connection: %w", err)
 	}
-
-	pem.Decode()
 
 	client = &Client{
 		// snowflake does not adhere to the normal sql driver interface, so we have to use unsafe

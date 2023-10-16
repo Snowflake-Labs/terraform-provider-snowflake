@@ -14,11 +14,11 @@ var (
 
 func (opts *CreatePipeOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if opts.copyStatement == "" {
 		errs = append(errs, errNotSet("CreatePipeOptions", "copyStatement"))
@@ -31,16 +31,10 @@ func (opts *AlterPipeOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if ok := exactlyOneValueSet(
-		opts.Set,
-		opts.Unset,
-		opts.SetTags,
-		opts.UnsetTags,
-		opts.Refresh,
-	); !ok {
+	if ok := exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags, opts.Refresh); !ok {
 		errs = append(errs, errExactlyOneOf("AlterPipeOptions", "Set", "Unset", "SetTags", "UnsetTags", "Refresh"))
 	}
 	if set := opts.Set; valueSet(set) {
@@ -71,8 +65,8 @@ func (opts *DropPipeOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
@@ -83,7 +77,7 @@ func (opts *ShowPipeOptions) validate() error {
 	}
 	var errs []error
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		errs = append(errs, errPatternRequiredForLikeKeyword)
+		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
 	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
 		errs = append(errs, errExactlyOneOf("ShowPipeOptions", "In.Account", "In.Database", "In.Schema"))
@@ -96,8 +90,8 @@ func (opts *describePipeOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
