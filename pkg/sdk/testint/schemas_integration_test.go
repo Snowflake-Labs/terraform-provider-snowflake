@@ -119,6 +119,10 @@ func TestInt_SchemasAlter(t *testing.T) {
 	t.Run("rename to", func(t *testing.T) {
 		// new schema created on purpose
 		schema, _ := createSchema(t, client, testDb(t))
+		t.Cleanup(func() {
+			err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
+			require.NoError(t, err)
+		})
 		newID := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, random.String())
 		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
 			NewName: newID,
@@ -341,6 +345,10 @@ func TestInt_SchemasDrop(t *testing.T) {
 
 	// new schema created on purpose
 	schema, _ := createSchema(t, client, testDb(t))
+	t.Cleanup(func() {
+		err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
+		require.NoError(t, err)
+	})
 
 	s, err := client.Schemas.ShowByID(ctx, schema.ID())
 	require.NoError(t, err)
