@@ -10,7 +10,7 @@ func TestResourceMonitorCreate(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &CreateResourceMonitorOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -55,14 +55,14 @@ func TestResourceMonitorAlter(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &AlterResourceMonitorOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &AlterResourceMonitorOptions{
 			name: id,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER RESOURCE MONITOR %s", id.FullyQualifiedName())
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterResourceMonitorOptions", "Set"))
 	})
 
 	t.Run("with a single set", func(t *testing.T) {
@@ -97,7 +97,7 @@ func TestResourceMonitorDrop(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &dropResourceMonitorOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {

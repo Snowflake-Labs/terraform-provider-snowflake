@@ -60,10 +60,10 @@ func (v *TagSet) validate() error {
 func (v *TagUnset) validate() error {
 	var errs []error
 	if !exactlyOneValueSet(v.MaskingPolicies, v.AllowedValues, v.Comment) {
-		errs = append(errs, errOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
+		errs = append(errs, errExactlyOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
 	}
 	if valueSet(v.MaskingPolicies) {
-		if ok := validateIntGreaterThanOrEqual(len(v.MaskingPolicies.MaskingPolicies), 1); !ok {
+		if !validateIntGreaterThanOrEqual(len(v.MaskingPolicies.MaskingPolicies), 1) {
 			errs = append(errs, errIntValue("TagUnset.MaskingPolicies", "MaskingPolicies", IntErrGreater, 0))
 		}
 	}
@@ -99,9 +99,6 @@ func (opts *alterTagOptions) validate() error {
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
 			errs = append(errs, err)
-		}
-		if !anyValueSet(opts.Unset.MaskingPolicies, opts.Unset.AllowedValues, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("alterTagOptions.Unset", "MaskingPolicies", "AllowedValues", "Comment"))
 		}
 	}
 	if valueSet(opts.Rename) {

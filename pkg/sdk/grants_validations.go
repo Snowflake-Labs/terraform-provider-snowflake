@@ -358,15 +358,8 @@ func (v *OwnershipGrantTo) validate() error {
 
 // TODO: add validations for ShowGrantsOn, ShowGrantsTo, ShowGrantsOf and ShowGrantsIn
 func (opts *ShowGrantOptions) validate() error {
-	if opts == nil {
-		return errors.Join(ErrNilOptions)
-	}
-	var errs []error
-	if everyValueNil(opts.On, opts.To, opts.Of, opts.In) {
-		errs = append(errs, errExactlyOneOf("ShowGrantOptions", "On", "To", "Of", "In"))
-	}
 	if moreThanOneValueSet(opts.On, opts.To, opts.Of, opts.In) {
-		errs = append(errs, errOneOf("ShowGrantOptions", "On", "To", "Of", "In"))
+		return errOneOf("ShowGrantOptions", "On", "To", "Of", "In")
 	}
-	return errors.Join(errs...)
+	return nil
 }

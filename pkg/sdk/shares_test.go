@@ -30,7 +30,7 @@ func TestShareAlter(t *testing.T) {
 		opts := &AlterShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
 		}
-		assertOptsInvalid(t, opts, errExactlyOneOf("Add", "Remove", "Set", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterShareOptions", "Add", "Remove", "Set", "Unset"))
 	})
 
 	t.Run("with add", func(t *testing.T) {

@@ -58,6 +58,15 @@ func (opts *CreateMaskingPolicyOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		return errors.Join(ErrInvalidObjectIdentifier)
 	}
+	if !valueSet(opts.signature) {
+		return errNotSet("CreateMaskingPolicyOptions", "signature")
+	}
+	if !valueSet(opts.returns) {
+		return errNotSet("CreateMaskingPolicyOptions", "returns")
+	}
+	if !valueSet(opts.body) {
+		return errNotSet("CreateMaskingPolicyOptions", "body")
+	}
 	return nil
 }
 
@@ -102,7 +111,7 @@ func (opts *AlterMaskingPolicyOptions) validate() error {
 	if valueSet(opts.NewName) && !ValidObjectIdentifier(opts.NewName) {
 		errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
 	}
-	if exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset) {
+	if !exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset) {
 		errs = append(errs, errExactlyOneOf("AlterMaskingPolicyOptions", "NewName", "Set", "Unset"))
 	}
 	if valueSet(opts.Set) {

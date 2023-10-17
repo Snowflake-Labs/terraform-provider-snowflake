@@ -281,7 +281,7 @@ func (opts *AlterDatabaseOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset, opts.SwapWith) {
+	if !exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset, opts.SwapWith) {
 		errs = append(errs, errExactlyOneOf("AlterDatabaseOptions", "NewName", "Set", "Unset", "SwapWith"))
 	}
 	if valueSet(opts.Set) {

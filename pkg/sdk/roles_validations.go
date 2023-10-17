@@ -34,11 +34,11 @@ func (opts *AlterRoleOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueNil(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errAtLeastOneOf("CreateRoleOptions", "RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
+		errs = append(errs, errAtLeastOneOf("AlterRoleOptions", "RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	}
 	if anyValueSet(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetTags, opts.UnsetTags) &&
 		!exactlyOneValueSet(opts.RenameTo, opts.SetComment, opts.UnsetComment, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errOneOf("CreateRoleOptions", "RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
+		errs = append(errs, errOneOf("AlterRoleOptions", "RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	}
 	return errors.Join(errs...)
 }
@@ -76,13 +76,13 @@ func (opts *GrantRoleOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if (opts.Grant.Role != nil && opts.Grant.User != nil) || (opts.Grant.Role == nil && opts.Grant.User == nil) {
-		errs = append(errs, errOneOf("GrantRoleOptions", "Grant.Role", "Grant.User"))
+		errs = append(errs, errOneOf("GrantRoleOptions.Grant", "Role", "User"))
 	}
 	if opts.Grant.Role != nil && !ValidObjectIdentifier(opts.Grant.Role) {
-		errs = append(errs, errInvalidIdentifier("GrantRoleOptions", "Grant.Role"))
+		errs = append(errs, errInvalidIdentifier("GrantRoleOptions.Grant", "Role"))
 	}
 	if opts.Grant.User != nil && !ValidObjectIdentifier(opts.Grant.User) {
-		errs = append(errs, errInvalidIdentifier("GrantRoleOptions", "Grant.User"))
+		errs = append(errs, errInvalidIdentifier("GrantRoleOptions.Grant", "User"))
 	}
 	return errors.Join(errs...)
 }
@@ -96,7 +96,7 @@ func (opts *RevokeRoleOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if (opts.Revoke.Role != nil && opts.Revoke.User != nil) || (opts.Revoke.Role == nil && opts.Revoke.User == nil) {
-		errs = append(errs, errOneOf("RevokeRoleOptions", "Revoke.Role", "Revoke.User"))
+		errs = append(errs, errOneOf("RevokeRoleOptions.Revoke", "Role", "User"))
 	}
 	return errors.Join(errs...)
 }

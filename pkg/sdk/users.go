@@ -283,16 +283,8 @@ func (opts *AlterUserOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(
-		opts.NewName,
-		opts.ResetPassword,
-		opts.AbortAllQueries,
-		opts.AddDelegatedAuthorization,
-		opts.RemoveDelegatedAuthorization,
-		opts.Set,
-		opts.Unset,
-	) {
-		errs = append(errs, errExactlyOneOf("NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset"))
+	if !exactlyOneValueSet(opts.NewName, opts.ResetPassword, opts.AbortAllQueries, opts.AddDelegatedAuthorization, opts.RemoveDelegatedAuthorization, opts.Set, opts.Unset) {
+		errs = append(errs, errExactlyOneOf("AlterUserOptions", "NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset"))
 	}
 	if valueSet(opts.RemoveDelegatedAuthorization) {
 		if err := opts.RemoveDelegatedAuthorization.validate(); err != nil {
@@ -363,8 +355,11 @@ type UserSet struct {
 
 func (opts *UserSet) validate() error {
 	var errs []error
-	if !exactlyOneValueSet(opts.SessionPolicy, opts.PasswordPolicy, opts.Tags) {
-		errs = append(errs, errExactlyOneOf("UserSet", "SessionPolicy", "PasswordPolicy", "Tags"))
+	if !anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
+		errs = append(errs, fmt.Errorf("at least one of password policy, tag, object properties, object parameters, or session parameters must be set"))
+	}
+	if moreThanOneValueSet(opts.SessionPolicy, opts.PasswordPolicy, opts.Tags) {
+		errs = append(errs, fmt.Errorf("setting session policy, password policy and tags must be done separately"))
 	}
 	if anyValueSet(opts.ObjectParameters, opts.SessionParameters, opts.ObjectProperties) {
 		if anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags) {

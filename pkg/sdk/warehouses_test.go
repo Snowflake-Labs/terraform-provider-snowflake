@@ -61,7 +61,7 @@ func TestWarehouseSizing(t *testing.T) {
 			MaxClusterCount: Int(1),
 			MinClusterCount: Int(2),
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount"))
+		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount"))
 	})
 
 	t.Run("Max equal Min", func(t *testing.T) {

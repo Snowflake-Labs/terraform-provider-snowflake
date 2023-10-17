@@ -200,7 +200,7 @@ func TestTasks_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TaskUnset{}
 		opts.Unset.SessionParametersUnset = &SessionParametersUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("at least one session parameter must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionParametersUnset", "AbortDetachedQuery", "Autocommit", "BinaryInputFormat", "BinaryOutputFormat", "DateInputFormat", "DateOutputFormat", "ErrorOnNondeterministicMerge", "ErrorOnNondeterministicUpdate", "GeographyOutputFormat", "JSONIndent", "LockTimeout", "QueryTag", "RowsPerResultset", "SimulatedDataSharingConsumer", "StatementTimeoutInSeconds", "StrictJSONOutput", "TimestampDayIsAlways24h", "TimestampInputFormat", "TimestampLTZOutputFormat", "TimestampNTZOutputFormat", "TimestampOutputFormat", "TimestampTypeMapping", "TimestampTZOutputFormat", "Timezone", "TimeInputFormat", "TimeOutputFormat", "TransactionDefaultIsolationLevel", "TwoDigitCenturyStart", "UnsupportedDDLAction", "UseCachedResult", "WeekOfYearPolicy", "WeekStart"))
 	})
 
 	t.Run("alter resume", func(t *testing.T) {
