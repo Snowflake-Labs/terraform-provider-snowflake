@@ -18,26 +18,23 @@ func createPipeCopyStatement(t *testing.T, table *sdk.Table, stage *sdk.Stage) s
 }
 
 func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
-	databaseIdentifier := sdk.NewAccountObjectIdentifier(random.AlphanumericN(10))
-	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(databaseIdentifier.Name(), "tcK1>AJ+")
+	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "tcK1>AJ+")
 
-	// creating new database and schema on purpose
-	database, databaseCleanup := createDatabaseWithOptions(t, testClient(t), databaseIdentifier, nil)
-	t.Cleanup(databaseCleanup)
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, database, schemaIdentifier.Name())
+	// creating a new schema on purpose
+	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := createTable(t, itc.client, database, schema)
+	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, database, schema, stageName)
+	stage, stageCleanup := createStage(t, itc.client, testDb(t), schema, stageName)
 	t.Cleanup(stageCleanup)
 
 	t.Run("if we have special characters in db or schema name, create pipe returns error in copy <> from <> section", func(t *testing.T) {
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphanumericN(20)),
+			sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphanumericN(20)),
 			createPipeCopyStatement(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
@@ -47,11 +44,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 		require.ErrorContains(t, err, "unexpected '>'")
 	})
 
-	t.Run("the same works with using db and schema statements", func(t *testing.T) {
-		useDatabaseCleanup := useDatabase(t, itc.client, database.ID())
-		t.Cleanup(useDatabaseCleanup)
-		useSchemaCleanup := useSchema(t, itc.client, schema.ID())
-		t.Cleanup(useSchemaCleanup)
+	t.Run("the same works with using non fully qualified name for table", func(t *testing.T) {
 
 		createCopyStatementWithoutQualifiersForStage := func(t *testing.T, table *sdk.Table, stage *sdk.Stage) string {
 			t.Helper()
@@ -62,7 +55,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 
 		err := itc.client.Pipes.Create(
 			itc.ctx,
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphanumericN(20)),
+			sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphanumericN(20)),
 			createCopyStatementWithoutQualifiersForStage(t, table, stage),
 			&sdk.CreatePipeOptions{},
 		)
