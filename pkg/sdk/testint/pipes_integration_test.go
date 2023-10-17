@@ -45,7 +45,6 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	})
 
 	t.Run("the same works with using non fully qualified name for table", func(t *testing.T) {
-
 		createCopyStatementWithoutQualifiersForStage := func(t *testing.T, table *sdk.Table, stage *sdk.Stage) string {
 			t.Helper()
 			require.NotNil(t, table, "table has to be created")
