@@ -10,12 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
-
-func TestMain(m *testing.M) {
-	resource.TestMain(m)
-}
 
 const (
 	TestDatabaseName  = "terraform_test_database"
@@ -39,9 +34,8 @@ func init() {
 }
 
 func TestAccProviders() map[string]*schema.Provider {
-	p := provider.Provider()
 	return map[string]*schema.Provider{
-		"snowflake": p,
+		"snowflake": provider.Provider(),
 	}
 }
 
