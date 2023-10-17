@@ -336,7 +336,7 @@ type RemoveDelegatedAuthorization struct {
 func (opts *RemoveDelegatedAuthorization) validate() error {
 	var errs []error
 	if !exactlyOneValueSet(opts.Role, opts.Authorizations) {
-		errs = append(errs, errOneOf("RemoveDelegatedAuthorization", "Role", "Authorization"))
+		errs = append(errs, errExactlyOneOf("RemoveDelegatedAuthorization", "Role", "Authorization"))
 	}
 	if !valueSet(opts.Integration) {
 		errs = append(errs, errNotSet("RemoveDelegatedAuthorization", "Integration"))
@@ -354,19 +354,10 @@ type UserSet struct {
 }
 
 func (opts *UserSet) validate() error {
-	var errs []error
-	if !anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		errs = append(errs, fmt.Errorf("at least one of password policy, tag, object properties, object parameters, or session parameters must be set"))
+	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
+		return errExactlyOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "Tags", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
-	if moreThanOneValueSet(opts.SessionPolicy, opts.PasswordPolicy, opts.Tags) {
-		errs = append(errs, fmt.Errorf("setting session policy, password policy and tags must be done separately"))
-	}
-	if anyValueSet(opts.ObjectParameters, opts.SessionParameters, opts.ObjectProperties) {
-		if anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags) {
-			errs = append(errs, fmt.Errorf("cannot set both {object parameters, session parameters,object properties} and password policy, session policy, or tag"))
-		}
-	}
-	return errors.Join(errs...)
+	return nil
 }
 
 type UserUnset struct {

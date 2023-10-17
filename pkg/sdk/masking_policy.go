@@ -55,19 +55,20 @@ func (opts *CreateMaskingPolicyOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)
 	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return errors.Join(ErrInvalidObjectIdentifier)
+		errs = append(errs, errors.Join(ErrInvalidObjectIdentifier))
 	}
 	if !valueSet(opts.signature) {
-		return errNotSet("CreateMaskingPolicyOptions", "signature")
+		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "signature"))
 	}
 	if !valueSet(opts.returns) {
-		return errNotSet("CreateMaskingPolicyOptions", "returns")
+		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "returns"))
 	}
 	if !valueSet(opts.body) {
-		return errNotSet("CreateMaskingPolicyOptions", "body")
+		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "body"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, body string, opts *CreateMaskingPolicyOptions) error {
@@ -108,7 +109,7 @@ func (opts *AlterMaskingPolicyOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if valueSet(opts.NewName) && !ValidObjectIdentifier(opts.NewName) {
+	if opts.NewName != nil && !ValidObjectIdentifier(opts.NewName) {
 		errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
 	}
 	if !exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset) {

@@ -138,8 +138,8 @@ type CreateDatabaseOptions struct {
 	OrReplace                  *bool                   `ddl:"keyword" sql:"OR REPLACE"`
 	Transient                  *bool                   `ddl:"keyword" sql:"TRANSIENT"`
 	database                   bool                    `ddl:"static" sql:"DATABASE"`
-	name                       AccountObjectIdentifier `ddl:"identifier"`
 	IfNotExists                *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       AccountObjectIdentifier `ddl:"identifier"`
 	Clone                      *Clone                  `ddl:"-"`
 	DataRetentionTimeInDays    *int                    `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	MaxDataExtensionTimeInDays *int                    `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
@@ -152,6 +152,9 @@ func (opts *CreateDatabaseOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	if valueSet(opts.Clone) {
 		if err := opts.Clone.validate(); err != nil {
 			errs = append(errs, err)
@@ -197,7 +200,7 @@ func (opts *CreateSharedDatabaseOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !ValidObjectIdentifier(opts.fromShare) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("CreateSharedDatabaseOptions", "fromShare"))
 	}
 	return errors.Join(errs...)
 }
@@ -319,7 +322,7 @@ type DatabaseUnset struct {
 func (v *DatabaseUnset) validate() error {
 	if valueSet(v.Tag) {
 		if anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-			return errors.New("Tag cannot be set with other options")
+			return errors.New("tag cannot be set with other options")
 		}
 	}
 	return nil

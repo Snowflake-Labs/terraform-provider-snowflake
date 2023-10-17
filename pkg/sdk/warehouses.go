@@ -186,9 +186,6 @@ func (opts *AlterWarehouseOptions) validate() error {
 	if (valueSet(opts.IfSuspended) && *opts.IfSuspended) && (!valueSet(opts.Resume) || !*opts.Resume) {
 		errs = append(errs, fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`))
 	}
-	if everyValueSet(opts.Set, opts.Unset) {
-		errs = append(errs, errOneOf("AlterWarehouseOptions", "Set", "Unset"))
-	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
 			errs = append(errs, err)

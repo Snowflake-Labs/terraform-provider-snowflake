@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -46,7 +45,7 @@ func TestTasks_Create(t *testing.T) {
 		opts.SessionParameters = &SessionParameters{
 			JSONIndent: Int(25),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("JSON_INDENT must be between 0 and 16"))
+		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -187,7 +186,7 @@ func TestTasks_Alter(t *testing.T) {
 		opts.Set.SessionParameters = &SessionParameters{
 			JSONIndent: Int(25),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("JSON_INDENT must be between 0 and 16"))
+		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.Warehouse opts.Unset.Schedule opts.Unset.Config opts.Unset.AllowOverlappingExecution opts.Unset.UserTaskTimeoutMs opts.Unset.SuspendTaskAfterNumFailures opts.Unset.ErrorIntegration opts.Unset.Comment opts.Unset.SessionParametersUnset] should be set", func(t *testing.T) {

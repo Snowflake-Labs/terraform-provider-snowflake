@@ -829,8 +829,8 @@ func (v *AccountParameters) validate() error {
 		}
 	}
 	if valueSet(v.MinDataRetentionTimeInDays) {
-		if ok := validateIntInRange(*v.MinDataRetentionTimeInDays, 0, 90); !ok {
-			errs = append(errs, fmt.Errorf("MIN_DATA_RETENTION_TIME_IN_DAYS must be between 0 and 90"))
+		if !validateIntInRange(*v.MinDataRetentionTimeInDays, 0, 90) {
+			errs = append(errs, errIntBetween("AccountParameters", "MinDataRetentionTimeInDays", 0, 90))
 		}
 	}
 	return errors.Join(errs...)
@@ -935,37 +935,37 @@ type SessionParameters struct {
 func (v *SessionParameters) validate() error {
 	var errs []error
 	if valueSet(v.JSONIndent) {
-		if ok := validateIntInRange(*v.JSONIndent, 0, 16); !ok {
-			errs = append(errs, fmt.Errorf("JSON_INDENT must be between 0 and 16"))
+		if !validateIntInRange(*v.JSONIndent, 0, 16) {
+			errs = append(errs, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
 		}
 	}
 	if valueSet(v.LockTimeout) {
-		if ok := validateIntGreaterThanOrEqual(*v.LockTimeout, 0); !ok {
-			errs = append(errs, fmt.Errorf("LOCK_TIMEOUT must be greater than or equal to 0"))
+		if !validateIntGreaterThanOrEqual(*v.LockTimeout, 0) {
+			errs = append(errs, errIntValue("SessionParameters", "LockTimeout", IntErrGreaterOrEqual, 0))
 		}
 	}
 	if valueSet(v.QueryTag) {
 		if len(*v.QueryTag) > 2000 {
-			errs = append(errs, fmt.Errorf("QUERY_TAG must be less than 2000 characters"))
+			errs = append(errs, errIntValue("SessionParameters", "QueryTag", IntErrLess, 2000))
 		}
 	}
 	if valueSet(v.RowsPerResultset) {
-		if ok := validateIntGreaterThanOrEqual(*v.RowsPerResultset, 0); !ok {
-			errs = append(errs, fmt.Errorf("ROWS_PER_RESULTSET must be greater than or equal to 0"))
+		if !validateIntGreaterThanOrEqual(*v.RowsPerResultset, 0) {
+			errs = append(errs, errIntValue("SessionParameters", "RowsPerResultset", IntErrGreaterOrEqual, 0))
 		}
 	}
 	if valueSet(v.TwoDigitCenturyStart) {
-		if ok := validateIntInRange(*v.TwoDigitCenturyStart, 1900, 2100); !ok {
-			errs = append(errs, fmt.Errorf("TWO_DIGIT_CENTURY_START must be between 1900 and 2100"))
+		if !validateIntInRange(*v.TwoDigitCenturyStart, 1900, 2100) {
+			errs = append(errs, errIntBetween("SessionParameters", "TwoDigitCenturyStart", 1900, 2100))
 		}
 	}
 	if valueSet(v.WeekOfYearPolicy) {
-		if ok := validateIntInRange(*v.WeekOfYearPolicy, 0, 1); !ok {
+		if !validateIntInRange(*v.WeekOfYearPolicy, 0, 1) {
 			errs = append(errs, fmt.Errorf("WEEK_OF_YEAR_POLICY must be either 0 or 1"))
 		}
 	}
 	if valueSet(v.WeekStart) {
-		if ok := validateIntInRange(*v.WeekStart, 0, 1); !ok {
+		if !validateIntInRange(*v.WeekStart, 0, 1) {
 			errs = append(errs, fmt.Errorf("WEEK_START must be either 0 or 1"))
 		}
 	}
@@ -1061,32 +1061,32 @@ type ObjectParameters struct {
 func (v *ObjectParameters) validate() error {
 	var errs []error
 	if valueSet(v.DataRetentionTimeInDays) {
-		if ok := validateIntInRange(*v.DataRetentionTimeInDays, 0, 90); !ok {
+		if !validateIntInRange(*v.DataRetentionTimeInDays, 0, 90) {
 			errs = append(errs, errIntBetween("ObjectParameters", "DataRetentionTimeInDays", 0, 90))
 		}
 	}
 	if valueSet(v.MaxConcurrencyLevel) {
-		if ok := validateIntGreaterThanOrEqual(*v.MaxConcurrencyLevel, 1); !ok {
+		if !validateIntGreaterThanOrEqual(*v.MaxConcurrencyLevel, 1) {
 			errs = append(errs, errIntValue("ObjectParameters", "MaxConcurrencyLevel", IntErrGreaterOrEqual, 1))
 		}
 	}
 	if valueSet(v.MaxDataExtensionTimeInDays) {
-		if ok := validateIntInRange(*v.MaxDataExtensionTimeInDays, 0, 90); !ok {
+		if !validateIntInRange(*v.MaxDataExtensionTimeInDays, 0, 90) {
 			errs = append(errs, errIntBetween("ObjectParameters", "MaxDataExtensionTimeInDays", 0, 90))
 		}
 	}
 	if valueSet(v.StatementQueuedTimeoutInSeconds) {
-		if ok := validateIntGreaterThanOrEqual(*v.StatementQueuedTimeoutInSeconds, 0); !ok {
+		if !validateIntGreaterThanOrEqual(*v.StatementQueuedTimeoutInSeconds, 0) {
 			errs = append(errs, errIntValue("ObjectParameters", "StatementQueuedTimeoutInSeconds", IntErrGreaterOrEqual, 0))
 		}
 	}
 	if valueSet(v.SuspendTaskAfterNumFailures) {
-		if ok := validateIntGreaterThanOrEqual(*v.SuspendTaskAfterNumFailures, 0); !ok {
+		if !validateIntGreaterThanOrEqual(*v.SuspendTaskAfterNumFailures, 0) {
 			errs = append(errs, errIntValue("ObjectParameters", "SuspendTaskAfterNumFailures", IntErrGreaterOrEqual, 0))
 		}
 	}
 	if valueSet(v.UserTaskTimeoutMs) {
-		if ok := validateIntInRange(*v.UserTaskTimeoutMs, 0, 86400000); !ok {
+		if !validateIntInRange(*v.UserTaskTimeoutMs, 0, 86400000) {
 			errs = append(errs, errIntBetween("ObjectParameters", "UserTaskTimeoutMs", 0, 86400000))
 		}
 	}

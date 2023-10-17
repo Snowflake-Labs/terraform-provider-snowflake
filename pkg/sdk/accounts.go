@@ -105,16 +105,24 @@ func (opts *AlterAccountOptions) validate() error {
 		errs = append(errs, errExactlyOneOf("CreateAccountOptions", "Set", "Unset", "Drop", "Rename"))
 	}
 	if valueSet(opts.Set) {
-		errs = append(errs, opts.Set.validate())
+		if err := opts.Set.validate(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if valueSet(opts.Unset) {
-		errs = append(errs, opts.Unset.validate())
+		if err := opts.Unset.validate(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if valueSet(opts.Drop) {
-		errs = append(errs, opts.Drop.validate())
+		if err := opts.Drop.validate(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if valueSet(opts.Rename) {
-		errs = append(errs, opts.Rename.validate())
+		if err := opts.Rename.validate(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	return errors.Join(errs...)
 }
