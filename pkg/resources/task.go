@@ -465,37 +465,37 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	rootTasks, err := snowflake.GetRootTasks(name, database, schema, db)
+	rootTasks, err := client.Tasks.GetRootTasks(ctx, taskId)
 	if err != nil {
 		return err
 	}
 	for _, rootTask := range rootTasks {
-		// if a root task is enabled, then it needs to be suspended before the child tasks can be created
-		if rootTask.IsEnabled() {
-			q := rootTask.Suspend()
-			if err := snowflake.Exec(db, q); err != nil {
+		// if a root task is started, then it needs to be suspended before the child tasks can be created
+		if rootTask.IsStarted() {
+			err := suspendTask(ctx, client, rootTask.ID())
+			if err != nil {
 				return err
 			}
 
-			if !(rootTask.Name == name) {
-				// resume the task after modifications are complete, as long as it is not a standalone task
-				defer resumeTaskOld(db, rootTask)
+			// TODO: wait here for task suspension?
+			// resume the task after modifications are complete as long as it is not a standalone task
+			if !(rootTask.Name == taskId.Name()) {
+				defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
 			}
 		}
 	}
 
 	if d.HasChange("warehouse") {
-		var q string
 		newWarehouse := d.Get("warehouse")
-
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
 		if newWarehouse == "" {
-			q = builder.SwitchWarehouseToManaged()
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithWarehouse(sdk.Pointer(true)))
 		} else {
-			q = builder.ChangeWarehouse(newWarehouse.(string))
+			alterRequest.WithSet(sdk.NewTaskSetRequest().WithWarehouse(sdk.Pointer(sdk.NewAccountObjectIdentifier(newWarehouse.(string)))))
 		}
-
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating warehouse on task %v", d.Id())
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating warehouse on task %s", taskId.FullyQualifiedName())
 		}
 	}
 
@@ -504,26 +504,27 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		warehouse := d.Get("warehouse")
 
 		if warehouse == "" && newSize != "" {
-			q := builder.SwitchManagedWithInitialSize(newSize.(string))
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error updating user_task_managed_initial_warehouse_size on task %v", d.Id())
+			// TODO: user_task_managed_initial_warehouse_size is not on the list in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-task#syntax
+			alterRequest := sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest())
+			err := client.Tasks.Alter(ctx, alterRequest)
+			if err != nil {
+				return fmt.Errorf("error updating user_task_managed_initial_warehouse_size on task %s", taskId.FullyQualifiedName())
 			}
 		}
 	}
 
+	// TODO: error integration is not on the list in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-task#syntax
 	if d.HasChange("error_integration") {
-		var q string
 		if errorIntegration, ok := d.GetOk("error_integration"); ok {
-			q = builder.ChangeErrorIntegration(errorIntegration.(string))
+			_ = errorIntegration
+			//setRequest.
 		} else {
-			q = builder.RemoveErrorIntegration()
-		}
-
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating task error_integration on %v", d.Id())
+			_ = errorIntegration
+			//unsetRequest.
 		}
 	}
 
+	// here.
 	if d.HasChange("after") {
 		// preemitvely removing schedule because a task cannot have both after and schedule
 		q := builder.RemoveSchedule()
@@ -718,40 +719,37 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 // DeleteTask implements schema.DeleteFunc.
 func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	database := taskID.DatabaseName
-	schema := taskID.SchemaName
-	name := taskID.TaskName
+	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	rootTasks, err := snowflake.GetRootTasks(name, database, schema, db)
+	rootTasks, err := client.Tasks.GetRootTasks(ctx, taskId)
 	if err != nil {
 		return err
 	}
 	for _, rootTask := range rootTasks {
-		// if a root task is enabled, then it needs to be suspended before the child tasks can be deleted
-		if rootTask.IsEnabled() {
-			q := rootTask.Suspend()
-			if err := snowflake.Exec(db, q); err != nil {
+		// if a root task is started, then it needs to be suspended before the child tasks can be created
+		if rootTask.IsStarted() {
+			err := suspendTask(ctx, client, rootTask.ID())
+			if err != nil {
 				return err
 			}
 
-			if !(rootTask.Name == name) {
-				// resume the task after modifications are complete, as long as it is not a standalone task
-				defer resumeTaskOld(db, rootTask)
+			// TODO: wait here for task suspension?
+			// resume the task after modifications are complete as long as it is not a standalone task
+			if !(rootTask.Name == taskId.Name()) {
+				defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
 			}
 		}
 	}
 
-	q := snowflake.NewTaskBuilder(name, database, schema).Drop()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting task %v err = %w", d.Id(), err)
+	dropRequest := sdk.NewDropTaskRequest(taskId)
+	err = client.Tasks.Drop(ctx, dropRequest)
+	if err != nil {
+		return fmt.Errorf("error deleting task %s err = %w", taskId.FullyQualifiedName(), err)
 	}
 
 	d.SetId("")
-
 	return nil
 }
