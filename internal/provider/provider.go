@@ -799,24 +799,14 @@ type ProviderData struct {
 	client *sdk.Client
 }
 
-func (p *SnowflakeProvider) ConfigValidators(ctx context.Context) []provider.ConfigValidator {
-	return []provider.ConfigValidator{
-		/*providervalidator.Conflicting(
-			path.MatchRoot("account"),
-			path.MatchRoot("profile"),
-		),*/
-	}
-}
-
 func (p *SnowflakeProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewResourceMonitorResource,
+		//NewResourceMonitorResource,
 	}
 }
 
 func (p *SnowflakeProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		// NewDatabaseDataSource,
 	}
 }
 
