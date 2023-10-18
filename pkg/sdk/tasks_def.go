@@ -115,6 +115,7 @@ var TasksDef = g.NewInterface(
 				"Set",
 				g.QueryStruct("TaskSet").
 					OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("WAREHOUSE")).
+					OptionalAssignment("USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE", "WarehouseSize", g.ParameterOptions().SingleQuotes()).
 					OptionalTextAssignment("SCHEDULE", g.ParameterOptions().SingleQuotes()).
 					OptionalTextAssignment("CONFIG", g.ParameterOptions().NoQuotes()).
 					OptionalBooleanAssignment("ALLOW_OVERLAPPING_EXECUTION", nil).
@@ -123,7 +124,8 @@ var TasksDef = g.NewInterface(
 					OptionalTextAssignment("ERROR_INTEGRATION", g.ParameterOptions().NoQuotes()).
 					OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 					OptionalSessionParameters().
-					WithValidation(g.AtLeastOneValueSet, "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters"),
+					WithValidation(g.AtLeastOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters").
+					WithValidation(g.ConflictingFields, "Warehouse", "UserTaskManagedInitialWarehouseSize"),
 				g.KeywordOptions().SQL("SET"),
 			).
 			OptionalQueryStructField(

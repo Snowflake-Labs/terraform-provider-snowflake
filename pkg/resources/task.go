@@ -442,9 +442,12 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		warehouse := d.Get("warehouse")
 
 		if warehouse == "" && newSize != "" {
-			// TODO [SNOW-884987]: user_task_managed_initial_warehouse_size is not on the list in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-task#syntax
-			alterRequest := sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest())
-			err := client.Tasks.Alter(ctx, alterRequest)
+			size, err := sdk.ToWarehouseSize(newSize.(string))
+			if err != nil {
+				return err
+			}
+			alterRequest := sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithUserTaskManagedInitialWarehouseSize(&size))
+			err = client.Tasks.Alter(ctx, alterRequest)
 			if err != nil {
 				return fmt.Errorf("error updating user_task_managed_initial_warehouse_size on task %s", taskId.FullyQualifiedName())
 			}

@@ -78,15 +78,16 @@ type AlterTaskOptions struct {
 }
 
 type TaskSet struct {
-	Warehouse                   *AccountObjectIdentifier `ddl:"identifier" sql:"WAREHOUSE"`
-	Schedule                    *string                  `ddl:"parameter,single_quotes" sql:"SCHEDULE"`
-	Config                      *string                  `ddl:"parameter,no_quotes" sql:"CONFIG"`
-	AllowOverlappingExecution   *bool                    `ddl:"parameter" sql:"ALLOW_OVERLAPPING_EXECUTION"`
-	UserTaskTimeoutMs           *int                     `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
-	SuspendTaskAfterNumFailures *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
-	ErrorIntegration            *string                  `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
-	Comment                     *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	SessionParameters           *SessionParameters       `ddl:"list,no_parentheses"`
+	Warehouse                           *AccountObjectIdentifier `ddl:"identifier" sql:"WAREHOUSE"`
+	UserTaskManagedInitialWarehouseSize *WarehouseSize           `ddl:"parameter,single_quotes" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	Schedule                            *string                  `ddl:"parameter,single_quotes" sql:"SCHEDULE"`
+	Config                              *string                  `ddl:"parameter,no_quotes" sql:"CONFIG"`
+	AllowOverlappingExecution           *bool                    `ddl:"parameter" sql:"ALLOW_OVERLAPPING_EXECUTION"`
+	UserTaskTimeoutMs                   *int                     `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	SuspendTaskAfterNumFailures         *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	ErrorIntegration                    *string                  `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
+	Comment                             *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	SessionParameters                   *SessionParameters       `ddl:"list,no_parentheses"`
 }
 
 type TaskUnset struct {

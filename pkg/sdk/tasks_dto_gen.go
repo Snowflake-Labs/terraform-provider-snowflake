@@ -68,15 +68,16 @@ type AlterTaskRequest struct {
 }
 
 type TaskSetRequest struct {
-	Warehouse                   *AccountObjectIdentifier
-	Schedule                    *string
-	Config                      *string
-	AllowOverlappingExecution   *bool
-	UserTaskTimeoutMs           *int
-	SuspendTaskAfterNumFailures *int
-	ErrorIntegration            *string
-	Comment                     *string
-	SessionParameters           *SessionParameters
+	Warehouse                           *AccountObjectIdentifier
+	UserTaskManagedInitialWarehouseSize *WarehouseSize
+	Schedule                            *string
+	Config                              *string
+	AllowOverlappingExecution           *bool
+	UserTaskTimeoutMs                   *int
+	SuspendTaskAfterNumFailures         *int
+	ErrorIntegration                    *string
+	Comment                             *string
+	SessionParameters                   *SessionParameters
 }
 
 type TaskUnsetRequest struct {

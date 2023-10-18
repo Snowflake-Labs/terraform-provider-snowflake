@@ -154,15 +154,16 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 	}
 	if r.Set != nil {
 		opts.Set = &TaskSet{
-			Warehouse:                   r.Set.Warehouse,
-			Schedule:                    r.Set.Schedule,
-			Config:                      r.Set.Config,
-			AllowOverlappingExecution:   r.Set.AllowOverlappingExecution,
-			UserTaskTimeoutMs:           r.Set.UserTaskTimeoutMs,
-			SuspendTaskAfterNumFailures: r.Set.SuspendTaskAfterNumFailures,
-			ErrorIntegration:            r.Set.ErrorIntegration,
-			Comment:                     r.Set.Comment,
-			SessionParameters:           r.Set.SessionParameters,
+			Warehouse:                           r.Set.Warehouse,
+			UserTaskManagedInitialWarehouseSize: r.Set.UserTaskManagedInitialWarehouseSize,
+			Schedule:                            r.Set.Schedule,
+			Config:                              r.Set.Config,
+			AllowOverlappingExecution:           r.Set.AllowOverlappingExecution,
+			UserTaskTimeoutMs:                   r.Set.UserTaskTimeoutMs,
+			SuspendTaskAfterNumFailures:         r.Set.SuspendTaskAfterNumFailures,
+			ErrorIntegration:                    r.Set.ErrorIntegration,
+			Comment:                             r.Set.Comment,
+			SessionParameters:                   r.Set.SessionParameters,
 		}
 	}
 	if r.Unset != nil {

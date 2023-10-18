@@ -195,6 +195,11 @@ func (s *TaskSetRequest) WithWarehouse(Warehouse *AccountObjectIdentifier) *Task
 	return s
 }
 
+func (s *TaskSetRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize *WarehouseSize) *TaskSetRequest {
+	s.UserTaskManagedInitialWarehouseSize = UserTaskManagedInitialWarehouseSize
+	return s
+}
+
 func (s *TaskSetRequest) WithSchedule(Schedule *string) *TaskSetRequest {
 	s.Schedule = Schedule
 	return s

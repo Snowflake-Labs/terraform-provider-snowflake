@@ -62,8 +62,11 @@ func (opts *AlterTaskOptions) validate() error {
 		errs = append(errs, errExactlyOneOf("Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
 	}
 	if valueSet(opts.Set) {
-		if ok := anyValueSet(opts.Set.Warehouse, opts.Set.Schedule, opts.Set.Config, opts.Set.AllowOverlappingExecution, opts.Set.UserTaskTimeoutMs, opts.Set.SuspendTaskAfterNumFailures, opts.Set.ErrorIntegration, opts.Set.Comment, opts.Set.SessionParameters); !ok {
-			errs = append(errs, errAtLeastOneOf("Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters"))
+		if ok := anyValueSet(opts.Set.Warehouse, opts.Set.UserTaskManagedInitialWarehouseSize, opts.Set.Schedule, opts.Set.Config, opts.Set.AllowOverlappingExecution, opts.Set.UserTaskTimeoutMs, opts.Set.SuspendTaskAfterNumFailures, opts.Set.ErrorIntegration, opts.Set.Comment, opts.Set.SessionParameters); !ok {
+			errs = append(errs, errAtLeastOneOf("Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters"))
+		}
+		if everyValueSet(opts.Set.Warehouse, opts.Set.UserTaskManagedInitialWarehouseSize) {
+			errs = append(errs, errOneOf("Set", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
 		}
 		if valueSet(opts.Set.SessionParameters) {
 			if err := opts.Set.SessionParameters.validate(); err != nil {
