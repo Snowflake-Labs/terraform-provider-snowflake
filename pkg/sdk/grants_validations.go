@@ -277,10 +277,10 @@ func (opts *revokePrivilegeFromShareOptions) validate() error {
 	if !valueSet(opts.On) || opts.privilege == "" {
 		errs = append(errs, errNotSet("revokePrivilegeFromShareOptions", "On", "privilege"))
 	}
-	if !exactlyOneValueSet(opts.On.Database, opts.On.Schema, opts.On.Table, opts.On.View) {
-		errs = append(errs, errExactlyOneOf("revokePrivilegeFromShareOptions", "On.Database", "On.Schema", "On.Table", "On.View"))
-	}
 	if valueSet(opts.On) {
+		if !exactlyOneValueSet(opts.On.Database, opts.On.Schema, opts.On.Table, opts.On.View) {
+			errs = append(errs, errExactlyOneOf("revokePrivilegeFromShareOptions", "On.Database", "On.Schema", "On.Table", "On.View"))
+		}
 		if err := opts.On.validate(); err != nil {
 			errs = append(errs, err)
 		}

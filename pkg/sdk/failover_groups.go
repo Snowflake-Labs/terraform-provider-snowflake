@@ -267,7 +267,7 @@ func (opts *AlterTargetFailoverGroupOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Refresh, opts.Primary, opts.Suspend, opts.Resume) {
-		errs = append(errs, errExactlyOneOf("Refresh", "Primary", "Suspend", "Resume"))
+		errs = append(errs, errExactlyOneOf("AlterTargetFailoverGroupOptions", "Refresh", "Primary", "Suspend", "Resume"))
 	}
 	return errors.Join(errs...)
 }

@@ -59,7 +59,7 @@ func TestPipesAlter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterPipeOptions = nil
-		assertOptsInvalid(t, opts, ErrNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -212,7 +212,7 @@ func TestPipesDrop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DropPipeOptions = nil
-		assertOptsInvalid(t, opts, ErrNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -244,7 +244,7 @@ func TestPipesShow(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ShowPipeOptions = nil
-		assertOptsInvalid(t, opts, ErrNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: empty like", func(t *testing.T) {
@@ -256,7 +256,7 @@ func TestPipesShow(t *testing.T) {
 	t.Run("validation: empty in", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.In = &In{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ShowPipeOptions", "In.Account", "In.Database", "In.Schema"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ShowPipeOptions.In", "Account", "Database", "Schema"))
 	})
 
 	t.Run("validation: exactly one scope for in", func(t *testing.T) {
@@ -265,7 +265,7 @@ func TestPipesShow(t *testing.T) {
 			Account:  Bool(true),
 			Database: databaseIdentifier,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ShowPipeOptions", "In.Account", "In.Database", "In.Schema"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ShowPipeOptions.In", "Account", "Database", "Schema"))
 	})
 
 	t.Run("empty options", func(t *testing.T) {
@@ -350,7 +350,7 @@ func TestPipesDescribe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *describePipeOptions = nil
-		assertOptsInvalid(t, opts, ErrNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {

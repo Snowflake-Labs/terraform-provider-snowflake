@@ -161,7 +161,7 @@ func (opts *CreateDatabaseOptions) validate() error {
 		}
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("CreateDatabaseOptions", "OrReplace", "IfNotExists"))
 	}
 	return errors.Join(errs...)
 }

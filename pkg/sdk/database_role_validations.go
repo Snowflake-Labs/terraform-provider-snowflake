@@ -22,7 +22,7 @@ func (opts *createDatabaseRoleOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
-		errs = append(errs, errOneOf("OrReplace", "IfNotExists"))
+		errs = append(errs, errOneOf("createDatabaseRoleOptions", "OrReplace", "IfNotExists"))
 	}
 	return errors.Join(errs...)
 }

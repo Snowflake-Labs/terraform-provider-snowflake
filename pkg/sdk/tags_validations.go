@@ -38,7 +38,7 @@ func (opts *createTagOptions) validate() error {
 }
 
 func (v *AllowedValues) validate() error {
-	if ok := validateIntInRange(len(v.Values), 1, 50); !ok {
+	if !validateIntInRange(len(v.Values), 1, 50) {
 		return errIntBetween("AllowedValues", "Values", 1, 50)
 	}
 	return nil
@@ -50,7 +50,7 @@ func (v *TagSet) validate() error {
 		errs = append(errs, errOneOf("TagSet", "MaskingPolicies", "Comment"))
 	}
 	if valueSet(v.MaskingPolicies) {
-		if ok := validateIntGreaterThanOrEqual(len(v.MaskingPolicies.MaskingPolicies), 1); !ok {
+		if !validateIntGreaterThanOrEqual(len(v.MaskingPolicies.MaskingPolicies), 1) {
 			errs = append(errs, errIntValue("TagSet.MaskingPolicies", "MaskingPolicies", IntErrGreater, 0))
 		}
 	}
@@ -78,7 +78,7 @@ func (opts *alterTagOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if ok := exactlyOneValueSet(opts.Add, opts.Drop, opts.Set, opts.Unset, opts.Rename); !ok {
+	if !exactlyOneValueSet(opts.Add, opts.Drop, opts.Set, opts.Unset, opts.Rename) {
 		errs = append(errs, errExactlyOneOf("alterTagOptions", "Add", "Drop", "Set", "Unset", "Rename"))
 	}
 	if valueSet(opts.Add) && valueSet(opts.Add.AllowedValues) {

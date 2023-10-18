@@ -28,7 +28,7 @@ func (opts *CreatePipeOptions) validate() error {
 
 func (opts *AlterPipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
@@ -62,7 +62,7 @@ func (opts *AlterPipeOptions) validate() error {
 
 func (opts *DropPipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
@@ -73,21 +73,21 @@ func (opts *DropPipeOptions) validate() error {
 
 func (opts *ShowPipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
 		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
 	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
-		errs = append(errs, errExactlyOneOf("ShowPipeOptions", "In.Account", "In.Database", "In.Schema"))
+		errs = append(errs, errExactlyOneOf("ShowPipeOptions.In", "Account", "Database", "Schema"))
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *describePipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {

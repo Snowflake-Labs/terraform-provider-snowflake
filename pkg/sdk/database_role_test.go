@@ -30,7 +30,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("createDatabaseRoleOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("validation: multiple errors", func(t *testing.T) {
@@ -38,7 +38,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 		opts.name = NewDatabaseObjectIdentifier("", "")
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("createDatabaseRoleOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {

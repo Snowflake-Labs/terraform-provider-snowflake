@@ -2,6 +2,7 @@ package testint
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -131,7 +132,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(sdk.Bool(true)).WithResume(sdk.Bool(true)))
 		require.Error(t, err)
-		expected := "alter statement needs exactly one action from: set, unset, refresh"
+		expected := fmt.Sprintf("exactly one of %s fileds %v must be set", "alterDynamicTableOptions", []string{"Suspend", "Resume", "Refresh", "Set"})
 		require.Equal(t, expected, err.Error())
 	})
 

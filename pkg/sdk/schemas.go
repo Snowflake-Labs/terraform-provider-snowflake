@@ -121,7 +121,7 @@ func (opts *CreateSchemaOptions) validate() error {
 		}
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("IfNotExists", "OrReplace"))
+		errs = append(errs, errOneOf("CreateSchemaOptions", "IfNotExists", "OrReplace"))
 	}
 	return errors.Join(errs...)
 }
