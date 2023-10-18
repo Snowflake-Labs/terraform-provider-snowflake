@@ -4,14 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net/url"
-	"reflect"
 	"runtime"
 	"strings"
-	"unsafe"
 )
 
-// TODO change to predefined errors
 var (
 	ErrNilOptions                    = errors.New("options cannot be nil")
 	ErrPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
@@ -81,195 +77,45 @@ func decodeDriverError(err error) error {
 	return err
 }
 
-const ghIssueBodyTemplate = `
-**Provider Version**
-
-The provider version you are using.
-
-**Terraform Version**
-
-The version of Terraform you were using when the bug was encountered.
-
-**Describe the bug**
-
-A clear and concise description of what the bug is.
-
-**Expected behavior**
-
-A clear and concise description of what you expected to happen.
-
-**Code samples and commands**
-
-Please add code examples and commands that were run to cause the problem.
-
-**Additional context**
-
-Add any other context about the problem here.
-
-<!-- 
-Please provide additional error messages if we missed any (see the errors below and compare it with your console output)
--->
-
-Errors:
-%s
-`
-
-// NewTopLevelError wraps an error with "final" error message of sdk.
-// It should be placed in the highest place of call stack to catch as much error context as possible.
-// TODO Is it possible to call this function somewhere high in the callstack, so it always be top level ? If not maybe this would be overkill / too hard to use
-// TODO It's possible to wrap errors multiple times, this function will try to keep only the one with most error context.
-func NewTopLevelError(err error) error {
-	// TODO if called multiple times, unwrap lower level errors and wrap err to have more context
-
-	return fmt.Errorf(`
-Snowflake Terraform Provider error!
-If you think you've encountered a bug, please report it with the link below.
-If any of the error information is missing in the issue body, please fill it up.
-Any additional information (or context what you were trying to achieve) would be helpful
-to provide the solution or fix as soon as possible. Thanks :)
-
-https://github.com//Snowflake-Labs/terraform-provider-snowflake/issues/new?labels=bug&title=%s&body=%s
-
-Errors:
-%s`,
-		url.QueryEscape("New issue"),
-		url.QueryEscape(fmt.Sprintf(ghIssueBodyTemplate, err.Error())),
-		err.Error(),
-	)
-}
-
-// TODO: error distinction (go-snowflake, validation, etc.)
-// 	-
-// 	-
-
-type SDKError struct { //nolint:all
+type Error struct { //nolint:all
 	file         string
 	line         int
 	message      string
 	nestedErrors []error
 }
 
-func (e *SDKError) errorFileInfoHidden() string {
-	builder := new(strings.Builder)
-	writeTree(e, builder, 0, false)
-	return builder.String()
-}
-
-func (e *SDKError) Error() string {
+func (e *Error) Error() string {
 	builder := new(strings.Builder)
 	writeTree(e, builder, 0, true)
 	return builder.String()
 }
 
-// NewError Creates new sdk.SDKError with information like filename or line number
-// depending on where NewError was called
+// NewError Creates new sdk.Error with information like filename or line number (depending on where NewError was called)
 func NewError(message string) error {
 	return newSDKError(message, 2)
 }
 
-// TODO: new error with error as a parameter
-
-// NewPredefinedError Lets you predefine factory method for given sdk.SDKError which is convenient
-// when given error must be returned multiple times
-func NewPredefinedError(message string) func() error {
-	return func() error {
-		return newSDKError(message, 2)
-	}
-}
-
-type SDKPredefinedError func() error //nolint:all
-
-func (fn SDKPredefinedError) Error() string {
-	return fn().Error()
-}
-
-// NewPredefinedError2 same as NewPredefinedError, but we're getting filename + line where this error is declared,
-// not returned, which may be worse than the NewPredefinedError
-// version, but this one is better at replacing current predefined errors like ErrInvalidObjectIdentifier. With NewPredefinedError
-// we would have to change every return statement of this error to function call (because NewPredefinedError returns factory method for predefined err)
-// and the nature of NewPredefinedError2 is that we can return value as with ErrInvalidObjectIdentifier example.
-// The only disadvantage of this is that we'll get file + line from declaration which may cause issues that we have right now
-// (not knowing places where errors have been returned from - one function can return ErrInvalidObjectIdentifier in two places
-// and we'll know from which place with this approach unfortunately) and this error should solve them.
-// We can use both (e.g. for new errors use NewPredefinedError2 and for replacing old use NewPredefinedError)
-// or we can just choose one approach over the other. (of course NewPredefinedError2 will be renamed to something that makes more sense)
-// TODO this approach to predefined errors, this is lazy evaluated error, so the only filename + line number
-// TODO if we're going with this approach, change other methods to handle SDKPredefinedError type
-func NewPredefinedError2(message string) SDKPredefinedError {
-	err := newSDKError(message, 2)
-	return func() error {
-		return err
-	}
-}
-
-func NewErrorOneOf(structPointer any, fields ...any) error {
-	structure := reflect.ValueOf(structPointer).Elem()
-	var fieldsBuilder strings.Builder
-
-	for fieldIndex := range fields {
-		fieldMeta := structure.Type().Field(fieldIndex)
-		fieldValue := structure.Field(fieldIndex)
-		fieldPointer := reflect.NewAt(fieldMeta.Type, unsafe.Pointer(fieldValue.UnsafeAddr()))
-		if fieldMeta.Type.Kind() == reflect.Pointer {
-			fieldPointer = fieldPointer.Elem()
-		}
-
-		fieldsBuilder.WriteString(fmt.Sprintf("%s %s(%v)", fieldMeta.Name, fieldMeta.Type, fieldPointer.Elem().Interface()))
-
-		if fieldIndex != len(fields)-1 {
-			fieldsBuilder.WriteString(", ")
+// JoinErrors returns an error that wraps the given errors.
+// Any nil error values are discarded.
+// JoinErrors returns nil if errs contains no non-nil values, otherwise returns sdk.Error with nested errors
+func JoinErrors(errs ...error) error {
+	notNilErrs := make([]error, 0)
+	for _, err := range errs {
+		if err != nil {
+			notNilErrs = append(notNilErrs, err)
 		}
 	}
-
-	return newSDKError(
-		fmt.Sprintf(
-			"fields of struct %s [%s] are incompatible and shouldn't be set at the same time",
-			structure.Type().Name(),
-			fieldsBuilder.String(),
-		),
-		2,
-	)
-}
-
-func NewErrorNotSet(structPointer any, fields ...any) error {
-	structure := reflect.ValueOf(structPointer).Elem()
-	var fieldsBuilder strings.Builder
-
-	for fieldIndex := range fields {
-		fieldMeta := structure.Type().Field(fieldIndex)
-		fieldsBuilder.WriteString(fmt.Sprintf("%s %s", fieldMeta.Name, fieldMeta.Type))
-
-		if fieldIndex != len(fields)-1 {
-			fieldsBuilder.WriteString(", ")
-		}
+	if len(notNilErrs) == 0 {
+		return nil
 	}
-
-	return newSDKError(
-		fmt.Sprintf(
-			"fields of struct %s: [%s] are required and should be set",
-			structure.Type().Name(),
-			fieldsBuilder.String(),
-		),
-		2,
-	)
+	err := newSDKError("joined error", 2)
+	err.nestedErrors = notNilErrs
+	return err
 }
 
-// WrapErrors wraps errs with wrapper error.
-// When wrapper is any other type than SDKError than it'll create new SDKError with wrapper's error message
-// and in every case errs will be added to its internal list of errors.
-// TODO We can force to use SDKError as wrapper
-func WrapErrors(wrapper error, errs ...error) error {
-	if err, ok := wrapper.(*SDKError); ok { //nolint:all
-		err.nestedErrors = append(err.nestedErrors, errs...)
-		return wrapper
-	} else {
-		return newSDKError(wrapper.Error(), 2, errs...)
-	}
-}
-
-func newSDKError(message string, skip int, nested ...error) error {
+func newSDKError(message string, skip int, nested ...error) *Error {
 	line, filename := getCallerInfo(skip)
-	return &SDKError{
+	return &Error{
 		file:         filename,
 		line:         line,
 		message:      message,
@@ -290,7 +136,7 @@ func getCallerInfo(skip int) (int, string) {
 }
 
 func writeTree(e error, builder *strings.Builder, indent int, fileInfo bool) {
-	var sdkErr *SDKError
+	var sdkErr *Error
 	if joinedErr, ok := e.(interface{ Unwrap() []error }); ok { //nolint:all
 		errs := joinedErr.Unwrap()
 		for i, err := range errs {
