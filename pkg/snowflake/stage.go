@@ -150,7 +150,7 @@ func (sb *StageBuilder) Create() string {
 	}
 
 	if sb.fileFormat != "" {
-		q.WriteString(fmt.Sprintf(` FILE_FORMAT = (%v)`, fixFileFormat(sb.fileFormat)))
+		q.WriteString(fmt.Sprintf(` FILE_FORMAT = %v`, fixFileFormat(sb.fileFormat)))
 	}
 
 	if sb.copyOptions != "" {
@@ -209,7 +209,7 @@ func (sb *StageBuilder) ChangeEncryption(e string) string {
 
 // ChangeFileFormat returns the SQL query that will update the file format on the stage.
 func (sb *StageBuilder) ChangeFileFormat(f string) string {
-	return fmt.Sprintf(`ALTER STAGE %v SET FILE_FORMAT = (%v)`, sb.QualifiedName(), fixFileFormat(f))
+	return fmt.Sprintf(`ALTER STAGE %v SET FILE_FORMAT = %v`, sb.QualifiedName(), fixFileFormat(f))
 }
 
 // ChangeCopyOptions returns the SQL query that will update the copy options on the stage.
