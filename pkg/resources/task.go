@@ -451,14 +451,17 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// TODO [SNOW-884987]: error integration is not on the list in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-task#syntax
 	if d.HasChange("error_integration") {
-		if errorIntegration, ok := d.GetOk("error_integration"); ok {
-			_ = errorIntegration
-			// setRequest.
+		newErrorIntegration := d.Get("error_integration")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if newErrorIntegration == "" {
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithErrorIntegration(sdk.Pointer(true)))
 		} else {
-			_ = errorIntegration
-			// unsetRequest.
+			alterRequest.WithSet(sdk.NewTaskSetRequest().WithErrorIntegration(sdk.Pointer(newErrorIntegration.(string))))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating error integration on task %s", taskId.FullyQualifiedName())
 		}
 	}
 

@@ -84,6 +84,7 @@ type TaskSet struct {
 	AllowOverlappingExecution   *bool                    `ddl:"parameter" sql:"ALLOW_OVERLAPPING_EXECUTION"`
 	UserTaskTimeoutMs           *int                     `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
 	SuspendTaskAfterNumFailures *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	ErrorIntegration            *string                  `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
 	Comment                     *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	SessionParameters           *SessionParameters       `ddl:"list,no_parentheses"`
 }
@@ -95,6 +96,7 @@ type TaskUnset struct {
 	AllowOverlappingExecution   *bool                   `ddl:"keyword" sql:"ALLOW_OVERLAPPING_EXECUTION"`
 	UserTaskTimeoutMs           *bool                   `ddl:"keyword" sql:"USER_TASK_TIMEOUT_MS"`
 	SuspendTaskAfterNumFailures *bool                   `ddl:"keyword" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	ErrorIntegration            *bool                   `ddl:"keyword" sql:"ERROR_INTEGRATION"`
 	Comment                     *bool                   `ddl:"keyword" sql:"COMMENT"`
 	SessionParametersUnset      *SessionParametersUnset `ddl:"list,no_parentheses"`
 }

@@ -74,6 +74,7 @@ type TaskSetRequest struct {
 	AllowOverlappingExecution   *bool
 	UserTaskTimeoutMs           *int
 	SuspendTaskAfterNumFailures *int
+	ErrorIntegration            *string
 	Comment                     *string
 	SessionParameters           *SessionParameters
 }
@@ -85,6 +86,7 @@ type TaskUnsetRequest struct {
 	AllowOverlappingExecution   *bool
 	UserTaskTimeoutMs           *bool
 	SuspendTaskAfterNumFailures *bool
+	ErrorIntegration            *bool
 	Comment                     *bool
 	SessionParametersUnset      *SessionParametersUnset
 }

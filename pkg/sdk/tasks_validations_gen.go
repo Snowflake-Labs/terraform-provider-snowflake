@@ -62,8 +62,8 @@ func (opts *AlterTaskOptions) validate() error {
 		errs = append(errs, errExactlyOneOf("Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
 	}
 	if valueSet(opts.Set) {
-		if ok := anyValueSet(opts.Set.Warehouse, opts.Set.Schedule, opts.Set.Config, opts.Set.AllowOverlappingExecution, opts.Set.UserTaskTimeoutMs, opts.Set.SuspendTaskAfterNumFailures, opts.Set.Comment, opts.Set.SessionParameters); !ok {
-			errs = append(errs, errAtLeastOneOf("Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "Comment", "SessionParameters"))
+		if ok := anyValueSet(opts.Set.Warehouse, opts.Set.Schedule, opts.Set.Config, opts.Set.AllowOverlappingExecution, opts.Set.UserTaskTimeoutMs, opts.Set.SuspendTaskAfterNumFailures, opts.Set.ErrorIntegration, opts.Set.Comment, opts.Set.SessionParameters); !ok {
+			errs = append(errs, errAtLeastOneOf("Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters"))
 		}
 		if valueSet(opts.Set.SessionParameters) {
 			if err := opts.Set.SessionParameters.validate(); err != nil {
@@ -72,8 +72,8 @@ func (opts *AlterTaskOptions) validate() error {
 		}
 	}
 	if valueSet(opts.Unset) {
-		if ok := anyValueSet(opts.Unset.Warehouse, opts.Unset.Schedule, opts.Unset.Config, opts.Unset.AllowOverlappingExecution, opts.Unset.UserTaskTimeoutMs, opts.Unset.SuspendTaskAfterNumFailures, opts.Unset.Comment, opts.Unset.SessionParametersUnset); !ok {
-			errs = append(errs, errAtLeastOneOf("Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "Comment", "SessionParametersUnset"))
+		if ok := anyValueSet(opts.Unset.Warehouse, opts.Unset.Schedule, opts.Unset.Config, opts.Unset.AllowOverlappingExecution, opts.Unset.UserTaskTimeoutMs, opts.Unset.SuspendTaskAfterNumFailures, opts.Unset.ErrorIntegration, opts.Unset.Comment, opts.Unset.SessionParametersUnset); !ok {
+			errs = append(errs, errAtLeastOneOf("Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset"))
 		}
 		if valueSet(opts.Unset.SessionParametersUnset) {
 			if err := opts.Unset.SessionParametersUnset.validate(); err != nil {

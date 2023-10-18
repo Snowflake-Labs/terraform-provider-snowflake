@@ -160,6 +160,7 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 			AllowOverlappingExecution:   r.Set.AllowOverlappingExecution,
 			UserTaskTimeoutMs:           r.Set.UserTaskTimeoutMs,
 			SuspendTaskAfterNumFailures: r.Set.SuspendTaskAfterNumFailures,
+			ErrorIntegration:            r.Set.ErrorIntegration,
 			Comment:                     r.Set.Comment,
 			SessionParameters:           r.Set.SessionParameters,
 		}
@@ -172,6 +173,7 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 			AllowOverlappingExecution:   r.Unset.AllowOverlappingExecution,
 			UserTaskTimeoutMs:           r.Unset.UserTaskTimeoutMs,
 			SuspendTaskAfterNumFailures: r.Unset.SuspendTaskAfterNumFailures,
+			ErrorIntegration:            r.Unset.ErrorIntegration,
 			Comment:                     r.Unset.Comment,
 			SessionParametersUnset:      r.Unset.SessionParametersUnset,
 		}

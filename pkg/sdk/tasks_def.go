@@ -120,9 +120,10 @@ var TasksDef = g.NewInterface(
 					OptionalBooleanAssignment("ALLOW_OVERLAPPING_EXECUTION", nil).
 					OptionalNumberAssignment("USER_TASK_TIMEOUT_MS", nil).
 					OptionalNumberAssignment("SUSPEND_TASK_AFTER_NUM_FAILURES", nil).
+					OptionalTextAssignment("ERROR_INTEGRATION", g.ParameterOptions().NoQuotes()).
 					OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 					OptionalSessionParameters().
-					WithValidation(g.AtLeastOneValueSet, "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "Comment", "SessionParameters"),
+					WithValidation(g.AtLeastOneValueSet, "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters"),
 				g.KeywordOptions().SQL("SET"),
 			).
 			OptionalQueryStructField(
@@ -134,9 +135,10 @@ var TasksDef = g.NewInterface(
 					OptionalSQL("ALLOW_OVERLAPPING_EXECUTION").
 					OptionalSQL("USER_TASK_TIMEOUT_MS").
 					OptionalSQL("SUSPEND_TASK_AFTER_NUM_FAILURES").
+					OptionalSQL("ERROR_INTEGRATION").
 					OptionalSQL("COMMENT").
 					OptionalSessionParametersUnset().
-					WithValidation(g.AtLeastOneValueSet, "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "Comment", "SessionParametersUnset"),
+					WithValidation(g.AtLeastOneValueSet, "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset"),
 				g.KeywordOptions().SQL("UNSET"),
 			).
 			SetTags().

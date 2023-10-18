@@ -220,6 +220,11 @@ func (s *TaskSetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFail
 	return s
 }
 
+func (s *TaskSetRequest) WithErrorIntegration(ErrorIntegration *string) *TaskSetRequest {
+	s.ErrorIntegration = ErrorIntegration
+	return s
+}
+
 func (s *TaskSetRequest) WithComment(Comment *string) *TaskSetRequest {
 	s.Comment = Comment
 	return s
@@ -261,6 +266,11 @@ func (s *TaskUnsetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *bool) *TaskU
 
 func (s *TaskUnsetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *bool) *TaskUnsetRequest {
 	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+	return s
+}
+
+func (s *TaskUnsetRequest) WithErrorIntegration(ErrorIntegration *bool) *TaskUnsetRequest {
+	s.ErrorIntegration = ErrorIntegration
 	return s
 }
 
