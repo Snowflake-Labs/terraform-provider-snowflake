@@ -13,14 +13,11 @@ func TestInt_GetTag(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
-	tagTest, tagCleanup := createTag(t, client, testDb(t), schemaTest)
+	tagTest, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
 	t.Cleanup(tagCleanup)
 
 	t.Run("masking policy tag", func(t *testing.T) {
-		maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), schemaTest)
+		maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 		t.Cleanup(maskingPolicyCleanup)
 
 		tagValue := random.String()
@@ -41,7 +38,7 @@ func TestInt_GetTag(t *testing.T) {
 	})
 
 	t.Run("masking policy with no set tag", func(t *testing.T) {
-		maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), schemaTest)
+		maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 		t.Cleanup(maskingPolicyCleanup)
 
 		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), sdk.ObjectTypeMaskingPolicy)
