@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 type Tasks interface {
@@ -181,4 +182,9 @@ type ExecuteTaskOptions struct {
 
 func (v *Task) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
+// TODO: extract enum for state
+func (v *Task) IsStarted() bool {
+	return strings.ToLower(v.State) == "started"
 }

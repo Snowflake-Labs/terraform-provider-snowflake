@@ -2,6 +2,7 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
@@ -9,7 +10,10 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -344,98 +348,100 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 
 // CreateTask implements schema.CreateFunc.
 func CreateTask(d *schema.ResourceData, meta interface{}) error {
-	var err error
 	db := meta.(*sql.DB)
-	database := d.Get("database").(string)
-	schema := d.Get("schema").(string)
-	name := d.Get("name").(string)
-	sql := d.Get("sql_statement").(string)
-	enabled := d.Get("enabled").(bool)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	builder := snowflake.NewTaskBuilder(name, database, schema)
-	builder.WithStatement(sql)
+	databaseName := d.Get("database").(string)
+	schemaName := d.Get("schema").(string)
+	name := d.Get("name").(string)
+
+	sqlStatement := d.Get("sql_statement").(string)
+
+	taskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+	createRequest := sdk.NewCreateTaskRequest(taskId, sqlStatement)
 
 	// Set optionals
 	if v, ok := d.GetOk("warehouse"); ok {
-		builder.WithWarehouse(v.(string))
+		warehouseId := sdk.NewAccountObjectIdentifier(v.(string))
+		createRequest.WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithWarehouse(&warehouseId))
 	}
 
 	if v, ok := d.GetOk("user_task_managed_initial_warehouse_size"); ok {
-		builder.WithInitialWarehouseSize(v.(string))
+		size, err := sdk.ToWarehouseSize(v.(string))
+		if err != nil {
+			return err
+		}
+		createRequest.WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(&size))
 	}
 
 	if v, ok := d.GetOk("schedule"); ok {
-		builder.WithSchedule(v.(string))
+		createRequest.WithSchedule(sdk.Pointer(v.(string)))
 	}
 
-	if v, ok := d.GetOk("session_parameters"); ok {
-		builder.WithSessionParameters(v.(map[string]interface{}))
+	if _, ok := d.GetOk("session_parameters"); ok {
+		//TODO
+		//builder.WithSessionParameters(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
-		builder.WithTimeout(v.(int))
+		createRequest.WithUserTaskTimeoutMs(sdk.Pointer(v.(int)))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		createRequest.WithComment(sdk.Pointer(v.(string)))
 	}
 
 	if v, ok := d.GetOk("allow_overlapping_execution"); ok {
-		builder.WithAllowOverlappingExecution(v.(bool))
+		createRequest.WithAllowOverlappingExecution(sdk.Pointer(v.(bool)))
 	}
 
 	if v, ok := d.GetOk("error_integration"); ok {
-		builder.WithErrorIntegration(v.(string))
+		createRequest.WithErrorIntegration(sdk.Pointer(v.(string)))
 	}
 
 	if v, ok := d.GetOk("after"); ok {
 		after := expandStringList(v.([]interface{}))
+		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0, len(after))
 		for _, dep := range after {
-			rootTasks, err := snowflake.GetRootTasks(dep, database, schema, db)
+			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
+			rootTasks, err := client.Tasks.GetRootTasks(ctx, precedingTaskId)
 			if err != nil {
 				return err
 			}
 			for _, rootTask := range rootTasks {
-				// if a root task is enabled, then it needs to be suspended before the child tasks can be created
-				if rootTask.IsEnabled() {
-					q := rootTask.Suspend()
-					if err := snowflake.Exec(db, q); err != nil {
+				// if a root task is started, then it needs to be suspended before the child tasks can be created
+				if rootTask.IsStarted() {
+					err := suspendTask(ctx, client, rootTask.ID())
+					if err != nil {
 						return err
 					}
 
+					// TODO: wait here for task suspension?
 					// resume the task after modifications are complete as long as it is not a standalone task
 					if !(rootTask.Name == name) {
-						defer resumeTask(db, rootTask)
+						defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
 					}
 				}
 			}
-
-			builder.WithAfter(after)
+			precedingTasks = append(precedingTasks, precedingTaskId)
 		}
+		createRequest.WithAfter(precedingTasks)
 	}
 
 	if v, ok := d.GetOk("when"); ok {
-		builder.WithCondition(v.(string))
+		createRequest.WithWhen(sdk.Pointer(v.(string)))
 	}
 
-	q := builder.Create()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error creating task %v err = %w", name, err)
+	if err := client.Tasks.Create(ctx, createRequest); err != nil {
+		return fmt.Errorf("error creating task %s err = %w", taskId.FullyQualifiedName(), err)
 	}
 
-	taskID := &taskID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		TaskName:     name,
-	}
-	dataIDInput, err := taskID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	d.SetId(helpers.EncodeSnowflakeID(taskId))
 
+	enabled := d.Get("enabled").(bool)
 	if enabled {
-		if err := snowflake.WaitResumeTask(db, name, database, schema); err != nil {
+		if err := waitForTaskStart(ctx, client, taskId); err != nil {
 			log.Printf("[WARN] failed to resume task %s", name)
 		}
 	}
@@ -443,7 +449,40 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	return ReadTask(d, meta)
 }
 
-func resumeTask(db *sql.DB, rootTask *snowflake.Task) {
+func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	err := resumeTask(ctx, client, id)
+	if err != nil {
+		return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err)
+	}
+	return helpers.Retry(5, 5*time.Second, func() (error, bool) {
+		task, err := client.Tasks.ShowByID(ctx, id)
+		if err != nil {
+			return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err), false
+		}
+		if !task.IsStarted() {
+			return nil, false
+		}
+		return nil, true
+	})
+}
+
+func suspendTask(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(sdk.Pointer(true)))
+	if err != nil {
+		log.Printf("[WARN] failed to suspend task %s", id.FullyQualifiedName())
+	}
+	return err
+}
+
+func resumeTask(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithResume(sdk.Pointer(true)))
+	if err != nil {
+		log.Printf("[WARN] failed to resume task %s", id.FullyQualifiedName())
+	}
+	return err
+}
+
+func resumeTaskOld(db *sql.DB, rootTask *snowflake.Task) {
 	q := rootTask.Resume()
 	if err := snowflake.Exec(db, q); err != nil {
 		log.Printf("[WARN] failed to resume task %s", rootTask.Name)
@@ -477,7 +516,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 			if !(rootTask.Name == name) {
 				// resume the task after modifications are complete, as long as it is not a standalone task
-				defer resumeTask(db, rootTask)
+				defer resumeTaskOld(db, rootTask)
 			}
 		}
 	}
@@ -584,7 +623,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 						if !(rootTask.Name == name) {
 							// resume the task after modifications are complete, as long as it is not a standalone task
-							defer resumeTask(db, rootTask)
+							defer resumeTaskOld(db, rootTask)
 						}
 					}
 				}
@@ -701,7 +740,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	enabled := d.Get("enabled").(bool)
 	if enabled {
-		if err := snowflake.WaitResumeTask(db, name, database, schema); err != nil {
+		if err := waitForTaskStart(); err != nil {
 			log.Printf("[WARN] failed to resume task %s", name)
 		}
 	} else {
@@ -739,7 +778,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 
 			if !(rootTask.Name == name) {
 				// resume the task after modifications are complete, as long as it is not a standalone task
-				defer resumeTask(db, rootTask)
+				defer resumeTaskOld(db, rootTask)
 			}
 		}
 	}

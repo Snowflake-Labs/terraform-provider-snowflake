@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -480,73 +479,4 @@ func ListTasks(databaseName string, schemaName string, db *sql.DB) ([]Task, erro
 		return dbs, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
 	return dbs, nil
-}
-
-// GetRootTasks tries to retrieve the root of current task or returns the current (standalone) task.
-func GetRootTasks(name string, databaseName string, schemaName string, db *sql.DB) ([]*Task, error) {
-	builder := NewTaskBuilder(name, databaseName, schemaName)
-	log.Printf("[DEBUG] retrieving predecessors for task %s\n", builder.QualifiedName())
-	q := builder.Show()
-	row := QueryRow(db, q)
-	t, err := ScanTask(row)
-	if err != nil {
-		return nil, err
-	}
-
-	predecessors, err := t.GetPredecessors()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get predecessors for task %s err = %w", builder.QualifiedName(), err)
-	}
-
-	// no predecessors mean this is a root task
-	if len(predecessors) == 0 {
-		return []*Task{t}, nil
-	}
-
-	tasks := make([]*Task, 0, len(predecessors))
-	// get the root tasks for each predecessor and append them all together
-	for _, predecessor := range predecessors {
-		predecessorTasks, err := GetRootTasks(predecessor, databaseName, schemaName, db)
-		if err != nil {
-			return nil, fmt.Errorf("unable to get predecessors for task %s err = %w", builder.QualifiedName(), err)
-		}
-		tasks = append(tasks, predecessorTasks...)
-	}
-
-	// remove duplicate root tasks
-	uniqueTasks := make(map[string]*Task)
-	for _, task := range tasks {
-		uniqueTasks[task.QualifiedName()] = task
-	}
-	tasks = []*Task{}
-	for _, task := range uniqueTasks {
-		tasks = append(tasks, task)
-	}
-
-	return tasks, nil
-}
-
-func WaitResumeTask(db *sql.DB, name string, database string, schema string) error {
-	builder := NewTaskBuilder(name, database, schema)
-
-	// try to resume the task, and verify that it was resumed.
-	// if its not resumed then try again up until a maximum of 5 times
-	for i := 0; i < 5; i++ {
-		q := builder.Resume()
-		if err := Exec(db, q); err != nil {
-			return fmt.Errorf("error resuming task %v err = %w", name, err)
-		}
-
-		q = builder.Show()
-		row := QueryRow(db, q)
-		t, err := ScanTask(row)
-		if err != nil {
-			return err
-		}
-		if t.IsEnabled() {
-			return nil
-		}
-		time.Sleep(10 * time.Second)
-	}
-	return fmt.Errorf("unable to resume task %v after 5 attempts", name)
 }
