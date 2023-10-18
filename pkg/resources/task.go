@@ -1,13 +1,10 @@
 package resources
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -17,10 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"golang.org/x/exp/slices"
-)
-
-const (
-	taskIDDelimiter = '|'
 )
 
 var taskSchema = map[string]*schema.Schema{
@@ -119,26 +112,6 @@ var taskSchema = map[string]*schema.Schema{
 	},
 }
 
-type taskID struct {
-	DatabaseName string
-	SchemaName   string
-	TaskName     string
-}
-
-// String() takes in a taskID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|TaskName.
-func (t *taskID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = taskIDDelimiter
-	dataIdentifiers := [][]string{{t.DatabaseName, t.SchemaName, t.TaskName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strTaskID := strings.TrimSpace(buf.String())
-	return strTaskID, nil
-}
-
 // difference find keys in 'a' but not in 'b'.
 func difference(a, b map[string]interface{}) map[string]interface{} {
 	diff := make(map[string]interface{})
@@ -148,31 +121,6 @@ func difference(a, b map[string]interface{}) map[string]interface{} {
 		}
 	}
 	return diff
-}
-
-// taskIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TaskName
-// and returns a taskID object.
-func taskIDFromString(stringID string) (*taskID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = pipeIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per task")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	taskResult := &taskID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		TaskName:     lines[0][2],
-	}
-	return taskResult, nil
 }
 
 // Task returns a pointer to the resource representing a task.
