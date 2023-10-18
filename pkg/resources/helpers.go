@@ -99,3 +99,18 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	}
 	return &typedValue
 }
+
+// constructWithFallbacks constructs sdk.SchemaObjectIdentifier by accepting sdk.ObjectIdentifier interface and figuring out which id components
+// are already there and which one we could replace with default values (databaseName, schemaName).
+func constructWithFallbacks(databaseName string, schemaName string, identifier sdk.ObjectIdentifier) sdk.SchemaObjectIdentifier {
+	switch id := identifier.(type) {
+	case sdk.AccountObjectIdentifier:
+		return sdk.NewSchemaObjectIdentifier(databaseName, schemaName, id.Name())
+	case sdk.DatabaseObjectIdentifier:
+		return sdk.NewSchemaObjectIdentifier(id.DatabaseName(), schemaName, id.Name())
+	case sdk.SchemaObjectIdentifier:
+		return id
+	default:
+		return sdk.NewSchemaObjectIdentifier(databaseName, schemaName, id.Name())
+	}
+}
