@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: add test for allow_overlapping_execution in child task
 func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)

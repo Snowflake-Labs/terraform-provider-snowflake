@@ -5,10 +5,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -195,153 +193,123 @@ func Task() *schema.Resource {
 // ReadTask implements schema.ReadFunc.
 func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	taskID, err := taskIDFromString(d.Id())
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
+	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	task, err := client.Tasks.ShowByID(ctx, taskId)
 	if err != nil {
-		return err
-	}
-
-	database := taskID.DatabaseName
-	schema := taskID.SchemaName
-	name := taskID.TaskName
-
-	builder := snowflake.NewTaskBuilder(name, database, schema)
-	q := builder.Show()
-	row := snowflake.QueryRow(db, q)
-	t, err := snowflake.ScanTask(row)
-	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] task (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
+
+	if err := d.Set("enabled", task.IsStarted()); err != nil {
 		return err
 	}
 
-	if err := d.Set("enabled", t.IsEnabled()); err != nil {
+	if err := d.Set("name", task.Name); err != nil {
 		return err
 	}
 
-	if err := d.Set("name", t.Name); err != nil {
+	if err := d.Set("database", task.DatabaseName); err != nil {
 		return err
 	}
 
-	if err := d.Set("database", t.DatabaseName); err != nil {
+	if err := d.Set("schema", task.SchemaName); err != nil {
 		return err
 	}
 
-	if err := d.Set("schema", t.SchemaName); err != nil {
+	if err := d.Set("warehouse", task.Warehouse); err != nil {
 		return err
 	}
 
-	if err := d.Set("warehouse", t.Warehouse); err != nil {
+	if err := d.Set("schedule", task.Schedule); err != nil {
 		return err
 	}
 
-	if err := d.Set("schedule", t.Schedule); err != nil {
+	if err := d.Set("comment", task.Comment); err != nil {
 		return err
 	}
 
-	if err := d.Set("comment", t.Comment); err != nil {
+	if err := d.Set("allow_overlapping_execution", task.AllowOverlappingExecution); err != nil {
 		return err
 	}
 
-	allowOverlappingExecutionValue, err := t.AllowOverlappingExecution.Value()
-	if err != nil {
+	if err := d.Set("error_integration", task.ErrorIntegration); err != nil {
 		return err
 	}
 
-	if allowOverlappingExecutionValue != nil && allowOverlappingExecutionValue.(string) != "null" {
-		allowOverlappingExecution, err := strconv.ParseBool(allowOverlappingExecutionValue.(string))
-		if err != nil {
-			return err
-		}
-
-		if err := d.Set("allow_overlapping_execution", allowOverlappingExecution); err != nil {
-			return err
-		}
-	} else {
-		if err := d.Set("allow_overlapping_execution", false); err != nil {
-			return err
-		}
+	predecessors := make([]string, len(task.Predecessors))
+	for i, p := range task.Predecessors {
+		predecessors[i] = p.Name()
 	}
-
-	// The "DESCRIBE TASK ..." command returns the string "null" for error_integration
-	if t.ErrorIntegration.String == "null" {
-		t.ErrorIntegration.Valid = false
-		t.ErrorIntegration.String = ""
-	}
-
-	if err := d.Set("error_integration", t.ErrorIntegration.String); err != nil {
-		return err
-	}
-
-	predecessors, err := t.GetPredecessors()
-	if err != nil {
-		return err
-	}
-
 	if err := d.Set("after", predecessors); err != nil {
 		return err
 	}
 
-	if err := d.Set("when", t.Condition); err != nil {
+	if err := d.Set("when", task.Condition); err != nil {
 		return err
 	}
 
-	if err := d.Set("sql_statement", t.Definition); err != nil {
+	if err := d.Set("sql_statement", task.Definition); err != nil {
 		return err
 	}
 
-	q = builder.ShowParameters()
-	paramRows, err := snowflake.Query(db, q)
-	if err != nil {
-		return err
-	}
-	params, err := snowflake.ScanTaskParameters(paramRows)
-	if err != nil {
-		return err
-	}
-
-	if len(params) > 0 {
-		sessionParameters := map[string]interface{}{}
-		fieldParameters := map[string]interface{}{
-			"user_task_managed_initial_warehouse_size": "",
+	// TODO: do task parameters
+	/*
+		q = builder.ShowParameters()
+		paramRows, err := snowflake.Query(db, q)
+		if err != nil {
+			return err
 		}
-
-		for _, param := range params {
-			log.Printf("[TRACE] %+v\n", param)
-
-			if param.Level != "TASK" {
-				continue
-			}
-			switch param.Key {
-			case "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE":
-				fieldParameters["user_task_managed_initial_warehouse_size"] = param.Value
-			case "USER_TASK_TIMEOUT_MS":
-				timeout, err := strconv.ParseInt(param.Value, 10, 64)
-				if err != nil {
-					return err
-				}
-
-				fieldParameters["user_task_timeout_ms"] = timeout
-			default:
-				sessionParameters[param.Key] = param.Value
-			}
-		}
-
-		if err := d.Set("session_parameters", sessionParameters); err != nil {
+		params, err := snowflake.ScanTaskParameters(paramRows)
+		if err != nil {
 			return err
 		}
 
-		for key, value := range fieldParameters {
-			// lintignore:R001
-			err = d.Set(key, value)
-			if err != nil {
+		if len(params) > 0 {
+			sessionParameters := map[string]interface{}{}
+			fieldParameters := map[string]interface{}{
+				"user_task_managed_initial_warehouse_size": "",
+			}
+
+			for _, param := range params {
+				log.Printf("[TRACE] %+v\n", param)
+
+				if param.Level != "TASK" {
+					continue
+				}
+				switch param.Key {
+				case "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE":
+					fieldParameters["user_task_managed_initial_warehouse_size"] = param.Value
+				case "USER_TASK_TIMEOUT_MS":
+					timeout, err := strconv.ParseInt(param.Value, 10, 64)
+					if err != nil {
+						return err
+					}
+
+					fieldParameters["user_task_timeout_ms"] = timeout
+				default:
+					sessionParameters[param.Key] = param.Value
+				}
+			}
+
+			if err := d.Set("session_parameters", sessionParameters); err != nil {
 				return err
 			}
+
+			for key, value := range fieldParameters {
+				// lintignore:R001
+				err = d.Set(key, value)
+				if err != nil {
+					return err
+				}
+			}
 		}
-	}
+	*/
 
 	return nil
 }
@@ -491,16 +459,11 @@ func resumeTaskOld(db *sql.DB, rootTask *snowflake.Task) {
 
 // UpdateTask implements schema.UpdateFunc.
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
-	taskID, err := taskIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
 	db := meta.(*sql.DB)
-	database := taskID.DatabaseName
-	schema := taskID.SchemaName
-	name := taskID.TaskName
-	builder := snowflake.NewTaskBuilder(name, database, schema)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
+	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	rootTasks, err := snowflake.GetRootTasks(name, database, schema, db)
 	if err != nil {
