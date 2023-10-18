@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -63,9 +64,39 @@ func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error 
 	return validateAndExec(v.client, ctx, opts)
 }
 
+// TODO: handle cycles
 func (v *tasks) GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]Task, error) {
+	task, err := v.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 
-	panic("implement me")
+	predecessors := task.Predecessors
+	// no predecessors mean this is a root task
+	if len(predecessors) == 0 {
+		return []Task{*task}, nil
+	}
+
+	rootTasks := make([]Task, 0, len(predecessors))
+	for _, predecessor := range predecessors {
+		predecessorTasks, err := v.GetRootTasks(ctx, predecessor)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get predecessors for task %s err = %w", predecessor.FullyQualifiedName(), err)
+		}
+		rootTasks = append(rootTasks, predecessorTasks...)
+	}
+
+	// TODO: extract unique function in our collection helper
+	keys := make(map[string]bool)
+	uniqueRootTasks := make([]Task, 0, len(rootTasks))
+	for _, rootTask := range rootTasks {
+		if _, value := keys[rootTask.ID().FullyQualifiedName()]; !value {
+			keys[rootTask.ID().FullyQualifiedName()] = true
+			uniqueRootTasks = append(uniqueRootTasks, rootTask)
+		}
+	}
+
+	return uniqueRootTasks, nil
 }
 
 func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
