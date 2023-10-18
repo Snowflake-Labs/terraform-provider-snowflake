@@ -14,6 +14,8 @@ type Tasks interface {
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Execute(ctx context.Context, request *ExecuteTaskRequest) error
+	// TODO: add to task def
+	GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]Task, error)
 }
 
 // CreateTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-task.
@@ -149,7 +151,7 @@ type Task struct {
 	Comment                   string
 	Warehouse                 string
 	Schedule                  string
-	Predecessors              string
+	Predecessors              []SchemaObjectIdentifier
 	State                     string
 	Definition                string
 	Condition                 string

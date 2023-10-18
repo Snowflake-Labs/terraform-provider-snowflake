@@ -27,7 +27,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, "", task.Comment)
 		assert.Equal(t, "", task.Warehouse)
 		assert.Equal(t, "", task.Schedule)
-		assert.Equal(t, "[]", task.Predecessors)
+		assert.Empty(t, task.Predecessors)
 		assert.Equal(t, "suspended", task.State)
 		assert.Equal(t, sql, task.Definition)
 		assert.Equal(t, "", task.Condition)
@@ -63,14 +63,10 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, config, task.Config)
 		assert.Empty(t, task.Budget)
 		if predecessor != nil {
-			// Predecessors list is formatted, so matching it is unnecessarily complicated:
-			// e.g. `[\n  \"\\\"qgb)Z1KcNWJ(\\\".\\\"glN@JtR=7dzP$7\\\".\\\"_XEL(7N_F?@frgT5>dQS>V|vSy,J\\\"\"\n]`.
-			// We just match parts of the expected predecessor. Later we can parse the output while constructing Task object.
-			assert.Contains(t, task.Predecessors, predecessor.DatabaseName())
-			assert.Contains(t, task.Predecessors, predecessor.SchemaName())
-			assert.Contains(t, task.Predecessors, predecessor.Name())
+			assert.Len(t, task.Predecessors, 1)
+			assert.Contains(t, task.Predecessors, *predecessor)
 		} else {
-			assert.Equal(t, "[]", task.Predecessors)
+			assert.Empty(t, task.Predecessors)
 		}
 	}
 
@@ -369,7 +365,7 @@ func TestInt_Tasks(t *testing.T) {
 		task := createTaskWithRequest(t, request)
 		id := task.ID()
 
-		assert.Contains(t, task.Predecessors, otherId.Name())
+		assert.Contains(t, task.Predecessors, otherId)
 
 		alterRequest := sdk.NewAlterTaskRequest(id).WithRemoveAfter([]sdk.SchemaObjectIdentifier{otherId})
 
@@ -379,7 +375,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err = client.Tasks.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assert.Equal(t, "[]", task.Predecessors)
+		assert.Empty(t, task.Predecessors)
 
 		alterRequest = sdk.NewAlterTaskRequest(id).WithAddAfter([]sdk.SchemaObjectIdentifier{otherId})
 
@@ -389,7 +385,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err = client.Tasks.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assert.Contains(t, task.Predecessors, otherId.Name())
+		assert.Contains(t, task.Predecessors, otherId)
 	})
 
 	t.Run("alter task: modify when and as", func(t *testing.T) {

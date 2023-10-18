@@ -2,6 +2,9 @@ package sdk
 
 import (
 	"context"
+	"encoding/json"
+	"strconv"
+	"strings"
 )
 
 var _ Tasks = (*tasks)(nil)
@@ -58,6 +61,11 @@ func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task,
 func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *tasks) GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]Task, error) {
+
+	panic("implement me")
 }
 
 func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
@@ -183,7 +191,15 @@ func (r taskDBRow) convert() *Task {
 		task.Schedule = r.Schedule.String
 	}
 	if r.Predecessors.Valid {
-		task.Predecessors = r.Predecessors.String
+		// TODO: should we swallow this error here?
+		names, err := getPredecessors(r.Predecessors.String)
+		ids := make([]SchemaObjectIdentifier, len(names))
+		if err == nil {
+			for i, name := range names {
+				ids[i] = NewSchemaObjectIdentifier(r.DatabaseName, r.SchemaName, name)
+			}
+		}
+		task.Predecessors = ids
 	}
 	if r.State.Valid {
 		task.State = r.State.String
@@ -216,6 +232,32 @@ func (r taskDBRow) convert() *Task {
 		task.Budget = r.Budget.String
 	}
 	return &task
+}
+
+func getPredecessors(predecessors string) ([]string, error) {
+	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
+	// The list is formatted, e.g.:
+	// e.g. `[\n  \"\\\"qgb)Z1KcNWJ(\\\".\\\"glN@JtR=7dzP$7\\\".\\\"_XEL(7N_F?@frgT5>dQS>V|vSy,J\\\"\"\n]`.
+	predecessorNames := make([]string, 0)
+	if err := json.Unmarshal([]byte(predecessors), &predecessorNames); err == nil {
+		for i, predecessorName := range predecessorNames {
+			formattedName := predecessorName[strings.LastIndex(predecessorName, ".")+1:]
+			formattedName = strings.Trim(formattedName, "\\\"")
+			predecessorNames[i] = formattedName
+		}
+		return predecessorNames, nil
+	}
+
+	// TODO: do we still need this old way? I guess it can be removed
+	pre := strings.Split(predecessors, ".")
+	for _, p := range pre {
+		predecessorName, err := strconv.Unquote(p)
+		if err != nil {
+			return nil, err
+		}
+		predecessorNames = append(predecessorNames, predecessorName)
+	}
+	return predecessorNames, nil
 }
 
 func (r *DescribeTaskRequest) toOpts() *DescribeTaskOptions {
