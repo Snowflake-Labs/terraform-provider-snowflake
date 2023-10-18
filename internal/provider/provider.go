@@ -34,40 +34,40 @@ type SnowflakeProvider struct {
 
 // SnowflakeProviderModel describes the provider data model.
 type snowflakeProviderModelV0 struct {
-	Account                        types.String          `tfsdk:"account"`
-	User                           types.String          `tfsdk:"user"`
-	Password                       types.String          `tfsdk:"password"`
-	Warehouse                      types.String          `tfsdk:"warehouse"`
-	Role                           types.String          `tfsdk:"role"`
-	Region                         types.String          `tfsdk:"region"`
-	ValidateDefaultParameters      types.Bool            `tfsdk:"validate_default_parameters"`
-	Params                         types.Map             `tfsdk:"params"`
-	ClientIP                       types.String          `tfsdk:"client_ip"`
-	Protocol                       types.String          `tfsdk:"protocol"`
-	Host                           types.String          `tfsdk:"host"`
-	Port                           types.Int64           `tfsdk:"port"`
-	Authenticator                  types.String          `tfsdk:"authenticator"`
-	Passcode                       types.String          `tfsdk:"passcode"`
-	PasscodeInPassword             types.Bool            `tfsdk:"passcode_in_password"`
-	OktaURL                        types.String          `tfsdk:"okta_url"`
-	LoginTimeout                   types.Int64           `tfsdk:"login_timeout"`
-	RequestTimeout                 types.Int64           `tfsdk:"request_timeout"`
-	JWTExpireTimeout               types.Int64           `tfsdk:"jwt_expire_timeout"`
-	ClientTimeout                  types.Int64           `tfsdk:"client_timeout"`
-	JWTClientTimeout               types.Int64           `tfsdk:"jwt_client_timeout"`
-	ExternalBrowserTimeout         types.Int64           `tfsdk:"external_browser_timeout"`
-	InsecureMode                   types.Bool            `tfsdk:"insecure_mode"`
-	OCSPFailOpen                   types.Bool            `tfsdk:"ocsp_fail_open"`
-	Token                          types.String          `tfsdk:"token"`
-	TokenAccessor                  types.List `tfsdk:"token_accessor"`
-	KeepSessionAlive               types.Bool            `tfsdk:"keep_session_alive"`
-	PrivateKey                     types.String          `tfsdk:"private_key"`
-	PrivateKeyPassphrase           types.String          `tfsdk:"private_key_passphrase"`
-	DisableTelemetry               types.Bool            `tfsdk:"disable_telemetry"`
-	ClientRequestMFAToken          types.Bool            `tfsdk:"client_request_mfa_token"`
-	ClientStoreTemporaryCredential types.Bool            `tfsdk:"client_store_temporary_credential"`
-	DisableQueryContextCache       types.Bool            `tfsdk:"disable_query_context_cache"`
-	Profile                        types.String          `tfsdk:"profile"`
+	Account                        types.String `tfsdk:"account"`
+	User                           types.String `tfsdk:"user"`
+	Password                       types.String `tfsdk:"password"`
+	Warehouse                      types.String `tfsdk:"warehouse"`
+	Role                           types.String `tfsdk:"role"`
+	Region                         types.String `tfsdk:"region"`
+	ValidateDefaultParameters      types.Bool   `tfsdk:"validate_default_parameters"`
+	Params                         types.Map    `tfsdk:"params"`
+	ClientIP                       types.String `tfsdk:"client_ip"`
+	Protocol                       types.String `tfsdk:"protocol"`
+	Host                           types.String `tfsdk:"host"`
+	Port                           types.Int64  `tfsdk:"port"`
+	Authenticator                  types.String `tfsdk:"authenticator"`
+	Passcode                       types.String `tfsdk:"passcode"`
+	PasscodeInPassword             types.Bool   `tfsdk:"passcode_in_password"`
+	OktaURL                        types.String `tfsdk:"okta_url"`
+	LoginTimeout                   types.Int64  `tfsdk:"login_timeout"`
+	RequestTimeout                 types.Int64  `tfsdk:"request_timeout"`
+	JWTExpireTimeout               types.Int64  `tfsdk:"jwt_expire_timeout"`
+	ClientTimeout                  types.Int64  `tfsdk:"client_timeout"`
+	JWTClientTimeout               types.Int64  `tfsdk:"jwt_client_timeout"`
+	ExternalBrowserTimeout         types.Int64  `tfsdk:"external_browser_timeout"`
+	InsecureMode                   types.Bool   `tfsdk:"insecure_mode"`
+	OCSPFailOpen                   types.Bool   `tfsdk:"ocsp_fail_open"`
+	Token                          types.String `tfsdk:"token"`
+	TokenAccessor                  types.List   `tfsdk:"token_accessor"`
+	KeepSessionAlive               types.Bool   `tfsdk:"keep_session_alive"`
+	PrivateKey                     types.String `tfsdk:"private_key"`
+	PrivateKeyPassphrase           types.String `tfsdk:"private_key_passphrase"`
+	DisableTelemetry               types.Bool   `tfsdk:"disable_telemetry"`
+	ClientRequestMFAToken          types.Bool   `tfsdk:"client_request_mfa_token"`
+	ClientStoreTemporaryCredential types.Bool   `tfsdk:"client_store_temporary_credential"`
+	DisableQueryContextCache       types.Bool   `tfsdk:"disable_query_context_cache"`
+	Profile                        types.String `tfsdk:"profile"`
 	// Deprecated Attributes
 	Username          types.String `tfsdk:"username"`
 	OauthAccessToken  types.String `tfsdk:"oauth_access_token"`
@@ -801,13 +801,12 @@ type ProviderData struct {
 
 func (p *SnowflakeProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		//NewResourceMonitorResource,
+		// NewResourceMonitorResource,
 	}
 }
 
 func (p *SnowflakeProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-	}
+	return []func() datasource.DataSource{}
 }
 
 func New(version string) func() provider.Provider {

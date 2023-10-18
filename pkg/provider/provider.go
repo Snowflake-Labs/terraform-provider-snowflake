@@ -376,9 +376,9 @@ func Provider() *schema.Provider {
 				Description: "Required when `oauth_refresh_token` is used. Can also be sourced from `SNOWFLAKE_USE_BROWSER_AUTH` environment variable.",
 				Optional:    true,
 				Sensitive:   false,
-				//DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
+				// DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
 				Deprecated: "Use `authenticator` instead",
-				//ConflictsWith: []string{"password", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
+				// ConflictsWith: []string{"password", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
 			},
 			"private_key_path": {
 				Type:          schema.TypeString,

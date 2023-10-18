@@ -23,7 +23,7 @@ func (m suppressDiffIfModifier) MarkdownDescription(_ context.Context) string {
 
 // PlanModifyBool implements the plan modification logic.
 func (m suppressDiffIfModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	if m.f(req.StateValue.ValueString(), req.PlanValue.ValueString() ) {
+	if m.f(req.StateValue.ValueString(), req.PlanValue.ValueString()) {
 		resp.PlanValue = req.StateValue
 	}
 }

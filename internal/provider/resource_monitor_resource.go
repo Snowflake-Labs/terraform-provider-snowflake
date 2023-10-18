@@ -33,7 +33,7 @@ func NewResourceMonitorResource() resource.Resource {
 	return &ResourceMonitorResource{}
 }
 
-type ResourceMonitorResource struct{
+type ResourceMonitorResource struct {
 	client *sdk.Client
 }
 
@@ -141,7 +141,7 @@ func resourceMonitorSchemaV0() schema.Schema {
 				Optional:    true,
 				ElementType: types.StringType,
 				// todo: add the `resource_monitor` attribute to the `snowflake_warehouse` resource
-				//DeprecationMessage: "Set the `resource_monitor` attribute on the `snowflake_warehouse` resource instead",
+				// DeprecationMessage: "Set the `resource_monitor` attribute on the `snowflake_warehouse` resource instead",
 			},
 		},
 	}
