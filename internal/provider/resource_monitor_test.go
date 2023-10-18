@@ -1,5 +1,5 @@
 
-package resources_test
+package provider
 
 import (
 	"encoding/json"

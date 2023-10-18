@@ -6,6 +6,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -23,23 +24,451 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// Ensure provider defined types fully satisfy framework interfaces.
 var (
-	_ resource.Resource                = &ResourceMonitorResource{}
-	_ resource.ResourceWithImportState = &ResourceMonitorResource{}
+	_ resource.Resource                = &ResourceMonitorResourceV1{}
+	_ resource.ResourceWithImportState = &ResourceMonitorResourceV1{}
 )
 
 func NewResourceMonitorResource() resource.Resource {
-	return &ResourceMonitorResource{}
+	return &ResourceMonitorResourceV0{}
 }
 
-// ResourceMonitorResource defines the resource implementation.
-type ResourceMonitorResource struct {
+type ResourceMonitorResourceV0 struct{
 	client *sdk.Client
 }
 
-// ResourceMonitorModel describes the resource data model.
-type ResourceMonitorModel struct {
+type resourceMonitorModelV0 struct {
+	Name                     types.String  `tfsdk:"name"`
+	NotifyUsers              types.Set     `tfsdk:"notify_users"`
+	CreditQuota              types.Float64 `tfsdk:"credit_quota"`
+	Frequency                types.String  `tfsdk:"frequency"`
+	StartTimestamp           types.String  `tfsdk:"start_timestamp"`
+	EndTimestamp             types.String  `tfsdk:"end_timestamp"`
+	SuspendTrigger           types.Int64   `tfsdk:"suspend_trigger"`
+	SuspendTriggers          types.Set     `tfsdk:"suspend_triggers"`
+	SuspendImmediateTrigger  types.Int64   `tfsdk:"suspend_immediate_trigger"`
+	SuspendImmediateTriggers types.Set     `tfsdk:"suspend_immediate_triggers"`
+	NotifyTriggers           types.Set     `tfsdk:"notify_triggers"`
+	SetForAccount            types.Bool    `tfsdk:"set_for_account"`
+	Warehouses               types.Set     `tfsdk:"warehouses"`
+	Id                       types.String  `tfsdk:"id"`
+}
+
+func resourceMonitorSchemaV0() schema.Schema {
+	return schema.Schema{
+		Version: 0,
+		Attributes: map[string]schema.Attribute{
+			"name": schema.StringAttribute{
+				Description: "Identifier for the resource monitor; must be unique for your account.",
+				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"notify_users": schema.SetAttribute{
+				Description: "Specifies the list of users to receive email notifications on resource monitors.",
+				Optional:    true,
+				ElementType: types.StringType,
+			},
+			"credit_quota": schema.Int64Attribute{
+				Description: "The number of credits allocated monthly to the resource monitor.",
+				Optional:    true,
+				Computed:    true,
+			},
+			"frequency": schema.StringAttribute{
+				Description: "The frequency interval at which the credit usage resets to 0. If you set a frequency for a resource monitor, you must also set START_TIMESTAMP.",
+				Optional:    true,
+				Computed:    true,
+				Validators: []validator.String{
+					stringvalidator.OneOfCaseInsensitive([]string{"MONTHLY", "DAILY", "WEEKLY", "YEARLY", "NEVER"}...),
+				},
+			},
+			"start_timestamp": schema.StringAttribute{
+				Description: "The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses.",
+				Optional:    true,
+				Computed:    true,
+			},
+			"end_timestamp": schema.StringAttribute{
+				Description: "The date and time when the resource monitor suspends the assigned warehouses.",
+				Optional:    true,
+				Computed:    true,
+			},
+			"suspend_trigger": schema.Int64Attribute{
+				Description: "The number that represents the percentage threshold at which to suspend all warehouses.",
+				Optional:    true,
+				Validators: []validator.Int64{
+					int64validator.ConflictsWith(path.MatchRoot("suspend_triggers")),
+				},
+			},
+			"suspend_triggers": schema.SetAttribute{
+				Description: "A list of percentage thresholds at which to suspend all warehouses.",
+				Optional:    true,
+				ElementType: types.Int64Type,
+				Validators: []validator.Set{
+					setvalidator.ConflictsWith(path.MatchRoot("suspend_trigger")),
+				},
+				DeprecationMessage: "Use suspend_trigger instead",
+			},
+			"suspend_immediate_trigger": schema.Int64Attribute{
+				Description: "The number that represents the percentage threshold at which to immediately suspend all warehouses.", Optional: true,
+				Validators: []validator.Int64{
+					int64validator.ConflictsWith(path.MatchRoot("suspend_immediate_triggers")),
+				},
+			},
+			"suspend_immediate_triggers": schema.SetAttribute{
+				Description: "A list of percentage thresholds at which to suspend all warehouses.",
+				Optional:    true,
+				ElementType: types.Int64Type,
+				Validators: []validator.Set{
+					setvalidator.ConflictsWith(path.MatchRoot("suspend_immediate_trigger")),
+				},
+				DeprecationMessage: "Use suspend_immediate_trigger instead",
+			},
+			"notify_triggers": schema.SetAttribute{
+				Description: "A list of percentage thresholds at which to send an alert to subscribed users.",
+				Optional:    true,
+				ElementType: types.Int64Type,
+			},
+			"set_for_account": schema.BoolAttribute{
+				Description: "Specifies whether the resource monitor should be applied globally to your Snowflake account (defaults to false).",
+				Optional:    true,
+				Default:     booldefault.StaticBool(false),
+				// todo: create a snowflake_resource_monitor_association resource
+				// DeprecationMessage: "Use snowflake_resource_monitor_association instead",
+			},
+			"warehouses": schema.SetAttribute{
+				Description: "A list of warehouses to apply the resource monitor to.",
+				Optional:    true,
+				ElementType: types.StringType,
+				// todo: add the `resource_monitor` attribute to the `snowflake_warehouse` resource
+				//DeprecationMessage: "Set the `resource_monitor` attribute on the `snowflake_warehouse` resource instead",
+			},
+		},
+	}
+}
+
+func (r *ResourceMonitorResourceV0) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_resource_monitor"
+}
+
+func (r *ResourceMonitorResourceV0) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = resourceMonitorSchemaV0()
+}
+
+
+func (r *ResourceMonitorResourceV0) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	providerData, ok := req.ProviderData.(*ProviderData)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *sdk.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	r.client = providerData.client
+}
+
+func (r *ResourceMonitorResourceV0) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data *resourceMonitorModelV0
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	name := data.Name.ValueString()
+	id := sdk.NewAccountObjectIdentifier(name)
+	opts := &sdk.CreateResourceMonitorOptions{
+		
+	}
+	with := &sdk.ResourceMonitorWith{}
+	setWith := false
+	if !data.CreditQuota.IsNull() && !data.CreditQuota.IsUnknown() && data.CreditQuota.ValueFloat64() > 0 {
+		setWith = true
+		with.CreditQuota = sdk.Int(int(data.CreditQuota.ValueFloat64()))
+	}
+	if !data.Frequency.IsNull() && data.Frequency.ValueString() != "" {
+		setWith = true
+		frequency, err := sdk.FrequencyFromString(data.Frequency.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create resource monitor, got error: %s", err))
+		}
+		with.Frequency = frequency
+	}
+	if !data.StartTimestamp.IsNull() && data.StartTimestamp.ValueString() != "" {
+		setWith = true
+		with.StartTimestamp = data.StartTimestamp.ValueStringPointer()
+	}
+
+	if !data.EndTimestamp.IsNull() && data.EndTimestamp.ValueString() != "" {
+		setWith = true
+		with.EndTimestamp = data.EndTimestamp.ValueStringPointer()
+	}
+
+	if !data.NotifyUsers.IsNull() && len(data.NotifyUsers.Elements()) > 0 {
+		setWith = true
+		elements := make([]types.String, 0, len(data.NotifyUsers.Elements()))
+		var notifiedUsers []sdk.NotifiedUser
+		for _, e := range elements {
+			notifiedUsers = append(notifiedUsers, sdk.NotifiedUser{Name: e.ValueString()})
+		}
+		with.NotifyUsers = &sdk.NotifyUsers{
+			Users: notifiedUsers,
+		}
+	}
+
+	var triggers[]sdk.TriggerDefinition
+	if !data.SuspendImmediateTriggers.IsNull() && len(data.SuspendImmediateTriggers.Elements()) > 0 {
+		setWith = true
+		elements := make([]types.Int64, 0, len(data.SuspendImmediateTriggers.Elements()))
+		data.SuspendImmediateTriggers.ElementsAs(ctx, &elements, false)
+		if len(elements) > 0 {
+			triggers = append(triggers, sdk.TriggerDefinition{
+				Threshold:     int(elements[0].ValueInt64()),
+				TriggerAction: sdk.TriggerActionSuspendImmediate,
+			})
+		}
+	}
+	if !data.SuspendImmediateTrigger.IsNull() && !data.SuspendImmediateTrigger.IsUnknown() && data.SuspendImmediateTrigger.ValueInt64() > 0 {
+		setWith = true
+		triggers = append(triggers, sdk.TriggerDefinition{
+			Threshold:     int(data.SuspendImmediateTrigger.ValueInt64()),
+			TriggerAction: sdk.TriggerActionSuspendImmediate,
+		})
+	}
+	if !data.SuspendTriggers.IsNull() && len(data.SuspendTriggers.Elements()) > 0 {
+		setWith = true
+		elements := make([]types.Int64, 0, len(data.SuspendTriggers.Elements()))
+		data.SuspendTriggers.ElementsAs(ctx, &elements, false)
+		if len(elements) > 0 {
+			triggers = append(triggers, sdk.TriggerDefinition{
+				Threshold:     int(elements[0].ValueInt64()),
+				TriggerAction: sdk.TriggerActionSuspend,
+			})
+		}
+	}
+	if !data.SuspendTrigger.IsNull() && !data.SuspendTrigger.IsUnknown() && data.SuspendTrigger.ValueInt64() > 0 {
+		setWith = true
+		triggers = append(triggers, sdk.TriggerDefinition{
+			Threshold:     int(data.SuspendTrigger.ValueInt64()),
+			TriggerAction: sdk.TriggerActionSuspend,
+		})
+	}
+	if !data.NotifyTriggers.IsNull() && len(data.NotifyTriggers.Elements()) > 0 {
+		setWith = true
+		elements := make([]types.Int64, 0, len(data.NotifyTriggers.Elements()))
+		data.NotifyTriggers.ElementsAs(ctx, &elements, false)
+		for _, e := range elements {
+			triggers = append(triggers, sdk.TriggerDefinition{
+				Threshold:     int(e.ValueInt64()),
+				TriggerAction: sdk.TriggerActionNotify,	
+			})
+		}
+	}
+	if setWith {
+		opts.With = with
+	}
+	err := r.client.ResourceMonitors.Create(ctx, id, opts)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create resource monitor, got error: %s", err))
+	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	data.Id = types.StringValue(id.FullyQualifiedName())
+
+	if !data.SetForAccount.IsNull() && !data.SetForAccount.IsUnknown() && data.SetForAccount.ValueBool() {
+		accountOpts := sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				ResourceMonitor: id,
+			},
+		}
+		if err := r.client.Accounts.Alter(ctx, &accountOpts); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to set resource monitor %v on account, got error: %s", name, err))
+		}
+	}
+
+	if !data.Warehouses.IsNull() && len(data.Warehouses.Elements()) > 0 {
+		elements := make([]types.String, 0, len(data.Warehouses.Elements()))
+		data.Warehouses.ElementsAs(ctx, &elements, false)
+		for _, e := range elements {
+			warehouseOpts := sdk.AlterWarehouseOptions{
+				Set: &sdk.WarehouseSet{
+					ResourceMonitor: id,
+				},
+			}
+			if err := r.client.Warehouses.Alter(ctx, sdk.NewAccountObjectIdentifier(e.ValueString()), &warehouseOpts); err != nil {
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to set resource monitor %v on warehouse %v, got error: %s", name, e.ValueString(), err))
+			}
+		}
+	}
+}
+
+func (r *ResourceMonitorResourceV1) read(ctx context.Context, data *resourceMonitorModelV1, dryRun bool) (*resourceMonitorModelV1, []string, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+	client := r.client
+	if dryRun {
+		client = sdk.NewDryRunClient()
+	}
+
+	id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(data.Id.ValueString())
+	resourceMonitor, err := client.ResourceMonitors.ShowByID(ctx, id)
+	if dryRun {
+		return data, client.TraceLogs(), diags
+	}
+	if err != nil {
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read database, got error: %s", err))
+		return data, nil, diags
+	}
+
+	data.CreditQuota = types.Float64Value(resourceMonitor.CreditQuota)
+	data.Frequency = types.StringValue(string(resourceMonitor.Frequency))
+	switch resourceMonitor.Level {
+	case sdk.ResourceMonitorLevelAccount:
+		data.Level = types.StringValue("ACCOUNT")
+	case sdk.ResourceMonitorLevelWarehouse:
+		data.Level = types.StringValue("WAREHOUSE")
+	case sdk.ResourceMonitorLevelNull:
+		data.Level = types.StringValue("NULL")
+	}
+	data.UsedCredits = types.Float64Value(resourceMonitor.UsedCredits)
+	data.RemainingCredits = types.Float64Value(resourceMonitor.RemainingCredits)
+
+	if resourceMonitor.StartTime != "" {
+		if data.StartTimestamp.ValueString() != "IMMEDIATELY" {
+			data.StartTimestamp = types.StringValue(resourceMonitor.StartTime)
+		}
+	} else {
+		data.StartTimestamp = types.StringNull()
+	}
+	if resourceMonitor.EndTime != "" {
+		data.EndTimestamp = types.StringValue(resourceMonitor.EndTime)
+	}
+	if len(resourceMonitor.NotifyUsers) == 0 {
+		data.NotifyUsers = types.SetNull(types.StringType)
+	} else {
+		var notifyUsers []types.String
+		for _, e := range resourceMonitor.NotifyUsers {
+			notifyUsers = append(notifyUsers, types.StringValue(e))
+		}
+		var diag diag.Diagnostics
+		data.NotifyUsers, diag = types.SetValueFrom(ctx, types.StringType, notifyUsers)
+		diags = append(diags, diag...)
+	}
+
+	triggersObjectType := types.ObjectType{}.WithAttributeTypes(map[string]attr.Type{
+		"threshold":      types.Int64Type,
+		"trigger_action": types.StringType,
+	})
+	if len(resourceMonitor.NotifyTriggers) == 0 && resourceMonitor.SuspendAt == nil && resourceMonitor.SuspendImmediateAt == nil {
+		data.Triggers = types.SetNull(triggersObjectType)
+	} else {
+		var triggers []resourceMonitorTriggerModel
+		for _, e := range resourceMonitor.NotifyTriggers {
+			triggers = append(triggers, resourceMonitorTriggerModel{
+				Threshold:     types.Int64Value(int64(e)),
+				TriggerAction: types.StringValue(string(sdk.TriggerActionNotify)),
+			})
+		}
+		if resourceMonitor.SuspendAt != nil {
+			triggers = append(triggers, resourceMonitorTriggerModel{
+				Threshold:     types.Int64Value(int64(*resourceMonitor.SuspendAt)),
+				TriggerAction: types.StringValue(string(sdk.TriggerActionSuspend)),
+			})
+		}
+
+		var diag diag.Diagnostics
+		data.Triggers, diag = types.SetValueFrom(ctx, triggersObjectType, triggers)
+		diags = append(diags, diag...)
+	}
+
+	data.Id = types.StringValue(id.FullyQualifiedName())
+	return data, nil, diags
+}
+
+type ResourceMonitorResourceV1 struct {
+	client *sdk.Client
+}
+
+func upgradeResourceMonitorStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+	var resourceMonitorDataV0 resourceMonitorModelV0
+	resp.Diagnostics.Append(req.State.Get(ctx, &resourceMonitorDataV0)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := resourceMonitorDataV0.Name
+	notifyUsers := resourceMonitorDataV0.NotifyUsers
+	creditQuota := resourceMonitorDataV0.CreditQuota
+	frequency := resourceMonitorDataV0.Frequency
+	startTimestamp := resourceMonitorDataV0.StartTimestamp
+	endTimestamp := resourceMonitorDataV0.EndTimestamp
+	suspendTrigger := resourceMonitorDataV0.SuspendTrigger
+	suspendTriggers := resourceMonitorDataV0.SuspendTriggers
+	if !suspendTriggers.IsNull() {
+		suspendTriggersElements := make([]types.Int64, 0, len(suspendTriggers.Elements()))
+		suspendTriggers.ElementsAs(ctx, &suspendTriggersElements, false)
+		if len(suspendTriggersElements) > 0 {
+			suspendTrigger = suspendTriggersElements[0]
+		}
+	}
+	suspendImmediateTrigger := resourceMonitorDataV0.SuspendImmediateTrigger
+	suspendImmediateTriggers := resourceMonitorDataV0.SuspendImmediateTriggers
+	if !suspendImmediateTriggers.IsNull() {
+		suspendImmediateTriggersElements := make([]types.Int64, 0, len(suspendImmediateTriggers.Elements()))
+		suspendImmediateTriggers.ElementsAs(ctx, &suspendImmediateTriggersElements, false)
+		if len(suspendImmediateTriggersElements) > 0 {
+			suspendImmediateTrigger = suspendImmediateTriggersElements[0]
+		}
+	}
+	notifyTriggers := resourceMonitorDataV0.NotifyTriggers
+
+	trigggers := make([]resourceMonitorTriggerModel, 0)
+	if !suspendTrigger.IsNull() {
+		trigggers = append(trigggers, resourceMonitorTriggerModel{
+			Threshold:     suspendTrigger,
+			TriggerAction: types.StringValue("SUSPEND"),
+		})
+	}
+	if !suspendImmediateTrigger.IsNull() {
+		trigggers = append(trigggers, resourceMonitorTriggerModel{
+			Threshold:     suspendImmediateTrigger,
+			TriggerAction: types.StringValue("SUSPEND_IMMEDIATE"),
+		})
+	}
+	if !notifyTriggers.IsNull() {
+		notifyTriggersElements := make([]types.Int64, 0, len(notifyTriggers.Elements()))
+		notifyTriggers.ElementsAs(ctx, &notifyTriggersElements, false)
+		for _, v := range notifyTriggersElements {
+			trigggers = append(trigggers, resourceMonitorTriggerModel{
+				Threshold:     v,
+				TriggerAction: types.StringValue("NOTIFY"),
+			})
+		}
+	}
+	triggersObjectType := types.ObjectType{}.WithAttributeTypes(map[string]attr.Type{
+		"threshold":      types.Int64Type,
+		"trigger_action": types.StringType,
+	})
+	triggersSet, diags := types.SetValueFrom(ctx, triggersObjectType, trigggers)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resourceMonitorV1 := &resourceMonitorModelV1{
+		Name:           name,
+		NotifyUsers:    notifyUsers,
+		CreditQuota:    creditQuota,
+		Frequency:      frequency,
+		StartTimestamp: startTimestamp,
+		EndTimestamp:   endTimestamp,
+		Triggers:       triggersSet,
+		Id:             resourceMonitorDataV0.Id,
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, resourceMonitorV1)...)
+}
+
+type resourceMonitorModelV1 struct {
 	OrReplace        types.Bool    `tfsdk:"or_replace"`
 	Name             types.String  `tfsdk:"name"`
 	CreditQuota      types.Float64 `tfsdk:"credit_quota"`
@@ -54,53 +483,10 @@ type ResourceMonitorModel struct {
 	Id               types.String  `tfsdk:"id"`
 }
 
-type ResourceMonitorTriggerModel struct {
-	Threshold     types.Int64  `tfsdk:"threshold"`
-	TriggerAction types.String `tfsdk:"trigger_action"`
-}
-
-func (old *ResourceMonitorModel) Equals(new *ResourceMonitorModel, ctx context.Context) bool {
-	if old == nil || new == nil {
-		return false
-	}
-	if !old.Id.Equal(new.Id) {
-		return false
-	}
-	if !old.OrReplace.Equal(new.OrReplace) {
-		return false
-	}
-	if !old.Name.Equal(new.Name) {
-		return false
-	}
-	if !old.CreditQuota.Equal(new.CreditQuota) {
-		return false
-	}
-	if !old.Frequency.Equal(new.Frequency) {
-		return false
-	}
-	if !old.StartTimestamp.Equal(new.StartTimestamp) {
-		return false
-	}
-	if !old.EndTimestamp.Equal(new.EndTimestamp) {
-		return false
-	}
-	if !old.Triggers.Equal(new.Triggers) {
-		return false
-	}
-	if !old.NotifyUsers.Equal(new.NotifyUsers) {
-		return false
-	}
-
-	return true
-}
-
-func (r *ResourceMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_resource_monitor"
-}
-
-func (r *ResourceMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func resourceMonitorSchemaV1() schema.Schema {
+	return schema.Schema{
 		Description: "Snowflake resource monitor resource",
+		Version:     1,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -208,7 +594,66 @@ func (r *ResourceMonitorResource) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *ResourceMonitorResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+type resourceMonitorTriggerModel struct {
+	Threshold     types.Int64  `tfsdk:"threshold"`
+	TriggerAction types.String `tfsdk:"trigger_action"`
+}
+
+func (old *resourceMonitorModelV1) Equals(new *resourceMonitorModelV1, ctx context.Context) bool {
+	if old == nil || new == nil {
+		return false
+	}
+	if !old.Id.Equal(new.Id) {
+		return false
+	}
+	if !old.OrReplace.Equal(new.OrReplace) {
+		return false
+	}
+	if !old.Name.Equal(new.Name) {
+		return false
+	}
+	if !old.CreditQuota.Equal(new.CreditQuota) {
+		return false
+	}
+	if !old.Frequency.Equal(new.Frequency) {
+		return false
+	}
+	if !old.StartTimestamp.Equal(new.StartTimestamp) {
+		return false
+	}
+	if !old.EndTimestamp.Equal(new.EndTimestamp) {
+		return false
+	}
+	if !old.Triggers.Equal(new.Triggers) {
+		return false
+	}
+	if !old.NotifyUsers.Equal(new.NotifyUsers) {
+		return false
+	}
+
+	return true
+}
+
+func (r *ResourceMonitorResourceV1) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_resource_monitor"
+}
+
+func (r *ResourceMonitorResourceV1) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = resourceMonitorSchemaV1()
+}
+
+func (r *ResourceMonitorResourceV1) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := resourceMonitorSchemaV0()
+	return map[int64]resource.StateUpgrader{
+		// State upgrade implementation from 0 to 1
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeResourceMonitorStateV0toV1,
+		},
+	}
+}
+
+func (r *ResourceMonitorResourceV1) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -228,10 +673,10 @@ func (r *ResourceMonitorResource) Configure(ctx context.Context, req resource.Co
 	r.client = providerData.client
 }
 
-func (r *ResourceMonitorResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *ResourceMonitorResourceV1) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// we aren't really modifying the plan, just logging what the plan intends to do
 	resp.Plan = req.Plan
-	var plan, state *ResourceMonitorModel
+	var plan, state *resourceMonitorModelV1
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -271,8 +716,8 @@ func (r *ResourceMonitorResource) ModifyPlan(ctx context.Context, req resource.M
 	}
 }
 
-func (r *ResourceMonitorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data *ResourceMonitorModel
+func (r *ResourceMonitorResourceV1) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data *resourceMonitorModelV1
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	data, _, diags := r.create(ctx, data, false)
 	resp.Diagnostics.Append(diags...)
@@ -282,7 +727,7 @@ func (r *ResourceMonitorResource) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *ResourceMonitorResource) create(ctx context.Context, data *ResourceMonitorModel, dryRun bool) (*ResourceMonitorModel, []string, diag.Diagnostics) {
+func (r *ResourceMonitorResourceV1) create(ctx context.Context, data *resourceMonitorModelV1, dryRun bool) (*resourceMonitorModelV1, []string, diag.Diagnostics) {
 	diags := diag.Diagnostics{}
 	client := r.client
 	if dryRun {
@@ -335,7 +780,7 @@ func (r *ResourceMonitorResource) create(ctx context.Context, data *ResourceMoni
 
 	if !data.Triggers.IsNull() && len(data.Triggers.Elements()) > 0 {
 		setWith = true
-		elements := make([]ResourceMonitorTriggerModel, 0, len(data.Triggers.Elements()))
+		elements := make([]resourceMonitorTriggerModel, 0, len(data.Triggers.Elements()))
 		data.Triggers.ElementsAs(ctx, &elements, false)
 		var triggers []sdk.TriggerDefinition
 		for _, e := range elements {
@@ -364,8 +809,8 @@ func (r *ResourceMonitorResource) create(ctx context.Context, data *ResourceMoni
 	return data, nil, diags
 }
 
-func (r *ResourceMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data *ResourceMonitorModel
+func (r *ResourceMonitorResourceV1) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data *resourceMonitorModelV1
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -378,7 +823,7 @@ func (r *ResourceMonitorResource) Read(ctx context.Context, req resource.ReadReq
 	diags.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *ResourceMonitorResource) read(ctx context.Context, data *ResourceMonitorModel, dryRun bool) (*ResourceMonitorModel, []string, diag.Diagnostics) {
+func (r *ResourceMonitorResourceV1) read(ctx context.Context, data *resourceMonitorModelV1, dryRun bool) (*resourceMonitorModelV1, []string, diag.Diagnostics) {
 	diags := diag.Diagnostics{}
 	client := r.client
 	if dryRun {
@@ -437,15 +882,15 @@ func (r *ResourceMonitorResource) read(ctx context.Context, data *ResourceMonito
 	if len(resourceMonitor.NotifyTriggers) == 0 && resourceMonitor.SuspendAt == nil && resourceMonitor.SuspendImmediateAt == nil {
 		data.Triggers = types.SetNull(triggersObjectType)
 	} else {
-		var triggers []ResourceMonitorTriggerModel
+		var triggers []resourceMonitorTriggerModel
 		for _, e := range resourceMonitor.NotifyTriggers {
-			triggers = append(triggers, ResourceMonitorTriggerModel{
+			triggers = append(triggers, resourceMonitorTriggerModel{
 				Threshold:     types.Int64Value(int64(e)),
 				TriggerAction: types.StringValue(string(sdk.TriggerActionNotify)),
 			})
 		}
 		if resourceMonitor.SuspendAt != nil {
-			triggers = append(triggers, ResourceMonitorTriggerModel{
+			triggers = append(triggers, resourceMonitorTriggerModel{
 				Threshold:     types.Int64Value(int64(*resourceMonitor.SuspendAt)),
 				TriggerAction: types.StringValue(string(sdk.TriggerActionSuspend)),
 			})
@@ -460,8 +905,8 @@ func (r *ResourceMonitorResource) read(ctx context.Context, data *ResourceMonito
 	return data, nil, diags
 }
 
-func (r *ResourceMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state ResourceMonitorModel
+func (r *ResourceMonitorResourceV1) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state resourceMonitorModelV1
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -476,7 +921,7 @@ func (r *ResourceMonitorResource) Update(ctx context.Context, req resource.Updat
 	diags.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *ResourceMonitorResource) update(ctx context.Context, plan *ResourceMonitorModel, state *ResourceMonitorModel, dryRun bool) (*ResourceMonitorModel, []string, diag.Diagnostics) {
+func (r *ResourceMonitorResourceV1) update(ctx context.Context, plan *resourceMonitorModelV1, state *resourceMonitorModelV1, dryRun bool) (*resourceMonitorModelV1, []string, diag.Diagnostics) {
 	diags := diag.Diagnostics{}
 	client := r.client
 	if dryRun {
@@ -541,7 +986,7 @@ func (r *ResourceMonitorResource) update(ctx context.Context, plan *ResourceMoni
 	if !plan.Triggers.Equal(state.Triggers) {
 		runUpdate = true
 		var triggers []sdk.TriggerDefinition
-		elements := make([]ResourceMonitorTriggerModel, 0, len(plan.Triggers.Elements()))
+		elements := make([]resourceMonitorTriggerModel, 0, len(plan.Triggers.Elements()))
 		plan.Triggers.ElementsAs(ctx, &elements, false)
 		for _, e := range elements {
 			triggers = append(triggers, sdk.TriggerDefinition{
@@ -567,8 +1012,8 @@ func (r *ResourceMonitorResource) update(ctx context.Context, plan *ResourceMoni
 	return data, nil, diags
 }
 
-func (r *ResourceMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data *ResourceMonitorModel
+func (r *ResourceMonitorResourceV1) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data *resourceMonitorModelV1
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -580,7 +1025,7 @@ func (r *ResourceMonitorResource) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *ResourceMonitorResource) delete(ctx context.Context, data *ResourceMonitorModel, dryRun bool) (*ResourceMonitorModel, []string, diag.Diagnostics) {
+func (r *ResourceMonitorResourceV1) delete(ctx context.Context, data *resourceMonitorModelV1, dryRun bool) (*resourceMonitorModelV1, []string, diag.Diagnostics) {
 	client := r.client
 	if dryRun {
 		client = sdk.NewDryRunClient()
@@ -599,6 +1044,6 @@ func (r *ResourceMonitorResource) delete(ctx context.Context, data *ResourceMoni
 	return data, nil, diags
 }
 
-func (r *ResourceMonitorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *ResourceMonitorResourceV1) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
