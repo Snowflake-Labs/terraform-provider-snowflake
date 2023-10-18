@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/go-uuid"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 )
 
 var itc integrationTestContext
@@ -42,6 +42,9 @@ func cleanup() {
 	if itc.databaseCleanup != nil {
 		defer itc.databaseCleanup()
 	}
+	if itc.schemaCleanup != nil {
+		defer itc.schemaCleanup()
+	}
 }
 
 type integrationTestContext struct {
@@ -50,6 +53,8 @@ type integrationTestContext struct {
 
 	database        *sdk.Database
 	databaseCleanup func()
+	schema          *sdk.Schema
+	schemaCleanup   func()
 }
 
 func (itc *integrationTestContext) initialize() error {
@@ -63,25 +68,45 @@ func (itc *integrationTestContext) initialize() error {
 	itc.ctx = context.Background()
 
 	db, dbCleanup, err := createDb(itc.client, itc.ctx)
+	if err != nil {
+		return err
+	}
 	itc.database = db
 	itc.databaseCleanup = dbCleanup
 
-	return err
+	sc, scCleanup, err := createSc(itc.client, itc.ctx, itc.database)
+	if err != nil {
+		return err
+	}
+	itc.schema = sc
+	itc.schemaCleanup = scCleanup
+
+	return nil
 }
 
 func createDb(client *sdk.Client, ctx context.Context) (*sdk.Database, func(), error) {
-	u, err := uuid.GenerateUUID()
-	if err != nil {
-		return nil, nil, err
-	}
-	id := sdk.NewAccountObjectIdentifier("int_test_db_" + u)
-	err = client.Databases.Create(ctx, id, nil)
+	name := "int_test_db_" + random.UUID()
+	id := sdk.NewAccountObjectIdentifier(name)
+	err := client.Databases.Create(ctx, id, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 	database, err := client.Databases.ShowByID(ctx, id)
 	return database, func() {
 		_ = client.Databases.Drop(ctx, id, nil)
+	}, err
+}
+
+func createSc(client *sdk.Client, ctx context.Context, db *sdk.Database) (*sdk.Schema, func(), error) {
+	name := "int_test_sc_" + random.UUID()
+	id := sdk.NewDatabaseObjectIdentifier(db.Name, name)
+	err := client.Schemas.Create(ctx, id, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	schema, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(db.Name, name))
+	return schema, func() {
+		_ = client.Schemas.Drop(ctx, id, nil)
 	}, err
 }
 
@@ -96,23 +121,22 @@ func timer(name string) func() {
 	}
 }
 
-// TODO: Discuss after this initial change is merged.
-// This is temporary way to move all integration tests to this package without doing revolution in a single PR.
 func testClient(t *testing.T) *sdk.Client {
 	t.Helper()
 	return itc.client
 }
 
-// TODO: Discuss after this initial change is merged.
-// This is temporary way to move all integration tests to this package without doing revolution in a single PR.
 func testContext(t *testing.T) context.Context {
 	t.Helper()
 	return itc.ctx
 }
 
-// TODO: Discuss after this initial change is merged.
-// This is temporary way to move all integration tests to this package without doing revolution in a single PR.
 func testDb(t *testing.T) *sdk.Database {
 	t.Helper()
 	return itc.database
+}
+
+func testSchema(t *testing.T) *sdk.Schema {
+	t.Helper()
+	return itc.schema
 }

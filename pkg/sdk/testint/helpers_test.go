@@ -63,34 +63,6 @@ func testClientFromProfile(t *testing.T, profile string) (*sdk.Client, error) {
 	return sdk.NewClient(config)
 }
 
-func useDatabase(t *testing.T, client *sdk.Client, databaseID sdk.AccountObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseDatabase(ctx, databaseID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseDatabase(ctx, sdk.NewAccountObjectIdentifier(orgDB))
-		require.NoError(t, err)
-	}
-}
-
-func useSchema(t *testing.T, client *sdk.Client, schemaID sdk.DatabaseObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	orgSchema, err := client.ContextFunctions.CurrentSchema(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseSchema(ctx, schemaID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(orgDB, orgSchema))
-		require.NoError(t, err)
-	}
-}
-
 func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
@@ -119,6 +91,8 @@ func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountO
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
 		require.NoError(t, err)
+		err = client.Sessions.UseSchema(ctx, testSchema(t).ID())
+		require.NoError(t, err)
 	}
 }
 
@@ -140,6 +114,8 @@ func createSchemaWithIdentifier(t *testing.T, client *sdk.Client, database *sdk.
 		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 			return
 		}
+		require.NoError(t, err)
+		err = client.Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)
 	}
 }
