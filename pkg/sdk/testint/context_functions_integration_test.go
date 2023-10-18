@@ -65,6 +65,7 @@ func TestInt_CurrentSchema(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	// new database and schema created on purpose
 	databaseTest, databaseCleanup := createDatabase(t, client)
 	t.Cleanup(databaseCleanup)
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)

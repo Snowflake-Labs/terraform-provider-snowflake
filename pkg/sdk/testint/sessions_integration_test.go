@@ -122,17 +122,12 @@ func TestInt_UseWarehouse(t *testing.T) {
 func TestInt_UseDatabase(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	originalDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
+
 	t.Cleanup(func() {
-		originalDBIdentifier := sdk.NewAccountObjectIdentifier(originalDB)
-		if !sdk.ValidObjectIdentifier(originalDBIdentifier) {
-			return
-		}
-		err := client.Sessions.UseDatabase(ctx, originalDBIdentifier)
+		err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)
 	})
-	err = client.Sessions.UseDatabase(ctx, testDb(t).ID())
+	err := client.Sessions.UseDatabase(ctx, testDb(t).ID())
 	require.NoError(t, err)
 	actual, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
@@ -143,24 +138,15 @@ func TestInt_UseDatabase(t *testing.T) {
 func TestInt_UseSchema(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-	originalSchema, err := client.ContextFunctions.CurrentSchema(ctx)
-	require.NoError(t, err)
-	originalDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
+
 	t.Cleanup(func() {
-		originalSchemaIdentifier := sdk.NewDatabaseObjectIdentifier(originalDB, originalSchema)
-		if !sdk.ValidObjectIdentifier(originalSchemaIdentifier) {
-			return
-		}
-		err := client.Sessions.UseSchema(ctx, originalSchemaIdentifier)
+		err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)
 	})
-	err = client.Sessions.UseSchema(ctx, schemaTest.ID())
+	err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 	require.NoError(t, err)
 	actual, err := client.ContextFunctions.CurrentSchema(ctx)
 	require.NoError(t, err)
-	expected := schemaTest.Name
+	expected := testSchema(t).Name
 	assert.Equal(t, expected, actual)
 }

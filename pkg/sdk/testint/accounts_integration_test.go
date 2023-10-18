@@ -234,9 +234,7 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset password policy", func(t *testing.T) {
-		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-		t.Cleanup(schemaCleanup)
-		passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, testDb(t), schemaTest)
+		passwordPolicyTest, passwordPolicyCleanup := createPasswordPolicy(t, client, testDb(t), testSchema(t))
 		t.Cleanup(passwordPolicyCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -257,9 +255,7 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset session policy", func(t *testing.T) {
-		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-		t.Cleanup(schemaCleanup)
-		sessionPolicyTest, sessionPolicyCleanup := createSessionPolicy(t, client, testDb(t), schemaTest)
+		sessionPolicyTest, sessionPolicyCleanup := createSessionPolicy(t, client, testDb(t), testSchema(t))
 		t.Cleanup(sessionPolicyCleanup)
 		opts := &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -280,11 +276,9 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset tag", func(t *testing.T) {
-		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-		t.Cleanup(schemaCleanup)
-		tagTest1, tagCleanup1 := createTag(t, client, testDb(t), schemaTest)
+		tagTest1, tagCleanup1 := createTag(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tagCleanup1)
-		tagTest2, tagCleanup2 := createTag(t, client, testDb(t), schemaTest)
+		tagTest2, tagCleanup2 := createTag(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tagCleanup2)
 
 		opts := &sdk.AlterAccountOptions{
