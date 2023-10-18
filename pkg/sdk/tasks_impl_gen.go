@@ -64,7 +64,7 @@ func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error 
 	return validateAndExec(v.client, ctx, opts)
 }
 
-// TODO: handle cycles
+// TODO [SNOW-884987]: handle cycles
 func (v *tasks) GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]Task, error) {
 	task, err := v.ShowByID(ctx, id)
 	if err != nil {
@@ -86,7 +86,7 @@ func (v *tasks) GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]
 		rootTasks = append(rootTasks, predecessorTasks...)
 	}
 
-	// TODO: extract unique function in our collection helper
+	// TODO [SNOW-884987]: extract unique function in our collection helper
 	keys := make(map[string]bool)
 	uniqueRootTasks := make([]Task, 0, len(rootTasks))
 	for _, rootTask := range rootTasks {
@@ -222,7 +222,7 @@ func (r taskDBRow) convert() *Task {
 		task.Schedule = r.Schedule.String
 	}
 	if r.Predecessors.Valid {
-		// TODO: should we swallow this error here?
+		// TODO [SNOW-884987]: should we swallow this error here?
 		names, err := getPredecessors(r.Predecessors.String)
 		ids := make([]SchemaObjectIdentifier, len(names))
 		if err == nil {
@@ -279,7 +279,7 @@ func getPredecessors(predecessors string) ([]string, error) {
 		return predecessorNames, nil
 	}
 
-	// TODO: do we still need this old way? I guess it can be removed
+	// TODO [SNOW-884987]: do we still need this old way? I guess it can be removed
 	pre := strings.Split(predecessors, ".")
 	for _, p := range pre {
 		predecessorName, err := strconv.Unquote(p)

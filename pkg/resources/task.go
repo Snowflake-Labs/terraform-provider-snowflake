@@ -205,7 +205,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// TODO: do task parameters
+	// TODO [SNOW-884987]: do task parameters
 	/*
 		q = builder.ShowParameters()
 		paramRows, err := snowflake.Query(db, q)
@@ -295,7 +295,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("session_parameters"); ok {
-		//TODO
+		// TODO [SNOW-884987]: handle session parameters
 		//builder.WithSessionParameters(v.(map[string]interface{}))
 	}
 
@@ -332,7 +332,6 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 						return err
 					}
 
-					// TODO: wait here for task suspension?
 					// resume the task after modifications are complete as long as it is not a standalone task
 					if !(rootTask.Name == name) {
 						defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
@@ -417,7 +416,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 
-			// TODO: wait here for task suspension?
 			// resume the task after modifications are complete as long as it is not a standalone task
 			if !(rootTask.Name == taskId.Name()) {
 				defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
@@ -444,7 +442,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		warehouse := d.Get("warehouse")
 
 		if warehouse == "" && newSize != "" {
-			// TODO: user_task_managed_initial_warehouse_size is not on the list in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-task#syntax
+			// TODO [SNOW-884987]: user_task_managed_initial_warehouse_size is not on the list in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-task#syntax
 			alterRequest := sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest())
 			err := client.Tasks.Alter(ctx, alterRequest)
 			if err != nil {
@@ -453,7 +451,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// TODO: error integration is not on the list in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-task#syntax
+	// TODO [SNOW-884987]: error integration is not on the list in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-task#syntax
 	if d.HasChange("error_integration") {
 		if errorIntegration, ok := d.GetOk("error_integration"); ok {
 			_ = errorIntegration
@@ -516,7 +514,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 							return err
 						}
 
-						// TODO: wait here for task suspension?
 						// resume the task after modifications are complete as long as it is not a standalone task
 						if !(rootTask.Name == taskId.Name()) {
 							defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
@@ -587,7 +584,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("session_parameters") {
-		// TODO: handle session parameters
+		// TODO [SNOW-884987]: handle session parameters
 		//var q string
 		//o, n := d.GetChange("session_parameters")
 		//
@@ -669,7 +666,6 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 
-			// TODO: wait here for task suspension?
 			// resume the task after modifications are complete as long as it is not a standalone task
 			if !(rootTask.Name == taskId.Name()) {
 				defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()

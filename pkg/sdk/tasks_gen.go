@@ -15,7 +15,7 @@ type Tasks interface {
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Execute(ctx context.Context, request *ExecuteTaskRequest) error
-	// TODO: add to task def
+	// TODO [SNOW-884987]: add to task def
 	GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]Task, error)
 }
 
@@ -184,7 +184,7 @@ func (v *Task) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
-// TODO: extract enum for state
+// TODO [SNOW-884987]: extract enum for state
 func (v *Task) IsStarted() bool {
 	return strings.ToLower(v.State) == "started"
 }
