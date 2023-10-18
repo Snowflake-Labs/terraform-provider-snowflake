@@ -26,6 +26,7 @@ var formatTypeOptions = map[string][]string{
 		"record_delimiter",
 		"field_delimiter",
 		"file_extension",
+		"parse_header",
 		"skip_header",
 		"skip_blank_lines",
 		"date_format",
@@ -134,6 +135,11 @@ var fileFormatSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies the extension for files unloaded to a stage.",
+	},
+	"parse_header": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Boolean that specifies whether to use the first row headers in the data files to determine column names.",
 	},
 	"skip_header": {
 		Type:        schema.TypeInt,
@@ -345,6 +351,7 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("file_extension"); ok {
 			opts.CSVFileExtension = sdk.String(v.(string))
 		}
+		opts.CSVParseHeader = sdk.Bool(d.Get("parse_header").(bool))
 		opts.CSVSkipHeader = sdk.Int(d.Get("skip_header").(int))
 		opts.CSVSkipBlankLines = sdk.Bool(d.Get("skip_blank_lines").(bool))
 		if v, ok := d.GetOk("date_format"); ok {
@@ -563,6 +570,9 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		if err := d.Set("file_extension", fileFormat.Options.CSVFileExtension); err != nil {
+			return err
+		}
+		if err := d.Set("parse_header", fileFormat.Options.CSVParseHeader); err != nil {
 			return err
 		}
 		if err := d.Set("skip_header", fileFormat.Options.CSVSkipHeader); err != nil {
@@ -787,6 +797,10 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("file_extension") {
 			v := d.Get("file_extension").(string)
 			opts.Set.CSVFileExtension = &v
+		}
+		if d.HasChange("parse_header") {
+			v := d.Get("parse_header").(bool)
+			opts.Set.CSVParseHeader = &v
 		}
 		if d.HasChange("skip_header") {
 			v := d.Get("skip_header").(int)
