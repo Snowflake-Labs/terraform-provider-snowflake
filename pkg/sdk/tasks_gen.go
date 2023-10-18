@@ -15,7 +15,6 @@ type Tasks interface {
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Execute(ctx context.Context, request *ExecuteTaskRequest) error
-	// TODO [SNOW-884987]: add to task def
 	GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]Task, error)
 }
 
