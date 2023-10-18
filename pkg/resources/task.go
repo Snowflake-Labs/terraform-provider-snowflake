@@ -296,7 +296,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("session_parameters"); ok {
 		// TODO [SNOW-884987]: handle session parameters
-		//builder.WithSessionParameters(v.(map[string]interface{}))
+		// builder.WithSessionParameters(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
@@ -334,7 +334,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 					// resume the task after modifications are complete as long as it is not a standalone task
 					if !(rootTask.Name == name) {
-						defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
+						defer func(identifier sdk.SchemaObjectIdentifier) { _ = resumeTask(ctx, client, identifier) }(rootTask.ID())
 					}
 				}
 			}
@@ -418,7 +418,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 			// resume the task after modifications are complete as long as it is not a standalone task
 			if !(rootTask.Name == taskId.Name()) {
-				defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
+				defer func(identifier sdk.SchemaObjectIdentifier) { _ = resumeTask(ctx, client, identifier) }(rootTask.ID())
 			}
 		}
 	}
@@ -455,10 +455,10 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("error_integration") {
 		if errorIntegration, ok := d.GetOk("error_integration"); ok {
 			_ = errorIntegration
-			//setRequest.
+			// setRequest.
 		} else {
 			_ = errorIntegration
-			//unsetRequest.
+			// unsetRequest.
 		}
 	}
 
@@ -516,7 +516,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 						// resume the task after modifications are complete as long as it is not a standalone task
 						if !(rootTask.Name == taskId.Name()) {
-							defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
+							defer func(identifier sdk.SchemaObjectIdentifier) { _ = resumeTask(ctx, client, identifier) }(rootTask.ID())
 						}
 					}
 				}
@@ -668,7 +668,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 
 			// resume the task after modifications are complete as long as it is not a standalone task
 			if !(rootTask.Name == taskId.Name()) {
-				defer func() { _ = resumeTask(ctx, client, rootTask.ID()) }()
+				defer func(identifier sdk.SchemaObjectIdentifier) { _ = resumeTask(ctx, client, identifier) }(rootTask.ID())
 			}
 		}
 	}
