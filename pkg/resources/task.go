@@ -9,7 +9,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -396,13 +395,6 @@ func resumeTask(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIden
 		log.Printf("[WARN] failed to resume task %s", id.FullyQualifiedName())
 	}
 	return err
-}
-
-func resumeTaskOld(db *sql.DB, rootTask *snowflake.Task) {
-	q := rootTask.Resume()
-	if err := snowflake.Exec(db, q); err != nil {
-		log.Printf("[WARN] failed to resume task %s", rootTask.Name)
-	}
 }
 
 // UpdateTask implements schema.UpdateFunc.

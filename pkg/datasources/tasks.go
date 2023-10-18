@@ -1,12 +1,12 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -63,25 +63,24 @@ func Tasks() *schema.Resource {
 
 func ReadTasks(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
+	d.SetId("tasks_read")
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentTasks, err := snowflake.ListTasks(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
+	extractedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}))
+	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] tasks in schema (%s) not found", d.Id())
 		d.SetId("")
 		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse tasks in schema (%s)", d.Id())
-		d.SetId("")
-		return nil
 	}
 
-	tasks := []map[string]interface{}{}
-
-	for _, task := range currentTasks {
-		taskMap := map[string]interface{}{}
+	tasks := make([]map[string]any, 0, len(extractedTasks))
+	for _, task := range extractedTasks {
+		taskMap := map[string]any{}
 
 		taskMap["name"] = task.Name
 		taskMap["database"] = task.DatabaseName
