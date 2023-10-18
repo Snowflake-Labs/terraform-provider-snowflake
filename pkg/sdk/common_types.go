@@ -191,13 +191,13 @@ type ForeignKeyOnAction struct {
 func (row *propertyRow) toBoolProperty() *BoolProperty {
 	var value bool
 	if row.Value != "" && row.Value != "null" {
-		value = toBool(row.Value)
+		value = ToBool(row.Value)
 	} else {
 		value = false
 	}
 	var defaultValue bool
 	if row.DefaultValue != "" && row.Value != "null" {
-		defaultValue = toBool(row.DefaultValue)
+		defaultValue = ToBool(row.DefaultValue)
 	} else {
 		defaultValue = false
 	}

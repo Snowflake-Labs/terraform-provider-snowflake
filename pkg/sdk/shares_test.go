@@ -3,8 +3,7 @@ package sdk
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 )
 
 func TestSharesCreate(t *testing.T) {
@@ -12,23 +11,17 @@ func TestSharesCreate(t *testing.T) {
 		opts := &CreateShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE SHARE "myshare"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE SHARE "myshare"`)
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		comment := randomComment(t)
+		comment := random.Comment()
 		opts := &CreateShareOptions{
 			OrReplace: Bool(true),
 			name:      NewAccountObjectIdentifier("complete_share"),
 			Comment:   String(comment),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE OR REPLACE SHARE "complete_share" COMMENT = '` + comment + `'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SHARE "complete_share" COMMENT = '%s'`, comment)
 	})
 }
 
@@ -37,10 +30,7 @@ func TestShareAlter(t *testing.T) {
 		opts := &AlterShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SHARE "myshare"`
-		assert.Equal(t, expected, actual)
+		assertOptsInvalid(t, opts, errExactlyOneOf("Add", "Remove", "Set", "Unset"))
 	})
 
 	t.Run("with add", func(t *testing.T) {
@@ -53,10 +43,7 @@ func TestShareAlter(t *testing.T) {
 				ShareRestrictions: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SHARE IF EXISTS "myshare" ADD ACCOUNTS = "my-org.myaccount" SHARE_RESTRICTIONS = true`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" ADD ACCOUNTS = "my-org.myaccount" SHARE_RESTRICTIONS = true`)
 	})
 
 	t.Run("with remove", func(t *testing.T) {
@@ -68,15 +55,12 @@ func TestShareAlter(t *testing.T) {
 				Accounts: accounts,
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SHARE IF EXISTS "myshare" REMOVE ACCOUNTS = "my-org.myaccount", "my-org.myaccount2"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" REMOVE ACCOUNTS = "my-org.myaccount", "my-org.myaccount2"`)
 	})
 
 	t.Run("with set", func(t *testing.T) {
 		accounts := []AccountIdentifier{NewAccountIdentifier("my-org", "myaccount")}
-		comment := randomComment(t)
+		comment := random.Comment()
 		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
@@ -85,10 +69,7 @@ func TestShareAlter(t *testing.T) {
 				Comment:  &comment,
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SHARE IF EXISTS "myshare" SET ACCOUNTS = "my-org.myaccount" COMMENT = '` + comment + `'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" SET ACCOUNTS = "my-org.myaccount" COMMENT = '%s'`, comment)
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
@@ -104,10 +85,7 @@ func TestShareAlter(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SHARE IF EXISTS "myshare" SET TAG "db"."schema"."tag" = 'v1'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" SET TAG "db"."schema"."tag" = 'v1'`)
 	})
 
 	t.Run("with unset", func(t *testing.T) {
@@ -118,10 +96,7 @@ func TestShareAlter(t *testing.T) {
 				Comment: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SHARE IF EXISTS "myshare" UNSET COMMENT`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" UNSET COMMENT`)
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
@@ -134,10 +109,7 @@ func TestShareAlter(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER SHARE IF EXISTS "myshare" UNSET TAG "db"."schema"."tag"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" UNSET TAG "db"."schema"."tag"`)
 	})
 }
 
@@ -153,10 +125,7 @@ func TestShareShow(t *testing.T) {
 				From: String("my_other_share"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW SHARES LIKE 'myshare' STARTS WITH 'my' LIMIT 10 FROM 'my_other_share'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW SHARES LIKE 'myshare' STARTS WITH 'my' LIMIT 10 FROM 'my_other_share'`)
 	})
 }
 
@@ -165,10 +134,7 @@ func TestShareDrop(t *testing.T) {
 		opts := &dropShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP SHARE "myshare"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP SHARE "myshare"`)
 	})
 }
 
@@ -177,18 +143,13 @@ func TestShareDescribe(t *testing.T) {
 		opts := &describeShareOptions{
 			name: NewAccountObjectIdentifier("myprovider"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DESCRIBE SHARE "myprovider"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE SHARE "myprovider"`)
 	})
+
 	t.Run("describe consumer", func(t *testing.T) {
 		opts := &describeShareOptions{
 			name: NewAccountObjectIdentifier("myconsumer"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DESCRIBE SHARE "myconsumer"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE SHARE "myconsumer"`)
 	})
 }

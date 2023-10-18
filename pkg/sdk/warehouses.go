@@ -119,8 +119,8 @@ type CreateWarehouseOptions struct {
 }
 
 func (opts *CreateWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
 		return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
@@ -154,19 +154,19 @@ type AlterWarehouseOptions struct {
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 
-	Suspend         *bool                   `ddl:"keyword" sql:"SUSPEND"`
-	Resume          *bool                   `ddl:"keyword" sql:"RESUME"`
-	IfSuspended     *bool                   `ddl:"keyword" sql:"IF SUSPENDED"`
-	AbortAllQueries *bool                   `ddl:"keyword" sql:"ABORT ALL QUERIES"`
-	NewName         AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Suspend         *bool                    `ddl:"keyword" sql:"SUSPEND"`
+	Resume          *bool                    `ddl:"keyword" sql:"RESUME"`
+	IfSuspended     *bool                    `ddl:"keyword" sql:"IF SUSPENDED"`
+	AbortAllQueries *bool                    `ddl:"keyword" sql:"ABORT ALL QUERIES"`
+	NewName         *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 
 	Set   *WarehouseSet   `ddl:"keyword" sql:"SET"`
 	Unset *WarehouseUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 func (opts *AlterWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	if ok := exactlyOneValueSet(
 		opts.Suspend,
@@ -175,16 +175,16 @@ func (opts *AlterWarehouseOptions) validate() error {
 		opts.NewName,
 		opts.Set,
 		opts.Unset); !ok {
-		return fmt.Errorf("exactly one of Suspend, Resume, AbortAllQueries, NewName, Set, Unset must be set")
+		return errExactlyOneOf("Suspend", "Resume", "AbortAllQueries", "NewName", "Set", "Unset")
 	}
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
-		return fmt.Errorf("Suspend and Resume cannot both be true")
+		return fmt.Errorf("suspend and Resume cannot both be true")
 	}
 	if (valueSet(opts.IfSuspended) && *opts.IfSuspended) && (!valueSet(opts.Resume) || !*opts.Resume) {
 		return fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`)
 	}
 	if everyValueSet(opts.Set, opts.Unset) {
-		return fmt.Errorf("Set and Unset cannot both be set")
+		return fmt.Errorf("set and Unset cannot both be set")
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
@@ -224,7 +224,13 @@ type WarehouseSet struct {
 
 func (v *WarehouseSet) validate() error {
 	if v.MinClusterCount != nil {
-		if ok := validateIntInRange(*v.MinClusterCount, 1, *v.MaxClusterCount); !ok {
+		var max int
+		if valueSet(v.MaxClusterCount) {
+			max = *v.MaxClusterCount
+		} else {
+			max = 1
+		}
+		if ok := validateIntInRange(*v.MinClusterCount, 1, max); !ok {
 			return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
 		}
 	}
@@ -298,8 +304,8 @@ type DropWarehouseOptions struct {
 }
 
 func (opts *DropWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -476,7 +482,7 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 			return &warehouse, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describeWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-warehouse.
@@ -487,8 +493,8 @@ type describeWarehouseOptions struct {
 }
 
 func (opts *describeWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }

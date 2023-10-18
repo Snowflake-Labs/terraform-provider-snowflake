@@ -18,7 +18,7 @@ var (
 type CreateExternalTableRequest struct {
 	orReplace           *bool
 	ifNotExists         *bool
-	name                AccountObjectIdentifier // required
+	name                SchemaObjectIdentifier // required
 	columns             []*ExternalTableColumnRequest
 	cloudProviderParams *CloudProviderParamsRequest
 	partitionBy         []string
@@ -32,6 +32,10 @@ type CreateExternalTableRequest struct {
 	comment             *string
 	rowAccessPolicy     *RowAccessPolicyRequest
 	tag                 []*TagAssociationRequest
+}
+
+func (s *CreateExternalTableRequest) GetColumns() []*ExternalTableColumnRequest {
+	return s.columns
 }
 
 type ExternalTableColumnRequest struct {
@@ -250,50 +254,50 @@ func (v TagAssociationRequest) toOpts() TagAssociation {
 	}
 }
 
-func (v *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
-	columns := make([]ExternalTableColumn, len(v.columns))
-	if v.columns != nil {
-		for i, c := range v.columns {
+func (s *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
+	columns := make([]ExternalTableColumn, len(s.columns))
+	if s.columns != nil {
+		for i, c := range s.columns {
 			columns[i] = c.toOpts()
 		}
 	}
 
 	var fileFormat []ExternalTableFileFormat
-	if v.fileFormat != nil {
-		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
+	if s.fileFormat != nil {
+		fileFormat = []ExternalTableFileFormat{s.fileFormat.toOpts()}
 	}
 
 	var cloudProviderParams *CloudProviderParams
-	if v.cloudProviderParams != nil {
-		cloudProviderParams = v.cloudProviderParams.toOpts()
+	if s.cloudProviderParams != nil {
+		cloudProviderParams = s.cloudProviderParams.toOpts()
 	}
 
 	var rowAccessPolicy *RowAccessPolicy
-	if v.rowAccessPolicy != nil {
-		rowAccessPolicy = v.rowAccessPolicy.toOpts()
+	if s.rowAccessPolicy != nil {
+		rowAccessPolicy = s.rowAccessPolicy.toOpts()
 	}
 
-	tag := make([]TagAssociation, len(v.tag))
-	if v.tag != nil {
-		for i, t := range v.tag {
+	tag := make([]TagAssociation, len(s.tag))
+	if s.tag != nil {
+		for i, t := range s.tag {
 			tag[i] = t.toOpts()
 		}
 	}
 
 	return &CreateExternalTableOptions{
-		OrReplace:           v.orReplace,
-		IfNotExists:         v.ifNotExists,
-		name:                v.name,
+		OrReplace:           s.orReplace,
+		IfNotExists:         s.ifNotExists,
+		name:                s.name,
 		Columns:             columns,
 		CloudProviderParams: cloudProviderParams,
-		Location:            v.location,
-		RefreshOnCreate:     v.refreshOnCreate,
-		AutoRefresh:         v.autoRefresh,
-		Pattern:             v.pattern,
+		Location:            s.location,
+		RefreshOnCreate:     s.refreshOnCreate,
+		AutoRefresh:         s.autoRefresh,
+		Pattern:             s.pattern,
 		FileFormat:          fileFormat,
-		AwsSnsTopic:         v.awsSnsTopic,
-		CopyGrants:          v.copyGrants,
-		Comment:             v.comment,
+		AwsSnsTopic:         s.awsSnsTopic,
+		CopyGrants:          s.copyGrants,
+		Comment:             s.comment,
 		RowAccessPolicy:     rowAccessPolicy,
 		Tag:                 tag,
 	}
@@ -302,7 +306,7 @@ func (v *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
 type CreateWithManualPartitioningExternalTableRequest struct {
 	orReplace                  *bool
 	ifNotExists                *bool
-	name                       AccountObjectIdentifier // required
+	name                       SchemaObjectIdentifier // required
 	columns                    []*ExternalTableColumnRequest
 	cloudProviderParams        *CloudProviderParamsRequest
 	partitionBy                []string
@@ -365,7 +369,7 @@ func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithM
 type CreateDeltaLakeExternalTableRequest struct {
 	orReplace                  *bool
 	ifNotExists                *bool
-	name                       AccountObjectIdentifier // required
+	name                       SchemaObjectIdentifier // required
 	columns                    []*ExternalTableColumnRequest
 	cloudProviderParams        *CloudProviderParamsRequest
 	partitionBy                []string
@@ -433,7 +437,7 @@ func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalT
 
 type CreateExternalTableUsingTemplateRequest struct {
 	orReplace           *bool
-	name                AccountObjectIdentifier // required
+	name                SchemaObjectIdentifier // required
 	copyGrants          *bool
 	query               string
 	cloudProviderParams *CloudProviderParamsRequest
@@ -493,7 +497,7 @@ func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableU
 
 type AlterExternalTableRequest struct {
 	ifExists    *bool
-	name        AccountObjectIdentifier // required
+	name        SchemaObjectIdentifier // required
 	refresh     *RefreshExternalTableRequest
 	addFiles    []*ExternalTableFileRequest
 	removeFiles []*ExternalTableFileRequest
@@ -557,7 +561,7 @@ func (v *AlterExternalTableRequest) toOpts() *AlterExternalTableOptions {
 
 type AlterExternalTablePartitionRequest struct {
 	ifExists      *bool
-	name          AccountObjectIdentifier // required
+	name          SchemaObjectIdentifier // required
 	addPartitions []*PartitionRequest
 	dropPartition *bool
 	location      string
@@ -590,7 +594,7 @@ func (v *AlterExternalTablePartitionRequest) toOpts() *AlterExternalTablePartiti
 
 type DropExternalTableRequest struct {
 	ifExists   *bool
-	name       AccountObjectIdentifier // required
+	name       SchemaObjectIdentifier // required
 	dropOption *ExternalTableDropOptionRequest
 }
 
@@ -681,15 +685,15 @@ func (v *ShowExternalTableRequest) toOpts() *ShowExternalTableOptions {
 }
 
 type ShowExternalTableByIDRequest struct {
-	id AccountObjectIdentifier // required
+	id SchemaObjectIdentifier // required
 }
 
 type DescribeExternalTableColumnsRequest struct {
-	id AccountObjectIdentifier // required
+	id SchemaObjectIdentifier // required
 }
 
 type DescribeExternalTableStageRequest struct {
-	id AccountObjectIdentifier // required
+	id SchemaObjectIdentifier // required
 }
 
 func (v *DescribeExternalTableColumnsRequest) toOpts() *describeExternalTableColumnsOptions {

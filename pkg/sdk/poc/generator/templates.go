@@ -17,15 +17,17 @@ type {{ .Name }} interface {
 	{{- range .Operations }}
 		{{- if and (eq .Name "Show") .ShowMapping }}
 			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) ([]{{ .ShowMapping.To.Name }}, error)
+		{{- else if eq .Name "ShowByID" }}
+			{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error)
 		{{- else if and (eq .Name "Describe") .DescribeMapping }}
-			{{ if .DescribeKind }}
-				{{ if eq (deref .DescribeKind) "single_value" }}
+			{{- if .DescribeKind }}
+				{{- if eq (deref .DescribeKind) "single_value" }}
 					{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error)
-				{{ else if eq (deref .DescribeKind) "slice" }}
+				{{- else if eq (deref .DescribeKind) "slice" }}
 					{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error)
-				{{ end }}
-			{{ end }}
-		{{ else }}
+				{{- end }}
+			{{- end }}
+		{{- else }}
 			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error
 		{{- end -}}
 	{{ end }}
@@ -55,7 +57,9 @@ var DtoTemplate, _ = template.New("dtoTemplate").Parse(`
 
 var (
 	{{- range .Operations }}
+	{{- if .OptsField }}
 	_ optionsProvider[{{ .OptsField.KindNoPtr }}] = new({{ .OptsField.DtoDecl }})
+	{{- end }}
 	{{- end }}
 )
 `)
@@ -111,7 +115,11 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").
 		return &{{ .To.KindNoPtr }}{}
 	}
 {{ end }}
-import "context"
+import (
+"context"
+
+"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+)
 
 {{ $impl := .NameLowerCased }}
 var _ {{ .Name }} = (*{{ $impl }})(nil)
@@ -129,6 +137,15 @@ type {{ $impl }} struct {
 			}
 			resultList := convertRows[{{ .ShowMapping.From.Name }}, {{ .ShowMapping.To.Name }}](dbRows)
 			return resultList, nil
+		}
+	{{ else if eq .Name "ShowByID" }}
+		func (v *{{ $impl }}) ShowByID(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
+			// TODO: adjust request if e.g. LIKE is supported for the resource
+			{{ $impl }}, err := v.Show(ctx, NewShow{{ .ObjectInterface.NameSingular }}Request())
+			if err != nil {
+				return nil, err
+			}
+			return collections.FindOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
 		}
 	{{ else if and (eq .Name "Describe") .DescribeMapping }}
 		{{ if .DescribeKind }}
@@ -165,6 +182,7 @@ type {{ $impl }} struct {
 {{ end }}
 
 {{ range .Operations }}
+	{{- if .OptsField }}
 	func (r *{{ .OptsField.DtoDecl }}) toOpts() *{{ .OptsField.KindNoPtr }} {
 		opts := {{ template "MAPPING" .OptsField -}}
 		return opts
@@ -175,6 +193,7 @@ type {{ $impl }} struct {
 	{{ if .DescribeMapping }}
 		{{ template "MAPPING_FUNC" .DescribeMapping }}
 	{{ end }}
+	{{- end}}
 {{ end }}
 `)
 
@@ -202,8 +221,9 @@ var TestFuncTemplate, _ = template.New("testFuncTemplate").Parse(`
 import "testing"
 
 {{ range .Operations }}
+	{{- if .OptsField }}
 	func Test{{ .ObjectInterface.Name }}_{{ .Name }}(t *testing.T) {
-		id := random{{ .ObjectInterface.IdentifierKind }}(t)
+		id := Random{{ .ObjectInterface.IdentifierKind }}()
 
 		// Minimal valid {{ .OptsField.KindNoPtr }}
 		defaultOpts := func() *{{ .OptsField.KindNoPtr }} {
@@ -214,7 +234,7 @@ import "testing"
 
 		t.Run("validation: nil options", func(t *testing.T) {
 			var opts *{{ .OptsField.KindNoPtr }} = nil
-			assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+			assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 		})
 
 		{{- template "VALIDATIONS" .OptsField }}
@@ -231,6 +251,7 @@ import "testing"
 			assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 		})
 	}
+	{{- end }}
 {{ end }}
 `)
 
@@ -255,18 +276,22 @@ import "errors"
 
 var (
 {{- range .Operations }}
+	{{- if .OptsField }}	
 	_ validatable = new({{ .OptsField.KindNoPtr }})
+	{{- end }}
 {{- end }}
 )
 {{ range .Operations }}
+	{{- if .OptsField }}
 	func (opts *{{ .OptsField.KindNoPtr }}) validate() error {
 		if opts == nil {
-			return errors.Join(errNilOptions)
+			return errors.Join(ErrNilOptions)
 		}
 		var errs []error
 		{{- template "VALIDATIONS" .OptsField }}
 		return errors.Join(errs...)
 	}
+	{{- end }}
 {{ end }}
 `)
 

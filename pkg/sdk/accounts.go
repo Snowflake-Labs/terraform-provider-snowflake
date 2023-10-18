@@ -64,10 +64,10 @@ func (opts *CreateAccountOptions) validate() error {
 		return fmt.Errorf("at least one of AdminPassword or AdminRSAPublicKey must be set")
 	}
 	if opts.Email == "" {
-		return fmt.Errorf("Email is required")
+		return fmt.Errorf("email is required")
 	}
 	if opts.Edition == "" {
-		return fmt.Errorf("Edition is required")
+		return fmt.Errorf("edition is required")
 	}
 	return nil
 }
@@ -237,10 +237,10 @@ type AccountRename struct {
 }
 
 func (opts *AccountRename) validate() error {
-	if !validObjectidentifier(opts.Name) {
+	if !ValidObjectIdentifier(opts.Name) {
 		return fmt.Errorf("Name must be set")
 	}
-	if !validObjectidentifier(opts.NewName) {
+	if !ValidObjectIdentifier(opts.NewName) {
 		return fmt.Errorf("NewName must be set")
 	}
 	return nil
@@ -252,7 +252,7 @@ type AccountDrop struct {
 }
 
 func (opts *AccountDrop) validate() error {
-	if !validObjectidentifier(opts.Name) {
+	if !ValidObjectIdentifier(opts.Name) {
 		return fmt.Errorf("Name must be set")
 	}
 	if valueSet(opts.OldURL) {
@@ -386,7 +386,7 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 			return &account, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // DropAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-account.
@@ -399,7 +399,7 @@ type DropAccountOptions struct {
 }
 
 func (opts *DropAccountOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return fmt.Errorf("Name must be set")
 	}
 	if !validateIntGreaterThanOrEqual(opts.gracePeriodInDays, 3) {

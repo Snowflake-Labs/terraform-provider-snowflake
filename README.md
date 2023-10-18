@@ -80,22 +80,22 @@ Integration status - indicates if given resource / datasource is using new SDK.
 | Notification Integration            | ❌                    | snowflake_notification_integration             | snowflake_integrations        | ❌                  |
 | Security Integration                | ❌                    | snowflake_security_integration                 | snowflake_integrations        | ❌                  |
 | Storage Integration                 | ❌                    | snowflake_storage_integration                  | snowflake_integrations        | ❌                  |
-| Network Policy                      | ❌                    | snowflake_network_policy                       | snowflake_network_policy      | ❌                  |
+| Network Policy                      | ✅                    | snowflake_network_policy                       | snowflake_network_policy      | ✅                  |
 | Password Policy                     | ✅                    | snowflake_password_policy                      | snowflake_password_policy     | ✅                  |
-| Session Policy                      | ❌                    | snowflake_session_policy                       | snowflake_session_policy      | ❌                  |
+| Session Policy                      | ✅                    | snowflake_session_policy                       | snowflake_session_policy      | ❌                  |
 | Replication Group                   | ❌                    | snowflake_replication_group                    | snowflake_replication_group   | ❌                  |
 | Failover Group                      | ✅                    | snowflake_failover_group                       | snowflake_failover_group      | ✅                  |
 | Connection                          | ❌                    | snowflake_connection                           | snowflake_connection          | ❌                  |
-| Account Parameters                  | 🟨                   | snowflake_account_parameter                    | snowflake_parameters          | ❌                  |
-| Session Parameters                  | 🟨                   | snowflake_session_parameter                    | snowflake_parameters          | ❌                  |
-| Object Parameters                   | 🟨                   | snowflake_object_parameter                     | snowflake_parameters          | ❌                  |
+| Account Parameters                  | ✅                    | snowflake_account_parameter                    | snowflake_parameters          | ❌                  |
+| Session Parameters                  | ✅                    | snowflake_session_parameter                    | snowflake_parameters          | ❌                  |
+| Object Parameters                   | ✅                    | snowflake_object_parameter                     | snowflake_parameters          | ❌                  |
 | Warehouse                           | ✅                    | snowflake_warehouse                            | snowflake_warehouse           | 🟨                 |
 | Resource Monitor                    | ✅                    | snowflake_resource_monitor                     | snowflake_resource_monitor    | ✅                  |
 | Database                            | ✅                    | snowflake_database                             | snowflake_database            | ✅                  |
-| Schema                              | ✅                    | snowflake_schema                               | snowflake_schema              | ❌                  |
+| Schema                              | ✅                    | snowflake_schema                               | snowflake_schema              | ✅                  |
 | Share                               | ✅                    | snowflake_share                                | snowflake_share               | ✅                  |
 | Table                               | 👨‍💻                | snowflake_table                                | snowflake_table               | ❌                  |
-| Dynamic Table                       | ❌                    | snowflake_dynamic_table                        | snowflake_dynamic_table       | ❌                  |
+| Dynamic Table                       | ✅                    | snowflake_dynamic_table                        | snowflake_dynamic_table       | ❌                  |
 | External Table                      | ✅                    | snowflake_external_table                       | snowflake_external_table      | ❌                  |
 | Event Table                         | ❌                    | snowflake_event_table                          | snowflake_event_table         | ❌                  |
 | View                                | ❌                    | snowflake_view                                 | snowflake_view                | ❌                  |
@@ -104,11 +104,11 @@ Integration status - indicates if given resource / datasource is using new SDK.
 | Function                            | ❌                    | snowflake_function                             | snowflake_function            | ❌                  |
 | External Function                   | ❌                    | snowflake_external_function                    | snowflake_external_function   | ❌                  |
 | Stored Procedure                    | ❌                    | snowflake_stored_procedure                     | snowflake_stored_procedure    | ❌                  |
-| Stream                              | ❌                    | snowflake_stream                               | snowflake_stream              | ❌                  |
-| Task                                | ❌                    | snowflake_task                                 | snowflake_task                | ❌                  |
+| Stream                              | ✅                    | snowflake_stream                               | snowflake_stream              | ❌                  |
+| Task                                | ✅                    | snowflake_task                                 | snowflake_task                | ❌                  |
 | Masking Policy                      | ✅                    | snowflake_masking_policy                       | snowflake_masking_policy      | ✅                  |
 | Row Access Policy                   | ❌                    | snowflake_row_access_policy                    | snowflake_row_access_policy   | ❌                  |
-| Tag                                 | ❌                    | snowflake_tag                                  | snowflake_tag                 | ❌                  |
+| Tag                                 | ✅                    | snowflake_tag                                  | snowflake_tag                 | ❌                  |
 | Secret                              | ❌                    | snowflake_secret                               | snowflake_secret              | ❌                  |
 | Stage                               | ❌                    | snowflake_stage                                | snowflake_stage               | ❌                  |
 | File Format                         | ✅                    | snowflake_file_format                          | snowflake_file_format         | ✅                  |

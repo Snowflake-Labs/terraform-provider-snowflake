@@ -17,6 +17,10 @@ type CreateRoleRequest struct {
 	Tag         []TagAssociation
 }
 
+func (s *CreateRoleRequest) GetName() AccountObjectIdentifier {
+	return s.name
+}
+
 func NewCreateRoleRequest(name AccountObjectIdentifier) *CreateRoleRequest {
 	return &CreateRoleRequest{
 		name: name,

@@ -170,7 +170,7 @@ type UserTag struct {
 }
 
 func (opts *CreateUserOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 	return nil
@@ -273,7 +273,7 @@ type AlterUserOptions struct {
 }
 
 func (opts *AlterUserOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 	if ok := exactlyOneValueSet(
@@ -285,7 +285,7 @@ func (opts *AlterUserOptions) validate() error {
 		opts.Set,
 		opts.Unset,
 	); !ok {
-		return fmt.Errorf(`exactly one of reset password, abort all queries, add deletegated authorization, remove deletegated authorization, set [tag], unset [tag] must be set`)
+		return errExactlyOneOf("NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset")
 	}
 	if valueSet(opts.RemoveDelegatedAuthorization) {
 		if err := opts.RemoveDelegatedAuthorization.validate(); err != nil {
@@ -392,8 +392,8 @@ type DropUserOptions struct {
 }
 
 func (opts *DropUserOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -527,8 +527,8 @@ type describeUserOptions struct {
 }
 
 func (v *describeUserOptions) validate() error {
-	if !validObjectidentifier(v.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(v.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -594,5 +594,5 @@ func (v *users) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User
 			return &user, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }

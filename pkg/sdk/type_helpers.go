@@ -14,8 +14,8 @@ func Bool(b bool) *bool {
 	return &b
 }
 
-// toBool converts a string to a bool.
-func toBool(s string) bool {
+// ToBool converts a string to a bool.
+func ToBool(s string) bool {
 	b, err := strconv.ParseBool(s)
 	if err != nil {
 		panic(err)
@@ -28,8 +28,8 @@ func Int(i int) *int {
 	return &i
 }
 
-// toInt converts a string to an int.
-func toInt(s string) int {
+// ToInt converts a string to an int.
+func ToInt(s string) int {
 	i, err := strconv.Atoi(s)
 	if err != nil {
 		panic(err)
@@ -37,13 +37,13 @@ func toInt(s string) int {
 	return i
 }
 
-// Int64 returns a pointer to the given int64.
+// Float64 returns a pointer to the given float64.
 func Float64(f float64) *float64 {
 	return &f
 }
 
-// toFloat64 converts a string to a float64.
-func toFloat64(s string) float64 {
+// ToFloat64 converts a string to a float64.
+func ToFloat64(s string) float64 {
 	f, err := strconv.ParseFloat(s, 64)
 	if err != nil {
 		panic(err)

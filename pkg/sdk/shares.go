@@ -111,7 +111,7 @@ type CreateShareOptions struct {
 }
 
 func (opts *CreateShareOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return fmt.Errorf("not a valid object identifier: %s", opts.name)
 	}
 	return nil
@@ -172,11 +172,11 @@ type AlterShareOptions struct {
 }
 
 func (opts *AlterShareOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return fmt.Errorf("not a valid object identifier: %s", opts.name)
 	}
 	if ok := exactlyOneValueSet(opts.Add, opts.Remove, opts.Set, opts.Unset); !ok {
-		return fmt.Errorf("exactly one of add, remove, set, unset must be set")
+		return errExactlyOneOf("Add", "Remove", "Set", "Unset")
 	}
 	if valueSet(opts.Add) {
 		if err := opts.Add.validate(); err != nil {
@@ -302,7 +302,7 @@ func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Sha
 			return &share, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type ShareDetails struct {
@@ -348,8 +348,8 @@ type describeShareOptions struct {
 }
 
 func (opts *describeShareOptions) validate() error {
-	if ok := validObjectidentifier(opts.name); !ok {
-		return errInvalidObjectIdentifier
+	if ok := ValidObjectIdentifier(opts.name); !ok {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }

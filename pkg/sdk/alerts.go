@@ -55,7 +55,7 @@ type AlertCondition struct {
 }
 
 func (opts *CreateAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 
@@ -115,24 +115,12 @@ type AlterAlertOptions struct {
 }
 
 func (opts *AlterAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 
-	if everyValueNil(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
-		return errors.New("No alter action specified")
-	}
 	if !exactlyOneValueSet(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
-		return errors.New(`
-		Only one of the following actions can be performed at a time:
-		{
-			RESUME | SUSPEND,
-			SET,
-			UNSET,
-			MODIFY CONDITION EXISTS,
-			MODIFY ACTION
-		}
-		`)
+		return errExactlyOneOf("Action", "Set", "Unset", "ModifyCondition", "ModifyAction")
 	}
 
 	return nil
@@ -175,8 +163,8 @@ type dropAlertOptions struct {
 }
 
 func (opts *dropAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -297,7 +285,7 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 			return &alert, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describeAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-alert.
@@ -308,8 +296,8 @@ type describeAlertOptions struct {
 }
 
 func (v *describeAlertOptions) validate() error {
-	if !validObjectidentifier(v.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(v.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }

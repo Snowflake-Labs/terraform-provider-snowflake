@@ -5,15 +5,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_PasswordPolicy(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -52,33 +54,23 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 
 func passwordPolicyConfig(s string, minLength int, maxLength int, comment string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_database" "test" {
-		name = "%v"
-		comment = "Terraform acceptance test"
-	  }
-
-	  resource "snowflake_schema" "test" {
-		name = "%v"
-		database = snowflake_database.test.name
-		comment = "Terraform acceptance test"
-	  }
-
 	resource "snowflake_password_policy" "pa" {
-		database   = snowflake_database.test.name
-		schema     = snowflake_schema.test.name
+		database   = "terraform_test_database"
+		schema     = "terraform_test_schema"
 		name       = "%v"
 		min_length = %d
 		max_length = %d
 		or_replace = true
 	}
-	`, s, s, s, minLength, maxLength)
+	`, s, minLength, maxLength)
 }
 
 func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// Creation sets zero properly
@@ -112,22 +104,11 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 
 func passwordPolicyDefaultMaxageDaysConfig(s string, maxAgeDays int) string {
 	return fmt.Sprintf(`
-	resource "snowflake_database" "test" {
-		name = "%v"
-		comment = "Terraform acceptance test"
-	}
-
-	resource "snowflake_schema" "test" {
-		name = "%v"
-		database = snowflake_database.test.name
-		comment = "Terraform acceptance test"
-	}
-
 	resource "snowflake_password_policy" "pa" {
-		database     = snowflake_database.test.name
-		schema       = snowflake_schema.test.name
+		database   = "terraform_test_database"
+		schema     = "terraform_test_schema"
 		name         = "%v"
 		max_age_days = %d
 	}
-	`, s, s, s, maxAgeDays)
+	`, s, maxAgeDays)
 }

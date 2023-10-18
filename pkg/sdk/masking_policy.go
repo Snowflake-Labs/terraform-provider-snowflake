@@ -52,8 +52,17 @@ type CreateMaskingPolicyOptions struct {
 }
 
 func (opts *CreateMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
+	}
+	if !valueSet(opts.signature) {
+		return errNotSet("CreateMaskingPolicyOptions", "signature")
+	}
+	if !valueSet(opts.returns) {
+		return errNotSet("CreateMaskingPolicyOptions", "returns")
+	}
+	if !valueSet(opts.body) {
+		return errNotSet("CreateMaskingPolicyOptions", "body")
 	}
 
 	return nil
@@ -80,28 +89,22 @@ func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 
 // AlterMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-masking-policy.
 type AlterMaskingPolicyOptions struct {
-	alter         bool                   `ddl:"static" sql:"ALTER"`
-	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
-	IfExists      *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name          SchemaObjectIdentifier `ddl:"identifier"`
-	NewName       SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set           *MaskingPolicySet      `ddl:"keyword" sql:"SET"`
-	Unset         *MaskingPolicyUnset    `ddl:"keyword" sql:"UNSET"`
+	alter         bool                    `ddl:"static" sql:"ALTER"`
+	maskingPolicy bool                    `ddl:"static" sql:"MASKING POLICY"`
+	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name          SchemaObjectIdentifier  `ddl:"identifier"`
+	NewName       *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Set           *MaskingPolicySet       `ddl:"keyword" sql:"SET"`
+	Unset         *MaskingPolicyUnset     `ddl:"keyword" sql:"UNSET"`
 }
 
 func (opts *AlterMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		return errors.New("invalid object identifier")
 	}
 
-	if everyValueNil(opts.Set, opts.Unset) {
-		if !validObjectidentifier(opts.NewName) {
-			return errInvalidObjectIdentifier
-		}
-	}
-
-	if !valueSet(opts.NewName) && !exactlyOneValueSet(opts.Set, opts.Unset) {
-		return errors.New("cannot use both set and unset")
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.NewName) {
+		return errExactlyOneOf("Set", "Unset", "NewName")
 	}
 
 	if valueSet(opts.Set) {
@@ -168,8 +171,8 @@ type DropMaskingPolicyOptions struct {
 }
 
 func (opts *DropMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(opts.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }
@@ -285,7 +288,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 			return &maskingPolicy, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.
@@ -296,8 +299,8 @@ type describeMaskingPolicyOptions struct {
 }
 
 func (v *describeMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(v.name) {
-		return errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(v.name) {
+		return ErrInvalidObjectIdentifier
 	}
 	return nil
 }

@@ -2,13 +2,11 @@ package sdk
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
+// TODO: add more tests
 func TestSetObjectParameterOnObject(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	defaultOpts := func() *setParameterOnObject {
 		return &setParameterOnObject{
@@ -19,11 +17,8 @@ func TestSetObjectParameterOnObject(t *testing.T) {
 		}
 	}
 
-	t.Run("empty options", func(t *testing.T) {
+	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "ALTER USER " + id.FullyQualifiedName() + " SET ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = TRUE"
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = TRUE", id.FullyQualifiedName())
 	})
 }

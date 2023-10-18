@@ -3,13 +3,16 @@ package resources_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 )
 
+// todo: remove the rest of these which are not used. also this file should be renamed for clarity to make it clear it is for testing only
+// https://snowflakecomputing.atlassian.net/browse/SNOW-936093
 type grantType int
 
 const (
@@ -17,6 +20,33 @@ const (
 	onFuture
 	onAll
 )
+
+func TestGetPropertyAsPointer(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, map[string]*schema.Schema{
+		"integer": {
+			Type:     schema.TypeInt,
+			Required: true,
+		},
+		"string": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"boolean": {
+			Type:     schema.TypeBool,
+			Required: true,
+		},
+	}, map[string]interface{}{
+		"integer": 123,
+		"string":  "some string",
+		"boolean": true,
+		"invalid": true,
+	})
+
+	assert.Equal(t, 123, *resources.GetPropertyAsPointer[int](d, "integer"))
+	assert.Equal(t, "some string", *resources.GetPropertyAsPointer[string](d, "string"))
+	assert.Equal(t, true, *resources.GetPropertyAsPointer[bool](d, "boolean"))
+	assert.Nil(t, resources.GetPropertyAsPointer[bool](d, "invalid"))
+}
 
 func database(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	t.Helper()
@@ -187,13 +217,6 @@ func tag(t *testing.T, id string, params map[string]interface{}) *schema.Resourc
 	r.NotNil(d)
 	d.SetId(id)
 	return d
-}
-
-func providers() map[string]*schema.Provider {
-	p := provider.Provider()
-	return map[string]*schema.Provider{
-		"snowflake": p,
-	}
 }
 
 func roleGrants(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {

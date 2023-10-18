@@ -341,7 +341,7 @@ func (opts *CreateFileFormatOptions) validate() error {
 			continue
 		}
 		if anyValueSet(fields[formatType]...) {
-			return fmt.Errorf("Cannot set %s fields when TYPE = %s", formatType, opts.Type)
+			return fmt.Errorf("cannot set %s fields when TYPE = %s", formatType, opts.Type)
 		}
 	}
 
@@ -382,7 +382,7 @@ type AlterFileFormatOptions struct {
 
 func (opts *AlterFileFormatOptions) validate() error {
 	if !exactlyOneValueSet(opts.Rename, opts.Set) {
-		return fmt.Errorf("Only one of Rename or Set can be set at once.")
+		return fmt.Errorf("only one of Rename or Set can be set at once.")
 	}
 	if valueSet(opts.Set) {
 		err := opts.Set.validate()
@@ -663,7 +663,7 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 			return &f, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type FileFormatDetails struct {
