@@ -33,10 +33,10 @@ func Provider() *schema.Provider {
 			},
 			"username": {
 				Type:        schema.TypeString,
-				Description: "Username for username+password authentication. Can also be sourced from the `SNOWFLAKE_USER` environment variable. Required unless using `profile`.",
+				Description: "Username for username+password authentication. Can also be sourced from the `SNOWFLAKE_USERNAME` environment variable. Required unless using `profile`.",
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USER", nil),
-				Deprecated:  "Use `user` instead",
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USERNAME", nil),
+				Deprecated:  "Use `user` instead of `username`",
 			},
 			"password": {
 				Type:          schema.TypeString,
