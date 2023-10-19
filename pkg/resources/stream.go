@@ -162,6 +162,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error creating stream %v err = %w", name, err)
 			}
 		}
+		break
 	case onViewSet:
 		viewId := constructWithFallbacks(databaseName, schemaName, helpers.DecodeSnowflakeID(onView.(string)))
 		req := sdk.NewCreateStreamOnViewRequest(id, viewId)
@@ -178,6 +179,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error creating stream %v err = %w", name, err)
 		}
+		break
 	case onStageSet:
 		stageBuilder := snowflake.NewStageBuilder(onStage.(string), databaseName, schemaName)
 		sq := stageBuilder.Describe()
@@ -200,6 +202,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error creating stream %v err = %w", name, err)
 		}
+		break
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
