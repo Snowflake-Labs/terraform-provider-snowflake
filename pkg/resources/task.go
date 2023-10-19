@@ -318,7 +318,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0, len(after))
 		for _, dep := range after {
 			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
-			rootTasks, err := client.Tasks.GetRootTasks(ctx, precedingTaskId)
+			rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, precedingTaskId)
 			if err != nil {
 				return err
 			}
@@ -402,7 +402,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	rootTasks, err := client.Tasks.GetRootTasks(ctx, taskId)
+	rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, taskId)
 	if err != nil {
 		return err
 	}
@@ -506,7 +506,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		if len(toAdd) > 0 {
 			// need to suspend any new root tasks from dependencies before adding them
 			for _, dep := range toAdd {
-				rootTasks, err := client.Tasks.GetRootTasks(ctx, dep)
+				rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, dep)
 				if err != nil {
 					return err
 				}
@@ -663,7 +663,7 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 
 	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	rootTasks, err := client.Tasks.GetRootTasks(ctx, taskId)
+	rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, taskId)
 	if err != nil {
 		return err
 	}

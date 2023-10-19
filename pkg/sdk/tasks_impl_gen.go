@@ -64,7 +64,7 @@ func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error 
 }
 
 // TODO [SNOW-884987]: handle cycles
-func (v *tasks) GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]Task, error) {
+func GetRootTasks(v Tasks, ctx context.Context, id SchemaObjectIdentifier) ([]Task, error) {
 	task, err := v.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func (v *tasks) GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]
 
 	rootTasks := make([]Task, 0, len(predecessors))
 	for _, predecessor := range predecessors {
-		predecessorTasks, err := v.GetRootTasks(ctx, predecessor)
+		predecessorTasks, err := GetRootTasks(v, ctx, predecessor)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get predecessors for task %s err = %w", predecessor.FullyQualifiedName(), err)
 		}
