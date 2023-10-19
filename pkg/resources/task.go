@@ -288,9 +288,12 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		createRequest.WithSchedule(sdk.Pointer(v.(string)))
 	}
 
-	if _, ok := d.GetOk("session_parameters"); ok {
-		// TODO [SNOW-884987]: handle session parameters
-		// builder.WithSessionParameters(v.(map[string]interface{}))
+	if v, ok := d.GetOk("session_parameters"); ok {
+		sessionParameters, err := sdk.GetSessionParametersFrom(v.(map[string]string))
+		if err != nil {
+			return err
+		}
+		createRequest.WithSessionParameters(sessionParameters)
 	}
 
 	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
