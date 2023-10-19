@@ -188,7 +188,6 @@ func TestInt_Tasks(t *testing.T) {
 		assertTaskWithOptions(t, task, request.GetName(), "", "", "", "", false, "", &otherId)
 	})
 
-	// TODO [SNOW-884987]: test multiple roots
 	t.Run("create dag of tasks", func(t *testing.T) {
 		rootName := random.String()
 		rootId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, rootName)
@@ -265,6 +264,45 @@ func TestInt_Tasks(t *testing.T) {
 		alterRequest = sdk.NewAlterTaskRequest(rootId).WithResume(sdk.Bool(true))
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.ErrorContains(t, err, "Graph has at least one cycle containing task")
+	})
+
+	t.Run("create dag of tasks - multiple roots", func(t *testing.T) {
+		root1Name := random.String()
+		root1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, root1Name)
+
+		request := sdk.NewCreateTaskRequest(root1Id, sql).WithSchedule(sdk.String("10 MINUTE"))
+		root1 := createTaskWithRequest(t, request)
+
+		require.Equal(t, []sdk.SchemaObjectIdentifier{}, root1.Predecessors)
+
+		root2Name := random.String()
+		root2Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, root2Name)
+
+		request = sdk.NewCreateTaskRequest(root2Id, sql).WithSchedule(sdk.String("10 MINUTE"))
+		root2 := createTaskWithRequest(t, request)
+
+		require.Equal(t, []sdk.SchemaObjectIdentifier{}, root2.Predecessors)
+
+		t1Name := random.String()
+		t1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t1Name)
+
+		request = sdk.NewCreateTaskRequest(t1Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{root1Id, root2Id})
+		t1 := createTaskWithRequest(t, request)
+
+		require.Contains(t, t1.Predecessors, root1Id)
+		require.Contains(t, t1.Predecessors, root2Id)
+		require.Len(t, t1.Predecessors, 2)
+
+		rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, t1Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 2)
+		require.Contains(t, []sdk.SchemaObjectIdentifier{root1Id, root2Id}, rootTasks[0].ID())
+		require.Contains(t, []sdk.SchemaObjectIdentifier{root1Id, root2Id}, rootTasks[1].ID())
+
+		// we get an error when trying to start
+		alterRequest := sdk.NewAlterTaskRequest(root1Id).WithResume(sdk.Bool(true))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.ErrorContains(t, err, "The graph has more than one root task (one without predecessors)")
 	})
 
 	// TODO: this fails with `syntax error line 1 at position 89 unexpected 'GRANTS'`.
