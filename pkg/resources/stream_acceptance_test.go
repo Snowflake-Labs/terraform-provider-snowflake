@@ -52,8 +52,8 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 }
 
 func TestAcc_Stream(t *testing.T) {
-	env := os.Getenv("STREAM_TEST")
-	if env == "" {
+	env := os.Getenv("SKIP_STREAM_TEST")
+	if env != "" {
 		t.Skip("Skipping TestAcc_Stream")
 	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

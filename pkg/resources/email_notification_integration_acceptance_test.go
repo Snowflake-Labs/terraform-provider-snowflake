@@ -12,8 +12,8 @@ import (
 )
 
 func TestAcc_EmailNotificationIntegration(t *testing.T) {
-	env := os.Getenv("EMAIL_INTEGRATION_TESTS")
-	if env == "" {
+	env := os.Getenv("SKIP_EMAIL_INTEGRATION_TESTS")
+	if env != "" {
 		t.Skip("Skipping TestAcc_EmailNotificationIntegration")
 	}
 
