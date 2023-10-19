@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: add test for allow_overlapping_execution in child task
 func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -187,6 +186,85 @@ func TestInt_Tasks(t *testing.T) {
 		task := createTaskWithRequest(t, request)
 
 		assertTaskWithOptions(t, task, request.GetName(), "", "", "", "", false, "", &otherId)
+	})
+
+	// TODO [SNOW-884987]: test multiple roots
+	t.Run("create dag of tasks", func(t *testing.T) {
+		rootName := random.String()
+		rootId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, rootName)
+
+		request := sdk.NewCreateTaskRequest(rootId, sql).WithSchedule(sdk.String("10 MINUTE"))
+		root := createTaskWithRequest(t, request)
+
+		require.Equal(t, []sdk.SchemaObjectIdentifier{}, root.Predecessors)
+
+		t1Name := random.String()
+		t1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t1Name)
+
+		request = sdk.NewCreateTaskRequest(t1Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootId})
+		t1 := createTaskWithRequest(t, request)
+
+		require.Equal(t, []sdk.SchemaObjectIdentifier{rootId}, t1.Predecessors)
+
+		t2Name := random.String()
+		t2Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t2Name)
+
+		request = sdk.NewCreateTaskRequest(t2Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{t1Id, rootId})
+		t2 := createTaskWithRequest(t, request)
+
+		require.Contains(t, t2.Predecessors, rootId)
+		require.Contains(t, t2.Predecessors, t1Id)
+		require.Len(t, t2.Predecessors, 2)
+
+		t3Name := random.String()
+		t3Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t3Name)
+
+		request = sdk.NewCreateTaskRequest(t3Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{t2Id, t1Id})
+		t3 := createTaskWithRequest(t, request)
+
+		require.Contains(t, t3.Predecessors, t2Id)
+		require.Contains(t, t3.Predecessors, t1Id)
+		require.Len(t, t3.Predecessors, 2)
+
+		rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, rootId)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t1Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t2Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
+		// cannot set ALLOW_OVERLAPPING_EXECUTION on child task
+		alterRequest := sdk.NewAlterTaskRequest(t1Id).WithSet(sdk.NewTaskSetRequest().WithAllowOverlappingExecution(sdk.Bool(true)))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.ErrorContains(t, err, "Cannot set allow_overlapping_execution on non-root task")
+
+		// can set ALLOW_OVERLAPPING_EXECUTION on root task
+		alterRequest = sdk.NewAlterTaskRequest(rootId).WithSet(sdk.NewTaskSetRequest().WithAllowOverlappingExecution(sdk.Bool(true)))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		// can create cycle, because DAG is suspended
+		alterRequest = sdk.NewAlterTaskRequest(t1Id).WithAddAfter([]sdk.SchemaObjectIdentifier{t3Id})
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		// we get an error when trying to start
+		alterRequest = sdk.NewAlterTaskRequest(rootId).WithResume(sdk.Bool(true))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.ErrorContains(t, err, "Graph has at least one cycle containing task")
 	})
 
 	// TODO: this fails with `syntax error line 1 at position 89 unexpected 'GRANTS'`.
