@@ -286,11 +286,11 @@ func getPredecessors(predecessors string) ([]string, error) {
 			// \".\"x
 			// \".x
 			// \".\".x
-			idx := strings.LastIndex(formattedName, "\"")
-			if strings.LastIndex(formattedName, ".\"")+1 < idx {
-				idx = idx + 1
+			idx := strings.LastIndex(formattedName, "\"") + 1
+			if strings.LastIndex(formattedName, ".\"")+2 < idx {
+				idx++
 			}
-			formattedName = formattedName[idx+1:]
+			formattedName = formattedName[idx:]
 			predecessorNames[i] = formattedName
 		}
 	}
