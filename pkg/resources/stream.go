@@ -42,21 +42,21 @@ var streamSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		ForceNew:     true,
-		Description:  "Specifies the identifier for the table the stream will monitor.",
+		Description:  "Specifies an identifier for the table the stream will monitor.",
 		ExactlyOneOf: []string{"on_table", "on_view", "on_stage"},
 	},
 	"on_view": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		ForceNew:     true,
-		Description:  "Specifies the identifier for the view the stream will monitor.",
+		Description:  "Specifies an identifier for the view the stream will monitor.",
 		ExactlyOneOf: []string{"on_table", "on_view", "on_stage"},
 	},
 	"on_stage": {
 		Type:         schema.TypeString,
 		Optional:     true,
 		ForceNew:     true,
-		Description:  "Specifies the identifier for the stage the stream will monitor.",
+		Description:  "Specifies an identifier for the stage the stream will monitor.",
 		ExactlyOneOf: []string{"on_table", "on_view", "on_stage"},
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			// Suppress diff if the stage name is the same, even if database and schema are not specified
@@ -125,7 +125,9 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	switch {
 	case onTableSet:
-		tq := snowflake.NewTableBuilder(onTable.(string), databaseName, schemaName).Show()
+		tableId := helpers.DecodeSnowflakeID(onTable.(string)).(sdk.SchemaObjectIdentifier)
+
+		tq := snowflake.NewTableBuilder(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()).Show()
 		tableRow := snowflake.QueryRow(db, tq)
 		t, err := snowflake.ScanTable(tableRow)
 		if err != nil {
@@ -133,8 +135,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if t.IsExternal.String == "Y" {
-			externalTableId := constructWithFallbacks(databaseName, schemaName, helpers.DecodeSnowflakeID(onTable.(string)))
-			req := sdk.NewCreateStreamOnExternalTableRequest(id, externalTableId)
+			req := sdk.NewCreateStreamOnExternalTableRequest(id, tableId)
 			if insertOnly {
 				req.WithInsertOnly(sdk.Bool(true))
 			}
@@ -146,7 +147,6 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error creating stream %v err = %w", name, err)
 			}
 		} else {
-			tableId := constructWithFallbacks(databaseName, schemaName, helpers.DecodeSnowflakeID(onTable.(string)))
 			req := sdk.NewCreateStreamOnTableRequest(id, tableId)
 			if appendOnly {
 				req.WithAppendOnly(sdk.Bool(true))
@@ -164,7 +164,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 		break
 	case onViewSet:
-		viewId := constructWithFallbacks(databaseName, schemaName, helpers.DecodeSnowflakeID(onView.(string)))
+		viewId := helpers.DecodeSnowflakeID(onView.(string)).(sdk.SchemaObjectIdentifier)
 		req := sdk.NewCreateStreamOnViewRequest(id, viewId)
 		if appendOnly {
 			req.WithAppendOnly(sdk.Bool(true))
@@ -181,7 +181,8 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 		break
 	case onStageSet:
-		stageBuilder := snowflake.NewStageBuilder(onStage.(string), databaseName, schemaName)
+		stageId := helpers.DecodeSnowflakeID(onStage.(string)).(sdk.SchemaObjectIdentifier)
+		stageBuilder := snowflake.NewStageBuilder(stageId.Name(), stageId.DatabaseName(), stageId.SchemaName())
 		sq := stageBuilder.Describe()
 		stageDesc, err := snowflake.DescStage(db, sq)
 		if err != nil {
@@ -190,10 +191,6 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		if !strings.Contains(stageDesc.Directory, "ENABLE = true") {
 			return fmt.Errorf("directory must be enabled on stage")
 		}
-
-		// Here I used sdk.NewSchemaObjectIdentifier, because we have an old version of stage sdk, where I could pass stageId
-		// created from constructWithFallbacks (then I would know that same database and schema were used).
-		stageId := sdk.NewSchemaObjectIdentifier(onStage.(string), databaseName, schemaName)
 		req := sdk.NewCreateStreamOnDirectoryTableRequest(id, stageId)
 		if v, ok := d.GetOk("comment"); ok {
 			req.WithComment(sdk.String(v.(string)))
@@ -251,9 +248,9 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("insert_only", *stream.Mode == "INSERT_ONLY"); err != nil {
 		return err
 	}
-	// TODO: Snowflake doesn't return that value right now (and I don't know if it ever did), but probably we can assume
-	// 	the customers got 'false' every time and hardcode it for now (because it's only on create thing, it's not necessary
-	//	to track it's value after creation).
+	// TODO: SHOW STREAMS doesn't return that value right now (I'm not sure if it ever did), but probably we can assume
+	// 	the customers got 'false' every time and hardcode it (it's only on create thing, so it's not necessary
+	//	to track its value after creation).
 	if err := d.Set("show_initial_rows", false); err != nil {
 		return err
 	}
