@@ -431,7 +431,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
-			return fmt.Errorf("error updating warehouse on task %s", taskId.FullyQualifiedName())
+			return fmt.Errorf("error updating warehouse on task %s err = %w", taskId.FullyQualifiedName(), err)
 		}
 	}
 
