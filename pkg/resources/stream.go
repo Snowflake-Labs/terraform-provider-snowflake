@@ -165,6 +165,14 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		break
 	case onViewSet:
 		viewId := helpers.DecodeSnowflakeParameterID(onView.(string)).(sdk.SchemaObjectIdentifier)
+
+		tq := snowflake.NewViewBuilder(viewId.Name()).WithDB(viewId.DatabaseName()).WithSchema(viewId.SchemaName()).Show()
+		viewRow := snowflake.QueryRow(db, tq)
+		_, err := snowflake.ScanView(viewRow)
+		if err != nil {
+			return err
+		}
+
 		req := sdk.NewCreateStreamOnViewRequest(id, viewId)
 		if appendOnly {
 			req.WithAppendOnly(sdk.Bool(true))
@@ -175,7 +183,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("comment"); ok {
 			req.WithComment(sdk.String(v.(string)))
 		}
-		err := client.Streams.CreateOnView(ctx, req)
+		err = client.Streams.CreateOnView(ctx, req)
 		if err != nil {
 			return fmt.Errorf("error creating stream %v err = %w", name, err)
 		}
