@@ -81,6 +81,7 @@ func TestInt_CurrentWarehouse(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	// new warehouse created on purpose
 	warehouseTest, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 	err := client.Sessions.UseWarehouse(ctx, warehouseTest.ID())

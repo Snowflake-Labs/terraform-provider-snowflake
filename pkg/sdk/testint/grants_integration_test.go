@@ -544,9 +544,6 @@ func TestInt_GrantOwnership(t *testing.T) {
 	})
 
 	t.Run("on account level object to role", func(t *testing.T) {
-		warehouse, warehouseCleanup := createWarehouse(t, client)
-		t.Cleanup(warehouseCleanup)
-
 		// role is deliberately created after warehouse, so that cleanup is done in reverse
 		// because after ownership grant we lose privilege to drop object
 		// with first dropping the role, we reacquire rights to do it - a little hacky trick
@@ -557,7 +554,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		on := sdk.OwnershipGrantOn{
 			Object: &sdk.Object{
 				ObjectType: sdk.ObjectTypeWarehouse,
-				Name:       warehouse.ID(),
+				Name:       testWarehouse(t).ID(),
 			},
 		}
 		to := sdk.OwnershipGrantTo{

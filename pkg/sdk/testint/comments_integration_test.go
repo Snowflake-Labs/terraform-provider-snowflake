@@ -13,18 +13,15 @@ func TestInt_Comment(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	testWarehouse, warehouseCleanup := createWarehouse(t, client)
-	t.Cleanup(warehouseCleanup)
-
 	t.Run("set", func(t *testing.T) {
 		comment := random.Comment()
 		err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
 			ObjectType: sdk.ObjectTypeWarehouse,
-			ObjectName: testWarehouse.ID(),
+			ObjectName: testWarehouse(t).ID(),
 			Value:      sdk.String(comment),
 		})
 		require.NoError(t, err)
-		wh, err := client.Warehouses.ShowByID(ctx, testWarehouse.ID())
+		wh, err := client.Warehouses.ShowByID(ctx, testWarehouse(t).ID())
 		require.NoError(t, err)
 		assert.Equal(t, comment, wh.Comment)
 	})
