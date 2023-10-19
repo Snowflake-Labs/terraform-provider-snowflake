@@ -208,7 +208,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-
+	/*
 	tagID := TagID{
 		DatabaseName: t.RefDB.String,
 		SchemaName:   t.RefSchema.String,
@@ -218,13 +218,13 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	tagIDString, err := tagID.String()
 	if err != nil {
 		return err
-	}
+	}*/
 
 	mpIDString := helpers.EncodeSnowflakeID(t.PolicyDB.String, t.PolicySchema.String, t.PolicyName.String)
 
-	if err := d.Set("tag_id", tagIDString); err != nil {
+	/*if err := d.Set("tag_id", tagIDString); err != nil {
 		return err
-	}
+	}*/
 
 	if err := d.Set("masking_policy_id", mpIDString); err != nil {
 		return err
