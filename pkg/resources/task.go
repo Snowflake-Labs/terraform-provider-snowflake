@@ -113,8 +113,8 @@ var taskSchema = map[string]*schema.Schema{
 }
 
 // difference find keys in 'a' but not in 'b'.
-func difference(a, b map[string]interface{}) map[string]interface{} {
-	diff := make(map[string]interface{})
+func difference(a, b map[string]string) map[string]string {
+	diff := make(map[string]string)
 	for k := range a {
 		if _, ok := b[k]; !ok {
 			diff[k] = a[k]
@@ -586,36 +586,41 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// TODO [SNOW-884987]: old implementation does not handle changing parameter value correctly (only finds for parameters to add od remove, not change)
 	if d.HasChange("session_parameters") {
-		// TODO [SNOW-884987]: handle session parameters
-		//var q string
-		//o, n := d.GetChange("session_parameters")
-		//
-		//if o == nil {
-		//	o = make(map[string]interface{})
-		//}
-		//if n == nil {
-		//	n = make(map[string]interface{})
-		//}
-		//os := o.(map[string]interface{})
-		//ns := n.(map[string]interface{})
-		//
-		//remove := difference(os, ns)
-		//add := difference(ns, os)
-		//
-		//if len(remove) > 0 {
-		//	q = builder.RemoveSessionParameters(remove)
-		//	if err := snowflake.Exec(db, q); err != nil {
-		//		return fmt.Errorf("error removing session_parameters on task %v", d.Id())
-		//	}
-		//}
-		//
-		//if len(add) > 0 {
-		//	q = builder.AddSessionParameters(add)
-		//	if err := snowflake.Exec(db, q); err != nil {
-		//		return fmt.Errorf("error adding session_parameters to task %v", d.Id())
-		//	}
-		//}
+		o, n := d.GetChange("session_parameters")
+
+		if o == nil {
+			o = make(map[string]interface{})
+		}
+		if n == nil {
+			n = make(map[string]interface{})
+		}
+		os := o.(map[string]string)
+		ns := n.(map[string]string)
+
+		remove := difference(os, ns)
+		add := difference(ns, os)
+
+		if len(remove) > 0 {
+			sessionParametersUnset, err := sdk.GetSessionParametersUnsetFrom(remove)
+			if err != nil {
+				return err
+			}
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(sdk.NewTaskUnsetRequest().WithSessionParametersUnset(sessionParametersUnset))); err != nil {
+				return fmt.Errorf("error removing session_parameters on task %v", d.Id())
+			}
+		}
+
+		if len(add) > 0 {
+			sessionParameters, err := sdk.GetSessionParametersFrom(add)
+			if err != nil {
+				return err
+			}
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithSessionParameters(sessionParameters))); err != nil {
+				return fmt.Errorf("error adding session_parameters to task %v", d.Id())
+			}
+		}
 	}
 
 	if d.HasChange("when") {

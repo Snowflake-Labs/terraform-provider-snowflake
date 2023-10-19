@@ -17,6 +17,7 @@ func GetSessionParametersFrom(params map[string]string) (*SessionParameters, err
 }
 
 // TODO [SNOW-884987]: use this method in SetSessionParameterOnAccount and in SetSessionParameterOnUser
+// TODO [SNOW-884987]: unit test this method
 func (sessionParameters *SessionParameters) setParam(parameter SessionParameter, value string) error {
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
@@ -170,6 +171,101 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 			return fmt.Errorf("WEEK_START session parameter is an integer, got %v", value)
 		}
 		sessionParameters.WeekStart = Pointer(v)
+	default:
+		return fmt.Errorf("%s session parameter is not supported", string(parameter))
 	}
-	return fmt.Errorf("%s session parameter is not supported", string(parameter))
+	return nil
+}
+
+func GetSessionParametersUnsetFrom(params map[string]string) (*SessionParametersUnset, error) {
+	sessionParametersUnset := &SessionParametersUnset{}
+	for k, _ := range params {
+		err := sessionParametersUnset.setParam(SessionParameter(k))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return sessionParametersUnset, nil
+}
+
+func (sessionParametersUnset *SessionParametersUnset) setParam(parameter SessionParameter) error {
+	switch parameter {
+	case SessionParameterAbortDetachedQuery:
+		sessionParametersUnset.AbortDetachedQuery = Bool(true)
+	case SessionParameterAutocommit:
+		sessionParametersUnset.Autocommit = Bool(true)
+	case SessionParameterBinaryInputFormat:
+		sessionParametersUnset.BinaryInputFormat = Bool(true)
+	case SessionParameterBinaryOutputFormat:
+		sessionParametersUnset.BinaryOutputFormat = Bool(true)
+	case SessionParameterClientMetadataRequestUseConnectionCtx:
+		sessionParametersUnset.ClientMetadataRequestUseConnectionCtx = Bool(true)
+	case SessionParameterClientMetadataUseSessionDatabase:
+		sessionParametersUnset.ClientMetadataUseSessionDatabase = Bool(true)
+	case SessionParameterClientResultColumnCaseInsensitive:
+		sessionParametersUnset.ClientResultColumnCaseInsensitive = Bool(true)
+	case SessionParameterDateInputFormat:
+		sessionParametersUnset.DateInputFormat = Bool(true)
+	case SessionParameterDateOutputFormat:
+		sessionParametersUnset.DateOutputFormat = Bool(true)
+	case SessionParameterErrorOnNondeterministicMerge:
+		sessionParametersUnset.ErrorOnNondeterministicMerge = Bool(true)
+	case SessionParameterErrorOnNondeterministicUpdate:
+		sessionParametersUnset.ErrorOnNondeterministicUpdate = Bool(true)
+	case SessionParameterGeographyOutputFormat:
+		sessionParametersUnset.GeographyOutputFormat = Bool(true)
+	case SessionParameterJSONIndent:
+		sessionParametersUnset.JSONIndent = Bool(true)
+	case SessionParameterLockTimeout:
+		sessionParametersUnset.LockTimeout = Bool(true)
+	case SessionParameterMultiStatementCount:
+		sessionParametersUnset.MultiStatementCount = Bool(true)
+	case SessionParameterQueryTag:
+		sessionParametersUnset.QueryTag = Bool(true)
+	case SessionParameterQuotedIdentifiersIgnoreCase:
+		sessionParametersUnset.QuotedIdentifiersIgnoreCase = Bool(true)
+	case SessionParameterRowsPerResultset:
+		sessionParametersUnset.RowsPerResultset = Bool(true)
+	case SessionParameterSimulatedDataSharingConsumer:
+		sessionParametersUnset.SimulatedDataSharingConsumer = Bool(true)
+	case SessionParameterStatementTimeoutInSeconds:
+		sessionParametersUnset.StatementTimeoutInSeconds = Bool(true)
+	case SessionParameterStrictJSONOutput:
+		sessionParametersUnset.StrictJSONOutput = Bool(true)
+	case SessionParameterTimestampDayIsAlways24h:
+		sessionParametersUnset.TimestampDayIsAlways24h = Bool(true)
+	case SessionParameterTimestampInputFormat:
+		sessionParametersUnset.TimestampInputFormat = Bool(true)
+	case SessionParameterTimestampLTZOutputFormat:
+		sessionParametersUnset.TimestampLTZOutputFormat = Bool(true)
+	case SessionParameterTimestampNTZOutputFormat:
+		sessionParametersUnset.TimestampNTZOutputFormat = Bool(true)
+	case SessionParameterTimestampOutputFormat:
+		sessionParametersUnset.TimestampOutputFormat = Bool(true)
+	case SessionParameterTimestampTypeMapping:
+		sessionParametersUnset.TimestampTypeMapping = Bool(true)
+	case SessionParameterTimestampTZOutputFormat:
+		sessionParametersUnset.TimestampTZOutputFormat = Bool(true)
+	case SessionParameterTimezone:
+		sessionParametersUnset.Timezone = Bool(true)
+	case SessionParameterTimeInputFormat:
+		sessionParametersUnset.TimeInputFormat = Bool(true)
+	case SessionParameterTimeOutputFormat:
+		sessionParametersUnset.TimeOutputFormat = Bool(true)
+	case SessionParameterTransactionDefaultIsolationLevel:
+		sessionParametersUnset.TransactionDefaultIsolationLevel = Bool(true)
+	case SessionParameterTwoDigitCenturyStart:
+		sessionParametersUnset.TwoDigitCenturyStart = Bool(true)
+	case SessionParameterUnsupportedDDLAction:
+		sessionParametersUnset.UnsupportedDDLAction = Bool(true)
+	case SessionParameterUseCachedResult:
+		sessionParametersUnset.UseCachedResult = Bool(true)
+	case SessionParameterWeekOfYearPolicy:
+		sessionParametersUnset.WeekOfYearPolicy = Bool(true)
+	case SessionParameterWeekStart:
+		sessionParametersUnset.WeekStart = Bool(true)
+	default:
+		return fmt.Errorf("%s session parameter is not supported", string(parameter))
+	}
+	return nil
 }
