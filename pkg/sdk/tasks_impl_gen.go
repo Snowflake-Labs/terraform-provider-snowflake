@@ -63,6 +63,10 @@ func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error 
 	return validateAndExec(v.client, ctx, opts)
 }
 
+// GetRootTasks is a way to get all root tasks for the given tasks.
+// Snowflake does not have (yet) a method to do it without traversing the task graph manually.
+// Task DAG should have a single root but this is checked when the root task is being resumed; that's why we return here multiple roots.
+// Cycles should not be possible in a task DAG but it is checked when the root task is being resumed; that's why this method has to be cycle-proof.
 // TODO [SNOW-884987]: handle cycles
 func GetRootTasks(v Tasks, ctx context.Context, id SchemaObjectIdentifier) ([]Task, error) {
 	task, err := v.ShowByID(ctx, id)
