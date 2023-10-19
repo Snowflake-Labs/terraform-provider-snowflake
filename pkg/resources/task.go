@@ -315,7 +315,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("after"); ok {
 		after := expandStringList(v.([]interface{}))
-		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0, len(after))
+		precedingTasks := make([]sdk.SchemaObjectIdentifier, len(after))
 		for _, dep := range after {
 			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
 			rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, precedingTaskId)
@@ -484,7 +484,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Remove old dependencies that are not in new dependencies
-		var toRemove []sdk.SchemaObjectIdentifier
+		toRemove := make([]sdk.SchemaObjectIdentifier, 0)
 		for _, dep := range oldAfter {
 			if !slices.Contains(newAfter, dep) {
 				toRemove = append(toRemove, sdk.NewSchemaObjectIdentifier(taskId.DatabaseName(), taskId.SchemaName(), dep))
@@ -497,7 +497,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Add new dependencies that are not in old dependencies
-		var toAdd []sdk.SchemaObjectIdentifier
+		toAdd := make([]sdk.SchemaObjectIdentifier, 0)
 		for _, dep := range newAfter {
 			if !slices.Contains(oldAfter, dep) {
 				toAdd = append(toAdd, sdk.NewSchemaObjectIdentifier(taskId.DatabaseName(), taskId.SchemaName(), dep))
