@@ -114,8 +114,8 @@ var taskSchema = map[string]*schema.Schema{
 }
 
 // difference find keys in 'a' but not in 'b'.
-func difference(a, b map[string]string) map[string]string {
-	diff := make(map[string]string)
+func difference(a, b map[string]any) map[string]any {
+	diff := make(map[string]any)
 	for k := range a {
 		if _, ok := b[k]; !ok {
 			diff[k] = a[k]
@@ -290,7 +290,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("session_parameters"); ok {
-		sessionParameters, err := sdk.GetSessionParametersFrom(v.(map[string]string))
+		sessionParameters, err := sdk.GetSessionParametersFrom(v.(map[string]any))
 		if err != nil {
 			return err
 		}
@@ -598,8 +598,8 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		if n == nil {
 			n = make(map[string]interface{})
 		}
-		os := o.(map[string]string)
-		ns := n.(map[string]string)
+		os := o.(map[string]any)
+		ns := n.(map[string]any)
 
 		remove := difference(os, ns)
 		add := difference(ns, os)

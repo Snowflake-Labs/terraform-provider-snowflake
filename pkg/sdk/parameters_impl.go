@@ -5,10 +5,14 @@ import (
 	"strconv"
 )
 
-func GetSessionParametersFrom(params map[string]string) (*SessionParameters, error) {
+func GetSessionParametersFrom(params map[string]any) (*SessionParameters, error) {
 	sessionParameters := &SessionParameters{}
 	for k, v := range params {
-		err := sessionParameters.setParam(SessionParameter(k), v)
+		s, ok := v.(string)
+		if !ok {
+			return nil, fmt.Errorf("expecting string value for parameter %s (current value: %v)", k, v)
+		}
+		err := sessionParameters.setParam(SessionParameter(k), s)
 		if err != nil {
 			return nil, err
 		}
@@ -177,7 +181,7 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 	return nil
 }
 
-func GetSessionParametersUnsetFrom(params map[string]string) (*SessionParametersUnset, error) {
+func GetSessionParametersUnsetFrom(params map[string]any) (*SessionParametersUnset, error) {
 	sessionParametersUnset := &SessionParametersUnset{}
 	for k := range params {
 		err := sessionParametersUnset.setParam(SessionParameter(k))
