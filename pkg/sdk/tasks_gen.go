@@ -3,7 +3,6 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"strings"
 )
 
 type Tasks interface {
@@ -155,7 +154,7 @@ type Task struct {
 	Warehouse                 string
 	Schedule                  string
 	Predecessors              []SchemaObjectIdentifier
-	State                     string
+	State                     TaskState
 	Definition                string
 	Condition                 string
 	AllowOverlappingExecution bool
@@ -186,7 +185,13 @@ func (v *Task) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
-// TODO [SNOW-884987]: extract enum for state
+type TaskState string
+
+const (
+	TaskStateStarted   TaskState = "started"
+	TaskStateSuspended TaskState = "suspended"
+)
+
 func (v *Task) IsStarted() bool {
-	return strings.ToLower(v.State) == "started"
+	return v.State == TaskStateStarted
 }

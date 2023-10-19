@@ -29,7 +29,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, "", task.Warehouse)
 		assert.Equal(t, "", task.Schedule)
 		assert.Empty(t, task.Predecessors)
-		assert.Equal(t, "suspended", task.State)
+		assert.Equal(t, sdk.TaskStateSuspended, task.State)
 		assert.Equal(t, sql, task.Definition)
 		assert.Equal(t, "", task.Condition)
 		assert.Equal(t, false, task.AllowOverlappingExecution)
@@ -53,7 +53,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, comment, task.Comment)
 		assert.Equal(t, warehouse, task.Warehouse)
 		assert.Equal(t, schedule, task.Schedule)
-		assert.Equal(t, "suspended", task.State)
+		assert.Equal(t, sdk.TaskStateSuspended, task.State)
 		assert.Equal(t, sql, task.Definition)
 		assert.Equal(t, condition, task.Condition)
 		assert.Equal(t, allowOverlappingExecution, task.AllowOverlappingExecution)
@@ -332,7 +332,7 @@ func TestInt_Tasks(t *testing.T) {
 		task := createTaskWithRequest(t, request)
 		id := task.ID()
 
-		assert.Equal(t, "suspended", task.State)
+		assert.Equal(t, sdk.TaskStateSuspended, task.State)
 
 		alterRequest := sdk.NewAlterTaskRequest(id).WithResume(sdk.Bool(true))
 		err := client.Tasks.Alter(ctx, alterRequest)
@@ -341,7 +341,7 @@ func TestInt_Tasks(t *testing.T) {
 		alteredTask, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, "started", alteredTask.State)
+		assert.Equal(t, sdk.TaskStateStarted, alteredTask.State)
 
 		alterRequest = sdk.NewAlterTaskRequest(id).WithSuspend(sdk.Bool(true))
 		err = client.Tasks.Alter(ctx, alterRequest)
@@ -350,7 +350,7 @@ func TestInt_Tasks(t *testing.T) {
 		alteredTask, err = client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, "suspended", alteredTask.State)
+		assert.Equal(t, sdk.TaskStateSuspended, alteredTask.State)
 	})
 
 	t.Run("alter task: remove after and add after", func(t *testing.T) {

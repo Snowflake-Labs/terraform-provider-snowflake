@@ -85,7 +85,7 @@ func (v *tasks) GetRootTasks(ctx context.Context, id SchemaObjectIdentifier) ([]
 		rootTasks = append(rootTasks, predecessorTasks...)
 	}
 
-	// TODO [SNOW-884987]: extract unique function in our collection helper
+	// TODO [SNOW-884987]: extract unique function in our collection helper (if cycle-proof algorithm still needs it)
 	keys := make(map[string]bool)
 	uniqueRootTasks := make([]Task, 0, len(rootTasks))
 	for _, rootTask := range rootTasks {
@@ -234,7 +234,11 @@ func (r taskDBRow) convert() *Task {
 		task.Predecessors = ids
 	}
 	if r.State.Valid {
-		task.State = r.State.String
+		if strings.ToLower(r.State.String) == string(TaskStateStarted) {
+			task.State = TaskStateStarted
+		} else {
+			task.State = TaskStateSuspended
+		}
 	}
 	if r.Definition.Valid {
 		task.Definition = r.Definition.String
@@ -266,6 +270,7 @@ func (r taskDBRow) convert() *Task {
 	return &task
 }
 
+// TODO [SNOW-884987]: test this method with different task names (like "Ls.T7-(bt{.lWd@DRWkyA6<6hNdh")
 func getPredecessors(predecessors string) ([]string, error) {
 	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
 	// The list is formatted, e.g.:
@@ -274,7 +279,7 @@ func getPredecessors(predecessors string) ([]string, error) {
 	err := json.Unmarshal([]byte(predecessors), &predecessorNames)
 	if err == nil {
 		for i, predecessorName := range predecessorNames {
-			formattedName := predecessorName[strings.LastIndex(predecessorName, ".")+1:]
+			formattedName := predecessorName[strings.LastIndex(predecessorName, ".\"")+1:]
 			formattedName = strings.Trim(formattedName, "\\\"")
 			predecessorNames[i] = formattedName
 		}
