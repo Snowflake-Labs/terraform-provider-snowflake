@@ -16,6 +16,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// TODO [SNOW-884987]: add missing SUSPEND_TASK_AFTER_NUM_FAILURES attribute.
 var taskSchema = map[string]*schema.Schema{
 	"enabled": {
 		Type:        schema.TypeBool,
