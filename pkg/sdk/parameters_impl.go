@@ -179,7 +179,7 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 
 func GetSessionParametersUnsetFrom(params map[string]string) (*SessionParametersUnset, error) {
 	sessionParametersUnset := &SessionParametersUnset{}
-	for k, _ := range params {
+	for k := range params {
 		err := sessionParametersUnset.setParam(SessionParameter(k))
 		if err != nil {
 			return nil, err
