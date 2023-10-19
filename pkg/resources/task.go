@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -205,58 +206,51 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// TODO [SNOW-884987]: do task parameters
-	/*
-		q = builder.ShowParameters()
-		paramRows, err := snowflake.Query(db, q)
-		if err != nil {
-			return err
+	opts := &sdk.ShowParametersOptions{In: &sdk.ParametersIn{Task: taskId}}
+	params, err := client.Parameters.ShowParameters(ctx, opts)
+	if err != nil {
+		return err
+	}
+
+	if len(params) > 0 {
+		sessionParameters := map[string]interface{}{}
+		fieldParameters := map[string]interface{}{
+			"user_task_managed_initial_warehouse_size": "",
 		}
-		params, err := snowflake.ScanTaskParameters(paramRows)
-		if err != nil {
-			return err
-		}
 
-		if len(params) > 0 {
-			sessionParameters := map[string]interface{}{}
-			fieldParameters := map[string]interface{}{
-				"user_task_managed_initial_warehouse_size": "",
+		for _, param := range params {
+			log.Printf("[TRACE] %+v\n", param)
+
+			if param.Level != "TASK" {
+				continue
 			}
-
-			for _, param := range params {
-				log.Printf("[TRACE] %+v\n", param)
-
-				if param.Level != "TASK" {
-					continue
-				}
-				switch param.Key {
-				case "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE":
-					fieldParameters["user_task_managed_initial_warehouse_size"] = param.Value
-				case "USER_TASK_TIMEOUT_MS":
-					timeout, err := strconv.ParseInt(param.Value, 10, 64)
-					if err != nil {
-						return err
-					}
-
-					fieldParameters["user_task_timeout_ms"] = timeout
-				default:
-					sessionParameters[param.Key] = param.Value
-				}
-			}
-
-			if err := d.Set("session_parameters", sessionParameters); err != nil {
-				return err
-			}
-
-			for key, value := range fieldParameters {
-				// lintignore:R001
-				err = d.Set(key, value)
+			switch param.Key {
+			case "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE":
+				fieldParameters["user_task_managed_initial_warehouse_size"] = param.Value
+			case "USER_TASK_TIMEOUT_MS":
+				timeout, err := strconv.ParseInt(param.Value, 10, 64)
 				if err != nil {
 					return err
 				}
+
+				fieldParameters["user_task_timeout_ms"] = timeout
+			default:
+				sessionParameters[param.Key] = param.Value
 			}
 		}
-	*/
+
+		if err := d.Set("session_parameters", sessionParameters); err != nil {
+			return err
+		}
+
+		for key, value := range fieldParameters {
+			// lintignore:R001
+			err = d.Set(key, value)
+			if err != nil {
+				return err
+			}
+		}
+	}
 
 	return nil
 }
