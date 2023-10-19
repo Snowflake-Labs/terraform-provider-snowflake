@@ -114,7 +114,7 @@ var TasksDef = g.NewInterface(
 			OptionalQueryStructField(
 				"Set",
 				g.QueryStruct("TaskSet").
-					OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().SQL("WAREHOUSE")).
+					OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("WAREHOUSE")).
 					OptionalAssignment("USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE", "WarehouseSize", g.ParameterOptions().SingleQuotes()).
 					OptionalTextAssignment("SCHEDULE", g.ParameterOptions().SingleQuotes()).
 					OptionalTextAssignment("CONFIG", g.ParameterOptions().NoQuotes()).

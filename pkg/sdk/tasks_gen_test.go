@@ -235,6 +235,15 @@ func TestTasks_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
+	t.Run("alter set warehouse", func(t *testing.T) {
+		warehouseId := RandomAccountObjectIdentifier()
+		opts := defaultOpts()
+		opts.Set = &TaskSet{
+			Warehouse: &warehouseId,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET WAREHOUSE = %s", id.FullyQualifiedName(), warehouseId.FullyQualifiedName())
+	})
+
 	t.Run("alter set session parameter", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &TaskSet{

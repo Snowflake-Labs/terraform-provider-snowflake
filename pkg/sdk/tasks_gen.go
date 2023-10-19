@@ -75,7 +75,7 @@ type AlterTaskOptions struct {
 }
 
 type TaskSet struct {
-	Warehouse                           *AccountObjectIdentifier `ddl:"identifier" sql:"WAREHOUSE"`
+	Warehouse                           *AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
 	UserTaskManagedInitialWarehouseSize *WarehouseSize           `ddl:"parameter,single_quotes" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
 	Schedule                            *string                  `ddl:"parameter,single_quotes" sql:"SCHEDULE"`
 	Config                              *string                  `ddl:"parameter,no_quotes" sql:"CONFIG"`
