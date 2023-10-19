@@ -282,7 +282,7 @@ func getPredecessors(predecessors string) ([]string, error) {
 	err := json.Unmarshal([]byte(predecessors), &predecessorNames)
 	if err == nil {
 		for i, predecessorName := range predecessorNames {
-			formattedName := predecessorName[strings.LastIndex(predecessorName, ".\"")+1:]
+			formattedName := predecessorName[strings.LastIndex(predecessorName, "\".")+2:]
 			formattedName = strings.Trim(formattedName, "\\\"")
 			predecessorNames[i] = formattedName
 		}
