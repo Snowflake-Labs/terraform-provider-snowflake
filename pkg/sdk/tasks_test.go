@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type testTasks struct {
@@ -52,6 +53,7 @@ func TestTasks_GetRootTasks(t *testing.T) {
 		{"t1": {}, "t2": {}, "initial": {"t1"}, "expected": {"t1"}},
 		{"t1": {"t2", "t3", "t4"}, "t2": {}, "t3": {}, "t4": {}, "initial": {"t1"}, "expected": {"t2", "t3", "t4"}},
 		{"t1": {"t2", "t3", "t4"}, "t2": {}, "t3": {"t2"}, "t4": {"t3"}, "initial": {"t1"}, "expected": {"t2"}},
+		//{"r": {}, "t1": {"t2", "r"}, "t2": {"t3"}, "t3": {"t1"}, "initial": {"t1"}, "expected": {"r"}}, // cycle -> failing for current (old) implementation
 	}
 	for i, p := range testParameters {
 		t.Run(fmt.Sprintf("test case [%v]", i), func(t *testing.T) {
