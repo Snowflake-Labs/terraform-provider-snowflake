@@ -315,7 +315,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("after"); ok {
 		after := expandStringList(v.([]interface{}))
-		precedingTasks := make([]sdk.SchemaObjectIdentifier, len(after))
+		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0)
 		for _, dep := range after {
 			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
 			rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, precedingTaskId)
