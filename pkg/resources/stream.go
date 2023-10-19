@@ -125,7 +125,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	switch {
 	case onTableSet:
-		tableId := helpers.DecodeSnowflakeID(onTable.(string)).(sdk.SchemaObjectIdentifier)
+		tableId := helpers.DecodeSnowflakeParameterID(onTable.(string)).(sdk.SchemaObjectIdentifier)
 
 		tq := snowflake.NewTableBuilder(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()).Show()
 		tableRow := snowflake.QueryRow(db, tq)
@@ -164,7 +164,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 		break
 	case onViewSet:
-		viewId := helpers.DecodeSnowflakeID(onView.(string)).(sdk.SchemaObjectIdentifier)
+		viewId := helpers.DecodeSnowflakeParameterID(onView.(string)).(sdk.SchemaObjectIdentifier)
 		req := sdk.NewCreateStreamOnViewRequest(id, viewId)
 		if appendOnly {
 			req.WithAppendOnly(sdk.Bool(true))
@@ -181,7 +181,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 		break
 	case onStageSet:
-		stageId := helpers.DecodeSnowflakeID(onStage.(string)).(sdk.SchemaObjectIdentifier)
+		stageId := helpers.DecodeSnowflakeParameterID(onStage.(string)).(sdk.SchemaObjectIdentifier)
 		stageBuilder := snowflake.NewStageBuilder(stageId.Name(), stageId.DatabaseName(), stageId.SchemaName())
 		sq := stageBuilder.Describe()
 		stageDesc, err := snowflake.DescStage(db, sq)

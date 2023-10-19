@@ -13,6 +13,10 @@ import (
 )
 
 // ToDo: We can merge these two functions together and also add more functions here with similar functionality
+const (
+	IDDelimiter          = "|"
+	ParameterIDDelimiter = "."
+)
 
 // This function converts list of string into snowflake formated string like 'ele1', 'ele2'.
 func ListToSnowflakeString(list []string) string {
@@ -100,6 +104,22 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 	}
 }
 
+func DecodeSnowflakeParameterID(id string) sdk.ObjectIdentifier {
+	parts := strings.Split(id, ParameterIDDelimiter)
+	switch len(parts) {
+	case 1:
+		return sdk.NewAccountObjectIdentifier(parts[0])
+	case 2:
+		return sdk.NewDatabaseObjectIdentifier(parts[0], parts[1])
+	case 3:
+		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2])
+	case 4:
+		return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3])
+	default:
+		return nil
+	}
+}
+
 func Retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) error {
 	for i := 0; i < attempts; i++ {
 		err, done := f()
@@ -115,5 +135,3 @@ func Retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) er
 	}
 	return fmt.Errorf("giving up after %v attempts", attempts)
 }
-
-const IDDelimiter = "|"
