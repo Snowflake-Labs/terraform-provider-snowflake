@@ -12,11 +12,12 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-// ToDo: We can merge these two functions together and also add more functions here with similar functionality
 const (
 	IDDelimiter          = "|"
 	ParameterIDDelimiter = "."
 )
+
+// ToDo: We can merge these two functions together and also add more functions here with similar functionality
 
 // This function converts list of string into snowflake formated string like 'ele1', 'ele2'.
 func ListToSnowflakeString(list []string) string {
@@ -106,6 +107,9 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 
 func DecodeSnowflakeParameterID(id string) sdk.ObjectIdentifier {
 	parts := strings.Split(id, ParameterIDDelimiter)
+	for i, p := range parts {
+		parts[i] = strings.Trim(p, `"`)
+	}
 	switch len(parts) {
 	case 1:
 		return sdk.NewAccountObjectIdentifier(parts[0])
