@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccProcedureGrant_onAll(t *testing.T) {
+func TestAcc_ProcedureGrant_onAll(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -21,8 +21,8 @@ func TestAccProcedureGrant_onAll(t *testing.T) {
 			{
 				Config: procedureGrantConfig(name, onAll, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckNoResourceAttr("snowflake_procedure_grant.test", "procedure_name"),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "on_all", "true"),
@@ -41,7 +41,7 @@ func TestAccProcedureGrant_onAll(t *testing.T) {
 	})
 }
 
-func TestAccProcedureGrant_onFuture(t *testing.T) {
+func TestAcc_ProcedureGrant_onFuture(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -52,8 +52,8 @@ func TestAccProcedureGrant_onFuture(t *testing.T) {
 			{
 				Config: procedureGrantConfig(name, onFuture, "USAGE"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckNoResourceAttr("snowflake_procedure_grant.test", "procedure_name"),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_procedure_grant.test", "on_future", "true"),
@@ -82,25 +82,16 @@ func procedureGrantConfig(name string, grantType grantType, privilege string) st
 	}
 
 	return fmt.Sprintf(`
-resource snowflake_database test {
-  name = "%s"
-}
-
-resource snowflake_schema test {
-	name = "%s"
-	database = snowflake_database.test.name
-}
-
 resource snowflake_role test {
   name = "%s"
 }
 
 resource snowflake_procedure_grant test {
-    database_name = snowflake_database.test.name
+    database_name = "terraform_test_database"
 	roles         = [snowflake_role.test.name]
-	schema_name   = snowflake_schema.test.name
+	schema_name   = "terraform_test_schema"
 	%s
 	privilege = "%s"
 }
-`, name, name, name, procedureNameConfig, privilege)
+`, name, procedureNameConfig, privilege)
 }

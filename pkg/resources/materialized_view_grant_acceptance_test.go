@@ -21,8 +21,8 @@ func TestAcc_MaterializedViewFutureGrant(t *testing.T) {
 			{
 				Config: materializedViewGrantConfigFuture(name, onFuture, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckNoResourceAttr("snowflake_materialized_view_grant.test", "materialized_view_name"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "on_future", "true"),
@@ -53,8 +53,8 @@ func TestAcc_MaterializedViewAllGrant(t *testing.T) {
 			{
 				Config: materializedViewGrantConfigFuture(name, onAll, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckNoResourceAttr("snowflake_materialized_view_grant.test", "materialized_view_name"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_materialized_view_grant.test", "on_all", "true"),
@@ -83,25 +83,16 @@ func materializedViewGrantConfigFuture(name string, grantType grantType, privile
 	}
 
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-  name = "%s"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%s"
-	database = snowflake_database.test.name
-}
-
 resource "snowflake_role" "test" {
   name = "%s"
 }
 
 resource "snowflake_materialized_view_grant" "test" {
-    database_name = snowflake_database.test.name
+    database_name = "terraform_test_database"
 	roles         = [snowflake_role.test.name]
-	schema_name   = snowflake_schema.test.name
+	schema_name   = "terraform_test_schema"
 	%s
 	privilege = "%s"
 }
-`, name, name, name, materializedViewNameConfig, privilege)
+`, name, materializedViewNameConfig, privilege)
 }

@@ -24,8 +24,8 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 				Config: maskingPolicyConfig(accName, accName, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "database", accName),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "return_data_type", "VARCHAR"),
@@ -70,21 +70,10 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 
 func maskingPolicyConfig(n string, name string, comment string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_masking_policy" "test" {
 	name = "%s"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "terraform_test_database"
+	schema = "terraform_test_schema"
 	signature {
 		column {
 			name = "val"
@@ -95,26 +84,15 @@ resource "snowflake_masking_policy" "test" {
 	return_data_type = "VARCHAR"
 	comment = "%s"
 }
-`, n, n, name, comment)
+`, name, comment)
 }
 
 func maskingPolicyConfigMultiline(n string, name string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_database" "test" {
-		name = "%v"
-		comment = "Terraform acceptance test"
-	}
-
-	resource "snowflake_schema" "test" {
-		name = "%v"
-		database = snowflake_database.test.name
-		comment = "Terraform acceptance test"
-	}
-
 	resource "snowflake_masking_policy" "test" {
 		name = "%s"
-		database = snowflake_database.test.name
-		schema = snowflake_schema.test.name
+		database = "terraform_test_database"
+		schema = "terraform_test_schema"
 		signature {
 			column {
 				name = "val"
@@ -133,5 +111,5 @@ func maskingPolicyConfigMultiline(n string, name string) string {
     	EOF
 		return_data_type = "VARCHAR"
 	}
-	`, n, n, name)
+	`, name)
 }

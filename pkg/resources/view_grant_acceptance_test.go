@@ -16,7 +16,7 @@ import (
 func TestAcc_ViewGrantBasic(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
@@ -49,18 +49,17 @@ func TestAcc_ViewGrantBasic(t *testing.T) {
 }
 
 func TestAcc_ViewGrantShares(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewGrantConfigShares(t, databaseName, viewName, roleName, shareName),
+				Config: viewGrantConfigShares(t, viewName, roleName, shareName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "view_name", viewName),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
@@ -78,10 +77,10 @@ func TestAcc_ViewGrantShares(t *testing.T) {
 	})
 }
 
-func TestAcc_FutureViewGrantChange(t *testing.T) {
+func TestAcc_ViewGrantChange(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
@@ -116,64 +115,53 @@ func TestAcc_FutureViewGrantChange(t *testing.T) {
 	})
 }
 
-func viewGrantConfigShares(t *testing.T, databaseName, viewName, role, shareName string) string {
+func viewGrantConfigShares(t *testing.T, viewName, role, shareName string) string {
 	t.Helper()
 	r := require.New(t)
 
 	tmpl := template.Must(template.New("shares").Parse(`
-resource "snowflake_database" "test" {
-  name = "{{.database_name}}"
-}
-
-resource "snowflake_schema" "test" {
-	name = "{{ .schema_name }}"
-	database = snowflake_database.test.name
-}
-
 resource "snowflake_view" "test" {
-  name      = "{{.view_name}}"
-  database  = "{{.database_name}}"
-  schema    = "{{ .schema_name }}"
-  statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-  is_secure = true
-
-  depends_on = [snowflake_database.test, snowflake_schema.test]
+	name      = "{{.view_name}}"
+	database  = "{{.database_name}}"
+	schema    = "{{ .schema_name }}"
+	statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	is_secure = true
 }
 
 resource "snowflake_role" "test" {
-  name = "{{.role_name}}"
+  	name = "{{.role_name}}"
 }
 
 resource "snowflake_share" "test" {
-  name     = "{{.share_name}}"
+  	name     = "{{.share_name}}"
 }
 
 resource "snowflake_database_grant" "test" {
-  database_name = "{{ .database_name }}"
-  shares        = ["{{ .share_name }}"]
+	database_name = "{{ .database_name }}"
+	shares        = ["{{ .share_name }}"]
 
-  depends_on = [snowflake_database.test, snowflake_share.test]
+	depends_on = [snowflake_share.test]
 }
 
 resource "snowflake_view_grant" "test" {
-  view_name     = "{{ .view_name }}"
-  database_name = "{{ .database_name }}"
-  roles         = ["{{ .role_name }}"]
+	view_name     = "{{ .view_name }}"
+	database_name = "{{ .database_name }}"
+	roles         = ["{{ .role_name }}"]
 	shares        = ["{{ .share_name }}"]
 	schema_name = "{{ .schema_name }}"
 
-  // HACK(el): There is a problem with the provider where
-  // in older versions of terraform referencing role.name will
-  // trick the provider into thinking there are no roles inputted
-  // so I hard-code the references.
-  depends_on = [snowflake_database_grant.test, snowflake_role.test, snowflake_share.test, snowflake_view.test, snowflake_schema.test]
+	// HACK(el): There is a problem with the provider where
+	// in older versions of terraform referencing role.name will
+	// trick the provider into thinking there are no roles inputted
+	// so I hard-code the references.
+	depends_on = [snowflake_database_grant.test, snowflake_role.test, snowflake_share.test, snowflake_view.test]
 }`))
 
 	out := bytes.NewBuffer(nil)
 	err := tmpl.Execute(out, map[string]string{
 		"share_name":    shareName,
-		"database_name": databaseName,
-		"schema_name":   databaseName,
+		"database_name": acc.TestDatabaseName,
+		"schema_name":   acc.TestSchemaName,
 		"role_name":     role,
 		"view_name":     viewName,
 	})
@@ -194,35 +182,26 @@ func viewGrantConfig(name string, grantType grantType, privilege string) string 
 	}
 
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-  name = "%s"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%s"
-	database = snowflake_database.test.name
-}
-
 resource "snowflake_view" "test" {
-  name      = "%s"
-  database  = snowflake_database.test.name
-  schema    = snowflake_schema.test.name
-  statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-  is_secure = true
+  	name      = "%s"
+  	database  = "terraform_test_database"
+  	schema    = "terraform_test_schema"
+  	statement = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+  	is_secure = true
 }
 
 resource "snowflake_role" "test" {
-  name = "%s"
+  	name = "%s"
 }
 
 resource "snowflake_view_grant" "test" {
-  %s
-  database_name = snowflake_view.test.database
-  roles         = [snowflake_role.test.name]
-  schema_name   = snowflake_schema.test.name
-  privilege = "%s"
+  	%s
+  	database_name = "terraform_test_database"
+  	roles         = [snowflake_role.test.name]
+  	schema_name   = "terraform_test_schema"
+  	privilege = "%s"
 }
-`, name, name, name, name, viewNameConfig, privilege)
+`, name, name, viewNameConfig, privilege)
 }
 
 func TestAcc_ViewGrantOnAll(t *testing.T) {
@@ -236,8 +215,8 @@ func TestAcc_ViewGrantOnAll(t *testing.T) {
 			{
 				Config: viewGrantConfig(name, onAll, "SELECT"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view_grant.test", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_view_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_view_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "on_all", "true"),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "privilege", "SELECT"),
 					resource.TestCheckResourceAttr("snowflake_view_grant.test", "with_grant_option", "false"),

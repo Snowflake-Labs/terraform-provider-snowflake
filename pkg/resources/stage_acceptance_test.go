@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccAlterStageWhenBothURLAndStorageIntegrationChange(t *testing.T) {
+func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,17 +38,6 @@ func TestAccAlterStageWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 
 func stageIntegrationConfig(name string, siNameSuffix string, url string) string {
 	resources := `
-resource "snowflake_database" "test" {
-	name = "%s"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%s"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_storage_integration" "test" {
 	name = "%s%s"
 	storage_allowed_locations = ["%s"]
@@ -61,10 +50,10 @@ resource "snowflake_stage" "test" {
 	name = "%s"
 	url = "%s"
 	storage_integration = snowflake_storage_integration.test.name
-	schema = snowflake_schema.test.name
-	database = snowflake_database.test.name
+	schema = "terraform_test_schema"
+	database = "terraform_test_database"
 }
 `
 
-	return fmt.Sprintf(resources, name, name, name, siNameSuffix, url, name, url)
+	return fmt.Sprintf(resources, name, siNameSuffix, url, name, url)
 }

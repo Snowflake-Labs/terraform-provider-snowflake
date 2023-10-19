@@ -11,7 +11,6 @@ import (
 )
 
 func TestAcc_Schema(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -20,10 +19,10 @@ func TestAcc_Schema(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: schemaConfig(databaseName, schemaName),
+				Config: schemaConfig(schemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", schemaName),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "database", databaseName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
 					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
 					checkBool("snowflake_schema.test", "is_managed", false),
@@ -34,7 +33,6 @@ func TestAcc_Schema(t *testing.T) {
 }
 
 func TestAcc_SchemaRename(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	oldSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	newSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
@@ -44,20 +42,20 @@ func TestAcc_SchemaRename(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: schemaConfig(databaseName, oldSchemaName),
+				Config: schemaConfig(oldSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", oldSchemaName),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "database", databaseName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
 					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
 					checkBool("snowflake_schema.test", "is_managed", false),
 				),
 			},
 			{
-				Config: schemaConfig(databaseName, newSchemaName),
+				Config: schemaConfig(newSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newSchemaName),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "database", databaseName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
 					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
 					checkBool("snowflake_schema.test", "is_managed", false),
@@ -67,17 +65,12 @@ func TestAcc_SchemaRename(t *testing.T) {
 	})
 }
 
-func schemaConfig(databaseName string, schemaName string) string {
+func schemaConfig(schemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_schema" "test" {
 	name = "%v"
-	database = snowflake_database.test.name
+	database = "terraform_test_database"
 	comment = "Terraform acceptance test"
 }
-`, databaseName, schemaName)
+`, schemaName)
 }

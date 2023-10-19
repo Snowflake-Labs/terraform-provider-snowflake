@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccGrantPrivilegesToRole_onAccount(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,7 +49,7 @@ func TestAccGrantPrivilegesToRole_onAccount(t *testing.T) {
 }
 
 /*
-	func TestAccGrantPrivilegesToRole_onAccountAllPrivileges(t *testing.T) {
+	func TestAcc_GrantPrivilegesToRole_onAccountAllPrivileges(t *testing.T) {
 		name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 		resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +108,7 @@ func grantPrivilegesToRole_onAccountConfigAllPrivileges(name string) string {
 	`, name)
 }
 
-func TestAccGrantPrivilegesToRole_onAccountObject(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onAccountObject(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -147,7 +147,7 @@ func TestAccGrantPrivilegesToRole_onAccountObject(t *testing.T) {
 	})
 }
 
-func TestAccGrantPrivilegesToRole_onAccountObjectAllPrivileges(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onAccountObjectAllPrivileges(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -214,7 +214,7 @@ func grantPrivilegesToRole_onAccountObjectConfigAllPrivileges(name string) strin
 	`, name)
 }
 
-func TestAccGrantPrivilegesToRole_onSchema(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchema(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -289,7 +289,7 @@ func grantPrivilegesToRole_onSchemaConfigAllPrivileges(name string) string {
 	`, name)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaConfigAllPrivileges(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaConfigAllPrivileges(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -316,7 +316,7 @@ func TestAccGrantPrivilegesToRole_onSchemaConfigAllPrivileges(t *testing.T) {
 	})
 }
 
-func TestAccGrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -354,7 +354,7 @@ func TestAccGrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
 	})
 }
 
-func TestAccGrantPrivilegesToRole_onSchema_futureSchemasInDatabase(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchema_futureSchemasInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -427,7 +427,7 @@ func grantPrivilegesToRole_onSchema_futureSchemasInDatabaseConfig(name string, p
 	`, name, privilegesString)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_objectType(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_objectType(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -497,7 +497,7 @@ func grantPrivilegesToRole_onSchemaObject_objectType(name string, privileges []s
 	`, name, name, privilegesString, name)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_allInSchema(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_allInSchema(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -561,7 +561,7 @@ func grantPrivilegesToRole_onSchemaObject_allInSchema(name string, privileges []
 	`, name, privilegesString)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_allInDatabase(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_allInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -625,7 +625,7 @@ func grantPrivilegesToRole_onSchemaObject_allInDatabase(name string, privileges 
 	`, name, privilegesString)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_futureInSchema(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInSchema(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -689,7 +689,7 @@ func grantPrivilegesToRole_onSchemaObject_futureInSchema(name string, privileges
 	`, name, privilegesString)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_futureInDatabase(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	objectType := "TABLES"
 	resource.ParallelTest(t, resource.TestCase{
@@ -753,7 +753,7 @@ func grantPrivilegesToRole_onSchemaObject_futureInDatabase(name string, objectTy
 	`, name, privilegesString, objectType)
 }
 
-func TestAccGrantPrivilegesToRole_multipleResources(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_multipleResources(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -822,7 +822,7 @@ func grantPrivilegesToRole_multipleResources(name string, privileges1, privilege
 	`, name, privilegesString1, privilegesString2)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	objectType := "EXTERNAL TABLES"
 	resource.ParallelTest(t, resource.TestCase{

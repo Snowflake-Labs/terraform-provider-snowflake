@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccTagGrant(t *testing.T) {
+func TestAcc_TagGrant(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
@@ -21,8 +21,8 @@ func TestAccTagGrant(t *testing.T) {
 			{
 				Config: tagGrantConfig(accName, "APPLY"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "database_name", accName),
-					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "tag_name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "privilege", "APPLY"),
@@ -32,8 +32,8 @@ func TestAccTagGrant(t *testing.T) {
 			{
 				Config: tagGrantConfig(accName, "ALL PRIVILEGES"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "database_name", accName),
-					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "tag_name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_tag_grant.test", "privilege", "ALL PRIVILEGES"),
@@ -53,35 +53,24 @@ func TestAccTagGrant(t *testing.T) {
 
 func tagGrantConfig(name string, privilege string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_database" "test" {
-		name = "%v"
-		comment = "Terraform acceptance test"
-	}
-
-	resource "snowflake_schema" "test" {
-		name = "%v"
-		database = snowflake_database.test.name
-		comment = "Terraform acceptance test"
-	}
-
 	resource "snowflake_role" "test" {
 		name = "%v"
 	}
 
 	resource "snowflake_tag" "test" {
 		name = "%v"
-		database = snowflake_database.test.name
-		schema = snowflake_schema.test.name
+		database = "terraform_test_database"
+		schema = "terraform_test_schema"
 		allowed_values = []
 	}
 
 	resource "snowflake_tag_grant" "test" {
 		tag_name = snowflake_tag.test.name
-		database_name = snowflake_database.test.name
+		database_name = "terraform_test_database"
 		roles         = [snowflake_role.test.name]
-		schema_name   = snowflake_schema.test.name
+		schema_name   = "terraform_test_schema"
 		privilege = "%s"
 
 	}
-	`, name, name, name, name, privilege)
+	`, name, name, privilege)
 }

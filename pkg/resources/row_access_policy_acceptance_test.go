@@ -27,8 +27,8 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 				Config: rowAccessPolicyConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", accName),
-					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "row_access_expression", "case when current_role() in ('ANALYST') then true else false end"),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "signature.N", "VARCHAR"),
@@ -41,21 +41,10 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 
 func rowAccessPolicyConfig(n string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_row_access_policy" "test" {
 	name = "%v"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "terraform_test_database"
+	schema = "terraform_test_schema"
 	signature = {
 		N = "VARCHAR"
 		V = "VARCHAR",
@@ -63,5 +52,5 @@ resource "snowflake_row_access_policy" "test" {
 	row_access_expression = "case when current_role() in ('ANALYST') then true else false end"
 	comment = "Terraform acceptance test"
 }
-`, n, n, n)
+`, n)
 }

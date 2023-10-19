@@ -22,8 +22,8 @@ func TestAcc_ExternalStage(t *testing.T) {
 				Config: externalStageConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "database", accName),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "comment", "Terraform acceptance test"),
 				),
 			},
@@ -33,23 +33,12 @@ func TestAcc_ExternalStage(t *testing.T) {
 
 func externalStageConfig(n string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_stage" "test" {
 	name = "%v"
 	url = "s3://com.example.bucket/prefix"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "terraform_test_database"
+	schema = "terraform_test_schema"
 	comment = "Terraform acceptance test"
 }
-`, n, n, n)
+`, n)
 }

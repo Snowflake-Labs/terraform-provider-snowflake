@@ -43,20 +43,9 @@ func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
 
 func accountPasswordPolicyAttachmentConfig(prefix string) string {
 	s := `
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-	}
-
 resource "snowflake_password_policy" "pa" {
-	database   = snowflake_database.test.name
-	schema     = snowflake_schema.test.name
+	database   = "terraform_test_database"
+	schema     = "terraform_test_schema"
 	name       = "%v"
 }
 
@@ -64,5 +53,5 @@ resource "snowflake_account_password_policy_attachment" "att" {
 	password_policy = snowflake_password_policy.pa.qualified_name
 }
 `
-	return fmt.Sprintf(s, prefix, prefix, prefix)
+	return fmt.Sprintf(s, prefix)
 }

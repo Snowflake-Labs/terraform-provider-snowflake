@@ -21,8 +21,8 @@ func TestAcc_TagMaskingPolicyAssociation(t *testing.T) {
 			{
 				Config: tagAttachmentConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "masking_policy_id", fmt.Sprintf("%[1]v|%[1]v|%[1]v", accName)),
-					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "tag_id", fmt.Sprintf("%[1]v|%[1]v|%[1]v", accName)),
+					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "masking_policy_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, accName)),
+					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, accName)),
 				),
 			},
 		},
@@ -31,29 +31,18 @@ func TestAcc_TagMaskingPolicyAssociation(t *testing.T) {
 
 func tagAttachmentConfig(n string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%[1]v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%[1]v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_tag" "test" {
 	name = "%[1]v"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "terraform_test_database"
+	schema = "terraform_test_schema"
 	allowed_values = []
 	comment = "Terraform acceptance test"
 }
 
 resource "snowflake_masking_policy" "test" {
 	name = "%[1]v"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "terraform_test_database"
+	schema = "terraform_test_schema"
 	signature {
 		column {
 			name = "val"
@@ -68,7 +57,6 @@ resource "snowflake_masking_policy" "test" {
 resource "snowflake_tag_masking_policy_association" "test" {
 	tag_id = snowflake_tag.test.id
 	masking_policy_id = snowflake_masking_policy.test.id
-
-  }
+}
 `, n)
 }

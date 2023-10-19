@@ -182,15 +182,11 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 
 func failoverGroupBasic(randomCharacters, accountName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "db" {
-	name = "tst-terraform-%s"
-}
-
 resource "snowflake_failover_group" "fg" {
 	name = "%s"
 	object_types = ["WAREHOUSES","DATABASES", "INTEGRATIONS", "ROLES"]
 	allowed_accounts= ["%s"]
-	allowed_databases = [snowflake_database.db.name]
+	allowed_databases = ["terraform_test_database"]
 	allowed_integration_types = ["SECURITY INTEGRATIONS"]
 	replication_schedule {
 		cron {
@@ -199,34 +195,26 @@ resource "snowflake_failover_group" "fg" {
 		}
 	}
 }
-`, randomCharacters, randomCharacters, accountName)
+`, randomCharacters, accountName)
 }
 
 func failoverGroupWithInterval(randomCharacters, accountName string, interval int) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "db" {
-	name = "tst-terraform-%s"
-}
-
 resource "snowflake_failover_group" "fg" {
 	name = "%s"
 	object_types = ["WAREHOUSES","DATABASES", "INTEGRATIONS", "ROLES"]
 	allowed_accounts= ["%s"]
-	allowed_databases = [snowflake_database.db.name]
+	allowed_databases = ["terraform_test_database"]
 	allowed_integration_types = ["SECURITY INTEGRATIONS"]
 	replication_schedule {
 		interval = %d
 	}
 }
-`, randomCharacters, randomCharacters, accountName, interval)
+`, randomCharacters, accountName, interval)
 }
 
 func failoverGroupWithNoWarehouse(randomCharacters, accountName string, interval int) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "db" {
-	name = "tst-terraform-%s"
-}
-
 resource "snowflake_failover_group" "fg" {
 	name = "%s"
 	object_types = ["DATABASES", "INTEGRATIONS", "ROLES"]
@@ -236,20 +224,16 @@ resource "snowflake_failover_group" "fg" {
 		interval = %d
 	}
 }
-`, randomCharacters, randomCharacters, accountName, interval)
+`, randomCharacters, accountName, interval)
 }
 
 func failoverGroupWithCronExpression(randomCharacters, accountName, expression string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "db" {
-	name = "tst-terraform-%s"
-}
-
 resource "snowflake_failover_group" "fg" {
 	name = "%s"
 	object_types = ["WAREHOUSES","DATABASES", "INTEGRATIONS", "ROLES"]
 	allowed_accounts= ["%s"]
-	allowed_databases = [snowflake_database.db.name]
+	allowed_databases = ["terraform_test_database"]
 	allowed_integration_types = ["SECURITY INTEGRATIONS"]
 	replication_schedule {
 		cron {
@@ -258,5 +242,5 @@ resource "snowflake_failover_group" "fg" {
 		}
 	}
 }
-`, randomCharacters, randomCharacters, accountName, expression)
+`, randomCharacters, accountName, expression)
 }

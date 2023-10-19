@@ -5,22 +5,19 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_TableColumnMaskingPolicyApplication(t *testing.T) {
-	database := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: maskingPolicyApplicationTestConfig(database),
+				Config: maskingPolicyApplicationTestConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table_column_masking_policy_application.mpa", "table", fmt.Sprintf(`"%s"."test_schema"."table"`, database)),
+					resource.TestCheckResourceAttr("snowflake_table_column_masking_policy_application.mpa", "table", fmt.Sprintf(`"%s"."%s"."table"`, acc.TestDatabaseName, acc.TestSchemaName)),
 				),
 			},
 			{
@@ -32,23 +29,12 @@ func TestAcc_TableColumnMaskingPolicyApplication(t *testing.T) {
 	})
 }
 
-func maskingPolicyApplicationTestConfig(database string) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "test_schema"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
+func maskingPolicyApplicationTestConfig() string {
+	return `
 resource "snowflake_masking_policy" "test" {
 	name               = "mypolicy"
-	database           = snowflake_database.test.name
-	schema             = snowflake_schema.test.name
+	database           = "terraform_test_database"
+	schema             = "terraform_test_schema"
 	signature {
 		column {
 			name = "val"
@@ -61,8 +47,8 @@ resource "snowflake_masking_policy" "test" {
 }
 
 resource "snowflake_table" "table" {
-	database = snowflake_database.test.name
-	schema   = snowflake_schema.test.name
+	database = "terraform_test_database"
+	schema   = "terraform_test_schema"
 	name     = "table"
 
 	column {
@@ -79,6 +65,5 @@ resource "snowflake_table_column_masking_policy_application" "mpa" {
 	table          = snowflake_table.table.qualified_name
 	column         = "secret"
 	masking_policy = snowflake_masking_policy.test.qualified_name
-}`,
-		database)
+}`
 }

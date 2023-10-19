@@ -16,14 +16,12 @@ import (
 type (
 	AccAlertTestSettings struct {
 		WarehouseName string
-		DatabaseName  string
 		Alert         *AlertSettings
 	}
 
 	AlertSettings struct {
 		Name      string
 		Enabled   bool
-		Schema    string
 		Condition string
 		Action    string
 		Schedule  int
@@ -33,17 +31,12 @@ type (
 
 var (
 	warehouseName = "wh_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	databaseName  = "db_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName    = "PUBLIC"
 	alertName     = "a_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	alertInitialState = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
-		DatabaseName:  databaseName,
-
 		Alert: &AlertSettings{
 			Name:      alertName,
-			Schema:    schemaName,
 			Condition: "select 0 as c",
 			Action:    "select 0 as c",
 			Enabled:   true,
@@ -55,11 +48,8 @@ var (
 	// Changes: condition, action, comment, schedule.
 	alertStepOne = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
-		DatabaseName:  databaseName,
-
 		Alert: &AlertSettings{
 			Name:      alertName,
-			Schema:    schemaName,
 			Condition: "select 1 as c",
 			Action:    "select 1 as c",
 			Enabled:   true,
@@ -71,11 +61,8 @@ var (
 	// Changes: condition, action, comment, schedule.
 	alertStepTwo = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
-		DatabaseName:  databaseName,
-
 		Alert: &AlertSettings{
 			Name:      alertName,
-			Schema:    schemaName,
 			Condition: "select 2 as c",
 			Action:    "select 2 as c",
 			Enabled:   true,
@@ -87,11 +74,8 @@ var (
 	// Changes: condition, action, comment, schedule.
 	alertStepThree = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
-		DatabaseName:  databaseName,
-
 		Alert: &AlertSettings{
 			Name:      alertName,
-			Schema:    schemaName,
 			Condition: "select 2 as c",
 			Action:    "select 2 as c",
 			Enabled:   false,
@@ -111,8 +95,8 @@ func TestAcc_Alert(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_alert.test_alert", "enabled", alertInitialState.Alert.Enabled),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", alertName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", databaseName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", schemaName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertInitialState.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertInitialState.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertInitialState.Alert.Comment),
@@ -124,8 +108,8 @@ func TestAcc_Alert(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_alert.test_alert", "enabled", alertStepOne.Alert.Enabled),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", alertName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", databaseName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", schemaName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertStepOne.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertStepOne.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertStepOne.Alert.Comment),
@@ -137,8 +121,8 @@ func TestAcc_Alert(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_alert.test_alert", "enabled", alertStepTwo.Alert.Enabled),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", alertName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", databaseName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", schemaName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertStepTwo.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertStepTwo.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertStepTwo.Alert.Comment),
@@ -150,8 +134,8 @@ func TestAcc_Alert(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_alert.test_alert", "enabled", alertStepThree.Alert.Enabled),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", alertName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", databaseName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", schemaName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertStepThree.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertStepThree.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertStepThree.Alert.Comment),
@@ -163,8 +147,8 @@ func TestAcc_Alert(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_alert.test_alert", "enabled", alertInitialState.Alert.Enabled),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", alertName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", databaseName),
-					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", schemaName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "condition", alertInitialState.Alert.Condition),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "action", alertInitialState.Alert.Action),
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "comment", alertInitialState.Alert.Comment),
@@ -180,13 +164,10 @@ func alertConfig(settings *AccAlertTestSettings) string { //nolint
 resource "snowflake_warehouse" "test_wh" {
 	name = "{{ .WarehouseName }}"
 }
-resource "snowflake_database" "test_db" {
-	name = "{{ .DatabaseName }}"
-}
 resource "snowflake_alert" "test_alert" {
 	name     	      = "{{ .Alert.Name }}"
-	database  	      = snowflake_database.test_db.name
-	schema   	      = "{{ .Alert.Schema }}"
+	database  	      = "terraform_test_database"
+	schema   	      = "terraform_test_schema"
 	warehouse 	      = snowflake_warehouse.test_wh.name
 	alert_schedule 	  {
 		interval = "{{ .Alert.Schedule }}"

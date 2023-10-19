@@ -21,12 +21,9 @@ func TestAcc_StageGrant_defaults(t *testing.T) {
 			{
 				Config: stageGrantConfig(name, normal, "READ"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.d", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "database", name),
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
-					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "privilege", "READ"),
 					testRolesAndShares(t, "snowflake_stage_grant.g", []string{name}),
 				),
@@ -35,12 +32,9 @@ func TestAcc_StageGrant_defaults(t *testing.T) {
 			{
 				Config: stageGrantConfig(name, normal, "ALL PRIVILEGES"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.d", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "database", name),
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
-					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "privilege", "ALL PRIVILEGES"),
 					testRolesAndShares(t, "snowflake_stage_grant.g", []string{name}),
 				),
@@ -70,21 +64,10 @@ func stageGrantConfig(name string, grantType grantType, privilege string) string
 	}
 
 	return fmt.Sprintf(`
-	resource snowflake_database d {
-		name = "%s"
-		comment = "Terraform acceptance test"
-	}
-
-	resource snowflake_schema s {
-		name = "%s"
-		database = snowflake_database.d.name
-		comment = "Terraform acceptance test"
-	}
-
 	resource snowflake_stage s {
 		name = "%s"
-		database = snowflake_database.d.name
-		schema = snowflake_schema.s.name
+		database = "terraform_test_database"
+		schema = "terraform_test_schema"
 		comment = "Terraform acceptance test"
 	}
 
@@ -93,8 +76,8 @@ func stageGrantConfig(name string, grantType grantType, privilege string) string
 	}
 
 	resource snowflake_stage_grant g {
-		database_name = snowflake_database.d.name
-		schema_name = snowflake_schema.s.name
+		database_name = "terraform_test_database"
+		schema_name = "terraform_test_schema"
 		%s
 
 		privilege = "%s"
@@ -103,7 +86,7 @@ func stageGrantConfig(name string, grantType grantType, privilege string) string
 			snowflake_role.r.name
 		]
 	}
-`, name, name, name, name, stageNameConfig, privilege)
+`, name, name, stageNameConfig, privilege)
 }
 
 func TestAcc_StageFutureGrant(t *testing.T) {
@@ -117,8 +100,8 @@ func TestAcc_StageFutureGrant(t *testing.T) {
 			{
 				Config: stageGrantConfig(name, onFuture, "READ"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckNoResourceAttr("snowflake_stage_grant.g", "stage_name"),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "on_future", "true"),
@@ -150,8 +133,8 @@ func TestAcc_StageGrantOnAll(t *testing.T) {
 			{
 				Config: stageGrantConfig(name, onAll, "READ"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckNoResourceAttr("snowflake_stage_grant.g", "stage_name"),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_stage_grant.g", "on_all", "true"),

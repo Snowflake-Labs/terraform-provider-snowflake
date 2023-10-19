@@ -22,8 +22,8 @@ func TestAcc_InternalStage(t *testing.T) {
 				Config: internalStageConfig(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "database", accName),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "comment", "Terraform acceptance test"),
 				),
 			},
@@ -33,22 +33,11 @@ func TestAcc_InternalStage(t *testing.T) {
 
 func internalStageConfig(n string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_stage" "test" {
 	name = "%v"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "terraform_test_database"
+	schema = "terraform_test_schema"
 	comment = "Terraform acceptance test"
 }
-`, n, n, n)
+`, n)
 }

@@ -12,8 +12,9 @@ import (
 )
 
 func TestAcc_ExternalTable(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_EXTERNAL_TABLE_TESTS"); ok {
-		t.Skip("Skipping TestAccExternalTable")
+	env := os.Getenv("EXTERNAL_TABLE_TEST")
+	if env == "" {
+		t.Skip("Skipping TestAcc_ExternalTable")
 	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 

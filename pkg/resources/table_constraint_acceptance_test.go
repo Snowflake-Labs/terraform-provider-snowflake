@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccTableConstraint_fk(t *testing.T) {
+func TestAcc_TableConstraint_fk(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -33,19 +33,9 @@ func TestAccTableConstraint_fk(t *testing.T) {
 
 func tableConstraintFKConfig(n string) string {
 	return fmt.Sprintf(`
-
-resource "snowflake_database" "d" {
-	name = "%s"
-}
-
-resource "snowflake_schema" "s" {
-	name = "%s"
-	database = snowflake_database.d.name
-}
-
 resource "snowflake_table" "t" {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
+	database = "terraform_test_database"
+	schema   = "terraform_test_schema"
 	name     = "%s"
 
 	column {
@@ -55,8 +45,8 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_table" "fk_t" {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
+	database = "terraform_test_database"
+	schema   = "terraform_test_schema"
 	name     = "fk_%s"
 
 	column {
@@ -83,10 +73,10 @@ resource "snowflake_table_constraint" "fk" {
 	comment = "hello fk"
 }
 
-`, n, n, n, n, n)
+`, n, n, n)
 }
 
-func TestAccTableConstraint_unique(t *testing.T) {
+func TestAcc_TableConstraint_unique(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,19 +100,9 @@ func TestAccTableConstraint_unique(t *testing.T) {
 
 func tableConstraintUniqueConfig(n string) string {
 	return fmt.Sprintf(`
-
-resource "snowflake_database" "d" {
-	name = "%s"
-}
-
-resource "snowflake_schema" "s" {
-	name = "%s"
-	database = snowflake_database.d.name
-}
-
 resource "snowflake_table" "t" {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
+	database = "terraform_test_database"
+	schema   = "terraform_test_schema"
 	name     = "%s"
 
 	column {
@@ -132,8 +112,8 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_table" "unique_t" {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
+	database = "terraform_test_database"
+	schema   = "terraform_test_schema"
 	name     = "unique_%s"
 
 	column {
@@ -154,5 +134,5 @@ resource "snowflake_table_constraint" "unique" {
 	comment = "hello unique"
 }
 
-`, n, n, n, n, n)
+`, n, n, n)
 }

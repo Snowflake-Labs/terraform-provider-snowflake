@@ -12,11 +12,12 @@ import (
 )
 
 func TestAcc_EmailNotificationIntegration(t *testing.T) {
-	emailIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	if _, ok := os.LookupEnv("SKIP_EMAIL_INTEGRATION_TESTS"); ok {
+	env := os.Getenv("EMAIL_INTEGRATION_TESTS")
+	if env == "" {
 		t.Skip("Skipping TestAcc_EmailNotificationIntegration")
 	}
 
+	emailIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },

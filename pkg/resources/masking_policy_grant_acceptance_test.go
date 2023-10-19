@@ -21,8 +21,8 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 			{
 				Config: maskingPolicyGrantConfig(accName, "APPLY"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "database_name", accName),
-					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "masking_policy_name", accName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "privilege", "APPLY"),
@@ -32,8 +32,8 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 			{
 				Config: maskingPolicyGrantConfig(accName, "ALL PRIVILEGES"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "database_name", accName),
-					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "masking_policy_name", accName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "privilege", "ALL PRIVILEGES"),
@@ -54,25 +54,14 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 
 func maskingPolicyGrantConfig(name string, privilege string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_database" "test" {
-		name = "%v"
-		comment = "Terraform acceptance test"
-	}
-
-	resource "snowflake_schema" "test" {
-		name = "%v"
-		database = snowflake_database.test.name
-		comment = "Terraform acceptance test"
-	}
-
 	resource "snowflake_role" "test" {
 		name = "%v"
 	}
 
 	resource "snowflake_masking_policy" "test" {
 		name = "%v"
-		database = snowflake_database.test.name
-		schema = snowflake_schema.test.name
+		database = "terraform_test_database"
+		schema = "terraform_test_schema"
 		signature {
 			column {
 				name = "val"
@@ -86,10 +75,10 @@ func maskingPolicyGrantConfig(name string, privilege string) string {
 
 	resource "snowflake_masking_policy_grant" "test" {
 		masking_policy_name = snowflake_masking_policy.test.name
-		database_name = snowflake_database.test.name
+		database_name = "terraform_test_database"
 		roles         = [snowflake_role.test.name]
-		schema_name   = snowflake_schema.test.name
+		schema_name   = "terraform_test_schema"
 		privilege = "%s"
 	}
-	`, name, name, name, name, privilege)
+	`, name, name, privilege)
 }
