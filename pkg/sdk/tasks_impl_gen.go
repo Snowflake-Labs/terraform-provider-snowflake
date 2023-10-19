@@ -270,7 +270,6 @@ func (r taskDBRow) convert() *Task {
 	return &task
 }
 
-// TODO [SNOW-884987]: test this method with different task names (like "Ls.T7-(bt{.lWd@DRWkyA6<6hNdh")
 func getPredecessors(predecessors string) ([]string, error) {
 	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
 	// The list is formatted, e.g.:

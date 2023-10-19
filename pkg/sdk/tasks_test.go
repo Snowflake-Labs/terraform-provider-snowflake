@@ -45,7 +45,7 @@ func TestTasks_GetRootTasks(t *testing.T) {
 		return r
 	}
 
-	testParameters := []map[string][]string{
+	tests := []map[string][]string{
 		{"t1": {}, "initial": {"t1"}, "expected": {"t1"}},
 		{"t1": {"t2"}, "t2": {"t3"}, "t3": {}, "initial": {"t1"}, "expected": {"t3"}},
 		{"t1": {"t2", "t3"}, "t2": {"t3"}, "t3": {}, "initial": {"t1"}, "expected": {"t3"}},
@@ -55,19 +55,19 @@ func TestTasks_GetRootTasks(t *testing.T) {
 		{"t1": {"t2", "t3", "t4"}, "t2": {}, "t3": {"t2"}, "t4": {"t3"}, "initial": {"t1"}, "expected": {"t2"}},
 		//{"r": {}, "t1": {"t2", "r"}, "t2": {"t3"}, "t3": {"t1"}, "initial": {"t1"}, "expected": {"r"}}, // cycle -> failing for current (old) implementation
 	}
-	for i, p := range testParameters {
+	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test case [%v]", i), func(t *testing.T) {
 			ctx := context.Background()
-			initial, ok := p["initial"]
+			initial, ok := tt["initial"]
 			if !ok {
 				t.FailNow()
 			}
-			expected, ok := p["expected"]
+			expected, ok := tt["expected"]
 			if !ok {
 				t.FailNow()
 			}
 			client := new(testTasks)
-			client.stubbedTasks = setUpTasks(p)
+			client.stubbedTasks = setUpTasks(tt)
 
 			rootTasks, err := GetRootTasks(client, ctx, NewSchemaObjectIdentifier(db, sc, initial[0]))
 			require.NoError(t, err)
@@ -77,4 +77,30 @@ func TestTasks_GetRootTasks(t *testing.T) {
 			require.Len(t, rootTasks, len(expected))
 		})
 	}
+}
+
+func Test_getPredecessors(t *testing.T) {
+	special := "!@#$%&*+-_=?:;,.|(){}<>"
+
+	tests := []struct {
+		predecessorsRaw      string
+		expectedPredecessors []string
+	}{
+		{predecessorsRaw: "[]", expectedPredecessors: []string{}},
+		{predecessorsRaw: "[\n  \"\\\"qgb)Z1KcNWJ(\\\".\\\"glN@JtR=7dzP$7\\\".\\\"Ls.T7-(bt{.lWd@DRWkyA6<6hNdh\\\"\"\n]", expectedPredecessors: []string{"Ls.T7-(bt{.lWd@DRWkyA6<6hNdh"}},
+		{predecessorsRaw: fmt.Sprintf("[\n  \"\\\"a\\\".\\\"b\\\".\\\"%s\\\"\"\n]", special), expectedPredecessors: []string{special}},
+		{predecessorsRaw: "[\n  \"\\\"a\\\".\\\"b\\\".\\\"c\\\"\",\"\\\"a\\\".\\\"b\\\".\\\"d\\\"\",\"\\\"a\\\".\\\"b\\\".\\\"e\\\"\"\n]", expectedPredecessors: []string{"c", "d", "e"}},
+	}
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("test number %d for input: [%s]", i, tt.predecessorsRaw), func(t *testing.T) {
+			got, err := getPredecessors(tt.predecessorsRaw)
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedPredecessors, got)
+		})
+	}
+
+	t.Run("incorrect json", func(t *testing.T) {
+		_, err := getPredecessors("[{]")
+		require.ErrorContains(t, err, "invalid character ']'")
+	})
 }
