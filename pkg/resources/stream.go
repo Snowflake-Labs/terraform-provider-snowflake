@@ -125,7 +125,11 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 	switch {
 	case onTableSet:
-		tableId := helpers.DecodeSnowflakeParameterID(onTable.(string)).(sdk.SchemaObjectIdentifier)
+		tableObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(onTable.(string))
+		if err != nil {
+			return err
+		}
+		tableId := tableObjectIdentifier.(sdk.SchemaObjectIdentifier)
 
 		tq := snowflake.NewTableBuilder(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()).Show()
 		tableRow := snowflake.QueryRow(db, tq)
@@ -163,11 +167,15 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	case onViewSet:
-		viewId := helpers.DecodeSnowflakeParameterID(onView.(string)).(sdk.SchemaObjectIdentifier)
+		viewObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(onView.(string))
+		viewId := viewObjectIdentifier.(sdk.SchemaObjectIdentifier)
+		if err != nil {
+			return err
+		}
 
 		tq := snowflake.NewViewBuilder(viewId.Name()).WithDB(viewId.DatabaseName()).WithSchema(viewId.SchemaName()).Show()
 		viewRow := snowflake.QueryRow(db, tq)
-		_, err := snowflake.ScanView(viewRow)
+		_, err = snowflake.ScanView(viewRow)
 		if err != nil {
 			return err
 		}
@@ -187,7 +195,11 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating stream %v err = %w", name, err)
 		}
 	case onStageSet:
-		stageId := helpers.DecodeSnowflakeParameterID(onStage.(string)).(sdk.SchemaObjectIdentifier)
+		stageObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(onStage.(string))
+		stageId := stageObjectIdentifier.(sdk.SchemaObjectIdentifier)
+		if err != nil {
+			return err
+		}
 		stageBuilder := snowflake.NewStageBuilder(stageId.Name(), stageId.DatabaseName(), stageId.SchemaName())
 		sq := stageBuilder.Describe()
 		stageDesc, err := snowflake.DescStage(db, sq)

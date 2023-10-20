@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"reflect"
@@ -14,7 +15,7 @@ import (
 
 const (
 	IDDelimiter          = "|"
-	ParameterIDDelimiter = "."
+	ParameterIDDelimiter = '.'
 )
 
 // ToDo: We can merge these two functions together and also add more functions here with similar functionality
@@ -105,22 +106,39 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 	}
 }
 
-func DecodeSnowflakeParameterID(id string) sdk.ObjectIdentifier {
-	parts := strings.Split(id, ParameterIDDelimiter)
-	for i, p := range parts {
-		parts[i] = strings.Trim(p, `"`)
+// DecodeSnowflakeParameterID decodes identifier (usually passed as one of the parameter in tf configuration) into sdk.ObjectIdentifier.
+// identifier can be specified in two ways: quoted and unquoted, e.g.
+//
+// quoted { "some_identifier": "\"database.name\".\"schema.name\".\"test.name\" }
+// (note that here dots as part of the name are allowed)
+//
+// unquoted { "some_identifier": "database_name.schema_name.test_name" }
+// (note that here dots as part of the name are NOT allowed, because they're treated in this case as dividers)
+//
+// The following configuration { "some_identifier": "db.name" } will be parsed as an object called "name" that lives
+// inside database called "db", not a database called "db.name". In this case quotes should be used.
+func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error) {
+	reader := csv.NewReader(strings.NewReader(identifier))
+	reader.Comma = ParameterIDDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("unable to read identifier: %s, err = %w", identifier, err)
 	}
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
+	}
+	parts := lines[0]
 	switch len(parts) {
 	case 1:
-		return sdk.NewAccountObjectIdentifier(parts[0])
+		return sdk.NewAccountObjectIdentifier(parts[0]), nil
 	case 2:
-		return sdk.NewDatabaseObjectIdentifier(parts[0], parts[1])
+		return sdk.NewDatabaseObjectIdentifier(parts[0], parts[1]), nil
 	case 3:
-		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2])
+		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2]), nil
 	case 4:
-		return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3])
+		return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3]), nil
 	default:
-		return nil
+		return nil, fmt.Errorf("unable to classify identifier: %s", identifier)
 	}
 }
 
