@@ -22,7 +22,7 @@ import (
 )
 
 // Ensure SnowflakeProvider satisfies various provider interfaces.
-var _ provider.Provider = &SnowflakeProvider{}
+var _ provider.Provider = new(SnowflakeProvider)
 
 // SnowflakeProvider defines the provider implementation.
 type SnowflakeProvider struct {
@@ -340,9 +340,6 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				Optional:           true,
 				Sensitive:          false,
 				DeprecationMessage: "Use `authenticator` instead",
-				/*Validators: []validator.Bool{
-					boolvalidator.ConflictsWith(path.MatchRoot("password"),path.MatchRoot("private_key_path"), path.MatchRoot("private_key"),path.MatchRoot("private_key_passphrase"),path.MatchRoot("oauth_refresh_token"),path.MatchRoot("oauth_refresh_token")),
-				},*/
 			},
 			"private_key_path": schema.StringAttribute{
 				Description: "Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can also be sourced from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.",
