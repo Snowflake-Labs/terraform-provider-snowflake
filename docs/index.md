@@ -92,7 +92,7 @@ provider "snowflake" {
 - `token` (String, Sensitive) Token to use for OAuth and other forms of token based auth. Can also be sourced from the `SNOWFLAKE_TOKEN` environment variable.
 - `token_accessor` (Block List, Max: 1) (see [below for nested schema](#nestedblock--token_accessor))
 - `user` (String) Username. Can also be sourced from the `SNOWFLAKE_USER` environment variable. Required unless using `profile`.
-- `username` (String, Deprecated) Username for username+password authentication. Can also be sourced from the `SNOWFLAKE_USER` environment variable. Required unless using `profile`.
+- `username` (String, Deprecated) Username for username+password authentication. Can also be sourced from the `SNOWFLAKE_USERNAME` environment variable. Required unless using `profile`.
 - `validate_default_parameters` (Boolean) If true, disables the validation checks for Database, Schema, Warehouse and Role at the time a connection is established. Can also be sourced from the `SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS` environment variable.
 - `warehouse` (String) Specifies the virtual warehouse to use by default for queries, loading, etc. in the client session. Can also be sourced from the `SNOWFLAKE_WAREHOUSE` environment variable.
 

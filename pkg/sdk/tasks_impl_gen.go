@@ -2,6 +2,9 @@ package sdk
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
 )
 
 var _ Tasks = (*tasks)(nil)
@@ -60,6 +63,45 @@ func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error 
 	return validateAndExec(v.client, ctx, opts)
 }
 
+// GetRootTasks is a way to get all root tasks for the given tasks.
+// Snowflake does not have (yet) a method to do it without traversing the task graph manually.
+// Task DAG should have a single root but this is checked when the root task is being resumed; that's why we return here multiple roots.
+// Cycles should not be possible in a task DAG but it is checked when the root task is being resumed; that's why this method has to be cycle-proof.
+// TODO [SNOW-884987]: handle cycles
+func GetRootTasks(v Tasks, ctx context.Context, id SchemaObjectIdentifier) ([]Task, error) {
+	task, err := v.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	predecessors := task.Predecessors
+	// no predecessors mean this is a root task
+	if len(predecessors) == 0 {
+		return []Task{*task}, nil
+	}
+
+	rootTasks := make([]Task, 0, len(predecessors))
+	for _, predecessor := range predecessors {
+		predecessorTasks, err := GetRootTasks(v, ctx, predecessor)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get predecessors for task %s err = %w", predecessor.FullyQualifiedName(), err)
+		}
+		rootTasks = append(rootTasks, predecessorTasks...)
+	}
+
+	// TODO [SNOW-884987]: extract unique function in our collection helper (if cycle-proof algorithm still needs it)
+	keys := make(map[string]bool)
+	uniqueRootTasks := make([]Task, 0, len(rootTasks))
+	for _, rootTask := range rootTasks {
+		if _, exists := keys[rootTask.ID().FullyQualifiedName()]; !exists {
+			keys[rootTask.ID().FullyQualifiedName()] = true
+			uniqueRootTasks = append(uniqueRootTasks, rootTask)
+		}
+	}
+
+	return uniqueRootTasks, nil
+}
+
 func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
 	opts := &CreateTaskOptions{
 		OrReplace:   r.OrReplace,
@@ -115,14 +157,16 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 	}
 	if r.Set != nil {
 		opts.Set = &TaskSet{
-			Warehouse:                   r.Set.Warehouse,
-			Schedule:                    r.Set.Schedule,
-			Config:                      r.Set.Config,
-			AllowOverlappingExecution:   r.Set.AllowOverlappingExecution,
-			UserTaskTimeoutMs:           r.Set.UserTaskTimeoutMs,
-			SuspendTaskAfterNumFailures: r.Set.SuspendTaskAfterNumFailures,
-			Comment:                     r.Set.Comment,
-			SessionParameters:           r.Set.SessionParameters,
+			Warehouse:                           r.Set.Warehouse,
+			UserTaskManagedInitialWarehouseSize: r.Set.UserTaskManagedInitialWarehouseSize,
+			Schedule:                            r.Set.Schedule,
+			Config:                              r.Set.Config,
+			AllowOverlappingExecution:           r.Set.AllowOverlappingExecution,
+			UserTaskTimeoutMs:                   r.Set.UserTaskTimeoutMs,
+			SuspendTaskAfterNumFailures:         r.Set.SuspendTaskAfterNumFailures,
+			ErrorIntegration:                    r.Set.ErrorIntegration,
+			Comment:                             r.Set.Comment,
+			SessionParameters:                   r.Set.SessionParameters,
 		}
 	}
 	if r.Unset != nil {
@@ -133,6 +177,7 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 			AllowOverlappingExecution:   r.Unset.AllowOverlappingExecution,
 			UserTaskTimeoutMs:           r.Unset.UserTaskTimeoutMs,
 			SuspendTaskAfterNumFailures: r.Unset.SuspendTaskAfterNumFailures,
+			ErrorIntegration:            r.Unset.ErrorIntegration,
 			Comment:                     r.Unset.Comment,
 			SessionParametersUnset:      r.Unset.SessionParametersUnset,
 		}
@@ -183,10 +228,21 @@ func (r taskDBRow) convert() *Task {
 		task.Schedule = r.Schedule.String
 	}
 	if r.Predecessors.Valid {
-		task.Predecessors = r.Predecessors.String
+		names, err := getPredecessors(r.Predecessors.String)
+		ids := make([]SchemaObjectIdentifier, len(names))
+		if err == nil {
+			for i, name := range names {
+				ids[i] = NewSchemaObjectIdentifier(r.DatabaseName, r.SchemaName, name)
+			}
+		}
+		task.Predecessors = ids
 	}
 	if r.State.Valid {
-		task.State = r.State.String
+		if strings.ToLower(r.State.String) == string(TaskStateStarted) {
+			task.State = TaskStateStarted
+		} else {
+			task.State = TaskStateSuspended
+		}
 	}
 	if r.Definition.Valid {
 		task.Definition = r.Definition.String
@@ -216,6 +272,26 @@ func (r taskDBRow) convert() *Task {
 		task.Budget = r.Budget.String
 	}
 	return &task
+}
+
+func getPredecessors(predecessors string) ([]string, error) {
+	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
+	// The list is formatted, e.g.:
+	// e.g. `[\n  \"\\\"qgb)Z1KcNWJ(\\\".\\\"glN@JtR=7dzP$7\\\".\\\"_XEL(7N_F?@frgT5>dQS>V|vSy,J\\\"\"\n]`.
+	predecessorNames := make([]string, 0)
+	err := json.Unmarshal([]byte(predecessors), &predecessorNames)
+	if err == nil {
+		for i, predecessorName := range predecessorNames {
+			formattedName := strings.Trim(predecessorName, "\\\"")
+			idx := strings.LastIndex(formattedName, "\"") + 1
+			if strings.LastIndex(formattedName, ".\"")+2 < idx {
+				idx++
+			}
+			formattedName = formattedName[idx:]
+			predecessorNames[i] = formattedName
+		}
+	}
+	return predecessorNames, err
 }
 
 func (r *DescribeTaskRequest) toOpts() *DescribeTaskOptions {

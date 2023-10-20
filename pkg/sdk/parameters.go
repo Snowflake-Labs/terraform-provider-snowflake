@@ -971,38 +971,43 @@ func (v *SessionParameters) validate() error {
 }
 
 type SessionParametersUnset struct {
-	AbortDetachedQuery               *bool `ddl:"keyword" sql:"ABORT_DETACHED_QUERY"`
-	Autocommit                       *bool `ddl:"keyword" sql:"AUTOCOMMIT"`
-	BinaryInputFormat                *bool `ddl:"keyword" sql:"BINARY_INPUT_FORMAT"`
-	BinaryOutputFormat               *bool `ddl:"keyword" sql:"BINARY_OUTPUT_FORMAT"`
-	DateInputFormat                  *bool `ddl:"keyword" sql:"DATE_INPUT_FORMAT"`
-	DateOutputFormat                 *bool `ddl:"keyword" sql:"DATE_OUTPUT_FORMAT"`
-	ErrorOnNondeterministicMerge     *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_MERGE"`
-	ErrorOnNondeterministicUpdate    *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
-	GeographyOutputFormat            *bool `ddl:"keyword" sql:"GEOGRAPHY_OUTPUT_FORMAT"`
-	JSONIndent                       *bool `ddl:"keyword" sql:"JSON_INDENT"`
-	LockTimeout                      *bool `ddl:"keyword" sql:"LOCK_TIMEOUT"`
-	QueryTag                         *bool `ddl:"keyword" sql:"QUERY_TAG"`
-	RowsPerResultset                 *bool `ddl:"keyword" sql:"ROWS_PER_RESULTSET"`
-	SimulatedDataSharingConsumer     *bool `ddl:"keyword" sql:"SIMULATED_DATA_SHARING_CONSUMER"`
-	StatementTimeoutInSeconds        *bool `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
-	StrictJSONOutput                 *bool `ddl:"keyword" sql:"STRICT_JSON_OUTPUT"`
-	TimestampDayIsAlways24h          *bool `ddl:"keyword" sql:"TIMESTAMP_DAY_IS_ALWAYS_24H"`
-	TimestampInputFormat             *bool `ddl:"keyword" sql:"TIMESTAMP_INPUT_FORMAT"`
-	TimestampLTZOutputFormat         *bool `ddl:"keyword" sql:"TIMESTAMP_LTZ_OUTPUT_FORMAT"`
-	TimestampNTZOutputFormat         *bool `ddl:"keyword" sql:"TIMESTAMP_NTZ_OUTPUT_FORMAT"`
-	TimestampOutputFormat            *bool `ddl:"keyword" sql:"TIMESTAMP_OUTPUT_FORMAT"`
-	TimestampTypeMapping             *bool `ddl:"keyword" sql:"TIMESTAMP_TYPE_MAPPING"`
-	TimestampTZOutputFormat          *bool `ddl:"keyword" sql:"TIMESTAMP_TZ_OUTPUT_FORMAT"`
-	Timezone                         *bool `ddl:"keyword" sql:"TIMEZONE"`
-	TimeInputFormat                  *bool `ddl:"keyword" sql:"TIME_INPUT_FORMAT"`
-	TimeOutputFormat                 *bool `ddl:"keyword" sql:"TIME_OUTPUT_FORMAT"`
-	TransactionDefaultIsolationLevel *bool `ddl:"keyword" sql:"TRANSACTION_DEFAULT_ISOLATION_LEVEL"`
-	TwoDigitCenturyStart             *bool `ddl:"keyword" sql:"TWO_DIGIT_CENTURY_START"`
-	UnsupportedDDLAction             *bool `ddl:"keyword" sql:"UNSUPPORTED_DDL_ACTION"`
-	UseCachedResult                  *bool `ddl:"keyword" sql:"USE_CACHED_RESULT"`
-	WeekOfYearPolicy                 *bool `ddl:"keyword" sql:"WEEK_OF_YEAR_POLICY"`
-	WeekStart                        *bool `ddl:"keyword" sql:"WEEK_START"`
+	AbortDetachedQuery                    *bool `ddl:"keyword" sql:"ABORT_DETACHED_QUERY"`
+	Autocommit                            *bool `ddl:"keyword" sql:"AUTOCOMMIT"`
+	BinaryInputFormat                     *bool `ddl:"keyword" sql:"BINARY_INPUT_FORMAT"`
+	BinaryOutputFormat                    *bool `ddl:"keyword" sql:"BINARY_OUTPUT_FORMAT"`
+	ClientMetadataRequestUseConnectionCtx *bool `ddl:"keyword" sql:"CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"`
+	ClientMetadataUseSessionDatabase      *bool `ddl:"keyword" sql:"CLIENT_METADATA_USE_SESSION_DATABASE"`
+	ClientResultColumnCaseInsensitive     *bool `ddl:"keyword" sql:"CLIENT_RESULT_COLUMN_CASE_INSENSITIVE"`
+	DateInputFormat                       *bool `ddl:"keyword" sql:"DATE_INPUT_FORMAT"`
+	DateOutputFormat                      *bool `ddl:"keyword" sql:"DATE_OUTPUT_FORMAT"`
+	ErrorOnNondeterministicMerge          *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_MERGE"`
+	ErrorOnNondeterministicUpdate         *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
+	GeographyOutputFormat                 *bool `ddl:"keyword" sql:"GEOGRAPHY_OUTPUT_FORMAT"`
+	JSONIndent                            *bool `ddl:"keyword" sql:"JSON_INDENT"`
+	LockTimeout                           *bool `ddl:"keyword" sql:"LOCK_TIMEOUT"`
+	MultiStatementCount                   *bool `ddl:"keyword" sql:"MULTI_STATEMENT_COUNT"`
+	QueryTag                              *bool `ddl:"keyword" sql:"QUERY_TAG"`
+	QuotedIdentifiersIgnoreCase           *bool `ddl:"keyword" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	RowsPerResultset                      *bool `ddl:"keyword" sql:"ROWS_PER_RESULTSET"`
+	SimulatedDataSharingConsumer          *bool `ddl:"keyword" sql:"SIMULATED_DATA_SHARING_CONSUMER"`
+	StatementTimeoutInSeconds             *bool `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	StrictJSONOutput                      *bool `ddl:"keyword" sql:"STRICT_JSON_OUTPUT"`
+	TimestampDayIsAlways24h               *bool `ddl:"keyword" sql:"TIMESTAMP_DAY_IS_ALWAYS_24H"`
+	TimestampInputFormat                  *bool `ddl:"keyword" sql:"TIMESTAMP_INPUT_FORMAT"`
+	TimestampLTZOutputFormat              *bool `ddl:"keyword" sql:"TIMESTAMP_LTZ_OUTPUT_FORMAT"`
+	TimestampNTZOutputFormat              *bool `ddl:"keyword" sql:"TIMESTAMP_NTZ_OUTPUT_FORMAT"`
+	TimestampOutputFormat                 *bool `ddl:"keyword" sql:"TIMESTAMP_OUTPUT_FORMAT"`
+	TimestampTypeMapping                  *bool `ddl:"keyword" sql:"TIMESTAMP_TYPE_MAPPING"`
+	TimestampTZOutputFormat               *bool `ddl:"keyword" sql:"TIMESTAMP_TZ_OUTPUT_FORMAT"`
+	Timezone                              *bool `ddl:"keyword" sql:"TIMEZONE"`
+	TimeInputFormat                       *bool `ddl:"keyword" sql:"TIME_INPUT_FORMAT"`
+	TimeOutputFormat                      *bool `ddl:"keyword" sql:"TIME_OUTPUT_FORMAT"`
+	TransactionDefaultIsolationLevel      *bool `ddl:"keyword" sql:"TRANSACTION_DEFAULT_ISOLATION_LEVEL"`
+	TwoDigitCenturyStart                  *bool `ddl:"keyword" sql:"TWO_DIGIT_CENTURY_START"`
+	UnsupportedDDLAction                  *bool `ddl:"keyword" sql:"UNSUPPORTED_DDL_ACTION"`
+	UseCachedResult                       *bool `ddl:"keyword" sql:"USE_CACHED_RESULT"`
+	WeekOfYearPolicy                      *bool `ddl:"keyword" sql:"WEEK_OF_YEAR_POLICY"`
+	WeekStart                             *bool `ddl:"keyword" sql:"WEEK_START"`
 }
 
 func (v *SessionParametersUnset) validate() error {
