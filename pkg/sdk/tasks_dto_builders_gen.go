@@ -195,6 +195,11 @@ func (s *TaskSetRequest) WithWarehouse(Warehouse *AccountObjectIdentifier) *Task
 	return s
 }
 
+func (s *TaskSetRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize *WarehouseSize) *TaskSetRequest {
+	s.UserTaskManagedInitialWarehouseSize = UserTaskManagedInitialWarehouseSize
+	return s
+}
+
 func (s *TaskSetRequest) WithSchedule(Schedule *string) *TaskSetRequest {
 	s.Schedule = Schedule
 	return s
@@ -217,6 +222,11 @@ func (s *TaskSetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *int) *TaskSetR
 
 func (s *TaskSetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *int) *TaskSetRequest {
 	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+	return s
+}
+
+func (s *TaskSetRequest) WithErrorIntegration(ErrorIntegration *string) *TaskSetRequest {
+	s.ErrorIntegration = ErrorIntegration
 	return s
 }
 
@@ -261,6 +271,11 @@ func (s *TaskUnsetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *bool) *TaskU
 
 func (s *TaskUnsetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *bool) *TaskUnsetRequest {
 	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+	return s
+}
+
+func (s *TaskUnsetRequest) WithErrorIntegration(ErrorIntegration *bool) *TaskUnsetRequest {
+	s.ErrorIntegration = ErrorIntegration
 	return s
 }
 

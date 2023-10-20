@@ -66,12 +66,10 @@ func testClientFromProfile(t *testing.T, profile string) (*sdk.Client, error) {
 func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
-	orgWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseWarehouse(ctx, warehouseID)
+	err := client.Sessions.UseWarehouse(ctx, warehouseID)
 	require.NoError(t, err)
 	return func() {
-		err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(orgWarehouse))
+		err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 		require.NoError(t, err)
 	}
 }
@@ -136,6 +134,8 @@ func createWarehouseWithOptions(t *testing.T, client *sdk.Client, opts *sdk.Crea
 			Name: name,
 		}, func() {
 			err := client.Warehouses.Drop(ctx, id, nil)
+			require.NoError(t, err)
+			err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 			require.NoError(t, err)
 		}
 }

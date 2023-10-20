@@ -99,10 +99,8 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Create: infer schema", func(t *testing.T) {
 		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
-		warehouse, warehouseCleanup := createWarehouse(t, client)
-		t.Cleanup(warehouseCleanup)
 
-		err := client.Sessions.UseWarehouse(ctx, warehouse.ID())
+		err := client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 		require.NoError(t, err)
 
 		name := random.AlphanumericN(32)

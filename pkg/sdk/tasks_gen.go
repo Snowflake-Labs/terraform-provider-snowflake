@@ -75,14 +75,16 @@ type AlterTaskOptions struct {
 }
 
 type TaskSet struct {
-	Warehouse                   *AccountObjectIdentifier `ddl:"identifier" sql:"WAREHOUSE"`
-	Schedule                    *string                  `ddl:"parameter,single_quotes" sql:"SCHEDULE"`
-	Config                      *string                  `ddl:"parameter,no_quotes" sql:"CONFIG"`
-	AllowOverlappingExecution   *bool                    `ddl:"parameter" sql:"ALLOW_OVERLAPPING_EXECUTION"`
-	UserTaskTimeoutMs           *int                     `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
-	SuspendTaskAfterNumFailures *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
-	Comment                     *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	SessionParameters           *SessionParameters       `ddl:"list,no_parentheses"`
+	Warehouse                           *AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
+	UserTaskManagedInitialWarehouseSize *WarehouseSize           `ddl:"parameter,single_quotes" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	Schedule                            *string                  `ddl:"parameter,single_quotes" sql:"SCHEDULE"`
+	Config                              *string                  `ddl:"parameter,no_quotes" sql:"CONFIG"`
+	AllowOverlappingExecution           *bool                    `ddl:"parameter" sql:"ALLOW_OVERLAPPING_EXECUTION"`
+	UserTaskTimeoutMs                   *int                     `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	SuspendTaskAfterNumFailures         *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	ErrorIntegration                    *string                  `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
+	Comment                             *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	SessionParameters                   *SessionParameters       `ddl:"list,no_parentheses"`
 }
 
 type TaskUnset struct {
@@ -92,6 +94,7 @@ type TaskUnset struct {
 	AllowOverlappingExecution   *bool                   `ddl:"keyword" sql:"ALLOW_OVERLAPPING_EXECUTION"`
 	UserTaskTimeoutMs           *bool                   `ddl:"keyword" sql:"USER_TASK_TIMEOUT_MS"`
 	SuspendTaskAfterNumFailures *bool                   `ddl:"keyword" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	ErrorIntegration            *bool                   `ddl:"keyword" sql:"ERROR_INTEGRATION"`
 	Comment                     *bool                   `ddl:"keyword" sql:"COMMENT"`
 	SessionParametersUnset      *SessionParametersUnset `ddl:"list,no_parentheses"`
 }
@@ -149,8 +152,8 @@ type Task struct {
 	Comment                   string
 	Warehouse                 string
 	Schedule                  string
-	Predecessors              string
-	State                     string
+	Predecessors              []SchemaObjectIdentifier
+	State                     TaskState
 	Definition                string
 	Condition                 string
 	AllowOverlappingExecution bool
@@ -179,4 +182,15 @@ type ExecuteTaskOptions struct {
 
 func (v *Task) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
+type TaskState string
+
+const (
+	TaskStateStarted   TaskState = "started"
+	TaskStateSuspended TaskState = "suspended"
+)
+
+func (v *Task) IsStarted() bool {
+	return v.State == TaskStateStarted
 }

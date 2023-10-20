@@ -52,6 +52,7 @@ resource "snowflake_file_format" "example_file_format" {
 - `file_extension` (String) Specifies the extension for files unloaded to a stage.
 - `ignore_utf8_errors` (Boolean) Boolean that specifies whether UTF-8 encoding errors produce error conditions.
 - `null_if` (List of String) String used to convert to and from SQL NULL.
+- `parse_header` (Boolean) Boolean that specifies whether to use the first row headers in the data files to determine column names.
 - `preserve_space` (Boolean) Boolean that specifies whether the XML parser preserves leading and trailing spaces in element content.
 - `record_delimiter` (String) Specifies one or more singlebyte or multibyte characters that separate records in an input file (data loading) or unloaded file (data unloading).
 - `replace_invalid_characters` (Boolean) Boolean that specifies whether to replace invalid UTF-8 characters with the Unicode replacement character (�).

@@ -51,10 +51,12 @@ type integrationTestContext struct {
 	client *sdk.Client
 	ctx    context.Context
 
-	database        *sdk.Database
-	databaseCleanup func()
-	schema          *sdk.Schema
-	schemaCleanup   func()
+	database         *sdk.Database
+	databaseCleanup  func()
+	schema           *sdk.Schema
+	schemaCleanup    func()
+	warehouse        *sdk.Warehouse
+	warehouseCleanup func()
 }
 
 func (itc *integrationTestContext) initialize() error {
@@ -80,6 +82,13 @@ func (itc *integrationTestContext) initialize() error {
 	}
 	itc.schema = sc
 	itc.schemaCleanup = scCleanup
+
+	wh, whCleanup, err := createWh(itc.client, itc.ctx)
+	if err != nil {
+		return err
+	}
+	itc.warehouse = wh
+	itc.warehouseCleanup = whCleanup
 
 	return nil
 }
@@ -107,6 +116,19 @@ func createSc(client *sdk.Client, ctx context.Context, db *sdk.Database) (*sdk.S
 	schema, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(db.Name, name))
 	return schema, func() {
 		_ = client.Schemas.Drop(ctx, id, nil)
+	}, err
+}
+
+func createWh(client *sdk.Client, ctx context.Context) (*sdk.Warehouse, func(), error) {
+	name := "int_test_wh_" + random.UUID()
+	id := sdk.NewAccountObjectIdentifier(name)
+	err := client.Warehouses.Create(ctx, id, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	warehouse, err := client.Warehouses.ShowByID(ctx, id)
+	return warehouse, func() {
+		_ = client.Warehouses.Drop(ctx, id, nil)
 	}, err
 }
 
@@ -139,4 +161,9 @@ func testDb(t *testing.T) *sdk.Database {
 func testSchema(t *testing.T) *sdk.Schema {
 	t.Helper()
 	return itc.schema
+}
+
+func testWarehouse(t *testing.T) *sdk.Warehouse {
+	t.Helper()
+	return itc.warehouse
 }
