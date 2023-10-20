@@ -24,7 +24,7 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: failoverGroupBasic(randomCharacters, accountName),
+				Config: failoverGroupBasic(randomCharacters, accountName, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -180,13 +180,13 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 	})
 }
 
-func failoverGroupBasic(randomCharacters, accountName string) string {
+func failoverGroupBasic(randomCharacters, accountName, databaseName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_failover_group" "fg" {
 	name = "%s"
 	object_types = ["WAREHOUSES","DATABASES", "INTEGRATIONS", "ROLES"]
 	allowed_accounts= ["%s"]
-	allowed_databases = ["terraform_test_database"]
+	allowed_databases = ["%s"]
 	allowed_integration_types = ["SECURITY INTEGRATIONS"]
 	replication_schedule {
 		cron {
@@ -195,7 +195,7 @@ resource "snowflake_failover_group" "fg" {
 		}
 	}
 }
-`, randomCharacters, accountName)
+`, randomCharacters, accountName, databaseName)
 }
 
 func failoverGroupWithInterval(randomCharacters, accountName string, interval int, databaseName string) string {

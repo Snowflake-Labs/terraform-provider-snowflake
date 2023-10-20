@@ -94,5 +94,5 @@ resource "snowflake_materialized_view_grant" "test" {
 	%s
 	privilege = "%s"
 }
-`, name, materializedViewNameConfig, databaseName, schemaName, privilege)
+`, name, databaseName, schemaName, materializedViewNameConfig, privilege)
 }

@@ -192,7 +192,7 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE SCHEMA level FUTURE ownership grant to role <name>
 			{
-				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", name),
+				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", name, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -204,7 +204,7 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 			},
 			// UPDATE SCHEMA level FUTURE OWNERSHIP grant to role <new_name>
 			{
-				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", new_name),
+				Config: taskOwnershipGrantConfig(name, onFuture, "OWNERSHIP", new_name, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -227,7 +227,7 @@ func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {
 	})
 }
 
-func taskOwnershipGrantConfig(name string, grantType grantType, privilege string, rolename string) string {
+func taskOwnershipGrantConfig(name string, grantType grantType, privilege string, rolename string, databaseName string, schemaName string) string {
 	var taskNameConfig string
 	switch grantType {
 	case normal:
@@ -249,12 +249,12 @@ resource "snowflake_role" "test_new" {
 
 resource "snowflake_task_grant" "test" {
   %s
-  database_name 	= "terraform_test_database"
   roles             = [ "%s" ]
-  schema_name       = "terraform_test_schema"
+  database_name 	= "%s"
+  schema_name       = "%s"
   privilege 	    = "%s"
   with_grant_option = false
 }
 `
-	return fmt.Sprintf(s, name, name, taskNameConfig, rolename, privilege)
+	return fmt.Sprintf(s, name, name, taskNameConfig, rolename, databaseName, schemaName, privilege)
 }

@@ -64,9 +64,9 @@ func TestAcc_TagAssociationColumn(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, accName)),
 					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "tag_value", "TAG_VALUE"),
 					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "object_identifier.0.%", "3"),
-					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "object_identifier.0.name", "test_table.column_name"),
-					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "object_identifier.0.database", accName2),
-					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "object_identifier.0.schema", accName2),
+					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "object_identifier.0.name", fmt.Sprintf("%s.column_name", accName)),
+					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "object_identifier.0.database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "object_identifier.0.schema", acc.TestSchemaName),
 				),
 			},
 		},
@@ -97,9 +97,9 @@ resource "snowflake_tag_association" "test" {
 func tagAssociationConfigSchema(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_tag" "tag1" {
+ name     = "%s"
  database = "%s"
- name     = "EXAMPLE_TAG"
- schema   = "PUBLIC"
+ schema   = "%s"
 
  allowed_values = []
 }
@@ -114,21 +114,21 @@ resource "snowflake_tag_association" "schema" {
   tag_id      = snowflake_tag.tag1.id
   tag_value   = "TAG_VALUE"
 }
-`, databaseName, databaseName, schemaName)
+`, n, databaseName, schemaName, databaseName, schemaName)
 }
 
 func tagAssociationConfigColumn(n1, n2 string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_tag" "tag1" {
-	database = "%[3]v"
 	name     = "%[1]v"
+	database = "%[3]v"
 	schema   = "%[4]v"
 }
 
 resource "snowflake_table" "test_table" {
+	name                = "%[1]v"
 	database            = "%[3]v"
 	schema              = "%[4]v"
-	name                = "test_table"
 
 	column {
 		name    = "column_name"

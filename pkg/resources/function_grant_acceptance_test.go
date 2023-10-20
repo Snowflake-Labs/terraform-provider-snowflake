@@ -107,5 +107,5 @@ resource "snowflake_function_grant" "test" {
 	%s
 	privilege = "%s"
 }
-`, name, functionNameConfig, databaseName, schemaName, privilege)
+`, name, databaseName, schemaName, functionNameConfig, privilege)
 }

@@ -155,8 +155,8 @@ resource snowflake_table t {
 }
 
 resource snowflake_table_grant g {
-	database = "%s"
-	schema   = "%s"
+	database_name = "%s"
+	schema_name   = "%s"
 	%s
 	privilege = "%s"
 	roles = [

@@ -93,5 +93,5 @@ resource snowflake_procedure_grant test {
 	%s
 	privilege = "%s"
 }
-`, name, procedureNameConfig, databaseName, schemaName, privilege)
+`, name, databaseName, schemaName, procedureNameConfig, privilege)
 }

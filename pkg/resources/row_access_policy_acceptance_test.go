@@ -43,7 +43,7 @@ func rowAccessPolicyConfig(n string, databaseName string, schemaName string) str
 	return fmt.Sprintf(`
 resource "snowflake_row_access_policy" "test" {
 	name = "%v"
-	database = "%se"
+	database = "%s"
 	schema = "%s"
 	signature = {
 		N = "VARCHAR"

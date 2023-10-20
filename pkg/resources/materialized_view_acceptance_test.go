@@ -16,7 +16,6 @@ func TestAcc_MaterializedView(t *testing.T) {
 		t.Skip("Skipping TestAcc_MaterializedView")
 	}
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	warehouseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -25,12 +24,12 @@ func TestAcc_MaterializedView(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: materializedViewConfig(warehouseName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\";", tableName), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: materializedViewConfig(acc.TestWarehouseName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\";", tableName), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", warehouseName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "Terraform test resource"),
 					checkBool("snowflake_materialized_view.test", "is_secure", true),
 				),
@@ -70,15 +69,10 @@ func TestAcc_MaterializedView2(t *testing.T) {
 func materializedViewConfig(warehouseName string, tableName string, viewName string, q string, databaseName string, schemaName string) string {
 	// convert the cluster from string slice to string
 	return fmt.Sprintf(`
-resource "snowflake_warehouse" "test" {
-	name = "%s"
-	initially_suspended = false
-}
-
 resource "snowflake_table" "test" {
+	name     = "%s"
 	database = "%s"
 	schema   = "%s"
-	name     = "%s"
 
 	column {
 		name = "ID"
@@ -96,7 +90,7 @@ resource "snowflake_materialized_view" "test" {
 	comment   = "Terraform test resource"
 	database  = "%s"
 	schema    = "%s"
-	warehouse = snowflake_warehouse.test.name
+	warehouse = "%s"
 	is_secure = true
 	or_replace = false
 	statement = "%s"
@@ -106,5 +100,5 @@ resource "snowflake_materialized_view" "test" {
   		snowflake_table.test
   	]
 }
-`, warehouseName, databaseName, schemaName, tableName, viewName, databaseName, schemaName, q)
+`, tableName, databaseName, schemaName, viewName, databaseName, schemaName, warehouseName, q)
 }

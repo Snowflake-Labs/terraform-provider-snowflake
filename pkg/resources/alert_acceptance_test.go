@@ -176,7 +176,7 @@ resource "snowflake_warehouse" "test_wh" {
 }
 resource "snowflake_alert" "test_alert" {
 	name     	      = "{{ .Alert.Name }}"
-	database  	      = "{{ .Alert.DatabaseName }}"
+	database  	      = "{{ .DatabaseName }}"
 	schema   	      = "{{ .Alert.Schema }}"
 	warehouse 	      = snowflake_warehouse.test_wh.name
 	alert_schedule 	  {

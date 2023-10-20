@@ -52,17 +52,17 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 	})
 }
 
-func passwordPolicyConfig(s string, minLength int, maxLength int, comment string) string {
+func passwordPolicyConfig(s string, minLength int, maxLength int, comment string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_password_policy" "pa" {
-		database   = "terraform_test_database"
-		schema     = "terraform_test_schema"
 		name       = "%v"
+		database   = "%s"
+		schema     = "%s"
 		min_length = %d
 		max_length = %d
 		or_replace = true
 	}
-	`, s, minLength, maxLength)
+	`, s, databaseName, schemaName, minLength, maxLength)
 }
 
 func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
@@ -102,13 +102,13 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 	})
 }
 
-func passwordPolicyDefaultMaxageDaysConfig(s string, maxAgeDays int) string {
+func passwordPolicyDefaultMaxageDaysConfig(s string, databaseName string, schemaName string, maxAgeDays int) string {
 	return fmt.Sprintf(`
 	resource "snowflake_password_policy" "pa" {
-		database   = "terraform_test_database"
-		schema     = "terraform_test_schema"
 		name         = "%v"
+		database   = "%s"
+		schema     = "%s"
 		max_age_days = %d
 	}
-	`, s, maxAgeDays)
+	`, s, databaseName, schemaName, maxAgeDays)
 }
