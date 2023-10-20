@@ -99,23 +99,19 @@ func TestInt_ShowUserParameter(t *testing.T) {
 func TestInt_UseWarehouse(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	originalWH, err := client.ContextFunctions.CurrentWarehouse(ctx)
-	require.NoError(t, err)
+
 	t.Cleanup(func() {
-		originalWHIdentifier := sdk.NewAccountObjectIdentifier(originalWH)
-		if !sdk.ValidObjectIdentifier(originalWHIdentifier) {
-			return
-		}
-		err := client.Sessions.UseWarehouse(ctx, originalWHIdentifier)
+		err := client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 		require.NoError(t, err)
 	})
-	warehouseTest, warehouseCleanup := createWarehouse(t, client)
+	// new warehouse created on purpose
+	warehouse, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
-	err = client.Sessions.UseWarehouse(ctx, warehouseTest.ID())
+	err := client.Sessions.UseWarehouse(ctx, warehouse.ID())
 	require.NoError(t, err)
 	actual, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	require.NoError(t, err)
-	expected := warehouseTest.Name
+	expected := warehouse.Name
 	assert.Equal(t, expected, actual)
 }
 
@@ -127,11 +123,14 @@ func TestInt_UseDatabase(t *testing.T) {
 		err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)
 	})
-	err := client.Sessions.UseDatabase(ctx, testDb(t).ID())
+	// new database created on purpose
+	database, databaseCleanup := createDatabase(t, client)
+	t.Cleanup(databaseCleanup)
+	err := client.Sessions.UseDatabase(ctx, database.ID())
 	require.NoError(t, err)
 	actual, err := client.ContextFunctions.CurrentDatabase(ctx)
 	require.NoError(t, err)
-	expected := testDb(t).Name
+	expected := database.Name
 	assert.Equal(t, expected, actual)
 }
 
@@ -143,10 +142,15 @@ func TestInt_UseSchema(t *testing.T) {
 		err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)
 	})
-	err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
+	// new database and schema created on purpose
+	database, databaseCleanup := createDatabase(t, client)
+	t.Cleanup(databaseCleanup)
+	schema, schemaCleanup := createSchema(t, client, database)
+	t.Cleanup(schemaCleanup)
+	err := client.Sessions.UseSchema(ctx, schema.ID())
 	require.NoError(t, err)
 	actual, err := client.ContextFunctions.CurrentSchema(ctx)
 	require.NoError(t, err)
-	expected := testSchema(t).Name
+	expected := schema.Name
 	assert.Equal(t, expected, actual)
 }

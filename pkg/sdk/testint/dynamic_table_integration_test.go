@@ -13,8 +13,6 @@ import (
 func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	client := testClient(t)
 
-	warehouseTest, warehouseCleanup := createWarehouse(t, client)
-	t.Cleanup(warehouseCleanup)
 	tableTest, tableCleanup := createTable(t, client, testDb(t), testSchema(t))
 	t.Cleanup(tableCleanup)
 
@@ -26,7 +24,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		}
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
 		comment := random.Comment()
-		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouseTest.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
+		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(name))
@@ -38,7 +36,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 		entity := entities[0]
 		require.Equal(t, name.Name(), entity.Name)
-		require.Equal(t, warehouseTest.ID().Name(), entity.Warehouse)
+		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
 		require.Equal(t, *targetLag.MaximumDuration, entity.TargetLag)
 	})
 
@@ -49,7 +47,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		}
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
 		comment := random.Comment()
-		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouseTest.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
+		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(name))
@@ -61,7 +59,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 		entity := entities[0]
 		require.Equal(t, name.Name(), entity.Name)
-		require.Equal(t, warehouseTest.ID().Name(), entity.Warehouse)
+		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
 		require.Equal(t, "DOWNSTREAM", entity.TargetLag)
 	})
 }
