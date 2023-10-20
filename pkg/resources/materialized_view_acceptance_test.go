@@ -25,7 +25,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: materializedViewConfig(warehouseName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\";", tableName)),
+				Config: materializedViewConfig(warehouseName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\";", tableName), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
@@ -53,7 +53,7 @@ func TestAcc_MaterializedView2(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: materializedViewConfig(warehouseName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\" WHERE ID LIKE 'foo%%';", tableName)),
+				Config: materializedViewConfig(warehouseName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\" WHERE ID LIKE 'foo%%';", tableName), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
@@ -67,7 +67,7 @@ func TestAcc_MaterializedView2(t *testing.T) {
 	})
 }
 
-func materializedViewConfig(warehouseName string, tableName string, viewName string, q string) string {
+func materializedViewConfig(warehouseName string, tableName string, viewName string, q string, databaseName string, schemaName string) string {
 	// convert the cluster from string slice to string
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "test" {
@@ -76,8 +76,8 @@ resource "snowflake_warehouse" "test" {
 }
 
 resource "snowflake_table" "test" {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
+	database = "%s"
+	schema   = "%s"
 	name     = "%s"
 
 	column {
@@ -94,8 +94,8 @@ resource "snowflake_table" "test" {
 resource "snowflake_materialized_view" "test" {
 	name      = "%s"
 	comment   = "Terraform test resource"
-	database  = "terraform_test_database"
-	schema    = "terraform_test_schema"
+	database  = "%s"
+	schema    = "%s"
 	warehouse = snowflake_warehouse.test.name
 	is_secure = true
 	or_replace = false
@@ -106,5 +106,5 @@ resource "snowflake_materialized_view" "test" {
   		snowflake_table.test
   	]
 }
-`, warehouseName, tableName, viewName, q)
+`, warehouseName, databaseName, schemaName, tableName, viewName, databaseName, schemaName, q)
 }

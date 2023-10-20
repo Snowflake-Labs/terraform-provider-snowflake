@@ -19,7 +19,7 @@ func TestAcc_FunctionGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functionGrantConfig(name, onFuture, "USAGE"),
+				Config: functionGrantConfig(name, onFuture, "USAGE", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "schema_name", acc.TestSchemaName),
@@ -51,7 +51,7 @@ func TestAcc_FunctionGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functionGrantConfig(name, onAll, "USAGE"),
+				Config: functionGrantConfig(name, onAll, "USAGE", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "schema_name", acc.TestSchemaName),
@@ -63,7 +63,7 @@ func TestAcc_FunctionGrant_onAll(t *testing.T) {
 			},
 			// UPDATE ALL PRIVILEGES
 			{
-				Config: functionGrantConfig(name, onAll, "ALL PRIVILEGES"),
+				Config: functionGrantConfig(name, onAll, "ALL PRIVILEGES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_function_grant.test", "schema_name", acc.TestSchemaName),
@@ -86,7 +86,7 @@ func TestAcc_FunctionGrant_onAll(t *testing.T) {
 	})
 }
 
-func functionGrantConfig(name string, grantType grantType, privilege string) string {
+func functionGrantConfig(name string, grantType grantType, privilege, databaseName, schemaName string) string {
 	var functionNameConfig string
 	switch grantType {
 	case onFuture:
@@ -101,11 +101,11 @@ resource snowflake_role test {
 }
 
 resource "snowflake_function_grant" "test" {
-    database_name = "terraform_test_database"
+    database_name = "%s"
 	roles         = [snowflake_role.test.name]
-	schema_name   = "terraform_test_schema"
+	schema_name   = "%s"
 	%s
 	privilege = "%s"
 }
-`, name, functionNameConfig, privilege)
+`, name, functionNameConfig, databaseName, schemaName, privilege)
 }

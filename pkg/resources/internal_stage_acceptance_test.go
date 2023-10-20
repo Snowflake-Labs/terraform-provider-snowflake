@@ -19,7 +19,7 @@ func TestAcc_InternalStage(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: internalStageConfig(accName),
+				Config: internalStageConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "database", acc.TestDatabaseName),
@@ -31,13 +31,13 @@ func TestAcc_InternalStage(t *testing.T) {
 	})
 }
 
-func internalStageConfig(n string) string {
+func internalStageConfig(n, databaseName, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_stage" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	comment = "Terraform acceptance test"
 }
-`, n)
+`, n, databaseName, schemaName)
 }

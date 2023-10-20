@@ -15,7 +15,7 @@ func TestAcc_ObjectParameter(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: objectParameterConfigBasic("USER_TASK_TIMEOUT_MS", "1000"),
+				Config: objectParameterConfigBasic("USER_TASK_TIMEOUT_MS", "1000", acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "USER_TASK_TIMEOUT_MS"),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "1000"),
@@ -55,16 +55,16 @@ resource "snowflake_object_parameter" "p" {
 	return fmt.Sprintf(s, key, value)
 }
 
-func objectParameterConfigBasic(key, value string) string {
+func objectParameterConfigBasic(key, value, databaseName string) string {
 	s := `
 resource "snowflake_object_parameter" "p" {
 	key = "%s"
 	value = "%s"
 	object_type = "DATABASE"
 	object_identifier {
-		name = "terraform_test_database"
+		name = "%s"
 	}
 }
 `
-	return fmt.Sprintf(s, key, value)
+	return fmt.Sprintf(s, key, value, databaseName)
 }

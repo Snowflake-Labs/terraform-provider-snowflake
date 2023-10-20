@@ -15,7 +15,7 @@ func TestAcc_TableColumnMaskingPolicyApplication(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: maskingPolicyApplicationTestConfig(),
+				Config: maskingPolicyApplicationTestConfig(acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_column_masking_policy_application.mpa", "table", fmt.Sprintf(`"%s"."%s"."table"`, acc.TestDatabaseName, acc.TestSchemaName)),
 				),
@@ -29,12 +29,12 @@ func TestAcc_TableColumnMaskingPolicyApplication(t *testing.T) {
 	})
 }
 
-func maskingPolicyApplicationTestConfig() string {
-	return `
+func maskingPolicyApplicationTestConfig(databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
 resource "snowflake_masking_policy" "test" {
 	name               = "mypolicy"
-	database           = "terraform_test_database"
-	schema             = "terraform_test_schema"
+	database           = "%s"
+	schema             = "%s"
 	signature {
 		column {
 			name = "val"
@@ -47,8 +47,8 @@ resource "snowflake_masking_policy" "test" {
 }
 
 resource "snowflake_table" "table" {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
+	database = "%s"
+	schema   = "%s"
 	name     = "table"
 
 	column {
@@ -65,5 +65,5 @@ resource "snowflake_table_column_masking_policy_application" "mpa" {
 	table          = snowflake_table.table.qualified_name
 	column         = "secret"
 	masking_policy = snowflake_masking_policy.test.qualified_name
-}`
+}`, databaseName, schemaName, databaseName, schemaName)
 }

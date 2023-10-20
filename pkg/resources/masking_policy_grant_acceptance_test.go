@@ -19,7 +19,7 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: maskingPolicyGrantConfig(accName, "APPLY"),
+				Config: maskingPolicyGrantConfig(accName, "APPLY", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "schema_name", acc.TestSchemaName),
@@ -30,7 +30,7 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 			},
 			// UPDATE ALL PRIVILEGES
 			{
-				Config: maskingPolicyGrantConfig(accName, "ALL PRIVILEGES"),
+				Config: maskingPolicyGrantConfig(accName, "ALL PRIVILEGES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy_grant.test", "schema_name", acc.TestSchemaName),
@@ -52,7 +52,7 @@ func TestAcc_MaskingPolicyGrant(t *testing.T) {
 	})
 }
 
-func maskingPolicyGrantConfig(name string, privilege string) string {
+func maskingPolicyGrantConfig(name string, privilege string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_role" "test" {
 		name = "%v"
@@ -60,8 +60,8 @@ func maskingPolicyGrantConfig(name string, privilege string) string {
 
 	resource "snowflake_masking_policy" "test" {
 		name = "%v"
-		database = "terraform_test_database"
-		schema = "terraform_test_schema"
+		database = "%s"
+		schema = "%s"
 		signature {
 			column {
 				name = "val"
@@ -75,10 +75,10 @@ func maskingPolicyGrantConfig(name string, privilege string) string {
 
 	resource "snowflake_masking_policy_grant" "test" {
 		masking_policy_name = snowflake_masking_policy.test.name
-		database_name = "terraform_test_database"
+		database_name = "%s"
 		roles         = [snowflake_role.test.name]
-		schema_name   = "terraform_test_schema"
+		schema_name   = "%s"
 		privilege = "%s"
 	}
-	`, name, name, privilege)
+	`, name, name, databaseName, schemaName, databaseName, schemaName, privilege)
 }

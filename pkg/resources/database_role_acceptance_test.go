@@ -24,7 +24,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: databaseRoleConfig(dbRoleName, comment),
+				Config: databaseRoleConfig(dbRoleName, acc.TestDatabaseName, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
@@ -32,7 +32,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 				),
 			},
 			{
-				Config: databaseRoleConfig(dbRoleName, comment2),
+				Config: databaseRoleConfig(dbRoleName, acc.TestDatabaseName, comment2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
@@ -43,13 +43,13 @@ func TestAcc_DatabaseRole(t *testing.T) {
 	})
 }
 
-func databaseRoleConfig(dbRoleName string, comment string) string {
+func databaseRoleConfig(dbRoleName string, databaseName string, comment string) string {
 	s := `
 resource "snowflake_database_role" "test_db_role" {
 	name     	  = "%s"
-	database  	  = "terraform_test_database"
+	database  	  = "%s"
 	comment       = "%s"
 }
 	`
-	return fmt.Sprintf(s, dbRoleName, comment)
+	return fmt.Sprintf(s, dbRoleName, databaseName, comment)
 }

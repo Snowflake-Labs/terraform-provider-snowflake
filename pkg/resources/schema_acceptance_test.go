@@ -19,7 +19,7 @@ func TestAcc_Schema(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: schemaConfig(schemaName),
+				Config: schemaConfig(schemaName, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", schemaName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
@@ -42,7 +42,7 @@ func TestAcc_SchemaRename(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: schemaConfig(oldSchemaName),
+				Config: schemaConfig(oldSchemaName, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", oldSchemaName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
@@ -52,7 +52,7 @@ func TestAcc_SchemaRename(t *testing.T) {
 				),
 			},
 			{
-				Config: schemaConfig(newSchemaName),
+				Config: schemaConfig(newSchemaName, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newSchemaName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
@@ -65,12 +65,12 @@ func TestAcc_SchemaRename(t *testing.T) {
 	})
 }
 
-func schemaConfig(schemaName string) string {
+func schemaConfig(schemaName string, databaseName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_schema" "test" {
 	name = "%v"
-	database = "terraform_test_database"
+	database = "%s"
 	comment = "Terraform acceptance test"
 }
-`, schemaName)
+`, schemaName, databaseName)
 }

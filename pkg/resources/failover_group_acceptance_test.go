@@ -59,7 +59,7 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName, 20),
+				Config: failoverGroupWithInterval(randomCharacters, accountName, 20, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -97,7 +97,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName, 10),
+				Config: failoverGroupWithInterval(randomCharacters, accountName, 10, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -111,7 +111,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Update Interval
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName, 20),
+				Config: failoverGroupWithInterval(randomCharacters, accountName, 20, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -125,7 +125,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Change to Cron Expression
 			{
-				Config: failoverGroupWithCronExpression(randomCharacters, accountName, "0 0 10-20 * TUE,THU"),
+				Config: failoverGroupWithCronExpression(randomCharacters, accountName, "0 0 10-20 * TUE,THU", acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -141,7 +141,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Update Cron Expression
 			{
-				Config: failoverGroupWithCronExpression(randomCharacters, accountName, "0 0 5-20 * TUE,THU"),
+				Config: failoverGroupWithCronExpression(randomCharacters, accountName, "0 0 5-20 * TUE,THU", acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -157,7 +157,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Change to Interval
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName, 10),
+				Config: failoverGroupWithInterval(randomCharacters, accountName, 10, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
@@ -198,19 +198,19 @@ resource "snowflake_failover_group" "fg" {
 `, randomCharacters, accountName)
 }
 
-func failoverGroupWithInterval(randomCharacters, accountName string, interval int) string {
+func failoverGroupWithInterval(randomCharacters, accountName string, interval int, databaseName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_failover_group" "fg" {
 	name = "%s"
 	object_types = ["WAREHOUSES","DATABASES", "INTEGRATIONS", "ROLES"]
 	allowed_accounts= ["%s"]
-	allowed_databases = ["terraform_test_database"]
+	allowed_databases = ["%s"]
 	allowed_integration_types = ["SECURITY INTEGRATIONS"]
 	replication_schedule {
 		interval = %d
 	}
 }
-`, randomCharacters, accountName, interval)
+`, randomCharacters, accountName, databaseName, interval)
 }
 
 func failoverGroupWithNoWarehouse(randomCharacters, accountName string, interval int) string {
@@ -227,13 +227,13 @@ resource "snowflake_failover_group" "fg" {
 `, randomCharacters, accountName, interval)
 }
 
-func failoverGroupWithCronExpression(randomCharacters, accountName, expression string) string {
+func failoverGroupWithCronExpression(randomCharacters, accountName, expression, databaseName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_failover_group" "fg" {
 	name = "%s"
 	object_types = ["WAREHOUSES","DATABASES", "INTEGRATIONS", "ROLES"]
 	allowed_accounts= ["%s"]
-	allowed_databases = ["terraform_test_database"]
+	allowed_databases = ["%s"]
 	allowed_integration_types = ["SECURITY INTEGRATIONS"]
 	replication_schedule {
 		cron {
@@ -242,5 +242,5 @@ resource "snowflake_failover_group" "fg" {
 		}
 	}
 }
-`, randomCharacters, accountName, expression)
+`, randomCharacters, accountName, databaseName, expression)
 }

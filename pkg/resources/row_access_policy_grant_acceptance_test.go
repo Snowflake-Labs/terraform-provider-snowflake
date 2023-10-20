@@ -24,7 +24,7 @@ func TestAcc_RowAccessPolicyGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: rowAccessPolicyGrantConfig(accName, "APPLY"),
+				Config: rowAccessPolicyGrantConfig(accName, "APPLY", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "schema_name", acc.TestSchemaName),
@@ -35,7 +35,7 @@ func TestAcc_RowAccessPolicyGrant(t *testing.T) {
 			},
 			// UPDATE ALL PRIVILEGES
 			{
-				Config: rowAccessPolicyGrantConfig(accName, "ALL PRIVILEGES"),
+				Config: rowAccessPolicyGrantConfig(accName, "ALL PRIVILEGES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "schema_name", acc.TestSchemaName),
@@ -56,7 +56,7 @@ func TestAcc_RowAccessPolicyGrant(t *testing.T) {
 	})
 }
 
-func rowAccessPolicyGrantConfig(n, privilege string) string {
+func rowAccessPolicyGrantConfig(n string, privilege string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_role" "test" {
 	name = "%v"
@@ -64,8 +64,8 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_row_access_policy" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	signature = {
 		N = "VARCHAR"
 		V = "VARCHAR",
@@ -76,10 +76,10 @@ resource "snowflake_row_access_policy" "test" {
 
 resource "snowflake_row_access_policy_grant" "test" {
 	row_access_policy_name = snowflake_row_access_policy.test.name
-	database_name = "terraform_test_database"
+	database_name = "%s"
 	roles         = [snowflake_role.test.name]
-	schema_name   = "terraform_test_schema"
+	schema_name   = "%s"
 	privilege = "%s"
 }
-`, n, n, privilege)
+`, n, n, databaseName, schemaName, databaseName, schemaName, privilege)
 }

@@ -18,7 +18,7 @@ func TestAcc_TableConstraint_fk(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableConstraintFKConfig(name),
+				Config: tableConstraintFKConfig(name, acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_constraint.fk", "type", "FOREIGN KEY"),
@@ -31,12 +31,12 @@ func TestAcc_TableConstraint_fk(t *testing.T) {
 	})
 }
 
-func tableConstraintFKConfig(n string) string {
+func tableConstraintFKConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "t" {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
 	name     = "%s"
+	database = "%s"
+	schema   = "%s"
 
 	column {
 		name = "col1"
@@ -45,10 +45,9 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_table" "fk_t" {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
 	name     = "fk_%s"
-
+	database = "%s"
+	schema   = "%s"
 	column {
 		name     = "fk_col1"
 		type     = "text"
@@ -73,7 +72,7 @@ resource "snowflake_table_constraint" "fk" {
 	comment = "hello fk"
 }
 
-`, n, n, n)
+`, n, databaseName, schemaName, n, databaseName, schemaName, n)
 }
 
 func TestAcc_TableConstraint_unique(t *testing.T) {
@@ -85,7 +84,7 @@ func TestAcc_TableConstraint_unique(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableConstraintUniqueConfig(name),
+				Config: tableConstraintUniqueConfig(name, acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
@@ -98,12 +97,12 @@ func TestAcc_TableConstraint_unique(t *testing.T) {
 	})
 }
 
-func tableConstraintUniqueConfig(n string) string {
+func tableConstraintUniqueConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "t" {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
 	name     = "%s"
+	database = "%s"
+	schema   = "%s"
 
 	column {
 		name = "col1"
@@ -112,9 +111,9 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_table" "unique_t" {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
 	name     = "unique_%s"
+	database = "%s"
+	schema   = "%s"
 
 	column {
 		name     = "unique_col1"
@@ -134,5 +133,5 @@ resource "snowflake_table_constraint" "unique" {
 	comment = "hello unique"
 }
 
-`, n, n, n)
+`, n, databaseName, schemaName, n, databaseName, schemaName, n)
 }

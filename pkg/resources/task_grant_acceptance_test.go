@@ -19,7 +19,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: taskGrantConfig(name, 8, normal, "OPERATE"),
+				Config: taskGrantConfig(name, 8, normal, "OPERATE", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -32,7 +32,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 			},
 			// UPDATE MAX_CONCURRENCY_LEVEL
 			{
-				Config: taskGrantConfig(name, 10, normal, "OPERATE"),
+				Config: taskGrantConfig(name, 10, normal, "OPERATE", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -45,7 +45,7 @@ func TestAcc_TaskGrant(t *testing.T) {
 			},
 			// UPDATE PRIVILEGE
 			{
-				Config: taskGrantConfig(name, 10, normal, "ALL PRIVILEGES"),
+				Config: taskGrantConfig(name, 10, normal, "ALL PRIVILEGES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -75,7 +75,7 @@ func TestAcc_TaskGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: taskGrantConfig(name, 8, onAll, "OPERATE"),
+				Config: taskGrantConfig(name, 8, onAll, "OPERATE", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -109,7 +109,7 @@ func TestAcc_TaskGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: taskGrantConfig(name, 8, onFuture, "OPERATE"),
+				Config: taskGrantConfig(name, 8, onFuture, "OPERATE", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task_grant.test", "schema_name", acc.TestSchemaName),
@@ -134,7 +134,7 @@ func TestAcc_TaskGrant_onFuture(t *testing.T) {
 	})
 }
 
-func taskGrantConfig(name string, concurrency int32, grantType grantType, privilege string) string {
+func taskGrantConfig(name string, concurrency int32, grantType grantType, privilege string, databaseName string, schemaName string) string {
 	var taskNameConfig string
 	switch grantType {
 	case normal:
@@ -159,8 +159,8 @@ resource "snowflake_warehouse" "test" {
 
 resource "snowflake_task" "test" {
 	name     	    = "%s"
-	database  		= "terraform_test_database"
-	schema   		= "terraform_test_schema"
+	database  		= "%s"
+	schema   		= "%s"
 	warehouse 		= snowflake_warehouse.test.name
 	sql_statement = "SHOW FUNCTIONS"
 	enabled  	  	= true
@@ -172,13 +172,13 @@ resource "snowflake_task" "test" {
 
 resource "snowflake_task_grant" "test" {
 	%s
-	database_name = "terraform_test_database"
+	database_name = "%s"
 	roles         = [snowflake_role.test.name]
-	schema_name   = "terraform_test_schema"
+	schema_name   = "%s"
 	privilege 	= "%s"
 }
 `
-	return fmt.Sprintf(s, name, name, concurrency, name, taskNameConfig, privilege)
+	return fmt.Sprintf(s, name, name, concurrency, name, databaseName, schemaName, taskNameConfig, databaseName, schemaName, privilege)
 }
 
 func TestAcc_TaskOwnershipGrant_onFuture(t *testing.T) {

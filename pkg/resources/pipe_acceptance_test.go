@@ -23,7 +23,7 @@ func TestAcc_Pipe(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: pipeConfig(accName),
+				Config: pipeConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "database", acc.TestDatabaseName),
@@ -37,11 +37,11 @@ func TestAcc_Pipe(t *testing.T) {
 	})
 }
 
-func pipeConfig(name string) string {
+func pipeConfig(name string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_table" "test" {
-	database = "terraform_test_database"
-  	schema   = "terraform_test_schema"
+	database = "%s"
+  	schema   = "%s"
 	name     = "%s"
 
 	  column {
@@ -57,15 +57,15 @@ resource "snowflake_table" "test" {
 
 resource "snowflake_stage" "test" {
 	name = "%s"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	comment = "Terraform acceptance test"
 }
 
 
 resource "snowflake_pipe" "test" {
-  database       = "terraform_test_database"
-  schema         = "terraform_test_schema"
+  database       = "%s"
+  schema         = "%s"
   name           = "%s"
   comment        = "Terraform acceptance test"
   copy_statement = <<CMD
@@ -76,5 +76,5 @@ CMD
   auto_ingest    = false
 }
 `
-	return fmt.Sprintf(s, name, name, name)
+	return fmt.Sprintf(s, databaseName, schemaName, name, name, databaseName, schemaName, databaseName, schemaName, name)
 }

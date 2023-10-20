@@ -19,7 +19,7 @@ func TestAcc_TagAssociation(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tagAssociationConfig(accName),
+				Config: tagAssociationConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "object_type", "DATABASE"),
 					resource.TestCheckResourceAttr("snowflake_tag_association.test", "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, accName)),
@@ -39,7 +39,7 @@ func TestAcc_TagAssociationSchema(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tagAssociationConfigSchema(accName),
+				Config: tagAssociationConfigSchema(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_tag_association.schema", "object_type", "SCHEMA"),
 				),
@@ -58,7 +58,7 @@ func TestAcc_TagAssociationColumn(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tagAssociationConfigColumn(accName, accName2),
+				Config: tagAssociationConfigColumn(accName, accName2, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "object_type", "COLUMN"),
 					resource.TestCheckResourceAttr("snowflake_tag_association.columnTag", "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, accName)),
@@ -73,41 +73,31 @@ func TestAcc_TagAssociationColumn(t *testing.T) {
 	})
 }
 
-func tagAssociationConfig(n string) string {
+func tagAssociationConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_tag" "test" {
 	name = "%[1]v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%[2]s"
+	schema = "%[3]s"
 	allowed_values = ["finance", "hr"]
 	comment = "Terraform acceptance test"
 }
 
 resource "snowflake_tag_association" "test" {
 	object_identifier {
-		name = "terraform_test_database"
+		name = "%[2]s"
 	  }
 	object_type = "DATABASE"
 	tag_id = snowflake_tag.test.id
 	tag_value = "finance"
 }
-`, n)
+`, n, databaseName, schemaName)
 }
 
-func tagAssociationConfigSchema(n string) string {
+func tagAssociationConfigSchema(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "db" {
-	name = "test_db"
-}
-
-resource "snowflake_schema" "sch" {
-	database = snowflake_database.db.name
-	name = "test_sch"
-	comment = "%v"
-}
-
 resource "snowflake_tag" "tag1" {
- database = snowflake_database.db.name
+ database = "%s"
  name     = "EXAMPLE_TAG"
  schema   = "PUBLIC"
 
@@ -116,37 +106,28 @@ resource "snowflake_tag" "tag1" {
 
 resource "snowflake_tag_association" "schema" {
   object_identifier {
-    database = snowflake_database.db.name
-    name     = snowflake_schema.sch.name
+    database = "%s"
+    name     = "%s"
   }
 
   object_type = "SCHEMA"
   tag_id      = snowflake_tag.tag1.id
   tag_value   = "TAG_VALUE"
 }
-`, n)
+`, databaseName, databaseName, schemaName)
 }
 
-func tagAssociationConfigColumn(n1, n2 string) string {
+func tagAssociationConfigColumn(n1, n2 string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "table_db" {
-	name = "%[2]v"
-}
-
-resource "snowflake_schema" "table_sch" {
-	database = snowflake_database.table_db.name
-	name = "%[2]v"
-}
-
 resource "snowflake_tag" "tag1" {
-	database = "terraform_test_database"
+	database = "%[3]v"
 	name     = "%[1]v"
-	schema   = "terraform_test_schema"
+	schema   = "%[4]v"
 }
 
 resource "snowflake_table" "test_table" {
-	database            = snowflake_database.table_db.name
-	schema              = snowflake_schema.table_sch.name
+	database            = "%[3]v"
+	schema              = "%[4]v"
 	name                = "test_table"
 
 	column {
@@ -157,8 +138,8 @@ resource "snowflake_table" "test_table" {
 
 resource "snowflake_tag_association" "columnTag" {
 	object_identifier {
-		database = snowflake_database.table_db.name
-		schema   = snowflake_schema.table_sch.name
+		database            = "%[3]v"
+		schema              = "%[4]v"
 		name     = "${snowflake_table.test_table.name}.${snowflake_table.test_table.column[0].name}"
 	}
 
@@ -166,5 +147,5 @@ resource "snowflake_tag_association" "columnTag" {
 	tag_id      = snowflake_tag.tag1.id
 	tag_value   = "TAG_VALUE"
 }
-`, n1, n2)
+`, n1, n2, databaseName, schemaName)
 }

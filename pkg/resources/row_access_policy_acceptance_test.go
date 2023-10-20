@@ -24,7 +24,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: rowAccessPolicyConfig(accName),
+				Config: rowAccessPolicyConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", acc.TestDatabaseName),
@@ -39,12 +39,12 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 	})
 }
 
-func rowAccessPolicyConfig(n string) string {
+func rowAccessPolicyConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_row_access_policy" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%se"
+	schema = "%s"
 	signature = {
 		N = "VARCHAR"
 		V = "VARCHAR",
@@ -52,5 +52,5 @@ resource "snowflake_row_access_policy" "test" {
 	row_access_expression = "case when current_role() in ('ANALYST') then true else false end"
 	comment = "Terraform acceptance test"
 }
-`, n)
+`, n, databaseName, schemaName)
 }

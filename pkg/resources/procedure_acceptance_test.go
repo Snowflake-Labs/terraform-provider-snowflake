@@ -27,7 +27,7 @@ func TestAcc_Procedure(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: procedureConfig(procName),
+				Config: procedureConfig(procName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc", "name", procName),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc", "comment", "Terraform acceptance test"),
@@ -63,12 +63,12 @@ func TestAcc_Procedure(t *testing.T) {
 	})
 }
 
-func procedureConfig(name string) string {
+func procedureConfig(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_procedure" "test_proc_simple" {
 		name = "%s"
-		database = "terraform_test_database"
-		schema   = "terraform_test_schema"
+		database = "%s"
+		schema   = "%s"
 		return_type = "varchar"
 		language = "javascript"
 		statement = <<-EOF
@@ -78,8 +78,8 @@ func procedureConfig(name string) string {
 
 	resource "snowflake_procedure" "test_proc" {
 		name = "%s"
-		database = "terraform_test_database"
-		schema   = "terraform_test_schema"
+		database = "%s"
+		schema   = "%s"
 		arguments {
 			name = "arg1"
 			type = "varchar"
@@ -95,8 +95,8 @@ func procedureConfig(name string) string {
 
 	resource "snowflake_procedure" "test_proc_complex" {
 		name = "%s"
-		database = "terraform_test_database"
-		schema   = "terraform_test_schema"
+		database = "%s"
+		schema   = "%s"
 		arguments {
 			name = "arg1"
 			type = "varchar"
@@ -119,8 +119,8 @@ func procedureConfig(name string) string {
 
 	resource "snowflake_procedure" "test_proc_sql" {
 		name = "%s_sql"
-		database = "terraform_test_database"
-		schema   = "terraform_test_schema"
+		database = "%s"
+		schema   = "%s"
 		language = "SQL"
 		return_type         = "INTEGER"
 		execute_as          = "CALLER"
@@ -137,5 +137,5 @@ func procedureConfig(name string) string {
 	  end;
 	  EOT
 	  }
-	`, name, name, name, name)
+	`, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName)
 }

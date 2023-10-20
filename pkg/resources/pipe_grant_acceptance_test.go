@@ -19,7 +19,7 @@ func TestAcc_PipeGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: pipeGrantConfig(accName, "OPERATE"),
+				Config: pipeGrantConfig(accName, "OPERATE", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "schema_name", acc.TestSchemaName),
@@ -29,7 +29,7 @@ func TestAcc_PipeGrant(t *testing.T) {
 				),
 			},
 			{
-				Config: pipeGrantConfig(accName, "ALL PRIVILEGES"),
+				Config: pipeGrantConfig(accName, "ALL PRIVILEGES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "schema_name", acc.TestSchemaName),
@@ -59,7 +59,7 @@ func TestAcc_PipeGrantWithDefaultPrivilege(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: pipeGrantConfigWithDefaultPrivilege(accName),
+				Config: pipeGrantConfigWithDefaultPrivilege(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_pipe_grant.test", "schema_name", acc.TestSchemaName),
@@ -80,12 +80,12 @@ func TestAcc_PipeGrantWithDefaultPrivilege(t *testing.T) {
 	})
 }
 
-func pipeGrantConfig(name, privilege string) string {
+func pipeGrantConfig(name string, privilege string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_table" "test" {
-  database = "terraform_test_database"
-  schema   = "terraform_test_schema"
   name     = "%s"
+  database = "%s"
+  schema   = "%s"
   column {
 	name = "id"
 	type = "NUMBER(5,0)"
@@ -102,23 +102,23 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_stage" "test" {
   name = "%s"
-  database = "terraform_test_database"
-  schema = "terraform_test_schema"
+  database = "%s"
+  schema = "%s"
   comment = "Terraform acceptance test"
 }
 
 resource "snowflake_pipe_grant" "test" {
   pipe_name = snowflake_pipe.test.name
-  database_name = "terraform_test_database"
+  database_name = "%s"
   roles         = [snowflake_role.test.name]
-  schema_name   = "terraform_test_schema"
+  schema_name   = "%s"
   privilege 	  = "%s"
 }
 
 resource "snowflake_pipe" "test" {
-  database       = "terraform_test_database"
-  schema         = "terraform_test_schema"
   name           = "%s"
+  database       = "%s"
+  schema         = "%s"
   comment        = "Terraform acceptance test"
   copy_statement = <<CMD
 COPY INTO "${snowflake_table.test.database}"."${snowflake_table.test.schema}"."${snowflake_table.test.name}"
@@ -128,15 +128,15 @@ CMD
   auto_ingest    = false
 }
 `
-	return fmt.Sprintf(s, name, name, name, privilege, name)
+	return fmt.Sprintf(s, name, databaseName, schemaName, name, name, databaseName, schemaName, databaseName, schemaName, privilege, name, databaseName, schemaName)
 }
 
-func pipeGrantConfigWithDefaultPrivilege(name string) string {
+func pipeGrantConfigWithDefaultPrivilege(name string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_table" "test" {
-  database = "terraform_test_database"
-  schema   = "terraform_test_schema"
   name     = "%s"
+  database = "%s"
+  schema   = "%s"
   column {
 	name = "id"
 	type = "NUMBER(5,0)"
@@ -153,22 +153,22 @@ resource "snowflake_role" "test" {
 
 resource "snowflake_stage" "test" {
   name = "%s"
-  database = "terraform_test_database"
-  schema = "terraform_test_schema"
+  database = "%s"
+  schema = "%s"
   comment = "Terraform acceptance test"
 }
 
 resource "snowflake_pipe_grant" "test" {
   pipe_name = snowflake_pipe.test.name
-  database_name = "terraform_test_database"
+  database_name = "%s"
   roles         = [snowflake_role.test.name]
-  schema_name   = "terraform_test_schema"
+  schema_name   = "%s"
 }
 
 resource "snowflake_pipe" "test" {
-  database       = "terraform_test_database"
-  schema         = "terraform_test_schema"
   name           = "%s"
+  database       = "%s"
+  schema         = "%s"
   comment        = "Terraform acceptance test"
   copy_statement = <<CMD
 COPY INTO "${snowflake_table.test.database}"."${snowflake_table.test.schema}"."${snowflake_table.test.name}"
@@ -178,5 +178,5 @@ CMD
   auto_ingest    = false
 }
 `
-	return fmt.Sprintf(s, name, name, name, name)
+	return fmt.Sprintf(s, name, databaseName, schemaName, name, name, databaseName, schemaName, databaseName, schemaName, name, databaseName, schemaName)
 }

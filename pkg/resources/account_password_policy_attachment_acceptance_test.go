@@ -19,7 +19,7 @@ func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: accountPasswordPolicyAttachmentConfig(prefix),
+				Config: accountPasswordPolicyAttachmentConfig(acc.TestDatabaseName, acc.TestSchemaName, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("snowflake_account_password_policy_attachment.att", "id"),
 				),
@@ -41,11 +41,11 @@ func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
 	})
 }
 
-func accountPasswordPolicyAttachmentConfig(prefix string) string {
+func accountPasswordPolicyAttachmentConfig(databaseName, schemaName, prefix string) string {
 	s := `
 resource "snowflake_password_policy" "pa" {
-	database   = "terraform_test_database"
-	schema     = "terraform_test_schema"
+	database   = "%s"
+	schema     = "%s"
 	name       = "%v"
 }
 
@@ -53,5 +53,5 @@ resource "snowflake_account_password_policy_attachment" "att" {
 	password_policy = snowflake_password_policy.pa.qualified_name
 }
 `
-	return fmt.Sprintf(s, prefix)
+	return fmt.Sprintf(s, databaseName, schemaName, prefix)
 }

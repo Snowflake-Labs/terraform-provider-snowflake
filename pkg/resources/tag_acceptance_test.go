@@ -19,7 +19,7 @@ func TestAcc_Tag(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tagConfig(accName),
+				Config: tagConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_tag.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_tag.test", "database", acc.TestDatabaseName),
@@ -32,14 +32,14 @@ func TestAcc_Tag(t *testing.T) {
 	})
 }
 
-func tagConfig(n string) string {
+func tagConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_tag" "test" {
 	name = "%[1]v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%[2]s"
+	schema = "	%[3]s"
 	allowed_values = ["alv1", "alv2"]
 	comment = "Terraform acceptance test"
 }
-`, n)
+`, n, databaseName, schemaName)
 }

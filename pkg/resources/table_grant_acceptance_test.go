@@ -19,7 +19,7 @@ func TestAcc_TableGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableGrantConfig(name, onAll, "SELECT"),
+				Config: tableGrantConfig(name, onAll, "SELECT", acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
@@ -54,7 +54,7 @@ func TestAcc_TableGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableGrantConfig(name, onFuture, "SELECT"),
+				Config: tableGrantConfig(name, onFuture, "SELECT", acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
@@ -90,7 +90,7 @@ func TestAcc_TableGrant_defaults(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableGrantConfig(name, normal, "SELECT"),
+				Config: tableGrantConfig(name, normal, "SELECT", acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
@@ -103,7 +103,7 @@ func TestAcc_TableGrant_defaults(t *testing.T) {
 			},
 			// UPDATE ALL PRIVILEGES
 			{
-				Config: tableGrantConfig(name, normal, "ALL PRIVILEGES"),
+				Config: tableGrantConfig(name, normal, "ALL PRIVILEGES", acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
@@ -127,7 +127,7 @@ func TestAcc_TableGrant_defaults(t *testing.T) {
 	})
 }
 
-func tableGrantConfig(name string, grantType grantType, privilege string) string {
+func tableGrantConfig(name string, grantType grantType, privilege string, databaseName string, schemaName string) string {
 	var tableNameConfig string
 	switch grantType {
 	case normal:
@@ -144,9 +144,9 @@ resource snowflake_role r {
 }
 
 resource snowflake_table t {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
 	name     = "%s"
+	database = "%s"
+	schema   = "%s"
 
 	column {
 		name = "id"
@@ -155,8 +155,8 @@ resource snowflake_table t {
 }
 
 resource snowflake_table_grant g {
-	database_name = "terraform_test_database"
-	schema_name   = "terraform_test_schema"
+	database = "%s"
+	schema   = "%s"
 	%s
 	privilege = "%s"
 	roles = [
@@ -164,5 +164,5 @@ resource snowflake_table_grant g {
 	]
 }
 
-`, name, name, tableNameConfig, privilege)
+`, name, name, databaseName, schemaName, databaseName, schemaName, tableNameConfig, privilege)
 }

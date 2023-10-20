@@ -18,7 +18,7 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigCSV(accName),
+				Config: fileFormatConfigCSV(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -71,7 +71,7 @@ func TestAcc_FileFormatJSON(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigJSON(accName),
+				Config: fileFormatConfigJSON(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -108,7 +108,7 @@ func TestAcc_FileFormatAvro(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigAvro(accName),
+				Config: fileFormatConfigAvro(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -134,7 +134,7 @@ func TestAcc_FileFormatORC(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigORC(accName),
+				Config: fileFormatConfigORC(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -159,7 +159,7 @@ func TestAcc_FileFormatParquet(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigParquet(accName),
+				Config: fileFormatConfigParquet(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -186,7 +186,7 @@ func TestAcc_FileFormatXML(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigXML(accName),
+				Config: fileFormatConfigXML(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -216,7 +216,7 @@ func TestAcc_FileFormatCSVDefaults(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigFullDefaults(accName, "CSV"),
+				Config: fileFormatConfigFullDefaults(accName, "CSV", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -242,7 +242,7 @@ func TestAcc_FileFormatJSONDefaults(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigFullDefaults(accName, "JSON"),
+				Config: fileFormatConfigFullDefaults(accName, "JSON", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -268,7 +268,7 @@ func TestAcc_FileFormatAVRODefaults(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigFullDefaults(accName, "AVRO"),
+				Config: fileFormatConfigFullDefaults(accName, "AVRO", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -294,7 +294,7 @@ func TestAcc_FileFormatORCDefaults(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigFullDefaults(accName, "ORC"),
+				Config: fileFormatConfigFullDefaults(accName, "ORC", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -320,7 +320,7 @@ func TestAcc_FileFormatPARQUETDefaults(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigFullDefaults(accName, "PARQUET"),
+				Config: fileFormatConfigFullDefaults(accName, "PARQUET", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -346,7 +346,7 @@ func TestAcc_FileFormatXMLDefaults(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigFullDefaults(accName, "XML"),
+				Config: fileFormatConfigFullDefaults(accName, "XML", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -363,12 +363,12 @@ func TestAcc_FileFormatXMLDefaults(t *testing.T) {
 	})
 }
 
-func fileFormatConfigCSV(n string) string {
+func fileFormatConfigCSV(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	format_type = "CSV"
 	compression = "GZIP"
 	record_delimiter = "\r"
@@ -392,15 +392,15 @@ resource "snowflake_file_format" "test" {
 	encoding = "UTF-16"
 	comment = "Terraform acceptance test"
 }
-`, n)
+`, n, databaseName, schemaName)
 }
 
-func fileFormatConfigJSON(n string) string {
+func fileFormatConfigJSON(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	format_type = "JSON"
 	compression = "GZIP"
 	date_format = "YYY-MM-DD"
@@ -418,44 +418,44 @@ resource "snowflake_file_format" "test" {
 	skip_byte_order_mark = false
 	comment = "Terraform acceptance test"
 }
-`, n)
+`, n, databaseName, schemaName)
 }
 
-func fileFormatConfigAvro(n string) string {
+func fileFormatConfigAvro(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	format_type = "AVRO"
 	compression = "GZIP"
 	trim_space = true
 	null_if = ["NULL"]
 	comment = "Terraform acceptance test"
 }
-`, n)
+`, n, databaseName, schemaName)
 }
 
-func fileFormatConfigORC(n string) string {
+func fileFormatConfigORC(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	format_type = "ORC"
 	trim_space = true
 	null_if = ["NULL"]
 	comment = "Terraform acceptance test"
 }
-`, n)
+`, n, databaseName, schemaName)
 }
 
-func fileFormatConfigParquet(n string) string {
+func fileFormatConfigParquet(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	format_type = "PARQUET"
 	compression = "SNAPPY"
 	binary_as_text = true
@@ -463,15 +463,15 @@ resource "snowflake_file_format" "test" {
 	null_if = ["NULL"]
 	comment = "Terraform acceptance test"
 }
-`, n)
+`, n, databaseName, schemaName)
 }
 
-func fileFormatConfigXML(n string) string {
+func fileFormatConfigXML(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	format_type = "XML"
 	compression = "GZIP"
 	ignore_utf8_errors = true
@@ -482,16 +482,16 @@ resource "snowflake_file_format" "test" {
 	skip_byte_order_mark = false
 	comment = "Terraform acceptance test"
 }
-`, n)
+`, n, databaseName, schemaName)
 }
 
-func fileFormatConfigFullDefaults(n, formatType string) string {
+func fileFormatConfigFullDefaults(n string, formatType string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
 	name = "%v"
-	database = "terraform_test_database"
-	schema = "terraform_test_schema"
+	database = "%s"
+	schema = "%s"
 	format_type = "%s"
 }
-`, n, formatType)
+`, n, databaseName, schemaName, formatType)
 }

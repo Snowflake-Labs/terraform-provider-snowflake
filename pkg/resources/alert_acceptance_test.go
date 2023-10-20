@@ -16,12 +16,14 @@ import (
 type (
 	AccAlertTestSettings struct {
 		WarehouseName string
+		DatabaseName  string
 		Alert         *AlertSettings
 	}
 
 	AlertSettings struct {
 		Name      string
 		Enabled   bool
+		Schema    string
 		Condition string
 		Action    string
 		Schedule  int
@@ -35,10 +37,12 @@ var (
 
 	alertInitialState = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
+		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
 			Name:      alertName,
 			Condition: "select 0 as c",
 			Action:    "select 0 as c",
+			Schema:    acc.TestSchemaName,
 			Enabled:   true,
 			Schedule:  5,
 			Comment:   "dummy",
@@ -48,10 +52,12 @@ var (
 	// Changes: condition, action, comment, schedule.
 	alertStepOne = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
+		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
 			Name:      alertName,
 			Condition: "select 1 as c",
 			Action:    "select 1 as c",
+			Schema:    acc.TestSchemaName,
 			Enabled:   true,
 			Schedule:  15,
 			Comment:   "test",
@@ -61,10 +67,12 @@ var (
 	// Changes: condition, action, comment, schedule.
 	alertStepTwo = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
+		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
 			Name:      alertName,
 			Condition: "select 2 as c",
 			Action:    "select 2 as c",
+			Schema:    acc.TestSchemaName,
 			Enabled:   true,
 			Schedule:  25,
 			Comment:   "text",
@@ -74,10 +82,12 @@ var (
 	// Changes: condition, action, comment, schedule.
 	alertStepThree = &AccAlertTestSettings{ //nolint
 		WarehouseName: warehouseName,
+		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
 			Name:      alertName,
 			Condition: "select 2 as c",
 			Action:    "select 2 as c",
+			Schema:    acc.TestSchemaName,
 			Enabled:   false,
 			Schedule:  5,
 		},
@@ -166,8 +176,8 @@ resource "snowflake_warehouse" "test_wh" {
 }
 resource "snowflake_alert" "test_alert" {
 	name     	      = "{{ .Alert.Name }}"
-	database  	      = "terraform_test_database"
-	schema   	      = "terraform_test_schema"
+	database  	      = "{{ .Alert.DatabaseName }}"
+	schema   	      = "{{ .Alert.Schema }}"
 	warehouse 	      = snowflake_warehouse.test_wh.name
 	alert_schedule 	  {
 		interval = "{{ .Alert.Schedule }}"

@@ -21,7 +21,7 @@ func TestAcc_Sequence(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE
 			{
-				Config: sequenceConfig(accName),
+				Config: sequenceConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
@@ -30,7 +30,7 @@ func TestAcc_Sequence(t *testing.T) {
 			},
 			// Set comment and rename
 			{
-				Config: sequenceConfigWithComment(accRename, "look at me I am a comment"),
+				Config: sequenceConfigWithComment(accRename, "look at me I am a comment", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accRename),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", "look at me I am a comment"),
@@ -40,7 +40,7 @@ func TestAcc_Sequence(t *testing.T) {
 			},
 			// Unset comment and set increment
 			{
-				Config: sequenceConfigWithIncrement(accName),
+				Config: sequenceConfigWithIncrement(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", ""),
@@ -59,37 +59,37 @@ func TestAcc_Sequence(t *testing.T) {
 	})
 }
 
-func sequenceConfigWithIncrement(sequenceName string) string {
+func sequenceConfigWithIncrement(sequenceName string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_sequence" "test_sequence" {
-	database   = "terraform_test_database"
-	schema     = "terraform_test_schema"
 	name       = "%s"
+	database   = "%s"
+	schema     = "%s"
     increment = 32
 }
 `
-	return fmt.Sprintf(s, sequenceName)
+	return fmt.Sprintf(s, sequenceName, databaseName, schemaName)
 }
 
-func sequenceConfig(sequenceName string) string {
+func sequenceConfig(sequenceName string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_sequence" "test_sequence" {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
 	name     = "%s"
+	database   = "%s"
+	schema     = "%s"
 }
 `
-	return fmt.Sprintf(s, sequenceName)
+	return fmt.Sprintf(s, sequenceName, databaseName, schemaName)
 }
 
-func sequenceConfigWithComment(sequenceName, comment string) string {
+func sequenceConfigWithComment(sequenceName, comment string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_sequence" "test_sequence" {
-	database = "terraform_test_database"
-	schema   = "terraform_test_schema"
 	name     = "%s"
+	database   = "%s"
+	schema     = "%s"
     comment  = "%s"
 }
 `
-	return fmt.Sprintf(s, sequenceName, comment)
+	return fmt.Sprintf(s, sequenceName, databaseName, schemaName, comment)
 }

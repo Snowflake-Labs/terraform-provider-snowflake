@@ -499,7 +499,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: taskConfigManagedScheduled(accName, taskRootName),
+				Config: taskConfigManagedScheduled(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_task.test_task", "enabled", true),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
@@ -509,7 +509,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 				),
 			},
 			{
-				Config: taskConfigManagedScheduled2(accName, taskRootName),
+				Config: taskConfigManagedScheduled2(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_task.test_task", "enabled", true),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
@@ -519,7 +519,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 				),
 			},
 			{
-				Config: taskConfigManagedScheduled(accName, taskRootName),
+				Config: taskConfigManagedScheduled(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_task.test_task", "enabled", true),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
@@ -529,7 +529,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 				),
 			},
 			{
-				Config: taskConfigManagedScheduled3(accName, taskRootName),
+				Config: taskConfigManagedScheduled3(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					checkBool("snowflake_task.test_task", "enabled", false),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
@@ -542,12 +542,12 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 	})
 }
 
-func taskConfigManagedScheduled(name string, taskRootName string) string {
+func taskConfigManagedScheduled(name string, taskRootName string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_task" "test_task_root" {
 	name     	  = "%s"
-	database  	  = "terraform_test_database"
-	schema    	  = "terraform_test_schema"
+	database  	  = "%s"
+	schema    	  = "%s"
 	sql_statement = "SELECT 1"
 	enabled  	  = true
 	schedule      = "5 MINUTE"
@@ -555,22 +555,22 @@ resource "snowflake_task" "test_task_root" {
 
 resource "snowflake_task" "test_task" {
 	name     	  = "%s"
-	database  	  = "terraform_test_database"
-	schema    	  = "terraform_test_schema"
+	database  	  = "%s"
+	schema    	  = "%s"
 	sql_statement = "SELECT 1"
 	enabled  	  = true
 	schedule      = "5 MINUTE"
 }
 `
-	return fmt.Sprintf(s, taskRootName, name)
+	return fmt.Sprintf(s, taskRootName, databaseName, schemaName, name, databaseName, schemaName)
 }
 
-func taskConfigManagedScheduled2(name string, taskRootName string) string {
+func taskConfigManagedScheduled2(name string, taskRootName string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_task" "test_task_root" {
 	name     	  = "%s"
-	database  	  = "terraform_test_database"
-	schema    	  = "terraform_test_schema"
+	database  	  =  "%s"
+	schema    	  =  "%s"
 	sql_statement = "SELECT 1"
 	enabled  	  = true
 	schedule      = "5 MINUTE"
@@ -578,22 +578,22 @@ resource "snowflake_task" "test_task_root" {
 
 resource "snowflake_task" "test_task" {
 	name     	  = "%s"
-	database  	  = "terraform_test_database"
-	schema    	  = "terraform_test_schema"
+	database  	  = "%s"
+	schema    	  = "%s"
 	sql_statement = "SELECT 1"
 	enabled  	  = true
 	after         = [snowflake_task.test_task_root.name]
 }
 `
-	return fmt.Sprintf(s, taskRootName, name)
+	return fmt.Sprintf(s, taskRootName, databaseName, schemaName, name, databaseName, schemaName)
 }
 
-func taskConfigManagedScheduled3(name string, taskRootName string) string {
+func taskConfigManagedScheduled3(name string, taskRootName string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_task" "test_task_root" {
 	name     	  = "%s"
-	database  	  = "terraform_test_database"
-	schema    	  = "terraform_test_schema"
+	database  	  = "%s"
+	schema    	  = "%s"
 	sql_statement = "SELECT 1"
 	enabled  	  = false
 	schedule      = "5 MINUTE"
@@ -601,15 +601,14 @@ resource "snowflake_task" "test_task_root" {
 
 resource "snowflake_task" "test_task" {
 	name     	  = "%s"
-	database  	  = "terraform_test_database"
-	schema    	  = "terraform_test_schema"
+	database  	  = "%s"
+	schema    	  = "%s"
 	sql_statement = "SELECT 1"
 	enabled  	  = false
 	after         = [snowflake_task.test_task_root.name]
 }
-
 `
-	return fmt.Sprintf(s, taskRootName, name)
+	return fmt.Sprintf(s, taskRootName, databaseName, schemaName, name, databaseName, schemaName)
 }
 
 func checkInt64(name, key string, value int64) func(*terraform.State) error {

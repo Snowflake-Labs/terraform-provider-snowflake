@@ -19,7 +19,7 @@ func TestAcc_View(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
@@ -41,7 +41,7 @@ func TestAcc_View2(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%';"),
+				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%';", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
@@ -63,7 +63,7 @@ func TestAcc_ViewWithCopyGrants(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
@@ -88,7 +88,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "false"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
@@ -99,7 +99,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 				),
 			},
 			{
-				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
 						if value != createdOn {
@@ -125,7 +125,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
@@ -136,7 +136,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 				),
 			},
 			{
-				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
 						if value != createdOn {
@@ -151,17 +151,17 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 	})
 }
 
-func viewConfig(n string, copyGrants bool, q string) string {
+func viewConfig(n string, copyGrants bool, q string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_view" "test" {
 	name        = "%v"
 	comment     = "Terraform test resource"
-	database    = "terraform_test_database"
-	schema      = "PUBLIC"
+	database    = "%s"
+	schema      = "%s"
 	is_secure   = true
 	or_replace  = %t
 	copy_grants = %t
 	statement   = "%s"
 }
-`, n, copyGrants, copyGrants, q)
+`, n, databaseName, schemaName, copyGrants, copyGrants, q)
 }

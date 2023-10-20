@@ -43,7 +43,7 @@ func TestAcc_DatabaseGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: databaseGrantConfig(roleName, shareName),
+				Config: databaseGrantConfig(roleName, shareName, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "database_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_database_grant.test", "privilege", "USAGE"),
@@ -99,7 +99,7 @@ func TestAcc_DatabaseGrant(t *testing.T) {
 // 	})
 // }
 
-func databaseGrantConfig(role, share string) string {
+func databaseGrantConfig(role, share, databaseName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_role" "test" {
   name = "%v"
@@ -110,9 +110,9 @@ resource "snowflake_share" "test" {
 }
 
 resource "snowflake_database_grant" "test" {
-  database_name = "terraform_test_database"
+  database_name = "%s"
   roles         = [snowflake_role.test.name]
   shares        = [snowflake_share.test.name]
 }
-`, role, share)
+`, role, share, databaseName)
 }

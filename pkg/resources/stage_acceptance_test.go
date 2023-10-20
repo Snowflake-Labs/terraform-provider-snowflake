@@ -18,7 +18,7 @@ func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: stageIntegrationConfig(name, "si1", "s3://foo/"),
+				Config: stageIntegrationConfig(name, "si1", "s3://foo/", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://foo/"),
@@ -26,7 +26,7 @@ func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 				Destroy: false,
 			},
 			{
-				Config: stageIntegrationConfig(name, "changed", "s3://changed/"),
+				Config: stageIntegrationConfig(name, "changed", "s3://changed/", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://changed/"),
@@ -36,7 +36,7 @@ func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 	})
 }
 
-func stageIntegrationConfig(name string, siNameSuffix string, url string) string {
+func stageIntegrationConfig(name string, siNameSuffix string, url string, databaseName string, schemaName string) string {
 	resources := `
 resource "snowflake_storage_integration" "test" {
 	name = "%s%s"
@@ -50,10 +50,10 @@ resource "snowflake_stage" "test" {
 	name = "%s"
 	url = "%s"
 	storage_integration = snowflake_storage_integration.test.name
-	schema = "terraform_test_schema"
-	database = "terraform_test_database"
+	database = "%s"
+	schema = "%s"
 }
 `
 
-	return fmt.Sprintf(resources, name, siNameSuffix, url, name, url)
+	return fmt.Sprintf(resources, name, siNameSuffix, url, name, url, databaseName, schemaName)
 }
