@@ -220,8 +220,6 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for _, param := range params {
-			log.Printf("[TRACE] %+v\n", param)
-
 			if param.Level != "TASK" {
 				continue
 			}
@@ -286,7 +284,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("schedule"); ok {
-		createRequest.WithSchedule(sdk.Pointer(v.(string)))
+		createRequest.WithSchedule(sdk.String(v.(string)))
 	}
 
 	if v, ok := d.GetOk("session_parameters"); ok {
@@ -298,19 +296,19 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
-		createRequest.WithUserTaskTimeoutMs(sdk.Pointer(v.(int)))
+		createRequest.WithUserTaskTimeoutMs(sdk.Int(v.(int)))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		createRequest.WithComment(sdk.Pointer(v.(string)))
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
 	if v, ok := d.GetOk("allow_overlapping_execution"); ok {
-		createRequest.WithAllowOverlappingExecution(sdk.Pointer(v.(bool)))
+		createRequest.WithAllowOverlappingExecution(sdk.Bool(v.(bool)))
 	}
 
 	if v, ok := d.GetOk("error_integration"); ok {
-		createRequest.WithErrorIntegration(sdk.Pointer(v.(string)))
+		createRequest.WithErrorIntegration(sdk.String(v.(string)))
 	}
 
 	if v, ok := d.GetOk("after"); ok {
@@ -342,7 +340,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("when"); ok {
-		createRequest.WithWhen(sdk.Pointer(v.(string)))
+		createRequest.WithWhen(sdk.String(v.(string)))
 	}
 
 	if err := client.Tasks.Create(ctx, createRequest); err != nil {
@@ -379,7 +377,7 @@ func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 }
 
 func suspendTask(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(sdk.Pointer(true)))
+	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(sdk.Bool(true)))
 	if err != nil {
 		log.Printf("[WARN] failed to suspend task %s", id.FullyQualifiedName())
 	}
@@ -387,7 +385,7 @@ func suspendTask(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIde
 }
 
 func resumeTask(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithResume(sdk.Pointer(true)))
+	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithResume(sdk.Bool(true)))
 	if err != nil {
 		log.Printf("[WARN] failed to resume task %s", id.FullyQualifiedName())
 	}
@@ -425,7 +423,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		newWarehouse := d.Get("warehouse")
 		alterRequest := sdk.NewAlterTaskRequest(taskId)
 		if newWarehouse == "" {
-			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithWarehouse(sdk.Pointer(true)))
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithWarehouse(sdk.Bool(true)))
 		} else {
 			alterRequest.WithSet(sdk.NewTaskSetRequest().WithWarehouse(sdk.Pointer(sdk.NewAccountObjectIdentifier(newWarehouse.(string)))))
 		}
@@ -456,9 +454,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		newErrorIntegration := d.Get("error_integration")
 		alterRequest := sdk.NewAlterTaskRequest(taskId)
 		if newErrorIntegration == "" {
-			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithErrorIntegration(sdk.Pointer(true)))
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithErrorIntegration(sdk.Bool(true)))
 		} else {
-			alterRequest.WithSet(sdk.NewTaskSetRequest().WithErrorIntegration(sdk.Pointer(newErrorIntegration.(string))))
+			alterRequest.WithSet(sdk.NewTaskSetRequest().WithErrorIntegration(sdk.String(newErrorIntegration.(string))))
 		}
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
@@ -478,7 +476,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 		if len(newAfter) > 0 {
 			// preemptively removing schedule because a task cannot have both after and schedule
-			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(sdk.NewTaskUnsetRequest().WithSchedule(sdk.Pointer(true)))); err != nil {
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(sdk.NewTaskUnsetRequest().WithSchedule(sdk.Bool(true)))); err != nil {
 				return fmt.Errorf("error updating schedule on task %s", taskId.FullyQualifiedName())
 			}
 		}
@@ -536,9 +534,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		newSchedule := d.Get("schedule")
 		alterRequest := sdk.NewAlterTaskRequest(taskId)
 		if newSchedule == "" {
-			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithSchedule(sdk.Pointer(true)))
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithSchedule(sdk.Bool(true)))
 		} else {
-			alterRequest.WithSet(sdk.NewTaskSetRequest().WithSchedule(sdk.Pointer(newSchedule.(string))))
+			alterRequest.WithSet(sdk.NewTaskSetRequest().WithSchedule(sdk.String(newSchedule.(string))))
 		}
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
@@ -550,9 +548,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("user_task_timeout_ms")
 		alterRequest := sdk.NewAlterTaskRequest(taskId)
 		if o.(int) > 0 && n.(int) == 0 {
-			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithUserTaskTimeoutMs(sdk.Pointer(true)))
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithUserTaskTimeoutMs(sdk.Bool(true)))
 		} else {
-			alterRequest.WithSet(sdk.NewTaskSetRequest().WithUserTaskTimeoutMs(sdk.Pointer(n.(int))))
+			alterRequest.WithSet(sdk.NewTaskSetRequest().WithUserTaskTimeoutMs(sdk.Int(n.(int))))
 		}
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
@@ -564,9 +562,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		newComment := d.Get("comment")
 		alterRequest := sdk.NewAlterTaskRequest(taskId)
 		if newComment == "" {
-			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithComment(sdk.Pointer(true)))
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithComment(sdk.Bool(true)))
 		} else {
-			alterRequest.WithSet(sdk.NewTaskSetRequest().WithComment(sdk.Pointer(newComment.(string))))
+			alterRequest.WithSet(sdk.NewTaskSetRequest().WithComment(sdk.String(newComment.(string))))
 		}
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
@@ -578,9 +576,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		n := d.Get("allow_overlapping_execution")
 		alterRequest := sdk.NewAlterTaskRequest(taskId)
 		if n == "" {
-			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithAllowOverlappingExecution(sdk.Pointer(true)))
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithAllowOverlappingExecution(sdk.Bool(true)))
 		} else {
-			alterRequest.WithSet(sdk.NewTaskSetRequest().WithAllowOverlappingExecution(sdk.Pointer(n.(bool))))
+			alterRequest.WithSet(sdk.NewTaskSetRequest().WithAllowOverlappingExecution(sdk.Bool(n.(bool))))
 		}
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
@@ -627,7 +625,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("when") {
 		n := d.Get("when")
-		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyWhen(sdk.Pointer(n.(string)))
+		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyWhen(sdk.String(n.(string)))
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
 			return fmt.Errorf("error updating when condition on task %s", taskId.FullyQualifiedName())
@@ -636,7 +634,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("sql_statement") {
 		n := d.Get("sql_statement")
-		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyAs(sdk.Pointer(n.(string)))
+		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyAs(sdk.String(n.(string)))
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
 			return fmt.Errorf("error updating sql statement on task %s", taskId.FullyQualifiedName())
