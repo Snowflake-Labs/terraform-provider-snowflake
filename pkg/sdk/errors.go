@@ -77,11 +77,15 @@ func decodeDriverError(err error) error {
 	return err
 }
 
-type Error struct { //nolint:all
+type Error struct {
 	file         string
 	line         int
 	message      string
 	nestedErrors []error
+}
+
+func (e *Error) Append(err error) {
+	e.nestedErrors = append(e.nestedErrors, err)
 }
 
 func (e *Error) Error() string {
@@ -90,13 +94,17 @@ func (e *Error) Error() string {
 	return builder.String()
 }
 
-// NewError Creates new sdk.Error with information like filename or line number (depending on where NewError was called)
+// NewError creates new sdk.Error with information like filename or line number (depending on where NewError was called)
 func NewError(message string) error {
 	return newSDKError(message, 2)
 }
 
-// JoinErrors returns an error that wraps the given errors.
-// Any nil error values are discarded.
+// WrapError creates new sdk.Error with the message from err
+func WrapError(err error) error {
+	return newSDKError(err.Error(), 2)
+}
+
+// JoinErrors returns an error that wraps the given errors. Any nil error values are discarded.
 // JoinErrors returns nil if errs contains no non-nil values, otherwise returns sdk.Error with nested errors
 func JoinErrors(errs ...error) error {
 	notNilErrs := make([]error, 0)
