@@ -737,7 +737,7 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 			case "PARSE_HEADER":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
-					return nil, fmt.Errorf(`cannot cast SKIP_HEADER value "%s" to bool: %w`, v, err)
+					return nil, fmt.Errorf(`cannot cast PARSE_HEADER value "%s" to bool: %w`, v, err)
 				}
 				details.Options.CSVParseHeader = &b
 			case "DATE_FORMAT":
