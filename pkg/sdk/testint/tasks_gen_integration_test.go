@@ -195,7 +195,7 @@ func TestInt_Tasks(t *testing.T) {
 		request := sdk.NewCreateTaskRequest(rootId, sql).WithSchedule(sdk.String("10 MINUTE"))
 		root := createTaskWithRequest(t, request)
 
-		require.Equal(t, []sdk.SchemaObjectIdentifier{}, root.Predecessors)
+		require.Empty(t, root.Predecessors)
 
 		t1Name := random.String()
 		t1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t1Name)
@@ -273,7 +273,7 @@ func TestInt_Tasks(t *testing.T) {
 		request := sdk.NewCreateTaskRequest(root1Id, sql).WithSchedule(sdk.String("10 MINUTE"))
 		root1 := createTaskWithRequest(t, request)
 
-		require.Equal(t, []sdk.SchemaObjectIdentifier{}, root1.Predecessors)
+		require.Empty(t, root1.Predecessors)
 
 		root2Name := random.String()
 		root2Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, root2Name)
@@ -281,7 +281,7 @@ func TestInt_Tasks(t *testing.T) {
 		request = sdk.NewCreateTaskRequest(root2Id, sql).WithSchedule(sdk.String("10 MINUTE"))
 		root2 := createTaskWithRequest(t, request)
 
-		require.Equal(t, []sdk.SchemaObjectIdentifier{}, root2.Predecessors)
+		require.Empty(t, root2.Predecessors)
 
 		t1Name := random.String()
 		t1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t1Name)

@@ -93,7 +93,7 @@ func GetRootTasks(v Tasks, ctx context.Context, id SchemaObjectIdentifier) ([]Ta
 	keys := make(map[string]bool)
 	uniqueRootTasks := make([]Task, 0, len(rootTasks))
 	for _, rootTask := range rootTasks {
-		if _, value := keys[rootTask.ID().FullyQualifiedName()]; !value {
+		if _, exists := keys[rootTask.ID().FullyQualifiedName()]; !exists {
 			keys[rootTask.ID().FullyQualifiedName()] = true
 			uniqueRootTasks = append(uniqueRootTasks, rootTask)
 		}
@@ -283,9 +283,6 @@ func getPredecessors(predecessors string) ([]string, error) {
 	if err == nil {
 		for i, predecessorName := range predecessorNames {
 			formattedName := strings.Trim(predecessorName, "\\\"")
-			// \".\"x
-			// \".x
-			// \".\".x
 			idx := strings.LastIndex(formattedName, "\"") + 1
 			if strings.LastIndex(formattedName, ".\"")+2 < idx {
 				idx++

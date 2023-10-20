@@ -66,7 +66,6 @@ func ReadTasks(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
-	d.SetId("tasks_read")
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
