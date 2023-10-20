@@ -22,8 +22,6 @@ const (
 	ExactlyOneValueSet
 	AtLeastOneValueSet
 	ValidateValue
-	ValidateIntValue
-	ValidateIntRange
 )
 
 type Validation struct {

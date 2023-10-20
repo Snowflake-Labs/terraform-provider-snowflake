@@ -50,7 +50,7 @@ func (v *TagSet) validate() error {
 		errs = append(errs, errOneOf("TagSet", "MaskingPolicies", "Comment"))
 	}
 	if valueSet(v.MaskingPolicies) {
-		if !validateIntGreaterThanOrEqual(len(v.MaskingPolicies.MaskingPolicies), 1) {
+		if !validateIntGreaterThan(len(v.MaskingPolicies.MaskingPolicies), 0) {
 			errs = append(errs, errIntValue("TagSet.MaskingPolicies", "MaskingPolicies", IntErrGreater, 0))
 		}
 	}
@@ -63,7 +63,7 @@ func (v *TagUnset) validate() error {
 		errs = append(errs, errExactlyOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
 	}
 	if valueSet(v.MaskingPolicies) {
-		if !validateIntGreaterThanOrEqual(len(v.MaskingPolicies.MaskingPolicies), 1) {
+		if !validateIntGreaterThan(len(v.MaskingPolicies.MaskingPolicies), 0) {
 			errs = append(errs, errIntValue("TagUnset.MaskingPolicies", "MaskingPolicies", IntErrGreater, 0))
 		}
 	}
