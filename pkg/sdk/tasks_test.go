@@ -45,6 +45,11 @@ func TestTasks_GetRootTasks(t *testing.T) {
 		return r
 	}
 
+	// To increase readability tests are defined as maps (anonymous structs looked much worse in this case).
+	// What are the contents of the map:
+	// - key "initial" -> one element list with the task for which we will be getting root tasks
+	// - key "expected" -> list of the expected root tasks
+	// - any other key is considered as a task definition, that contains all direct predecessors (empty list for root task).
 	tests := []map[string][]string{
 		{"t1": {}, "initial": {"t1"}, "expected": {"t1"}},
 		{"t1": {"t2"}, "t2": {"t3"}, "t3": {}, "initial": {"t1"}, "expected": {"t3"}},
