@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
