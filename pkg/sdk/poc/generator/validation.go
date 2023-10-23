@@ -77,11 +77,11 @@ func (v *Validation) ReturnedError(field *Field) string {
 	case ValidIdentifierIfSet:
 		return "ErrInvalidObjectIdentifier"
 	case ConflictingFields:
-		return fmt.Sprintf(`errOneOf("%s%s", %s)`, field.Name, field.Path(), strings.Join(v.paramsQuoted(), ","))
+		return fmt.Sprintf(`errOneOf("%s", %s)`, field.PathWithRoot(), strings.Join(v.paramsQuoted(), ","))
 	case ExactlyOneValueSet:
-		return fmt.Sprintf(`errExactlyOneOf("%s%s", %s)`, field.Name, field.Path(), strings.Join(v.paramsQuoted(), ","))
+		return fmt.Sprintf(`errExactlyOneOf("%s", %s)`, field.PathWithRoot(), strings.Join(v.paramsQuoted(), ","))
 	case AtLeastOneValueSet:
-		return fmt.Sprintf(`errAtLeastOneOf("%s%s", %s)`, field.Name, field.Path(), strings.Join(v.paramsQuoted(), ","))
+		return fmt.Sprintf(`errAtLeastOneOf("%s", %s)`, field.PathWithRoot(), strings.Join(v.paramsQuoted(), ","))
 	case ValidateValue:
 		return "err"
 	}
