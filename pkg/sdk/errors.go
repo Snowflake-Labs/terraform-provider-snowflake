@@ -9,16 +9,16 @@ import (
 )
 
 var (
-	ErrNilOptions                    = errors.New("options cannot be nil")
-	ErrPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
+	ErrNilOptions                    = NewError("options cannot be nil")
+	ErrPatternRequiredForLikeKeyword = NewError("pattern must be specified for like keyword")
 
 	// go-snowflake errors.
-	ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
-	ErrAccountIsEmpty             = errors.New("account is empty")
+	ErrObjectNotExistOrAuthorized = NewError("object does not exist or not authorized")
+	ErrAccountIsEmpty             = NewError("account is empty")
 
 	// snowflake-sdk errors.
-	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
-	ErrDifferentDatabase       = errors.New("database must be the same")
+	ErrInvalidObjectIdentifier = NewError("invalid object identifier")
+	ErrDifferentDatabase       = NewError("database must be the same")
 )
 
 type IntErrType string
@@ -44,11 +44,11 @@ func errInvalidIdentifier(structName string, identifierField string) error {
 }
 
 func errOneOf(structName string, fieldNames ...string) error {
-	return fmt.Errorf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames)
+	return NewError(fmt.Sprintf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames))
 }
 
 func errNotSet(structName string, fieldNames ...string) error {
-	return fmt.Errorf("%v fields: %v should be set", structName, fieldNames)
+	return NewError(fmt.Sprintf("%v fields: %v should be set", structName, fieldNames))
 }
 
 func errExactlyOneOf(structName string, fieldNames ...string) error {
@@ -97,11 +97,6 @@ func (e *Error) Error() string {
 // NewError creates new sdk.Error with information like filename or line number (depending on where NewError was called)
 func NewError(message string) error {
 	return newSDKError(message, 2)
-}
-
-// WrapError creates new sdk.Error with the message from err
-func WrapError(err error) error {
-	return newSDKError(err.Error(), 2)
 }
 
 // JoinErrors returns an error that wraps the given errors. Any nil error values are discarded.
