@@ -1,9 +1,10 @@
 package helpers
 
 import (
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestDecodeSnowflakeParameterID(t *testing.T) {
