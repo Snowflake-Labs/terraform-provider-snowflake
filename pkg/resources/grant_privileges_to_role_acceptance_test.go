@@ -831,7 +831,7 @@ func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT", "REFERENCES"}),
+				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT", "REFERENCES"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.#", "1"),
@@ -845,7 +845,7 @@ func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable
 			},
 			// REMOVE PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT"}),
+				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
