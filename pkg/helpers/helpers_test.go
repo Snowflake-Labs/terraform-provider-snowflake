@@ -3,74 +3,55 @@ package helpers
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDecodeSnowflakeParameterID(t *testing.T) {
-	t.Run("decodes quoted account object identifier", func(t *testing.T) {
-		id := `"test.name"`
-		accObjId, err := DecodeSnowflakeParameterID(id)
-		accObjId = accObjId.(sdk.AccountObjectIdentifier)
-		require.NoError(t, err)
-		require.Equal(t, id, accObjId.FullyQualifiedName())
-	})
+	testCases := map[string]struct {
+		id                 string
+		fullyQualifiedName string
+	}{
+		"decodes quoted account object identifier": {
+			id:                 `"test.name"`,
+			fullyQualifiedName: `"test.name"`,
+		},
+		"decodes quoted database object identifier": {
+			id:                 `"db"."test.name"`,
+			fullyQualifiedName: `"db"."test.name"`,
+		},
+		"decodes quoted schema object identifier": {
+			id:                 `"db"."schema"."test.name"`,
+			fullyQualifiedName: `"db"."schema"."test.name"`,
+		},
+		"decodes quoted table column identifier": {
+			id:                 `"db"."schema"."table.name"."test.name"`,
+			fullyQualifiedName: `"db"."schema"."table.name"."test.name"`,
+		},
+		"decodes unquoted account object identifier": {
+			id:                 `name`,
+			fullyQualifiedName: `"name"`,
+		},
+		"decodes unquoted database object identifier": {
+			id:                 `db.name`,
+			fullyQualifiedName: `"db"."name"`,
+		},
+		"decodes unquoted schema object identifier": {
+			id:                 `db.schema.name`,
+			fullyQualifiedName: `"db"."schema"."name"`,
+		},
+		"decodes unquoted table column identifier": {
+			id:                 `db.schema.table.name`,
+			fullyQualifiedName: `"db"."schema"."table"."name"`,
+		},
+	}
 
-	t.Run("decodes quoted database object identifier", func(t *testing.T) {
-		id := `"db"."test.name"`
-		dbObjId, err := DecodeSnowflakeParameterID(id)
-		dbObjId = dbObjId.(sdk.DatabaseObjectIdentifier)
-		require.NoError(t, err)
-		require.Equal(t, id, dbObjId.FullyQualifiedName())
-	})
-
-	t.Run("decodes quoted schema object identifier", func(t *testing.T) {
-		id := `"db"."schema"."test.name"`
-		schemaObjId, err := DecodeSnowflakeParameterID(id)
-		schemaObjId = schemaObjId.(sdk.SchemaObjectIdentifier)
-		require.NoError(t, err)
-		require.Equal(t, id, schemaObjId.FullyQualifiedName())
-	})
-
-	t.Run("decodes quoted table column identifier", func(t *testing.T) {
-		id := `"db"."schema"."table.name"."test.name"`
-		schemaObjId, err := DecodeSnowflakeParameterID(id)
-		schemaObjId = schemaObjId.(sdk.TableColumnIdentifier)
-		require.NoError(t, err)
-		require.Equal(t, id, schemaObjId.FullyQualifiedName())
-	})
-
-	t.Run("decodes unquoted account object identifier", func(t *testing.T) {
-		id := `name`
-		accObjId, err := DecodeSnowflakeParameterID(id)
-		accObjId = accObjId.(sdk.AccountObjectIdentifier)
-		require.NoError(t, err)
-		require.Equal(t, `"name"`, accObjId.FullyQualifiedName())
-	})
-
-	t.Run("decodes unquoted database object identifier", func(t *testing.T) {
-		id := `db.name`
-		dbObjId, err := DecodeSnowflakeParameterID(id)
-		dbObjId = dbObjId.(sdk.DatabaseObjectIdentifier)
-		require.NoError(t, err)
-		require.Equal(t, `"db"."name"`, dbObjId.FullyQualifiedName())
-	})
-
-	t.Run("decodes unquoted schema object identifier", func(t *testing.T) {
-		id := `db.schema.name`
-		schemaObjId, err := DecodeSnowflakeParameterID(id)
-		schemaObjId = schemaObjId.(sdk.SchemaObjectIdentifier)
-		require.NoError(t, err)
-		require.Equal(t, `"db"."schema"."name"`, schemaObjId.FullyQualifiedName())
-	})
-
-	t.Run("decodes unquoted table column identifier", func(t *testing.T) {
-		id := `db.schema.table.name`
-		schemaObjId, err := DecodeSnowflakeParameterID(id)
-		schemaObjId = schemaObjId.(sdk.TableColumnIdentifier)
-		require.NoError(t, err)
-		require.Equal(t, `"db"."schema"."table"."name"`, schemaObjId.FullyQualifiedName())
-	})
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			id, err := DecodeSnowflakeParameterID(tc.id)
+			require.NoError(t, err)
+			require.Equal(t, tc.fullyQualifiedName, id.FullyQualifiedName())
+		})
+	}
 
 	t.Run("identifier with too many parts", func(t *testing.T) {
 		id := `this.identifier.is.too.long.to.be.decoded`
