@@ -295,8 +295,6 @@ func (opts *AlterResourceMonitorOptions) validate() error {
 		if (opts.Set.Frequency != nil && opts.Set.StartTimestamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimestamp != nil) {
 			errs = append(errs, errors.New("must specify frequency and start time together"))
 		}
-	} else {
-		errs = append(errs, errNotSet("AlterResourceMonitorOptions", "Set"))
 	}
 	return errors.Join(errs...)
 }
