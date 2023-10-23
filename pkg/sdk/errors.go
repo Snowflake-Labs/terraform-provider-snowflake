@@ -44,11 +44,11 @@ func errInvalidIdentifier(structName string, identifierField string) error {
 }
 
 func errOneOf(structName string, fieldNames ...string) error {
-	return NewError(fmt.Sprintf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames))
+	return newSDKError(fmt.Sprintf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames), 2)
 }
 
 func errNotSet(structName string, fieldNames ...string) error {
-	return NewError(fmt.Sprintf("%v fields: %v should be set", structName, fieldNames))
+	return newSDKError(fmt.Sprintf("%v fields: %v should be set", structName, fieldNames), 2)
 }
 
 func errExactlyOneOf(structName string, fieldNames ...string) error {
@@ -84,13 +84,9 @@ type Error struct {
 	nestedErrors []error
 }
 
-func (e *Error) Append(err error) {
-	e.nestedErrors = append(e.nestedErrors, err)
-}
-
 func (e *Error) Error() string {
 	builder := new(strings.Builder)
-	writeTree(e, builder, 0, true)
+	writeTree(e, builder, 0)
 	return builder.String()
 }
 
@@ -100,7 +96,7 @@ func NewError(message string) error {
 }
 
 // JoinErrors returns an error that wraps the given errors. Any nil error values are discarded.
-// JoinErrors returns nil if errs contains no non-nil values, otherwise returns sdk.Error with nested errors
+// JoinErrors returns nil if errs contains no non-nil values, otherwise returns sdk.Error with errs as its nested errors
 func JoinErrors(errs ...error) error {
 	notNilErrs := make([]error, 0)
 	for _, err := range errs {
@@ -138,7 +134,11 @@ func getCallerInfo(skip int) (int, string) {
 	return line, filename
 }
 
-func writeTree(e error, builder *strings.Builder, indent int, fileInfo bool) {
+const (
+	errorIndentRune = '›'
+)
+
+func writeTree(e error, builder *strings.Builder, indent int) {
 	var sdkErr *Error
 	if joinedErr, ok := e.(interface{ Unwrap() []error }); ok { //nolint:all
 		errs := joinedErr.Unwrap()
@@ -146,19 +146,15 @@ func writeTree(e error, builder *strings.Builder, indent int, fileInfo bool) {
 			if i > 0 {
 				builder.WriteByte('\n')
 			}
-			writeTree(err, builder, indent, fileInfo)
+			writeTree(err, builder, indent)
 		}
 	} else if errors.As(e, &sdkErr) {
-		if fileInfo {
-			builder.WriteString(strings.Repeat("› ", indent) + fmt.Sprintf("[%s:%d] %s", sdkErr.file, sdkErr.line, sdkErr.message))
-		} else {
-			builder.WriteString(strings.Repeat("› ", indent) + fmt.Sprintf("[file:line] %s", sdkErr.message))
-		}
+		builder.WriteString(strings.Repeat(fmt.Sprintf("%b ", errorIndentRune), indent) + fmt.Sprintf("[%s:%d] %s", sdkErr.file, sdkErr.line, sdkErr.message))
 		for _, err := range sdkErr.nestedErrors {
 			builder.WriteByte('\n')
-			writeTree(err, builder, indent+2, fileInfo)
+			writeTree(err, builder, indent+2)
 		}
 	} else {
-		builder.WriteString(strings.Repeat("› ", indent) + e.Error())
+		builder.WriteString(strings.Repeat(fmt.Sprintf("%b ", errorIndentRune), indent) + e.Error())
 	}
 }
