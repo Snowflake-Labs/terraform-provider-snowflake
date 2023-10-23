@@ -5,10 +5,8 @@ import (
 	"flag"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/internal/provider"
 	oldprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
@@ -35,7 +33,8 @@ func main() {
 	}
 
 	providers := []func() tfprotov6.ProviderServer{
-		providerserver.NewProtocol6(provider.New(version)()),
+		// disabled until ready to start using
+		//	providerserver.NewProtocol6(provider.New(version)()),
 		func() tfprotov6.ProviderServer {
 			return upgradedSdkServer
 		},
