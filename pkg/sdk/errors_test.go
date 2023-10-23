@@ -3,10 +3,9 @@ package sdk
 import (
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestWriteTree(t *testing.T) {
@@ -74,8 +73,6 @@ func TestWriteTree(t *testing.T) {
 		},
 		"nested errors - custom errors combined with std errors": {
 			Error: &Error{
-				file:    "errors_test.go",
-				line:    333,
 				message: "root error",
 				nestedErrors: []error{
 					errors.New("regular error"),
