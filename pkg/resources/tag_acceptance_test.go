@@ -35,9 +35,9 @@ func TestAcc_Tag(t *testing.T) {
 func tagConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_tag" "test" {
-	name = "%[1]v"
-	database = "%[2]s"
-	schema = "	%[3]s"
+	name = "%s"
+	database = "%s"
+	schema = "%s"
 	allowed_values = ["alv1", "alv2"]
 	comment = "Terraform acceptance test"
 }
