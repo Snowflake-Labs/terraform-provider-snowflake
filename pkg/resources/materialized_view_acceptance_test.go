@@ -96,7 +96,6 @@ resource "snowflake_materialized_view" "test" {
 	statement = "%s"
 
 	depends_on = [
-		snowflake_warehouse.test,
   		snowflake_table.test
   	]
 }
