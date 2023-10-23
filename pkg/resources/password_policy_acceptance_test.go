@@ -19,7 +19,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: passwordPolicyConfig(accName, 10, 30, "this is a test resource"),
+				Config: passwordPolicyConfig(accName, 10, 30, "this is a test resource", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "10"),
@@ -27,7 +27,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 				),
 			},
 			{
-				Config: passwordPolicyConfig(accName, 20, 50, "this is a test resource"),
+				Config: passwordPolicyConfig(accName, 20, 50, "this is a test resource", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "20"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_length", "50"),
@@ -75,20 +75,20 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Creation sets zero properly
 			{
-				Config: passwordPolicyDefaultMaxageDaysConfig(accName, 0),
+				Config: passwordPolicyDefaultMaxageDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
 				),
 			},
 			{
-				Config: passwordPolicyDefaultMaxageDaysConfig(accName, 10),
+				Config: passwordPolicyDefaultMaxageDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "10"),
 				),
 			},
 			// Update sets zero properly
 			{
-				Config: passwordPolicyDefaultMaxageDaysConfig(accName, 0),
+				Config: passwordPolicyDefaultMaxageDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
 				),
