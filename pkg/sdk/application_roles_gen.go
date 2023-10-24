@@ -5,43 +5,15 @@ import (
 	"time"
 )
 
+// ApplicationRoles is an interface that allows for querying application roles.
+// It does not allow for other DDL queries (CREATE, ALTER, DROP, ...) to be called, because they are not possible
+// to be called from the program level. Application roles are a special case where they're only usable
+// inside application context (e.g. setup.sql). Right now, they can be only manipulated from the program context
+// by applying debug_mode parameter to the application, but it's a hacky solution and even with that you're limited with GRANT and REVOKE options.
+// That's why we're only exposing SHOW operations, because only they are the only allowed operations to be called from the program context.
 type ApplicationRoles interface {
-	Create(ctx context.Context, request *CreateApplicationRoleRequest) error
-	Alter(ctx context.Context, request *AlterApplicationRoleRequest) error
-	Drop(ctx context.Context, request *DropApplicationRoleRequest) error
 	Show(ctx context.Context, request *ShowApplicationRoleRequest) ([]ApplicationRole, error)
 	ShowByID(ctx context.Context, request *ShowByIDApplicationRoleRequest) (*ApplicationRole, error)
-	Grant(ctx context.Context, request *GrantApplicationRoleRequest) error
-	Revoke(ctx context.Context, request *RevokeApplicationRoleRequest) error
-}
-
-// CreateApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-application-role.
-type CreateApplicationRoleOptions struct {
-	create          bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace       *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	applicationRole bool                     `ddl:"static" sql:"APPLICATION ROLE"`
-	IfNotExists     *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name            DatabaseObjectIdentifier `ddl:"identifier"`
-	Comment         *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
-}
-
-// AlterApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-application-role.
-type AlterApplicationRoleOptions struct {
-	alter           bool                      `ddl:"static" sql:"ALTER"`
-	applicationRole bool                      `ddl:"static" sql:"APPLICATION ROLE"`
-	IfExists        *bool                     `ddl:"keyword" sql:"IF EXISTS"`
-	name            DatabaseObjectIdentifier  `ddl:"identifier"`
-	RenameTo        *DatabaseObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	SetComment      *string                   `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
-	UnsetComment    *bool                     `ddl:"keyword" sql:"UNSET COMMENT"`
-}
-
-// DropApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-application-role.
-type DropApplicationRoleOptions struct {
-	drop            bool                     `ddl:"static" sql:"DROP"`
-	applicationRole bool                     `ddl:"static" sql:"APPLICATION ROLE"`
-	IfExists        *bool                    `ddl:"keyword" sql:"IF EXISTS"`
-	name            DatabaseObjectIdentifier `ddl:"identifier"`
 }
 
 // ShowApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-application-roles.
@@ -66,26 +38,4 @@ type ApplicationRole struct {
 	Owner         string
 	Comment       string
 	OwnerRoleType string
-}
-
-// GrantApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-application-roles.
-type GrantApplicationRoleOptions struct {
-	grant           bool                     `ddl:"static" sql:"GRANT"`
-	applicationRole bool                     `ddl:"static" sql:"APPLICATION ROLE"`
-	name            DatabaseObjectIdentifier `ddl:"identifier"`
-	GrantTo         ApplicationGrantOptions  `ddl:"keyword" sql:"TO"`
-}
-
-type ApplicationGrantOptions struct {
-	ParentRole      *AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
-	ApplicationRole *DatabaseObjectIdentifier `ddl:"identifier" sql:"APPLICATION ROLE"`
-	Application     *AccountObjectIdentifier  `ddl:"identifier" sql:"APPLICATION"`
-}
-
-// RevokeApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/revoke-application-roles.
-type RevokeApplicationRoleOptions struct {
-	revoke          bool                     `ddl:"static" sql:"REVOKE"`
-	applicationRole bool                     `ddl:"static" sql:"APPLICATION ROLE"`
-	name            DatabaseObjectIdentifier `ddl:"identifier"`
-	RevokeFrom      ApplicationGrantOptions  `ddl:"keyword" sql:"FROM"`
 }

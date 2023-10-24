@@ -2,27 +2,14 @@ package sdk
 
 import (
 	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ ApplicationRoles = (*applicationRoles)(nil)
 
 type applicationRoles struct {
 	client *Client
-}
-
-func (v *applicationRoles) Create(ctx context.Context, request *CreateApplicationRoleRequest) error {
-	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, opts)
-}
-
-func (v *applicationRoles) Alter(ctx context.Context, request *AlterApplicationRoleRequest) error {
-	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, opts)
-}
-
-func (v *applicationRoles) Drop(ctx context.Context, request *DropApplicationRoleRequest) error {
-	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *applicationRoles) Show(ctx context.Context, request *ShowApplicationRoleRequest) ([]ApplicationRole, error) {
@@ -36,50 +23,11 @@ func (v *applicationRoles) Show(ctx context.Context, request *ShowApplicationRol
 }
 
 func (v *applicationRoles) ShowByID(ctx context.Context, request *ShowByIDApplicationRoleRequest) (*ApplicationRole, error) {
-	appRoles, err := v.client.ApplicationRoles.Show(ctx, NewShowApplicationRoleRequest(request.ApplicationName))
+	appRoles, err := v.client.ApplicationRoles.Show(ctx, NewShowApplicationRoleRequest().WithApplicationName(request.ApplicationName))
 	if err != nil {
 		return nil, err
 	}
-	return findOne(appRoles, func(role ApplicationRole) bool { return role.Name == request.name.Name() })
-}
-
-func (v *applicationRoles) Grant(ctx context.Context, request *GrantApplicationRoleRequest) error {
-	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, opts)
-}
-
-func (v *applicationRoles) Revoke(ctx context.Context, request *RevokeApplicationRoleRequest) error {
-	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, opts)
-}
-
-func (r *CreateApplicationRoleRequest) toOpts() *CreateApplicationRoleOptions {
-	opts := &CreateApplicationRoleOptions{
-		OrReplace:   r.OrReplace,
-		IfNotExists: r.IfNotExists,
-		name:        r.name,
-		Comment:     r.Comment,
-	}
-	return opts
-}
-
-func (r *AlterApplicationRoleRequest) toOpts() *AlterApplicationRoleOptions {
-	opts := &AlterApplicationRoleOptions{
-		IfExists:     r.IfExists,
-		name:         r.name,
-		RenameTo:     r.RenameTo,
-		SetComment:   r.SetComment,
-		UnsetComment: r.UnsetComment,
-	}
-	return opts
-}
-
-func (r *DropApplicationRoleRequest) toOpts() *DropApplicationRoleOptions {
-	opts := &DropApplicationRoleOptions{
-		IfExists: r.IfExists,
-		name:     r.name,
-	}
-	return opts
+	return collections.FindOne(appRoles, func(role ApplicationRole) bool { return role.Name == request.name.Name() })
 }
 
 func (r *ShowApplicationRoleRequest) toOpts() *ShowApplicationRoleOptions {
@@ -102,27 +50,5 @@ func (r applicationRoleDbRow) convert() *ApplicationRole {
 		Owner:         r.Owner,
 		Comment:       r.Comment,
 		OwnerRoleType: r.OwnerRoleType,
-	}
-}
-
-func (r *GrantApplicationRoleRequest) toOpts() *GrantApplicationRoleOptions {
-	return &GrantApplicationRoleOptions{
-		name: r.name,
-		GrantTo: ApplicationGrantOptions{
-			ParentRole:      r.GrantTo.ParentRole,
-			ApplicationRole: r.GrantTo.ApplicationRole,
-			Application:     r.GrantTo.Application,
-		},
-	}
-}
-
-func (r *RevokeApplicationRoleRequest) toOpts() *RevokeApplicationRoleOptions {
-	return &RevokeApplicationRoleOptions{
-		name: r.name,
-		RevokeFrom: ApplicationGrantOptions{
-			ParentRole:      r.RevokeFrom.ParentRole,
-			ApplicationRole: r.RevokeFrom.ApplicationRole,
-			Application:     r.RevokeFrom.Application,
-		},
 	}
 }

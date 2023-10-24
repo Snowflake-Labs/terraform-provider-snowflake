@@ -148,11 +148,11 @@ func (i *Interface) DropOperation(doc string, queryStruct *QueryStruct) *Interfa
 }
 
 func (i *Interface) GrantOperation(doc string, queryStruct *queryStruct) *Interface {
-	return i.newSimpleOperation(OperationKindGrant, doc, queryStruct)
+	return i.newSimpleOperation(string(OperationKindGrant), doc, queryStruct)
 }
 
 func (i *Interface) RevokeOperation(doc string, queryStruct *queryStruct) *Interface {
-	return i.newSimpleOperation(OperationKindRevoke, doc, queryStruct)
+	return i.newSimpleOperation(string(OperationKindRevoke), doc, queryStruct)
 }
 
 func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct) *Interface {

@@ -4,67 +4,17 @@ package sdk
 
 import ()
 
-func NewCreateApplicationRoleRequest(
-	name DatabaseObjectIdentifier,
-) *CreateApplicationRoleRequest {
-	s := CreateApplicationRoleRequest{}
-	s.name = name
-	return &s
+func NewShowApplicationRoleRequest() *ShowApplicationRoleRequest {
+	return &ShowApplicationRoleRequest{}
 }
 
-func (s *CreateApplicationRoleRequest) WithOrReplace(OrReplace *bool) *CreateApplicationRoleRequest {
-	s.OrReplace = OrReplace
+func (s *ShowApplicationRoleRequest) WithApplicationName(ApplicationName AccountObjectIdentifier) *ShowApplicationRoleRequest {
+	s.ApplicationName = ApplicationName
 	return s
 }
 
-func (s *CreateApplicationRoleRequest) WithIfNotExists(IfNotExists *bool) *CreateApplicationRoleRequest {
-	s.IfNotExists = IfNotExists
-	return s
-}
-
-func (s *CreateApplicationRoleRequest) WithComment(Comment *string) *CreateApplicationRoleRequest {
-	s.Comment = Comment
-	return s
-}
-
-func NewAlterApplicationRoleRequest(
-	name DatabaseObjectIdentifier,
-) *AlterApplicationRoleRequest {
-	s := AlterApplicationRoleRequest{}
-	s.name = name
-	return &s
-}
-
-func (s *AlterApplicationRoleRequest) WithIfExists(IfExists *bool) *AlterApplicationRoleRequest {
-	s.IfExists = IfExists
-	return s
-}
-
-func (s *AlterApplicationRoleRequest) WithRenameTo(RenameTo *DatabaseObjectIdentifier) *AlterApplicationRoleRequest {
-	s.RenameTo = RenameTo
-	return s
-}
-
-func (s *AlterApplicationRoleRequest) WithSetComment(SetComment *string) *AlterApplicationRoleRequest {
-	s.SetComment = SetComment
-	return s
-}
-
-func (s *AlterApplicationRoleRequest) WithUnsetComment(UnsetComment *bool) *AlterApplicationRoleRequest {
-	s.UnsetComment = UnsetComment
-	return s
-}
-
-func NewDropApplicationRoleRequest(
-	name DatabaseObjectIdentifier,
-) *DropApplicationRoleRequest {
-	s := DropApplicationRoleRequest{}
-	s.name = name
-	return &s
-}
-
-func (s *DropApplicationRoleRequest) WithIfExists(IfExists *bool) *DropApplicationRoleRequest {
-	s.IfExists = IfExists
+func (s *ShowApplicationRoleRequest) WithLimit(Limit *LimitFrom) *ShowApplicationRoleRequest {
+	s.Limit = Limit
 	return s
 }
 
@@ -75,57 +25,5 @@ func NewShowByIDApplicationRoleRequest(
 	s := ShowByIDApplicationRoleRequest{}
 	s.name = name
 	s.ApplicationName = ApplicationName
-	return &s
-}
-
-func NewShowApplicationRoleRequest(
-	ApplicationName AccountObjectIdentifier,
-) *ShowApplicationRoleRequest {
-	s := ShowApplicationRoleRequest{}
-	s.ApplicationName = ApplicationName
-	return &s
-}
-
-func (s *ShowApplicationRoleRequest) WithLimit(Limit *LimitFrom) *ShowApplicationRoleRequest {
-	s.Limit = Limit
-	return s
-}
-
-func NewGrantApplicationRoleRequest(
-	name DatabaseObjectIdentifier,
-	GrantTo ApplicationGrantOptionsRequest,
-) *GrantApplicationRoleRequest {
-	s := GrantApplicationRoleRequest{}
-	s.name = name
-	s.GrantTo = GrantTo
-	return &s
-}
-
-func NewApplicationGrantOptionsRequest() *ApplicationGrantOptionsRequest {
-	return &ApplicationGrantOptionsRequest{}
-}
-
-func (s *ApplicationGrantOptionsRequest) WithParentRole(ParentRole *AccountObjectIdentifier) *ApplicationGrantOptionsRequest {
-	s.ParentRole = ParentRole
-	return s
-}
-
-func (s *ApplicationGrantOptionsRequest) WithApplicationRole(ApplicationRole *DatabaseObjectIdentifier) *ApplicationGrantOptionsRequest {
-	s.ApplicationRole = ApplicationRole
-	return s
-}
-
-func (s *ApplicationGrantOptionsRequest) WithApplication(Application *AccountObjectIdentifier) *ApplicationGrantOptionsRequest {
-	s.Application = Application
-	return s
-}
-
-func NewRevokeApplicationRoleRequest(
-	name DatabaseObjectIdentifier,
-	RevokeFrom ApplicationGrantOptionsRequest,
-) *RevokeApplicationRoleRequest {
-	s := RevokeApplicationRoleRequest{}
-	s.name = name
-	s.RevokeFrom = RevokeFrom
 	return &s
 }
