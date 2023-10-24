@@ -196,7 +196,7 @@ func getWarehouseSweeper(client *Client, prefix string) func() error {
 			return err
 		}
 		for _, wh := range whs {
-			if (prefix == "" || strings.HasPrefix(wh.Name, prefix)) && wh.Name != "SNOWFLAKE" && wh.Name != "test_terraform_warehouse" {
+			if (prefix == "" || strings.HasPrefix(wh.Name, prefix)) && wh.Name != "SNOWFLAKE" && wh.Name != "terraform_test_warehouse" {
 				log.Printf("[DEBUG] Dropping warehouse %s", wh.Name)
 				if err := client.Warehouses.Drop(ctx, wh.ID(), nil); err != nil {
 					return err

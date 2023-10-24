@@ -12,7 +12,6 @@ import (
 
 var (
 	resourceName = "snowflake_database_role.test_db_role"
-	dbName       = "db_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	dbRoleName   = "db_role_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	comment      = "dummy"
 	comment2     = "test comment"
@@ -25,18 +24,18 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: databaseRoleConfig(dbName, dbRoleName, comment),
+				Config: databaseRoleConfig(dbRoleName, acc.TestDatabaseName, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
-					resource.TestCheckResourceAttr(resourceName, "database", dbName),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
 			},
 			{
-				Config: databaseRoleConfig(dbName, dbRoleName, comment2),
+				Config: databaseRoleConfig(dbRoleName, acc.TestDatabaseName, comment2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", dbRoleName),
-					resource.TestCheckResourceAttr(resourceName, "database", dbName),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment2),
 				),
 			},
@@ -44,17 +43,13 @@ func TestAcc_DatabaseRole(t *testing.T) {
 	})
 }
 
-func databaseRoleConfig(dbName string, dbRoleName string, comment string) string {
+func databaseRoleConfig(dbRoleName string, databaseName string, comment string) string {
 	s := `
-resource "snowflake_database" "test_db" {
-	name = "%s"
-}
-
 resource "snowflake_database_role" "test_db_role" {
 	name     	  = "%s"
-	database  	  = snowflake_database.test_db.name
+	database  	  = "%s"
 	comment       = "%s"
 }
 	`
-	return fmt.Sprintf(s, dbName, dbRoleName, comment)
+	return fmt.Sprintf(s, dbRoleName, databaseName, comment)
 }

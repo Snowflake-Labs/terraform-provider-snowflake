@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccResourceMonitor_defaults(t *testing.T) {
+func TestAcc_ResourceMonitor_defaults(t *testing.T) {
 	wName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
