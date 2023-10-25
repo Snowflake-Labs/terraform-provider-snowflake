@@ -26,9 +26,6 @@ docs-check: docs ## check that docs have been generated
 fmt: terraform-fmt ## Run terraform fmt and gofumpt
 	gofumpt -l -w .
 
-fmt-check: fmt ## check that terraform fmt and gofumt have been run
-	git diff --exit-code -- .
-
 terraform-fmt: ## Run terraform fmt
 	terraform fmt -recursive ./examples/
 	terraform fmt -recursive ./pkg/resources/testdata/
