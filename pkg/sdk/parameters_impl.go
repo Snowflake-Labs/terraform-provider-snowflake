@@ -20,7 +20,6 @@ func GetSessionParametersFrom(params map[string]any) (*SessionParameters, error)
 	return sessionParameters, nil
 }
 
-// TODO [SNOW-884987]: use this method in SetSessionParameterOnAccount and in SetSessionParameterOnUser
 func (sessionParameters *SessionParameters) setParam(parameter SessionParameter, value string) error {
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
