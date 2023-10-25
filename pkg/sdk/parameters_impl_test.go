@@ -2,8 +2,9 @@ package sdk
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSessionParameters_setParam(t *testing.T) {
@@ -68,38 +69,38 @@ func TestSessionParameters_setParam(t *testing.T) {
 	}{
 		{parameter: SessionParameterAbortDetachedQuery, value: "true123"},
 		{parameter: SessionParameterAutocommit, value: "true123"},
-		//{parameter: SessionParameterBinaryInputFormat, value: "some"}, // add validation
-		//{parameter: SessionParameterBinaryOutputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterBinaryInputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterBinaryOutputFormat, value: "some"}, // add validation
 		{parameter: SessionParameterClientMetadataRequestUseConnectionCtx, value: "true123"},
 		{parameter: SessionParameterClientMetadataUseSessionDatabase, value: "true123"},
 		{parameter: SessionParameterClientResultColumnCaseInsensitive, value: "true123"},
-		//{parameter: SessionParameterDateInputFormat, value: "some"}, // add validation
-		//{parameter: SessionParameterGeographyOutputFormat, value: "some"}, // add validation
-		//{parameter: SessionParameterDateOutputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterDateInputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterGeographyOutputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterDateOutputFormat, value: "some"}, // add validation
 		{parameter: SessionParameterErrorOnNondeterministicMerge, value: "true123"},
 		{parameter: SessionParameterErrorOnNondeterministicUpdate, value: "true123"},
 		{parameter: SessionParameterJSONIndent, value: "aaa"},
 		{parameter: SessionParameterLockTimeout, value: "aaa"},
 		{parameter: SessionParameterMultiStatementCount, value: "aaa"},
-		//{parameter: SessionParameterQueryTag, value: "some"}, // add validation
+		// {parameter: SessionParameterQueryTag, value: "some"}, // add validation
 		{parameter: SessionParameterQuotedIdentifiersIgnoreCase, value: "true123"},
 		{parameter: SessionParameterRowsPerResultset, value: "aaa"},
-		//{parameter: SessionParameterSimulatedDataSharingConsumer, value: "some"}, // add validation
+		// {parameter: SessionParameterSimulatedDataSharingConsumer, value: "some"}, // add validation
 		{parameter: SessionParameterStatementTimeoutInSeconds, value: "aaa"},
 		{parameter: SessionParameterStrictJSONOutput, value: "true123"},
-		//{parameter: SessionParameterTimeInputFormat, value: "some"}, // add validation
-		//{parameter: SessionParameterTimeOutputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterTimeInputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterTimeOutputFormat, value: "some"}, // add validation
 		{parameter: SessionParameterTimestampDayIsAlways24h, value: "true123"},
-		//{parameter: SessionParameterTimestampInputFormat, value: "some"}, // add validation
-		//{parameter: SessionParameterTimestampLTZOutputFormat, value: "some"}, // add validation
-		//{parameter: SessionParameterTimestampNTZOutputFormat, value: "some"}, // add validation
-		//{parameter: SessionParameterTimestampOutputFormat, value: "some"}, // add validation
-		//{parameter: SessionParameterTimestampTypeMapping, value: "some"}, // add validation
-		//{parameter: SessionParameterTimestampTZOutputFormat, value: "some"}, // add validation
-		//{parameter: SessionParameterTimezone, value: "some"}, // add validation
-		//{parameter: SessionParameterTransactionDefaultIsolationLevel, value: "some"}, // add validation
+		// {parameter: SessionParameterTimestampInputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterTimestampLTZOutputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterTimestampNTZOutputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterTimestampOutputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterTimestampTypeMapping, value: "some"}, // add validation
+		// {parameter: SessionParameterTimestampTZOutputFormat, value: "some"}, // add validation
+		// {parameter: SessionParameterTimezone, value: "some"}, // add validation
+		// {parameter: SessionParameterTransactionDefaultIsolationLevel, value: "some"}, // add validation
 		{parameter: SessionParameterTwoDigitCenturyStart, value: "aaa"},
-		//{parameter: SessionParameterUnsupportedDDLAction, value: "some"}, // add validation
+		// {parameter: SessionParameterUnsupportedDDLAction, value: "some"}, // add validation
 		{parameter: SessionParameterUseCachedResult, value: "true123"},
 		{parameter: SessionParameterWeekOfYearPolicy, value: "aaa"},
 		{parameter: SessionParameterWeekStart, value: "aaa"},
