@@ -130,6 +130,19 @@ func difference(a, b map[string]any) map[string]any {
 	return diff
 }
 
+// differentValue find keys present both in 'a' and 'b' but having different values.
+func differentValue(a, b map[string]any) map[string]any {
+	diff := make(map[string]any)
+	for k := range a {
+		if v, ok := b[k]; ok {
+			if v != a[k] {
+				diff[k] = v
+			}
+		}
+	}
+	return diff
+}
+
 // Task returns a pointer to the resource representing a task.
 func Task() *schema.Resource {
 	return &schema.Resource{
@@ -617,7 +630,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// TODO [SNOW-884987]: old implementation does not handle changing parameter value correctly (only finds for parameters to add od remove, not change)
 	if d.HasChange("session_parameters") {
 		o, n := d.GetChange("session_parameters")
 
@@ -632,6 +644,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 		remove := difference(os, ns)
 		add := difference(ns, os)
+		change := differentValue(ns, os)
 
 		if len(remove) > 0 {
 			sessionParametersUnset, err := sdk.GetSessionParametersUnsetFrom(remove)
@@ -650,6 +663,16 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			}
 			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithSessionParameters(sessionParameters))); err != nil {
 				return fmt.Errorf("error adding session_parameters to task %v", d.Id())
+			}
+		}
+
+		if len(change) > 0 {
+			sessionParameters, err := sdk.GetSessionParametersFrom(change)
+			if err != nil {
+				return err
+			}
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithSessionParameters(sessionParameters))); err != nil {
+				return fmt.Errorf("error updating session_parameters in task %v", d.Id())
 			}
 		}
 	}
