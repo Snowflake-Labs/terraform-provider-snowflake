@@ -26,9 +26,8 @@ docs-check: docs ## check that docs have been generated
 fmt: terraform-fmt ## Run terraform fmt and gofumpt
 	gofumpt -l -w .
 
-fmt-check: fmt terraform-fmt ## check that docs have been generated
+fmt-check: fmt ## check that terraform fmt and gofumt have been run
 	git diff --exit-code -- .
-	if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then exit 1; fi
 
 terraform-fmt: ## Run terraform fmt
 	terraform fmt -recursive ./examples/
