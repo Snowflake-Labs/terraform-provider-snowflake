@@ -519,6 +519,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "1"),
 				),
 			},
 			{
@@ -529,6 +530,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", ""),
+					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "2"),
 				),
 			},
 			{
@@ -539,6 +541,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "1"),
 				),
 			},
 			{
@@ -549,6 +552,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", ""),
+					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "0"),
 				),
 			},
 		},
@@ -558,12 +562,13 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 func taskConfigManagedScheduled(name string, taskRootName string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_task" "test_task_root" {
-	name     	  = "%s"
-	database  	  = "%s"
-	schema    	  = "%s"
-	sql_statement = "SELECT 1"
-	enabled  	  = true
-	schedule      = "5 MINUTE"
+	name     	                    = "%s"
+	database  	                    = "%s"
+	schema    	                    = "%s"
+	sql_statement                   = "SELECT 1"
+	enabled  	                    = true
+	schedule                        = "5 MINUTE"
+    suspend_task_after_num_failures = 1
 }
 
 resource "snowflake_task" "test_task" {
@@ -581,12 +586,13 @@ resource "snowflake_task" "test_task" {
 func taskConfigManagedScheduled2(name string, taskRootName string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_task" "test_task_root" {
-	name     	  = "%s"
-	database  	  =  "%s"
-	schema    	  =  "%s"
-	sql_statement = "SELECT 1"
-	enabled  	  = true
-	schedule      = "5 MINUTE"
+	name     	                    = "%s"
+	database  	                    =  "%s"
+	schema    	                    =  "%s"
+	sql_statement                   = "SELECT 1"
+	enabled  	                    = true
+	schedule                        = "5 MINUTE"
+    suspend_task_after_num_failures = 2
 }
 
 resource "snowflake_task" "test_task" {

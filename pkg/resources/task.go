@@ -16,7 +16,6 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// TODO [SNOW-884987]: add missing SUSPEND_TASK_AFTER_NUM_FAILURES attribute.
 var taskSchema = map[string]*schema.Schema{
 	"enabled": {
 		Type:        schema.TypeBool,
@@ -66,6 +65,13 @@ var taskSchema = map[string]*schema.Schema{
 		Optional:     true,
 		ValidateFunc: validation.IntBetween(0, 86400000),
 		Description:  "Specifies the time limit on a single run of the task before it times out (in milliseconds).",
+	},
+	"suspend_task_after_num_failures": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      0,
+		ValidateFunc: validation.IntAtLeast(0),
+		Description:  "Specifies the number of consecutive failed task runs after which the current task is suspended automatically. The default is 0 (no automatic suspension).",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -233,6 +239,13 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				fieldParameters["user_task_timeout_ms"] = timeout
+			case "SUSPEND_TASK_AFTER_NUM_FAILURES":
+				num, err := strconv.ParseInt(param.Value, 10, 64)
+				if err != nil {
+					return err
+				}
+
+				fieldParameters["suspend_task_after_num_failures"] = num
 			default:
 				sessionParameters[param.Key] = param.Value
 			}
@@ -297,6 +310,10 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
 		createRequest.WithUserTaskTimeoutMs(sdk.Int(v.(int)))
+	}
+
+	if v, ok := d.GetOk("suspend_task_after_num_failures"); ok {
+		createRequest.WithSuspendTaskAfterNumFailures(sdk.Int(v.(int)))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -555,6 +572,20 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
 			return fmt.Errorf("error updating user task timeout on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	if d.HasChange("suspend_task_after_num_failures") {
+		o, n := d.GetChange("suspend_task_after_num_failures")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if o.(int) > 0 && n.(int) == 0 {
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithSuspendTaskAfterNumFailures(sdk.Bool(true)))
+		} else {
+			alterRequest.WithSet(sdk.NewTaskSetRequest().WithSuspendTaskAfterNumFailures(sdk.Int(n.(int))))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating suspenf task after num failures on task %s", taskId.FullyQualifiedName())
 		}
 	}
 
