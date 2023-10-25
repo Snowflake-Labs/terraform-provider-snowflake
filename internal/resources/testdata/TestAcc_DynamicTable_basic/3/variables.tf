@@ -1,0 +1,30 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
+variable "name" {
+    type = string
+}
+
+variable "database" {
+    type = string
+}
+
+variable "schema" {
+    type = string
+}
+
+variable "warehouse" {
+    type = string
+}
+
+variable "query" {
+    type = string
+}
+
+variable "comment" {
+    type = string
+}
+
+variable "table_name" {
+    type = string
+}

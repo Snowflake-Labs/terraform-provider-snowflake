@@ -6,7 +6,7 @@
 2. Ensure that your `GOPATH` is set to the desired location
 3. Fork this repo and clone it into `$GOPATH/src/github.com/Snowflake-Labs/terraform-provider-snowflake`
 4. cd to `terraform-provider-snowflake` and install all the required packages with `go get`
-5. Build provider with `go install`
+5. Build provider with `make build`
 
 ## Testing
 
@@ -46,15 +46,15 @@ role='ACCOUNTADMIN'
 
 For the Terraform resources, there are 3 levels of testing - internal, unit and acceptance tests.
 
-The 'internal' tests are run in the `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources` package so that they can test functions that are not exported. These tests are intended to be limited to unit tests for simple functions.
+The 'internal' tests are run in the `github.com/Snowflake-Labs/terraform-provider-snowflake/internal/resources` package so that they can test functions that are not exported. These tests are intended to be limited to unit tests for simple functions.
 
-The 'unit' tests are run in  `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources_test`, so they only have access to the exported methods of `resources`. These tests exercise the CRUD methods that on the terraform resources. Note that all tests here make use of database mocking and are run locally. This means the tests are fast, but are liable to be wrong in subtle ways (since the mocks are unlikely to be perfect).
+The 'unit' tests are run in  `github.com/Snowflake-Labs/terraform-provider-snowflake/internal/resources_test`, so they only have access to the exported methods of `resources`. These tests exercise the CRUD methods that on the terraform resources. Note that all tests here make use of database mocking and are run locally. This means the tests are fast, but are liable to be wrong in subtle ways (since the mocks are unlikely to be perfect).
 
 You can run these first two sets of tests with `make test`.
 
 The 'acceptance' tests run the full stack, creating, modifying and destroying resources in a live snowflake account. To run them you need a snowflake account and the proper authentication set up. These tests are slower but have higher fidelity. You can create a new Snowflake Enterprise trial account and setup the environment variables for running acceptance tests.
 
-To run all tests, including the acceptance tests, run `make test-acceptance`.
+To run all tests, including the acceptance tests, run `make testacc`.
 
 ### Running tests in VSCode
 
@@ -67,7 +67,18 @@ We've included an example env file `test.env.example` with the environment varia
 
 ## Advanced Debugging
 
-If you want to build and test the provider locally there is a make target `make install-tf` that will build the provider binary and install it in a location that terraform can find.
+If you want to build and test the provider locally you should edit you `~.terraformrc` file to include the following:
+
+```
+provider_installation {
+
+  dev_overrides {
+      "registry.terraform.io/Snowflake-Labs/snowflake" = "<path_to_binary>"
+  }
+
+  direct {}
+}
+```
 
 To debug the provider with a debugger:
 

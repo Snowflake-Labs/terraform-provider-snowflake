@@ -34,7 +34,7 @@ terraform {
 
 provider "snowflake" {
   account  = "abc12345" # the Snowflake account identifier
-  username = "johndoe"
+  user     = "johndoe"
   password = "v3ry$3cr3t"
   role     = "ACCOUNTADMIN"
 }
