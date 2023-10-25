@@ -19,8 +19,6 @@ jobs:
       - name: Install dependencies
         run: make tools
       - name: Create and populate .snowflake/config file
-        env:
-          SNOWFLAKE_CONFIG_PATH: .snowflake/config
-        run: mkdir .snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > .snowflake/config
+        run: mkdir $HOME/.snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > $HOME/.snowflake/config
       - run: make test
       - run: make testacc
