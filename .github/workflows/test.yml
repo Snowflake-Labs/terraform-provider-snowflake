@@ -5,7 +5,7 @@ on:
     paths-ignore:
       - 'README.md'
       - 'CHANGELOG.md'
-name: Test
+name: test
 
 jobs:
   test:
