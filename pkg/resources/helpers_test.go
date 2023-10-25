@@ -1,9 +1,6 @@
 package resources_test
 
 import (
-	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -472,38 +469,4 @@ func tagGrant(t *testing.T, id string, params map[string]interface{}) *schema.Re
 	r.NotNil(d)
 	d.SetId(id)
 	return d
-}
-
-type attrIntComparison int
-
-const (
-	AttrIsGreaterThan attrIntComparison = iota
-	AttrIsLessThan
-	AttrIsEqualTo
-)
-
-var checkIntComparison = func(comp attrIntComparison, expected int) resource.CheckResourceAttrWithFunc {
-	return func(value string) error {
-		actual, err := strconv.ParseInt(value, 10, 8)
-		if err != nil {
-			return err
-		}
-		switch comp {
-		case AttrIsGreaterThan:
-			if int(actual) <= expected {
-				return fmt.Errorf("expected attribute to be greater than %d, but got %d", expected, actual)
-			}
-		case AttrIsLessThan:
-			if int(actual) >= expected {
-				return fmt.Errorf("expected attribute to be less than %d, but got %d", expected, actual)
-			}
-		case AttrIsEqualTo:
-			if int(actual) != expected {
-				return fmt.Errorf("expected attribute to be equal to %d, but got %d", expected, actual)
-			}
-		default:
-			return fmt.Errorf("invalid comparison: %v", comp)
-		}
-		return nil
-	}
 }

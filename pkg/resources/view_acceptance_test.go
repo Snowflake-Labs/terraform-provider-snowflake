@@ -161,13 +161,15 @@ func TestAcc_ViewStatementUpdate(t *testing.T) {
 				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, `\"name\"`),
 				Check: resource.ComposeTestCheckFunc(
 					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
-					checkIntComparison("data.snowflake_grants.grants", "grants.#", AttrLenIsGreaterThan, 1),
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
 				),
 			},
 			{
 				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, "*"),
 				Check: resource.ComposeTestCheckFunc(
-					checkIntComparison("data.snowflake_grants.grants", "grants.#", AttrLenIsGreaterThan, 1),
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
 				),
 			},
 		},
@@ -222,7 +224,7 @@ resource "snowflake_view_grant" "grant" {
   database_name = "%s"
   schema_name = "%s"
   view_name = snowflake_view.test.name
-  privilege = "ALL PRIVILEGES"
+  privilege = "SELECT"
   roles = [snowflake_role.test.name]
 }
 
@@ -233,5 +235,10 @@ data "snowflake_grants" "grants" {
     object_type = "VIEW"
   }
 }
-	`, databaseName, schemaName, databaseName, schemaName, selectStatement, databaseName, schemaName, databaseName, schemaName, databaseName, schemaName)
+	`, databaseName, schemaName,
+		databaseName, schemaName,
+		selectStatement,
+		databaseName, schemaName,
+		databaseName, schemaName,
+		databaseName, schemaName)
 }

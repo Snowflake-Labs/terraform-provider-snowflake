@@ -280,12 +280,9 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema)
 	db := meta.(*sql.DB)
 
-	// in order to update the statement field in a view is to perform create or replace
-	// what we could do is to apply all the changes in create or replace, because that would be less sql queries,
-	// but for now I've implemented it that create or replace will be performed with all the old parameters, except statement
-	// and copy grants (which will be set to true, so that it would copy all the grants after create or replace,
-	// since create or replace works like atomic drop and create, which could break some things that require certain set of permissions
-	// which could be lost after drop)
+	// The only way to update the statement field in a view is to perform create or replace with the new statement.
+	// In case of any statement change, create or replace will be performed with all the old parameters, except statement
+	// and copy grants (which is always set to true to keep the permissions from the previous state).
 	if d.HasChange("statement") {
 		isSecureOld, _ := d.GetChange("is_secure")
 		commentOld, _ := d.GetChange("comment")
