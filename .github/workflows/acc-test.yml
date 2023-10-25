@@ -5,10 +5,11 @@ on:
     paths-ignore:
       - 'README.md'
       - 'CHANGELOG.md'
-name: test
+name: acceptance
 
 jobs:
   test:
+    name: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,5 +21,10 @@ jobs:
         run: make tools
       - name: Create and populate .snowflake/config file
         run: mkdir $HOME/.snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > $HOME/.snowflake/config
-      - run: make test
       - run: make testacc
+        env:
+          SKIP_EMAIL_INTEGRATION_TESTS=true
+          SKIP_EXTERNAL_TABLE_TEST=true
+          SKIP_NOTIFICATION_INTEGRATION_TESTS=true
+          SKIP_SAML_INTEGRATION_TESTS=true
+          SKIP_STREAM_TEST=true

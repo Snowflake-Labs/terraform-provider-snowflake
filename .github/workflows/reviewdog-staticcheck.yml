@@ -1,8 +1,8 @@
-name: reviewdog-staticcheck
+name: staticcheck
 on: [pull_request]
 jobs:
-  staticcheck:
-    name: staticcheck
+  reviewdog:
+    name: reviewdog
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

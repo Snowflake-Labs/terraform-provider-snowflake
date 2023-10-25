@@ -1,4 +1,4 @@
-name: reviewdog-golangci-lint
+name: golangci-lint
 on:
   push:
     branches:
@@ -11,8 +11,8 @@ permissions:
   # pull-requests: read
 
 jobs:
-  lint:
-    name: lint
+  reviewdog:
+    name: reviewdog
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
