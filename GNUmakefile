@@ -34,7 +34,7 @@ tools:
 	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd tools && go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 	cd tools && go install github.com/hashicorp/copywrite
-	cd tools && go install go install mvdan.cc/gofumpt
+	cd tools && go install mvdan.cc/gofumpt
 
 generate-all-dto: ## Generate all DTOs for SDK interfaces
 	go generate ./internal/sdk/*_dto.go
