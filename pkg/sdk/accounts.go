@@ -90,10 +90,12 @@ type AlterAccountOptions struct {
 	alter   bool `ddl:"static" sql:"ALTER"`
 	account bool `ddl:"static" sql:"ACCOUNT"`
 
-	Set    *AccountSet    `ddl:"keyword" sql:"SET"`
-	Unset  *AccountUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
-	Rename *AccountRename `ddl:"-"`
-	Drop   *AccountDrop   `ddl:"-"`
+	Set      *AccountSet        `ddl:"keyword" sql:"SET"`
+	Unset    *AccountUnset      `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTag   []TagAssociation   `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
+	Rename   *AccountRename     `ddl:"-"`
+	Drop     *AccountDrop       `ddl:"-"`
 }
 
 func (opts *AlterAccountOptions) validate() error {
@@ -101,8 +103,8 @@ func (opts *AlterAccountOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.Drop, opts.Rename) {
-		errs = append(errs, errExactlyOneOf("CreateAccountOptions", "Set", "Unset", "Drop", "Rename"))
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.Drop, opts.Rename) {
+		errs = append(errs, errExactlyOneOf("CreateAccountOptions", "Set", "Unset", "SetTag", "UnsetTag", "Drop", "Rename"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
@@ -164,13 +166,12 @@ type AccountSet struct {
 	ResourceMonitor AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
 	PasswordPolicy  SchemaObjectIdentifier  `ddl:"identifier" sql:"PASSWORD POLICY"`
 	SessionPolicy   SchemaObjectIdentifier  `ddl:"identifier" sql:"SESSION POLICY"`
-	Tag             []TagAssociation        `ddl:"keyword" sql:"TAG"`
 }
 
 func (opts *AccountSet) validate() error {
 	var errs []error
-	if !exactlyOneValueSet(opts.Parameters, opts.ResourceMonitor, opts.PasswordPolicy, opts.SessionPolicy, opts.Tag) {
-		errs = append(errs, errExactlyOneOf("AccountSet", "Parameters", "ResourceMonitor", "PasswordPolicy", "SessionPolicy", "Tag"))
+	if !exactlyOneValueSet(opts.Parameters, opts.ResourceMonitor, opts.PasswordPolicy, opts.SessionPolicy) {
+		errs = append(errs, errExactlyOneOf("AccountSet", "Parameters", "ResourceMonitor", "PasswordPolicy", "SessionPolicy"))
 	}
 	if valueSet(opts.Parameters) {
 		if err := opts.Parameters.validate(); err != nil {
@@ -198,13 +199,12 @@ type AccountUnset struct {
 	Parameters     *AccountLevelParametersUnset `ddl:"list,no_parentheses"`
 	PasswordPolicy *bool                        `ddl:"keyword" sql:"PASSWORD POLICY"`
 	SessionPolicy  *bool                        `ddl:"keyword" sql:"SESSION POLICY"`
-	Tag            []ObjectIdentifier           `ddl:"keyword" sql:"TAG"`
 }
 
 func (opts *AccountUnset) validate() error {
 	var errs []error
-	if !exactlyOneValueSet(opts.Parameters, opts.PasswordPolicy, opts.SessionPolicy, opts.Tag) {
-		errs = append(errs, errExactlyOneOf("AccountUnset", "Parameters", "PasswordPolicy", "SessionPolicy", "Tag"))
+	if !exactlyOneValueSet(opts.Parameters, opts.PasswordPolicy, opts.SessionPolicy) {
+		errs = append(errs, errExactlyOneOf("AccountUnset", "Parameters", "PasswordPolicy", "SessionPolicy"))
 	}
 	if valueSet(opts.Parameters) {
 		if err := opts.Parameters.validate(); err != nil {

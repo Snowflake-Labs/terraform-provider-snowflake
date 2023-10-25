@@ -237,9 +237,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 			unsetTags[i] = sdk.NewDatabaseObjectIdentifier(t.database, t.name)
 		}
 		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			Unset: &sdk.SchemaUnset{
-				Tag: unsetTags,
-			},
+			UnsetTag: unsetTags,
 		})
 		if err != nil {
 			return fmt.Errorf("error dropping tags on %v", d.Id())
@@ -259,9 +257,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		err = client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			Set: &sdk.SchemaSet{
-				Tag: setTags,
-			},
+			SetTag: setTags,
 		})
 		if err != nil {
 			return fmt.Errorf("error setting tags on %v", d.Id())

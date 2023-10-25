@@ -99,6 +99,8 @@ type AlterMaskingPolicyOptions struct {
 	NewName       *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 	Set           *MaskingPolicySet       `ddl:"keyword" sql:"SET"`
 	Unset         *MaskingPolicyUnset     `ddl:"keyword" sql:"UNSET"`
+	SetTag        []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag      []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterMaskingPolicyOptions) validate() error {
@@ -112,8 +114,8 @@ func (opts *AlterMaskingPolicyOptions) validate() error {
 	if opts.NewName != nil && !ValidObjectIdentifier(opts.NewName) {
 		errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
 	}
-	if !exactlyOneValueSet(opts.NewName, opts.Set, opts.Unset) {
-		errs = append(errs, errExactlyOneOf("AlterMaskingPolicyOptions", "NewName", "Set", "Unset"))
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.NewName) {
+		errs = append(errs, errExactlyOneOf("AlterMaskingPolicyOptions", "Set", "Unset", "SetTag", "UnsetTag", "NewName"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
@@ -129,26 +131,24 @@ func (opts *AlterMaskingPolicyOptions) validate() error {
 }
 
 type MaskingPolicySet struct {
-	Body    *string          `ddl:"parameter,no_equals" sql:"BODY ->"`
-	Tag     []TagAssociation `ddl:"keyword" sql:"TAG"`
-	Comment *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Body    *string `ddl:"parameter,no_equals" sql:"BODY ->"`
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *MaskingPolicySet) validate() error {
-	if !exactlyOneValueSet(v.Body, v.Tag, v.Comment) {
-		return errExactlyOneOf("MaskingPolicySet", "Body", "Tag", "Comment")
+	if !exactlyOneValueSet(v.Body, v.Comment) {
+		return errExactlyOneOf("MaskingPolicySet", "Body", "Comment")
 	}
 	return nil
 }
 
 type MaskingPolicyUnset struct {
-	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
-	Comment *bool              `ddl:"keyword" sql:"COMMENT"`
+	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *MaskingPolicyUnset) validate() error {
-	if !exactlyOneValueSet(v.Tag, v.Comment) {
-		return errExactlyOneOf("MaskingPolicyUnset", "Tag", "Comment")
+	if !exactlyOneValueSet(v.Comment) {
+		return errExactlyOneOf("MaskingPolicyUnset", "Comment")
 	}
 	return nil
 }

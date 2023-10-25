@@ -165,8 +165,10 @@ type AlterWarehouseOptions struct {
 	AbortAllQueries *bool                    `ddl:"keyword" sql:"ABORT ALL QUERIES"`
 	NewName         *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 
-	Set   *WarehouseSet   `ddl:"keyword" sql:"SET"`
-	Unset *WarehouseUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set      *WarehouseSet      `ddl:"keyword" sql:"SET"`
+	Unset    *WarehouseUnset    `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTag   []TagAssociation   `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterWarehouseOptions) validate() error {
@@ -177,8 +179,8 @@ func (opts *AlterWarehouseOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Suspend, opts.Resume, opts.AbortAllQueries, opts.NewName, opts.Set, opts.Unset) {
-		errs = append(errs, errExactlyOneOf("AlterWarehouseOptions", "Suspend", "Resume", "AbortAllQueries", "NewName", "Set", "Unset"))
+	if !exactlyOneValueSet(opts.Suspend, opts.Resume, opts.AbortAllQueries, opts.NewName, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag) {
+		errs = append(errs, errExactlyOneOf("AlterWarehouseOptions", "Suspend", "Resume", "AbortAllQueries", "NewName", "Set", "Unset", "SetTag", "UnsetTag"))
 	}
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
 		errs = append(errs, errOneOf("AlterWarehouseOptions", "Suspend", "Resume"))
@@ -218,8 +220,6 @@ type WarehouseSet struct {
 	MaxConcurrencyLevel             *int `ddl:"parameter" sql:"MAX_CONCURRENCY_LEVEL"`
 	StatementQueuedTimeoutInSeconds *int `ddl:"parameter" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
 	StatementTimeoutInSeconds       *int `ddl:"parameter" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
-
-	Tag []TagAssociation `ddl:"keyword" sql:"TAG"`
 }
 
 func (v *WarehouseSet) validate() error {
@@ -244,8 +244,8 @@ func (v *WarehouseSet) validate() error {
 			return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
 		}
 	}
-	if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
-		return fmt.Errorf("Tag cannot be set with any other Set parameter")
+	if everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
+		return errAtLeastOneOf("AutoResume", "EnableQueryAcceleration", "MaxClusterCount", "MinClusterCount", "AutoSuspend", "QueryAccelerationMaxScaleFactor")
 	}
 	return nil
 }
@@ -266,15 +266,14 @@ type WarehouseUnset struct {
 	QueryAccelerationMaxScaleFactor *bool `ddl:"keyword" sql:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
 
 	// Object params
-	MaxConcurrencyLevel             *bool              `ddl:"keyword" sql:"MAX_CONCURRENCY_LEVEL"`
-	StatementQueuedTimeoutInSeconds *bool              `ddl:"keyword" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	StatementTimeoutInSeconds       *bool              `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
-	Tag                             []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
+	MaxConcurrencyLevel             *bool `ddl:"keyword" sql:"MAX_CONCURRENCY_LEVEL"`
+	StatementQueuedTimeoutInSeconds *bool `ddl:"keyword" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds       *bool `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
 }
 
 func (v *WarehouseUnset) validate() error {
-	if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
-		return fmt.Errorf("Tag cannot be unset with any other Unset parameter")
+	if everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
+		return errAtLeastOneOf("AutoResume", "EnableQueryAcceleration", "MaxClusterCount", "MinClusterCount", "AutoSuspend", "QueryAccelerationMaxScaleFactor")
 	}
 	return nil
 }

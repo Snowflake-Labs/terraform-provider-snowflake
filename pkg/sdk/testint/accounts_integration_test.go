@@ -282,16 +282,14 @@ func TestInt_AccountAlter(t *testing.T) {
 		t.Cleanup(tagCleanup2)
 
 		opts := &sdk.AlterAccountOptions{
-			Set: &sdk.AccountSet{
-				Tag: []sdk.TagAssociation{
-					{
-						Name:  tagTest1.ID(),
-						Value: "abc",
-					},
-					{
-						Name:  tagTest2.ID(),
-						Value: "123",
-					},
+			SetTag: []sdk.TagAssociation{
+				{
+					Name:  tagTest1.ID(),
+					Value: "abc",
+				},
+				{
+					Name:  tagTest2.ID(),
+					Value: "123",
 				},
 			},
 		}

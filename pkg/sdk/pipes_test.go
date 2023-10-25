@@ -70,7 +70,7 @@ func TestPipesAlter(t *testing.T) {
 
 	t.Run("validation: no alter action", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterPipeOptions", "Set", "Unset", "SetTags", "UnsetTags", "Refresh"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterPipeOptions", "Set", "Unset", "SetTag", "UnsetTag", "Refresh"))
 	})
 
 	t.Run("validation: multiple alter actions", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestPipesAlter(t *testing.T) {
 		opts.Unset = &PipeUnset{
 			Comment: Bool(true),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterPipeOptions", "Set", "Unset", "SetTags", "UnsetTags", "Refresh"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterPipeOptions", "Set", "Unset", "SetTag", "UnsetTag", "Refresh"))
 	})
 
 	t.Run("validation: no property to set", func(t *testing.T) {
@@ -90,36 +90,18 @@ func TestPipesAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterPipeOptions.Set", "ErrorIntegration", "PipeExecutionPaused", "Comment"))
 	})
 
-	t.Run("validation: empty tags slice for set", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.SetTags = &PipeSetTags{
-			Tag: []TagAssociation{},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterPipeOptions.SetTags", "Tag"))
-	})
-
 	t.Run("validation: no property to unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &PipeUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterPipeOptions.Unset", "PipeExecutionPaused", "Comment"))
 	})
 
-	t.Run("validation: empty tags slice for unset", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.UnsetTags = &PipeUnsetTags{
-			Tag: []ObjectIdentifier{},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterPipeOptions.UnsetTags", "Tag"))
-	})
-
 	t.Run("set tag: single", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SetTags = &PipeSetTags{
-			Tag: []TagAssociation{
-				{
-					Name:  NewAccountObjectIdentifier("tag_name1"),
-					Value: "v1",
-				},
+		opts.SetTag = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag_name1"),
+				Value: "v1",
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER PIPE %s SET TAG "tag_name1" = 'v1'`, id.FullyQualifiedName())
@@ -127,16 +109,14 @@ func TestPipesAlter(t *testing.T) {
 
 	t.Run("set tag: multiple", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SetTags = &PipeSetTags{
-			Tag: []TagAssociation{
-				{
-					Name:  NewAccountObjectIdentifier("tag_name1"),
-					Value: "v1",
-				},
-				{
-					Name:  NewAccountObjectIdentifier("tag_name2"),
-					Value: "v2",
-				},
+		opts.SetTag = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag_name1"),
+				Value: "v1",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("tag_name2"),
+				Value: "v2",
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER PIPE %s SET TAG "tag_name1" = 'v1', "tag_name2" = 'v2'`, id.FullyQualifiedName())
@@ -155,21 +135,17 @@ func TestPipesAlter(t *testing.T) {
 
 	t.Run("unset tag: single", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.UnsetTags = &PipeUnsetTags{
-			Tag: []ObjectIdentifier{
-				NewAccountObjectIdentifier("tag_name1"),
-			},
+		opts.UnsetTag = []ObjectIdentifier{
+			NewAccountObjectIdentifier("tag_name1"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER PIPE %s UNSET TAG "tag_name1"`, id.FullyQualifiedName())
 	})
 
 	t.Run("unset tag: multi", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.UnsetTags = &PipeUnsetTags{
-			Tag: []ObjectIdentifier{
-				NewAccountObjectIdentifier("tag_name1"),
-				NewAccountObjectIdentifier("tag_name2"),
-			},
+		opts.UnsetTag = []ObjectIdentifier{
+			NewAccountObjectIdentifier("tag_name1"),
+			NewAccountObjectIdentifier("tag_name2"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER PIPE %s UNSET TAG "tag_name1", "tag_name2"`, id.FullyQualifiedName())
 	})

@@ -342,9 +342,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 
 		tagAssociations := []sdk.TagAssociation{{Name: tag.ID(), Value: "value1"}, {Name: tag2.ID(), Value: "value2"}}
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
-			Set: &sdk.MaskingPolicySet{
-				Tag: tagAssociations,
-			},
+			SetTag: tagAssociations,
 		}
 		err := client.MaskingPolicies.Alter(ctx, id, alterOptions)
 		require.NoError(t, err)
@@ -357,9 +355,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 
 		// unset tag
 		alterOptions = &sdk.AlterMaskingPolicyOptions{
-			Unset: &sdk.MaskingPolicyUnset{
-				Tag: []sdk.ObjectIdentifier{tag.ID()},
-			},
+			UnsetTag: []sdk.ObjectIdentifier{tag.ID()},
 		}
 		err = client.MaskingPolicies.Alter(ctx, id, alterOptions)
 		require.NoError(t, err)

@@ -179,6 +179,8 @@ type AlterShareOptions struct {
 	Remove   *ShareRemove            `ddl:"keyword" sql:"REMOVE"`
 	Set      *ShareSet               `ddl:"keyword" sql:"SET"`
 	Unset    *ShareUnset             `ddl:"keyword" sql:"UNSET"`
+	SetTag   []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterShareOptions) validate() error {
@@ -189,8 +191,8 @@ func (opts *AlterShareOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Add, opts.Remove, opts.Set, opts.Unset) {
-		errs = append(errs, errExactlyOneOf("AlterShareOptions", "Add", "Remove", "Set", "Unset"))
+	if !exactlyOneValueSet(opts.Add, opts.Remove, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag) {
+		errs = append(errs, errExactlyOneOf("AlterShareOptions", "Add", "Remove", "Set", "Unset", "SetTag", "UnsetTag"))
 	}
 	if valueSet(opts.Add) {
 		if err := opts.Add.validate(); err != nil {
@@ -241,24 +243,22 @@ func (v *ShareRemove) validate() error {
 type ShareSet struct {
 	Accounts []AccountIdentifier `ddl:"parameter" sql:"ACCOUNTS"`
 	Comment  *string             `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag      []TagAssociation    `ddl:"keyword" sql:"TAG"`
 }
 
 func (v *ShareSet) validate() error {
-	if valueSet(v.Tag) && anyValueSet(v.Accounts, v.Comment) {
-		return fmt.Errorf("accounts and comment cannot be set when tag is set")
+	if !anyValueSet(v.Accounts, v.Comment) {
+		return errAtLeastOneOf("Accounts", "Comment")
 	}
 	return nil
 }
 
 type ShareUnset struct {
-	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
-	Comment *bool              `ddl:"keyword" sql:"COMMENT"`
+	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *ShareUnset) validate() error {
-	if !exactlyOneValueSet(v.Comment, v.Tag) {
-		return errExactlyOneOf("ShareUnset", "Comment", "Tag")
+	if !exactlyOneValueSet(v.Comment) {
+		return errExactlyOneOf("ShareUnset", "Comment")
 	}
 	return nil
 }
