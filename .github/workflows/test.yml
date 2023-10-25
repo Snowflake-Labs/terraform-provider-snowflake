@@ -19,6 +19,8 @@ jobs:
       - name: Install dependencies
         run: make tools
       - name: Create and populate .snowflake/config file
-        run: touch /home/runner/.snowflake/config && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > /home/runner/.snowflake/config
+        env:
+          GITHUB_TOKEN: ${{ secrets.SNOWFLAKE_CONFIG_PATH }}
+        run: echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > .snowflake/config
       - run: make test
       - run: make testacc
