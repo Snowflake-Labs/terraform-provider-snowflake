@@ -1,6 +1,9 @@
 package resources_test
 
 import (
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -469,4 +472,40 @@ func tagGrant(t *testing.T, id string, params map[string]interface{}) *schema.Re
 	r.NotNil(d)
 	d.SetId(id)
 	return d
+}
+
+type attrLenComparison int
+
+const (
+	AttrLenIsGreaterThan attrLenComparison = iota
+	AttrLenIsLessThan
+	AttrLenIsEqualTo
+)
+
+func checkIntComparison(path, attr string, comp attrLenComparison, value int) func(*terraform.State) error {
+	return func(state *terraform.State) error {
+		is := state.RootModule().Resources[path].Primary
+		d := is.Attributes[attr]
+		attribute, err := strconv.ParseInt(d, 10, 8)
+		if err != nil {
+			return err
+		}
+		switch comp {
+		case AttrLenIsGreaterThan:
+			if int(attribute) <= value {
+				return fmt.Errorf("attribute %s at path %s is not greater than %d", attr, path, value)
+			}
+		case AttrLenIsLessThan:
+			if int(attribute) >= value {
+				return fmt.Errorf("attribute %s at path %s is not less than %d", attr, path, value)
+			}
+		case AttrLenIsEqualTo:
+			if int(attribute) != value {
+				return fmt.Errorf("attribute %s at path %s is not equal to %d", attr, path, value)
+			}
+		default:
+			return fmt.Errorf("invalid comparison: %v", comp)
+		}
+		return nil
+	}
 }
