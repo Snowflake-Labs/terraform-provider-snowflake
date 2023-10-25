@@ -46,9 +46,9 @@ role='ACCOUNTADMIN'
 
 For the Terraform resources, there are 3 levels of testing - internal, unit and acceptance tests.
 
-The 'internal' tests are run in the `github.com/Snowflake-Labs/terraform-provider-snowflake/internal/resources` package so that they can test functions that are not exported. These tests are intended to be limited to unit tests for simple functions.
+The 'internal' tests are run in the `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources` package so that they can test functions that are not exported. These tests are intended to be limited to unit tests for simple functions.
 
-The 'unit' tests are run in  `github.com/Snowflake-Labs/terraform-provider-snowflake/internal/resources_test`, so they only have access to the exported methods of `resources`. These tests exercise the CRUD methods that on the terraform resources. Note that all tests here make use of database mocking and are run locally. This means the tests are fast, but are liable to be wrong in subtle ways (since the mocks are unlikely to be perfect).
+The 'unit' tests are run in  `github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources_test`, so they only have access to the exported methods of `resources`. These tests exercise the CRUD methods that on the terraform resources. Note that all tests here make use of database mocking and are run locally. This means the tests are fast, but are liable to be wrong in subtle ways (since the mocks are unlikely to be perfect).
 
 You can run these first two sets of tests with `make test`.
 

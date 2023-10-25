@@ -1,12 +1,9 @@
-// Copyright (c) Snowflake, Inc.
-// SPDX-License-Identifier: MIT
-
 package main
 
 import (
 	"flag"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
