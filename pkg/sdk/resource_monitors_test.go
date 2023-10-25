@@ -62,7 +62,7 @@ func TestResourceMonitorAlter(t *testing.T) {
 		opts := &AlterResourceMonitorOptions{
 			name: id,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterResourceMonitorOptions", "Set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterResourceMonitorOptions", "Set", "NotifyUsers", "Triggers"))
 	})
 
 	t.Run("with a single set", func(t *testing.T) {

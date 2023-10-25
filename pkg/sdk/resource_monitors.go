@@ -296,6 +296,9 @@ func (opts *AlterResourceMonitorOptions) validate() error {
 			errs = append(errs, errors.New("must specify frequency and start time together"))
 		}
 	}
+	if !exactlyOneValueSet(opts.Set, opts.NotifyUsers) && opts.Triggers == nil {
+		errs = append(errs, errExactlyOneOf("AlterResourceMonitorOptions", "Set", "NotifyUsers", "Triggers"))
+	}
 	return errors.Join(errs...)
 }
 
