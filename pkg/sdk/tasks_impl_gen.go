@@ -3,7 +3,8 @@ package sdk
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"golang.org/x/exp/slices"
 	"strings"
 )
 
@@ -66,40 +67,38 @@ func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error 
 // GetRootTasks is a way to get all root tasks for the given tasks.
 // Snowflake does not have (yet) a method to do it without traversing the task graph manually.
 // Task DAG should have a single root but this is checked when the root task is being resumed; that's why we return here multiple roots.
-// Cycles should not be possible in a task DAG but it is checked when the root task is being resumed; that's why this method has to be cycle-proof.
-// TODO [SNOW-884987]: handle cycles
+// Cycles should not be possible in a task DAG, but it is checked when the root task is being resumed; that's why this method has to be cycle-proof.
 func GetRootTasks(v Tasks, ctx context.Context, id SchemaObjectIdentifier) ([]Task, error) {
-	task, err := v.ShowByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
+	tasksToExamine := collections.NewQueue[SchemaObjectIdentifier]()
+	alreadyExaminedTasksNames := make([]string, 0)
+	rootTasks := make([]Task, 0)
 
-	predecessors := task.Predecessors
-	// no predecessors mean this is a root task
-	if len(predecessors) == 0 {
-		return []Task{*task}, nil
-	}
+	tasksToExamine.Push(id)
 
-	rootTasks := make([]Task, 0, len(predecessors))
-	for _, predecessor := range predecessors {
-		predecessorTasks, err := GetRootTasks(v, ctx, predecessor)
+	for tasksToExamine.Head() != nil {
+		current := tasksToExamine.Pop()
+
+		if slices.Contains(alreadyExaminedTasksNames, current.Name()) {
+			continue
+		}
+
+		task, err := v.ShowByID(ctx, *current)
 		if err != nil {
-			return nil, fmt.Errorf("unable to get predecessors for task %s err = %w", predecessor.FullyQualifiedName(), err)
+			return nil, err
 		}
-		rootTasks = append(rootTasks, predecessorTasks...)
+
+		predecessors := task.Predecessors
+		if len(predecessors) == 0 {
+			rootTasks = append(rootTasks, *task)
+		} else {
+			for _, p := range predecessors {
+				tasksToExamine.Push(p)
+			}
+		}
+		alreadyExaminedTasksNames = append(alreadyExaminedTasksNames, current.Name())
 	}
 
-	// TODO [SNOW-884987]: extract unique function in our collection helper (if cycle-proof algorithm still needs it)
-	keys := make(map[string]bool)
-	uniqueRootTasks := make([]Task, 0, len(rootTasks))
-	for _, rootTask := range rootTasks {
-		if _, exists := keys[rootTask.ID().FullyQualifiedName()]; !exists {
-			keys[rootTask.ID().FullyQualifiedName()] = true
-			uniqueRootTasks = append(uniqueRootTasks, rootTask)
-		}
-	}
-
-	return uniqueRootTasks, nil
+	return rootTasks, nil
 }
 
 func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
