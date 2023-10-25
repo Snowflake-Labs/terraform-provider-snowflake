@@ -1,5 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MIT
+
 
 resource "snowflake_table" "t" {
 	database = var.database
