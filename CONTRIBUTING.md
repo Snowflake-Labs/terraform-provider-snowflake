@@ -6,7 +6,7 @@
 2. Ensure that your `GOPATH` is set to the desired location
 3. Fork this repo and clone it into `$GOPATH/src/github.com/Snowflake-Labs/terraform-provider-snowflake`
 4. cd to `terraform-provider-snowflake` and install all the required packages with `go get`
-5. Build provider with `make build`
+5. Build and install provider with `make install`
 
 ## Testing
 
