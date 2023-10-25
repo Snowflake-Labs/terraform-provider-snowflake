@@ -2,7 +2,7 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"strconv"
 	"testing"
 
@@ -474,34 +474,32 @@ func tagGrant(t *testing.T, id string, params map[string]interface{}) *schema.Re
 	return d
 }
 
-type attrLenComparison int
+type attrIntComparison int
 
 const (
-	AttrLenIsGreaterThan attrLenComparison = iota
-	AttrLenIsLessThan
-	AttrLenIsEqualTo
+	AttrIsGreaterThan attrIntComparison = iota
+	AttrIsLessThan
+	AttrIsEqualTo
 )
 
-func checkIntComparison(path, attr string, comp attrLenComparison, value int) func(*terraform.State) error {
-	return func(state *terraform.State) error {
-		is := state.RootModule().Resources[path].Primary
-		d := is.Attributes[attr]
-		attribute, err := strconv.ParseInt(d, 10, 8)
+var checkIntComparison = func(comp attrIntComparison, expected int) resource.CheckResourceAttrWithFunc {
+	return func(value string) error {
+		actual, err := strconv.ParseInt(value, 10, 8)
 		if err != nil {
 			return err
 		}
 		switch comp {
-		case AttrLenIsGreaterThan:
-			if int(attribute) <= value {
-				return fmt.Errorf("attribute %s at path %s is not greater than %d", attr, path, value)
+		case AttrIsGreaterThan:
+			if int(actual) <= expected {
+				return fmt.Errorf("expected attribute to be greater than %d, but got %d", expected, actual)
 			}
-		case AttrLenIsLessThan:
-			if int(attribute) >= value {
-				return fmt.Errorf("attribute %s at path %s is not less than %d", attr, path, value)
+		case AttrIsLessThan:
+			if int(actual) >= expected {
+				return fmt.Errorf("expected attribute to be less than %d, but got %d", expected, actual)
 			}
-		case AttrLenIsEqualTo:
-			if int(attribute) != value {
-				return fmt.Errorf("attribute %s at path %s is not equal to %d", attr, path, value)
+		case AttrIsEqualTo:
+			if int(actual) != expected {
+				return fmt.Errorf("expected attribute to be equal to %d, but got %d", expected, actual)
 			}
 		default:
 			return fmt.Errorf("invalid comparison: %v", comp)
