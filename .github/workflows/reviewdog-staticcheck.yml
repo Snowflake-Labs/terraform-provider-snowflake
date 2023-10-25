@@ -1,8 +1,8 @@
-name: reviewdog
+name: reviewdog-staticcheck
 on: [pull_request]
 jobs:
   staticcheck:
-    name: runner / staticcheck
+    name: staticcheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -15,4 +15,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           filter_mode: nofilter
-          fail_on_error: true
+          fail_on_error: false

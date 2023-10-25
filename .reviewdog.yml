@@ -1,3 +1,6 @@
+# Copyright (c) Snowflake, Inc.
+# SPDX-License-Identifier: MIT
+
 runner:
   golangci:
     cmd: golangci-lint run --out-format=line-number --timeout 5m

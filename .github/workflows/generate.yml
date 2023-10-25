@@ -11,8 +11,8 @@ permissions:
   # pull-requests: read
 
 jobs:
-  golangci:
-    name: lint
+  generate:
+    name: generate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
