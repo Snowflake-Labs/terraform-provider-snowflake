@@ -3,9 +3,9 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -160,7 +160,7 @@ func (parameters *parameters) SetSessionParameterOnAccount(ctx context.Context, 
 		}
 		return nil
 	} else {
-		if errors.Is(err, fmt.Errorf("%s session parameter is not supported", string(parameter))) {
+		if strings.Contains(err.Error(), "session parameter is not supported") {
 			return parameters.SetObjectParameterOnAccount(ctx, ObjectParameter(parameter), value)
 		}
 		return err
