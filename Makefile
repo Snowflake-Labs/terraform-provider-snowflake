@@ -3,33 +3,45 @@ export SKIP_EXTERNAL_TABLE_TEST=true
 export SKIP_NOTIFICATION_INTEGRATION_TESTS=true
 export SKIP_SAML_INTEGRATION_TESTS=true
 export SKIP_STREAM_TEST=true
+export BASE_BINARY_NAME=terraform-provider-snowflake
+export TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
+export TERRAFORM_PLUGIN_LOCAL_INSTALL=$(TERRAFORM_PLUGINS_DIR)/$(BASE_BINARY_NAME)
 
 default: help
 
-docs:
+dev-setup: ## setup development dependencies
+	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.3
+	cd tools && go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	cd tools && go install mvdan.cc/gofumpt
+
+dev-cleanup: ## cleanup development dependencies
+	rm -rf bin/*
+
+docs: ## generate docs
 	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
 
 docs-check: docs ## check that docs have been generated
 	git diff --exit-code -- docs
 
-fmt: ## Run gofumpt
-	@echo "==> Fixing source code with gofumpt..."
+fmt: terraform-fmt ## Run terraform fmt and gofumpt
 	gofumpt -l -w .
 
-fumpt: fmt
+fmt-check: fmt terraform-fmt ## check that docs have been generated
+	git diff --exit-code -- .
+	if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then exit 1; fi
 
-# Generate docs, terraform fmt the examples folder
-generate:
-	cd tools && go generate ./...
+terraform-fmt: ## Run terraform fmt
+	terraform fmt -recursive ./examples/
+	terraform fmt -recursive ./pkg/resources/testdata/
+	terraform fmt -recursive ./pkg/datasources/testdata/
 
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
 
-install:
+install: ## display help for this makefile
 	go install -v ./...
 
-# See https://golangci-lint.run/
-lint:
+lint: # See https://golangci-lint.run/
 	golangci-lint run ./... -v
 
 lint-fix: ## Run static code analysis, check formatting and try to fix findings
@@ -41,9 +53,9 @@ mod: ## add missing and remove unused modules
 mod-check: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum
 
-pre-push: fmt lint mod docs ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+pre-push: fmt docs mod lint   ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
-pre-push-check: docs-check lint-check mod-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+pre-push-check: fmt-check docs-check lint-check mod-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
 sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
@@ -54,17 +66,21 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 			else echo "Aborting..."; \
 		fi;
 
-test:
+test: ## run unit and integration tests
 	go test -v -cover -timeout=30m -parallel=4 ./...
 
-testacc:
-	TF_ACC=1 go test -v -cover -timeout 30m -parallel=4  `go list ./... | grep -v pkg/sdk`
+test-acceptance: ## run acceptance tests
+	TF_ACC=1 go test -v -cover -timeout 30m `go list ./... | grep -v pkg/sdk`
 
-tools:
-	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	cd tools && go install github.com/hashicorp/copywrite
-	cd tools && go install mvdan.cc/gofumpt
+build-local: ## build the binary locally
+	go build -o $(BASE_BINARY_NAME) .
+
+install-tf: build-local ## installs plugin where terraform can find it
+	mkdir -p $(TERRAFORM_PLUGINS_DIR)
+	cp ./$(BASE_BINARY_NAME) $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
+
+uninstall-tf: ## uninstalls plugin from where terraform can find it
+	rm -f $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
 
 generate-all-dto: ## Generate all DTOs for SDK interfaces
 	go generate ./internal/sdk/*_dto.go
@@ -88,4 +104,4 @@ run-generator-%: ./internal/sdk/%_def.go ## Run go generate on given object defi
 	go generate $<
 	go generate ./internal/sdk/$*_dto_gen.go
 
-.PHONY: build clean-generator-poc clean-generator-% docs docs-check fmt fumpt generate generate-all-dto generate-dto-% help install lint lint-fix mod mod-check pre-push pre-push-check run-generator-poc run-generator-% sweep test testacc tools
+.PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance tools uninstall-tf

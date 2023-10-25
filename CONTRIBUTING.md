@@ -54,7 +54,7 @@ You can run these first two sets of tests with `make test`.
 
 The 'acceptance' tests run the full stack, creating, modifying and destroying resources in a live snowflake account. To run them you need a snowflake account and the proper authentication set up. These tests are slower but have higher fidelity. You can create a new Snowflake Enterprise trial account and setup the environment variables for running acceptance tests.
 
-To run all tests, including the acceptance tests, run `make testacc`.
+To run all tests, including the acceptance tests, run `make test-acceptance`.
 
 ### Running tests in VSCode
 

@@ -1,4 +1,4 @@
-name: generate
+name: check
 on:
   push:
     branches:
@@ -11,8 +11,8 @@ permissions:
   # pull-requests: read
 
 jobs:
-  generate:
-    name: docs and fmt check
+  docs-and-fmt:
+    name: docs and fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,8 +20,5 @@ jobs:
         with:
           go-version-file: ./go.mod
           cache: false
-      - run: make generate
-      - name: Confirm no diff
-        run: |
-          git diff --compact-summary --exit-code || \
-            (echo "*** Unexpected differences after code generation. Run 'make generate' and commit."; exit 1)
+      - run: make docs-check
+      - run: make fmt-check
