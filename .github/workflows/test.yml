@@ -20,7 +20,7 @@ jobs:
         run: make tools
       - name: Create and populate .snowflake/config file
         env:
-          GITHUB_TOKEN: ${{ secrets.SNOWFLAKE_CONFIG_PATH }}
-        run: echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > .snowflake/config
+          SNOWFLAKE_CONFIG_PATH: ${{ secrets.SNOWFLAKE_CONFIG_PATH }}
+        run: mkdir .snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > .snowflake/config
       - run: make test
       - run: make testacc
