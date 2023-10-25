@@ -1,7 +1,5 @@
--- Copyright (c) HashiCorp, Inc.
--- SPDX-License-Identifier: MIT
 
- SELECT
+SELECT
              value:configRuleName::VARCHAR AS CONFIG_RULE_NAME,
              VALUE:complianceType::VARCHAR AS COMPLIANCE_TYPE,
              *

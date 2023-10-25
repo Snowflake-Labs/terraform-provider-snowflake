@@ -1,6 +1,3 @@
--- Copyright (c) HashiCorp, Inc.
--- SPDX-License-Identifier: MIT
-
 SELECT
          RAW:"Asset_Panda_Number"::NUMBER as ASSET_PANDA_NUMBER,
          RAW:"is_locked"::BOOLEAN as IS_LOCKED,
