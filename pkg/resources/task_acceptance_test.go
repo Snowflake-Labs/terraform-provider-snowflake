@@ -335,12 +335,12 @@ resource "snowflake_task" "root_task" {
 	user_task_timeout_ms = {{ .RootTask.UserTaskTimeoutMs }}
 	{{- end }}
 
-	{{ if .ChildTask.SessionParams }}
+	{{ if .RootTask.SessionParams }}
 	session_parameters = {
-	{{ range $key, $value :=  .RootTask.SessionParams}}
+	{{ range $key, $value := .RootTask.SessionParams}}
         {{ $key }} = "{{ $value }}",
-	}
 	{{- end }}
+	}
 	{{- end }}
 }
 resource "snowflake_task" "child_task" {
@@ -358,10 +358,10 @@ resource "snowflake_task" "child_task" {
 
 	{{ if .ChildTask.SessionParams }}
 	session_parameters = {
-	{{ range $key, $value :=  .ChildTask.SessionParams}}
+	{{ range $key, $value := .ChildTask.SessionParams}}
         {{ $key }} = "{{ $value }}",
-	}
 	{{- end }}
+	}
 	{{- end }}
 }
 resource "snowflake_task" "solo_task" {
@@ -384,8 +384,8 @@ resource "snowflake_task" "solo_task" {
 	session_parameters = {
 	{{ range $key, $value :=  .SoloTask.SessionParams}}
         {{ $key }} = "{{ $value }}",
-	}
 	{{- end }}
+	}
 	{{- end }}
 }
 	`)

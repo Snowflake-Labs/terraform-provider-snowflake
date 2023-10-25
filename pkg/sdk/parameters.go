@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -173,7 +174,7 @@ func (parameters *parameters) SetSessionParameterOnUser(ctx context.Context, use
 	if err != nil {
 		return err
 	}
-	opts := AlterUserOptions{Set: &UserSet{SessionParameters: &SessionParameters{}}}
+	opts := AlterUserOptions{Set: &UserSet{SessionParameters: sp}}
 	err = parameters.client.Users.Alter(ctx, userId, &opts)
 	if err != nil {
 		return err
@@ -717,7 +718,7 @@ type SessionParametersUnset struct {
 }
 
 func (v *SessionParametersUnset) validate() error {
-	if !anyValueSet(v.AbortDetachedQuery, v.Autocommit, v.BinaryInputFormat, v.BinaryOutputFormat, v.DateInputFormat, v.DateOutputFormat, v.ErrorOnNondeterministicMerge, v.ErrorOnNondeterministicUpdate, v.GeographyOutputFormat, v.JSONIndent, v.LockTimeout, v.QueryTag, v.RowsPerResultset, v.SimulatedDataSharingConsumer, v.StatementTimeoutInSeconds, v.StrictJSONOutput, v.TimestampDayIsAlways24h, v.TimestampInputFormat, v.TimestampLTZOutputFormat, v.TimestampNTZOutputFormat, v.TimestampOutputFormat, v.TimestampTypeMapping, v.TimestampTZOutputFormat, v.Timezone, v.TimeInputFormat, v.TimeOutputFormat, v.TransactionDefaultIsolationLevel, v.TwoDigitCenturyStart, v.UnsupportedDDLAction, v.UseCachedResult, v.WeekOfYearPolicy, v.WeekStart) {
+	if !anyValueSet(v.AbortDetachedQuery, v.Autocommit, v.BinaryInputFormat, v.BinaryOutputFormat, v.ClientMetadataRequestUseConnectionCtx, v.ClientMetadataUseSessionDatabase, v.ClientResultColumnCaseInsensitive, v.DateInputFormat, v.DateOutputFormat, v.ErrorOnNondeterministicMerge, v.ErrorOnNondeterministicUpdate, v.GeographyOutputFormat, v.JSONIndent, v.LockTimeout, v.MultiStatementCount, v.QueryTag, v.QuotedIdentifiersIgnoreCase, v.RowsPerResultset, v.SimulatedDataSharingConsumer, v.StatementTimeoutInSeconds, v.StrictJSONOutput, v.TimestampDayIsAlways24h, v.TimestampInputFormat, v.TimestampLTZOutputFormat, v.TimestampNTZOutputFormat, v.TimestampOutputFormat, v.TimestampTypeMapping, v.TimestampTZOutputFormat, v.Timezone, v.TimeInputFormat, v.TimeOutputFormat, v.TransactionDefaultIsolationLevel, v.TwoDigitCenturyStart, v.UnsupportedDDLAction, v.UseCachedResult, v.WeekOfYearPolicy, v.WeekStart) {
 		return errors.Join(errAtLeastOneOf("SessionParametersUnset", "AbortDetachedQuery", "Autocommit", "BinaryInputFormat", "BinaryOutputFormat", "DateInputFormat", "DateOutputFormat", "ErrorOnNondeterministicMerge", "ErrorOnNondeterministicUpdate", "GeographyOutputFormat", "JSONIndent", "LockTimeout", "QueryTag", "RowsPerResultset", "SimulatedDataSharingConsumer", "StatementTimeoutInSeconds", "StrictJSONOutput", "TimestampDayIsAlways24h", "TimestampInputFormat", "TimestampLTZOutputFormat", "TimestampNTZOutputFormat", "TimestampOutputFormat", "TimestampTypeMapping", "TimestampTZOutputFormat", "Timezone", "TimeInputFormat", "TimeOutputFormat", "TransactionDefaultIsolationLevel", "TwoDigitCenturyStart", "UnsupportedDDLAction", "UseCachedResult", "WeekOfYearPolicy", "WeekStart"))
 	}
 	return nil

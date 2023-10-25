@@ -133,10 +133,10 @@ func difference(a, b map[string]any) map[string]any {
 // differentValue find keys present both in 'a' and 'b' but having different values.
 func differentValue(a, b map[string]any) map[string]any {
 	diff := make(map[string]any)
-	for k := range a {
-		if v, ok := b[k]; ok {
-			if v != a[k] {
-				diff[k] = v
+	for k, va := range a {
+		if vb, ok := b[k]; ok {
+			if vb != va {
+				diff[k] = vb
 			}
 		}
 	}
@@ -233,7 +233,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(params) > 0 {
-		sessionParameters := map[string]interface{}{}
+		sessionParameters := make(map[string]any)
 		fieldParameters := map[string]interface{}{
 			"user_task_managed_initial_warehouse_size": "",
 		}
@@ -644,7 +644,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 		remove := difference(os, ns)
 		add := difference(ns, os)
-		change := differentValue(ns, os)
+		change := differentValue(os, ns)
 
 		if len(remove) > 0 {
 			sessionParametersUnset, err := sdk.GetSessionParametersUnsetFrom(remove)
@@ -652,7 +652,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(sdk.NewTaskUnsetRequest().WithSessionParametersUnset(sessionParametersUnset))); err != nil {
-				return fmt.Errorf("error removing session_parameters on task %v", d.Id())
+				return fmt.Errorf("error removing session_parameters on task %v err = %w", d.Id(), err)
 			}
 		}
 
@@ -662,7 +662,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithSessionParameters(sessionParameters))); err != nil {
-				return fmt.Errorf("error adding session_parameters to task %v", d.Id())
+				return fmt.Errorf("error adding session_parameters to task %v err = %w", d.Id(), err)
 			}
 		}
 
@@ -672,7 +672,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithSessionParameters(sessionParameters))); err != nil {
-				return fmt.Errorf("error updating session_parameters in task %v", d.Id())
+				return fmt.Errorf("error updating session_parameters in task %v err = %w", d.Id(), err)
 			}
 		}
 	}
