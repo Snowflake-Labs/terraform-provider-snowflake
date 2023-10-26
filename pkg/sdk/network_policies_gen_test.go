@@ -60,13 +60,13 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 
 	t.Run("validation: exactly one field from [opts.Set opts.UnsetComment opts.RenameTo] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Set", "UnsetComment", "RenameTo"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNetworkPolicyOptions", "Set", "UnsetComment", "RenameTo"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.AllowedIpList opts.Set.BlockedIpList opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &NetworkPolicySet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AllowedIpList", "BlockedIpList", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterNetworkPolicyOptions.Set", "AllowedIpList", "BlockedIpList", "Comment"))
 	})
 
 	t.Run("set allowed ip list", func(t *testing.T) {

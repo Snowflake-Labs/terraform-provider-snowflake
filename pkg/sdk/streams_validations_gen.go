@@ -30,11 +30,11 @@ func (opts *CreateOnTableStreamOptions) validate() error {
 	}
 	if valueSet(opts.On) {
 		if ok := exactlyOneValueSet(opts.On.At, opts.On.Before); !ok {
-			errs = append(errs, errExactlyOneOf("At", "Before"))
+			errs = append(errs, errExactlyOneOf("CreateOnTableStreamOptions.On", "At", "Before"))
 		}
 		if valueSet(opts.On.Statement) {
 			if ok := exactlyOneValueSet(opts.On.Statement.Timestamp, opts.On.Statement.Offset, opts.On.Statement.Statement, opts.On.Statement.Stream); !ok {
-				errs = append(errs, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+				errs = append(errs, errExactlyOneOf("CreateOnTableStreamOptions.On.Statement", "Timestamp", "Offset", "Statement", "Stream"))
 			}
 		}
 	}
@@ -57,11 +57,11 @@ func (opts *CreateOnExternalTableStreamOptions) validate() error {
 	}
 	if valueSet(opts.On) {
 		if ok := exactlyOneValueSet(opts.On.At, opts.On.Before); !ok {
-			errs = append(errs, errExactlyOneOf("At", "Before"))
+			errs = append(errs, errExactlyOneOf("CreateOnExternalTableStreamOptions.On", "At", "Before"))
 		}
 		if valueSet(opts.On.Statement) {
 			if ok := exactlyOneValueSet(opts.On.Statement.Timestamp, opts.On.Statement.Offset, opts.On.Statement.Statement, opts.On.Statement.Stream); !ok {
-				errs = append(errs, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+				errs = append(errs, errExactlyOneOf("CreateOnExternalTableStreamOptions.On.Statement", "Timestamp", "Offset", "Statement", "Stream"))
 			}
 		}
 	}
@@ -101,11 +101,11 @@ func (opts *CreateOnViewStreamOptions) validate() error {
 	}
 	if valueSet(opts.On) {
 		if ok := exactlyOneValueSet(opts.On.At, opts.On.Before); !ok {
-			errs = append(errs, errExactlyOneOf("At", "Before"))
+			errs = append(errs, errExactlyOneOf("CreateOnViewStreamOptions.On", "At", "Before"))
 		}
 		if valueSet(opts.On.Statement) {
 			if ok := exactlyOneValueSet(opts.On.Statement.Timestamp, opts.On.Statement.Offset, opts.On.Statement.Statement, opts.On.Statement.Stream); !ok {
-				errs = append(errs, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+				errs = append(errs, errExactlyOneOf("CreateOnViewStreamOptions.On.Statement", "Timestamp", "Offset", "Statement", "Stream"))
 			}
 		}
 	}
@@ -135,7 +135,7 @@ func (opts *AlterStreamOptions) validate() error {
 		errs = append(errs, errOneOf("AlterStreamOptions", "IfExists", "UnsetTags"))
 	}
 	if ok := exactlyOneValueSet(opts.SetComment, opts.UnsetComment, opts.SetTags, opts.UnsetTags); !ok {
-		errs = append(errs, errExactlyOneOf("SetComment", "UnsetComment", "SetTags", "UnsetTags"))
+		errs = append(errs, errExactlyOneOf("AlterStreamOptions", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	}
 	return errors.Join(errs...)
 }

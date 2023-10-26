@@ -88,8 +88,7 @@ func TestInt_Tags(t *testing.T) {
 		comment := random.Comment()
 		values := []string{"value1", "value2"}
 		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id).WithOrReplace(true).WithComment(&comment).WithAllowedValues(values))
-		expected := "Comment fields: [AllowedValues] are incompatible and cannot be set at the same time"
-		require.Equal(t, expected, err.Error())
+		require.Equal(t, sdk.ErrOneOf("createTagOptions", "Comment", "AllowedValues").Error(), err.Error())
 	})
 
 	t.Run("create tag: no optionals", func(t *testing.T) {

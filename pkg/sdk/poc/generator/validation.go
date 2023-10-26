@@ -57,13 +57,13 @@ func (v *Validation) Condition(field *Field) string {
 	case ValidIdentifier:
 		return fmt.Sprintf("!ValidObjectIdentifier(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ValidIdentifierIfSet:
-		return fmt.Sprintf("valueSet(%s) && !ValidObjectIdentifier(%s)", strings.Join(v.fieldsWithPath(field), ","), strings.Join(v.fieldsWithPath(field), ","))
+		return fmt.Sprintf("%s != nil && !ValidObjectIdentifier(%s)", strings.Join(v.fieldsWithPath(field), ","), strings.Join(v.fieldsWithPath(field), ","))
 	case ConflictingFields:
 		return fmt.Sprintf("everyValueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ExactlyOneValueSet:
-		return fmt.Sprintf("ok := exactlyOneValueSet(%s); !ok", strings.Join(v.fieldsWithPath(field), ","))
+		return fmt.Sprintf("!exactlyOneValueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case AtLeastOneValueSet:
-		return fmt.Sprintf("ok := anyValueSet(%s); !ok", strings.Join(v.fieldsWithPath(field), ","))
+		return fmt.Sprintf("!anyValueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ValidateValue:
 		return fmt.Sprintf("err := %s.validate(); err != nil", strings.Join(v.fieldsWithPath(field.Parent), ","))
 	}
@@ -77,11 +77,11 @@ func (v *Validation) ReturnedError(field *Field) string {
 	case ValidIdentifierIfSet:
 		return "ErrInvalidObjectIdentifier"
 	case ConflictingFields:
-		return fmt.Sprintf(`errOneOf("%s", %s)`, field.Name, strings.Join(v.paramsQuoted(), ","))
+		return fmt.Sprintf(`errOneOf("%s", %s)`, field.PathWithRoot(), strings.Join(v.paramsQuoted(), ","))
 	case ExactlyOneValueSet:
-		return fmt.Sprintf("errExactlyOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
+		return fmt.Sprintf(`errExactlyOneOf("%s", %s)`, field.PathWithRoot(), strings.Join(v.paramsQuoted(), ","))
 	case AtLeastOneValueSet:
-		return fmt.Sprintf("errAtLeastOneOf(%s)", strings.Join(v.paramsQuoted(), ","))
+		return fmt.Sprintf(`errAtLeastOneOf("%s", %s)`, field.PathWithRoot(), strings.Join(v.paramsQuoted(), ","))
 	case ValidateValue:
 		return "err"
 	}

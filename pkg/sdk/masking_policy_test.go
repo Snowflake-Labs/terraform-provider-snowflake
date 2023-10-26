@@ -26,7 +26,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 			signature: signature,
 			returns:   DataTypeVARCHAR,
 		}
-		assertOptsInvalid(t, opts, errNotSet("CreateMaskingPolicyOptions", "body"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaskingPolicyOptions", "body"))
 	})
 
 	t.Run("validation: no signature", func(t *testing.T) {
@@ -35,7 +35,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 			body:    expression,
 			returns: DataTypeVARCHAR,
 		}
-		assertOptsInvalid(t, opts, errNotSet("CreateMaskingPolicyOptions", "signature"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaskingPolicyOptions", "signature"))
 	})
 
 	t.Run("validation: no returns", func(t *testing.T) {
@@ -44,7 +44,7 @@ func TestMaskingPolicyCreate(t *testing.T) {
 			signature: signature,
 			body:      expression,
 		}
-		assertOptsInvalid(t, opts, errNotSet("CreateMaskingPolicyOptions", "returns"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaskingPolicyOptions", "returns"))
 	})
 
 	t.Run("only required options", func(t *testing.T) {
@@ -81,15 +81,14 @@ func TestMaskingPolicyAlter(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &AlterMaskingPolicyOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: no option", func(t *testing.T) {
 		opts := &AlterMaskingPolicyOptions{
 			name: id,
 		}
-
-		assertOptsInvalid(t, opts, errExactlyOneOf("Set", "Unset", "NewName"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaskingPolicyOptions", "NewName", "Set", "Unset"))
 	})
 
 	t.Run("with set", func(t *testing.T) {
@@ -128,7 +127,7 @@ func TestMaskingPolicyDrop(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &DropMaskingPolicyOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
@@ -207,7 +206,7 @@ func TestMaskingPolicyDescribe(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &describeMaskingPolicyOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {

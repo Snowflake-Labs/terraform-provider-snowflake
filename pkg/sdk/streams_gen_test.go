@@ -48,14 +48,14 @@ func TestStreams_CreateOnTable(t *testing.T) {
 		opts := defaultOpts()
 		opts.On.At = Bool(true)
 		opts.On.Before = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("At", "Before"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateOnTableStreamOptions.On", "At", "Before"))
 	})
 
 	t.Run("validation: exactly one field from [opts.On.Statement.Timestamp opts.On.Statement.Offset opts.On.Statement.Statement opts.On.Statement.Stream] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.On.At = Bool(true)
 		opts.On.Statement = OnStreamStatement{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateOnTableStreamOptions.On.Statement", "Timestamp", "Offset", "Statement", "Stream"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -126,13 +126,13 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 		opts := defaultOpts()
 		opts.On.At = Bool(true)
 		opts.On.Before = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("At", "Before"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateOnExternalTableStreamOptions.On", "At", "Before"))
 	})
 
 	t.Run("validation: exactly one field from [opts.On.Statement.Timestamp opts.On.Statement.Offset opts.On.Statement.Statement opts.On.Statement.Stream] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.On.Statement = OnStreamStatement{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateOnExternalTableStreamOptions.On.Statement", "Timestamp", "Offset", "Statement", "Stream"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -253,13 +253,13 @@ func TestStreams_CreateOnView(t *testing.T) {
 		opts := defaultOpts()
 		opts.On.At = Bool(true)
 		opts.On.Before = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("At", "Before"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateOnViewStreamOptions.On", "At", "Before"))
 	})
 
 	t.Run("validation: exactly one field from [opts.On.Statement.Timestamp opts.On.Statement.Offset opts.On.Statement.Statement opts.On.Statement.Stream] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.On.Statement = OnStreamStatement{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Timestamp", "Offset", "Statement", "Stream"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateOnViewStreamOptions.On.Statement", "Timestamp", "Offset", "Statement", "Stream"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -351,7 +351,7 @@ func TestStreams_Alter(t *testing.T) {
 
 	t.Run("validation: exactly one field from [opts.SetComment opts.UnsetComment opts.SetTags opts.UnsetTags] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SetComment", "UnsetComment", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterStreamOptions", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("set comment", func(t *testing.T) {

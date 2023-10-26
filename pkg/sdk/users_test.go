@@ -11,7 +11,7 @@ func TestUserCreate(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &CreateUserOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -51,14 +51,14 @@ func TestUserAlter(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &AlterUserOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &AlterUserOptions{
 			name: id,
 		}
-		assertOptsInvalid(t, opts, errExactlyOneOf("NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterUserOptions", "NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset"))
 	})
 
 	t.Run("with setting a policy", func(t *testing.T) {
@@ -225,7 +225,7 @@ func TestUserDrop(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &DropUserOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
@@ -292,7 +292,7 @@ func TestUserDescribe(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &describeUserOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {

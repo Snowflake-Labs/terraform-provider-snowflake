@@ -30,14 +30,14 @@ func (opts *AlterNetworkPolicyOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(opts.Set, opts.UnsetComment, opts.RenameTo); !ok {
-		errs = append(errs, errExactlyOneOf("Set", "UnsetComment", "RenameTo"))
+		errs = append(errs, errExactlyOneOf("AlterNetworkPolicyOptions", "Set", "UnsetComment", "RenameTo"))
 	}
 	if valueSet(opts.RenameTo) && !ValidObjectIdentifier(opts.RenameTo) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.Set) {
 		if ok := anyValueSet(opts.Set.AllowedIpList, opts.Set.BlockedIpList, opts.Set.Comment); !ok {
-			errs = append(errs, errAtLeastOneOf("AllowedIpList", "BlockedIpList", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterNetworkPolicyOptions.Set", "AllowedIpList", "BlockedIpList", "Comment"))
 		}
 	}
 	return errors.Join(errs...)
