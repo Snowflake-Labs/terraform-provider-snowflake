@@ -318,7 +318,7 @@ type accountDBRow struct {
 	Edition                              string         `db:"edition"`
 	AccountURL                           string         `db:"account_url"`
 	CreatedOn                            time.Time      `db:"created_on"`
-	Comment                              string         `db:"comment"`
+	Comment                              sql.NullString `db:"comment"`
 	AccountLocator                       string         `db:"account_locator"`
 	AccountLocatorURL                    string         `db:"account_locator_url"`
 	AccountOldURLSavedOn                 sql.NullString `db:"account_old_url_saved_on"`
@@ -339,7 +339,7 @@ func (row accountDBRow) convert() *Account {
 		Edition:                              AccountEdition(row.Edition),
 		AccountURL:                           row.AccountURL,
 		CreatedOn:                            row.CreatedOn,
-		Comment:                              row.Comment,
+		Comment:                              row.Comment.String,
 		AccountLocator:                       row.AccountLocator,
 		AccountLocatorURL:                    row.AccountLocatorURL,
 		ManagedAccounts:                      row.ManagedAccounts,
