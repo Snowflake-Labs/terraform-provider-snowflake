@@ -84,10 +84,6 @@ type Error struct {
 	nestedErrors []error
 }
 
-func (e *Error) Append(err error) {
-	e.nestedErrors = append(e.nestedErrors, err)
-}
-
 func (e *Error) Error() string {
 	builder := new(strings.Builder)
 	writeTree(e, builder, 0)
@@ -111,17 +107,15 @@ func JoinErrors(errs ...error) error {
 	if len(notNilErrs) == 0 {
 		return nil
 	}
-	err := newError("joined error", 2)
-	err.nestedErrors = notNilErrs
-	return err
+	return newError("joined error", 2, notNilErrs...)
 }
 
 // newError is a function that is supposed to be used by other sdk.Error constructors like NewError or JoinErrors.
 // First of all, it returns error implementation which is against Golang conventions, but it's convenient to use
-// in other constructors, because then there's no need for casting and guessing which type or error it is.
-// The second reason is that there's mysterious skip parameter which is only useful for other constructor functions.
+// in other constructors, because then there's no need for casting and guessing which type of error it is.
+// The second reason is that there is a mysterious skip parameter which is only useful for other constructor functions.
 // It determines how many function stack calls have to be skipped to get the right filename and line information,
-// which is kind of too low-level for outside use.
+// which is too low-level for normal use.
 func newError(message string, skip int, nested ...error) *Error {
 	line, filename := getCallerInfo(skip)
 	return &Error{
