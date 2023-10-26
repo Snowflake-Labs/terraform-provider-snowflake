@@ -4,21 +4,20 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"runtime"
 	"strings"
 )
 
 var (
-	ErrNilOptions                    = NewError("options cannot be nil")
-	ErrPatternRequiredForLikeKeyword = NewError("pattern must be specified for like keyword")
+	ErrNilOptions                    = errors.New("options cannot be nil")
+	ErrPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
 
 	// go-snowflake errors.
-	ErrObjectNotExistOrAuthorized = NewError("object does not exist or not authorized")
-	ErrAccountIsEmpty             = NewError("account is empty")
+	ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
+	ErrAccountIsEmpty             = errors.New("account is empty")
 
 	// snowflake-sdk errors.
-	ErrInvalidObjectIdentifier = NewError("invalid object identifier")
-	ErrDifferentDatabase       = NewError("database must be the same")
+	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
+	ErrDifferentDatabase       = errors.New("database must be the same")
 )
 
 type IntErrType string
@@ -44,11 +43,11 @@ func errInvalidIdentifier(structName string, identifierField string) error {
 }
 
 func errOneOf(structName string, fieldNames ...string) error {
-	return newSDKError(fmt.Sprintf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames), 2)
+	return fmt.Errorf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames)
 }
 
 func errNotSet(structName string, fieldNames ...string) error {
-	return newSDKError(fmt.Sprintf("%v fields: %v should be set", structName, fieldNames), 2)
+	return fmt.Errorf("%v fields: %v should be set", structName, fieldNames)
 }
 
 func errExactlyOneOf(structName string, fieldNames ...string) error {
@@ -75,86 +74,4 @@ func decodeDriverError(err error) error {
 	}
 
 	return err
-}
-
-type Error struct {
-	file         string
-	line         int
-	message      string
-	nestedErrors []error
-}
-
-func (e *Error) Error() string {
-	builder := new(strings.Builder)
-	writeTree(e, builder, 0)
-	return builder.String()
-}
-
-// NewError creates new sdk.Error with information like filename or line number (depending on where NewError was called)
-func NewError(message string) error {
-	return newSDKError(message, 2)
-}
-
-// JoinErrors returns an error that wraps the given errors. Any nil error values are discarded.
-// JoinErrors returns nil if errs contains no non-nil values, otherwise returns sdk.Error with errs as its nested errors
-func JoinErrors(errs ...error) error {
-	notNilErrs := make([]error, 0)
-	for _, err := range errs {
-		if err != nil {
-			notNilErrs = append(notNilErrs, err)
-		}
-	}
-	if len(notNilErrs) == 0 {
-		return nil
-	}
-	err := newSDKError("joined error", 2)
-	err.nestedErrors = notNilErrs
-	return err
-}
-
-func newSDKError(message string, skip int, nested ...error) *Error {
-	line, filename := getCallerInfo(skip)
-	return &Error{
-		file:         filename,
-		line:         line,
-		message:      message,
-		nestedErrors: nested,
-	}
-}
-
-func getCallerInfo(skip int) (int, string) {
-	_, file, line, _ := runtime.Caller(skip + 1)
-	fileSplit := strings.Split(file, "/")
-	var filename string
-	if len(fileSplit) > 1 {
-		filename = fileSplit[len(fileSplit)-1]
-	} else {
-		filename = fileSplit[0]
-	}
-	return line, filename
-}
-
-const (
-	errorIndentRune = '›'
-)
-
-func writeTree(e error, builder *strings.Builder, indent int) {
-	var sdkErr *Error
-	if joinedErr, ok := e.(interface{ Unwrap() []error }); ok { //nolint:all
-		errs := joinedErr.Unwrap()
-		for i, err := range errs {
-			if i > 0 {
-				builder.WriteByte('\n')
-			}
-			writeTree(err, builder, indent)
-		}
-	} else if errors.As(e, &sdkErr) {
-		builder.WriteString(strings.Repeat(fmt.Sprintf("%b ", errorIndentRune), indent) + fmt.Sprintf("[%s:%d] %s", sdkErr.file, sdkErr.line, sdkErr.message))
-		for _, err := range sdkErr.nestedErrors {
-			builder.WriteByte('\n')
-			writeTree(err, builder, indent+2)
-		}
-	} else {
-		builder.WriteString(strings.Repeat(fmt.Sprintf("%b ", errorIndentRune), indent) + e.Error())
-	}
 }
