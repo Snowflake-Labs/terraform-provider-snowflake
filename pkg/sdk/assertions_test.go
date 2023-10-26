@@ -19,7 +19,7 @@ func assertOptsInvalid(t *testing.T, opts validatable, expectedError error) {
 	err := opts.validate()
 	assert.Error(t, err)
 	var sdkErr *Error
-	if errors.As(err, &sdkErr) || errors.Is(err, sdkErr) {
+	if errors.As(err, &sdkErr) {
 		errorWithoutFileInfo := assertOptsInvalidReg.ReplaceAllString(sdkErr.Error(), "")
 		expectedErrorWithoutFileInfo := assertOptsInvalidReg.ReplaceAllString(expectedError.Error(), "")
 		assert.Equal(t, expectedErrorWithoutFileInfo, errorWithoutFileInfo)

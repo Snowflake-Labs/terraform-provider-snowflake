@@ -3,9 +3,10 @@ package sdk
 import (
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestWriteTree(t *testing.T) {
@@ -72,21 +73,18 @@ func TestWriteTree(t *testing.T) {
 			},
 		},
 		"nested errors - custom errors combined with std errors": {
-			Error: &Error{
-				message: "root error",
-				nestedErrors: []error{
-					errors.New("regular error"),
-					errors.Join(
-						errors.New("regular nested error"),
-						NewError("custom nested error"),
-						JoinErrors(
-							errors.New("regular nested nested error"),
-							NewError("custom nested nested error"),
-						),
+			Error: NewError("root error",
+				errors.New("regular error"),
+				errors.Join(
+					errors.New("regular nested error"),
+					NewError("custom nested error"),
+					JoinErrors(
+						errors.New("regular nested nested error"),
+						NewError("custom nested nested error"),
 					),
-					NewError("custom error"),
-				},
-			},
+				),
+				NewError("custom error"),
+			),
 			Indent: 0,
 			MatchContains: []string{
 				fmt.Sprintf("%s root error", errorsTestFileInfoReg),
