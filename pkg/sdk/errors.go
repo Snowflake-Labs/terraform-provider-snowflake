@@ -9,16 +9,16 @@ import (
 )
 
 var (
-	ErrNilOptions                    = errors.New("options cannot be nil")
-	ErrPatternRequiredForLikeKeyword = errors.New("pattern must be specified for like keyword")
+	ErrNilOptions                    = NewError("options cannot be nil")
+	ErrPatternRequiredForLikeKeyword = NewError("pattern must be specified for like keyword")
 
 	// go-snowflake errors.
-	ErrObjectNotExistOrAuthorized = errors.New("object does not exist or not authorized")
-	ErrAccountIsEmpty             = errors.New("account is empty")
+	ErrObjectNotExistOrAuthorized = NewError("object does not exist or not authorized")
+	ErrAccountIsEmpty             = NewError("account is empty")
 
 	// snowflake-sdk errors.
-	ErrInvalidObjectIdentifier = errors.New("invalid object identifier")
-	ErrDifferentDatabase       = errors.New("database must be the same")
+	ErrInvalidObjectIdentifier = NewError("invalid object identifier")
+	ErrDifferentDatabase       = NewError("database must be the same")
 )
 
 type IntErrType string
@@ -32,31 +32,31 @@ const (
 )
 
 func errIntValue(structName string, fieldName string, intErrType IntErrType, limit int) error {
-	return fmt.Errorf("%s field: %s must be %s %d", structName, fieldName, string(intErrType), limit)
+	return newError(fmt.Sprintf("%s field: %s must be %s %d", structName, fieldName, string(intErrType), limit), 2)
 }
 
 func errIntBetween(structName string, fieldName string, from int, to int) error {
-	return fmt.Errorf("%s field: %s must be between %d and %d", structName, fieldName, from, to)
+	return newError(fmt.Sprintf("%s field: %s must be between %d and %d", structName, fieldName, from, to), 2)
 }
 
 func errInvalidIdentifier(structName string, identifierField string) error {
-	return fmt.Errorf("invalid object identifier of %s field: %s", structName, identifierField)
+	return newError(fmt.Sprintf("invalid object identifier of %s field: %s", structName, identifierField), 2)
 }
 
 func errOneOf(structName string, fieldNames ...string) error {
-	return fmt.Errorf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames)
+	return newError(fmt.Sprintf("%v fields: %v are incompatible and cannot be set at the same time", structName, fieldNames), 2)
 }
 
 func errNotSet(structName string, fieldNames ...string) error {
-	return fmt.Errorf("%v fields: %v should be set", structName, fieldNames)
+	return newError(fmt.Sprintf("%v fields: %v should be set", structName, fieldNames), 2)
 }
 
 func errExactlyOneOf(structName string, fieldNames ...string) error {
-	return fmt.Errorf("exactly one of %s fileds %v must be set", structName, fieldNames)
+	return newError(fmt.Sprintf("exactly one of %s fileds %v must be set", structName, fieldNames), 2)
 }
 
 func errAtLeastOneOf(structName string, fieldNames ...string) error {
-	return fmt.Errorf("at least one of %s fields %v must be set", structName, fieldNames)
+	return newError(fmt.Sprintf("at least one of %s fields %v must be set", structName, fieldNames), 2)
 }
 
 func decodeDriverError(err error) error {
@@ -90,22 +90,17 @@ func (e *Error) Append(err error) {
 
 func (e *Error) Error() string {
 	builder := new(strings.Builder)
-	writeTree(e, builder, 0, true)
+	writeTree(e, builder, 0)
 	return builder.String()
 }
 
 // NewError creates new sdk.Error with information like filename or line number (depending on where NewError was called)
-func NewError(message string) error {
-	return newSDKError(message, 2)
-}
-
-// WrapError creates new sdk.Error with the message from err
-func WrapError(err error) error {
-	return newSDKError(err.Error(), 2)
+func NewError(message string, nestedErrors ...error) error {
+	return newError(message, 2, nestedErrors...)
 }
 
 // JoinErrors returns an error that wraps the given errors. Any nil error values are discarded.
-// JoinErrors returns nil if errs contains no non-nil values, otherwise returns sdk.Error with nested errors
+// JoinErrors returns nil if errs contains no non-nil values, otherwise returns sdk.Error with errs as its nested errors
 func JoinErrors(errs ...error) error {
 	notNilErrs := make([]error, 0)
 	for _, err := range errs {
@@ -116,12 +111,18 @@ func JoinErrors(errs ...error) error {
 	if len(notNilErrs) == 0 {
 		return nil
 	}
-	err := newSDKError("joined error", 2)
+	err := newError("joined error", 2)
 	err.nestedErrors = notNilErrs
 	return err
 }
 
-func newSDKError(message string, skip int, nested ...error) *Error {
+// newError is a function that is supposed to be used by other sdk.Error constructors like NewError or JoinErrors.
+// First of all, it returns error implementation which is against Golang conventions, but it's convenient to use
+// in other constructors, because then there's no need for casting and guessing which type or error it is.
+// The second reason is that there's mysterious skip parameter which is only useful for other constructor functions.
+// It determines how many function stack calls have to be skipped to get the right filename and line information,
+// which is kind of too low-level for outside use.
+func newError(message string, skip int, nested ...error) *Error {
 	line, filename := getCallerInfo(skip)
 	return &Error{
 		file:         filename,
@@ -143,7 +144,11 @@ func getCallerInfo(skip int) (int, string) {
 	return line, filename
 }
 
-func writeTree(e error, builder *strings.Builder, indent int, fileInfo bool) {
+const (
+	errorIndentRune = '›'
+)
+
+func writeTree(e error, builder *strings.Builder, indent int) {
 	var sdkErr *Error
 	if joinedErr, ok := e.(interface{ Unwrap() []error }); ok { //nolint:all
 		errs := joinedErr.Unwrap()
@@ -151,19 +156,15 @@ func writeTree(e error, builder *strings.Builder, indent int, fileInfo bool) {
 			if i > 0 {
 				builder.WriteByte('\n')
 			}
-			writeTree(err, builder, indent, fileInfo)
+			writeTree(err, builder, indent)
 		}
 	} else if errors.As(e, &sdkErr) {
-		if fileInfo {
-			builder.WriteString(strings.Repeat("› ", indent) + fmt.Sprintf("[%s:%d] %s", sdkErr.file, sdkErr.line, sdkErr.message))
-		} else {
-			builder.WriteString(strings.Repeat("› ", indent) + fmt.Sprintf("[file:line] %s", sdkErr.message))
-		}
+		builder.WriteString(strings.Repeat(fmt.Sprintf("%b ", errorIndentRune), indent) + fmt.Sprintf("[%s:%d] %s", sdkErr.file, sdkErr.line, sdkErr.message))
 		for _, err := range sdkErr.nestedErrors {
 			builder.WriteByte('\n')
-			writeTree(err, builder, indent+2, fileInfo)
+			writeTree(err, builder, indent+2)
 		}
 	} else {
-		builder.WriteString(strings.Repeat("› ", indent) + e.Error())
+		builder.WriteString(strings.Repeat(fmt.Sprintf("%b ", errorIndentRune), indent) + e.Error())
 	}
 }
