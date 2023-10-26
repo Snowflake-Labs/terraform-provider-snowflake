@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var assertOptsInvalidReg = regexp.MustCompile("^\\[\\w+\\.\\w+:\\d+\\] ")
+var assertOptsInvalidReg = regexp.MustCompile(`^\[\w+\.\w+:\d+\] `)
 
 // assertOptsInvalid could be reused in tests for other interfaces in sdk package.
 func assertOptsInvalid(t *testing.T, opts validatable, expectedError error) {

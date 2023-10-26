@@ -3,9 +3,10 @@ package sdk
 import (
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestWriteTree(t *testing.T) {
