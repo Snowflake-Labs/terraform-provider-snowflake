@@ -678,7 +678,7 @@ func putOnStage(t *testing.T, client *sdk.Client, stage *sdk.Stage, filename str
 	t.Helper()
 	ctx := context.Background()
 
-	path, err := filepath.Abs("./test-resources/" + filename)
+	path, err := filepath.Abs("./testdata/" + filename)
 	require.NoError(t, err)
 	absPath := "file://" + path
 

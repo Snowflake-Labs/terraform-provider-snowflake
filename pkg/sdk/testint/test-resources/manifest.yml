@@ -1,5 +1,0 @@
-manifest_version: 1 # required
-version:
-  name: hello_snowflake
-  label: "v1.0"
-  comment: "The first version of a Snowflake Native App"

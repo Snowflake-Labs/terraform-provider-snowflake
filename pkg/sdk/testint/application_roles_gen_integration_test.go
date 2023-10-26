@@ -6,14 +6,13 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestInt_ApplicationRoles setup is a little bit different from usual integration test, because of how native apps work.
 // I will try to explain it in a short form, but check out this article for more detailed description (https://docs.snowflake.com/en/developer-guide/native-apps/tutorials/getting-started-tutorial#introduction)
-//   - create database, schema and stage (it is where we will be keeping our application files)
+//   - create stage - it is where we will be keeping our application files
 //   - put native app specific stuff onto our stage (manifest.yml and setup.sql)
 //   - create an application package and a new version of our application
 //   - create an application with the application package and the version we just created
@@ -22,16 +21,8 @@ import (
 func TestInt_ApplicationRoles(t *testing.T) {
 	client := testClient(t)
 
-	dbName := "application_role_db"
-	db, cleanupDB := createDatabaseWithOptions(t, client, sdk.NewAccountObjectIdentifier(dbName), nil)
-	t.Cleanup(cleanupDB)
-
-	schemaName := random.AlphanumericN(32)
-	schema, cleanupSchema := createSchemaWithIdentifier(t, client, db, schemaName)
-	t.Cleanup(cleanupSchema)
-
 	stageName := "stage_name"
-	stage, cleanupStage := createStage(t, client, db, schema, stageName)
+	stage, cleanupStage := createStage(t, client, testDb(t), testSchema(t), stageName)
 	t.Cleanup(cleanupStage)
 
 	putOnStage(t, client, stage, "manifest.yml")
