@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"time"
 )
 
@@ -94,6 +95,9 @@ type ShowRegionsOptions struct {
 }
 
 func (opts *ShowRegionsOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 

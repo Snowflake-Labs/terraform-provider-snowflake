@@ -55,10 +55,12 @@ type AlertCondition struct {
 }
 
 func (opts *CreateAlertOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
+	}
 	return nil
 }
 
@@ -115,15 +117,17 @@ type AlterAlertOptions struct {
 }
 
 func (opts *AlterAlertOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-
 	if !exactlyOneValueSet(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
-		return errExactlyOneOf("Action", "Set", "Unset", "ModifyCondition", "ModifyAction")
+		errs = append(errs, errExactlyOneOf("AlterAlertOptions", "Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 type AlertSet struct {
@@ -163,8 +167,11 @@ type dropAlertOptions struct {
 }
 
 func (opts *dropAlertOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -254,6 +261,9 @@ func (row alertDBRow) convert() *Alert {
 }
 
 func (opts *ShowAlertOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -295,9 +305,12 @@ type describeAlertOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describeAlertOptions) validate() error {
-	if !ValidObjectIdentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describeAlertOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

@@ -19,7 +19,7 @@ func (tl *TargetLag) validate() error {
 	}
 	var errs []error
 	if everyValueSet(tl.MaximumDuration, tl.Downstream) {
-		errs = append(errs, errOneOf("MaximumDuration", "Downstream"))
+		errs = append(errs, errOneOf("TargetLag", "MaximumDuration", "Downstream"))
 	}
 	return errors.Join(errs...)
 }
@@ -60,16 +60,8 @@ func (opts *alterDynamicTableOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if ok := exactlyOneValueSet(
-		opts.Suspend,
-		opts.Resume,
-		opts.Refresh,
-		opts.Set,
-	); !ok {
-		errs = append(errs, errAlterNeedsExactlyOneAction)
-	}
-	if !anyValueSet(opts.Suspend, opts.Resume, opts.Refresh, opts.Set) {
-		errs = append(errs, errAlterNeedsAtLeastOneProperty)
+	if ok := exactlyOneValueSet(opts.Suspend, opts.Resume, opts.Refresh, opts.Set); !ok {
+		errs = append(errs, errExactlyOneOf("alterDynamicTableOptions", "Suspend", "Resume", "Refresh", "Set"))
 	}
 	if valueSet(opts.Set) && valueSet(opts.Set.TargetLag) {
 		errs = append(errs, opts.Set.TargetLag.validate())
@@ -86,7 +78,7 @@ func (opts *showDynamicTableOptions) validate() error {
 		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
 	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
-		errs = append(errs, errScopeRequiredForInKeyword)
+		errs = append(errs, errExactlyOneOf("showDynamicTableOptions.In", "Account", "Database", "Schema"))
 	}
 	return errors.Join(errs...)
 }

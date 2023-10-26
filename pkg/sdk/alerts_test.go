@@ -37,7 +37,7 @@ func TestAlertAlter(t *testing.T) {
 		opts := &AlterAlertOptions{
 			name: id,
 		}
-		assertOptsInvalid(t, opts, errExactlyOneOf("Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterAlertOptions", "Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
 	})
 
 	t.Run("fail when 2 alter actions specified", func(t *testing.T) {
@@ -49,7 +49,7 @@ func TestAlertAlter(t *testing.T) {
 				Comment: String(newComment),
 			},
 		}
-		assertOptsInvalid(t, opts, errExactlyOneOf("Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterAlertOptions", "Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
 	})
 
 	t.Run("with resume", func(t *testing.T) {
@@ -119,7 +119,7 @@ func TestAlertDrop(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &dropAlertOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
@@ -210,7 +210,7 @@ func TestAlertDescribe(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &describeAlertOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {

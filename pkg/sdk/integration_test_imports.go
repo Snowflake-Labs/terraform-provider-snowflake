@@ -15,3 +15,11 @@ func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, erro
 	result, err := c.db.ExecContext(ctx, sql)
 	return result, decodeDriverError(err)
 }
+
+func ErrExactlyOneOf(structName string, fieldNames ...string) error {
+	return errExactlyOneOf(structName, fieldNames...)
+}
+
+func ErrOneOf(structName string, fieldNames ...string) error {
+	return errOneOf(structName, fieldNames...)
+}

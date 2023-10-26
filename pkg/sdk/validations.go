@@ -99,6 +99,10 @@ func validateIntInRange(value int, min int, max int) bool {
 	return true
 }
 
+func validateIntGreaterThan(value int, min int) bool {
+	return value > min
+}
+
 func validateIntGreaterThanOrEqual(value int, min int) bool {
 	return value >= min
 }

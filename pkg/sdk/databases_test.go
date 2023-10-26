@@ -8,6 +8,7 @@ import (
 func TestDatabasesCreate(t *testing.T) {
 	t.Run("clone", func(t *testing.T) {
 		opts := &CreateDatabaseOptions{
+			name: NewAccountObjectIdentifier("db"),
 			Clone: &Clone{
 				SourceObject: NewAccountObjectIdentifier("db1"),
 				At: &TimeTravel{
@@ -15,11 +16,12 @@ func TestDatabasesCreate(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE CLONE "db1" AT (TIMESTAMP => '2021-01-01 00:00:00 +0000 UTC')`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db" CLONE "db1" AT (TIMESTAMP => '2021-01-01 00:00:00 +0000 UTC')`)
 	})
 
 	t.Run("complete", func(t *testing.T) {
 		opts := &CreateDatabaseOptions{
+			name:                       NewAccountObjectIdentifier("db"),
 			OrReplace:                  Bool(true),
 			Transient:                  Bool(true),
 			Comment:                    String("comment"),
@@ -32,7 +34,7 @@ func TestDatabasesCreate(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TRANSIENT DATABASE DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TRANSIENT DATABASE "db" DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`)
 	})
 }
 

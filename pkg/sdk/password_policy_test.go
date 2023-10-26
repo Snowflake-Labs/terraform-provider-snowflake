@@ -11,7 +11,7 @@ func TestPasswordPolicyCreate(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &CreatePasswordPolicyOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
@@ -46,14 +46,14 @@ func TestPasswordPolicyAlter(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &AlterPasswordPolicyOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &AlterPasswordPolicyOptions{
 			name: id,
 		}
-		assertOptsInvalid(t, opts, errExactlyOneOf("Set", "Unset", "NewName"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Set", "Unset", "NewName"))
 	})
 
 	t.Run("with set", func(t *testing.T) {
@@ -93,7 +93,7 @@ func TestPasswordPolicyDrop(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &DropPasswordPolicyOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
@@ -180,7 +180,7 @@ func TestPasswordPolicyDescribe(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &describePasswordPolicyOptions{}
-		assertOptsInvalid(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {

@@ -108,6 +108,9 @@ type CreateSchemaOptions struct {
 }
 
 func (opts *CreateSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
@@ -118,7 +121,7 @@ func (opts *CreateSchemaOptions) validate() error {
 		}
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("IfNotExists", "OrReplace"))
+		errs = append(errs, errOneOf("CreateSchemaOptions", "IfNotExists", "OrReplace"))
 	}
 	return errors.Join(errs...)
 }
@@ -155,6 +158,9 @@ type AlterSchemaOptions struct {
 }
 
 func (opts *AlterSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
@@ -233,12 +239,15 @@ type DropSchemaOptions struct {
 }
 
 func (opts *DropSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.Cascade, opts.Restrict) {
-		errs = append(errs, errors.New("only one of the fields [ Cascade | Restrict ] can be set at once"))
+		errs = append(errs, errOneOf("DropSchemaOptions", "Cascade", "Restrict"))
 	}
 	return errors.Join(errs...)
 }
@@ -267,8 +276,11 @@ type undropSchemaOptions struct {
 }
 
 func (opts *undropSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -296,8 +308,11 @@ type describeSchemaOptions struct {
 }
 
 func (opts *describeSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -346,6 +361,9 @@ type ShowSchemaOptions struct {
 }
 
 func (opts *ShowSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 

@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -57,19 +58,23 @@ type CreateAccountOptions struct {
 }
 
 func (opts *CreateAccountOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if opts.AdminName == "" {
-		return fmt.Errorf("AdminName is required")
+		errs = append(errs, errNotSet("CreateAccountOptions", "AdminName"))
 	}
 	if !anyValueSet(opts.AdminPassword, opts.AdminRSAPublicKey) {
-		return fmt.Errorf("at least one of AdminPassword or AdminRSAPublicKey must be set")
+		errs = append(errs, errAtLeastOneOf("CreateAccountOptions", "AdminPassword", "AdminRSAPublicKey"))
 	}
 	if opts.Email == "" {
-		return fmt.Errorf("email is required")
+		errs = append(errs, errNotSet("CreateAccountOptions", "Email"))
 	}
 	if opts.Edition == "" {
-		return fmt.Errorf("edition is required")
+		errs = append(errs, errNotSet("CreateAccountOptions", "Edition"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error {
@@ -92,26 +97,34 @@ type AlterAccountOptions struct {
 }
 
 func (opts *AlterAccountOptions) validate() error {
-	if ok := exactlyOneValueSet(
-		opts.Set,
-		opts.Unset,
-		opts.Drop,
-		opts.Rename); !ok {
-		return fmt.Errorf("exactly one of Set, Unset, Drop, Rename  must be set")
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.Drop, opts.Rename) {
+		errs = append(errs, errExactlyOneOf("CreateAccountOptions", "Set", "Unset", "Drop", "Rename"))
 	}
 	if valueSet(opts.Set) {
-		return opts.Set.validate()
+		if err := opts.Set.validate(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if valueSet(opts.Unset) {
-		return opts.Unset.validate()
+		if err := opts.Unset.validate(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if valueSet(opts.Drop) {
-		return opts.Drop.validate()
+		if err := opts.Drop.validate(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if valueSet(opts.Rename) {
-		return opts.Rename.validate()
+		if err := opts.Rename.validate(); err != nil {
+			errs = append(errs, err)
+		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type AccountLevelParameters struct {
@@ -122,27 +135,28 @@ type AccountLevelParameters struct {
 }
 
 func (opts *AccountLevelParameters) validate() error {
+	var errs []error
 	if valueSet(opts.AccountParameters) {
 		if err := opts.AccountParameters.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.SessionParameters) {
 		if err := opts.SessionParameters.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.ObjectParameters) {
 		if err := opts.ObjectParameters.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.UserParameters) {
 		if err := opts.UserParameters.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type AccountSet struct {
@@ -154,34 +168,16 @@ type AccountSet struct {
 }
 
 func (opts *AccountSet) validate() error {
-	if !anyValueSet(opts.Parameters, opts.ResourceMonitor, opts.PasswordPolicy, opts.SessionPolicy, opts.Tag) {
-		return fmt.Errorf("at least one of parameters, resource monitor, password policy, session policy, or tag must be set")
+	var errs []error
+	if !exactlyOneValueSet(opts.Parameters, opts.ResourceMonitor, opts.PasswordPolicy, opts.SessionPolicy, opts.Tag) {
+		errs = append(errs, errExactlyOneOf("AccountSet", "Parameters", "ResourceMonitor", "PasswordPolicy", "SessionPolicy", "Tag"))
 	}
 	if valueSet(opts.Parameters) {
-		if !everyValueNil(opts.ResourceMonitor, opts.PasswordPolicy, opts.SessionPolicy, opts.Tag) {
-			return fmt.Errorf("cannot set both parameters and resource monitor, password policy, session policy, or tag")
+		if err := opts.Parameters.validate(); err != nil {
+			errs = append(errs, err)
 		}
-		return opts.Parameters.validate()
 	}
-	if valueSet(opts.ResourceMonitor) {
-		if !everyValueNil(opts.PasswordPolicy, opts.SessionPolicy, opts.Tag) {
-			return fmt.Errorf("cannot set both resource monitor and password policy, session policy, or tag")
-		}
-		return nil
-	}
-	if valueSet(opts.PasswordPolicy) {
-		if !everyValueNil(opts.SessionPolicy, opts.Tag) {
-			return fmt.Errorf("cannot set both password policy and session policy or tag")
-		}
-		return nil
-	}
-	if valueSet(opts.SessionPolicy) {
-		if !everyValueNil(opts.Tag) {
-			return fmt.Errorf("cannot set both session policy and tag")
-		}
-		return nil
-	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type AccountLevelParametersUnset struct {
@@ -193,7 +189,7 @@ type AccountLevelParametersUnset struct {
 
 func (opts *AccountLevelParametersUnset) validate() error {
 	if !anyValueSet(opts.AccountParameters, opts.SessionParameters, opts.ObjectParameters, opts.UserParameters) {
-		return fmt.Errorf("at least one of account parameters, session parameters, object parameters, or user parameters must be set")
+		return errAtLeastOneOf("AccountLevelParametersUnset", "AccountParameters", "SessionParameters", "ObjectParameters", "UserParameters")
 	}
 	return nil
 }
@@ -206,28 +202,16 @@ type AccountUnset struct {
 }
 
 func (opts *AccountUnset) validate() error {
-	if !anyValueSet(opts.Parameters, opts.PasswordPolicy, opts.SessionPolicy, opts.Tag) {
-		return fmt.Errorf("at least one of parameters, password policy, session policy, or tag must be set")
+	var errs []error
+	if !exactlyOneValueSet(opts.Parameters, opts.PasswordPolicy, opts.SessionPolicy, opts.Tag) {
+		errs = append(errs, errExactlyOneOf("AccountUnset", "Parameters", "PasswordPolicy", "SessionPolicy", "Tag"))
 	}
 	if valueSet(opts.Parameters) {
-		if !everyValueNil(opts.PasswordPolicy, opts.SessionPolicy, opts.Tag) {
-			return fmt.Errorf("cannot unset both parameters and password policy, session policy, or tag")
+		if err := opts.Parameters.validate(); err != nil {
+			errs = append(errs, err)
 		}
-		return opts.Parameters.validate()
 	}
-	if valueSet(opts.PasswordPolicy) {
-		if !everyValueNil(opts.SessionPolicy, opts.Tag) {
-			return fmt.Errorf("cannot unset both password policy and session policy or tag")
-		}
-		return nil
-	}
-	if valueSet(opts.SessionPolicy) {
-		if !everyValueNil(opts.Tag) {
-			return fmt.Errorf("cannot unset both session policy and tag")
-		}
-		return nil
-	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type AccountRename struct {
@@ -237,13 +221,14 @@ type AccountRename struct {
 }
 
 func (opts *AccountRename) validate() error {
+	var errs []error
 	if !ValidObjectIdentifier(opts.Name) {
-		return fmt.Errorf("Name must be set")
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !ValidObjectIdentifier(opts.NewName) {
-		return fmt.Errorf("NewName must be set")
+		errs = append(errs, errInvalidIdentifier("AccountRename", "NewName"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type AccountDrop struct {
@@ -252,17 +237,19 @@ type AccountDrop struct {
 }
 
 func (opts *AccountDrop) validate() error {
+	var errs []error
 	if !ValidObjectIdentifier(opts.Name) {
-		return fmt.Errorf("Name must be set")
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.OldURL) {
+		// TODO: Should this really be validated to be true ?
 		if !*opts.OldURL {
-			return fmt.Errorf("OldURL must be true")
+			errs = append(errs, fmt.Errorf("OldURL must be true"))
 		}
 	} else {
-		return fmt.Errorf("OldURL must be set")
+		errs = append(errs, errNotSet("AccountDrop", "OldURL"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (c *accounts) Alter(ctx context.Context, opts *AlterAccountOptions) error {
@@ -280,6 +267,9 @@ type ShowAccountOptions struct {
 }
 
 func (opts *ShowAccountOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -380,7 +370,6 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 	if err != nil {
 		return nil, err
 	}
-
 	for _, account := range accounts {
 		if account.AccountName == id.Name() || account.AccountLocator == id.Name() {
 			return &account, nil
@@ -399,13 +388,17 @@ type DropAccountOptions struct {
 }
 
 func (opts *DropAccountOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return fmt.Errorf("Name must be set")
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !validateIntGreaterThanOrEqual(opts.gracePeriodInDays, 3) {
-		return fmt.Errorf("gracePeriodInDays must be greater than or equal to 3")
+		errs = append(errs, errIntValue("DropAccountOptions", "gracePeriodInDays", IntErrGreaterOrEqual, 3))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (c *accounts) Drop(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int, opts *DropAccountOptions) error {
