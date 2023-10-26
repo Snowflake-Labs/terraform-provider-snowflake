@@ -1,12 +1,13 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -63,33 +64,30 @@ func Streams() *schema.Resource {
 
 func ReadStreams(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentStreams, err := snowflake.ListStreams(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
+	currentStreams, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
+		WithIn(&sdk.In{
+			Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
+		}))
+	if err != nil {
 		log.Printf("[DEBUG] streams in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse streams in schema (%s)", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	streams := []map[string]interface{}{}
-
-	for _, stream := range currentStreams {
-		streamMap := map[string]interface{}{}
-
-		streamMap["name"] = stream.StreamName.String
-		streamMap["database"] = stream.DatabaseName.String
-		streamMap["schema"] = stream.SchemaName.String
-		streamMap["comment"] = stream.Comment.String
-		streamMap["table"] = stream.TableName.String
-
-		streams = append(streams, streamMap)
+	streams := make([]map[string]any, len(currentStreams))
+	for i, stream := range currentStreams {
+		streams[i] = map[string]any{
+			"name":     stream.Name,
+			"database": stream.DatabaseName,
+			"schema":   stream.SchemaName,
+			"comment":  stream.Comment,
+			"table":    stream.TableName,
+		}
 	}
 
 	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))

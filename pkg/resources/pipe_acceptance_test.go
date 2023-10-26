@@ -23,11 +23,11 @@ func TestAcc_Pipe(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: pipeConfig(accName),
+				Config: pipeConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_pipe.test", "database", accName),
-					resource.TestCheckResourceAttr("snowflake_pipe.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_pipe.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_pipe.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "auto_ingest", "false"),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "notification_channel", ""),
@@ -37,23 +37,12 @@ func TestAcc_Pipe(t *testing.T) {
 	})
 }
 
-func pipeConfig(name string) string {
+func pipeConfig(name string, databaseName string, schemaName string) string {
 	s := `
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = snowflake_database.test.name
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_table" "test" {
-	database = snowflake_database.test.name
-  	schema   = snowflake_schema.test.name
-	name     = snowflake_schema.test.name
+	database = "%s"
+  	schema   = "%s"
+	name     = "%s"
 
 	  column {
 			name = "id"
@@ -67,17 +56,17 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_stage" "test" {
-	name = snowflake_schema.test.name
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	name = "%s"
+	database = "%s"
+	schema = "%s"
 	comment = "Terraform acceptance test"
 }
 
 
 resource "snowflake_pipe" "test" {
-  database       = snowflake_database.test.name
-  schema         = snowflake_schema.test.name
-  name           = snowflake_schema.test.name
+  database       = "%s"
+  schema         = "%s"
+  name           = "%s"
   comment        = "Terraform acceptance test"
   copy_statement = <<CMD
 COPY INTO "${snowflake_table.test.database}"."${snowflake_table.test.schema}"."${snowflake_table.test.name}"
@@ -87,5 +76,5 @@ CMD
   auto_ingest    = false
 }
 `
-	return fmt.Sprintf(s, name)
+	return fmt.Sprintf(s, databaseName, schemaName, name, name, databaseName, schemaName, databaseName, schemaName, name)
 }

@@ -24,10 +24,10 @@ func TestAcc_RowAccessPolicyGrant(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: rowAccessPolicyGrantConfig(accName, "APPLY"),
+				Config: rowAccessPolicyGrantConfig(accName, "APPLY", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "database_name", accName),
-					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "row_access_policy_name", accName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "privilege", "APPLY"),
@@ -35,10 +35,10 @@ func TestAcc_RowAccessPolicyGrant(t *testing.T) {
 			},
 			// UPDATE ALL PRIVILEGES
 			{
-				Config: rowAccessPolicyGrantConfig(accName, "ALL PRIVILEGES"),
+				Config: rowAccessPolicyGrantConfig(accName, "ALL PRIVILEGES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "database_name", accName),
-					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "schema_name", accName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "row_access_policy_name", accName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy_grant.test", "privilege", "ALL PRIVILEGES"),
@@ -56,27 +56,16 @@ func TestAcc_RowAccessPolicyGrant(t *testing.T) {
 	})
 }
 
-func rowAccessPolicyGrantConfig(n, privilege string) string {
+func rowAccessPolicyGrantConfig(n string, privilege string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_role" "test" {
 	name = "%v"
 }
 
 resource "snowflake_row_access_policy" "test" {
 	name = "%v"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "%s"
+	schema = "%s"
 	signature = {
 		N = "VARCHAR"
 		V = "VARCHAR",
@@ -87,10 +76,10 @@ resource "snowflake_row_access_policy" "test" {
 
 resource "snowflake_row_access_policy_grant" "test" {
 	row_access_policy_name = snowflake_row_access_policy.test.name
-	database_name = snowflake_database.test.name
+	database_name = "%s"
 	roles         = [snowflake_role.test.name]
-	schema_name   = snowflake_schema.test.name
+	schema_name   = "%s"
 	privilege = "%s"
 }
-`, n, n, n, n, privilege)
+`, n, n, databaseName, schemaName, databaseName, schemaName, privilege)
 }

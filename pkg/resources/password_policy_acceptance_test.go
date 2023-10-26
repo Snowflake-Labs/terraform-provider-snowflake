@@ -19,7 +19,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: passwordPolicyConfig(accName, 10, 30, "this is a test resource"),
+				Config: passwordPolicyConfig(accName, 10, 30, "this is a test resource", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "10"),
@@ -27,7 +27,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 				),
 			},
 			{
-				Config: passwordPolicyConfig(accName, 20, 50, "this is a test resource"),
+				Config: passwordPolicyConfig(accName, 20, 50, "this is a test resource", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "20"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_length", "50"),
@@ -52,17 +52,17 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 	})
 }
 
-func passwordPolicyConfig(s string, minLength int, maxLength int, comment string) string {
+func passwordPolicyConfig(s string, minLength int, maxLength int, comment string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_password_policy" "pa" {
-		database   = "terraform_test_database"
-		schema     = "terraform_test_schema"
 		name       = "%v"
+		database   = "%s"
+		schema     = "%s"
 		min_length = %d
 		max_length = %d
 		or_replace = true
 	}
-	`, s, minLength, maxLength)
+	`, s, databaseName, schemaName, minLength, maxLength)
 }
 
 func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
@@ -75,20 +75,20 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Creation sets zero properly
 			{
-				Config: passwordPolicyDefaultMaxageDaysConfig(accName, 0),
+				Config: passwordPolicyDefaultMaxageDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
 				),
 			},
 			{
-				Config: passwordPolicyDefaultMaxageDaysConfig(accName, 10),
+				Config: passwordPolicyDefaultMaxageDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "10"),
 				),
 			},
 			// Update sets zero properly
 			{
-				Config: passwordPolicyDefaultMaxageDaysConfig(accName, 0),
+				Config: passwordPolicyDefaultMaxageDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
 				),
@@ -102,13 +102,13 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 	})
 }
 
-func passwordPolicyDefaultMaxageDaysConfig(s string, maxAgeDays int) string {
+func passwordPolicyDefaultMaxageDaysConfig(s string, databaseName string, schemaName string, maxAgeDays int) string {
 	return fmt.Sprintf(`
 	resource "snowflake_password_policy" "pa" {
-		database   = "terraform_test_database"
-		schema     = "terraform_test_schema"
 		name         = "%v"
+		database   = "%s"
+		schema     = "%s"
 		max_age_days = %d
 	}
-	`, s, maxAgeDays)
+	`, s, databaseName, schemaName, maxAgeDays)
 }
