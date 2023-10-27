@@ -79,7 +79,7 @@ var TasksDef = g.NewInterface(
 			OptionalSQL("COPY GRANTS").
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 			ListAssignment("AFTER", "SchemaObjectIdentifier", g.ParameterOptions().NoEquals()).
-			WithTags().
+			OptionalTags().
 			OptionalTextAssignment("WHEN", g.ParameterOptions().NoQuotes().NoEquals()).
 			SQL("AS").
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).

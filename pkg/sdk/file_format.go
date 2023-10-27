@@ -329,6 +329,7 @@ type CreateFileFormatOptions struct {
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
 	Type        FileFormatType         `ddl:"parameter" sql:"TYPE"`
+	Comment     *string                `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
 
 	FileFormatTypeOptions
 }
@@ -376,8 +377,9 @@ type AlterFileFormatOptions struct {
 	IfExists   *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name       SchemaObjectIdentifier `ddl:"identifier"`
 
-	Rename *AlterFileFormatRenameOptions
-	Set    *FileFormatTypeOptions `ddl:"list,no_comma" sql:"SET"`
+	Rename     *AlterFileFormatRenameOptions
+	Set        *FileFormatTypeOptions `ddl:"list,no_comma" sql:"SET"`
+	SetComment *string                `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
 }
 
 func (opts *AlterFileFormatOptions) validate() error {
@@ -466,8 +468,6 @@ type FileFormatTypeOptions struct {
 	XMLDisableAutoConvert       *bool           `ddl:"parameter" sql:"DISABLE_AUTO_CONVERT"`
 	XMLReplaceInvalidCharacters *bool           `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
 	XMLSkipByteOrderMark        *bool           `ddl:"parameter" sql:"SKIP_BYTE_ORDER_MARK"`
-
-	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *FileFormatTypeOptions) fieldsByType() map[FileFormatType][]any {
