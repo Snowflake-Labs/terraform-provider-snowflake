@@ -3,15 +3,12 @@ package sdk
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
 )
-
-var assertOptsInvalidReg = regexp.MustCompile(`^\[\w+\.\w+:\d+\] `)
 
 // assertOptsInvalid could be reused in tests for other interfaces in sdk package.
 func assertOptsInvalid(t *testing.T, opts validatable, expectedError error) {
@@ -20,8 +17,8 @@ func assertOptsInvalid(t *testing.T, opts validatable, expectedError error) {
 	assert.Error(t, err)
 	var sdkErr *Error
 	if errors.As(err, &sdkErr) {
-		errorWithoutFileInfo := assertOptsInvalidReg.ReplaceAllString(sdkErr.Error(), "")
-		expectedErrorWithoutFileInfo := assertOptsInvalidReg.ReplaceAllString(expectedError.Error(), "")
+		errorWithoutFileInfo := errorFileInfoRegexp.ReplaceAllString(sdkErr.Error(), "")
+		expectedErrorWithoutFileInfo := errorFileInfoRegexp.ReplaceAllString(expectedError.Error(), "")
 		assert.Equal(t, expectedErrorWithoutFileInfo, errorWithoutFileInfo)
 	} else {
 		assert.Equal(t, expectedError, err)
@@ -36,7 +33,7 @@ func assertOptsInvalidJoinedErrors(t *testing.T, opts validatable, expectedError
 	for _, expectedError := range expectedErrors {
 		var sdkErr *Error
 		if errors.As(expectedError, &sdkErr) {
-			expectedErrorWithoutFileInfo := assertOptsInvalidReg.ReplaceAllString(sdkErr.Error(), "")
+			expectedErrorWithoutFileInfo := errorFileInfoRegexp.ReplaceAllString(sdkErr.Error(), "")
 			assert.Contains(t, err.Error(), expectedErrorWithoutFileInfo)
 		} else {
 			assert.Contains(t, err.Error(), expectedError.Error())

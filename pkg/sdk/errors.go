@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -77,6 +78,10 @@ func decodeDriverError(err error) error {
 	return err
 }
 
+const errorIndentRune = '›'
+
+var errorFileInfoRegexp = regexp.MustCompile(`\[\w+\.\w+:\d+\] `)
+
 type Error struct {
 	file         string
 	line         int
@@ -137,10 +142,6 @@ func getCallerInfo(skip int) (int, string) {
 	}
 	return line, filename
 }
-
-const (
-	errorIndentRune = '›'
-)
 
 func writeTree(e error, builder *strings.Builder, indent int) {
 	var sdkErr *Error
