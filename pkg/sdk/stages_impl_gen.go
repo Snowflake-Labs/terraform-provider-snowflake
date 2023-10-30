@@ -17,6 +17,56 @@ func (v *stages) CreateInternal(ctx context.Context, request *CreateInternalStag
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *stages) CreateOnS3(ctx context.Context, request *CreateOnS3StageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *stages) CreateOnGCS(ctx context.Context, request *CreateOnGCSStageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *stages) CreateOnAzure(ctx context.Context, request *CreateOnAzureStageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *stages) CreateOnS3Compatible(ctx context.Context, request *CreateOnS3CompatibleStageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *stages) Alter(ctx context.Context, request *AlterStageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *stages) AlterInternalStage(ctx context.Context, request *AlterInternalStageStageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *stages) AlterExternalS3Stage(ctx context.Context, request *AlterExternalS3StageStageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *stages) AlterExternalGCSStage(ctx context.Context, request *AlterExternalGCSStageStageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *stages) AlterExternalAzureStage(ctx context.Context, request *AlterExternalAzureStageStageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *stages) AlterDirectoryTable(ctx context.Context, request *AlterDirectoryTableStageRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *stages) Drop(ctx context.Context, request *DropStageRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
@@ -81,15 +131,498 @@ func (r *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {
 			EnforceLength:     r.CopyOptions.EnforceLength,
 			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
 			Force:             r.CopyOptions.Force,
-			Type:              r.CopyOptions.Type,
-			TYPE:              r.CopyOptions.TYPE,
 		}
 		if r.CopyOptions.OnError != nil {
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
-				Continue: r.CopyOptions.OnError.Continue,
-				SkipFile: r.CopyOptions.OnError.SkipFile,
-				SkipFile: r.CopyOptions.OnError.SkipFile,
+				Continue:       r.CopyOptions.OnError.Continue,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
+				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
+		}
+	}
+	return opts
+}
+
+func (r *CreateOnS3StageRequest) toOpts() *CreateOnS3StageOptions {
+	opts := &CreateOnS3StageOptions{
+		OrReplace:   r.OrReplace,
+		Temporary:   r.Temporary,
+		IfNotExists: r.IfNotExists,
+		name:        r.name,
+
+		Comment: r.Comment,
+		Tag:     r.Tag,
+	}
+	if r.ExternalStageParams != nil {
+		opts.ExternalStageParams = &ExternalS3StageParams{
+			Url:                r.ExternalStageParams.Url,
+			StorageIntegration: r.ExternalStageParams.StorageIntegration,
+		}
+		if r.ExternalStageParams.Credentials != nil {
+			opts.ExternalStageParams.Credentials = &ExternalStageS3Credentials{
+				AwsKeyId:     r.ExternalStageParams.Credentials.AwsKeyId,
+				AwsSecretKey: r.ExternalStageParams.Credentials.AwsSecretKey,
+				AwsToken:     r.ExternalStageParams.Credentials.AwsToken,
+				AwsRole:      r.ExternalStageParams.Credentials.AwsRole,
+			}
+		}
+		if r.ExternalStageParams.Encryption != nil {
+			opts.ExternalStageParams.Encryption = &ExternalStageS3Encryption{
+				Type:      r.ExternalStageParams.Encryption.Type,
+				MasterKey: r.ExternalStageParams.Encryption.MasterKey,
+				KmsKeyId:  r.ExternalStageParams.Encryption.KmsKeyId,
+			}
+		}
+	}
+	if r.DirectoryTableOptions != nil {
+		opts.DirectoryTableOptions = &ExternalS3DirectoryTableOptions{
+			Enable:          r.DirectoryTableOptions.Enable,
+			RefreshOnCreate: r.DirectoryTableOptions.RefreshOnCreate,
+			AutoRefresh:     r.DirectoryTableOptions.AutoRefresh,
+		}
+	}
+	if r.FileFormat != nil {
+		opts.FileFormat = &StageFileFormat{
+			FormatName: r.FileFormat.FormatName,
+			Type:       r.FileFormat.Type,
+			TYPE:       r.FileFormat.TYPE,
+		}
+	}
+	if r.CopyOptions != nil {
+		opts.CopyOptions = &StageCopyOptions{
+
+			SizeLimit:         r.CopyOptions.SizeLimit,
+			Purge:             r.CopyOptions.Purge,
+			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
+			MatchByColumnName: r.CopyOptions.MatchByColumnName,
+			EnforceLength:     r.CopyOptions.EnforceLength,
+			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
+			Force:             r.CopyOptions.Force,
+		}
+		if r.CopyOptions.OnError != nil {
+			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
+				Continue:       r.CopyOptions.OnError.Continue,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
+				AbortStatement: r.CopyOptions.OnError.AbortStatement,
+			}
+		}
+	}
+	return opts
+}
+
+func (r *CreateOnGCSStageRequest) toOpts() *CreateOnGCSStageOptions {
+	opts := &CreateOnGCSStageOptions{
+		OrReplace:   r.OrReplace,
+		Temporary:   r.Temporary,
+		IfNotExists: r.IfNotExists,
+		name:        r.name,
+
+		Comment: r.Comment,
+		Tag:     r.Tag,
+	}
+	if r.ExternalStageParams != nil {
+		opts.ExternalStageParams = &ExternalGCSStageParams{
+			Url:                r.ExternalStageParams.Url,
+			StorageIntegration: r.ExternalStageParams.StorageIntegration,
+		}
+		if r.ExternalStageParams.Encryption != nil {
+			opts.ExternalStageParams.Encryption = &ExternalStageGCSEncryption{
+				Type:     r.ExternalStageParams.Encryption.Type,
+				KmsKeyId: r.ExternalStageParams.Encryption.KmsKeyId,
+			}
+		}
+	}
+	if r.DirectoryTableOptions != nil {
+		opts.DirectoryTableOptions = &ExternalGCSDirectoryTableOptions{
+			Enable:                  r.DirectoryTableOptions.Enable,
+			RefreshOnCreate:         r.DirectoryTableOptions.RefreshOnCreate,
+			AutoRefresh:             r.DirectoryTableOptions.AutoRefresh,
+			NotificationIntegration: r.DirectoryTableOptions.NotificationIntegration,
+		}
+	}
+	if r.FileFormat != nil {
+		opts.FileFormat = &StageFileFormat{
+			FormatName: r.FileFormat.FormatName,
+			Type:       r.FileFormat.Type,
+			TYPE:       r.FileFormat.TYPE,
+		}
+	}
+	if r.CopyOptions != nil {
+		opts.CopyOptions = &StageCopyOptions{
+
+			SizeLimit:         r.CopyOptions.SizeLimit,
+			Purge:             r.CopyOptions.Purge,
+			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
+			MatchByColumnName: r.CopyOptions.MatchByColumnName,
+			EnforceLength:     r.CopyOptions.EnforceLength,
+			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
+			Force:             r.CopyOptions.Force,
+		}
+		if r.CopyOptions.OnError != nil {
+			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
+				Continue:       r.CopyOptions.OnError.Continue,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
+				AbortStatement: r.CopyOptions.OnError.AbortStatement,
+			}
+		}
+	}
+	return opts
+}
+
+func (r *CreateOnAzureStageRequest) toOpts() *CreateOnAzureStageOptions {
+	opts := &CreateOnAzureStageOptions{
+		OrReplace:   r.OrReplace,
+		Temporary:   r.Temporary,
+		IfNotExists: r.IfNotExists,
+		name:        r.name,
+
+		Comment: r.Comment,
+		Tag:     r.Tag,
+	}
+	if r.ExternalStageParams != nil {
+		opts.ExternalStageParams = &ExternalAzureStageParams{
+			Url:                r.ExternalStageParams.Url,
+			StorageIntegration: r.ExternalStageParams.StorageIntegration,
+		}
+		if r.ExternalStageParams.Credentials != nil {
+			opts.ExternalStageParams.Credentials = &ExternalStageAzureCredentials{
+				AzureSasToken: r.ExternalStageParams.Credentials.AzureSasToken,
+			}
+		}
+		if r.ExternalStageParams.Encryption != nil {
+			opts.ExternalStageParams.Encryption = &ExternalStageGCSEncryption{
+				Type:      r.ExternalStageParams.Encryption.Type,
+				MasterKey: r.ExternalStageParams.Encryption.MasterKey,
+			}
+		}
+	}
+	if r.DirectoryTableOptions != nil {
+		opts.DirectoryTableOptions = &ExternalAzureDirectoryTableOptions{
+			Enable:                  r.DirectoryTableOptions.Enable,
+			RefreshOnCreate:         r.DirectoryTableOptions.RefreshOnCreate,
+			AutoRefresh:             r.DirectoryTableOptions.AutoRefresh,
+			NotificationIntegration: r.DirectoryTableOptions.NotificationIntegration,
+		}
+	}
+	if r.FileFormat != nil {
+		opts.FileFormat = &StageFileFormat{
+			FormatName: r.FileFormat.FormatName,
+			Type:       r.FileFormat.Type,
+			TYPE:       r.FileFormat.TYPE,
+		}
+	}
+	if r.CopyOptions != nil {
+		opts.CopyOptions = &StageCopyOptions{
+
+			SizeLimit:         r.CopyOptions.SizeLimit,
+			Purge:             r.CopyOptions.Purge,
+			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
+			MatchByColumnName: r.CopyOptions.MatchByColumnName,
+			EnforceLength:     r.CopyOptions.EnforceLength,
+			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
+			Force:             r.CopyOptions.Force,
+		}
+		if r.CopyOptions.OnError != nil {
+			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
+				Continue:       r.CopyOptions.OnError.Continue,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
+				AbortStatement: r.CopyOptions.OnError.AbortStatement,
+			}
+		}
+	}
+	return opts
+}
+
+func (r *CreateOnS3CompatibleStageRequest) toOpts() *CreateOnS3CompatibleStageOptions {
+	opts := &CreateOnS3CompatibleStageOptions{
+		OrReplace:   r.OrReplace,
+		Temporary:   r.Temporary,
+		IfNotExists: r.IfNotExists,
+		name:        r.name,
+		Url:         r.Url,
+		Endpoint:    r.Endpoint,
+
+		Comment: r.Comment,
+		Tag:     r.Tag,
+	}
+	if r.Credentials != nil {
+		opts.Credentials = &ExternalStageS3CompatibleCredentials{
+			AwsKeyId:     r.Credentials.AwsKeyId,
+			AwsSecretKey: r.Credentials.AwsSecretKey,
+		}
+	}
+	if r.DirectoryTableOptions != nil {
+		opts.DirectoryTableOptions = &ExternalS3DirectoryTableOptions{
+			Enable:          r.DirectoryTableOptions.Enable,
+			RefreshOnCreate: r.DirectoryTableOptions.RefreshOnCreate,
+			AutoRefresh:     r.DirectoryTableOptions.AutoRefresh,
+		}
+	}
+	if r.FileFormat != nil {
+		opts.FileFormat = &StageFileFormat{
+			FormatName: r.FileFormat.FormatName,
+			Type:       r.FileFormat.Type,
+			TYPE:       r.FileFormat.TYPE,
+		}
+	}
+	if r.CopyOptions != nil {
+		opts.CopyOptions = &StageCopyOptions{
+
+			SizeLimit:         r.CopyOptions.SizeLimit,
+			Purge:             r.CopyOptions.Purge,
+			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
+			MatchByColumnName: r.CopyOptions.MatchByColumnName,
+			EnforceLength:     r.CopyOptions.EnforceLength,
+			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
+			Force:             r.CopyOptions.Force,
+		}
+		if r.CopyOptions.OnError != nil {
+			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
+				Continue:       r.CopyOptions.OnError.Continue,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
+				AbortStatement: r.CopyOptions.OnError.AbortStatement,
+			}
+		}
+	}
+	return opts
+}
+
+func (r *AlterStageRequest) toOpts() *AlterStageOptions {
+	opts := &AlterStageOptions{
+		IfExists:  r.IfExists,
+		name:      r.name,
+		RenameTo:  r.RenameTo,
+		SetTags:   r.SetTags,
+		UnsetTags: r.UnsetTags,
+	}
+	return opts
+}
+
+func (r *AlterInternalStageStageRequest) toOpts() *AlterInternalStageStageOptions {
+	opts := &AlterInternalStageStageOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+
+		Comment: r.Comment,
+	}
+	if r.FileFormat != nil {
+		opts.FileFormat = &StageFileFormat{
+			FormatName: r.FileFormat.FormatName,
+			Type:       r.FileFormat.Type,
+			TYPE:       r.FileFormat.TYPE,
+		}
+	}
+	if r.CopyOptions != nil {
+		opts.CopyOptions = &StageCopyOptions{
+
+			SizeLimit:         r.CopyOptions.SizeLimit,
+			Purge:             r.CopyOptions.Purge,
+			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
+			MatchByColumnName: r.CopyOptions.MatchByColumnName,
+			EnforceLength:     r.CopyOptions.EnforceLength,
+			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
+			Force:             r.CopyOptions.Force,
+		}
+		if r.CopyOptions.OnError != nil {
+			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
+				Continue:       r.CopyOptions.OnError.Continue,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
+				AbortStatement: r.CopyOptions.OnError.AbortStatement,
+			}
+		}
+	}
+	return opts
+}
+
+func (r *AlterExternalS3StageStageRequest) toOpts() *AlterExternalS3StageStageOptions {
+	opts := &AlterExternalS3StageStageOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+
+		Comment: r.Comment,
+	}
+	if r.ExternalStageParams != nil {
+		opts.ExternalStageParams = &ExternalS3StageParams{
+			Url:                r.ExternalStageParams.Url,
+			StorageIntegration: r.ExternalStageParams.StorageIntegration,
+		}
+		if r.ExternalStageParams.Credentials != nil {
+			opts.ExternalStageParams.Credentials = &ExternalStageS3Credentials{
+				AwsKeyId:     r.ExternalStageParams.Credentials.AwsKeyId,
+				AwsSecretKey: r.ExternalStageParams.Credentials.AwsSecretKey,
+				AwsToken:     r.ExternalStageParams.Credentials.AwsToken,
+				AwsRole:      r.ExternalStageParams.Credentials.AwsRole,
+			}
+		}
+		if r.ExternalStageParams.Encryption != nil {
+			opts.ExternalStageParams.Encryption = &ExternalStageS3Encryption{
+				Type:      r.ExternalStageParams.Encryption.Type,
+				MasterKey: r.ExternalStageParams.Encryption.MasterKey,
+				KmsKeyId:  r.ExternalStageParams.Encryption.KmsKeyId,
+			}
+		}
+	}
+	if r.FileFormat != nil {
+		opts.FileFormat = &StageFileFormat{
+			FormatName: r.FileFormat.FormatName,
+			Type:       r.FileFormat.Type,
+			TYPE:       r.FileFormat.TYPE,
+		}
+	}
+	if r.CopyOptions != nil {
+		opts.CopyOptions = &StageCopyOptions{
+
+			SizeLimit:         r.CopyOptions.SizeLimit,
+			Purge:             r.CopyOptions.Purge,
+			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
+			MatchByColumnName: r.CopyOptions.MatchByColumnName,
+			EnforceLength:     r.CopyOptions.EnforceLength,
+			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
+			Force:             r.CopyOptions.Force,
+		}
+		if r.CopyOptions.OnError != nil {
+			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
+				Continue:       r.CopyOptions.OnError.Continue,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
+				AbortStatement: r.CopyOptions.OnError.AbortStatement,
+			}
+		}
+	}
+	return opts
+}
+
+func (r *AlterExternalGCSStageStageRequest) toOpts() *AlterExternalGCSStageStageOptions {
+	opts := &AlterExternalGCSStageStageOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+
+		Comment: r.Comment,
+	}
+	if r.ExternalStageParams != nil {
+		opts.ExternalStageParams = &ExternalGCSStageParams{
+			Url:                r.ExternalStageParams.Url,
+			StorageIntegration: r.ExternalStageParams.StorageIntegration,
+		}
+		if r.ExternalStageParams.Encryption != nil {
+			opts.ExternalStageParams.Encryption = &ExternalStageGCSEncryption{
+				Type:     r.ExternalStageParams.Encryption.Type,
+				KmsKeyId: r.ExternalStageParams.Encryption.KmsKeyId,
+			}
+		}
+	}
+	if r.FileFormat != nil {
+		opts.FileFormat = &StageFileFormat{
+			FormatName: r.FileFormat.FormatName,
+			Type:       r.FileFormat.Type,
+			TYPE:       r.FileFormat.TYPE,
+		}
+	}
+	if r.CopyOptions != nil {
+		opts.CopyOptions = &StageCopyOptions{
+
+			SizeLimit:         r.CopyOptions.SizeLimit,
+			Purge:             r.CopyOptions.Purge,
+			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
+			MatchByColumnName: r.CopyOptions.MatchByColumnName,
+			EnforceLength:     r.CopyOptions.EnforceLength,
+			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
+			Force:             r.CopyOptions.Force,
+		}
+		if r.CopyOptions.OnError != nil {
+			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
+				Continue:       r.CopyOptions.OnError.Continue,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
+				AbortStatement: r.CopyOptions.OnError.AbortStatement,
+			}
+		}
+	}
+	return opts
+}
+
+func (r *AlterExternalAzureStageStageRequest) toOpts() *AlterExternalAzureStageStageOptions {
+	opts := &AlterExternalAzureStageStageOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+
+		Comment: r.Comment,
+	}
+	if r.ExternalStageParams != nil {
+		opts.ExternalStageParams = &ExternalAzureStageParams{
+			Url:                r.ExternalStageParams.Url,
+			StorageIntegration: r.ExternalStageParams.StorageIntegration,
+		}
+		if r.ExternalStageParams.Credentials != nil {
+			opts.ExternalStageParams.Credentials = &ExternalStageAzureCredentials{
+				AzureSasToken: r.ExternalStageParams.Credentials.AzureSasToken,
+			}
+		}
+		if r.ExternalStageParams.Encryption != nil {
+			opts.ExternalStageParams.Encryption = &ExternalStageGCSEncryption{
+				Type:      r.ExternalStageParams.Encryption.Type,
+				MasterKey: r.ExternalStageParams.Encryption.MasterKey,
+			}
+		}
+	}
+	if r.FileFormat != nil {
+		opts.FileFormat = &StageFileFormat{
+			FormatName: r.FileFormat.FormatName,
+			Type:       r.FileFormat.Type,
+			TYPE:       r.FileFormat.TYPE,
+		}
+	}
+	if r.CopyOptions != nil {
+		opts.CopyOptions = &StageCopyOptions{
+
+			SizeLimit:         r.CopyOptions.SizeLimit,
+			Purge:             r.CopyOptions.Purge,
+			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
+			MatchByColumnName: r.CopyOptions.MatchByColumnName,
+			EnforceLength:     r.CopyOptions.EnforceLength,
+			Truncatecolumns:   r.CopyOptions.Truncatecolumns,
+			Force:             r.CopyOptions.Force,
+		}
+		if r.CopyOptions.OnError != nil {
+			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
+				Continue:       r.CopyOptions.OnError.Continue,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile:       r.CopyOptions.OnError.SkipFile,
+				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
+				AbortStatement: r.CopyOptions.OnError.AbortStatement,
+			}
+		}
+	}
+	return opts
+}
+
+func (r *AlterDirectoryTableStageRequest) toOpts() *AlterDirectoryTableStageOptions {
+	opts := &AlterDirectoryTableStageOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+	}
+	if r.SetDirectory != nil {
+		opts.SetDirectory = &DirectoryTableSet{
+			Enable: r.SetDirectory.Enable,
+		}
+	}
+	if r.Refresh != nil {
+		opts.Refresh = &DirectoryTableRefresh{
+			Subpath: r.Refresh.Subpath,
 		}
 	}
 	return opts
