@@ -52,7 +52,7 @@ provider "snowflake" {
 #### *(remove redundant information)* region
 
 Specifying a region is a legacy thing and according to https://docs.snowflake.com/en/user-guide/admin-account-identifier
-you can specify a region as a part of account parameter. Specifying account parameter with the region is also condiered legacy,
+you can specify a region as a part of account parameter. Specifying account parameter with the region is also considered legacy,
 but with this approach it will be easier to convert only your account identifier to the new preferred way of specifying account identifier.
 
 ```terraform
