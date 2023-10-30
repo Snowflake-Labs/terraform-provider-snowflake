@@ -16,7 +16,6 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// TODO [SNOW-884987]: add missing SUSPEND_TASK_AFTER_NUM_FAILURES attribute.
 var taskSchema = map[string]*schema.Schema{
 	"enabled": {
 		Type:        schema.TypeBool,
@@ -66,6 +65,13 @@ var taskSchema = map[string]*schema.Schema{
 		Optional:     true,
 		ValidateFunc: validation.IntBetween(0, 86400000),
 		Description:  "Specifies the time limit on a single run of the task before it times out (in milliseconds).",
+	},
+	"suspend_task_after_num_failures": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      0,
+		ValidateFunc: validation.IntAtLeast(0),
+		Description:  "Specifies the number of consecutive failed task runs after which the current task is suspended automatically. The default is 0 (no automatic suspension).",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -119,6 +125,19 @@ func difference(a, b map[string]any) map[string]any {
 	for k := range a {
 		if _, ok := b[k]; !ok {
 			diff[k] = a[k]
+		}
+	}
+	return diff
+}
+
+// differentValue find keys present both in 'a' and 'b' but having different values.
+func differentValue(a, b map[string]any) map[string]any {
+	diff := make(map[string]any)
+	for k, va := range a {
+		if vb, ok := b[k]; ok {
+			if vb != va {
+				diff[k] = vb
+			}
 		}
 	}
 	return diff
@@ -214,7 +233,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(params) > 0 {
-		sessionParameters := map[string]interface{}{}
+		sessionParameters := make(map[string]any)
 		fieldParameters := map[string]interface{}{
 			"user_task_managed_initial_warehouse_size": "",
 		}
@@ -233,6 +252,13 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				fieldParameters["user_task_timeout_ms"] = timeout
+			case "SUSPEND_TASK_AFTER_NUM_FAILURES":
+				num, err := strconv.ParseInt(param.Value, 10, 64)
+				if err != nil {
+					return err
+				}
+
+				fieldParameters["suspend_task_after_num_failures"] = num
 			default:
 				sessionParameters[param.Key] = param.Value
 			}
@@ -297,6 +323,10 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
 		createRequest.WithUserTaskTimeoutMs(sdk.Int(v.(int)))
+	}
+
+	if v, ok := d.GetOk("suspend_task_after_num_failures"); ok {
+		createRequest.WithSuspendTaskAfterNumFailures(sdk.Int(v.(int)))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -558,6 +588,20 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("suspend_task_after_num_failures") {
+		o, n := d.GetChange("suspend_task_after_num_failures")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if o.(int) > 0 && n.(int) == 0 {
+			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithSuspendTaskAfterNumFailures(sdk.Bool(true)))
+		} else {
+			alterRequest.WithSet(sdk.NewTaskSetRequest().WithSuspendTaskAfterNumFailures(sdk.Int(n.(int))))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating suspend task after num failures on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
 	if d.HasChange("comment") {
 		newComment := d.Get("comment")
 		alterRequest := sdk.NewAlterTaskRequest(taskId)
@@ -586,7 +630,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// TODO [SNOW-884987]: old implementation does not handle changing parameter value correctly (only finds for parameters to add od remove, not change)
 	if d.HasChange("session_parameters") {
 		o, n := d.GetChange("session_parameters")
 
@@ -601,6 +644,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 		remove := difference(os, ns)
 		add := difference(ns, os)
+		change := differentValue(os, ns)
 
 		if len(remove) > 0 {
 			sessionParametersUnset, err := sdk.GetSessionParametersUnsetFrom(remove)
@@ -608,7 +652,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(sdk.NewTaskUnsetRequest().WithSessionParametersUnset(sessionParametersUnset))); err != nil {
-				return fmt.Errorf("error removing session_parameters on task %v", d.Id())
+				return fmt.Errorf("error removing session_parameters on task %v err = %w", d.Id(), err)
 			}
 		}
 
@@ -618,7 +662,17 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithSessionParameters(sessionParameters))); err != nil {
-				return fmt.Errorf("error adding session_parameters to task %v", d.Id())
+				return fmt.Errorf("error adding session_parameters to task %v err = %w", d.Id(), err)
+			}
+		}
+
+		if len(change) > 0 {
+			sessionParameters, err := sdk.GetSessionParametersFrom(change)
+			if err != nil {
+				return err
+			}
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithSessionParameters(sessionParameters))); err != nil {
+				return fmt.Errorf("error updating session_parameters in task %v err = %w", d.Id(), err)
 			}
 		}
 	}
