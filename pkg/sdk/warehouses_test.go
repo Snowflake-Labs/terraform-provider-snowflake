@@ -142,12 +142,11 @@ func TestWarehouseAlter(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Unset: &WarehouseUnset{
-				WarehouseSize:   Bool(true),
 				MaxClusterCount: Bool(true),
 				AutoResume:      Bool(true),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET WAREHOUSE_SIZE, MAX_CLUSTER_COUNT, AUTO_RESUME`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET MAX_CLUSTER_COUNT, AUTO_RESUME`)
 	})
 
 	t.Run("rename", func(t *testing.T) {

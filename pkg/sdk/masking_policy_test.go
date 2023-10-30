@@ -88,7 +88,7 @@ func TestMaskingPolicyAlter(t *testing.T) {
 		opts := &AlterMaskingPolicyOptions{
 			name: id,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaskingPolicyOptions", "NewName", "Set", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaskingPolicyOptions", "Set", "Unset", "SetTag", "UnsetTag", "NewName"))
 	})
 
 	t.Run("with set", func(t *testing.T) {
