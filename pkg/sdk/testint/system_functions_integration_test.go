@@ -22,12 +22,10 @@ func TestInt_GetTag(t *testing.T) {
 
 		tagValue := random.String()
 		err := client.MaskingPolicies.Alter(ctx, maskingPolicyTest.ID(), &sdk.AlterMaskingPolicyOptions{
-			Set: &sdk.MaskingPolicySet{
-				Tag: []sdk.TagAssociation{
-					{
-						Name:  tagTest.ID(),
-						Value: tagValue,
-					},
+			SetTag: []sdk.TagAssociation{
+				{
+					Name:  tagTest.ID(),
+					Value: tagValue,
 				},
 			},
 		})

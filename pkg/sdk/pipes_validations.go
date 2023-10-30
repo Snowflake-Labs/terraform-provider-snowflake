@@ -34,8 +34,14 @@ func (opts *AlterPipeOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if ok := exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags, opts.Refresh); !ok {
-		errs = append(errs, errExactlyOneOf("AlterPipeOptions", "Set", "Unset", "SetTags", "UnsetTags", "Refresh"))
+	if ok := exactlyOneValueSet(
+		opts.Set,
+		opts.Unset,
+		opts.SetTag,
+		opts.UnsetTag,
+		opts.Refresh,
+	); !ok {
+		errs = append(errs, errExactlyOneOf("AlterPipeOptions", "Set", "Unset", "SetTag", "UnsetTag", "Refresh"))
 	}
 	if set := opts.Set; valueSet(set) {
 		if !anyValueSet(set.ErrorIntegration, set.PipeExecutionPaused, set.Comment) {
@@ -45,16 +51,6 @@ func (opts *AlterPipeOptions) validate() error {
 	if unset := opts.Unset; valueSet(unset) {
 		if !anyValueSet(unset.PipeExecutionPaused, unset.Comment) {
 			errs = append(errs, errAtLeastOneOf("AlterPipeOptions.Unset", "PipeExecutionPaused", "Comment"))
-		}
-	}
-	if setTags := opts.SetTags; valueSet(setTags) {
-		if !valueSet(setTags.Tag) {
-			errs = append(errs, errNotSet("AlterPipeOptions.SetTags", "Tag"))
-		}
-	}
-	if unsetTags := opts.UnsetTags; valueSet(unsetTags) {
-		if !valueSet(unsetTags.Tag) {
-			errs = append(errs, errNotSet("AlterPipeOptions.UnsetTags", "Tag"))
 		}
 	}
 	return errors.Join(errs...)

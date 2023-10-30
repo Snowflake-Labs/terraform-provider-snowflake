@@ -440,16 +440,14 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
-			Set: &sdk.WarehouseSet{
-				Tag: []sdk.TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: "val",
-					},
-					{
-						Name:  tag2.ID(),
-						Value: "val2",
-					},
+			SetTag: []sdk.TagAssociation{
+				{
+					Name:  tag.ID(),
+					Value: "val",
+				},
+				{
+					Name:  tag2.ID(),
+					Value: "val2",
 				},
 			},
 		}
@@ -470,16 +468,14 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
-			Set: &sdk.WarehouseSet{
-				Tag: []sdk.TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: "val1",
-					},
-					{
-						Name:  tag2.ID(),
-						Value: "val2",
-					},
+			SetTag: []sdk.TagAssociation{
+				{
+					Name:  tag.ID(),
+					Value: "val1",
+				},
+				{
+					Name:  tag2.ID(),
+					Value: "val2",
 				},
 			},
 		}
@@ -493,11 +489,9 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.Equal(t, "val2", val2)
 
 		alterOptions = &sdk.AlterWarehouseOptions{
-			Unset: &sdk.WarehouseUnset{
-				Tag: []sdk.ObjectIdentifier{
-					tag.ID(),
-					tag2.ID(),
-				},
+			UnsetTag: []sdk.ObjectIdentifier{
+				tag.ID(),
+				tag2.ID(),
 			},
 		}
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)

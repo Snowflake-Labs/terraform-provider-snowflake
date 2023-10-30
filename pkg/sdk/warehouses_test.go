@@ -114,16 +114,14 @@ func TestWarehouseAlter(t *testing.T) {
 	t.Run("with set tag", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			Set: &WarehouseSet{
-				Tag: []TagAssociation{
-					{
-						Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
-						Value: "v1",
-					},
-					{
-						Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
-						Value: "v2",
-					},
+			SetTag: []TagAssociation{
+				{
+					Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+					Value: "v1",
+				},
+				{
+					Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+					Value: "v2",
 				},
 			},
 		}
@@ -133,10 +131,8 @@ func TestWarehouseAlter(t *testing.T) {
 	t.Run("with unset tag", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			Unset: &WarehouseUnset{
-				Tag: []ObjectIdentifier{
-					NewSchemaObjectIdentifier("db", "schema", "tag1"),
-				},
+			UnsetTag: []ObjectIdentifier{
+				NewSchemaObjectIdentifier("db", "schema", "tag1"),
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db"."schema"."tag1"`)
@@ -146,12 +142,11 @@ func TestWarehouseAlter(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Unset: &WarehouseUnset{
-				WarehouseSize:   Bool(true),
 				MaxClusterCount: Bool(true),
 				AutoResume:      Bool(true),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET WAREHOUSE_SIZE, MAX_CLUSTER_COUNT, AUTO_RESUME`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET MAX_CLUSTER_COUNT, AUTO_RESUME`)
 	})
 
 	t.Run("rename", func(t *testing.T) {
@@ -191,16 +186,14 @@ func TestWarehouseAlter(t *testing.T) {
 	t.Run("with set tag", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			Set: &WarehouseSet{
-				Tag: []TagAssociation{
-					{
-						Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
-						Value: "v1",
-					},
-					{
-						Name:  NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
-						Value: "v2",
-					},
+			SetTag: []TagAssociation{
+				{
+					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+					Value: "v1",
+				},
+				{
+					Name:  NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
+					Value: "v2",
 				},
 			},
 		}
@@ -210,11 +203,9 @@ func TestWarehouseAlter(t *testing.T) {
 	t.Run("with unset tag", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			Unset: &WarehouseUnset{
-				Tag: []ObjectIdentifier{
-					NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
-					NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
-				},
+			UnsetTag: []ObjectIdentifier{
+				NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+				NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db1"."schema1"."tag1", "db2"."schema2"."tag2"`)

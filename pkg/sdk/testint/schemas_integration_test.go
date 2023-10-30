@@ -225,12 +225,10 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 		tagValue := "tag-value"
 		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
-			Set: &sdk.SchemaSet{
-				Tag: []sdk.TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: tagValue,
-					},
+			SetTag: []sdk.TagAssociation{
+				{
+					Name:  tag.ID(),
+					Value: tagValue,
 				},
 			},
 		})
@@ -268,10 +266,8 @@ func TestInt_SchemasAlter(t *testing.T) {
 		})
 
 		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
-			Unset: &sdk.SchemaUnset{
-				Tag: []sdk.ObjectIdentifier{
-					tagID,
-				},
+			UnsetTag: []sdk.ObjectIdentifier{
+				tagID,
 			},
 		})
 		require.NoError(t, err)
