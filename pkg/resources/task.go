@@ -598,7 +598,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {
-			return fmt.Errorf("error updating suspenf task after num failures on task %s", taskId.FullyQualifiedName())
+			return fmt.Errorf("error updating suspend task after num failures on task %s", taskId.FullyQualifiedName())
 		}
 	}
 
