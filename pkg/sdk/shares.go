@@ -247,7 +247,7 @@ type ShareSet struct {
 
 func (v *ShareSet) validate() error {
 	if !anyValueSet(v.Accounts, v.Comment) {
-		return errAtLeastOneOf("Accounts", "Comment")
+		return errAtLeastOneOf("ShareSet", "Accounts", "Comment")
 	}
 	return nil
 }
