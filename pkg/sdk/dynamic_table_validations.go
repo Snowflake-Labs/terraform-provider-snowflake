@@ -1,9 +1,5 @@
 package sdk
 
-import (
-	"errors"
-)
-
 var (
 	_ validatable = new(createDynamicTableOptions)
 	_ validatable = new(alterDynamicTableOptions)
@@ -15,27 +11,26 @@ var (
 
 func (tl *TargetLag) validate() error {
 	if tl == nil {
-		return errors.Join(ErrNilOptions)
+		return ErrNilOptions
 	}
-	var errs []error
 	if everyValueSet(tl.MaximumDuration, tl.Downstream) {
-		errs = append(errs, errOneOf("TargetLag", "MaximumDuration", "Downstream"))
+		return errOneOf("TargetLag", "MaximumDuration", "Downstream")
 	}
-	return errors.Join(errs...)
+	return nil
 }
 
 func (opts *createDynamicTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(ErrNilOptions)
+		return ErrNilOptions
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !ValidObjectIdentifier(opts.warehouse) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("createDynamicTableOptions", "warehouse"))
 	}
-	return errors.Join(errs...)
+	return JoinErrors(errs...)
 }
 
 func (dts *DynamicTableSet) validate() error {
@@ -43,18 +38,15 @@ func (dts *DynamicTableSet) validate() error {
 	if valueSet(dts.TargetLag) {
 		errs = append(errs, dts.TargetLag.validate())
 	}
-
-	if valueSet(dts.Warehouse) {
-		if !ValidObjectIdentifier(*dts.Warehouse) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
-		}
+	if dts.Warehouse != nil && !ValidObjectIdentifier(*dts.Warehouse) {
+		errs = append(errs, errInvalidIdentifier("DynamicTableSet", "Warehouse"))
 	}
-	return errors.Join(errs...)
+	return JoinErrors(errs...)
 }
 
 func (opts *alterDynamicTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(ErrNilOptions)
+		return ErrNilOptions
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
@@ -66,12 +58,12 @@ func (opts *alterDynamicTableOptions) validate() error {
 	if valueSet(opts.Set) && valueSet(opts.Set.TargetLag) {
 		errs = append(errs, opts.Set.TargetLag.validate())
 	}
-	return errors.Join(errs...)
+	return JoinErrors(errs...)
 }
 
 func (opts *showDynamicTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(ErrNilOptions)
+		return ErrNilOptions
 	}
 	var errs []error
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
@@ -80,28 +72,25 @@ func (opts *showDynamicTableOptions) validate() error {
 	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
 		errs = append(errs, errExactlyOneOf("showDynamicTableOptions.In", "Account", "Database", "Schema"))
 	}
-	return errors.Join(errs...)
+	return JoinErrors(errs...)
 }
 
 func (opts *dropDynamicTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(ErrNilOptions)
+		return ErrNilOptions
 	}
-	var errs []error
-
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		return ErrInvalidObjectIdentifier
 	}
-	return errors.Join(errs...)
+	return nil
 }
 
 func (opts *describeDynamicTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(ErrNilOptions)
+		return ErrNilOptions
 	}
-	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		return ErrInvalidObjectIdentifier
 	}
-	return errors.Join(errs...)
+	return nil
 }

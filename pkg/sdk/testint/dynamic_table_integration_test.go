@@ -131,7 +131,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(sdk.Bool(true)).WithResume(sdk.Bool(true)))
 		require.Error(t, err)
-		require.Equal(t, sdk.ErrExactlyOneOf("alterDynamicTableOptions", "Suspend", "Resume", "Refresh", "Set").Error(), err.Error())
+		sdk.ErrorsEqual(t, sdk.JoinErrors(sdk.ErrExactlyOneOf("alterDynamicTableOptions", "Suspend", "Resume", "Refresh", "Set")), err)
 	})
 
 	t.Run("alter with set", func(t *testing.T) {

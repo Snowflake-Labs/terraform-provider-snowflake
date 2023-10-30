@@ -57,7 +57,7 @@ func (opts *CreateMaskingPolicyOptions) validate() error {
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, errors.Join(ErrInvalidObjectIdentifier))
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.signature) {
 		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "signature"))
