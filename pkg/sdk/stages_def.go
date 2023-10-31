@@ -399,4 +399,5 @@ var StagesDef = g.NewInterface(
 			SQL("STAGES").
 			OptionalLike().
 			OptionalIn(),
-	)
+	).
+	ShowByIdOperation()

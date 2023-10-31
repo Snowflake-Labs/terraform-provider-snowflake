@@ -1,16 +1,31 @@
-package sdk
+package testint
 
-import "testing"
+import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
+	"github.com/stretchr/testify/require"
+	"testing"
+)
 
 func TestInt_Stages(t *testing.T) {
-	// TODO: prepare common resources
+	client := testClient(t)
+	ctx := testContext(t)
 
 	t.Run("CreateInternal", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+
+		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
+			require.NoError(t, err)
+		})
+
+		//client.Stages.Show()
 	})
 
 	t.Run("CreateOnS3", func(t *testing.T) {
-		// TODO: fill me
+
 	})
 
 	t.Run("CreateOnGCS", func(t *testing.T) {
@@ -50,7 +65,7 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		// TODO: fill me
+
 	})
 
 	t.Run("Describe", func(t *testing.T) {
