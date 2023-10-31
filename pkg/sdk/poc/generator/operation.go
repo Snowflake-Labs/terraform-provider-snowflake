@@ -90,7 +90,7 @@ func (i *Interface) newNoSqlOperation(kind string) *Interface {
 	return i
 }
 
-func (i *Interface) newSimpleOperation(kind string, doc string, queryStruct *queryStruct, helperStructs ...IntoField) *Interface {
+func (i *Interface) newSimpleOperation(kind string, doc string, queryStruct *QueryStruct, helperStructs ...IntoField) *Interface {
 	if queryStruct.identifierField != nil {
 		queryStruct.identifierField.Kind = i.IdentifierKind
 	}
@@ -112,7 +112,7 @@ func (i *Interface) newOperationWithDBMapping(
 	doc string,
 	dbRepresentation *dbStruct,
 	resourceRepresentation *plainStruct,
-	queryStruct *queryStruct,
+	queryStruct *QueryStruct,
 	addMappingFunc func(op *Operation, from, to *Field),
 ) *Operation {
 	db := dbRepresentation.IntoField()
@@ -133,19 +133,19 @@ type IntoField interface {
 	IntoField() *Field
 }
 
-func (i *Interface) CreateOperation(doc string, queryStruct *queryStruct, helperStructs ...IntoField) *Interface {
+func (i *Interface) CreateOperation(doc string, queryStruct *QueryStruct, helperStructs ...IntoField) *Interface {
 	return i.newSimpleOperation(string(OperationKindCreate), doc, queryStruct, helperStructs...)
 }
 
-func (i *Interface) AlterOperation(doc string, queryStruct *queryStruct) *Interface {
+func (i *Interface) AlterOperation(doc string, queryStruct *QueryStruct) *Interface {
 	return i.newSimpleOperation(string(OperationKindAlter), doc, queryStruct)
 }
 
-func (i *Interface) DropOperation(doc string, queryStruct *queryStruct) *Interface {
+func (i *Interface) DropOperation(doc string, queryStruct *QueryStruct) *Interface {
 	return i.newSimpleOperation(string(OperationKindDrop), doc, queryStruct)
 }
 
-func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
+func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct) *Interface {
 	i.newOperationWithDBMapping(string(OperationKindShow), doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping)
 	return i
 }
@@ -154,12 +154,12 @@ func (i *Interface) ShowByIdOperation() *Interface {
 	return i.newNoSqlOperation(string(OperationKindShowByID))
 }
 
-func (i *Interface) DescribeOperation(describeKind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *queryStruct) *Interface {
+func (i *Interface) DescribeOperation(describeKind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct) *Interface {
 	op := i.newOperationWithDBMapping(string(OperationKindDescribe), doc, dbRepresentation, resourceRepresentation, queryStruct, addDescriptionMapping)
 	op.DescribeKind = &describeKind
 	return i
 }
 
-func (i *Interface) CustomOperation(kind string, doc string, queryStruct *queryStruct) *Interface {
+func (i *Interface) CustomOperation(kind string, doc string, queryStruct *QueryStruct) *Interface {
 	return i.newSimpleOperation(kind, doc, queryStruct)
 }

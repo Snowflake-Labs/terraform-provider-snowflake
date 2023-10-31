@@ -5,7 +5,7 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var (
-	ip = g.QueryStruct("IP").
+	ip = g.NewQueryStruct("IP").
 		Text("IP", g.KeywordOptions().SingleQuotes().Required())
 
 	NetworkPoliciesDef = g.NewInterface(
@@ -15,7 +15,7 @@ var (
 	).
 		CreateOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/create-network-policy",
-			g.QueryStruct("CreateNetworkPolicies").
+			g.NewQueryStruct("CreateNetworkPolicies").
 				Create().
 				OrReplace().
 				SQL("NETWORK POLICY").
@@ -27,14 +27,14 @@ var (
 		).
 		AlterOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/alter-network-policy",
-			g.QueryStruct("AlterNetworkPolicy").
+			g.NewQueryStruct("AlterNetworkPolicy").
 				Alter().
 				SQL("NETWORK POLICY").
 				IfExists().
 				Name().
 				OptionalQueryStructField(
 					"Set",
-					g.QueryStruct("NetworkPolicySet").
+					g.NewQueryStruct("NetworkPolicySet").
 						ListQueryStructField("AllowedIpList", ip, g.ParameterOptions().SQL("ALLOWED_IP_LIST").Parentheses()).
 						ListQueryStructField("BlockedIpList", ip, g.ParameterOptions().SQL("BLOCKED_IP_LIST").Parentheses()).
 						OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
@@ -49,7 +49,7 @@ var (
 		).
 		DropOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/drop-network-policy",
-			g.QueryStruct("DropNetworkPolicy").
+			g.NewQueryStruct("DropNetworkPolicy").
 				Drop().
 				SQL("NETWORK POLICY").
 				IfExists().
@@ -70,7 +70,7 @@ var (
 				Field("Comment", "string").
 				Field("EntriesInAllowedIpList", "int").
 				Field("EntriesInBlockedIpList", "int"),
-			g.QueryStruct("ShowNetworkPolicies").
+			g.NewQueryStruct("ShowNetworkPolicies").
 				Show().
 				SQL("NETWORK POLICIES"),
 		).
@@ -83,7 +83,7 @@ var (
 			g.PlainStruct("NetworkPolicyDescription").
 				Field("Name", "string").
 				Field("Value", "string"),
-			g.QueryStruct("DescribeNetworkPolicy").
+			g.NewQueryStruct("DescribeNetworkPolicy").
 				Describe().
 				SQL("NETWORK POLICY").
 				Name().
