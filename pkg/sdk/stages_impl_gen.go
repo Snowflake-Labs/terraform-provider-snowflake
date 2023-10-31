@@ -1,8 +1,6 @@
 package sdk
 
-import (
-	"context"
-)
+import "context"
 
 var _ Stages = (*stages)(nil)
 

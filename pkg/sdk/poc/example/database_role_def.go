@@ -21,7 +21,7 @@ var (
 
 	dbRoleSet = g.NewQueryStruct("DatabaseRoleSet").
 		// Fields
-		TextAssignment("COMMENT", g.ParameterOptions().SingleQuotes().Required()).
+		TextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		OptionalQueryStructField("NestedThirdLevel", nestedThirdLevel, g.ListOptions().NoParentheses().SQL("NESTED"))
 
 	dbRoleUnset = g.NewQueryStruct("DatabaseRoleUnset").

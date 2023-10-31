@@ -78,7 +78,7 @@ type CreateOnS3StageRequest struct {
 }
 
 type ExternalS3StageParamsRequest struct {
-	Url                string
+	Url                string // required
 	StorageIntegration *AccountObjectIdentifier
 	Credentials        *ExternalStageS3CredentialsRequest
 	Encryption         *ExternalStageS3EncryptionRequest
@@ -117,7 +117,7 @@ type CreateOnGCSStageRequest struct {
 }
 
 type ExternalGCSStageParamsRequest struct {
-	Url                string
+	Url                string // required
 	StorageIntegration *AccountObjectIdentifier
 	Encryption         *ExternalStageGCSEncryptionRequest
 }
@@ -148,14 +148,14 @@ type CreateOnAzureStageRequest struct {
 }
 
 type ExternalAzureStageParamsRequest struct {
-	Url                string
+	Url                string // required
 	StorageIntegration *AccountObjectIdentifier
 	Credentials        *ExternalStageAzureCredentialsRequest
 	Encryption         *ExternalStageAzureEncryptionRequest
 }
 
 type ExternalStageAzureCredentialsRequest struct {
-	AzureSasToken *string
+	AzureSasToken string // required
 }
 
 type ExternalStageAzureEncryptionRequest struct {

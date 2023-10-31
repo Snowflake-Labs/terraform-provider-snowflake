@@ -102,7 +102,7 @@ var stageCopyOptionsDef = g.NewQueryStruct("StageCopyOptions").
 
 var externalS3StageParamsDef = g.NewQueryStruct("ExternalS3StageParams").
 	TextAssignment("URL", g.ParameterOptions().SingleQuotes()).
-	OptionalIdentifierAssignment("STORAGE_INTEGRATION", g.KindOfT[AccountObjectIdentifier](), g.ParameterOptions()).
+	OptionalIdentifier("StorageIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("STORAGE_INTEGRATION")).
 	OptionalQueryStructField(
 		"Credentials",
 		g.NewQueryStruct("ExternalStageS3Credentials").
@@ -111,7 +111,7 @@ var externalS3StageParamsDef = g.NewQueryStruct("ExternalS3StageParams").
 			OptionalTextAssignment("AWS_TOKEN", g.ParameterOptions().SingleQuotes()).
 			OptionalTextAssignment("AWS_ROLE", g.ParameterOptions().SingleQuotes()).
 			WithValidation(g.ConflictingFields, "AwsKeyId", "AwsRole"),
-		g.ParameterOptions().Parentheses().SQL("CREDENTIALS"),
+		g.ListOptions().Parentheses().NoComma().SQL("CREDENTIALS ="),
 	).
 	OptionalQueryStructField("Encryption", g.NewQueryStruct("ExternalStageS3Encryption").
 		OptionalAssignment(
@@ -121,13 +121,13 @@ var externalS3StageParamsDef = g.NewQueryStruct("ExternalS3StageParams").
 		).
 		OptionalTextAssignment("MASTER_KEY", g.ParameterOptions().SingleQuotes()).
 		OptionalTextAssignment("KMS_KEY_ID", g.ParameterOptions().SingleQuotes()),
-		g.ListOptions().Parentheses().SQL("ENCRYPTION ="),
+		g.ListOptions().Parentheses().NoComma().SQL("ENCRYPTION ="),
 	).
 	WithValidation(g.ConflictingFields, "StorageIntegration", "Credentials")
 
 var externalGCSStageParamsDef = g.NewQueryStruct("ExternalGCSStageParams").
 	TextAssignment("URL", g.ParameterOptions().SingleQuotes()).
-	OptionalIdentifierAssignment("STORAGE_INTEGRATION", g.KindOfT[AccountObjectIdentifier](), g.ParameterOptions()).
+	OptionalIdentifier("StorageIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("STORAGE_INTEGRATION")).
 	OptionalQueryStructField(
 		"Encryption",
 		g.NewQueryStruct("ExternalStageGCSEncryption").
@@ -137,17 +137,17 @@ var externalGCSStageParamsDef = g.NewQueryStruct("ExternalGCSStageParams").
 				g.ParameterOptions().SingleQuotes().Required(),
 			).
 			OptionalTextAssignment("KMS_KEY_ID", g.ParameterOptions().SingleQuotes()),
-		g.ListOptions().Parentheses().SQL("ENCRYPTION ="),
+		g.ListOptions().Parentheses().NoComma().SQL("ENCRYPTION ="),
 	)
 
 var externalAzureStageParamsDef = g.NewQueryStruct("ExternalAzureStageParams").
 	TextAssignment("URL", g.ParameterOptions().SingleQuotes()).
-	OptionalIdentifierAssignment("STORAGE_INTEGRATION", g.KindOfT[AccountObjectIdentifier](), g.ParameterOptions()).
+	OptionalIdentifier("StorageIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("STORAGE_INTEGRATION")).
 	OptionalQueryStructField(
 		"Credentials",
 		g.NewQueryStruct("ExternalStageAzureCredentials").
-			OptionalTextAssignment("AZURE_SAS_TOKEN", g.ParameterOptions().SingleQuotes()),
-		g.ParameterOptions().Parentheses(),
+			TextAssignment("AZURE_SAS_TOKEN", g.ParameterOptions().SingleQuotes()),
+		g.ListOptions().Parentheses().NoComma().SQL("CREDENTIALS ="),
 	).
 	OptionalQueryStructField(
 		"Encryption",
@@ -158,7 +158,7 @@ var externalAzureStageParamsDef = g.NewQueryStruct("ExternalAzureStageParams").
 				g.ParameterOptions().SingleQuotes().Required(),
 			).
 			OptionalTextAssignment("MASTER_KEY", g.ParameterOptions().SingleQuotes()),
-		g.ListOptions().Parentheses().SQL("ENCRYPTION ="),
+		g.ListOptions().Parentheses().NoComma().SQL("ENCRYPTION ="),
 	).
 	WithValidation(g.ConflictingFields, "StorageIntegration", "Credentials")
 
@@ -180,7 +180,7 @@ var StagesDef = g.NewInterface(
 							g.KindOfT[InternalStageEncryptionOption](),
 							g.ParameterOptions().SingleQuotes().Required(),
 						),
-					g.ListOptions().Parentheses().SQL("ENCRYPTION ="),
+					g.ListOptions().Parentheses().NoComma().SQL("ENCRYPTION ="),
 				).
 				OptionalQueryStructField(
 					"DirectoryTableOptions",
@@ -246,14 +246,14 @@ var StagesDef = g.NewInterface(
 		"https://docs.snowflake.com/en/sql-reference/sql/create-stage",
 		createStageOperation("CreateExternalS3CompatibleStage", func(qs *g.QueryStruct) *g.QueryStruct {
 			return qs.
-				TextAssignment("URL", g.ParameterOptions().SingleQuotes().Required()).
-				TextAssignment("ENDPOINT", g.ParameterOptions().SingleQuotes().Required()).
+				TextAssignment("URL", g.ParameterOptions().SingleQuotes()).
+				TextAssignment("ENDPOINT", g.ParameterOptions().SingleQuotes()).
 				OptionalQueryStructField(
 					"Credentials",
 					g.NewQueryStruct("ExternalStageS3CompatibleCredentials").
 						OptionalTextAssignment("AWS_KEY_ID", g.ParameterOptions().SingleQuotes().Required()).
 						OptionalTextAssignment("AWS_SECRET_KEY", g.ParameterOptions().SingleQuotes().Required()),
-					g.ParameterOptions().Parentheses(),
+					g.ListOptions().Parentheses().NoComma().SQL("CREDENTIALS ="),
 				).
 				// TODO: Can be used with compat ?
 				OptionalQueryStructField(
@@ -273,11 +273,12 @@ var StagesDef = g.NewInterface(
 			SQL("STAGE").
 			IfExists().
 			Name().
-			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions()).
+			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 			List("SetTags", g.KindOfT[TagAssociation](), g.KeywordOptions().SQL("SET TAG")).
 			List("UnsetTags", g.KindOfT[ObjectIdentifier](), g.KeywordOptions().SQL("UNSET TAG")).
 			WithValidation(g.ValidIdentifierIfSet, "RenameTo").
 			WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetTags", "UnsetTags").
+			WithValidation(g.ConflictingFields, "IfExists", "UnsetTags").
 			WithValidation(g.ValidIdentifier, "name"),
 	).
 	CustomOperation(
@@ -317,14 +318,15 @@ var StagesDef = g.NewInterface(
 			OptionalQueryStructField(
 				"SetDirectory",
 				g.NewQueryStruct("DirectoryTableSet").BooleanAssignment("ENABLE", g.ParameterOptions().Required()),
-				g.ParameterOptions().SQL("SET DIRECTORY").Parentheses(),
+				g.ListOptions().Parentheses().NoComma().SQL("SET DIRECTORY ="),
 			).
 			OptionalQueryStructField(
 				"Refresh",
 				g.NewQueryStruct("DirectoryTableRefresh").OptionalTextAssignment("SUBPATH", g.ParameterOptions().SingleQuotes()),
 				g.KeywordOptions().SQL("REFRESH"),
 			).
-			WithValidation(g.ValidIdentifier, "name"),
+			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ConflictingFields, "SetDirectory", "Refresh"),
 	).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-stage",

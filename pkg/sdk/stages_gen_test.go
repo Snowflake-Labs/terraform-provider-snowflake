@@ -82,32 +82,72 @@ func TestStages_CreateOnS3(t *testing.T) {
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnS3StageOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.ExternalStageParams.StorageIntegration opts.ExternalStageParams.Credentials]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		integrationId := NewAccountObjectIdentifier("integration")
+		opts.ExternalStageParams = &ExternalS3StageParams{
+			StorageIntegration: &integrationId,
+			Credentials: &ExternalStageS3Credentials{
+				AwsRole: String("aws-role"),
+			},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.ExternalStageParams.Credentials.AwsKeyId opts.ExternalStageParams.Credentials.AwsRole]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.ExternalStageParams = &ExternalS3StageParams{
+			Credentials: &ExternalStageS3Credentials{
+				AwsKeyId: String("aws-key-id"),
+				AwsRole:  String("aws-role"),
+			},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams.Credentials", "AwsKeyId", "AwsRole"))
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("all options - storage integration", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.OrReplace = Bool(true)
+		opts.Temporary = Bool(true)
+		integrationId := NewAccountObjectIdentifier("integration")
+		opts.ExternalStageParams = &ExternalS3StageParams{
+			Url:                "some url",
+			StorageIntegration: &integrationId,
+			Encryption: &ExternalStageS3Encryption{
+				Type:      &ExternalStageS3EncryptionCSE,
+				MasterKey: String("master-key"),
+			},
+		}
+		opts.FileFormat = &StageFileFormat{
+			Type: &FileFormatTypeCSV,
+		}
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY STAGE %s URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'AWS_CSE' MASTER_KEY = 'master-key') FILE_FORMAT = (TYPE = CSV) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("all options - directory table and credentials", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Temporary = Bool(true)
+		opts.IfNotExists = Bool(true)
+		opts.ExternalStageParams = &ExternalS3StageParams{
+			Url: "some url",
+			Credentials: &ExternalStageS3Credentials{
+				AwsKeyId:     String("aws-key-id"),
+				AwsSecretKey: String("aws-secret-key"),
+				AwsToken:     String("aws-token"),
+			},
+		}
+		opts.DirectoryTableOptions = &ExternalS3DirectoryTableOptions{
+			Enable:          Bool(true),
+			RefreshOnCreate: Bool(true),
+			AutoRefresh:     Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TEMPORARY STAGE IF NOT EXISTS %s URL = 'some url' CREDENTIALS = (AWS_KEY_ID = 'aws-key-id' AWS_SECRET_KEY = 'aws-secret-key' AWS_TOKEN = 'aws-token') DIRECTORY = (ENABLE = true REFRESH_ON_CREATE = true AUTO_REFRESH = true)`, id.FullyQualifiedName())
 	})
 }
 
@@ -128,20 +168,35 @@ func TestStages_CreateOnGCS(t *testing.T) {
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnGCSStageOptions", "OrReplace", "IfNotExists"))
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.OrReplace = Bool(true)
+		opts.Temporary = Bool(true)
+		integrationId := NewAccountObjectIdentifier("integration")
+		opts.ExternalStageParams = &ExternalGCSStageParams{
+			Url:                "some url",
+			StorageIntegration: &integrationId,
+			Encryption: &ExternalStageGCSEncryption{
+				Type:     &ExternalStageGCSEncryptionSSEKMS,
+				KmsKeyId: String("kms-key-id"),
+			},
+		}
+		opts.DirectoryTableOptions = &ExternalGCSDirectoryTableOptions{
+			Enable:                  Bool(true),
+			RefreshOnCreate:         Bool(true),
+			AutoRefresh:             Bool(true),
+			NotificationIntegration: String("notification-integration"),
+		}
+		opts.FileFormat = &StageFileFormat{
+			Type: &FileFormatTypeCSV,
+		}
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY STAGE %s URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'GCS_SSE_KMS' KMS_KEY_ID = 'kms-key-id') DIRECTORY = (ENABLE = true REFRESH_ON_CREATE = true AUTO_REFRESH = true NOTIFICATION_INTEGRATION = 'notification-integration') FILE_FORMAT = (TYPE = CSV) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -162,26 +217,63 @@ func TestStages_CreateOnAzure(t *testing.T) {
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnAzureStageOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.ExternalStageParams.StorageIntegration opts.ExternalStageParams.Credentials]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		integrationId := NewAccountObjectIdentifier("integration")
+		opts.ExternalStageParams = &ExternalAzureStageParams{
+			StorageIntegration: &integrationId,
+			Credentials: &ExternalStageAzureCredentials{
+				AzureSasToken: "azure-sas-token",
+			},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("all options - storage integration", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.OrReplace = Bool(true)
+		opts.Temporary = Bool(true)
+		integrationId := NewAccountObjectIdentifier("integration")
+		opts.ExternalStageParams = &ExternalAzureStageParams{
+			Url:                "some url",
+			StorageIntegration: &integrationId,
+			Encryption: &ExternalStageAzureEncryption{
+				Type:      &ExternalStageAzureEncryptionCSE,
+				MasterKey: String("master-key"),
+			},
+		}
+		opts.FileFormat = &StageFileFormat{
+			Type: &FileFormatTypeCSV,
+		}
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY STAGE %s URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'AZURE_CSE' MASTER_KEY = 'master-key') FILE_FORMAT = (TYPE = CSV) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("all options - directory table and credentials", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfNotExists = Bool(true)
+		opts.DirectoryTableOptions = &ExternalAzureDirectoryTableOptions{
+			Enable:                  Bool(true),
+			RefreshOnCreate:         Bool(true),
+			AutoRefresh:             Bool(true),
+			NotificationIntegration: String("notification-integration"),
+		}
+		opts.ExternalStageParams = &ExternalAzureStageParams{
+			Url: "some url",
+			Credentials: &ExternalStageAzureCredentials{
+				AzureSasToken: "azure-sas-token",
+			},
+			Encryption: &ExternalStageAzureEncryption{
+				Type:      &ExternalStageAzureEncryptionCSE,
+				MasterKey: String("master-key"),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE STAGE IF NOT EXISTS %s URL = 'some url' CREDENTIALS = (AZURE_SAS_TOKEN = 'azure-sas-token') ENCRYPTION = (TYPE = 'AZURE_CSE' MASTER_KEY = 'master-key') DIRECTORY = (ENABLE = true REFRESH_ON_CREATE = true AUTO_REFRESH = true NOTIFICATION_INTEGRATION = 'notification-integration')`, id.FullyQualifiedName())
 	})
 }
 
@@ -202,20 +294,26 @@ func TestStages_CreateOnS3Compatible(t *testing.T) {
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateOnS3CompatibleStageOptions", "OrReplace", "IfNotExists"))
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Temporary = Bool(true)
+		opts.IfNotExists = Bool(true)
+		opts.Url = "some url"
+		opts.Endpoint = "some endpoint"
+		opts.Credentials = &ExternalStageS3CompatibleCredentials{
+			AwsKeyId:     String("aws-key-id"),
+			AwsSecretKey: String("aws-secret-key"),
+		}
+		opts.FileFormat = &StageFileFormat{
+			Type: &FileFormatTypeCSV,
+		}
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TEMPORARY STAGE IF NOT EXISTS %s URL = 'some url' ENDPOINT = 'some endpoint' CREDENTIALS = (AWS_KEY_ID = 'aws-key-id' AWS_SECRET_KEY = 'aws-secret-key') FILE_FORMAT = (TYPE = CSV) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -236,32 +334,62 @@ func TestStages_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.RenameTo] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		newId := NewSchemaObjectIdentifier("", "", "")
+		opts.RenameTo = &newId
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.RenameTo opts.SetTags opts.UnsetTags] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterStageOptions", "RenameTo", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("validation: conflicting fields for [opts.IfExists opts.UnsetTags]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("id"),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterStageOptions", "IfExists", "UnsetTags"))
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("rename", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		newId := RandomSchemaObjectIdentifier()
+		opts.RenameTo = &newId
+		assertOptsValidAndSQLEquals(t, opts, "ALTER STAGE IF EXISTS %s RENAME TO %s", id.FullyQualifiedName(), newId.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("set tags", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag-name"),
+				Value: "tag-value",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("tag-name2"),
+				Value: "tag-value2",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET TAG "tag-name" = 'tag-value', "tag-name2" = 'tag-value2'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("tag-name"),
+			NewAccountObjectIdentifier("tag-name2"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE %s UNSET TAG "tag-name", "tag-name2"`, id.FullyQualifiedName())
 	})
 }
 
@@ -282,20 +410,25 @@ func TestStages_AlterInternalStage(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		// TODO check if can set multiple values like here
+		opts.IfExists = Bool(true)
+		opts.FileFormat = &StageFileFormat{
+			Type: &FileFormatTypeCSV,
+		}
+		opts.CopyOptions = &StageCopyOptions{
+			OnError: &StageCopyOnErrorOptions{
+				AbortStatement: Bool(true),
+			},
+		}
+		// TODO: Change in validation to check if e.g. someone wants to set comment to ""
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, "ALTER STAGE IF EXISTS %s SET FILE_FORMAT = (TYPE = CSV) COPY_OPTIONS = (ON_ERROR = ABORT_STATEMENT) COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 }
 
@@ -316,32 +449,52 @@ func TestStages_AlterExternalS3Stage(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.ExternalStageParams.StorageIntegration opts.ExternalStageParams.Credentials]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		integrationId := NewAccountObjectIdentifier("integration")
+		opts.ExternalStageParams = &ExternalS3StageParams{
+			StorageIntegration: &integrationId,
+			Credentials: &ExternalStageS3Credentials{
+				AwsRole: String("aws-role"),
+			},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.ExternalStageParams.Credentials.AwsKeyId opts.ExternalStageParams.Credentials.AwsRole]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.ExternalStageParams = &ExternalS3StageParams{
+			Credentials: &ExternalStageS3Credentials{
+				AwsKeyId: String("aws-key-id"),
+				AwsRole:  String("aws-role"),
+			},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams.Credentials", "AwsKeyId", "AwsRole"))
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		integrationId := NewAccountObjectIdentifier("integration")
+		opts.ExternalStageParams = &ExternalS3StageParams{
+			Url:                "some url",
+			StorageIntegration: &integrationId,
+			Encryption: &ExternalStageS3Encryption{
+				Type: &ExternalStageS3EncryptionNone,
+			},
+		}
+		opts.FileFormat = &StageFileFormat{
+			Type: &FileFormatTypeJSON,
+		}
+		opts.CopyOptions = &StageCopyOptions{
+			SizeLimit: Int(123),
+		}
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'NONE') FILE_FORMAT = (TYPE = JSON) COPY_OPTIONS = (SIZE_LIMIT = 123) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -362,20 +515,29 @@ func TestStages_AlterExternalGCSStage(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		integrationId := NewAccountObjectIdentifier("integration")
+		opts.ExternalStageParams = &ExternalGCSStageParams{
+			Url:                "some url",
+			StorageIntegration: &integrationId,
+			Encryption: &ExternalStageGCSEncryption{
+				Type: &ExternalStageGCSEncryptionNone,
+			},
+		}
+		opts.FileFormat = &StageFileFormat{
+			Type: &FileFormatTypeJSON,
+		}
+		opts.CopyOptions = &StageCopyOptions{
+			SizeLimit: Int(123),
+		}
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'NONE') FILE_FORMAT = (TYPE = JSON) COPY_OPTIONS = (SIZE_LIMIT = 123) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -396,26 +558,39 @@ func TestStages_AlterExternalAzureStage(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.ExternalStageParams.StorageIntegration opts.ExternalStageParams.Credentials]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		integrationId := NewAccountObjectIdentifier("integrationId")
+		opts.ExternalStageParams = &ExternalAzureStageParams{
+			StorageIntegration: &integrationId,
+			Credentials:        &ExternalStageAzureCredentials{},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		integrationId := NewAccountObjectIdentifier("integration")
+		opts.ExternalStageParams = &ExternalAzureStageParams{
+			Url:                "some url",
+			StorageIntegration: &integrationId,
+			Encryption: &ExternalStageAzureEncryption{
+				Type: &ExternalStageAzureEncryptionNone,
+			},
+		}
+		opts.FileFormat = &StageFileFormat{
+			Type: &FileFormatTypeJSON,
+		}
+		opts.CopyOptions = &StageCopyOptions{
+			SizeLimit: Int(123),
+		}
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'NONE') FILE_FORMAT = (TYPE = JSON) COPY_OPTIONS = (SIZE_LIMIT = 123) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -436,20 +611,26 @@ func TestStages_AlterDirectoryTable(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("set directory", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		opts.SetDirectory = &DirectoryTableSet{
+			Enable: true,
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET DIRECTORY = (ENABLE = true)`, id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("refresh", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		opts.Refresh = &DirectoryTableRefresh{
+			Subpath: String("subpath"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s REFRESH SUBPATH = 'subpath'`, id.FullyQualifiedName())
 	})
 }
 
@@ -470,20 +651,14 @@ func TestStages_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "DROP STAGE IF EXISTS %s", id.FullyQualifiedName())
 	})
 }
 
@@ -504,20 +679,13 @@ func TestStages_Describe(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE STAGE %s", id.FullyQualifiedName())
 	})
 }
 
@@ -534,13 +702,17 @@ func TestStages_Show(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "SHOW STAGES")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Like = &Like{
+			Pattern: String("some pattern"),
+		}
+		opts.In = &In{
+			Schema: NewDatabaseObjectIdentifier("db", "schema"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW STAGES LIKE 'some pattern' IN SCHEMA "db"."schema"`)
 	})
 }

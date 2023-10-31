@@ -214,13 +214,12 @@ func (s *CreateOnS3StageRequest) WithTag(Tag []TagAssociation) *CreateOnS3StageR
 	return s
 }
 
-func NewExternalS3StageParamsRequest() *ExternalS3StageParamsRequest {
-	return &ExternalS3StageParamsRequest{}
-}
-
-func (s *ExternalS3StageParamsRequest) WithUrl(Url string) *ExternalS3StageParamsRequest {
+func NewExternalS3StageParamsRequest(
+	Url string,
+) *ExternalS3StageParamsRequest {
+	s := ExternalS3StageParamsRequest{}
 	s.Url = Url
-	return s
+	return &s
 }
 
 func (s *ExternalS3StageParamsRequest) WithStorageIntegration(StorageIntegration *AccountObjectIdentifier) *ExternalS3StageParamsRequest {
@@ -352,13 +351,12 @@ func (s *CreateOnGCSStageRequest) WithTag(Tag []TagAssociation) *CreateOnGCSStag
 	return s
 }
 
-func NewExternalGCSStageParamsRequest() *ExternalGCSStageParamsRequest {
-	return &ExternalGCSStageParamsRequest{}
-}
-
-func (s *ExternalGCSStageParamsRequest) WithUrl(Url string) *ExternalGCSStageParamsRequest {
+func NewExternalGCSStageParamsRequest(
+	Url string,
+) *ExternalGCSStageParamsRequest {
+	s := ExternalGCSStageParamsRequest{}
 	s.Url = Url
-	return s
+	return &s
 }
 
 func (s *ExternalGCSStageParamsRequest) WithStorageIntegration(StorageIntegration *AccountObjectIdentifier) *ExternalGCSStageParamsRequest {
@@ -461,13 +459,12 @@ func (s *CreateOnAzureStageRequest) WithTag(Tag []TagAssociation) *CreateOnAzure
 	return s
 }
 
-func NewExternalAzureStageParamsRequest() *ExternalAzureStageParamsRequest {
-	return &ExternalAzureStageParamsRequest{}
-}
-
-func (s *ExternalAzureStageParamsRequest) WithUrl(Url string) *ExternalAzureStageParamsRequest {
+func NewExternalAzureStageParamsRequest(
+	Url string,
+) *ExternalAzureStageParamsRequest {
+	s := ExternalAzureStageParamsRequest{}
 	s.Url = Url
-	return s
+	return &s
 }
 
 func (s *ExternalAzureStageParamsRequest) WithStorageIntegration(StorageIntegration *AccountObjectIdentifier) *ExternalAzureStageParamsRequest {
@@ -485,13 +482,12 @@ func (s *ExternalAzureStageParamsRequest) WithEncryption(Encryption *ExternalSta
 	return s
 }
 
-func NewExternalStageAzureCredentialsRequest() *ExternalStageAzureCredentialsRequest {
-	return &ExternalStageAzureCredentialsRequest{}
-}
-
-func (s *ExternalStageAzureCredentialsRequest) WithAzureSasToken(AzureSasToken *string) *ExternalStageAzureCredentialsRequest {
+func NewExternalStageAzureCredentialsRequest(
+	AzureSasToken string,
+) *ExternalStageAzureCredentialsRequest {
+	s := ExternalStageAzureCredentialsRequest{}
 	s.AzureSasToken = AzureSasToken
-	return s
+	return &s
 }
 
 func NewExternalStageAzureEncryptionRequest(
