@@ -2,8 +2,6 @@ package sdk
 
 import (
 	"context"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ Stages = (*stages)(nil)
@@ -136,8 +134,6 @@ func (r *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
 				Continue:       r.CopyOptions.OnError.Continue,
 				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
 				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
 		}
@@ -205,8 +201,6 @@ func (r *CreateOnS3StageRequest) toOpts() *CreateOnS3StageOptions {
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
 				Continue:       r.CopyOptions.OnError.Continue,
 				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
 				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
 		}
@@ -266,8 +260,6 @@ func (r *CreateOnGCSStageRequest) toOpts() *CreateOnGCSStageOptions {
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
 				Continue:       r.CopyOptions.OnError.Continue,
 				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
 				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
 		}
@@ -296,7 +288,7 @@ func (r *CreateOnAzureStageRequest) toOpts() *CreateOnAzureStageOptions {
 			}
 		}
 		if r.ExternalStageParams.Encryption != nil {
-			opts.ExternalStageParams.Encryption = &ExternalStageGCSEncryption{
+			opts.ExternalStageParams.Encryption = &ExternalStageAzureEncryption{
 				Type:      r.ExternalStageParams.Encryption.Type,
 				MasterKey: r.ExternalStageParams.Encryption.MasterKey,
 			}
@@ -332,8 +324,6 @@ func (r *CreateOnAzureStageRequest) toOpts() *CreateOnAzureStageOptions {
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
 				Continue:       r.CopyOptions.OnError.Continue,
 				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
 				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
 		}
@@ -388,8 +378,6 @@ func (r *CreateOnS3CompatibleStageRequest) toOpts() *CreateOnS3CompatibleStageOp
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
 				Continue:       r.CopyOptions.OnError.Continue,
 				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
 				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
 		}
@@ -437,8 +425,6 @@ func (r *AlterInternalStageStageRequest) toOpts() *AlterInternalStageStageOption
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
 				Continue:       r.CopyOptions.OnError.Continue,
 				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
 				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
 		}
@@ -496,8 +482,6 @@ func (r *AlterExternalS3StageStageRequest) toOpts() *AlterExternalS3StageStageOp
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
 				Continue:       r.CopyOptions.OnError.Continue,
 				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
 				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
 		}
@@ -546,8 +530,6 @@ func (r *AlterExternalGCSStageStageRequest) toOpts() *AlterExternalGCSStageStage
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
 				Continue:       r.CopyOptions.OnError.Continue,
 				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
 				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
 		}
@@ -573,7 +555,7 @@ func (r *AlterExternalAzureStageStageRequest) toOpts() *AlterExternalAzureStageS
 			}
 		}
 		if r.ExternalStageParams.Encryption != nil {
-			opts.ExternalStageParams.Encryption = &ExternalStageGCSEncryption{
+			opts.ExternalStageParams.Encryption = &ExternalStageAzureEncryption{
 				Type:      r.ExternalStageParams.Encryption.Type,
 				MasterKey: r.ExternalStageParams.Encryption.MasterKey,
 			}
@@ -601,8 +583,6 @@ func (r *AlterExternalAzureStageStageRequest) toOpts() *AlterExternalAzureStageS
 			opts.CopyOptions.OnError = &StageCopyOnErrorOptions{
 				Continue:       r.CopyOptions.OnError.Continue,
 				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile:       r.CopyOptions.OnError.SkipFile,
-				SkipFile123:    r.CopyOptions.OnError.SkipFile123,
 				AbortStatement: r.CopyOptions.OnError.AbortStatement,
 			}
 		}

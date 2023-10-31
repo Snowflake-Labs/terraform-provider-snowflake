@@ -57,13 +57,12 @@ func (s *CreateInternalStageRequest) WithTag(Tag []TagAssociation) *CreateIntern
 	return s
 }
 
-func NewInternalStageEncryptionRequest() *InternalStageEncryptionRequest {
-	return &InternalStageEncryptionRequest{}
-}
-
-func (s *InternalStageEncryptionRequest) WithType(Type *InternalStageEncryptionOption) *InternalStageEncryptionRequest {
+func NewInternalStageEncryptionRequest(
+	Type *InternalStageEncryptionOption,
+) *InternalStageEncryptionRequest {
+	s := InternalStageEncryptionRequest{}
 	s.Type = Type
-	return s
+	return &s
 }
 
 func NewInternalDirectoryTableOptionsRequest() *InternalDirectoryTableOptionsRequest {
@@ -154,16 +153,6 @@ func (s *StageCopyOnErrorOptionsRequest) WithContinue(Continue *bool) *StageCopy
 
 func (s *StageCopyOnErrorOptionsRequest) WithSkipFile(SkipFile *bool) *StageCopyOnErrorOptionsRequest {
 	s.SkipFile = SkipFile
-	return s
-}
-
-func (s *StageCopyOnErrorOptionsRequest) WithSkipFile(SkipFile *bool) *StageCopyOnErrorOptionsRequest {
-	s.SkipFile = SkipFile
-	return s
-}
-
-func (s *StageCopyOnErrorOptionsRequest) WithSkipFile123(SkipFile123 *bool) *StageCopyOnErrorOptionsRequest {
-	s.SkipFile123 = SkipFile123
 	return s
 }
 
@@ -491,7 +480,7 @@ func (s *ExternalAzureStageParamsRequest) WithCredentials(Credentials *ExternalS
 	return s
 }
 
-func (s *ExternalAzureStageParamsRequest) WithEncryption(Encryption *ExternalStageGCSEncryptionRequest) *ExternalAzureStageParamsRequest {
+func (s *ExternalAzureStageParamsRequest) WithEncryption(Encryption *ExternalStageAzureEncryptionRequest) *ExternalAzureStageParamsRequest {
 	s.Encryption = Encryption
 	return s
 }
@@ -502,6 +491,19 @@ func NewExternalStageAzureCredentialsRequest() *ExternalStageAzureCredentialsReq
 
 func (s *ExternalStageAzureCredentialsRequest) WithAzureSasToken(AzureSasToken *string) *ExternalStageAzureCredentialsRequest {
 	s.AzureSasToken = AzureSasToken
+	return s
+}
+
+func NewExternalStageAzureEncryptionRequest(
+	Type *ExternalStageAzureEncryptionOption,
+) *ExternalStageAzureEncryptionRequest {
+	s := ExternalStageAzureEncryptionRequest{}
+	s.Type = Type
+	return &s
+}
+
+func (s *ExternalStageAzureEncryptionRequest) WithMasterKey(MasterKey *string) *ExternalStageAzureEncryptionRequest {
+	s.MasterKey = MasterKey
 	return s
 }
 

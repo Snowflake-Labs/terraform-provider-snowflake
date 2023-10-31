@@ -201,7 +201,7 @@ func (row FileFormatRow) convert() *FileFormat {
 
 type FileFormatType string
 
-const (
+var (
 	FileFormatTypeCSV     FileFormatType = "CSV"
 	FileFormatTypeJSON    FileFormatType = "JSON"
 	FileFormatTypeAvro    FileFormatType = "AVRO"

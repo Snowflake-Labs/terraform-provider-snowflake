@@ -33,7 +33,7 @@ type CreateInternalStageRequest struct {
 }
 
 type InternalStageEncryptionRequest struct {
-	Type *InternalStageEncryptionOption
+	Type *InternalStageEncryptionOption // required
 }
 
 type InternalDirectoryTableOptionsRequest struct {
@@ -61,7 +61,6 @@ type StageCopyOptionsRequest struct {
 type StageCopyOnErrorOptionsRequest struct {
 	Continue       *bool
 	SkipFile       *bool
-	SkipFile123    *bool
 	AbortStatement *bool
 }
 
@@ -152,11 +151,16 @@ type ExternalAzureStageParamsRequest struct {
 	Url                string
 	StorageIntegration *AccountObjectIdentifier
 	Credentials        *ExternalStageAzureCredentialsRequest
-	Encryption         *ExternalStageGCSEncryptionRequest
+	Encryption         *ExternalStageAzureEncryptionRequest
 }
 
 type ExternalStageAzureCredentialsRequest struct {
 	AzureSasToken *string
+}
+
+type ExternalStageAzureEncryptionRequest struct {
+	Type      *ExternalStageAzureEncryptionOption // required
+	MasterKey *string
 }
 
 type ExternalAzureDirectoryTableOptionsRequest struct {

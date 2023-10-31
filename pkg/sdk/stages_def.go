@@ -6,14 +6,14 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 type InternalStageEncryptionOption string
 
-const (
+var (
 	InternalStageEncryptionFull InternalStageEncryptionOption = "SNOWFLAKE_FULL"
 	InternalStageEncryptionSSE  InternalStageEncryptionOption = "SNOWFLAKE_SSE"
 )
 
 type ExternalStageS3EncryptionOption string
 
-const (
+var (
 	ExternalStageS3EncryptionCSE    ExternalStageS3EncryptionOption = "AWS_CSE"
 	ExternalStageS3EncryptionSSES3  ExternalStageS3EncryptionOption = "AWS_SSE_S3"
 	ExternalStageS3EncryptionSSEKMS ExternalStageS3EncryptionOption = "AWS_SSE_KMS"
@@ -22,21 +22,21 @@ const (
 
 type ExternalStageGCSEncryptionOption string
 
-const (
+var (
 	ExternalStageGCSEncryptionSSEKMS ExternalStageGCSEncryptionOption = "GCS_SSE_KMS"
 	ExternalStageGCSEncryptionNone   ExternalStageGCSEncryptionOption = "NONE"
 )
 
 type ExternalStageAzureEncryptionOption string
 
-const (
+var (
 	ExternalStageAzureEncryptionCSE  ExternalStageAzureEncryptionOption = "AZURE_CSE"
 	ExternalStageAzureEncryptionNone ExternalStageAzureEncryptionOption = "NONE"
 )
 
 type StageCopyColumnMapOption string
 
-const (
+var (
 	StageCopyColumnMapCaseSensitive   StageCopyColumnMapOption = "CASE_SENSITIVE"
 	StageCopyColumnMapCaseInsensitive StageCopyColumnMapOption = "CASE_INSENSITIVE"
 	StageCopyColumnMapCaseNone        StageCopyColumnMapOption = "NONE"
@@ -54,10 +54,11 @@ func createStageOperation(structName string, apply func(qs *g.QueryStruct) *g.Qu
 		Name()
 	qs = apply(qs)
 	return qs.
-		OptionalQueryStructField("FileFormat", stageFileFormatDef, g.ParameterOptions().Parentheses().SQL("FILE_FORMAT")).
-		OptionalQueryStructField("CopyOptions", stageCopyOptionsDef, g.ParameterOptions().SQL("COPY_OPTIONS").Parentheses()).
+		OptionalQueryStructField("FileFormat", stageFileFormatDef, g.ListOptions().Parentheses().SQL("FILE_FORMAT =")).
+		OptionalQueryStructField("CopyOptions", stageCopyOptionsDef, g.ListOptions().Parentheses().SQL("COPY_OPTIONS =")).
 		OptionalComment().
-		OptionalTags()
+		OptionalTags().
+		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists")
 }
 
 func alterStageOperation(structName string, apply func(qs *g.QueryStruct) *g.QueryStruct) *g.QueryStruct {
@@ -69,8 +70,8 @@ func alterStageOperation(structName string, apply func(qs *g.QueryStruct) *g.Que
 		SQL("SET")
 	qs = apply(qs)
 	return qs.
-		OptionalQueryStructField("FileFormat", stageFileFormatDef, g.ParameterOptions().SQL("FILE_FORMAT").Parentheses()).
-		OptionalQueryStructField("CopyOptions", stageCopyOptionsDef, g.ParameterOptions().SQL("COPY_OPTIONS").Parentheses()).
+		OptionalQueryStructField("FileFormat", stageFileFormatDef, g.ListOptions().Parentheses().SQL("FILE_FORMAT =")).
+		OptionalQueryStructField("CopyOptions", stageCopyOptionsDef, g.ListOptions().Parentheses().SQL("COPY_OPTIONS =")).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name")
 }
@@ -86,8 +87,8 @@ var stageCopyOptionsDef = g.NewQueryStruct("StageCopyOptions").
 		g.NewQueryStruct("StageCopyOnErrorOptions").
 			OptionalSQL("CONTINUE").
 			OptionalSQL("SKIP_FILE").
-			OptionalSQL("SKIP_FILE_").    // TODO templated value - not even supported by structToSQL (I think)
-			OptionalSQL("SKIP_FILE_123"). // TODO templated value with % - not even supported by structToSQL (I think)
+			//OptionalSQL("SKIP_FILE_n").  // TODO templated value - not even supported by structToSQL (I think)
+			//OptionalSQL("SKIP_FILE_n%"). // TODO templated value with % - not even supported by structToSQL (I think)
 			OptionalSQL("ABORT_STATEMENT"),
 		g.ParameterOptions().SQL("ON_ERROR"),
 	).
@@ -108,7 +109,8 @@ var externalS3StageParamsDef = g.NewQueryStruct("ExternalS3StageParams").
 			OptionalTextAssignment("AWS_KEY_ID", g.ParameterOptions().SingleQuotes()).
 			OptionalTextAssignment("AWS_SECRET_KEY", g.ParameterOptions().SingleQuotes()).
 			OptionalTextAssignment("AWS_TOKEN", g.ParameterOptions().SingleQuotes()).
-			OptionalTextAssignment("AWS_ROLE", g.ParameterOptions().SingleQuotes()),
+			OptionalTextAssignment("AWS_ROLE", g.ParameterOptions().SingleQuotes()).
+			WithValidation(g.ConflictingFields, "AwsKeyId", "AwsRole"),
 		g.ParameterOptions().Parentheses().SQL("CREDENTIALS"),
 	).
 	OptionalQueryStructField("Encryption", g.NewQueryStruct("ExternalStageS3Encryption").
@@ -119,8 +121,9 @@ var externalS3StageParamsDef = g.NewQueryStruct("ExternalS3StageParams").
 		).
 		OptionalTextAssignment("MASTER_KEY", g.ParameterOptions().SingleQuotes()).
 		OptionalTextAssignment("KMS_KEY_ID", g.ParameterOptions().SingleQuotes()),
-		g.ParameterOptions().Parentheses().SQL("ENCRYPTION"),
-	)
+		g.ListOptions().Parentheses().SQL("ENCRYPTION ="),
+	).
+	WithValidation(g.ConflictingFields, "StorageIntegration", "Credentials")
 
 var externalGCSStageParamsDef = g.NewQueryStruct("ExternalGCSStageParams").
 	TextAssignment("URL", g.ParameterOptions().SingleQuotes()).
@@ -134,7 +137,7 @@ var externalGCSStageParamsDef = g.NewQueryStruct("ExternalGCSStageParams").
 				g.ParameterOptions().SingleQuotes().Required(),
 			).
 			OptionalTextAssignment("KMS_KEY_ID", g.ParameterOptions().SingleQuotes()),
-		g.ParameterOptions().Parentheses().SQL("ENCRYPTION"),
+		g.ListOptions().Parentheses().SQL("ENCRYPTION ="),
 	)
 
 var externalAzureStageParamsDef = g.NewQueryStruct("ExternalAzureStageParams").
@@ -148,15 +151,16 @@ var externalAzureStageParamsDef = g.NewQueryStruct("ExternalAzureStageParams").
 	).
 	OptionalQueryStructField(
 		"Encryption",
-		g.NewQueryStruct("ExternalStageGCSEncryption").
+		g.NewQueryStruct("ExternalStageAzureEncryption").
 			OptionalAssignment(
 				"TYPE",
 				g.KindOfT[ExternalStageAzureEncryptionOption](),
 				g.ParameterOptions().SingleQuotes().Required(),
 			).
 			OptionalTextAssignment("MASTER_KEY", g.ParameterOptions().SingleQuotes()),
-		g.ParameterOptions().Parentheses().SQL("ENCRYPTION"),
-	)
+		g.ListOptions().Parentheses().SQL("ENCRYPTION ="),
+	).
+	WithValidation(g.ConflictingFields, "StorageIntegration", "Credentials")
 
 var StagesDef = g.NewInterface(
 	"Stages",
@@ -174,16 +178,16 @@ var StagesDef = g.NewInterface(
 						OptionalAssignment(
 							"TYPE",
 							g.KindOfT[InternalStageEncryptionOption](),
-							g.ParameterOptions().SingleQuotes(),
+							g.ParameterOptions().SingleQuotes().Required(),
 						),
-					g.ParameterOptions().Parentheses().SQL("ENCRYPTION"),
+					g.ListOptions().Parentheses().SQL("ENCRYPTION ="),
 				).
 				OptionalQueryStructField(
 					"DirectoryTableOptions",
 					g.NewQueryStruct("InternalDirectoryTableOptions").
 						OptionalBooleanAssignment("ENABLE", nil).
 						OptionalBooleanAssignment("REFRESH_ON_CREATE", nil),
-					g.ParameterOptions().Parentheses(),
+					g.ListOptions().Parentheses().NoComma().SQL("DIRECTORY ="),
 				)
 		}),
 	).
@@ -199,7 +203,7 @@ var StagesDef = g.NewInterface(
 						OptionalBooleanAssignment("ENABLE", nil).
 						OptionalBooleanAssignment("REFRESH_ON_CREATE", nil).
 						OptionalBooleanAssignment("AUTO_REFRESH", nil),
-					g.ParameterOptions().Parentheses(),
+					g.ListOptions().Parentheses().NoComma().SQL("DIRECTORY ="),
 				)
 		}),
 	).
@@ -216,7 +220,7 @@ var StagesDef = g.NewInterface(
 						OptionalBooleanAssignment("REFRESH_ON_CREATE", nil).
 						OptionalBooleanAssignment("AUTO_REFRESH", nil).
 						OptionalTextAssignment("NOTIFICATION_INTEGRATION", g.ParameterOptions().SingleQuotes()),
-					g.ParameterOptions().Parentheses(),
+					g.ListOptions().Parentheses().NoComma().SQL("DIRECTORY ="),
 				)
 		}),
 	).
@@ -233,7 +237,7 @@ var StagesDef = g.NewInterface(
 						OptionalBooleanAssignment("REFRESH_ON_CREATE", nil).
 						OptionalBooleanAssignment("AUTO_REFRESH", nil).
 						OptionalTextAssignment("NOTIFICATION_INTEGRATION", g.ParameterOptions().SingleQuotes()),
-					g.ParameterOptions().Parentheses(),
+					g.ListOptions().Parentheses().NoComma().SQL("DIRECTORY ="),
 				)
 		}),
 	).
@@ -258,7 +262,7 @@ var StagesDef = g.NewInterface(
 						OptionalBooleanAssignment("ENABLE", nil).
 						OptionalBooleanAssignment("REFRESH_ON_CREATE", nil).
 						OptionalBooleanAssignment("AUTO_REFRESH", nil),
-					g.ParameterOptions().Parentheses(),
+					g.ListOptions().Parentheses().NoComma().SQL("DIRECTORY ="),
 				)
 		}),
 	).
@@ -269,7 +273,7 @@ var StagesDef = g.NewInterface(
 			SQL("STAGE").
 			IfExists().
 			Name().
-			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().NoEquals()).
+			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions()).
 			List("SetTags", g.KindOfT[TagAssociation](), g.KeywordOptions().SQL("SET TAG")).
 			List("UnsetTags", g.KindOfT[ObjectIdentifier](), g.KeywordOptions().SQL("UNSET TAG")).
 			WithValidation(g.ValidIdentifierIfSet, "RenameTo").

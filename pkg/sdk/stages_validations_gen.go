@@ -22,6 +22,9 @@ func (opts *CreateInternalStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateInternalStageOptions", "OrReplace", "IfNotExists"))
+	}
 	return JoinErrors(errs...)
 }
 
@@ -30,6 +33,19 @@ func (opts *CreateOnS3StageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateOnS3StageOptions", "OrReplace", "IfNotExists"))
+	}
+	if valueSet(opts.ExternalStageParams) {
+		if everyValueSet(opts.ExternalStageParams.StorageIntegration, opts.ExternalStageParams.Credentials) {
+			errs = append(errs, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
+		}
+		if valueSet(opts.ExternalStageParams.Credentials) {
+			if everyValueSet(opts.ExternalStageParams.Credentials.AwsKeyId, opts.ExternalStageParams.Credentials.AwsRole) {
+				errs = append(errs, errOneOf(".ExternalStageParams.Credentials", "AwsKeyId", "AwsRole"))
+			}
+		}
+	}
 	return JoinErrors(errs...)
 }
 
@@ -38,6 +54,9 @@ func (opts *CreateOnGCSStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateOnGCSStageOptions", "OrReplace", "IfNotExists"))
+	}
 	return JoinErrors(errs...)
 }
 
@@ -46,6 +65,14 @@ func (opts *CreateOnAzureStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateOnAzureStageOptions", "OrReplace", "IfNotExists"))
+	}
+	if valueSet(opts.ExternalStageParams) {
+		if everyValueSet(opts.ExternalStageParams.StorageIntegration, opts.ExternalStageParams.Credentials) {
+			errs = append(errs, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
+		}
+	}
 	return JoinErrors(errs...)
 }
 
@@ -54,6 +81,9 @@ func (opts *CreateOnS3CompatibleStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
+		errs = append(errs, errOneOf("CreateOnS3CompatibleStageOptions", "OrReplace", "IfNotExists"))
+	}
 	return JoinErrors(errs...)
 }
 
@@ -62,6 +92,15 @@ func (opts *AlterStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if opts.RenameTo != nil && !ValidObjectIdentifier(opts.RenameTo) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !exactlyOneValueSet(opts.RenameTo, opts.SetTags, opts.UnsetTags) {
+		errs = append(errs, errExactlyOneOf("AlterStageOptions", "RenameTo", "SetTags", "UnsetTags"))
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	return JoinErrors(errs...)
 }
 
@@ -70,6 +109,9 @@ func (opts *AlterInternalStageStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	return JoinErrors(errs...)
 }
 
@@ -78,6 +120,19 @@ func (opts *AlterExternalS3StageStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if valueSet(opts.ExternalStageParams) {
+		if everyValueSet(opts.ExternalStageParams.StorageIntegration, opts.ExternalStageParams.Credentials) {
+			errs = append(errs, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
+		}
+		if valueSet(opts.ExternalStageParams.Credentials) {
+			if everyValueSet(opts.ExternalStageParams.Credentials.AwsKeyId, opts.ExternalStageParams.Credentials.AwsRole) {
+				errs = append(errs, errOneOf(".ExternalStageParams.Credentials", "AwsKeyId", "AwsRole"))
+			}
+		}
+	}
 	return JoinErrors(errs...)
 }
 
@@ -86,6 +141,9 @@ func (opts *AlterExternalGCSStageStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	return JoinErrors(errs...)
 }
 
@@ -94,6 +152,14 @@ func (opts *AlterExternalAzureStageStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if valueSet(opts.ExternalStageParams) {
+		if everyValueSet(opts.ExternalStageParams.StorageIntegration, opts.ExternalStageParams.Credentials) {
+			errs = append(errs, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
+		}
+	}
 	return JoinErrors(errs...)
 }
 
@@ -102,6 +168,9 @@ func (opts *AlterDirectoryTableStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	return JoinErrors(errs...)
 }
 
@@ -110,6 +179,9 @@ func (opts *DropStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	return JoinErrors(errs...)
 }
 
@@ -118,6 +190,9 @@ func (opts *DescribeStageOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	return JoinErrors(errs...)
 }
 

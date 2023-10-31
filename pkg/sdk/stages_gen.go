@@ -31,10 +31,10 @@ type CreateInternalStageOptions struct {
 	stage                 bool                           `ddl:"static" sql:"STAGE"`
 	IfNotExists           *bool                          `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                  SchemaObjectIdentifier         `ddl:"identifier"`
-	Encryption            *InternalStageEncryption       `ddl:"parameter,parentheses" sql:"ENCRYPTION"`
-	DirectoryTableOptions *InternalDirectoryTableOptions `ddl:"parameter,parentheses"`
-	FileFormat            *StageFileFormat               `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	CopyOptions           *StageCopyOptions              `ddl:"parameter,parentheses" sql:"COPY_OPTIONS"`
+	Encryption            *InternalStageEncryption       `ddl:"list,parentheses" sql:"ENCRYPTION ="`
+	DirectoryTableOptions *InternalDirectoryTableOptions `ddl:"list,parentheses,no_comma" sql:"DIRECTORY ="`
+	FileFormat            *StageFileFormat               `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	CopyOptions           *StageCopyOptions              `ddl:"list,parentheses" sql:"COPY_OPTIONS ="`
 	Comment               *string                        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Tag                   []TagAssociation               `ddl:"keyword,parentheses" sql:"TAG"`
 }
@@ -68,7 +68,6 @@ type StageCopyOptions struct {
 type StageCopyOnErrorOptions struct {
 	Continue       *bool `ddl:"keyword" sql:"CONTINUE"`
 	SkipFile       *bool `ddl:"keyword" sql:"SKIP_FILE"`
-	SkipFile123    *bool `ddl:"keyword" sql:"SKIP_FILE_123"`
 	AbortStatement *bool `ddl:"keyword" sql:"ABORT_STATEMENT"`
 }
 
@@ -168,11 +167,16 @@ type ExternalAzureStageParams struct {
 	Url                string                         `ddl:"parameter,single_quotes" sql:"URL"`
 	StorageIntegration *AccountObjectIdentifier       `ddl:"parameter" sql:"STORAGE_INTEGRATION"`
 	Credentials        *ExternalStageAzureCredentials `ddl:"parameter,parentheses"`
-	Encryption         *ExternalStageGCSEncryption    `ddl:"parameter,parentheses" sql:"ENCRYPTION"`
+	Encryption         *ExternalStageAzureEncryption  `ddl:"parameter,parentheses" sql:"ENCRYPTION"`
 }
 
 type ExternalStageAzureCredentials struct {
 	AzureSasToken *string `ddl:"parameter,single_quotes" sql:"AZURE_SAS_TOKEN"`
+}
+
+type ExternalStageAzureEncryption struct {
+	Type      *ExternalStageAzureEncryptionOption `ddl:"parameter,single_quotes" sql:"TYPE"`
+	MasterKey *string                             `ddl:"parameter,single_quotes" sql:"MASTER_KEY"`
 }
 
 type ExternalAzureDirectoryTableOptions struct {
@@ -211,7 +215,7 @@ type AlterStageOptions struct {
 	stage     bool                    `ddl:"static" sql:"STAGE"`
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      SchemaObjectIdentifier  `ddl:"identifier"`
-	RenameTo  *SchemaObjectIdentifier `ddl:"identifier,no_equals"`
+	RenameTo  *SchemaObjectIdentifier `ddl:"identifier"`
 	SetTags   []TagAssociation        `ddl:"list,keyword" sql:"SET TAG"`
 	UnsetTags []ObjectIdentifier      `ddl:"list,keyword" sql:"UNSET TAG"`
 }
