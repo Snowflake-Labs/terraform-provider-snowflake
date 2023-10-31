@@ -21,7 +21,7 @@ func TestInt_Stages(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		//client.Stages.Show()
+		client.Stages.ShowByID(ctx, id)
 	})
 
 	t.Run("CreateOnS3", func(t *testing.T) {

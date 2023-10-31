@@ -1,6 +1,10 @@
 package sdk
 
-import "context"
+import (
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+)
 
 var _ Stages = (*stages)(nil)
 
@@ -87,6 +91,21 @@ func (v *stages) Show(ctx context.Context, request *ShowStageRequest) ([]Stage, 
 	}
 	resultList := convertRows[stageShowRow, Stage](dbRows)
 	return resultList, nil
+}
+
+func (v *stages) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stage, error) {
+	// TODO: adjust request if e.g. LIKE is supported for the resource
+	stages, err := v.Show(ctx, NewShowStageRequest().
+		WithLike(&Like{
+			Pattern: String(id.Name()),
+		}).
+		WithIn(&In{
+			Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+		}))
+	if err != nil {
+		return nil, err
+	}
+	return collections.FindOne(stages, func(r Stage) bool { return r.Name == id.Name() })
 }
 
 func (r *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {
