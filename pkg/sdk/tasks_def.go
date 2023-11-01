@@ -55,7 +55,7 @@ var TasksDef = g.NewInterface(
 ).
 	CreateOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/create-task",
-		g.QueryStruct("CreateTask").
+		g.NewQueryStruct("CreateTask").
 			Create().
 			OrReplace().
 			SQL("TASK").
@@ -63,7 +63,7 @@ var TasksDef = g.NewInterface(
 			Name().
 			OptionalQueryStructField(
 				"Warehouse",
-				g.QueryStruct("CreateTaskWarehouse").
+				g.NewQueryStruct("CreateTaskWarehouse").
 					OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("WAREHOUSE")).
 					OptionalAssignment("USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE", "WarehouseSize", g.ParameterOptions().SingleQuotes()).
 					WithValidation(g.ExactlyOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize"),
@@ -89,7 +89,7 @@ var TasksDef = g.NewInterface(
 	CustomOperation(
 		"Clone",
 		"https://docs.snowflake.com/en/sql-reference/sql/create-task#variant-syntax",
-		g.QueryStruct("CloneTask").
+		g.NewQueryStruct("CloneTask").
 			Create().
 			OrReplace().
 			SQL("TASK").
@@ -102,7 +102,7 @@ var TasksDef = g.NewInterface(
 	).
 	AlterOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-task",
-		g.QueryStruct("AlterTask").
+		g.NewQueryStruct("AlterTask").
 			Alter().
 			SQL("TASK").
 			IfExists().
@@ -113,7 +113,7 @@ var TasksDef = g.NewInterface(
 			ListAssignment("ADD AFTER", "SchemaObjectIdentifier", g.ParameterOptions().NoEquals()).
 			OptionalQueryStructField(
 				"Set",
-				g.QueryStruct("TaskSet").
+				g.NewQueryStruct("TaskSet").
 					OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("WAREHOUSE")).
 					OptionalAssignment("USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE", "WarehouseSize", g.ParameterOptions().SingleQuotes()).
 					OptionalTextAssignment("SCHEDULE", g.ParameterOptions().SingleQuotes()).
@@ -130,7 +130,7 @@ var TasksDef = g.NewInterface(
 			).
 			OptionalQueryStructField(
 				"Unset",
-				g.QueryStruct("TaskUnset").
+				g.NewQueryStruct("TaskUnset").
 					OptionalSQL("WAREHOUSE").
 					OptionalSQL("SCHEDULE").
 					OptionalSQL("CONFIG").
@@ -152,7 +152,7 @@ var TasksDef = g.NewInterface(
 	).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-task",
-		g.QueryStruct("DropTask").
+		g.NewQueryStruct("DropTask").
 			Drop().
 			SQL("TASK").
 			IfExists().
@@ -163,7 +163,7 @@ var TasksDef = g.NewInterface(
 		"https://docs.snowflake.com/en/sql-reference/sql/show-tasks",
 		taskDbRow,
 		task,
-		g.QueryStruct("ShowTasks").
+		g.NewQueryStruct("ShowTasks").
 			Show().
 			Terse().
 			SQL("TASKS").
@@ -179,7 +179,7 @@ var TasksDef = g.NewInterface(
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-task",
 		taskDbRow,
 		task,
-		g.QueryStruct("DescribeTask").
+		g.NewQueryStruct("DescribeTask").
 			Describe().
 			SQL("TASK").
 			Name().
@@ -188,7 +188,7 @@ var TasksDef = g.NewInterface(
 	CustomOperation(
 		"Execute",
 		"https://docs.snowflake.com/en/sql-reference/sql/execute-task",
-		g.QueryStruct("ExecuteTask").
+		g.NewQueryStruct("ExecuteTask").
 			SQL("EXECUTE").
 			SQL("TASK").
 			Name().

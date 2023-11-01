@@ -299,9 +299,7 @@ func TestInt_SharesAlter(t *testing.T) {
 		}
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 			IfExists: sdk.Bool(true),
-			Set: &sdk.ShareSet{
-				Tag: tagAssociations,
-			},
+			SetTag:   tagAssociations,
 		})
 		require.NoError(t, err)
 		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), shareTest.ID(), sdk.ObjectTypeShare)
@@ -314,10 +312,8 @@ func TestInt_SharesAlter(t *testing.T) {
 		// unset tags
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 			IfExists: sdk.Bool(true),
-			Unset: &sdk.ShareUnset{
-				Tag: []sdk.ObjectIdentifier{
-					tagTest.ID(),
-				},
+			UnsetTag: []sdk.ObjectIdentifier{
+				tagTest.ID(),
 			},
 		})
 		require.NoError(t, err)

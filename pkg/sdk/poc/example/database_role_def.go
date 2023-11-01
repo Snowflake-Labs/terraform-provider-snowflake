@@ -7,24 +7,24 @@ import (
 //go:generate go run ../main.go
 
 var (
-	dbRoleRename = g.QueryStruct("DatabaseRoleRename").
+	dbRoleRename = g.NewQueryStruct("DatabaseRoleRename").
 		// Fields
 		Identifier("Name", g.KindOfT[DatabaseObjectIdentifier](), g.IdentifierOptions().Required()).
 		// Validations
 		WithValidation(g.ValidIdentifier, "Name")
 
-	nestedThirdLevel = g.QueryStruct("NestedThirdLevel").
+	nestedThirdLevel = g.NewQueryStruct("NestedThirdLevel").
 		// Fields
 		Identifier("Field", g.KindOfT[DatabaseObjectIdentifier](), g.IdentifierOptions().Required()).
 		// Validations
 		WithValidation(g.AtLeastOneValueSet, "Field")
 
-	dbRoleSet = g.QueryStruct("DatabaseRoleSet").
+	dbRoleSet = g.NewQueryStruct("DatabaseRoleSet").
 		// Fields
 		TextAssignment("COMMENT", g.ParameterOptions().SingleQuotes().Required()).
 		OptionalQueryStructField("NestedThirdLevel", nestedThirdLevel, g.ListOptions().NoParentheses().SQL("NESTED"))
 
-	dbRoleUnset = g.QueryStruct("DatabaseRoleUnset").
+	dbRoleUnset = g.NewQueryStruct("DatabaseRoleUnset").
 		// Fields
 		OptionalSQL("COMMENT").
 		// Validations
@@ -37,7 +37,7 @@ var (
 	).
 		CreateOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/create-database-role",
-			g.QueryStruct("CreateDatabaseRole").
+			g.NewQueryStruct("CreateDatabaseRole").
 				// Fields
 				Create().
 				OrReplace().
@@ -51,7 +51,7 @@ var (
 		).
 		AlterOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/alter-database-role",
-			g.QueryStruct("AlterDatabaseRole").
+			g.NewQueryStruct("AlterDatabaseRole").
 				// Fields
 				Alter().
 				SQL("DATABASE ROLE").

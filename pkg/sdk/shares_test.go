@@ -30,7 +30,7 @@ func TestShareAlter(t *testing.T) {
 		opts := &AlterShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterShareOptions", "Add", "Remove", "Set", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterShareOptions", "Add", "Remove", "Set", "Unset", "SetTag", "UnsetTag"))
 	})
 
 	t.Run("with add", func(t *testing.T) {
@@ -76,12 +76,10 @@ func TestShareAlter(t *testing.T) {
 		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
-			Set: &ShareSet{
-				Tag: []TagAssociation{
-					{
-						Name:  NewSchemaObjectIdentifier("db", "schema", "tag"),
-						Value: "v1",
-					},
+			SetTag: []TagAssociation{
+				{
+					Name:  NewSchemaObjectIdentifier("db", "schema", "tag"),
+					Value: "v1",
 				},
 			},
 		}
@@ -103,10 +101,8 @@ func TestShareAlter(t *testing.T) {
 		opts := &AlterShareOptions{
 			IfExists: Bool(true),
 			name:     NewAccountObjectIdentifier("myshare"),
-			Unset: &ShareUnset{
-				Tag: []ObjectIdentifier{
-					NewSchemaObjectIdentifier("db", "schema", "tag"),
-				},
+			UnsetTag: []ObjectIdentifier{
+				NewSchemaObjectIdentifier("db", "schema", "tag"),
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" UNSET TAG "db"."schema"."tag"`)

@@ -273,6 +273,8 @@ type AlterUserOptions struct {
 	RemoveDelegatedAuthorization *RemoveDelegatedAuthorization `ddl:"keyword"`
 	Set                          *UserSet                      `ddl:"keyword" sql:"SET"`
 	Unset                        *UserUnset                    `ddl:"keyword" sql:"UNSET"`
+	SetTag                       []TagAssociation              `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag                     []ObjectIdentifier            `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterUserOptions) validate() error {
@@ -283,8 +285,8 @@ func (opts *AlterUserOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.NewName, opts.ResetPassword, opts.AbortAllQueries, opts.AddDelegatedAuthorization, opts.RemoveDelegatedAuthorization, opts.Set, opts.Unset) {
-		errs = append(errs, errExactlyOneOf("AlterUserOptions", "NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset"))
+	if !exactlyOneValueSet(opts.NewName, opts.ResetPassword, opts.AbortAllQueries, opts.AddDelegatedAuthorization, opts.RemoveDelegatedAuthorization, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag) {
+		errs = append(errs, errExactlyOneOf("AlterUserOptions", "NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset", "SetTag", "UnsetTag"))
 	}
 	if valueSet(opts.RemoveDelegatedAuthorization) {
 		if err := opts.RemoveDelegatedAuthorization.validate(); err != nil {
@@ -347,15 +349,14 @@ func (opts *RemoveDelegatedAuthorization) validate() error {
 type UserSet struct {
 	PasswordPolicy    *string               `ddl:"parameter" sql:"PASSWORD POLICY"`
 	SessionPolicy     *string               `ddl:"parameter" sql:"SESSION POLICY"`
-	Tags              []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 	ObjectProperties  *UserObjectProperties `ddl:"keyword"`
 	ObjectParameters  *UserObjectParameters `ddl:"keyword"`
 	SessionParameters *SessionParameters    `ddl:"keyword"`
 }
 
 func (opts *UserSet) validate() error {
-	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return errExactlyOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "Tags", "ObjectProperties", "ObjectParameters", "SessionParameters")
+	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
+		return errExactlyOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
 	return nil
 }
@@ -363,15 +364,14 @@ func (opts *UserSet) validate() error {
 type UserUnset struct {
 	PasswordPolicy    *bool                      `ddl:"keyword" sql:"PASSWORD POLICY"`
 	SessionPolicy     *bool                      `ddl:"keyword" sql:"SESSION POLICY"`
-	Tags              *[]string                  `ddl:"keyword" sql:"TAG"`
 	ObjectProperties  *UserObjectPropertiesUnset `ddl:"list"`
 	ObjectParameters  *UserObjectParametersUnset `ddl:"list"`
 	SessionParameters *SessionParametersUnset    `ddl:"list"`
 }
 
 func (opts *UserUnset) validate() error {
-	if !exactlyOneValueSet(opts.Tags, opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return errExactlyOneOf("UserUnset", "Tags", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
+	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
+		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
 	return nil
 }

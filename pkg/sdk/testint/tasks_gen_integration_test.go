@@ -257,6 +257,12 @@ func TestInt_Tasks(t *testing.T) {
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
+		// can get the root task even with cycle
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
 		// we get an error when trying to start
 		alterRequest = sdk.NewAlterTaskRequest(rootId).WithResume(sdk.Bool(true))
 		err = client.Tasks.Alter(ctx, alterRequest)

@@ -58,7 +58,7 @@ func TestUserAlter(t *testing.T) {
 		opts := &AlterUserOptions{
 			name: id,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterUserOptions", "NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterUserOptions", "NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset", "SetTag", "UnsetTag"))
 	})
 
 	t.Run("with setting a policy", func(t *testing.T) {
@@ -84,12 +84,10 @@ func TestUserAlter(t *testing.T) {
 			},
 		}
 		opts := &AlterUserOptions{
-			name: id,
-			Set: &UserSet{
-				Tags: tags,
-			},
+			name:   id,
+			SetTag: tags,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER USER %s SET TAG ("db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2')`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER USER %s SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`, id.FullyQualifiedName())
 	})
 
 	t.Run("with setting properties and parameters", func(t *testing.T) {
@@ -171,15 +169,13 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("with unsetting tags", func(t *testing.T) {
-		tag1 := "USER_TAG1"
-		tag2 := "USER_TAG2"
+		tag1 := NewSchemaObjectIdentifier("db", "schema", "USER_TAG1")
+		tag2 := NewSchemaObjectIdentifier("db", "schema", "USER_TAG2")
 		opts := &AlterUserOptions{
-			name: id,
-			Unset: &UserUnset{
-				Tags: &[]string{tag1, tag2},
-			},
+			name:     id,
+			UnsetTag: []ObjectIdentifier{tag1, tag2},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s UNSET TAG %s, %s", id.FullyQualifiedName(), tag1, tag2)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s UNSET TAG %s, %s", id.FullyQualifiedName(), tag1.FullyQualifiedName(), tag2.FullyQualifiedName())
 	})
 
 	t.Run("with unsetting properties", func(t *testing.T) {
