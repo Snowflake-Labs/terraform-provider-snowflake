@@ -12,6 +12,32 @@ var viewDbRow = g.DbStruct("viewDBRow").
 var view = g.PlainStruct("View").
 	Field("Name", "string")
 
+var viewDetailsDbRow = g.DbStruct("viewDetailsRow").
+	Field("name", "string").
+	Field("type", "string").
+	Field("kind", "string").
+	Field("null", "string").
+	Field("default", "string").
+	Field("primary key", "string").
+	Field("unique key", "string").
+	Field("check", "string").
+	Field("expression", "string").
+	Field("comment", "string").
+	Field("policy name", "string")
+
+var viewDetails = g.PlainStruct("ViewDetails").
+	Field("Name", "string").
+	Field("Type", "DataType").
+	Field("Kind", "string").
+	Field("IsNullable", "bool").
+	Field("Default", "string").
+	Field("IsPrimary", "bool").
+	Field("IsUnique", "bool").
+	Field("Check", "bool").
+	Field("Expression", "string").
+	Field("Comment", "string").
+	Field("PolicyName", "string")
+
 var viewColumn = g.NewQueryStruct("ViewColumn").
 	Text("Name", g.KeywordOptions().DoubleQuotes().Required()).
 	OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes().NoEquals())
@@ -156,10 +182,10 @@ var ViewsDef = g.NewInterface(
 	).
 	ShowByIdOperation().
 	DescribeOperation(
-		g.DescriptionMappingKindSingleValue,
+		g.DescriptionMappingKindSlice,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-view",
-		viewDbRow,
-		view,
+		viewDetailsDbRow,
+		viewDetails,
 		g.NewQueryStruct("DescribeView").
 			Describe().
 			SQL("VIEW").
