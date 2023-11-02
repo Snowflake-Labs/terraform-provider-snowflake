@@ -105,17 +105,16 @@ func (r *CreateViewRequest) toOpts() *CreateViewOptions {
 
 func (r *AlterViewRequest) toOpts() *AlterViewOptions {
 	opts := &AlterViewOptions{
-		IfExists:          r.IfExists,
-		name:              r.name,
-		RenameTo:          r.RenameTo,
-		SetComment:        r.SetComment,
-		UnsetComment:      r.UnsetComment,
-		SetSecure:         r.SetSecure,
-		SetChangeTracking: r.SetChangeTracking,
-		UnsetSecure:       r.UnsetSecure,
-		SetTags:           r.SetTags,
-		UnsetTags:         r.UnsetTags,
-
+		IfExists:                 r.IfExists,
+		name:                     r.name,
+		RenameTo:                 r.RenameTo,
+		SetComment:               r.SetComment,
+		UnsetComment:             r.UnsetComment,
+		SetSecure:                r.SetSecure,
+		SetChangeTracking:        r.SetChangeTracking,
+		UnsetSecure:              r.UnsetSecure,
+		SetTags:                  r.SetTags,
+		UnsetTags:                r.UnsetTags,
 		DropAllRowAccessPolicies: r.DropAllRowAccessPolicies,
 	}
 	if r.AddRowAccessPolicy != nil {
@@ -131,16 +130,12 @@ func (r *AlterViewRequest) toOpts() *AlterViewOptions {
 	}
 	if r.DropAndAddRowAccessPolicy != nil {
 		opts.DropAndAddRowAccessPolicy = &ViewDropAndAddRowAccessPolicy{}
-		if r.DropAndAddRowAccessPolicy.Drop != nil {
-			opts.DropAndAddRowAccessPolicy.Drop = &ViewDropRowAccessPolicy{
-				RowAccessPolicy: r.DropAndAddRowAccessPolicy.Drop.RowAccessPolicy,
-			}
+		opts.DropAndAddRowAccessPolicy.Drop = ViewDropRowAccessPolicy{
+			RowAccessPolicy: r.DropAndAddRowAccessPolicy.Drop.RowAccessPolicy,
 		}
-		if r.DropAndAddRowAccessPolicy.Add != nil {
-			opts.DropAndAddRowAccessPolicy.Add = &ViewAddRowAccessPolicy{
-				RowAccessPolicy: r.DropAndAddRowAccessPolicy.Add.RowAccessPolicy,
-				On:              r.DropAndAddRowAccessPolicy.Add.On,
-			}
+		opts.DropAndAddRowAccessPolicy.Add = ViewAddRowAccessPolicy{
+			RowAccessPolicy: r.DropAndAddRowAccessPolicy.Add.RowAccessPolicy,
+			On:              r.DropAndAddRowAccessPolicy.Add.On,
 		}
 	}
 	if r.SetMaskingPolicyOnColumn != nil {

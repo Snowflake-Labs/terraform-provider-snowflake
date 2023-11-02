@@ -147,13 +147,9 @@ func TestViews_Drop(t *testing.T) {
 }
 
 func TestViews_Show(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
-
 	// Minimal valid ShowViewOptions
 	defaultOpts := func() *ShowViewOptions {
-		return &ShowViewOptions{
-			name: id,
-		}
+		return &ShowViewOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
