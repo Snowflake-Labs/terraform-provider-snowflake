@@ -48,7 +48,9 @@ func (v *QueryStruct) queryStructField(name string, queryStruct *QueryStruct, ki
 	qs := queryStruct.IntoField()
 	qs.Name = name
 	qs.Kind = kindPrefix + qs.Kind
-	qs = transformer.Transform(qs)
+	if transformer != nil {
+		qs = transformer.Transform(qs)
+	}
 	v.fields = append(v.fields, qs)
 	return v
 }
