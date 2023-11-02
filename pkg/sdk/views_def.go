@@ -4,13 +4,33 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
-// TODO: define
 var viewDbRow = g.DbStruct("viewDBRow").
-	Field("name", "string")
+	Field("created_on", "string").
+	Field("name", "string").
+	Field("reserved", "string").
+	Field("database_name", "string").
+	Field("schema_name", "string").
+	Field("owner", "string").
+	Field("comment", "string").
+	Field("text", "string").
+	Field("is_secure", "string").
+	Field("is_materialized", "string").
+	Field("owner_role_type", "string").
+	Field("change_tracking", "string")
 
-// TODO: define
 var view = g.PlainStruct("View").
-	Field("Name", "string")
+	Field("CreatedOn", "string").
+	Field("Name", "string").
+	Field("Reserved", "string").
+	Field("DatabaseName", "string").
+	Field("SchemaName", "string").
+	Field("Owner", "string").
+	Field("Comment", "string").
+	Field("Text", "string").
+	Field("IsSecure", "string").
+	Field("IsMaterialized", "string").
+	Field("OwnerRoleType", "string").
+	Field("ChangeTracking", "string")
 
 var viewDetailsDbRow = g.DbStruct("viewDetailsRow").
 	Field("name", "string").
