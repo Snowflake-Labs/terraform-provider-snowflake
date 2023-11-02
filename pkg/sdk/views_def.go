@@ -12,6 +12,17 @@ var viewDbRow = g.DbStruct("viewDBRow").
 var view = g.PlainStruct("View").
 	Field("Name", "string")
 
+var viewColumn = g.NewQueryStruct("ViewColumn").
+	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
+	OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes().NoEquals())
+
+var viewColumnMaskingPolicy = g.NewQueryStruct("ViewColumnMaskingPolicy").
+	Text("Name", g.KeywordOptions().Required()).
+	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required().SQL("MASKING POLICY")).
+	List("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
+	WithTags().
+	WithValidation(g.ValidIdentifier, "MaskingPolicy")
+
 var ViewsDef = g.NewInterface(
 	"Views",
 	"View",
@@ -30,6 +41,8 @@ var ViewsDef = g.NewInterface(
 			SQL("VIEW").
 			IfNotExists().
 			Name().
+			ListQueryStructField("Columns", viewColumn, g.ListOptions().Parentheses()).
+			ListQueryStructField("ColumnsMaskingPolicies", viewColumnMaskingPolicy, g.ListOptions().NoParentheses().NoEquals()).
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 	).
