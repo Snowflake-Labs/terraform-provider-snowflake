@@ -20,7 +20,7 @@ func TestApplicationRoles_Show(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.ApplicationName]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ApplicationName = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("ShowApplicationRoleOptions", "ApplicationRole"))
+		assertOptsInvalid(t, opts, errInvalidIdentifier("ShowApplicationRoleOptions", "ApplicationName"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
