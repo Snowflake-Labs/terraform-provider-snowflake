@@ -27,6 +27,54 @@ var viewRowAccessPolicy = g.NewQueryStruct("ViewRowAccessPolicy").
 	List("ON", g.KindOfT[string](), nil). // TODO: double quotes here?
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
+var viewAddRowAccessPolicy = g.NewQueryStruct("ViewAddRowAccessPolicy").
+	SQL("ADD").
+	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
+	List("ON", g.KindOfT[string](), nil). // TODO: double quotes here?
+	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
+
+var viewDropRowAccessPolicy = g.NewQueryStruct("ViewDropRowAccessPolicy").
+	SQL("DROP").
+	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
+	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
+
+var viewDropAndAddRowAccessPolicy = g.NewQueryStruct("ViewDropAndAddRowAccessPolicy").
+	QueryStructField("Drop", viewDropRowAccessPolicy, g.KeywordOptions().Required()).
+	QueryStructField("Add", viewAddRowAccessPolicy, g.KeywordOptions().Required())
+
+var viewSetColumnMaskingPolicy = g.NewQueryStruct("ViewSetColumnMaskingPolicy").
+	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
+	SQL("ALTER").
+	SQL("COLUMN").
+	Text("Name", g.KeywordOptions().Required()).
+	SQL("SET").
+	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
+	List("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
+	OptionalSQL("FORCE")
+
+var viewUnsetColumnMaskingPolicy = g.NewQueryStruct("ViewUnsetColumnMaskingPolicy").
+	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
+	SQL("ALTER").
+	SQL("COLUMN").
+	Text("Name", g.KeywordOptions().Required()).
+	SQL("UNSET").
+	SQL("MASKING POLICY")
+
+var viewSetColumnTags = g.NewQueryStruct("ViewSetColumnTags").
+	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
+	SQL("ALTER").
+	SQL("COLUMN").
+	Text("Name", g.KeywordOptions().Required()).
+	SQL("SET").
+	SetTags()
+
+var viewUnsetColumnTags = g.NewQueryStruct("ViewUnsetColumnTags").
+	// In the docs there is a MODIFY alternative, but for simplicity only one is supported here.
+	SQL("ALTER").
+	SQL("COLUMN").
+	Text("Name", g.KeywordOptions().Required()).
+	UnsetTags()
+
 var ViewsDef = g.NewInterface(
 	"Views",
 	"View",
@@ -65,11 +113,24 @@ var ViewsDef = g.NewInterface(
 			SQL("VIEW").
 			IfExists().
 			Name().
-			OptionalSQL("RESUME").
+			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+			OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
+			OptionalSQL("UNSET COMMENT").
+			OptionalSQL("SET SECURE").
+			OptionalBooleanAssignment("SET CHANGE TRACKING", nil).
+			OptionalSQL("UNSET SECURE").
 			SetTags().
 			UnsetTags().
+			OptionalQueryStructField("AddRowAccessPolicy", viewAddRowAccessPolicy, g.KeywordOptions()).
+			OptionalQueryStructField("DropRowAccessPolicy", viewDropRowAccessPolicy, g.KeywordOptions()).
+			OptionalQueryStructField("DropAndAddRowAccessPolicy", viewDropAndAddRowAccessPolicy, g.ListOptions().NoParentheses()).
+			OptionalSQL("DROP ALL ROW ACCESS POLICIES").
+			OptionalQueryStructField("SetMaskingPolicyOnColumn", viewSetColumnMaskingPolicy, g.KeywordOptions()).
+			OptionalQueryStructField("UnsetMaskingPolicyOnColumn", viewUnsetColumnMaskingPolicy, g.KeywordOptions()).
+			OptionalQueryStructField("SetTagsOnColumn", viewSetColumnTags, g.KeywordOptions()).
+			OptionalQueryStructField("UnsetTagsOnColumn", viewUnsetColumnTags, g.KeywordOptions()).
 			WithValidation(g.ValidIdentifier, "name").
-			WithValidation(g.ExactlyOneValueSet, "Resume", "SetTags", "UnsetTags"),
+			WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "UnsetComment", "SetSecure", "SetChangeTracking", "UnsetSecure", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "SetMaskingPolicyOnColumn", "UnsetMaskingPolicyOnColumn", "SetTagsOnColumn", "UnsetTagsOnColumn"),
 	).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-view",
