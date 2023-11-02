@@ -4,11 +4,13 @@ import "testing"
 
 func TestViews_Create(t *testing.T) {
 	id := RandomSchemaObjectIdentifier()
+	sql := "SELECT id FROM t"
 
 	// Minimal valid CreateViewOptions
 	defaultOpts := func() *CreateViewOptions {
 		return &CreateViewOptions{
 			name: id,
+			sql:  sql,
 		}
 	}
 
@@ -19,32 +21,36 @@ func TestViews_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateViewOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("validation: valid identifier for [opts.RowAccessPolicy.RowAccessPolicy]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.RowAccessPolicy = &ViewRowAccessPolicy{
+			RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
+		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE VIEW %s AS %s", id.FullyQualifiedName(), sql)
 	})
 
+	// TODO: add all options
 	t.Run("all options", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		req := NewCreateViewRequest(id, sql).
+			WithOrReplace(Bool(true))
+
+		assertOptsValidAndSQLEquals(t, req.toOpts(), "CREATE OR REPLACE VIEW %s AS %s", id.FullyQualifiedName(), sql)
 	})
 }
 
