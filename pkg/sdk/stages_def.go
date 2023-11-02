@@ -78,8 +78,7 @@ func alterStageOperation(structName string, apply func(qs *g.QueryStruct) *g.Que
 
 var stageFileFormatDef = g.NewQueryStruct("StageFileFormat").
 	OptionalTextAssignment("FORMAT_NAME", g.ParameterOptions().SingleQuotes()).
-	OptionalAssignment("TYPE", g.KindOfTPointer[FileFormatType](), g.ParameterOptions()).
-	List("TYPE", g.KindOfT[FileFormatType](), g.ListOptions())
+	OptionalAssignment("TYPE", g.KindOfTPointer[FileFormatType](), g.ParameterOptions())
 
 var stageCopyOptionsDef = g.NewQueryStruct("StageCopyOptions").
 	OptionalQueryStructField(
@@ -344,14 +343,14 @@ var StagesDef = g.NewInterface(
 			Field("parent_property", "string").
 			Field("property", "string").
 			Field("property_type", "string").
-			Field("property_value", "sql.NullString").
-			Field("property_default", "sql.NullString"),
+			Field("property_value", "string").
+			Field("property_default", "string"),
 		g.PlainStruct("StageProperty").
 			Field("Parent", "string").
 			Field("Name", "string").
 			Field("Type", "string").
-			Field("Value", "*string").
-			Field("Default", "*string"),
+			Field("Value", "string").
+			Field("Default", "string"),
 		g.NewQueryStruct("DescStage").
 			Describe().
 			SQL("STAGE").
@@ -370,7 +369,7 @@ var StagesDef = g.NewInterface(
 			Field("has_encryption_key", "string").
 			Field("owner", "string").
 			Field("comment", "string").
-			Field("region", "string").
+			Field("region", "sql.NullString").
 			Field("type", "string").
 			Field("cloud", "sql.NullString").
 			Field("storage_integration", "sql.NullString").
@@ -387,7 +386,7 @@ var StagesDef = g.NewInterface(
 			Field("HasEncryptionKey", "bool").
 			Field("Owner", "string").
 			Field("Comment", "string").
-			Field("Region", "string").
+			Field("Region", "*string").
 			Field("Type", "string").
 			Field("Cloud", "*string").
 			Field("StorageIntegration", "*string").

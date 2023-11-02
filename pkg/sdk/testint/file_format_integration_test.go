@@ -39,9 +39,8 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				CSVEmptyFieldAsNull:           sdk.Bool(true),
 				CSVSkipByteOrderMark:          sdk.Bool(true),
 				CSVEncoding:                   &sdk.CSVEncodingGB18030,
-
-				Comment: sdk.String("test comment"),
 			},
+			Comment: sdk.String("test comment"),
 		})
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -122,9 +121,8 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				JSONStripNullValues:   sdk.Bool(true),
 				JSONIgnoreUTF8Errors:  sdk.Bool(true),
 				JSONSkipByteOrderMark: sdk.Bool(true),
-
-				Comment: sdk.String("test comment"),
 			},
+			Comment: sdk.String("test comment"),
 		})
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -184,9 +182,8 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				AvroTrimSpace:                sdk.Bool(true),
 				AvroReplaceInvalidCharacters: sdk.Bool(true),
 				AvroNullIf:                   &[]sdk.NullString{{S: "a"}, {S: "b"}},
-
-				Comment: sdk.String("test comment"),
 			},
+			Comment: sdk.String("test comment"),
 		})
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -225,9 +222,8 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				ORCTrimSpace:                sdk.Bool(true),
 				ORCReplaceInvalidCharacters: sdk.Bool(true),
 				ORCNullIf:                   &[]sdk.NullString{{S: "a"}, {S: "b"}},
-
-				Comment: sdk.String("test comment"),
 			},
+			Comment: sdk.String("test comment"),
 		})
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -266,9 +262,8 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				ParquetTrimSpace:                sdk.Bool(true),
 				ParquetReplaceInvalidCharacters: sdk.Bool(true),
 				ParquetNullIf:                   &[]sdk.NullString{{S: "a"}, {S: "b"}},
-
-				Comment: sdk.String("test comment"),
 			},
+			Comment: sdk.String("test comment"),
 		})
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -313,9 +308,8 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				XMLDisableSnowflakeData: sdk.Bool(true),
 				XMLDisableAutoConvert:   sdk.Bool(true),
 				XMLSkipByteOrderMark:    sdk.Bool(true),
-
-				Comment: sdk.String("test comment"),
 			},
+			Comment: sdk.String("test comment"),
 		})
 		require.NoError(t, err)
 		t.Cleanup(func() {

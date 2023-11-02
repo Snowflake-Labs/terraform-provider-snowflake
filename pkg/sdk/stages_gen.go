@@ -306,19 +306,19 @@ type DescribeStageOptions struct {
 }
 
 type stageDescRow struct {
-	ParentProperty  string         `db:"parent_property"`
-	Property        string         `db:"property"`
-	PropertyType    string         `db:"property_type"`
-	PropertyValue   sql.NullString `db:"property_value"`
-	PropertyDefault sql.NullString `db:"property_default"`
+	ParentProperty  string `db:"parent_property"`
+	Property        string `db:"property"`
+	PropertyType    string `db:"property_type"`
+	PropertyValue   string `db:"property_value"`
+	PropertyDefault string `db:"property_default"`
 }
 
 type StageProperty struct {
 	Parent  string
 	Name    string
 	Type    string
-	Value   *string
-	Default *string
+	Value   string
+	Default string
 }
 
 // ShowStageOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-stages.
@@ -339,7 +339,7 @@ type stageShowRow struct {
 	HasEncryptionKey   string         `db:"has_encryption_key"`
 	Owner              string         `db:"owner"`
 	Comment            string         `db:"comment"`
-	Region             string         `db:"region"`
+	Region             sql.NullString `db:"region"`
 	Type               string         `db:"type"`
 	Cloud              sql.NullString `db:"cloud"`
 	StorageIntegration sql.NullString `db:"storage_integration"`
@@ -358,11 +358,19 @@ type Stage struct {
 	HasEncryptionKey   bool
 	Owner              string
 	Comment            string
-	Region             string
+	Region             *string
 	Type               string
 	Cloud              *string
 	StorageIntegration *string
 	Endpoint           *string
 	OwnerRoleType      *string
 	DirectoryEnabled   bool
+}
+
+func (s *Stage) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(s.DatabaseName, s.SchemaName, s.Name)
+}
+
+func (s *Stage) ObjectType() ObjectType {
+	return ObjectTypeStage
 }

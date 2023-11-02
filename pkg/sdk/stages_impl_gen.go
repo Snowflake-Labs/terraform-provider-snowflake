@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
@@ -641,8 +640,14 @@ func (r *DescribeStageRequest) toOpts() *DescribeStageOptions {
 }
 
 func (r stageDescRow) convert() *StageProperty {
-	// TODO: Mapping
-	return &StageProperty{}
+	stageProp := &StageProperty{
+		Parent:  r.ParentProperty,
+		Name:    r.Property,
+		Type:    r.PropertyType,
+		Value:   r.PropertyValue,
+		Default: r.PropertyDefault,
+	}
+	return stageProp
 }
 
 func (r *ShowStageRequest) toOpts() *ShowStageOptions {
@@ -654,6 +659,35 @@ func (r *ShowStageRequest) toOpts() *ShowStageOptions {
 }
 
 func (r stageShowRow) convert() *Stage {
-	// TODO: Mapping
-	return &Stage{}
+	stage := &Stage{
+		CreatedOn:    r.CreatedOn,
+		Name:         r.Name,
+		DatabaseName: r.DatabaseName,
+		SchemaName:   r.SchemaName,
+		Url:          r.Url,
+		// TODO: Check in worksheet
+		HasCredentials:   r.HasCredentials == "Y",
+		HasEncryptionKey: r.HasEncryptionKey == "Y",
+		Owner:            r.Owner,
+		Comment:          r.Comment,
+		Type:             r.Type,
+		DirectoryEnabled: r.DirectoryEnabled == "Y",
+	}
+	if r.Region.Valid {
+		stage.Region = &r.Region.String
+	}
+	// TODO: Check in worksheet or in test
+	if r.Cloud.Valid { // && r.Cloud.String != "NULL" {
+		stage.Cloud = &r.Cloud.String
+	}
+	if r.StorageIntegration.Valid {
+		stage.StorageIntegration = &r.StorageIntegration.String
+	}
+	if r.Endpoint.Valid {
+		stage.Endpoint = &r.Endpoint.String
+	}
+	if r.OwnerRoleType.Valid {
+		stage.OwnerRoleType = &r.OwnerRoleType.String
+	}
+	return stage
 }
