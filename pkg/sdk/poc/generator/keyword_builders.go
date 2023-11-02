@@ -41,7 +41,7 @@ func (v *QueryStruct) OptionalNumber(name string, transformer *KeywordTransforme
 	return v
 }
 
-func (v *queryStruct) OptionalLimitFrom() *queryStruct {
+func (v *QueryStruct) OptionalLimitFrom() *QueryStruct {
 	v.fields = append(v.fields, NewField("Limit", "*LimitFrom", Tags().Keyword().SQL("LIMIT"), nil))
 	return v
 }

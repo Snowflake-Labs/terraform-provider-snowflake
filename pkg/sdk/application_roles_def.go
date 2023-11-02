@@ -23,7 +23,7 @@ var ApplicationRolesDef = g.NewInterface(
 			Field("Owner", "string").
 			Field("Comment", "string").
 			Field("OwnerRoleType", "string"),
-		g.QueryStruct("ShowApplicationRoles").
+		g.NewQueryStruct("ShowApplicationRoles").
 			Show().
 			SQL("APPLICATION ROLES IN APPLICATION").
 			Identifier("ApplicationName", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions()).

@@ -147,11 +147,11 @@ func (i *Interface) DropOperation(doc string, queryStruct *QueryStruct) *Interfa
 	return i.newSimpleOperation(string(OperationKindDrop), doc, queryStruct)
 }
 
-func (i *Interface) GrantOperation(doc string, queryStruct *queryStruct) *Interface {
+func (i *Interface) GrantOperation(doc string, queryStruct *QueryStruct) *Interface {
 	return i.newSimpleOperation(string(OperationKindGrant), doc, queryStruct)
 }
 
-func (i *Interface) RevokeOperation(doc string, queryStruct *queryStruct) *Interface {
+func (i *Interface) RevokeOperation(doc string, queryStruct *QueryStruct) *Interface {
 	return i.newSimpleOperation(string(OperationKindRevoke), doc, queryStruct)
 }
 

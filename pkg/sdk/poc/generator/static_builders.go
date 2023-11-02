@@ -25,10 +25,10 @@ func (v *QueryStruct) Describe() *QueryStruct {
 	return v.SQL("DESCRIBE")
 }
 
-func (v *queryStruct) Grant() *queryStruct {
+func (v *QueryStruct) Grant() *QueryStruct {
 	return v.SQL("GRANT")
 }
 
-func (v *queryStruct) Revoke() *queryStruct {
+func (v *QueryStruct) Revoke() *QueryStruct {
 	return v.SQL("REVOKE")
 }
