@@ -230,6 +230,28 @@ func (r *DescribeViewRequest) toOpts() *DescribeViewOptions {
 }
 
 func (r viewDetailsRow) convert() *ViewDetails {
-	// TODO: Mapping
-	return &ViewDetails{}
+	details := &ViewDetails{
+		Name:       r.Name,
+		Type:       r.Type,
+		Kind:       r.Kind,
+		IsNullable: r.IsNullable == "Y",
+		IsPrimary:  r.IsPrimary == "Y",
+		IsUnique:   r.IsUnique == "Y",
+	}
+	if r.Default.Valid {
+		details.Default = String(r.Default.String)
+	}
+	if r.Check.Valid {
+		details.Check = Bool(r.Check.String == "Y")
+	}
+	if r.Expression.Valid {
+		details.Expression = String(r.Expression.String)
+	}
+	if r.Comment.Valid {
+		details.Comment = String(r.Comment.String)
+	}
+	if r.PolicyName.Valid {
+		details.PolicyName = String(r.PolicyName.String)
+	}
+	return details
 }

@@ -185,30 +185,33 @@ type DescribeViewOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
+// TODO: extract common type for describe
+// viewDetailsRow is a copy of externalTableColumnDetailsRow.
 type viewDetailsRow struct {
-	Name       string `db:"name"`
-	Type       string `db:"type"`
-	Kind       string `db:"kind"`
-	Null       string `db:"null"`
-	Default    string `db:"default"`
-	PrimaryKey string `db:"primary key"`
-	UniqueKey  string `db:"unique key"`
-	Check      string `db:"check"`
-	Expression string `db:"expression"`
-	Comment    string `db:"comment"`
-	PolicyName string `db:"policy name"`
+	Name       string         `db:"name"`
+	Type       DataType       `db:"type"`
+	Kind       string         `db:"kind"`
+	IsNullable string         `db:"null?"`
+	Default    sql.NullString `db:"default"`
+	IsPrimary  string         `db:"primary key"`
+	IsUnique   string         `db:"unique key"`
+	Check      sql.NullString `db:"check"`
+	Expression sql.NullString `db:"expression"`
+	Comment    sql.NullString `db:"comment"`
+	PolicyName sql.NullString `db:"policy name"`
 }
 
+// ViewDetails is a copy of ExternalTableColumnDetails.
 type ViewDetails struct {
 	Name       string
 	Type       DataType
 	Kind       string
 	IsNullable bool
-	Default    string
+	Default    *string
 	IsPrimary  bool
 	IsUnique   bool
-	Check      bool
-	Expression string
-	Comment    string
-	PolicyName string
+	Check      *bool
+	Expression *string
+	Comment    *string
+	PolicyName *string
 }

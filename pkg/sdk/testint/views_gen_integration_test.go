@@ -20,46 +20,63 @@ func TestInt_Views(t *testing.T) {
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
 
-	assertViewWithOptions := func(t *testing.T, task *sdk.View, id sdk.SchemaObjectIdentifier, isSecure bool, comment string) {
+	assertViewWithOptions := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier, isSecure bool, comment string) {
 		t.Helper()
-		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.Name(), task.Name)
+		assert.NotEmpty(t, view.CreatedOn)
+		assert.Equal(t, id.Name(), view.Name)
 		// Kind is filled out only in TERSE response.
-		assert.Empty(t, task.Kind)
-		assert.Empty(t, task.Reserved)
-		assert.Equal(t, testDb(t).Name, task.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, task.SchemaName)
-		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
-		assert.Equal(t, comment, task.Comment)
-		assert.NotEmpty(t, task.Text)
-		assert.Equal(t, isSecure, task.IsSecure)
-		assert.Equal(t, false, task.IsMaterialized)
-		assert.Equal(t, "ROLE", task.OwnerRoleType)
-		assert.Equal(t, "OFF", task.ChangeTracking)
+		assert.Empty(t, view.Kind)
+		assert.Empty(t, view.Reserved)
+		assert.Equal(t, testDb(t).Name, view.DatabaseName)
+		assert.Equal(t, testSchema(t).Name, view.SchemaName)
+		assert.Equal(t, "ACCOUNTADMIN", view.Owner)
+		assert.Equal(t, comment, view.Comment)
+		assert.NotEmpty(t, view.Text)
+		assert.Equal(t, isSecure, view.IsSecure)
+		assert.Equal(t, false, view.IsMaterialized)
+		assert.Equal(t, "ROLE", view.OwnerRoleType)
+		assert.Equal(t, "OFF", view.ChangeTracking)
 	}
 
-	assertView := func(t *testing.T, task *sdk.View, id sdk.SchemaObjectIdentifier) {
+	assertView := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
-		assertViewWithOptions(t, task, id, false, "")
+		assertViewWithOptions(t, view, id, false, "")
 	}
 
-	assertViewTerse := func(t *testing.T, task *sdk.View, id sdk.SchemaObjectIdentifier) {
+	assertViewTerse := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
-		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.Name(), task.Name)
-		assert.Equal(t, "VIEW", task.Kind)
-		assert.Equal(t, testDb(t).Name, task.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, task.SchemaName)
+		assert.NotEmpty(t, view.CreatedOn)
+		assert.Equal(t, id.Name(), view.Name)
+		assert.Equal(t, "VIEW", view.Kind)
+		assert.Equal(t, testDb(t).Name, view.DatabaseName)
+		assert.Equal(t, testSchema(t).Name, view.SchemaName)
 
 		// all below are not contained in the terse response, that's why all of them we expect to be empty
-		assert.Empty(t, task.Reserved)
-		assert.Empty(t, task.Owner)
-		assert.Empty(t, task.Comment)
-		assert.Empty(t, task.Text)
-		assert.Empty(t, task.IsSecure)
-		assert.Empty(t, task.IsMaterialized)
-		assert.Empty(t, task.OwnerRoleType)
-		assert.Empty(t, task.ChangeTracking)
+		assert.Empty(t, view.Reserved)
+		assert.Empty(t, view.Owner)
+		assert.Empty(t, view.Comment)
+		assert.Empty(t, view.Text)
+		assert.Empty(t, view.IsSecure)
+		assert.Empty(t, view.IsMaterialized)
+		assert.Empty(t, view.OwnerRoleType)
+		assert.Empty(t, view.ChangeTracking)
+	}
+
+	assertViewDetailsRow := func(t *testing.T, viewDetails *sdk.ViewDetails) {
+		t.Helper()
+		assert.Equal(t, sdk.ViewDetails{
+			Name:       "ID",
+			Type:       "NUMBER(38,0)",
+			Kind:       "COLUMN",
+			IsNullable: true,
+			Default:    nil,
+			IsPrimary:  false,
+			IsUnique:   false,
+			Check:      nil,
+			Expression: nil,
+			Comment:    nil,
+			PolicyName: nil,
+		}, *viewDetails)
 	}
 
 	cleanupViewProvider := func(id sdk.SchemaObjectIdentifier) func() {
@@ -177,7 +194,7 @@ func TestInt_Views(t *testing.T) {
 		assertViewTerse(t, &returnedViews[0], view.ID())
 	})
 
-	t.Run("show task: with options", func(t *testing.T) {
+	t.Run("show view: with options", func(t *testing.T) {
 		view1 := createView(t)
 		view2 := createView(t)
 
@@ -191,5 +208,15 @@ func TestInt_Views(t *testing.T) {
 		assert.Equal(t, 1, len(returnedViews))
 		assert.Contains(t, returnedViews, *view1)
 		assert.NotContains(t, returnedViews, *view2)
+	})
+
+	t.Run("describe view", func(t *testing.T) {
+		view := createView(t)
+
+		returnedViewDetails, err := client.Views.Describe(ctx, view.ID())
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, len(returnedViewDetails))
+		assertViewDetailsRow(t, &returnedViewDetails[0])
 	})
 }
