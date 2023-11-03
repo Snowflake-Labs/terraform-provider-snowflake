@@ -460,6 +460,19 @@ func createMaskingPolicy(t *testing.T, client *sdk.Client, database *sdk.Databas
 	return createMaskingPolicyWithOptions(t, client, database, schema, signature, sdk.DataTypeVARCHAR, expression, &sdk.CreateMaskingPolicyOptions{})
 }
 
+func createMaskingPolicyIdentity(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, columnType sdk.DataType) (*sdk.MaskingPolicy, func()) {
+	t.Helper()
+	name := "a"
+	signature := []sdk.TableColumnSignature{
+		{
+			Name: name,
+			Type: columnType,
+		},
+	}
+	expression := "a"
+	return createMaskingPolicyWithOptions(t, client, database, schema, signature, columnType, expression, &sdk.CreateMaskingPolicyOptions{})
+}
+
 func createMaskingPolicyWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, signature []sdk.TableColumnSignature, returns sdk.DataType, expression string, options *sdk.CreateMaskingPolicyOptions) (*sdk.MaskingPolicy, func()) {
 	t.Helper()
 	var databaseCleanup func()

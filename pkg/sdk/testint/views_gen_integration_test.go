@@ -295,6 +295,38 @@ func TestInt_Views(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	t.Run("alter view: set and unset masking policy", func(t *testing.T) {
+		maskingPolicy, maskingPolicyCleanup := createMaskingPolicyIdentity(t, client, testDb(t), testSchema(t), sdk.DataTypeNumber)
+		t.Cleanup(maskingPolicyCleanup)
+
+		view := createView(t)
+		id := view.ID()
+
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetMaskingPolicyOnColumn(
+			sdk.NewViewSetColumnMaskingPolicyRequest("id", maskingPolicy.ID()),
+		)
+		err := client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredViewDetails, err := client.Views.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, len(alteredViewDetails))
+		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), *alteredViewDetails[0].PolicyName)
+
+		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(
+			sdk.NewViewUnsetColumnMaskingPolicyRequest("id"),
+		)
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredViewDetails, err = client.Views.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, len(alteredViewDetails))
+		assert.Empty(t, alteredViewDetails[0].PolicyName)
+	})
+
 	t.Run("show view: default", func(t *testing.T) {
 		view1 := createView(t)
 		view2 := createView(t)
