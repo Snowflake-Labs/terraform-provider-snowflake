@@ -111,7 +111,6 @@ var viewSetColumnTags = g.NewQueryStruct("ViewSetColumnTags").
 	SQL("ALTER").
 	SQL("COLUMN").
 	Text("Name", g.KeywordOptions().Required()).
-	SQL("SET").
 	SetTags()
 
 var viewUnsetColumnTags = g.NewQueryStruct("ViewUnsetColumnTags").

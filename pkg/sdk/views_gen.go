@@ -110,7 +110,6 @@ type ViewSetColumnTags struct {
 	alter   bool             `ddl:"static" sql:"ALTER"`
 	column  bool             `ddl:"static" sql:"COLUMN"`
 	Name    string           `ddl:"keyword"`
-	set     bool             `ddl:"static" sql:"SET"`
 	SetTags []TagAssociation `ddl:"keyword" sql:"SET TAG"`
 }
 

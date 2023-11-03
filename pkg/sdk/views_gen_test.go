@@ -1,6 +1,8 @@
 package sdk
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestViews_Create(t *testing.T) {
 	id := RandomSchemaObjectIdentifier()
@@ -150,99 +152,166 @@ func TestViews_Alter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
+		newId := RandomSchemaObjectIdentifier()
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.RenameTo = &newId
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s RENAME TO %s", id.FullyQualifiedName(), newId.FullyQualifiedName())
 	})
 
 	t.Run("set comment", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.SetComment = String("comment")
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET COMMENT = 'comment'", id.FullyQualifiedName())
 	})
 
 	t.Run("unset comment", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.UnsetComment = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s UNSET COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("set secure", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.SetSecure = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET SECURE", id.FullyQualifiedName())
 	})
 
-	t.Run("set change tracking", func(t *testing.T) {
+	t.Run("set change tracking: true", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.SetChangeTracking = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET CHANGE TRACKING = true", id.FullyQualifiedName())
+	})
+
+	t.Run("set change tracking: false", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetChangeTracking = Bool(false)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET CHANGE TRACKING = false", id.FullyQualifiedName())
 	})
 
 	t.Run("unset secure", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.UnsetSecure = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s UNSET SECURE", id.FullyQualifiedName())
 	})
 
 	t.Run("set tags", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag1"),
+				Value: "value1",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("tag2"),
+				Value: "value2",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER VIEW %s SET TAG "tag1" = 'value1', "tag2" = 'value2'`, id.FullyQualifiedName())
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("tag1"),
+			NewAccountObjectIdentifier("tag2"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER VIEW %s UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
 	})
 
 	t.Run("add row access policy", func(t *testing.T) {
+		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
+			RowAccessPolicy: rowAccessPolicyId,
+			On:              []string{"a", "b"},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ADD ROW ACCESS POLICY %s ON (a, b)", id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName())
 	})
 
 	t.Run("drop row access policy", func(t *testing.T) {
+		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.DropRowAccessPolicy = &ViewDropRowAccessPolicy{
+			RowAccessPolicy: rowAccessPolicyId,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s DROP ROW ACCESS POLICY %s", id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName())
 	})
 
-	t.Run("drop and add row access polucy", func(t *testing.T) {
+	t.Run("drop and add row access policy", func(t *testing.T) {
+		rowAccessPolicy1Id := RandomSchemaObjectIdentifier()
+		rowAccessPolicy2Id := RandomSchemaObjectIdentifier()
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.DropAndAddRowAccessPolicy = &ViewDropAndAddRowAccessPolicy{
+			Drop: ViewDropRowAccessPolicy{
+				RowAccessPolicy: rowAccessPolicy1Id,
+			},
+			Add: ViewAddRowAccessPolicy{
+				RowAccessPolicy: rowAccessPolicy2Id,
+				On:              []string{"a", "b"},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s DROP ROW ACCESS POLICY %s, ADD ROW ACCESS POLICY %s ON (a, b)", id.FullyQualifiedName(), rowAccessPolicy1Id.FullyQualifiedName(), rowAccessPolicy2Id.FullyQualifiedName())
 	})
 
 	t.Run("drop all row access policies", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.DropAllRowAccessPolicies = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s DROP ALL ROW ACCESS POLICIES", id.FullyQualifiedName())
 	})
 
 	t.Run("set masking policy on column", func(t *testing.T) {
+		maskingPolicyId := RandomSchemaObjectIdentifier()
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.SetMaskingPolicyOnColumn = &ViewSetColumnMaskingPolicy{
+			Name:          "column",
+			MaskingPolicy: maskingPolicyId,
+			Using:         []string{"a", "b"},
+			Force:         Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ALTER COLUMN column SET MASKING POLICY %s USING (a, b) FORCE", id.FullyQualifiedName(), maskingPolicyId.FullyQualifiedName())
 	})
 
 	t.Run("unset masking policy on column", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.UnsetMaskingPolicyOnColumn = &ViewUnsetColumnMaskingPolicy{
+			Name: "column",
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s ALTER COLUMN column UNSET MASKING POLICY", id.FullyQualifiedName())
 	})
 
 	t.Run("set tags on column", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.SetTagsOnColumn = &ViewSetColumnTags{
+			Name: "column",
+			SetTags: []TagAssociation{
+				{
+					Name:  NewAccountObjectIdentifier("tag1"),
+					Value: "value1",
+				},
+				{
+					Name:  NewAccountObjectIdentifier("tag2"),
+					Value: "value2",
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER VIEW %s ALTER COLUMN column SET TAG "tag1" = 'value1', "tag2" = 'value2'`, id.FullyQualifiedName())
 	})
 
 	t.Run("unset tags on column", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.UnsetTagsOnColumn = &ViewUnsetColumnTags{
+			Name: "column",
+			UnsetTags: []ObjectIdentifier{
+				NewAccountObjectIdentifier("tag1"),
+				NewAccountObjectIdentifier("tag2"),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER VIEW %s ALTER COLUMN column UNSET TAG "tag1", "tag2"`, id.FullyQualifiedName())
 	})
 }
 
