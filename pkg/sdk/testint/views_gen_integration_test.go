@@ -20,22 +20,46 @@ func TestInt_Views(t *testing.T) {
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
 
-	// TODO: fill
+	assertViewWithOptions := func(t *testing.T, task *sdk.View, id sdk.SchemaObjectIdentifier, isSecure bool, comment string) {
+		t.Helper()
+		assert.NotEmpty(t, task.CreatedOn)
+		assert.Equal(t, id.Name(), task.Name)
+		// Kind is filled out only in TERSE response.
+		assert.Empty(t, task.Kind)
+		assert.Empty(t, task.Reserved)
+		assert.Equal(t, testDb(t).Name, task.DatabaseName)
+		assert.Equal(t, testSchema(t).Name, task.SchemaName)
+		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
+		assert.Equal(t, comment, task.Comment)
+		assert.NotEmpty(t, task.Text)
+		assert.Equal(t, isSecure, task.IsSecure)
+		assert.Equal(t, false, task.IsMaterialized)
+		assert.Equal(t, "ROLE", task.OwnerRoleType)
+		assert.Equal(t, "OFF", task.ChangeTracking)
+	}
+
 	assertView := func(t *testing.T, task *sdk.View, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
-		assert.NotEmpty(t, task.CreatedOn)
+		assertViewWithOptions(t, task, id, false, "")
 	}
 
-	// TODO: fill
-	assertViewWithOptions := func(t *testing.T, task *sdk.View, id sdk.SchemaObjectIdentifier) {
-		t.Helper()
-		assert.NotEmpty(t, task.CreatedOn)
-	}
-
-	// TODO: fill
 	assertViewTerse := func(t *testing.T, task *sdk.View, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
 		assert.NotEmpty(t, task.CreatedOn)
+		assert.Equal(t, id.Name(), task.Name)
+		assert.Equal(t, "VIEW", task.Kind)
+		assert.Equal(t, testDb(t).Name, task.DatabaseName)
+		assert.Equal(t, testSchema(t).Name, task.SchemaName)
+
+		// all below are not contained in the terse response, that's why all of them we expect to be empty
+		assert.Empty(t, task.Reserved)
+		assert.Empty(t, task.Owner)
+		assert.Empty(t, task.Comment)
+		assert.Empty(t, task.Text)
+		assert.Empty(t, task.IsSecure)
+		assert.Empty(t, task.IsMaterialized)
+		assert.Empty(t, task.OwnerRoleType)
+		assert.Empty(t, task.ChangeTracking)
 	}
 
 	cleanupViewProvider := func(id sdk.SchemaObjectIdentifier) func() {
@@ -72,8 +96,6 @@ func TestInt_Views(t *testing.T) {
 		return createViewWithRequest(t, createViewBasicRequest(t))
 	}
 
-	_, _ = assertViewTerse, createView
-
 	t.Run("create view: no optionals", func(t *testing.T) {
 		request := createViewBasicRequest(t)
 
@@ -107,7 +129,7 @@ func TestInt_Views(t *testing.T) {
 
 		view := createViewWithRequest(t, request)
 
-		assertViewWithOptions(t, view, id)
+		assertViewWithOptions(t, view, id, true, "comment")
 	})
 
 	t.Run("drop view: existing", func(t *testing.T) {
@@ -129,5 +151,45 @@ func TestInt_Views(t *testing.T) {
 
 		err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("show view: default", func(t *testing.T) {
+		view1 := createView(t)
+		view2 := createView(t)
+
+		showRequest := sdk.NewShowViewRequest()
+		returnedViews, err := client.Views.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Equal(t, 2, len(returnedViews))
+		assert.Contains(t, returnedViews, *view1)
+		assert.Contains(t, returnedViews, *view2)
+	})
+
+	t.Run("show view: terse", func(t *testing.T) {
+		view := createView(t)
+
+		showRequest := sdk.NewShowViewRequest().WithTerse(sdk.Bool(true))
+		returnedViews, err := client.Views.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, len(returnedViews))
+		assertViewTerse(t, &returnedViews[0], view.ID())
+	})
+
+	t.Run("show task: with options", func(t *testing.T) {
+		view1 := createView(t)
+		view2 := createView(t)
+
+		showRequest := sdk.NewShowViewRequest().
+			WithLike(&sdk.Like{Pattern: &view1.Name}).
+			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)}).
+			WithLimit(&sdk.LimitFrom{Rows: sdk.Int(5)})
+		returnedViews, err := client.Views.Show(ctx, showRequest)
+
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(returnedViews))
+		assert.Contains(t, returnedViews, *view1)
+		assert.NotContains(t, returnedViews, *view2)
 	})
 }
