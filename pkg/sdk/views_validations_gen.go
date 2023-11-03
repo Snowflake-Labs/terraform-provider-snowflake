@@ -23,6 +23,9 @@ func (opts *CreateViewOptions) validate() error {
 		if !ValidObjectIdentifier(opts.RowAccessPolicy.RowAccessPolicy) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
+		if !valueSet(opts.RowAccessPolicy.On) {
+			errs = append(errs, errNotSet("CreateViewOptions.RowAccessPolicy", "On"))
+		}
 	}
 	return JoinErrors(errs...)
 }
@@ -42,6 +45,9 @@ func (opts *AlterViewOptions) validate() error {
 		if !ValidObjectIdentifier(opts.AddRowAccessPolicy.RowAccessPolicy) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
+		if !valueSet(opts.AddRowAccessPolicy.On) {
+			errs = append(errs, errNotSet("AlterViewOptions.AddRowAccessPolicy", "On"))
+		}
 	}
 	if valueSet(opts.DropRowAccessPolicy) {
 		if !ValidObjectIdentifier(opts.DropRowAccessPolicy.RowAccessPolicy) {
@@ -57,6 +63,9 @@ func (opts *AlterViewOptions) validate() error {
 		if valueSet(opts.DropAndAddRowAccessPolicy.Add) {
 			if !ValidObjectIdentifier(opts.DropAndAddRowAccessPolicy.Add.RowAccessPolicy) {
 				errs = append(errs, ErrInvalidObjectIdentifier)
+			}
+			if !valueSet(opts.DropAndAddRowAccessPolicy.Add.On) {
+				errs = append(errs, errNotSet("AlterViewOptions.DropAndAddRowAccessPolicy.Add", "On"))
 			}
 		}
 	}

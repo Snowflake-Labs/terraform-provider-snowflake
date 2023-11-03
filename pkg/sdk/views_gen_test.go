@@ -42,6 +42,15 @@ func TestViews_Create(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: empty columns for row access policy", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.RowAccessPolicy = &ViewRowAccessPolicy{
+			RowAccessPolicy: RandomSchemaObjectIdentifier(),
+			On:              []string{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateViewOptions.RowAccessPolicy", "On"))
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, "CREATE VIEW %s AS %s", id.FullyQualifiedName(), sql)
@@ -125,6 +134,23 @@ func TestViews_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: valid identifier for [opts.AddRowAccessPolicy.RowAccessPolicy]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
+			RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: empty columns for row access policy (add)", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
+			RowAccessPolicy: RandomSchemaObjectIdentifier(),
+			On:              []string{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterViewOptions.AddRowAccessPolicy", "On"))
+	})
+
 	t.Run("validation: valid identifier for [opts.DropAndAddRowAccessPolicy.Drop.RowAccessPolicy]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.DropAndAddRowAccessPolicy = &ViewDropAndAddRowAccessPolicy{
@@ -149,6 +175,20 @@ func TestViews_Alter(t *testing.T) {
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: empty columns for row access policy (drop and add)", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.DropAndAddRowAccessPolicy = &ViewDropAndAddRowAccessPolicy{
+			Drop: ViewDropRowAccessPolicy{
+				RowAccessPolicy: RandomSchemaObjectIdentifier(),
+			},
+			Add: ViewAddRowAccessPolicy{
+				RowAccessPolicy: RandomSchemaObjectIdentifier(),
+				On:              []string{},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterViewOptions.DropAndAddRowAccessPolicy.Add", "On"))
 	})
 
 	t.Run("rename", func(t *testing.T) {
