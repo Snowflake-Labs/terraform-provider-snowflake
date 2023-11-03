@@ -70,13 +70,13 @@ var viewColumnMaskingPolicy = g.NewQueryStruct("ViewColumnMaskingPolicy").
 
 var viewRowAccessPolicy = g.NewQueryStruct("ViewRowAccessPolicy").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
-	List("ON", g.KindOfT[string](), nil). // TODO: double quotes here?
+	List("ON", g.KindOfT[string](), g.ListOptions().Required()). // TODO: double quotes here?
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
 var viewAddRowAccessPolicy = g.NewQueryStruct("ViewAddRowAccessPolicy").
 	SQL("ADD").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
-	List("ON", g.KindOfT[string](), nil). // TODO: double quotes here?
+	List("ON", g.KindOfT[string](), g.ListOptions().Required()). // TODO: double quotes here?
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
 var viewDropRowAccessPolicy = g.NewQueryStruct("ViewDropRowAccessPolicy").

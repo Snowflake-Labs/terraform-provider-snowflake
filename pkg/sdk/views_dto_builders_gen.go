@@ -104,15 +104,12 @@ func (s *ViewColumnMaskingPolicyRequest) WithTag(Tag []TagAssociation) *ViewColu
 
 func NewViewRowAccessPolicyRequest(
 	RowAccessPolicy SchemaObjectIdentifier,
+	On []string,
 ) *ViewRowAccessPolicyRequest {
 	s := ViewRowAccessPolicyRequest{}
 	s.RowAccessPolicy = RowAccessPolicy
-	return &s
-}
-
-func (s *ViewRowAccessPolicyRequest) WithOn(On []string) *ViewRowAccessPolicyRequest {
 	s.On = On
-	return s
+	return &s
 }
 
 func NewAlterViewRequest(
@@ -210,15 +207,12 @@ func (s *AlterViewRequest) WithUnsetTagsOnColumn(UnsetTagsOnColumn *ViewUnsetCol
 
 func NewViewAddRowAccessPolicyRequest(
 	RowAccessPolicy SchemaObjectIdentifier,
+	On []string,
 ) *ViewAddRowAccessPolicyRequest {
 	s := ViewAddRowAccessPolicyRequest{}
 	s.RowAccessPolicy = RowAccessPolicy
-	return &s
-}
-
-func (s *ViewAddRowAccessPolicyRequest) WithOn(On []string) *ViewAddRowAccessPolicyRequest {
 	s.On = On
-	return s
+	return &s
 }
 
 func NewViewDropRowAccessPolicyRequest(

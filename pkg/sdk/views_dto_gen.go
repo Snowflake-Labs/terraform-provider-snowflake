@@ -44,7 +44,7 @@ type ViewColumnMaskingPolicyRequest struct {
 
 type ViewRowAccessPolicyRequest struct {
 	RowAccessPolicy SchemaObjectIdentifier // required
-	On              []string
+	On              []string               // required
 }
 
 type AlterViewRequest struct {
@@ -70,7 +70,7 @@ type AlterViewRequest struct {
 
 type ViewAddRowAccessPolicyRequest struct {
 	RowAccessPolicy SchemaObjectIdentifier // required
-	On              []string
+	On              []string               // required
 }
 
 type ViewDropRowAccessPolicyRequest struct {
