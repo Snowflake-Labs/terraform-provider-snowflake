@@ -327,6 +327,46 @@ func TestInt_Views(t *testing.T) {
 		assert.Empty(t, alteredViewDetails[0].PolicyName)
 	})
 
+	t.Run("alter view: set and unset tags on column", func(t *testing.T) {
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		t.Cleanup(tagCleanup)
+
+		view := createView(t)
+		id := view.ID()
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetTagsOnColumn(
+			sdk.NewViewSetColumnTagsRequest("id").WithSetTags(tags),
+		)
+		err := client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		columnId := sdk.NewTableColumnIdentifier(id.DatabaseName(), id.SchemaName(), id.Name(), "ID")
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), columnId, sdk.ObjectTypeColumn)
+		require.NoError(t, err)
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+
+		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetTagsOnColumn(
+			sdk.NewViewUnsetColumnTagsRequest("id").WithUnsetTags(unsetTags),
+		)
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), columnId, sdk.ObjectTypeColumn)
+		require.Error(t, err)
+	})
+
 	t.Run("show view: default", func(t *testing.T) {
 		view1 := createView(t)
 		view2 := createView(t)
