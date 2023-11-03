@@ -74,7 +74,7 @@ func TestViews_Create(t *testing.T) {
 			}).
 			WithCopyGrants(Bool(true)).
 			WithComment(String("comment")).
-			WithRowAccessPolicy(NewViewRowAccessPolicyRequest(rowAccessPolicyId).WithOn([]string{"c", "d"})).
+			WithRowAccessPolicy(NewViewRowAccessPolicyRequest(rowAccessPolicyId, []string{"c", "d"})).
 			WithTag([]TagAssociation{{
 				Name:  tag2Id,
 				Value: "v2",

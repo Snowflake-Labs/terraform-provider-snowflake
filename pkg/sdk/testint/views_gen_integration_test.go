@@ -139,7 +139,7 @@ func TestInt_Views(t *testing.T) {
 			}).
 			WithCopyGrants(sdk.Bool(true)).
 			WithComment(sdk.String("comment")).
-			WithRowAccessPolicy(sdk.NewViewRowAccessPolicyRequest(rowAccessPolicyId).WithOn([]string{"column_with_comment"})).
+			WithRowAccessPolicy(sdk.NewViewRowAccessPolicyRequest(rowAccessPolicyId, []string{"column_with_comment"})).
 			WithTag([]sdk.TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v2",
@@ -387,9 +387,7 @@ func TestInt_Views(t *testing.T) {
 		id := view.ID()
 
 		// add policy
-		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicyId).
-			WithOn([]string{"ID"}),
-		)
+		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicyId, []string{"ID"}))
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -410,9 +408,7 @@ func TestInt_Views(t *testing.T) {
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
-		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicyId).
-			WithOn([]string{"ID"}),
-		)
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicyId, []string{"ID"}))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -422,7 +418,7 @@ func TestInt_Views(t *testing.T) {
 		// drop and add other policy simultaneously
 		alterRequest = sdk.NewAlterViewRequest(id).WithDropAndAddRowAccessPolicy(sdk.NewViewDropAndAddRowAccessPolicyRequest(
 			*sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicyId),
-			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2Id).WithOn([]string{"ID"}),
+			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2Id, []string{"ID"}),
 		))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
