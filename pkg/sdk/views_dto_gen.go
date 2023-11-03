@@ -26,6 +26,10 @@ type CreateViewRequest struct {
 	sql                    string // required
 }
 
+func (r *CreateViewRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
 type ViewColumnRequest struct {
 	Name    string // required
 	Comment *string

@@ -1,6 +1,9 @@
 package sdk
 
-import "context"
+import (
+	"context"
+	"database/sql"
+)
 
 type Views interface {
 	Create(ctx context.Context, request *CreateViewRequest) error
@@ -140,33 +143,39 @@ type ShowViewOptions struct {
 }
 
 type viewDBRow struct {
-	CreatedOn      string `db:"created_on"`
-	Name           string `db:"name"`
-	Reserved       string `db:"reserved"`
-	DatabaseName   string `db:"database_name"`
-	SchemaName     string `db:"schema_name"`
-	Owner          string `db:"owner"`
-	Comment        string `db:"comment"`
-	Text           string `db:"text"`
-	IsSecure       string `db:"is_secure"`
-	IsMaterialized string `db:"is_materialized"`
-	OwnerRoleType  string `db:"owner_role_type"`
-	ChangeTracking string `db:"change_tracking"`
+	CreatedOn      string         `db:"created_on"`
+	Name           string         `db:"name"`
+	Kind           sql.NullString `db:"kind"`
+	Reserved       sql.NullString `db:"reserved"`
+	DatabaseName   string         `db:"database_name"`
+	SchemaName     string         `db:"schema_name"`
+	Owner          sql.NullString `db:"owner"`
+	Comment        sql.NullString `db:"comment"`
+	Text           sql.NullString `db:"text"`
+	IsSecure       sql.NullBool   `db:"is_secure"`
+	IsMaterialized sql.NullBool   `db:"is_materialized"`
+	OwnerRoleType  sql.NullString `db:"owner_role_type"`
+	ChangeTracking sql.NullString `db:"change_tracking"`
 }
 
 type View struct {
 	CreatedOn      string
 	Name           string
+	Kind           string
 	Reserved       string
 	DatabaseName   string
 	SchemaName     string
 	Owner          string
 	Comment        string
 	Text           string
-	IsSecure       string
-	IsMaterialized string
+	IsSecure       bool
+	IsMaterialized bool
 	OwnerRoleType  string
 	ChangeTracking string
+}
+
+func (v *View) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
 // DescribeViewOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-view.

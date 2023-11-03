@@ -38,8 +38,8 @@ func (v *views) Show(ctx context.Context, request *ShowViewRequest) ([]View, err
 }
 
 func (v *views) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*View, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	views, err := v.Show(ctx, NewShowViewRequest())
+	request := NewShowViewRequest().WithIn(&In{Database: NewAccountObjectIdentifier(id.DatabaseName())}).WithLike(&Like{String(id.Name())})
+	views, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -186,8 +186,40 @@ func (r *ShowViewRequest) toOpts() *ShowViewOptions {
 }
 
 func (r viewDBRow) convert() *View {
-	// TODO: Mapping
-	return &View{}
+	view := View{
+		CreatedOn:    r.CreatedOn,
+		Name:         r.Name,
+		DatabaseName: r.DatabaseName,
+		SchemaName:   r.SchemaName,
+	}
+	if r.Kind.Valid {
+		view.Kind = r.Kind.String
+	}
+	if r.Reserved.Valid {
+		view.Reserved = r.Reserved.String
+	}
+	if r.Owner.Valid {
+		view.Owner = r.Owner.String
+	}
+	if r.Comment.Valid {
+		view.Comment = r.Comment.String
+	}
+	if r.Text.Valid {
+		view.Text = r.Text.String
+	}
+	if r.IsSecure.Valid {
+		view.IsSecure = r.IsSecure.Bool
+	}
+	if r.IsMaterialized.Valid {
+		view.IsMaterialized = r.IsMaterialized.Bool
+	}
+	if r.OwnerRoleType.Valid {
+		view.OwnerRoleType = r.OwnerRoleType.String
+	}
+	if r.ChangeTracking.Valid {
+		view.ChangeTracking = r.ChangeTracking.String
+	}
+	return &view
 }
 
 func (r *DescribeViewRequest) toOpts() *DescribeViewOptions {
