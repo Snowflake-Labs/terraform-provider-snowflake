@@ -71,7 +71,7 @@ func TestInt_Views(t *testing.T) {
 		return createViewWithRequest(t, createViewBasicRequest(t))
 	}
 
-	_, _, _ = assertViewWithOptions, assertViewTerse, createView
+	_, _ = assertViewTerse, createView
 
 	t.Run("create view: no optionals", func(t *testing.T) {
 		request := createViewBasicRequest(t)
@@ -79,5 +79,33 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertView(t, view, request.GetName())
+	})
+
+	t.Run("create view: almost complete case", func(t *testing.T) {
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		t.Cleanup(tagCleanup)
+
+		// row access policy is not added
+		// masking policy is not added
+		// recursive is not used
+		request := createViewBasicRequest(t).
+			WithOrReplace(sdk.Bool(true)).
+			WithSecure(sdk.Bool(true)).
+			WithTemporary(sdk.Bool(true)).
+			WithColumns([]sdk.ViewColumnRequest{
+				*sdk.NewViewColumnRequest("column_with_comment").WithComment(sdk.String("column comment")),
+			}).
+			WithCopyGrants(sdk.Bool(true)).
+			WithComment(sdk.String("comment")).
+			WithTag([]sdk.TagAssociation{{
+				Name:  tag.ID(),
+				Value: "v2",
+			}})
+
+		id := request.GetName()
+
+		view := createViewWithRequest(t, request)
+
+		assertViewWithOptions(t, view, id)
 	})
 }
