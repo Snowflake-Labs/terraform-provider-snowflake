@@ -707,7 +707,11 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	privateKeyPath := s.Get("private_key_path").(string)
 	privateKey := s.Get("private_key").(string)
 	privateKeyPassphrase := s.Get("private_key_passphrase").(string)
-	if v, err := getPrivateKey(privateKeyPath, privateKey, privateKeyPassphrase); err != nil && v != nil {
+	v, err := getPrivateKey(privateKeyPath, privateKey, privateKeyPassphrase)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve private key: %w", err)
+	}
+	if v != nil {
 		config.PrivateKey = v
 	}
 
