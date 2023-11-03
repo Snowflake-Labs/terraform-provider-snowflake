@@ -20,6 +20,13 @@ func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, erro
 	return result, decodeDriverError(err)
 }
 
+// QueryOneForTests is an exact copy of queryOne (that is unexported), that some integration tests/helpers were using
+// TODO: remove after introducing all resources using this
+func (c *Client) QueryOneForTests(ctx context.Context, dest interface{}, sql string) error {
+	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	return decodeDriverError(c.db.GetContext(ctx, dest, sql))
+}
+
 func ErrorsEqual(t *testing.T, expected error, actual error) {
 	t.Helper()
 	var expectedErr *Error

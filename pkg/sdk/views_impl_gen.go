@@ -119,13 +119,13 @@ func (r *AlterViewRequest) toOpts() *AlterViewOptions {
 	}
 	if r.AddRowAccessPolicy != nil {
 		opts.AddRowAccessPolicy = &ViewAddRowAccessPolicy{
-			RowAccessPolicy: r.DropAndAddRowAccessPolicy.Add.RowAccessPolicy,
-			On:              r.DropAndAddRowAccessPolicy.Add.On,
+			RowAccessPolicy: r.AddRowAccessPolicy.RowAccessPolicy,
+			On:              r.AddRowAccessPolicy.On,
 		}
 	}
 	if r.DropRowAccessPolicy != nil {
 		opts.DropRowAccessPolicy = &ViewDropRowAccessPolicy{
-			RowAccessPolicy: r.DropAndAddRowAccessPolicy.Drop.RowAccessPolicy,
+			RowAccessPolicy: r.DropRowAccessPolicy.RowAccessPolicy,
 		}
 	}
 	if r.DropAndAddRowAccessPolicy != nil {

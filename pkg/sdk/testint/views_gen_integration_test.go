@@ -367,6 +367,69 @@ func TestInt_Views(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	t.Run("alter view: add and drop row access policies", func(t *testing.T) {
+		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
+		t.Cleanup(rowAccessPolicyCleanup)
+		rowAccessPolicy2Id, rowAccessPolicy2Cleanup := createRowAccessPolicy(t, client, testSchema(t))
+		t.Cleanup(rowAccessPolicy2Cleanup)
+
+		view := createView(t)
+		id := view.ID()
+
+		// add policy
+		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicyId).
+			WithOn([]string{"ID"}),
+		)
+		err := client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		rowAccessPolicyReference, err := getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		require.NoError(t, err)
+		assert.Equal(t, rowAccessPolicyId.Name(), rowAccessPolicyReference.PolicyName)
+		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
+		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
+		assert.Equal(t, "VIEW", rowAccessPolicyReference.RefEntityDomain)
+		assert.Equal(t, "ACTIVE", rowAccessPolicyReference.PolicyStatus)
+
+		// remove policy
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropRowAccessPolicy(sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicyId))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		rowAccessPolicyReference, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		require.Error(t, err, "no rows in result set")
+
+		// add policy again
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicyId).
+			WithOn([]string{"ID"}),
+		)
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		rowAccessPolicyReference, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		require.NoError(t, err)
+
+		// drop and add other policy simultaneously
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropAndAddRowAccessPolicy(sdk.NewViewDropAndAddRowAccessPolicyRequest(
+			*sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicyId),
+			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2Id).WithOn([]string{"ID"}),
+		))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		rowAccessPolicyReference, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		require.NoError(t, err)
+		assert.Equal(t, rowAccessPolicy2Id.Name(), rowAccessPolicyReference.PolicyName)
+
+		// drop all policies
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(sdk.Bool(true))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		rowAccessPolicyReference, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		require.Error(t, err, "no rows in result set")
+	})
+
 	t.Run("show view: default", func(t *testing.T) {
 		view1 := createView(t)
 		view2 := createView(t)
