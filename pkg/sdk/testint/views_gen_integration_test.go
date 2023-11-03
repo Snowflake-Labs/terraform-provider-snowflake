@@ -404,7 +404,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		_, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
@@ -414,6 +414,7 @@ func TestInt_Views(t *testing.T) {
 
 		rowAccessPolicyReference, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
 		require.NoError(t, err)
+		assert.Equal(t, rowAccessPolicyId.Name(), rowAccessPolicyReference.PolicyName)
 
 		// drop and add other policy simultaneously
 		alterRequest = sdk.NewAlterViewRequest(id).WithDropAndAddRowAccessPolicy(sdk.NewViewDropAndAddRowAccessPolicyRequest(
@@ -432,7 +433,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		_, err = getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
 	})
 

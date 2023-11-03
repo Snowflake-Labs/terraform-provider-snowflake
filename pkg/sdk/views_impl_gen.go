@@ -75,22 +75,14 @@ func (r *CreateViewRequest) toOpts() *CreateViewOptions {
 	if r.Columns != nil {
 		s := make([]ViewColumn, len(r.Columns))
 		for i, v := range r.Columns {
-			s[i] = ViewColumn{
-				Name:    v.Name,
-				Comment: v.Comment,
-			}
+			s[i] = ViewColumn(v)
 		}
 		opts.Columns = s
 	}
 	if r.ColumnsMaskingPolicies != nil {
 		s := make([]ViewColumnMaskingPolicy, len(r.ColumnsMaskingPolicies))
 		for i, v := range r.ColumnsMaskingPolicies {
-			s[i] = ViewColumnMaskingPolicy{
-				Name:          v.Name,
-				MaskingPolicy: v.MaskingPolicy,
-				Using:         v.Using,
-				Tag:           v.Tag,
-			}
+			s[i] = ViewColumnMaskingPolicy(v)
 		}
 		opts.ColumnsMaskingPolicies = s
 	}
