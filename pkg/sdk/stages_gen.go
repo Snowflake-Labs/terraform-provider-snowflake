@@ -50,9 +50,8 @@ type InternalDirectoryTableOptions struct {
 }
 
 type StageFileFormat struct {
-	FormatName *string          `ddl:"parameter,single_quotes" sql:"FORMAT_NAME"`
-	Type       *FileFormatType  `ddl:"parameter" sql:"TYPE"`
-	TYPE       []FileFormatType `ddl:"list"`
+	FormatName *string         `ddl:"parameter,single_quotes" sql:"FORMAT_NAME"`
+	Type       *FileFormatType `ddl:"parameter" sql:"TYPE"`
 }
 
 type StageCopyOptions struct {

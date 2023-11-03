@@ -132,7 +132,6 @@ func (r *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
-			TYPE:       r.FileFormat.TYPE,
 		}
 	}
 	if r.CopyOptions != nil {
@@ -199,7 +198,6 @@ func (r *CreateOnS3StageRequest) toOpts() *CreateOnS3StageOptions {
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
-			TYPE:       r.FileFormat.TYPE,
 		}
 	}
 	if r.CopyOptions != nil {
@@ -258,7 +256,6 @@ func (r *CreateOnGCSStageRequest) toOpts() *CreateOnGCSStageOptions {
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
-			TYPE:       r.FileFormat.TYPE,
 		}
 	}
 	if r.CopyOptions != nil {
@@ -322,7 +319,6 @@ func (r *CreateOnAzureStageRequest) toOpts() *CreateOnAzureStageOptions {
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
-			TYPE:       r.FileFormat.TYPE,
 		}
 	}
 	if r.CopyOptions != nil {
@@ -376,7 +372,6 @@ func (r *CreateOnS3CompatibleStageRequest) toOpts() *CreateOnS3CompatibleStageOp
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
-			TYPE:       r.FileFormat.TYPE,
 		}
 	}
 	if r.CopyOptions != nil {
@@ -423,7 +418,6 @@ func (r *AlterInternalStageStageRequest) toOpts() *AlterInternalStageStageOption
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
-			TYPE:       r.FileFormat.TYPE,
 		}
 	}
 	if r.CopyOptions != nil {
@@ -480,7 +474,6 @@ func (r *AlterExternalS3StageStageRequest) toOpts() *AlterExternalS3StageStageOp
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
-			TYPE:       r.FileFormat.TYPE,
 		}
 	}
 	if r.CopyOptions != nil {
@@ -528,7 +521,6 @@ func (r *AlterExternalGCSStageStageRequest) toOpts() *AlterExternalGCSStageStage
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
-			TYPE:       r.FileFormat.TYPE,
 		}
 	}
 	if r.CopyOptions != nil {
@@ -581,7 +573,6 @@ func (r *AlterExternalAzureStageStageRequest) toOpts() *AlterExternalAzureStageS
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
-			TYPE:       r.FileFormat.TYPE,
 		}
 	}
 	if r.CopyOptions != nil {

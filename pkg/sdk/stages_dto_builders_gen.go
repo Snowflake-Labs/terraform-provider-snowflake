@@ -93,11 +93,6 @@ func (s *StageFileFormatRequest) WithType(Type *FileFormatType) *StageFileFormat
 	return s
 }
 
-func (s *StageFileFormatRequest) WithTYPE(TYPE []FileFormatType) *StageFileFormatRequest {
-	s.TYPE = TYPE
-	return s
-}
-
 func NewStageCopyOptionsRequest() *StageCopyOptionsRequest {
 	return &StageCopyOptionsRequest{}
 }

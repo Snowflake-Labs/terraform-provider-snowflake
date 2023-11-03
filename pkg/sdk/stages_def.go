@@ -42,8 +42,6 @@ var (
 	StageCopyColumnMapCaseNone        StageCopyColumnMapOption = "NONE"
 )
 
-// TODO PUT, GET, LS, etc. ???
-
 func createStageOperation(structName string, apply func(qs *g.QueryStruct) *g.QueryStruct) *g.QueryStruct {
 	qs := g.NewQueryStruct(structName).
 		Create().
@@ -78,7 +76,8 @@ func alterStageOperation(structName string, apply func(qs *g.QueryStruct) *g.Que
 
 var stageFileFormatDef = g.NewQueryStruct("StageFileFormat").
 	OptionalTextAssignment("FORMAT_NAME", g.ParameterOptions().SingleQuotes()).
-	OptionalAssignment("TYPE", g.KindOfTPointer[FileFormatType](), g.ParameterOptions())
+	OptionalAssignment("TYPE", g.KindOfTPointer[FileFormatType](), g.ParameterOptions()).
+	PredefinedQueryStructField("Options", g.KindOfTPointer[FileFormatTypeOptions](), g.ListOptions().NoComma())
 
 var stageCopyOptionsDef = g.NewQueryStruct("StageCopyOptions").
 	OptionalQueryStructField(
@@ -86,8 +85,8 @@ var stageCopyOptionsDef = g.NewQueryStruct("StageCopyOptions").
 		g.NewQueryStruct("StageCopyOnErrorOptions").
 			OptionalSQL("CONTINUE").
 			OptionalSQL("SKIP_FILE").
-			//OptionalSQL("SKIP_FILE_n").  // TODO templated value - not even supported by structToSQL (I think)
-			//OptionalSQL("SKIP_FILE_n%"). // TODO templated value with % - not even supported by structToSQL (I think)
+			//OptionalSQL("SKIP_FILE_n").  // TODO templated value - not even supported by structToSQL
+			//OptionalSQL("SKIP_FILE_n%"). // TODO templated value with % - not even supported by structToSQL
 			OptionalSQL("ABORT_STATEMENT"),
 		g.ParameterOptions().SQL("ON_ERROR"),
 	).
