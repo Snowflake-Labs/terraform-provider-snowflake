@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -107,5 +108,26 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertViewWithOptions(t, view, id)
+	})
+
+	t.Run("drop view: existing", func(t *testing.T) {
+		request := createViewBasicRequest(t)
+		id := request.GetName()
+
+		err := client.Views.Create(ctx, request)
+		require.NoError(t, err)
+
+		err = client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
+		require.NoError(t, err)
+
+		_, err = client.Views.ShowByID(ctx, id)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
+	})
+
+	t.Run("drop view: non-existing", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
+
+		err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
