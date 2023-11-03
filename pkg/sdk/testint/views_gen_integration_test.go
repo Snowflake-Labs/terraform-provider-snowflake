@@ -170,6 +170,34 @@ func TestInt_Views(t *testing.T) {
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
+	t.Run("alter view: rename", func(t *testing.T) {
+		createRequest := createViewBasicRequest(t)
+		id := createRequest.GetName()
+
+		err := client.Views.Create(ctx, createRequest)
+		require.NoError(t, err)
+
+		newName := random.String()
+		newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
+		alterRequest := sdk.NewAlterViewRequest(id).WithRenameTo(&newId)
+
+		err = client.Views.Alter(ctx, alterRequest)
+		if err != nil {
+			t.Cleanup(cleanupViewProvider(id))
+		} else {
+			t.Cleanup(cleanupViewProvider(newId))
+		}
+		require.NoError(t, err)
+
+		_, err = client.Views.ShowByID(ctx, id)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
+
+		view, err := client.Views.ShowByID(ctx, newId)
+		require.NoError(t, err)
+
+		assertView(t, view, newId)
+	})
+
 	t.Run("show view: default", func(t *testing.T) {
 		view1 := createView(t)
 		view2 := createView(t)
