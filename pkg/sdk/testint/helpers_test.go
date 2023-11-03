@@ -701,6 +701,7 @@ func createRowAccessPolicy(t *testing.T, client *sdk.Client, schema *sdk.Schema)
 }
 
 // TODO: extract getting row access policies as resource (like getting tag in system functions)
+// getRowAccessPolicyFor is based on https://docs.snowflake.com/en/user-guide/security-row-intro#obtain-database-objects-with-a-row-access-policy.
 func getRowAccessPolicyFor(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, objectType sdk.ObjectType) (*policyReference, error) {
 	t.Helper()
 	ctx := context.Background()
