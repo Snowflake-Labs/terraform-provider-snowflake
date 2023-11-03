@@ -16,12 +16,13 @@ import (
 )
 
 var definitionMapping = map[string]*generator.Interface{
-	"database_role_def.go":    example.DatabaseRole,
-	"network_policies_def.go": sdk.NetworkPoliciesDef,
-	"session_policies_def.go": sdk.SessionPoliciesDef,
-	"tasks_def.go":            sdk.TasksDef,
-	"streams_def.go":          sdk.StreamsDef,
-	"views_def.go":            sdk.ViewsDef,
+	"database_role_def.go":     example.DatabaseRole,
+	"network_policies_def.go":  sdk.NetworkPoliciesDef,
+	"session_policies_def.go":  sdk.SessionPoliciesDef,
+	"tasks_def.go":             sdk.TasksDef,
+	"streams_def.go":           sdk.StreamsDef,
+	"application_roles_def.go": sdk.ApplicationRolesDef,
+	"views_def.go":             sdk.ViewsDef,
 }
 
 func main() {

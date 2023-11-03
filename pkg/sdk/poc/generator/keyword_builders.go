@@ -26,8 +26,23 @@ func (v *QueryStruct) Text(name string, transformer *KeywordTransformer) *QueryS
 	return v
 }
 
+func (v *QueryStruct) Number(name string, transformer *KeywordTransformer) *QueryStruct {
+	v.fields = append(v.fields, NewField(name, "int", Tags().Keyword(), transformer))
+	return v
+}
+
 func (v *QueryStruct) OptionalText(name string, transformer *KeywordTransformer) *QueryStruct {
 	v.fields = append(v.fields, NewField(name, "*string", Tags().Keyword(), transformer))
+	return v
+}
+
+func (v *QueryStruct) OptionalNumber(name string, transformer *KeywordTransformer) *QueryStruct {
+	v.fields = append(v.fields, NewField(name, "*int", Tags().Keyword(), transformer))
+	return v
+}
+
+func (v *QueryStruct) OptionalLimitFrom() *QueryStruct {
+	v.fields = append(v.fields, NewField("Limit", "*LimitFrom", Tags().Keyword().SQL("LIMIT"), nil))
 	return v
 }
 

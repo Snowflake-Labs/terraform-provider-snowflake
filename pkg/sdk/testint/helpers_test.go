@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -683,6 +684,47 @@ func createView(t *testing.T, client *sdk.Client, viewId sdk.SchemaObjectIdentif
 
 	return func() {
 		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP VIEW %s`, viewId.FullyQualifiedName()))
+		require.NoError(t, err)
+	}
+}
+
+func putOnStage(t *testing.T, client *sdk.Client, stage *sdk.Stage, filename string) {
+	t.Helper()
+	ctx := context.Background()
+
+	path, err := filepath.Abs("./testdata/" + filename)
+	require.NoError(t, err)
+	absPath := "file://" + path
+
+	_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT '%s' @%s AUTO_COMPRESS = FALSE`, absPath, stage.ID().FullyQualifiedName()))
+	require.NoError(t, err)
+}
+
+func createApplicationPackage(t *testing.T, client *sdk.Client, name string) func() {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE APPLICATION PACKAGE "%s"`, name))
+	require.NoError(t, err)
+	return func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP APPLICATION PACKAGE "%s"`, name))
+		require.NoError(t, err)
+	}
+}
+
+func addApplicationPackageVersion(t *testing.T, client *sdk.Client, stage *sdk.Stage, appPackageName string, versionName string) {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`ALTER APPLICATION PACKAGE "%s" ADD VERSION %v USING '@%s'`, appPackageName, versionName, stage.ID().FullyQualifiedName()))
+	require.NoError(t, err)
+}
+
+func createApplication(t *testing.T, client *sdk.Client, name string, packageName string, version string) func() {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE APPLICATION "%s" FROM APPLICATION PACKAGE "%s" USING VERSION %s`, name, packageName, version))
+	require.NoError(t, err)
+	return func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP APPLICATION "%s"`, name))
 		require.NoError(t, err)
 	}
 }
