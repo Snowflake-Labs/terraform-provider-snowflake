@@ -45,12 +45,40 @@ func TestViews_Create(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "CREATE VIEW %s AS %s", id.FullyQualifiedName(), sql)
 	})
 
-	// TODO: add all options
 	t.Run("all options", func(t *testing.T) {
-		req := NewCreateViewRequest(id, sql).
-			WithOrReplace(Bool(true))
+		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+		tag1Id := RandomSchemaObjectIdentifier()
+		tag2Id := RandomSchemaObjectIdentifier()
+		maskingPolicy1Id := RandomSchemaObjectIdentifier()
+		maskingPolicy2Id := RandomSchemaObjectIdentifier()
 
-		assertOptsValidAndSQLEquals(t, req.toOpts(), "CREATE OR REPLACE VIEW %s AS %s", id.FullyQualifiedName(), sql)
+		req := NewCreateViewRequest(id, sql).
+			WithOrReplace(Bool(true)).
+			WithSecure(Bool(true)).
+			WithTemporary(Bool(true)).
+			WithRecursive(Bool(true)).
+			WithColumns([]ViewColumnRequest{
+				*NewViewColumnRequest("column_without_comment"),
+				*NewViewColumnRequest("column_with_comment").WithComment(String("column 2 comment")),
+			}).
+			WithColumnsMaskingPolicies([]ViewColumnMaskingPolicyRequest{
+				*NewViewColumnMaskingPolicyRequest("column", maskingPolicy1Id).
+					WithUsing([]string{"a", "b"}).
+					WithTag([]TagAssociation{{
+						Name:  tag1Id,
+						Value: "v1",
+					}}),
+				*NewViewColumnMaskingPolicyRequest("column 2", maskingPolicy2Id),
+			}).
+			WithCopyGrants(Bool(true)).
+			WithComment(String("comment")).
+			WithRowAccessPolicy(NewViewRowAccessPolicyRequest(rowAccessPolicyId).WithOn([]string{"c", "d"})).
+			WithTag([]TagAssociation{{
+				Name:  tag2Id,
+				Value: "v2",
+			}})
+
+		assertOptsValidAndSQLEquals(t, req.toOpts(), `CREATE OR REPLACE SECURE TEMPORARY RECURSIVE VIEW %s ("column_without_comment", "column_with_comment" COMMENT 'column 2 comment') column MASKING POLICY %s USING (a, b) TAG (%s = 'v1'), column 2 MASKING POLICY %s COPY GRANTS COMMENT = 'comment' ROW ACCESS POLICY %s ON (c, d) TAG (%s = 'v2') AS %s`, id.FullyQualifiedName(), maskingPolicy1Id.FullyQualifiedName(), tag1Id.FullyQualifiedName(), maskingPolicy2Id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName(), tag2Id.FullyQualifiedName(), sql)
 	})
 }
 
