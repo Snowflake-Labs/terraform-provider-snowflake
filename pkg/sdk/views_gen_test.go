@@ -180,13 +180,13 @@ func TestViews_Alter(t *testing.T) {
 	t.Run("set change tracking: true", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetChangeTracking = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET CHANGE TRACKING = true", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET CHANGE_TRACKING = true", id.FullyQualifiedName())
 	})
 
 	t.Run("set change tracking: false", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetChangeTracking = Bool(false)
-		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET CHANGE TRACKING = false", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER VIEW %s SET CHANGE_TRACKING = false", id.FullyQualifiedName())
 	})
 
 	t.Run("unset secure", func(t *testing.T) {

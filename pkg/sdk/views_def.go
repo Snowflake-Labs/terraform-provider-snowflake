@@ -162,7 +162,7 @@ var ViewsDef = g.NewInterface(
 			OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
 			OptionalSQL("UNSET COMMENT").
 			OptionalSQL("SET SECURE").
-			OptionalBooleanAssignment("SET CHANGE TRACKING", nil).
+			OptionalBooleanAssignment("SET CHANGE_TRACKING", nil).
 			OptionalSQL("UNSET SECURE").
 			SetTags().
 			UnsetTags().

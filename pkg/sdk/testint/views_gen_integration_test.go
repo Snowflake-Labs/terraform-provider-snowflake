@@ -198,6 +198,103 @@ func TestInt_Views(t *testing.T) {
 		assertView(t, view, newId)
 	})
 
+	t.Run("alter view: set and unset values", func(t *testing.T) {
+		view := createView(t)
+		id := view.ID()
+
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetComment(sdk.String("new comment"))
+		err := client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err := client.Views.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "new comment", alteredView.Comment)
+
+		alterRequest = sdk.NewAlterViewRequest(id).WithSetSecure(sdk.Bool(true))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.Views.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, true, alteredView.IsSecure)
+
+		alterRequest = sdk.NewAlterViewRequest(id).WithSetChangeTracking(sdk.Bool(true))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.Views.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "ON", alteredView.ChangeTracking)
+
+		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetComment(sdk.Bool(true))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.Views.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "", alteredView.Comment)
+
+		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetSecure(sdk.Bool(true))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.Views.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, false, alteredView.IsSecure)
+
+		alterRequest = sdk.NewAlterViewRequest(id).WithSetChangeTracking(sdk.Bool(false))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.Views.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "OFF", alteredView.ChangeTracking)
+	})
+
+	t.Run("alter view: set and unset tag", func(t *testing.T) {
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		t.Cleanup(tagCleanup)
+
+		view := createView(t)
+		id := view.ID()
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterViewRequest(id).WithSetTags(tags)
+
+		err := client.Views.Alter(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		// setting object type to view results in:
+		// SQL compilation error: Invalid value VIEW for argument OBJECT_TYPE. Please use object type TABLE for all kinds of table-like objects.
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTable)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterViewRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.Views.Alter(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTable)
+		require.Error(t, err)
+	})
+
 	t.Run("show view: default", func(t *testing.T) {
 		view1 := createView(t)
 		view2 := createView(t)

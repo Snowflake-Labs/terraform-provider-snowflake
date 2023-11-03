@@ -61,7 +61,7 @@ type AlterViewOptions struct {
 	SetComment                 *string                        `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
 	UnsetComment               *bool                          `ddl:"keyword" sql:"UNSET COMMENT"`
 	SetSecure                  *bool                          `ddl:"keyword" sql:"SET SECURE"`
-	SetChangeTracking          *bool                          `ddl:"parameter" sql:"SET CHANGE TRACKING"`
+	SetChangeTracking          *bool                          `ddl:"parameter" sql:"SET CHANGE_TRACKING"`
 	UnsetSecure                *bool                          `ddl:"keyword" sql:"UNSET SECURE"`
 	SetTags                    []TagAssociation               `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags                  []ObjectIdentifier             `ddl:"keyword" sql:"UNSET TAG"`
