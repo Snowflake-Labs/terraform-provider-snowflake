@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: add tests for setting masking policy on creation
+// TODO: add tests for setting recursive on creation
 func TestInt_Views(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -122,21 +124,22 @@ func TestInt_Views(t *testing.T) {
 	})
 
 	t.Run("create view: almost complete case", func(t *testing.T) {
+		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
+		t.Cleanup(rowAccessPolicyCleanup)
+
 		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tagCleanup)
 
-		// row access policy is not added
-		// masking policy is not added
-		// recursive is not used
 		request := createViewBasicRequest(t).
 			WithOrReplace(sdk.Bool(true)).
 			WithSecure(sdk.Bool(true)).
 			WithTemporary(sdk.Bool(true)).
 			WithColumns([]sdk.ViewColumnRequest{
-				*sdk.NewViewColumnRequest("column_with_comment").WithComment(sdk.String("column comment")),
+				*sdk.NewViewColumnRequest("COLUMN_WITH_COMMENT").WithComment(sdk.String("column comment")),
 			}).
 			WithCopyGrants(sdk.Bool(true)).
 			WithComment(sdk.String("comment")).
+			WithRowAccessPolicy(sdk.NewViewRowAccessPolicyRequest(rowAccessPolicyId).WithOn([]string{"column_with_comment"})).
 			WithTag([]sdk.TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v2",
@@ -147,6 +150,13 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertViewWithOptions(t, view, id, true, "comment")
+		rowAccessPolicyReference, err := getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		require.NoError(t, err)
+		assert.Equal(t, rowAccessPolicyId.Name(), rowAccessPolicyReference.PolicyName)
+		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
+		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
+		assert.Equal(t, "VIEW", rowAccessPolicyReference.RefEntityDomain)
+		assert.Equal(t, "ACTIVE", rowAccessPolicyReference.PolicyStatus)
 	})
 
 	t.Run("drop view: existing", func(t *testing.T) {
