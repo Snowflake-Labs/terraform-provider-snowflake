@@ -219,4 +219,11 @@ func TestInt_Views(t *testing.T) {
 		assert.Equal(t, 1, len(returnedViewDetails))
 		assertViewDetailsRow(t, &returnedViewDetails[0])
 	})
+
+	t.Run("describe view: non-existing", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
+
+		_, err := client.Views.Describe(ctx, id)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
 }
