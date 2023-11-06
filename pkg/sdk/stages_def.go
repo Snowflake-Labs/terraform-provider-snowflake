@@ -53,7 +53,7 @@ func createStageOperation(structName string, apply func(qs *g.QueryStruct) *g.Qu
 	qs = apply(qs)
 	return qs.
 		OptionalQueryStructField("FileFormat", stageFileFormatDef, g.ListOptions().Parentheses().SQL("FILE_FORMAT =")).
-		OptionalQueryStructField("CopyOptions", stageCopyOptionsDef, g.ListOptions().Parentheses().SQL("COPY_OPTIONS =")).
+		OptionalQueryStructField("CopyOptions", stageCopyOptionsDef, g.ListOptions().Parentheses().NoComma().SQL("COPY_OPTIONS =")).
 		OptionalComment().
 		OptionalTags().
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists")
@@ -69,7 +69,7 @@ func alterStageOperation(structName string, apply func(qs *g.QueryStruct) *g.Que
 	qs = apply(qs)
 	return qs.
 		OptionalQueryStructField("FileFormat", stageFileFormatDef, g.ListOptions().Parentheses().SQL("FILE_FORMAT =")).
-		OptionalQueryStructField("CopyOptions", stageCopyOptionsDef, g.ListOptions().Parentheses().SQL("COPY_OPTIONS =")).
+		OptionalQueryStructField("CopyOptions", stageCopyOptionsDef, g.ListOptions().Parentheses().NoComma().SQL("COPY_OPTIONS =")).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name")
 }

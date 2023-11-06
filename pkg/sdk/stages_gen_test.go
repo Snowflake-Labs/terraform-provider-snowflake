@@ -53,6 +53,13 @@ func TestStages_CreateInternal(t *testing.T) {
 			OnError: &StageCopyOnErrorOptions{
 				Continue: Bool(true),
 			},
+			SizeLimit:         Int(123),
+			Purge:             Bool(true),
+			ReturnFailedOnly:  Bool(true),
+			MatchByColumnName: &StageCopyColumnMapCaseNone,
+			EnforceLength:     Bool(true),
+			Truncatecolumns:   Bool(true),
+			Force:             Bool(true),
 		}
 		opts.Comment = String("some comment")
 		opts.Tag = []TagAssociation{
@@ -61,7 +68,7 @@ func TestStages_CreateInternal(t *testing.T) {
 				Value: "tag-value",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE TEMPORARY STAGE IF NOT EXISTS %s ENCRYPTION = (TYPE = 'SNOWFLAKE_FULL') DIRECTORY = (ENABLE = true REFRESH_ON_CREATE = true) FILE_FORMAT = (FORMAT_NAME = 'format name') COPY_OPTIONS = (ON_ERROR = CONTINUE) COMMENT = 'some comment' TAG ("tag-name" = 'tag-value')`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE TEMPORARY STAGE IF NOT EXISTS %s ENCRYPTION = (TYPE = 'SNOWFLAKE_FULL') DIRECTORY = (ENABLE = true REFRESH_ON_CREATE = true) FILE_FORMAT = (FORMAT_NAME = 'format name') COPY_OPTIONS = (ON_ERROR = CONTINUE SIZE_LIMIT = 123 PURGE = true RETURN_FAILED_ONLY = true MATCH_BY_COLUMN_NAME = NONE ENFORCE_LENGTH = true TRUNCATECOLUMNS = true FORCE = true) COMMENT = 'some comment' TAG ("tag-name" = 'tag-value')`, id.FullyQualifiedName())
 	})
 }
 
@@ -416,7 +423,6 @@ func TestStages_AlterInternalStage(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO check if can set multiple values like here
 		opts.IfExists = Bool(true)
 		opts.FileFormat = &StageFileFormat{
 			Type: &FileFormatTypeCSV,
@@ -425,10 +431,16 @@ func TestStages_AlterInternalStage(t *testing.T) {
 			OnError: &StageCopyOnErrorOptions{
 				AbortStatement: Bool(true),
 			},
+			SizeLimit:         Int(123),
+			Purge:             Bool(true),
+			ReturnFailedOnly:  Bool(true),
+			MatchByColumnName: &StageCopyColumnMapCaseNone,
+			EnforceLength:     Bool(true),
+			Truncatecolumns:   Bool(true),
+			Force:             Bool(true),
 		}
-		// TODO: Change in validation to check if e.g. someone wants to set comment to ""
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, "ALTER STAGE IF EXISTS %s SET FILE_FORMAT = (TYPE = CSV) COPY_OPTIONS = (ON_ERROR = ABORT_STATEMENT) COMMENT = 'some comment'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER STAGE IF EXISTS %s SET FILE_FORMAT = (TYPE = CSV) COPY_OPTIONS = (ON_ERROR = ABORT_STATEMENT SIZE_LIMIT = 123 PURGE = true RETURN_FAILED_ONLY = true MATCH_BY_COLUMN_NAME = NONE ENFORCE_LENGTH = true TRUNCATECOLUMNS = true FORCE = true) COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 }
 
@@ -491,10 +503,19 @@ func TestStages_AlterExternalS3Stage(t *testing.T) {
 			Type: &FileFormatTypeJSON,
 		}
 		opts.CopyOptions = &StageCopyOptions{
-			SizeLimit: Int(123),
+			OnError: &StageCopyOnErrorOptions{
+				Continue: Bool(true),
+			},
+			SizeLimit:         Int(123),
+			Purge:             Bool(true),
+			ReturnFailedOnly:  Bool(true),
+			MatchByColumnName: &StageCopyColumnMapCaseNone,
+			EnforceLength:     Bool(true),
+			Truncatecolumns:   Bool(true),
+			Force:             Bool(true),
 		}
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'NONE') FILE_FORMAT = (TYPE = JSON) COPY_OPTIONS = (SIZE_LIMIT = 123) COMMENT = 'some comment'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'NONE') FILE_FORMAT = (TYPE = JSON) COPY_OPTIONS = (ON_ERROR = CONTINUE SIZE_LIMIT = 123 PURGE = true RETURN_FAILED_ONLY = true MATCH_BY_COLUMN_NAME = NONE ENFORCE_LENGTH = true TRUNCATECOLUMNS = true FORCE = true) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -534,10 +555,19 @@ func TestStages_AlterExternalGCSStage(t *testing.T) {
 			Type: &FileFormatTypeJSON,
 		}
 		opts.CopyOptions = &StageCopyOptions{
-			SizeLimit: Int(123),
+			OnError: &StageCopyOnErrorOptions{
+				Continue: Bool(true),
+			},
+			SizeLimit:         Int(123),
+			Purge:             Bool(true),
+			ReturnFailedOnly:  Bool(true),
+			MatchByColumnName: &StageCopyColumnMapCaseNone,
+			EnforceLength:     Bool(true),
+			Truncatecolumns:   Bool(true),
+			Force:             Bool(true),
 		}
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'NONE') FILE_FORMAT = (TYPE = JSON) COPY_OPTIONS = (SIZE_LIMIT = 123) COMMENT = 'some comment'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'NONE') FILE_FORMAT = (TYPE = JSON) COPY_OPTIONS = (ON_ERROR = CONTINUE SIZE_LIMIT = 123 PURGE = true RETURN_FAILED_ONLY = true MATCH_BY_COLUMN_NAME = NONE ENFORCE_LENGTH = true TRUNCATECOLUMNS = true FORCE = true) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -587,10 +617,19 @@ func TestStages_AlterExternalAzureStage(t *testing.T) {
 			Type: &FileFormatTypeJSON,
 		}
 		opts.CopyOptions = &StageCopyOptions{
-			SizeLimit: Int(123),
+			OnError: &StageCopyOnErrorOptions{
+				Continue: Bool(true),
+			},
+			SizeLimit:         Int(123),
+			Purge:             Bool(true),
+			ReturnFailedOnly:  Bool(true),
+			MatchByColumnName: &StageCopyColumnMapCaseNone,
+			EnforceLength:     Bool(true),
+			Truncatecolumns:   Bool(true),
+			Force:             Bool(true),
 		}
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'NONE') FILE_FORMAT = (TYPE = JSON) COPY_OPTIONS = (SIZE_LIMIT = 123) COMMENT = 'some comment'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STAGE IF EXISTS %s SET URL = 'some url' STORAGE_INTEGRATION = "integration" ENCRYPTION = (TYPE = 'NONE') FILE_FORMAT = (TYPE = JSON) COPY_OPTIONS = (ON_ERROR = CONTINUE SIZE_LIMIT = 123 PURGE = true RETURN_FAILED_ONLY = true MATCH_BY_COLUMN_NAME = NONE ENFORCE_LENGTH = true TRUNCATECOLUMNS = true FORCE = true) COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 }
 

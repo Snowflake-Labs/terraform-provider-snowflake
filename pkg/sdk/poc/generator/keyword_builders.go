@@ -46,12 +46,6 @@ func (v *QueryStruct) OptionalLimitFrom() *QueryStruct {
 	return v
 }
 
-// SessionParameters *SessionParameters `ddl:"list,no_parentheses"`
-func (v *QueryStruct) SessionParameters() *QueryStruct {
-	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
-	return v
-}
-
 func (v *QueryStruct) OptionalSessionParameters() *QueryStruct {
 	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
 	return v
