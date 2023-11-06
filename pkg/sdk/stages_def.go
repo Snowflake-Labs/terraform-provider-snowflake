@@ -85,8 +85,8 @@ var stageCopyOptionsDef = g.NewQueryStruct("StageCopyOptions").
 		g.NewQueryStruct("StageCopyOnErrorOptions").
 			OptionalSQL("CONTINUE").
 			OptionalSQL("SKIP_FILE").
-			//OptionalSQL("SKIP_FILE_n").  // TODO templated value - not even supported by structToSQL
-			//OptionalSQL("SKIP_FILE_n%"). // TODO templated value with % - not even supported by structToSQL
+			// OptionalSQL("SKIP_FILE_n"). // TODO templated value - not even supported by structToSQL (could be keyword without space in-between)
+			// OptionalSQL("SKIP_FILE_n%"). // TODO templated value with % - not even supported by structToSQL (could be keyword without space in-between)
 			OptionalSQL("ABORT_STATEMENT"),
 		g.ParameterOptions().SQL("ON_ERROR"),
 	).

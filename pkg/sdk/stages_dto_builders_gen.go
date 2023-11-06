@@ -93,6 +93,11 @@ func (s *StageFileFormatRequest) WithType(Type *FileFormatType) *StageFileFormat
 	return s
 }
 
+func (s *StageFileFormatRequest) WithOptions(Options *FileFormatTypeOptions) *StageFileFormatRequest {
+	s.Options = Options
+	return s
+}
+
 func NewStageCopyOptionsRequest() *StageCopyOptionsRequest {
 	return &StageCopyOptionsRequest{}
 }

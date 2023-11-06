@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
@@ -93,7 +94,6 @@ func (v *stages) Show(ctx context.Context, request *ShowStageRequest) ([]Stage, 
 }
 
 func (v *stages) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stage, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
 	stages, err := v.Show(ctx, NewShowStageRequest().
 		WithLike(&Like{
 			Pattern: String(id.Name()),
@@ -132,11 +132,11 @@ func (r *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
+			Options:    r.FileFormat.Options,
 		}
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-
 			SizeLimit:         r.CopyOptions.SizeLimit,
 			Purge:             r.CopyOptions.Purge,
 			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
@@ -198,11 +198,11 @@ func (r *CreateOnS3StageRequest) toOpts() *CreateOnS3StageOptions {
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
+			Options:    r.FileFormat.Options,
 		}
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-
 			SizeLimit:         r.CopyOptions.SizeLimit,
 			Purge:             r.CopyOptions.Purge,
 			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
@@ -256,11 +256,11 @@ func (r *CreateOnGCSStageRequest) toOpts() *CreateOnGCSStageOptions {
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
+			Options:    r.FileFormat.Options,
 		}
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-
 			SizeLimit:         r.CopyOptions.SizeLimit,
 			Purge:             r.CopyOptions.Purge,
 			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
@@ -319,11 +319,11 @@ func (r *CreateOnAzureStageRequest) toOpts() *CreateOnAzureStageOptions {
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
+			Options:    r.FileFormat.Options,
 		}
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-
 			SizeLimit:         r.CopyOptions.SizeLimit,
 			Purge:             r.CopyOptions.Purge,
 			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
@@ -372,11 +372,11 @@ func (r *CreateOnS3CompatibleStageRequest) toOpts() *CreateOnS3CompatibleStageOp
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
+			Options:    r.FileFormat.Options,
 		}
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-
 			SizeLimit:         r.CopyOptions.SizeLimit,
 			Purge:             r.CopyOptions.Purge,
 			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
@@ -418,11 +418,11 @@ func (r *AlterInternalStageStageRequest) toOpts() *AlterInternalStageStageOption
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
+			Options:    r.FileFormat.Options,
 		}
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-
 			SizeLimit:         r.CopyOptions.SizeLimit,
 			Purge:             r.CopyOptions.Purge,
 			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
@@ -474,11 +474,11 @@ func (r *AlterExternalS3StageStageRequest) toOpts() *AlterExternalS3StageStageOp
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
+			Options:    r.FileFormat.Options,
 		}
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-
 			SizeLimit:         r.CopyOptions.SizeLimit,
 			Purge:             r.CopyOptions.Purge,
 			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
@@ -521,11 +521,11 @@ func (r *AlterExternalGCSStageStageRequest) toOpts() *AlterExternalGCSStageStage
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
+			Options:    r.FileFormat.Options,
 		}
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-
 			SizeLimit:         r.CopyOptions.SizeLimit,
 			Purge:             r.CopyOptions.Purge,
 			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
@@ -573,11 +573,11 @@ func (r *AlterExternalAzureStageStageRequest) toOpts() *AlterExternalAzureStageS
 		opts.FileFormat = &StageFileFormat{
 			FormatName: r.FileFormat.FormatName,
 			Type:       r.FileFormat.Type,
+			Options:    r.FileFormat.Options,
 		}
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{
-
 			SizeLimit:         r.CopyOptions.SizeLimit,
 			Purge:             r.CopyOptions.Purge,
 			ReturnFailedOnly:  r.CopyOptions.ReturnFailedOnly,
@@ -651,12 +651,11 @@ func (r *ShowStageRequest) toOpts() *ShowStageOptions {
 
 func (r stageShowRow) convert() *Stage {
 	stage := &Stage{
-		CreatedOn:    r.CreatedOn,
-		Name:         r.Name,
-		DatabaseName: r.DatabaseName,
-		SchemaName:   r.SchemaName,
-		Url:          r.Url,
-		// TODO: Check in worksheet
+		CreatedOn:        r.CreatedOn,
+		Name:             r.Name,
+		DatabaseName:     r.DatabaseName,
+		SchemaName:       r.SchemaName,
+		Url:              r.Url,
 		HasCredentials:   r.HasCredentials == "Y",
 		HasEncryptionKey: r.HasEncryptionKey == "Y",
 		Owner:            r.Owner,
@@ -667,8 +666,7 @@ func (r stageShowRow) convert() *Stage {
 	if r.Region.Valid {
 		stage.Region = &r.Region.String
 	}
-	// TODO: Check in worksheet or in test
-	if r.Cloud.Valid { // && r.Cloud.String != "NULL" {
+	if r.Cloud.Valid {
 		stage.Cloud = &r.Cloud.String
 	}
 	if r.StorageIntegration.Valid {
