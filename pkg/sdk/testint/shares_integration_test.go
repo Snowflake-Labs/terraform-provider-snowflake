@@ -283,11 +283,9 @@ func TestInt_SharesAlter(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-		t.Cleanup(schemaCleanup)
-		tagTest, tagCleanup := createTag(t, client, testDb(t), schemaTest)
+		tagTest, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tagCleanup)
-		tagTest2, tagCleanup2 := createTag(t, client, testDb(t), schemaTest)
+		tagTest2, tagCleanup2 := createTag(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tagCleanup2)
 		tagAssociations := []sdk.TagAssociation{
 			{
@@ -301,9 +299,7 @@ func TestInt_SharesAlter(t *testing.T) {
 		}
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 			IfExists: sdk.Bool(true),
-			Set: &sdk.ShareSet{
-				Tag: tagAssociations,
-			},
+			SetTag:   tagAssociations,
 		})
 		require.NoError(t, err)
 		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), shareTest.ID(), sdk.ObjectTypeShare)
@@ -316,10 +312,8 @@ func TestInt_SharesAlter(t *testing.T) {
 		// unset tags
 		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 			IfExists: sdk.Bool(true),
-			Unset: &sdk.ShareUnset{
-				Tag: []sdk.ObjectIdentifier{
-					tagTest.ID(),
-				},
+			UnsetTag: []sdk.ObjectIdentifier{
+				tagTest.ID(),
 			},
 		})
 		require.NoError(t, err)

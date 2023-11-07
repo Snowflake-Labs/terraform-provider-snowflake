@@ -13,6 +13,7 @@ func TestInt_WarehousesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	// new warehouses created on purpose
 	testWarehouse, warehouseCleanup := createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{
 		WarehouseSize: &sdk.WarehouseSizeSmall,
 	})
@@ -54,11 +55,9 @@ func TestInt_WarehousesShow(t *testing.T) {
 func TestInt_WarehouseCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-	tagTest, tagCleanup := createTag(t, client, testDb(t), schemaTest)
+	tagTest, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
 	t.Cleanup(tagCleanup)
-	tag2Test, tag2Cleanup := createTag(t, client, testDb(t), schemaTest)
+	tag2Test, tag2Cleanup := createTag(t, client, testDb(t), testSchema(t))
 	t.Cleanup(tag2Cleanup)
 
 	t.Run("test complete", func(t *testing.T) {
@@ -163,6 +162,7 @@ func TestInt_WarehouseDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	// new warehouse created on purpose
 	warehouse, warehouseCleanup := createWarehouse(t, client)
 	t.Cleanup(warehouseCleanup)
 
@@ -185,11 +185,9 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schema, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-	tag, tagCleanup := createTag(t, client, testDb(t), schema)
+	tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
 	t.Cleanup(tagCleanup)
-	tag2, tagCleanup2 := createTag(t, client, testDb(t), schema)
+	tag2, tagCleanup2 := createTag(t, client, testDb(t), testSchema(t))
 	t.Cleanup(tagCleanup2)
 
 	t.Run("terraform acc test", func(t *testing.T) {
@@ -250,6 +248,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("set", func(t *testing.T) {
+		// new warehouse created on purpose
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
@@ -276,6 +275,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
+		// new warehouse created on purpose
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		oldID := warehouse.ID()
 		t.Cleanup(warehouseCleanup)
@@ -303,6 +303,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 			Comment:         sdk.String("test comment"),
 			MaxClusterCount: sdk.Int(10),
 		}
+		// new warehouse created on purpose
 		warehouse, warehouseCleanup := createWarehouseWithOptions(t, client, createOptions)
 		t.Cleanup(warehouseCleanup)
 		id := warehouse.ID()
@@ -329,6 +330,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("suspend & resume", func(t *testing.T) {
+		// new warehouse created on purpose
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
@@ -364,6 +366,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("resume without suspending", func(t *testing.T) {
+		// new warehouse created on purpose
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
@@ -385,6 +388,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("abort all queries", func(t *testing.T) {
+		// new warehouse created on purpose
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
@@ -431,20 +435,19 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("set tags", func(t *testing.T) {
+		// new warehouse created on purpose
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
-			Set: &sdk.WarehouseSet{
-				Tag: []sdk.TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: "val",
-					},
-					{
-						Name:  tag2.ID(),
-						Value: "val2",
-					},
+			SetTag: []sdk.TagAssociation{
+				{
+					Name:  tag.ID(),
+					Value: "val",
+				},
+				{
+					Name:  tag2.ID(),
+					Value: "val2",
 				},
 			},
 		}
@@ -460,20 +463,19 @@ func TestInt_WarehouseAlter(t *testing.T) {
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
+		// new warehouse created on purpose
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
-			Set: &sdk.WarehouseSet{
-				Tag: []sdk.TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: "val1",
-					},
-					{
-						Name:  tag2.ID(),
-						Value: "val2",
-					},
+			SetTag: []sdk.TagAssociation{
+				{
+					Name:  tag.ID(),
+					Value: "val1",
+				},
+				{
+					Name:  tag2.ID(),
+					Value: "val2",
 				},
 			},
 		}
@@ -487,11 +489,9 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		require.Equal(t, "val2", val2)
 
 		alterOptions = &sdk.AlterWarehouseOptions{
-			Unset: &sdk.WarehouseUnset{
-				Tag: []sdk.ObjectIdentifier{
-					tag.ID(),
-					tag2.ID(),
-				},
+			UnsetTag: []sdk.ObjectIdentifier{
+				tag.ID(),
+				tag2.ID(),
 			},
 		}
 		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
@@ -511,6 +511,7 @@ func TestInt_WarehouseDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when warehouse exists", func(t *testing.T) {
+		// new warehouse created on purpose
 		warehouse, _ := createWarehouse(t, client)
 
 		err := client.Warehouses.Drop(ctx, warehouse.ID(), nil)
@@ -526,6 +527,7 @@ func TestInt_WarehouseDrop(t *testing.T) {
 	})
 
 	t.Run("when warehouse exists and if exists is true", func(t *testing.T) {
+		// new warehouse created on purpose
 		warehouse, _ := createWarehouse(t, client)
 
 		dropOptions := &sdk.DropWarehouseOptions{IfExists: sdk.Bool(true)}

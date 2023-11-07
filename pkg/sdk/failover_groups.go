@@ -68,8 +68,11 @@ type CreateFailoverGroupOptions struct {
 }
 
 func (opts *CreateFailoverGroupOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -102,13 +105,17 @@ type CreateSecondaryReplicationGroupOptions struct {
 }
 
 func (opts *CreateSecondaryReplicationGroupOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !ValidObjectIdentifier(opts.primaryFailoverGroup) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, errInvalidIdentifier("CreateSecondaryReplicationGroupOptions", "primaryFailoverGroup"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (v *failoverGroups) CreateSecondaryReplicationGroup(ctx context.Context, id AccountObjectIdentifier, primaryFailoverGroupID ExternalObjectIdentifier, opts *CreateSecondaryReplicationGroupOptions) error {
@@ -142,33 +149,37 @@ type AlterSourceFailoverGroupOptions struct {
 }
 
 func (opts *AlterSourceFailoverGroupOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Add, opts.Move, opts.Remove, opts.NewName) {
-		return errors.New("exactly one of SET, ADD, MOVE, REMOVE, or NewName must be specified")
+		errs = append(errs, errExactlyOneOf("AlterSourceFailoverGroupOptions", "Set", "Add", "Move", "Remove", "NewName"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Add) {
 		if err := opts.Add.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Move) {
 		if err := opts.Move.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Remove) {
 		if err := opts.Remove.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type FailoverGroupSet struct {
@@ -248,13 +259,17 @@ type AlterTargetFailoverGroupOptions struct {
 }
 
 func (opts *AlterTargetFailoverGroupOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Refresh, opts.Primary, opts.Suspend, opts.Resume) {
-		return errors.New("must set one of [Refresh, Primary, Suspend, Resume]")
+		errs = append(errs, errExactlyOneOf("AlterTargetFailoverGroupOptions", "Refresh", "Primary", "Suspend", "Resume"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (v *failoverGroups) AlterTarget(ctx context.Context, id AccountObjectIdentifier, opts *AlterTargetFailoverGroupOptions) error {
@@ -282,8 +297,11 @@ type DropFailoverGroupOptions struct {
 }
 
 func (opts *DropFailoverGroupOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -315,6 +333,9 @@ type ShowFailoverGroupOptions struct {
 }
 
 func (opts *ShowFailoverGroupOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -486,8 +507,11 @@ type showFailoverGroupDatabasesOptions struct {
 }
 
 func (opts *showFailoverGroupDatabasesOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.in) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -525,8 +549,11 @@ type showFailoverGroupSharesOptions struct {
 }
 
 func (opts *showFailoverGroupSharesOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.in) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

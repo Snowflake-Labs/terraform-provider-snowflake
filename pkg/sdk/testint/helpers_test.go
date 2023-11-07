@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -63,43 +64,13 @@ func testClientFromProfile(t *testing.T, profile string) (*sdk.Client, error) {
 	return sdk.NewClient(config)
 }
 
-func useDatabase(t *testing.T, client *sdk.Client, databaseID sdk.AccountObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseDatabase(ctx, databaseID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseDatabase(ctx, sdk.NewAccountObjectIdentifier(orgDB))
-		require.NoError(t, err)
-	}
-}
-
-func useSchema(t *testing.T, client *sdk.Client, schemaID sdk.DatabaseObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	orgDB, err := client.ContextFunctions.CurrentDatabase(ctx)
-	require.NoError(t, err)
-	orgSchema, err := client.ContextFunctions.CurrentSchema(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseSchema(ctx, schemaID)
-	require.NoError(t, err)
-	return func() {
-		err := client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(orgDB, orgSchema))
-		require.NoError(t, err)
-	}
-}
-
 func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
-	orgWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
-	require.NoError(t, err)
-	err = client.Sessions.UseWarehouse(ctx, warehouseID)
+	err := client.Sessions.UseWarehouse(ctx, warehouseID)
 	require.NoError(t, err)
 	return func() {
-		err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(orgWarehouse))
+		err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 		require.NoError(t, err)
 	}
 }
@@ -118,6 +89,8 @@ func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountO
 	require.NoError(t, err)
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
+		require.NoError(t, err)
+		err = client.Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)
 	}
 }
@@ -141,6 +114,8 @@ func createSchemaWithIdentifier(t *testing.T, client *sdk.Client, database *sdk.
 			return
 		}
 		require.NoError(t, err)
+		err = client.Sessions.UseSchema(ctx, testSchema(t).ID())
+		require.NoError(t, err)
 	}
 }
 
@@ -160,6 +135,8 @@ func createWarehouseWithOptions(t *testing.T, client *sdk.Client, opts *sdk.Crea
 			Name: name,
 		}, func() {
 			err := client.Warehouses.Drop(ctx, id, nil)
+			require.NoError(t, err)
+			err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 			require.NoError(t, err)
 		}
 }
@@ -693,6 +670,47 @@ func createView(t *testing.T, client *sdk.Client, viewId sdk.SchemaObjectIdentif
 
 	return func() {
 		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP VIEW %s`, viewId.FullyQualifiedName()))
+		require.NoError(t, err)
+	}
+}
+
+func putOnStage(t *testing.T, client *sdk.Client, stage *sdk.Stage, filename string) {
+	t.Helper()
+	ctx := context.Background()
+
+	path, err := filepath.Abs("./testdata/" + filename)
+	require.NoError(t, err)
+	absPath := "file://" + path
+
+	_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT '%s' @%s AUTO_COMPRESS = FALSE`, absPath, stage.ID().FullyQualifiedName()))
+	require.NoError(t, err)
+}
+
+func createApplicationPackage(t *testing.T, client *sdk.Client, name string) func() {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE APPLICATION PACKAGE "%s"`, name))
+	require.NoError(t, err)
+	return func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP APPLICATION PACKAGE "%s"`, name))
+		require.NoError(t, err)
+	}
+}
+
+func addApplicationPackageVersion(t *testing.T, client *sdk.Client, stage *sdk.Stage, appPackageName string, versionName string) {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`ALTER APPLICATION PACKAGE "%s" ADD VERSION %v USING '@%s'`, appPackageName, versionName, stage.ID().FullyQualifiedName()))
+	require.NoError(t, err)
+}
+
+func createApplication(t *testing.T, client *sdk.Client, name string, packageName string, version string) func() {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE APPLICATION "%s" FROM APPLICATION PACKAGE "%s" USING VERSION %s`, name, packageName, version))
+	require.NoError(t, err)
+	return func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP APPLICATION "%s"`, name))
 		require.NoError(t, err)
 	}
 }

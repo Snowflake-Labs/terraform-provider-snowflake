@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -111,8 +112,11 @@ type CreateShareOptions struct {
 }
 
 func (opts *CreateShareOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return fmt.Errorf("not a valid object identifier: %s", opts.name)
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -141,6 +145,12 @@ type dropShareOptions struct {
 }
 
 func (opts *dropShareOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
+	}
 	return nil
 }
 
@@ -169,36 +179,42 @@ type AlterShareOptions struct {
 	Remove   *ShareRemove            `ddl:"keyword" sql:"REMOVE"`
 	Set      *ShareSet               `ddl:"keyword" sql:"SET"`
 	Unset    *ShareUnset             `ddl:"keyword" sql:"UNSET"`
+	SetTag   []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterShareOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return fmt.Errorf("not a valid object identifier: %s", opts.name)
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-	if ok := exactlyOneValueSet(opts.Add, opts.Remove, opts.Set, opts.Unset); !ok {
-		return errExactlyOneOf("Add", "Remove", "Set", "Unset")
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !exactlyOneValueSet(opts.Add, opts.Remove, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag) {
+		errs = append(errs, errExactlyOneOf("AlterShareOptions", "Add", "Remove", "Set", "Unset", "SetTag", "UnsetTag"))
 	}
 	if valueSet(opts.Add) {
 		if err := opts.Add.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Remove) {
 		if err := opts.Remove.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type ShareAdd struct {
@@ -227,24 +243,22 @@ func (v *ShareRemove) validate() error {
 type ShareSet struct {
 	Accounts []AccountIdentifier `ddl:"parameter" sql:"ACCOUNTS"`
 	Comment  *string             `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag      []TagAssociation    `ddl:"keyword" sql:"TAG"`
 }
 
 func (v *ShareSet) validate() error {
-	if valueSet(v.Tag) && anyValueSet(v.Accounts, v.Comment) {
-		return fmt.Errorf("accounts and comment cannot be set when tag is set")
+	if !anyValueSet(v.Accounts, v.Comment) {
+		return errAtLeastOneOf("ShareSet", "Accounts", "Comment")
 	}
 	return nil
 }
 
 type ShareUnset struct {
-	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
-	Comment *bool              `ddl:"keyword" sql:"COMMENT"`
+	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *ShareUnset) validate() error {
-	if ok := exactlyOneValueSet(v.Comment, v.Tag); !ok {
-		return fmt.Errorf("exactly one of comment, tag must be set")
+	if !exactlyOneValueSet(v.Comment) {
+		return errExactlyOneOf("ShareUnset", "Comment")
 	}
 	return nil
 }
@@ -275,6 +289,9 @@ type ShowShareOptions struct {
 }
 
 func (opts *ShowShareOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -348,8 +365,11 @@ type describeShareOptions struct {
 }
 
 func (opts *describeShareOptions) validate() error {
-	if ok := ValidObjectIdentifier(opts.name); !ok {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

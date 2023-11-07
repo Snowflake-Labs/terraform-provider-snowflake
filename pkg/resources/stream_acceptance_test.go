@@ -52,12 +52,20 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 }
 
 func TestAcc_Stream(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_EXTERNAL_TABLE_TESTS"); ok {
-		t.Skip("Skipping TestAccStream")
+	env := os.Getenv("SKIP_STREAM_TEST")
+	if env != "" {
+		t.Skip("Skipping TestAcc_Stream")
 	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	accNameExternalTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
+	bucketURL := os.Getenv("AWS_EXTERNAL_BUCKET_URL")
+	if bucketURL == "" {
+		t.Skip("Skipping TestAcc_ExternalTable")
+	}
+	roleName := os.Getenv("AWS_EXTERNAL_ROLE_NAME")
+	if roleName == "" {
+		t.Skip("Skipping TestAcc_ExternalTable")
+	}
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -90,7 +98,7 @@ func TestAcc_Stream(t *testing.T) {
 				),
 			},
 			{
-				Config: externalTableStreamConfig(accNameExternalTable, false),
+				Config: externalTableStreamConfig(accNameExternalTable, false, bucketURL, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accNameExternalTable),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accNameExternalTable),
@@ -103,7 +111,7 @@ func TestAcc_Stream(t *testing.T) {
 				),
 			},
 			{
-				Config: externalTableStreamConfig(accNameExternalTable, true),
+				Config: externalTableStreamConfig(accNameExternalTable, true, bucketURL, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", accNameExternalTable),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accNameExternalTable),
@@ -194,7 +202,7 @@ resource "snowflake_stream" "test_stream" {
 	return fmt.Sprintf(s, name, name, name, appendOnlyConfig)
 }
 
-func externalTableStreamConfig(name string, insertOnly bool) string {
+func externalTableStreamConfig(name string, insertOnly bool, bucketURL string, roleName string) string {
 	// Refer to external_table_acceptance_test.go for the original source on
 	// external table resources and dependents (modified slightly here).
 	insertOnlyConfig := ""
@@ -202,7 +210,6 @@ func externalTableStreamConfig(name string, insertOnly bool) string {
 		insertOnlyConfig = "insert_only = true"
 	}
 
-	locations := []string{"s3://com.example.bucket/prefix"}
 	s := `
 resource "snowflake_database" "test" {
 	name = "%v"
@@ -215,7 +222,7 @@ resource "snowflake_schema" "test" {
 }
 resource "snowflake_stage" "test" {
 	name = "%v"
-	url = "s3://com.example.bucket/prefix"
+	url = "%s"
 	database = snowflake_database.test.name
 	schema = snowflake_schema.test.name
 	comment = "Terraform acceptance test"
@@ -223,9 +230,9 @@ resource "snowflake_stage" "test" {
 }
 resource "snowflake_storage_integration" "external_table_stream_integration" {
 	name = "%v"
-	storage_allowed_locations = %q
+	storage_allowed_locations = [%s]
 	storage_provider = "S3"
-	storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
+	storage_aws_role_arn = "%s"
 }
 resource "snowflake_external_table" "test_external_stream_table" {
 	database = snowflake_database.test.name
@@ -255,7 +262,7 @@ resource "snowflake_stream" "test_external_table_stream" {
 }
 `
 
-	return fmt.Sprintf(s, name, name, name, name, locations, name, insertOnlyConfig)
+	return fmt.Sprintf(s, name, name, name, bucketURL, name, bucketURL, roleName, name, insertOnlyConfig)
 }
 
 func viewStreamConfig(name string, appendOnly bool) string {

@@ -300,22 +300,6 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// setDataFromNullString blanks the value if v is null, otherwise sets the value to the value of v.
-func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullString) error {
-	for k, v := range ns {
-		var err error
-		if v.Valid {
-			err = data.Set(k, v.String) // lintignore:R001
-		} else {
-			err = data.Set(k, "") // lintignore:R001
-		}
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // UpdateResourceMonitor implements schema.UpdateFunc.
 func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)

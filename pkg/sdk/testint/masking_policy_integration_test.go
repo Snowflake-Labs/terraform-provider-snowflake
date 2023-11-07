@@ -14,21 +14,13 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
-	maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), schemaTest)
+	maskingPolicyTest, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 	t.Cleanup(maskingPolicyCleanup)
 
-	maskingPolicy2Test, maskingPolicy2Cleanup := createMaskingPolicy(t, client, testDb(t), schemaTest)
+	maskingPolicy2Test, maskingPolicy2Cleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 	t.Cleanup(maskingPolicy2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
-		useDatabaseCleanup := useDatabase(t, client, testDb(t).ID())
-		t.Cleanup(useDatabaseCleanup)
-		useSchemaCleanup := useSchema(t, client, schemaTest.ID())
-		t.Cleanup(useSchemaCleanup)
-
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, nil)
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(maskingPolicies))
@@ -37,7 +29,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowMaskingPolicyOptions{
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
@@ -93,12 +85,9 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
 	t.Run("test complete case", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
 				Name: "col1",
@@ -131,7 +120,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -143,7 +132,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 
 	t.Run("test if_not_exists", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
 				Name: "col1",
@@ -175,7 +164,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -187,7 +176,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 
 	t.Run("test no options", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
 				Name: "col1",
@@ -209,7 +198,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -221,7 +210,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 
 	t.Run("test multiline expression", func(t *testing.T) {
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 		signature := []sdk.TableColumnSignature{
 			{
 				Name: "val",
@@ -253,10 +242,7 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
-	maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), schemaTest)
+	maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 	t.Cleanup(maskingPolicyCleanup)
 
 	t.Run("when masking policy exists", func(t *testing.T) {
@@ -266,7 +252,7 @@ func TestInt_MaskingPolicyDescribe(t *testing.T) {
 	})
 
 	t.Run("when masking policy does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
 		_, err := client.MaskingPolicies.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
@@ -276,11 +262,8 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), schemaTest)
+		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 		t.Cleanup(maskingPolicyCleanup)
 		comment := random.Comment()
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
@@ -295,7 +278,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 				Pattern: sdk.String(maskingPolicy.Name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -316,7 +299,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 				Pattern: sdk.String(maskingPolicy.Name),
 			},
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -325,11 +308,11 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("when renaming", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), schemaTest)
+		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 		oldID := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
 		newName := random.String()
-		newID := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, newName)
+		newID := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
 			NewName: &newID,
 		}
@@ -347,21 +330,19 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 	})
 
 	t.Run("setting and unsetting tags", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), schemaTest)
+		maskingPolicy, maskingPolicyCleanup := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 		id := maskingPolicy.ID()
 		t.Cleanup(maskingPolicyCleanup)
 
-		tag, tagCleanup := createTag(t, client, testDb(t), schemaTest)
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tagCleanup)
 
-		tag2, tag2Cleanup := createTag(t, client, testDb(t), schemaTest)
+		tag2, tag2Cleanup := createTag(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tag2Cleanup)
 
 		tagAssociations := []sdk.TagAssociation{{Name: tag.ID(), Value: "value1"}, {Name: tag2.ID(), Value: "value2"}}
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
-			Set: &sdk.MaskingPolicySet{
-				Tag: tagAssociations,
-			},
+			SetTag: tagAssociations,
 		}
 		err := client.MaskingPolicies.Alter(ctx, id, alterOptions)
 		require.NoError(t, err)
@@ -374,9 +355,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 
 		// unset tag
 		alterOptions = &sdk.AlterMaskingPolicyOptions{
-			Unset: &sdk.MaskingPolicyUnset{
-				Tag: []sdk.ObjectIdentifier{tag.ID()},
-			},
+			UnsetTag: []sdk.ObjectIdentifier{tag.ID()},
 		}
 		err = client.MaskingPolicies.Alter(ctx, id, alterOptions)
 		require.NoError(t, err)
@@ -389,11 +368,8 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
 	t.Run("when masking policy exists", func(t *testing.T) {
-		maskingPolicy, _ := createMaskingPolicy(t, client, testDb(t), schemaTest)
+		maskingPolicy, _ := createMaskingPolicy(t, client, testDb(t), testSchema(t))
 		id := maskingPolicy.ID()
 		err := client.MaskingPolicies.Drop(ctx, id)
 		require.NoError(t, err)
@@ -402,7 +378,7 @@ func TestInt_MaskingPolicyDrop(t *testing.T) {
 	})
 
 	t.Run("when masking policy does not exist", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
 		err := client.MaskingPolicies.Drop(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})

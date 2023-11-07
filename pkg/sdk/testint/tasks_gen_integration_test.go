@@ -13,9 +13,6 @@ func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schema, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-
 	sql := "SELECT CURRENT_TIMESTAMP"
 
 	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier) {
@@ -25,13 +22,13 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
 		assert.Equal(t, testDb(t).Name, task.DatabaseName)
-		assert.Equal(t, schema.Name, task.SchemaName)
+		assert.Equal(t, testSchema(t).Name, task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, "", task.Comment)
 		assert.Equal(t, "", task.Warehouse)
 		assert.Equal(t, "", task.Schedule)
-		assert.Equal(t, "[]", task.Predecessors)
-		assert.Equal(t, "suspended", task.State)
+		assert.Empty(t, task.Predecessors)
+		assert.Equal(t, sdk.TaskStateSuspended, task.State)
 		assert.Equal(t, sql, task.Definition)
 		assert.Equal(t, "", task.Condition)
 		assert.Equal(t, false, task.AllowOverlappingExecution)
@@ -50,12 +47,12 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
 		assert.Equal(t, testDb(t).Name, task.DatabaseName)
-		assert.Equal(t, schema.Name, task.SchemaName)
+		assert.Equal(t, testSchema(t).Name, task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, comment, task.Comment)
 		assert.Equal(t, warehouse, task.Warehouse)
 		assert.Equal(t, schedule, task.Schedule)
-		assert.Equal(t, "suspended", task.State)
+		assert.Equal(t, sdk.TaskStateSuspended, task.State)
 		assert.Equal(t, sql, task.Definition)
 		assert.Equal(t, condition, task.Condition)
 		assert.Equal(t, allowOverlappingExecution, task.AllowOverlappingExecution)
@@ -66,14 +63,10 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, config, task.Config)
 		assert.Empty(t, task.Budget)
 		if predecessor != nil {
-			// Predecessors list is formatted, so matching it is unnecessarily complicated:
-			// e.g. `[\n  \"\\\"qgb)Z1KcNWJ(\\\".\\\"glN@JtR=7dzP$7\\\".\\\"_XEL(7N_F?@frgT5>dQS>V|vSy,J\\\"\"\n]`.
-			// We just match parts of the expected predecessor. Later we can parse the output while constructing Task object.
-			assert.Contains(t, task.Predecessors, predecessor.DatabaseName())
-			assert.Contains(t, task.Predecessors, predecessor.SchemaName())
-			assert.Contains(t, task.Predecessors, predecessor.Name())
+			assert.Len(t, task.Predecessors, 1)
+			assert.Contains(t, task.Predecessors, *predecessor)
 		} else {
-			assert.Equal(t, "[]", task.Predecessors)
+			assert.Empty(t, task.Predecessors)
 		}
 	}
 
@@ -83,7 +76,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
 		assert.Equal(t, testDb(t).Name, task.DatabaseName)
-		assert.Equal(t, schema.Name, task.SchemaName)
+		assert.Equal(t, testSchema(t).Name, task.SchemaName)
 		assert.Equal(t, schedule, task.Schedule)
 
 		// all below are not contained in the terse response, that's why all of them we expect to be empty
@@ -114,7 +107,7 @@ func TestInt_Tasks(t *testing.T) {
 	createTaskBasicRequest := func(t *testing.T) *sdk.CreateTaskRequest {
 		t.Helper()
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 
 		return sdk.NewCreateTaskRequest(id, sql)
 	}
@@ -156,12 +149,9 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create task: almost complete case", func(t *testing.T) {
-		warehouse, warehouseCleanup := createWarehouse(t, client)
-		t.Cleanup(warehouseCleanup)
-
 		request := createTaskBasicRequest(t).
 			WithOrReplace(sdk.Bool(true)).
-			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(warehouse.ID()))).
+			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))).
 			WithSchedule(sdk.String("10 MINUTE")).
 			WithConfig(sdk.String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
 			WithAllowOverlappingExecution(sdk.Bool(true)).
@@ -176,12 +166,12 @@ func TestInt_Tasks(t *testing.T) {
 
 		task := createTaskWithRequest(t, request)
 
-		assertTaskWithOptions(t, task, id, "some comment", warehouse.Name, "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
+		assertTaskWithOptions(t, task, id, "some comment", testWarehouse(t).Name, "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
 		otherName := random.String()
-		otherId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, otherName)
+		otherId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, otherName)
 
 		request := sdk.NewCreateTaskRequest(otherId, sql).WithSchedule(sdk.String("10 MINUTE"))
 
@@ -193,6 +183,129 @@ func TestInt_Tasks(t *testing.T) {
 		task := createTaskWithRequest(t, request)
 
 		assertTaskWithOptions(t, task, request.GetName(), "", "", "", "", false, "", &otherId)
+	})
+
+	t.Run("create dag of tasks", func(t *testing.T) {
+		rootName := random.String()
+		rootId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, rootName)
+
+		request := sdk.NewCreateTaskRequest(rootId, sql).WithSchedule(sdk.String("10 MINUTE"))
+		root := createTaskWithRequest(t, request)
+
+		require.Empty(t, root.Predecessors)
+
+		t1Name := random.String()
+		t1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t1Name)
+
+		request = sdk.NewCreateTaskRequest(t1Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootId})
+		t1 := createTaskWithRequest(t, request)
+
+		require.Equal(t, []sdk.SchemaObjectIdentifier{rootId}, t1.Predecessors)
+
+		t2Name := random.String()
+		t2Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t2Name)
+
+		request = sdk.NewCreateTaskRequest(t2Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{t1Id, rootId})
+		t2 := createTaskWithRequest(t, request)
+
+		require.Contains(t, t2.Predecessors, rootId)
+		require.Contains(t, t2.Predecessors, t1Id)
+		require.Len(t, t2.Predecessors, 2)
+
+		t3Name := random.String()
+		t3Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t3Name)
+
+		request = sdk.NewCreateTaskRequest(t3Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{t2Id, t1Id})
+		t3 := createTaskWithRequest(t, request)
+
+		require.Contains(t, t3.Predecessors, t2Id)
+		require.Contains(t, t3.Predecessors, t1Id)
+		require.Len(t, t3.Predecessors, 2)
+
+		rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, rootId)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t1Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t2Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
+		// cannot set ALLOW_OVERLAPPING_EXECUTION on child task
+		alterRequest := sdk.NewAlterTaskRequest(t1Id).WithSet(sdk.NewTaskSetRequest().WithAllowOverlappingExecution(sdk.Bool(true)))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.ErrorContains(t, err, "Cannot set allow_overlapping_execution on non-root task")
+
+		// can set ALLOW_OVERLAPPING_EXECUTION on root task
+		alterRequest = sdk.NewAlterTaskRequest(rootId).WithSet(sdk.NewTaskSetRequest().WithAllowOverlappingExecution(sdk.Bool(true)))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		// can create cycle, because DAG is suspended
+		alterRequest = sdk.NewAlterTaskRequest(t1Id).WithAddAfter([]sdk.SchemaObjectIdentifier{t3Id})
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		// can get the root task even with cycle
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 1)
+		require.Equal(t, rootId, rootTasks[0].ID())
+
+		// we get an error when trying to start
+		alterRequest = sdk.NewAlterTaskRequest(rootId).WithResume(sdk.Bool(true))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.ErrorContains(t, err, "Graph has at least one cycle containing task")
+	})
+
+	t.Run("create dag of tasks - multiple roots", func(t *testing.T) {
+		root1Name := random.String()
+		root1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, root1Name)
+
+		request := sdk.NewCreateTaskRequest(root1Id, sql).WithSchedule(sdk.String("10 MINUTE"))
+		root1 := createTaskWithRequest(t, request)
+
+		require.Empty(t, root1.Predecessors)
+
+		root2Name := random.String()
+		root2Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, root2Name)
+
+		request = sdk.NewCreateTaskRequest(root2Id, sql).WithSchedule(sdk.String("10 MINUTE"))
+		root2 := createTaskWithRequest(t, request)
+
+		require.Empty(t, root2.Predecessors)
+
+		t1Name := random.String()
+		t1Id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, t1Name)
+
+		request = sdk.NewCreateTaskRequest(t1Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{root1Id, root2Id})
+		t1 := createTaskWithRequest(t, request)
+
+		require.Contains(t, t1.Predecessors, root1Id)
+		require.Contains(t, t1.Predecessors, root2Id)
+		require.Len(t, t1.Predecessors, 2)
+
+		rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, t1Id)
+		require.NoError(t, err)
+		require.Len(t, rootTasks, 2)
+		require.Contains(t, []sdk.SchemaObjectIdentifier{root1Id, root2Id}, rootTasks[0].ID())
+		require.Contains(t, []sdk.SchemaObjectIdentifier{root1Id, root2Id}, rootTasks[1].ID())
+
+		// we get an error when trying to start
+		alterRequest := sdk.NewAlterTaskRequest(root1Id).WithResume(sdk.Bool(true))
+		err = client.Tasks.Alter(ctx, alterRequest)
+		require.ErrorContains(t, err, "The graph has more than one root task (one without predecessors)")
 	})
 
 	// TODO: this fails with `syntax error line 1 at position 89 unexpected 'GRANTS'`.
@@ -216,7 +329,7 @@ func TestInt_Tasks(t *testing.T) {
 	// })
 
 	t.Run("create task: with tags", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), schema)
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tagCleanup)
 
 		request := createTaskBasicRequest(t).
@@ -237,7 +350,7 @@ func TestInt_Tasks(t *testing.T) {
 		sourceTask := createTask(t)
 
 		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 
 		request := sdk.NewCloneTaskRequest(id, sourceTask.ID())
 
@@ -266,7 +379,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("drop task: non-existing", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, "does_not_exist")
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
 
 		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -296,7 +409,7 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := createTag(t, client, testDb(t), schema)
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tagCleanup)
 
 		task := createTask(t)
@@ -338,7 +451,7 @@ func TestInt_Tasks(t *testing.T) {
 		task := createTaskWithRequest(t, request)
 		id := task.ID()
 
-		assert.Equal(t, "suspended", task.State)
+		assert.Equal(t, sdk.TaskStateSuspended, task.State)
 
 		alterRequest := sdk.NewAlterTaskRequest(id).WithResume(sdk.Bool(true))
 		err := client.Tasks.Alter(ctx, alterRequest)
@@ -347,7 +460,7 @@ func TestInt_Tasks(t *testing.T) {
 		alteredTask, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, "started", alteredTask.State)
+		assert.Equal(t, sdk.TaskStateStarted, alteredTask.State)
 
 		alterRequest = sdk.NewAlterTaskRequest(id).WithSuspend(sdk.Bool(true))
 		err = client.Tasks.Alter(ctx, alterRequest)
@@ -356,7 +469,7 @@ func TestInt_Tasks(t *testing.T) {
 		alteredTask, err = client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, "suspended", alteredTask.State)
+		assert.Equal(t, sdk.TaskStateSuspended, alteredTask.State)
 	})
 
 	t.Run("alter task: remove after and add after", func(t *testing.T) {
@@ -372,7 +485,7 @@ func TestInt_Tasks(t *testing.T) {
 		task := createTaskWithRequest(t, request)
 		id := task.ID()
 
-		assert.Contains(t, task.Predecessors, otherId.Name())
+		assert.Contains(t, task.Predecessors, otherId)
 
 		alterRequest := sdk.NewAlterTaskRequest(id).WithRemoveAfter([]sdk.SchemaObjectIdentifier{otherId})
 
@@ -382,7 +495,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err = client.Tasks.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assert.Equal(t, "[]", task.Predecessors)
+		assert.Empty(t, task.Predecessors)
 
 		alterRequest = sdk.NewAlterTaskRequest(id).WithAddAfter([]sdk.SchemaObjectIdentifier{otherId})
 
@@ -392,7 +505,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err = client.Tasks.ShowByID(ctx, id)
 
 		require.NoError(t, err)
-		assert.Contains(t, task.Predecessors, otherId.Name())
+		assert.Contains(t, task.Predecessors, otherId)
 	})
 
 	t.Run("alter task: modify when and as", func(t *testing.T) {
@@ -453,7 +566,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		showRequest := sdk.NewShowTaskRequest().
 			WithLike(&sdk.Like{Pattern: &task1.Name}).
-			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, schema.Name)}).
+			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)}).
 			WithLimit(&sdk.LimitFrom{Rows: sdk.Int(5)})
 		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
 

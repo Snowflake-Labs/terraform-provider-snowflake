@@ -13,22 +13,18 @@ import (
 func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	client := testClient(t)
 
-	warehouseTest, warehouseCleanup := createWarehouse(t, client)
-	t.Cleanup(warehouseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
-	tableTest, tableCleanup := createTable(t, client, testDb(t), schemaTest)
+	tableTest, tableCleanup := createTable(t, client, testDb(t), testSchema(t))
 	t.Cleanup(tableCleanup)
 
 	ctx := context.Background()
 	t.Run("test complete", func(t *testing.T) {
-		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, random.String())
+		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
 		targetLag := sdk.TargetLag{
 			MaximumDuration: sdk.String("2 minutes"),
 		}
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
 		comment := random.Comment()
-		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouseTest.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
+		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(name))
@@ -40,18 +36,18 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 		entity := entities[0]
 		require.Equal(t, name.Name(), entity.Name)
-		require.Equal(t, warehouseTest.ID().Name(), entity.Warehouse)
+		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
 		require.Equal(t, *targetLag.MaximumDuration, entity.TargetLag)
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {
-		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schemaTest.Name, random.String())
+		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
 		targetLag := sdk.TargetLag{
 			Downstream: sdk.Bool(true),
 		}
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
 		comment := random.Comment()
-		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouseTest.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
+		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(name))
@@ -63,7 +59,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 
 		entity := entities[0]
 		require.Equal(t, name.Name(), entity.Name)
-		require.Equal(t, warehouseTest.ID().Name(), entity.Warehouse)
+		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
 		require.Equal(t, "DOWNSTREAM", entity.TargetLag)
 	})
 }
@@ -135,8 +131,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(sdk.Bool(true)).WithResume(sdk.Bool(true)))
 		require.Error(t, err)
-		expected := "alter statement needs exactly one action from: set, unset, refresh"
-		require.Equal(t, expected, err.Error())
+		sdk.ErrorsEqual(t, sdk.JoinErrors(sdk.ErrExactlyOneOf("alterDynamicTableOptions", "Suspend", "Resume", "Refresh", "Set")), err)
 	})
 
 	t.Run("alter with set", func(t *testing.T) {

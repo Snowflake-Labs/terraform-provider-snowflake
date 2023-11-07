@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.75.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.74.0...v0.75.0) (2023-10-26)
+
+
+### Features
+
+* add parse_header option to file format resource ([#2132](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2132)) ([1e6e54f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1e6e54f828efa60edd258b316709fc4dfd370f93))
+* Use streams from the new SDK in resource / datasource ([#2129](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2129)) ([5c633be](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5c633be461fd373d412b02b108e64b6cfc4eb856))
+* Use task from SDK in resource and data source ([#2140](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2140)) ([de23f2b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/de23f2ba939eb368d9734217e1bb2d4ebc75eef4))
+
+
+### Misc
+
+* Return multiple errors in existing validations ([#2122](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2122)) ([4d4bcdb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4d4bcdbe841807da2fa08d534eaf846234934f7c))
+* Set up a single warehouse for the SDK integration tests ([#2141](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2141)) ([16022ef](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/16022ef4171e7dccf2932ae6e8d451b51c93291c))
+
+
+### BugFixes
+
+* cleanup acc tests ([#2135](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2135)) ([5db751d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5db751d1aa71952b1528e81cf2fdcd05d9d5d0fb))
+* provider config ([#2136](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2136)) ([07b9b4f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/07b9b4fee800fe3f34890783cc463d4fc5904717))
+* view statement update ([#2152](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2152)) ([6de32ae](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6de32ae6ec16ad76fb40afddfcaa7f650322cb67))
+
+## [0.74.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.73.0...v0.74.0) (2023-10-18)
+
+
+### Features
+
+* dynamic table resource + data source ([#2104](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2104)) ([59c5de6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/59c5de6becf4b16542da4db59e839f7ca5625e50))
+* Migrate streams to the new sdk ([#2113](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2113)) ([521fde5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/521fde58b7836a21614d2ae31a7060352a68b465))
+* Move integration tests to separate package ([#2111](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2111)) ([2755589](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2755589bc8c7ecbda3115dc574339c40bfd5b096))
+* Provider config refactor ([#2126](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2126)) ([9858fea](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9858feaa2fb382b57e3c89aae044f09ce2dcc5a3))
+* tags sdk refactoring ([#2079](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2079)) ([7013f83](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7013f835864139ef40c2521e6af87589e909e201))
+* Use network policy from sdk ([#2087](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2087)) ([50f2935](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/50f2935dc12fc2479c2919a5666d5573a8b737ff))
+* use SDK in schema resource and datasource ([#2082](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2082)) ([f7d0d97](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f7d0d9716c4da9b00e5171a368a03a9cd52c31ae))
+
+
+### Misc
+
+* Adjust integration tests after moving to separate package ([#2115](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2115)) ([3f528a8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3f528a87f4c0b3bc95a0dfb35d93d22251b5112e))
+* Integration tests setup db once ([#2118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2118)) ([f533368](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f5333684d5e46877ec4da6dc708ce2b09b5694af))
+* Set up schema once for integration tests ([#2121](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2121)) ([5e3ebf4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5e3ebf4e809a4be163a30642f69ea1b9146f21a9))
+* Use helper methods in old unit tests ([#2119](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2119)) ([0c44571](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0c44571a92b842ac97d46a38e5bcfc1066367177))
+
+
+### BugFixes
+
+* use schema object identifier in external tables ([#2112](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2112)) ([f5d4aeb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f5d4aebf810697aca96764261b891415f002ee92))
+
 ## [0.73.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.72.0...v0.73.0) (2023-10-11)
 
 

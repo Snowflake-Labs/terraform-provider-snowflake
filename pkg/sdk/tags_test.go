@@ -66,14 +66,14 @@ func TestTagCreate(t *testing.T) {
 			},
 		}
 		opts.Comment = String("comment")
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("Comment", "AllowedValues"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("createTagOptions", "Comment", "AllowedValues"))
 	})
 
 	t.Run("validation: both ifNotExists and orReplace present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("createTagOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("validation: multiple errors", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestTagCreate(t *testing.T) {
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("createTagOptions", "OrReplace", "IfNotExists"))
 	})
 }
 
@@ -159,7 +159,7 @@ func TestTagShow(t *testing.T) {
 	t.Run("validation: empty in", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.In = &In{}
-		assertOptsInvalidJoinedErrors(t, opts, errScopeRequiredForInKeyword)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("showTagOptions.In", "Account", "Database", "Schema"))
 	})
 
 	t.Run("show with empty options", func(t *testing.T) {
@@ -284,7 +284,7 @@ func TestTagAlter(t *testing.T) {
 
 	t.Run("validation: no alter action", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterTagOptions", "Add", "Drop", "Set", "Unset", "Rename"))
 	})
 
 	t.Run("validation: multiple alter actions", func(t *testing.T) {
@@ -295,7 +295,7 @@ func TestTagAlter(t *testing.T) {
 		opts.Unset = &TagUnset{
 			AllowedValues: Bool(true),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterTagOptions", "Add", "Drop", "Set", "Unset", "Rename"))
 	})
 
 	t.Run("validation: invalid new name", func(t *testing.T) {
@@ -319,6 +319,6 @@ func TestTagAlter(t *testing.T) {
 	t.Run("validation: no property to unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TagUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsAtLeastOneProperty)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
 	})
 }

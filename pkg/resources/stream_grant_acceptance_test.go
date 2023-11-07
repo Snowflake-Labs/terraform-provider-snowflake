@@ -14,16 +14,16 @@ func TestAcc_StreamGrant_basic(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	streamName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: streamGrantConfig(name, streamName, normal, "SELECT"),
+				Config: streamGrantConfig(name, streamName, normal, "SELECT", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "stream_name", streamName),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "on_future", "false"),
@@ -33,10 +33,10 @@ func TestAcc_StreamGrant_basic(t *testing.T) {
 			},
 			// UPDATE ALL PRIVILEGES
 			{
-				Config: streamGrantConfig(name, streamName, normal, "ALL PRIVILEGES"),
+				Config: streamGrantConfig(name, streamName, normal, "ALL PRIVILEGES", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "stream_name", streamName),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "privilege", "ALL PRIVILEGES"),
@@ -64,10 +64,10 @@ func TestAcc_StreamGrant_onAll(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: streamGrantConfig(name, streamName, onAll, "SELECT"),
+				Config: streamGrantConfig(name, streamName, onAll, "SELECT", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckNoResourceAttr("snowflake_stream_grant.test", "stream_name"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "on_all", "true"),
@@ -96,10 +96,10 @@ func TestAcc_StreamGrant_onFuture(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: streamGrantConfig(name, streamName, onFuture, "SELECT"),
+				Config: streamGrantConfig(name, streamName, onFuture, "SELECT", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "schema_name", acc.TestSchemaName),
 					resource.TestCheckNoResourceAttr("snowflake_stream_grant.test", "stream_name"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "with_grant_option", "false"),
 					resource.TestCheckResourceAttr("snowflake_stream_grant.test", "on_future", "true"),
@@ -118,7 +118,7 @@ func TestAcc_StreamGrant_onFuture(t *testing.T) {
 	})
 }
 
-func streamGrantConfig(name string, streamName string, grantType grantType, privilege string) string {
+func streamGrantConfig(name string, streamName string, grantType grantType, privilege string, databaseName string, schemaName string) string {
 	var streamNameConfig string
 	switch grantType {
 	case normal:
@@ -130,22 +130,13 @@ func streamGrantConfig(name string, streamName string, grantType grantType, priv
 	}
 
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-    name = "%s"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%s"
-	database = snowflake_database.test.name
-}
-
 resource "snowflake_role" "test" {
     name = "%s"
 }
 resource "snowflake_table" "test" {
-	database        = snowflake_database.test.name
-	schema          = snowflake_schema.test.name
 	name            = "%s"
+	database        = "%s"
+	schema          = "%s"
 	change_tracking = true
 	comment         = "Terraform acceptance test"
 
@@ -160,19 +151,19 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_stream" "test" {
-	database = snowflake_database.test.name
-	schema   = snowflake_schema.test.name
 	name     = "%s"
+	database = "%s"
+	schema   = "%s"
 	comment  = "Terraform acceptance test"
-	on_table = "${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_table.test.name}"
+	on_table = "\"${snowflake_table.test.database}\".\"${snowflake_table.test.schema}\".${snowflake_table.test.name}"
 }
 
 resource "snowflake_stream_grant" "test" {
-    database_name = snowflake_database.test.name
+    database_name = "%s"
 	roles         = [snowflake_role.test.name]
-	schema_name   = snowflake_schema.test.name
+	schema_name   = "%s"
 	%s
     privilege = "%s"
 }
-`, name, name, name, name, streamName, streamNameConfig, privilege)
+`, name, name, databaseName, schemaName, streamName, databaseName, schemaName, databaseName, schemaName, streamNameConfig, privilege)
 }

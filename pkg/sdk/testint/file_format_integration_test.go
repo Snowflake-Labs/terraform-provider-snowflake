@@ -13,11 +13,9 @@ import (
 func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	schema, schemaCleanup := createSchema(t, client, testDb(t))
-	t.Cleanup(schemaCleanup)
 
 	t.Run("CSV", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.String())
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeCSV,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -106,7 +104,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, &sdk.CSVEncodingGB18030, describeResult.Options.CSVEncoding)
 	})
 	t.Run("JSON", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.String())
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeJSON,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -178,7 +176,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, true, *describeResult.Options.JSONSkipByteOrderMark)
 	})
 	t.Run("AVRO", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.String())
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeAvro,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -220,7 +218,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.AvroNullIf)
 	})
 	t.Run("ORC", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.String())
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeORC,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -259,7 +257,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ORCNullIf)
 	})
 	t.Run("PARQUET", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.String())
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeParquet,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -304,7 +302,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, []sdk.NullString{{S: "a"}, {S: "b"}}, *describeResult.Options.ParquetNullIf)
 	})
 	t.Run("XML", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.String())
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeXML,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -360,11 +358,8 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, cleanupSchema := createSchema(t, client, testDb(t))
-	t.Cleanup(cleanupSchema)
-
 	t.Run("rename", func(t *testing.T) {
-		fileFormat, fileFormatCleanup := createFileFormat(t, client, schemaTest.ID())
+		fileFormat, fileFormatCleanup := createFileFormat(t, client, testSchema(t).ID())
 		t.Cleanup(fileFormatCleanup)
 		oldId := fileFormat.ID()
 		newId := sdk.NewSchemaObjectIdentifier(oldId.DatabaseName(), oldId.SchemaName(), random.String())
@@ -393,7 +388,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 	})
 
 	t.Run("set", func(t *testing.T) {
-		fileFormat, fileFormatCleanup := createFileFormatWithOptions(t, client, schemaTest.ID(), &sdk.CreateFileFormatOptions{
+		fileFormat, fileFormatCleanup := createFileFormatWithOptions(t, client, testSchema(t).ID(), &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeCSV,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
 				CSVCompression: &sdk.CSVCompressionAuto,
@@ -421,10 +416,8 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, cleanupSchema := createSchema(t, client, testDb(t))
-	t.Cleanup(cleanupSchema)
 	t.Run("no options", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, schemaTest.ID())
+		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
 		err := client.FileFormats.Drop(ctx, fileFormat.ID(), nil)
 		require.NoError(t, err)
 
@@ -433,7 +426,7 @@ func TestInt_FileFormatsDrop(t *testing.T) {
 	})
 
 	t.Run("with IfExists", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, schemaTest.ID())
+		fileFormat, _ := createFileFormat(t, client, testSchema(t).ID())
 		err := client.FileFormats.Drop(ctx, fileFormat.ID(), &sdk.DropFileFormatOptions{
 			IfExists: sdk.Bool(true),
 		})
@@ -448,11 +441,9 @@ func TestInt_FileFormatsShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, cleanupSchema := createSchema(t, client, testDb(t))
-	t.Cleanup(cleanupSchema)
-	fileFormatTest, cleanupFileFormat := createFileFormat(t, client, schemaTest.ID())
+	fileFormatTest, cleanupFileFormat := createFileFormat(t, client, testSchema(t).ID())
 	t.Cleanup(cleanupFileFormat)
-	fileFormatTest2, cleanupFileFormat2 := createFileFormat(t, client, schemaTest.ID())
+	fileFormatTest2, cleanupFileFormat2 := createFileFormat(t, client, testSchema(t).ID())
 	t.Cleanup(cleanupFileFormat2)
 
 	t.Run("without options", func(t *testing.T) {
@@ -477,7 +468,7 @@ func TestInt_FileFormatsShow(t *testing.T) {
 	t.Run("IN", func(t *testing.T) {
 		fileFormats, err := client.FileFormats.Show(ctx, &sdk.ShowFileFormatsOptions{
 			In: &sdk.In{
-				Schema: schemaTest.ID(),
+				Schema: testSchema(t).ID(),
 			},
 		})
 		require.NoError(t, err)
@@ -491,11 +482,10 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	schemaTest, cleanupSchema := createSchema(t, client, testDb(t))
-	t.Cleanup(cleanupSchema)
-	fileFormatTest, cleanupFileFormat := createFileFormat(t, client, schemaTest.ID())
+	fileFormatTest, cleanupFileFormat := createFileFormat(t, client, testSchema(t).ID())
 	t.Cleanup(cleanupFileFormat)
 
+	// new database and schema created on purpose
 	databaseTest2, cleanupDatabase2 := createDatabase(t, client)
 	t.Cleanup(cleanupDatabase2)
 	schemaTest2, cleanupSchema2 := createSchema(t, client, databaseTest2)
@@ -510,7 +500,7 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 		fileFormat, err := client.FileFormats.ShowByID(ctx, fileFormatTest.ID())
 		require.NoError(t, err)
 		assert.Equal(t, testDb(t).Name, fileFormat.Name.DatabaseName())
-		assert.Equal(t, schemaTest.Name, fileFormat.Name.SchemaName())
+		assert.Equal(t, testSchema(t).Name, fileFormat.Name.SchemaName())
 		assert.Equal(t, fileFormatTest.Name.Name(), fileFormat.Name.Name())
 	})
 }
