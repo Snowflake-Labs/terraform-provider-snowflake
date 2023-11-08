@@ -22,6 +22,7 @@ type ExternalTableBuilder struct {
 	autoRefresh     bool
 	pattern         string
 	fileFormat      string
+	tableFormat     string
 	copyGrants      bool
 	awsSNSTopic     string
 	comment         string
@@ -91,6 +92,11 @@ func (tb *ExternalTableBuilder) WithFileFormat(c string) *ExternalTableBuilder {
 	return tb
 }
 
+func (tb *ExternalTableBuilder) WithTableFormat(c string) *ExternalTableBuilder {
+	tb.tableFormat = c
+	return tb
+}
+
 func (tb *ExternalTableBuilder) WithCopyGrants(c bool) *ExternalTableBuilder {
 	tb.copyGrants = c
 	return tb
@@ -150,6 +156,9 @@ func (tb *ExternalTableBuilder) Create() string {
 	}
 
 	q.WriteString(fmt.Sprintf(` FILE_FORMAT = ( %v )`, tb.fileFormat))
+	if  tb.tableFormat != "" {
+	    q.WriteString(fmt.Sprintf(` TABLE_FORMAT = '%v'`, tb.tableFormat))
+	}
 
 	if tb.awsSNSTopic != "" {
 		q.WriteString(fmt.Sprintf(` AWS_SNS_TOPIC = '%v'`, EscapeString(tb.awsSNSTopic)))

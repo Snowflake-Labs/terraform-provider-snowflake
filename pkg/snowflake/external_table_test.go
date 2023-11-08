@@ -21,6 +21,18 @@ func TestExternalTableCreate(t *testing.T) {
 	r.Equal(`CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT AS expression1, "column2" VARCHAR AS expression2) WITH LOCATION = location REFRESH_ON_CREATE = false AUTO_REFRESH = false PATTERN = 'pattern' FILE_FORMAT = ( TYPE = CSV FIELD_DELIMITER = '|' ) COMMENT = 'Test Comment'`, s.Create())
 }
 
+func TestExternalDeltaTableCreate(t *testing.T) {
+	r := require.New(t)
+	s := NewExternalTableBuilder("test_table", "test_db", "test_schema")
+	s.WithColumns([]map[string]string{{"name": "column1", "type": "OBJECT", "as": "expression1"}, {"name": "column2", "type": "VARCHAR", "as": "expression2"}})
+	s.WithLocation("location")
+	s.WithPattern("pattern")
+	s.WithFileFormat("TYPE = PARQUET")
+	s.WithTableFormat("DELTA")
+	r.Equal(`"test_db"."test_schema"."test_table"`, s.QualifiedName())
+	r.Equal(`CREATE EXTERNAL TABLE "test_db"."test_schema"."test_table" ("column1" OBJECT AS expression1, "column2" VARCHAR AS expression2) WITH LOCATION = location REFRESH_ON_CREATE = false AUTO_REFRESH = false PATTERN = 'pattern' FILE_FORMAT = ( TYPE = PARQUET ) TABLE_FORMAT = 'DELTA'`, s.Create())
+}
+
 func TestExternalTableUpdate(t *testing.T) {
 	r := require.New(t)
 	s := NewExternalTableBuilder("test_table", "test_db", "test_schema")

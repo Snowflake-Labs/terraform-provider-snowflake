@@ -76,6 +76,12 @@ var externalTableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies the file format for the external table.",
 	},
+	"table_format": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "Specifies the table format for the external table.",
+	},
 	"pattern": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -209,6 +215,7 @@ func CreateExternalTable(d *schema.ResourceData, meta interface{}) error {
 	builder := snowflake.NewExternalTableBuilder(name, database, dbSchema)
 	builder.WithColumns(columns)
 	builder.WithFileFormat(d.Get("file_format").(string))
+	builder.WithTableFormat(d.Get("table_format").(string))
 	builder.WithLocation(d.Get("location").(string))
 
 	builder.WithAutoRefresh(d.Get("auto_refresh").(bool))
