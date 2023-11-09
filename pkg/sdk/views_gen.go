@@ -185,7 +185,7 @@ type DescribeViewOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-// TODO: extract common type for describe
+// TODO [SNOW-965322]: extract common type for describe
 // viewDetailsRow is a copy of externalTableColumnDetailsRow.
 type viewDetailsRow struct {
 	Name       string         `db:"name"`
