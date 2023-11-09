@@ -7,56 +7,58 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 var viewDbRow = g.DbStruct("viewDBRow").
 	Field("created_on", "string").
 	Field("name", "string").
-	Field("reserved", "string").
+	Field("name", "sql.NullString").
+	Field("reserved", "sql.NullString").
 	Field("database_name", "string").
 	Field("schema_name", "string").
-	Field("owner", "string").
-	Field("comment", "string").
-	Field("text", "string").
-	Field("is_secure", "string").
-	Field("is_materialized", "string").
-	Field("owner_role_type", "string").
-	Field("change_tracking", "string")
+	Field("owner", "sql.NullString").
+	Field("comment", "sql.NullString").
+	Field("text", "sql.NullString").
+	Field("is_secure", "sql.NullBool").
+	Field("is_materialized", "sql.NullBool").
+	Field("owner_role_type", "sql.NullString").
+	Field("change_tracking", "sql.NullString")
 
 var view = g.PlainStruct("View").
 	Field("CreatedOn", "string").
 	Field("Name", "string").
+	Field("Kind", "string").
 	Field("Reserved", "string").
 	Field("DatabaseName", "string").
 	Field("SchemaName", "string").
 	Field("Owner", "string").
 	Field("Comment", "string").
 	Field("Text", "string").
-	Field("IsSecure", "string").
-	Field("IsMaterialized", "string").
+	Field("IsSecure", "bool").
+	Field("IsMaterialized", "bool").
 	Field("OwnerRoleType", "string").
 	Field("ChangeTracking", "string")
 
 var viewDetailsDbRow = g.DbStruct("viewDetailsRow").
 	Field("name", "string").
-	Field("type", "string").
+	Field("type", "DataType").
 	Field("kind", "string").
 	Field("null", "string").
-	Field("default", "string").
+	Field("default", "sql.NullString").
 	Field("primary key", "string").
 	Field("unique key", "string").
-	Field("check", "string").
-	Field("expression", "string").
-	Field("comment", "string").
-	Field("policy name", "string")
+	Field("check", "sql.NullString").
+	Field("expression", "sql.NullString").
+	Field("comment", "sql.NullString").
+	Field("policy name", "sql.NullString")
 
 var viewDetails = g.PlainStruct("ViewDetails").
 	Field("Name", "string").
 	Field("Type", "DataType").
 	Field("Kind", "string").
 	Field("IsNullable", "bool").
-	Field("Default", "string").
+	Field("Default", "*string").
 	Field("IsPrimary", "bool").
 	Field("IsUnique", "bool").
-	Field("Check", "bool").
-	Field("Expression", "string").
-	Field("Comment", "string").
-	Field("PolicyName", "string")
+	Field("Check", "*bool").
+	Field("Expression", "*string").
+	Field("Comment", "*string").
+	Field("PolicyName", "*string")
 
 var viewColumn = g.NewQueryStruct("ViewColumn").
 	Text("Name", g.KeywordOptions().DoubleQuotes().Required()).
