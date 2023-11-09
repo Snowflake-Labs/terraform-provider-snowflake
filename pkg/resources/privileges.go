@@ -23,6 +23,7 @@ const (
 	privilegeCreateDatabase              Privilege = "CREATE DATABASE"
 	privilegeCreateDatabaseRole          Privilege = "CREATE DATABASE ROLE"
 	privilegeCreateDataExchangeListing   Privilege = "CREATE DATA EXCHANGE LISTING"
+	privilegeCreateDynamicTable          Privilege = "CREATE DYNAMIC TABLE"
 	privilegeCreateExternalTable         Privilege = "CREATE EXTERNAL TABLE"
 	privilegeCreateFailoverGroup         Privilege = "CREATE FAILOVER GROUP"
 	privilegeCreateFileFormat            Privilege = "CREATE FILE FORMAT"
