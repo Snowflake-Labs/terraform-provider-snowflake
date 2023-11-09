@@ -42,13 +42,13 @@ type ViewColumn struct {
 type ViewColumnMaskingPolicy struct {
 	Name          string                 `ddl:"keyword"`
 	MaskingPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"MASKING POLICY"`
-	Using         []string               `ddl:"list,parentheses" sql:"USING"`
+	Using         []string               `ddl:"keyword,parentheses" sql:"USING"`
 	Tag           []TagAssociation       `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 type ViewRowAccessPolicy struct {
 	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
-	On              []string               `ddl:"list,parentheses" sql:"ON"`
+	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
 }
 
 // AlterViewOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-view.
@@ -78,7 +78,7 @@ type AlterViewOptions struct {
 type ViewAddRowAccessPolicy struct {
 	add             bool                   `ddl:"static" sql:"ADD"`
 	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
-	On              []string               `ddl:"list,parentheses" sql:"ON"`
+	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
 }
 
 type ViewDropRowAccessPolicy struct {
@@ -97,7 +97,7 @@ type ViewSetColumnMaskingPolicy struct {
 	Name          string                 `ddl:"keyword"`
 	set           bool                   `ddl:"static" sql:"SET"`
 	MaskingPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"MASKING POLICY"`
-	Using         []string               `ddl:"list,parentheses" sql:"USING"`
+	Using         []string               `ddl:"keyword,parentheses" sql:"USING"`
 	Force         *bool                  `ddl:"keyword" sql:"FORCE"`
 }
 
