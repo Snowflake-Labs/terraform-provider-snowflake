@@ -5,60 +5,60 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var viewDbRow = g.DbStruct("viewDBRow").
-	Field("created_on", "string").
-	Field("name", "string").
-	Field("name", "sql.NullString").
-	Field("reserved", "sql.NullString").
-	Field("database_name", "string").
-	Field("schema_name", "string").
-	Field("owner", "sql.NullString").
-	Field("comment", "sql.NullString").
-	Field("text", "sql.NullString").
-	Field("is_secure", "sql.NullBool").
-	Field("is_materialized", "sql.NullBool").
-	Field("owner_role_type", "sql.NullString").
-	Field("change_tracking", "sql.NullString")
+	Text("created_on").
+	Text("name").
+	OptionalText("name").
+	OptionalText("reserved").
+	Text("database_name").
+	Text("schema_name").
+	OptionalText("owner").
+	OptionalText("comment").
+	OptionalText("text").
+	OptionalBool("is_secure").
+	OptionalBool("is_materialized").
+	OptionalText("owner_role_type").
+	OptionalText("change_tracking")
 
 var view = g.PlainStruct("View").
-	Field("CreatedOn", "string").
-	Field("Name", "string").
-	Field("Kind", "string").
-	Field("Reserved", "string").
-	Field("DatabaseName", "string").
-	Field("SchemaName", "string").
-	Field("Owner", "string").
-	Field("Comment", "string").
-	Field("Text", "string").
-	Field("IsSecure", "bool").
-	Field("IsMaterialized", "bool").
-	Field("OwnerRoleType", "string").
-	Field("ChangeTracking", "string")
+	Text("CreatedOn").
+	Text("Name").
+	Text("Kind").
+	Text("Reserved").
+	Text("DatabaseName").
+	Text("SchemaName").
+	Text("Owner").
+	Text("Comment").
+	Text("Text").
+	Bool("IsSecure").
+	Bool("IsMaterialized").
+	Text("OwnerRoleType").
+	Text("ChangeTracking")
 
 var viewDetailsDbRow = g.DbStruct("viewDetailsRow").
-	Field("name", "string").
+	Text("name").
 	Field("type", "DataType").
-	Field("kind", "string").
-	Field("null", "string").
-	Field("default", "sql.NullString").
-	Field("primary key", "string").
-	Field("unique key", "string").
-	Field("check", "sql.NullString").
-	Field("expression", "sql.NullString").
-	Field("comment", "sql.NullString").
-	Field("policy name", "sql.NullString")
+	Text("kind").
+	Text("null").
+	OptionalText("default").
+	Text("primary key").
+	Text("unique key").
+	OptionalText("check").
+	OptionalText("expression").
+	OptionalText("comment").
+	OptionalText("policy name")
 
 var viewDetails = g.PlainStruct("ViewDetails").
-	Field("Name", "string").
+	Text("Name").
 	Field("Type", "DataType").
-	Field("Kind", "string").
-	Field("IsNullable", "bool").
-	Field("Default", "*string").
-	Field("IsPrimary", "bool").
-	Field("IsUnique", "bool").
-	Field("Check", "*bool").
-	Field("Expression", "*string").
-	Field("Comment", "*string").
-	Field("PolicyName", "*string")
+	Text("Kind").
+	Bool("IsNullable").
+	OptionalText("Default").
+	Bool("IsPrimary").
+	Bool("IsUnique").
+	OptionalBool("Check").
+	OptionalText("Expression").
+	OptionalText("Comment").
+	OptionalText("PolicyName")
 
 var viewColumn = g.NewQueryStruct("ViewColumn").
 	Text("Name", g.KeywordOptions().DoubleQuotes().Required()).
