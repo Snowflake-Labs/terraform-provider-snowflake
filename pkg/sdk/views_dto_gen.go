@@ -94,13 +94,13 @@ type ViewUnsetColumnMaskingPolicyRequest struct {
 }
 
 type ViewSetColumnTagsRequest struct {
-	Name    string // required
-	SetTags []TagAssociation
+	Name    string           // required
+	SetTags []TagAssociation // required
 }
 
 type ViewUnsetColumnTagsRequest struct {
-	Name      string // required
-	UnsetTags []ObjectIdentifier
+	Name      string             // required
+	UnsetTags []ObjectIdentifier // required
 }
 
 type DropViewRequest struct {

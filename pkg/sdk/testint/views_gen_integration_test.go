@@ -353,7 +353,7 @@ func TestInt_Views(t *testing.T) {
 		}
 
 		alterRequest := sdk.NewAlterViewRequest(id).WithSetTagsOnColumn(
-			sdk.NewViewSetColumnTagsRequest("id").WithSetTags(tags),
+			sdk.NewViewSetColumnTagsRequest("id", tags),
 		)
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -368,7 +368,7 @@ func TestInt_Views(t *testing.T) {
 		}
 
 		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetTagsOnColumn(
-			sdk.NewViewUnsetColumnTagsRequest("id").WithUnsetTags(unsetTags),
+			sdk.NewViewUnsetColumnTagsRequest("id", unsetTags),
 		)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)

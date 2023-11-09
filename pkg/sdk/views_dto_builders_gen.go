@@ -263,28 +263,22 @@ func NewViewUnsetColumnMaskingPolicyRequest(
 
 func NewViewSetColumnTagsRequest(
 	Name string,
+	SetTags []TagAssociation,
 ) *ViewSetColumnTagsRequest {
 	s := ViewSetColumnTagsRequest{}
 	s.Name = Name
-	return &s
-}
-
-func (s *ViewSetColumnTagsRequest) WithSetTags(SetTags []TagAssociation) *ViewSetColumnTagsRequest {
 	s.SetTags = SetTags
-	return s
+	return &s
 }
 
 func NewViewUnsetColumnTagsRequest(
 	Name string,
+	UnsetTags []ObjectIdentifier,
 ) *ViewUnsetColumnTagsRequest {
 	s := ViewUnsetColumnTagsRequest{}
 	s.Name = Name
-	return &s
-}
-
-func (s *ViewUnsetColumnTagsRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *ViewUnsetColumnTagsRequest {
 	s.UnsetTags = UnsetTags
-	return s
+	return &s
 }
 
 func NewDropViewRequest(
