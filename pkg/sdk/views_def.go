@@ -67,18 +67,18 @@ var viewColumn = g.NewQueryStruct("ViewColumn").
 var viewColumnMaskingPolicy = g.NewQueryStruct("ViewColumnMaskingPolicy").
 	Text("Name", g.KeywordOptions().Required()).
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
-	List("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
+	ListWithParens("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
 	WithTags()
 
 var viewRowAccessPolicy = g.NewQueryStruct("ViewRowAccessPolicy").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
-	List("ON", g.KindOfT[string](), g.ListOptions().Required()). // TODO: double quotes here?
+	ListWithParens("ON", g.KindOfT[string](), g.ListOptions().Required()). // TODO: double quotes here?
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
 var viewAddRowAccessPolicy = g.NewQueryStruct("ViewAddRowAccessPolicy").
 	SQL("ADD").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
-	List("ON", g.KindOfT[string](), g.ListOptions().Required()). // TODO: double quotes here?
+	ListWithParens("ON", g.KindOfT[string](), g.ListOptions().Required()). // TODO: double quotes here?
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
 var viewDropRowAccessPolicy = g.NewQueryStruct("ViewDropRowAccessPolicy").
@@ -97,7 +97,7 @@ var viewSetColumnMaskingPolicy = g.NewQueryStruct("ViewSetColumnMaskingPolicy").
 	Text("Name", g.KeywordOptions().Required()).
 	SQL("SET").
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
-	List("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
+	ListWithParens("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
 	OptionalSQL("FORCE")
 
 var viewUnsetColumnMaskingPolicy = g.NewQueryStruct("ViewUnsetColumnMaskingPolicy").

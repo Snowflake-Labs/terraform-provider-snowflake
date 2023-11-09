@@ -62,18 +62,8 @@ func (v *QueryStruct) OptionalSessionParametersUnset() *QueryStruct {
 	return v
 }
 
-func (v *QueryStruct) List(sqlPrefix string, listItemKind string, transformer *ListTransformer) *QueryStruct {
-	if transformer != nil {
-		transformer = transformer.Parentheses().SQL(sqlPrefix)
-	} else {
-		transformer = ListOptions().Parentheses().SQL(sqlPrefix)
-	}
-	v.fields = append(v.fields, NewField(sqlToFieldName(sqlPrefix, true), KindOfSlice(listItemKind), Tags().Keyword(), transformer))
-	return v
-}
-
 func (v *QueryStruct) WithTags() *QueryStruct {
-	v.List("TAG", "TagAssociation", nil)
+	v.fields = append(v.fields, NewField("Tag", "[]TagAssociation", Tags().Keyword().Parentheses().SQL("TAG"), nil))
 	return v
 }
 
