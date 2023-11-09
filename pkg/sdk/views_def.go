@@ -7,7 +7,7 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 var viewDbRow = g.DbStruct("viewDBRow").
 	Text("created_on").
 	Text("name").
-	OptionalText("name").
+	OptionalText("kind").
 	OptionalText("reserved").
 	Text("database_name").
 	Text("schema_name").
