@@ -166,8 +166,8 @@ var ViewsDef = g.NewInterface(
 			OptionalSQL("SET SECURE").
 			OptionalBooleanAssignment("SET CHANGE_TRACKING", nil).
 			OptionalSQL("UNSET SECURE").
-			SetTags().
-			UnsetTags().
+			OptionalSetTags().
+			OptionalUnsetTags().
 			OptionalQueryStructField("AddRowAccessPolicy", viewAddRowAccessPolicy, g.KeywordOptions()).
 			OptionalQueryStructField("DropRowAccessPolicy", viewDropRowAccessPolicy, g.KeywordOptions()).
 			OptionalQueryStructField("DropAndAddRowAccessPolicy", viewDropAndAddRowAccessPolicy, g.ListOptions().NoParentheses()).

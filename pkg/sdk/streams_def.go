@@ -158,8 +158,8 @@ var (
 				Name().
 				OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
 				OptionalSQL("UNSET COMMENT").
-				SetTags().
-				UnsetTags().
+				OptionalSetTags().
+				OptionalUnsetTags().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ConflictingFields, "IfExists", "UnsetTags").
 				WithValidation(g.ExactlyOneValueSet, "SetComment", "UnsetComment", "SetTags", "UnsetTags"),

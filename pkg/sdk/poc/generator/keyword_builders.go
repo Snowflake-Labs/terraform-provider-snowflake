@@ -68,11 +68,21 @@ func (v *QueryStruct) WithTags() *QueryStruct {
 }
 
 func (v *QueryStruct) SetTags() *QueryStruct {
+	v.fields = append(v.fields, NewField("SetTags", "[]TagAssociation", Tags().Keyword().SQL("SET TAG"), KeywordOptions().Required()))
+	return v
+}
+
+func (v *QueryStruct) OptionalSetTags() *QueryStruct {
 	v.fields = append(v.fields, NewField("SetTags", "[]TagAssociation", Tags().Keyword().SQL("SET TAG"), nil))
 	return v
 }
 
 func (v *QueryStruct) UnsetTags() *QueryStruct {
+	v.fields = append(v.fields, NewField("UnsetTags", "[]ObjectIdentifier", Tags().Keyword().SQL("UNSET TAG"), KeywordOptions().Required()))
+	return v
+}
+
+func (v *QueryStruct) OptionalUnsetTags() *QueryStruct {
 	v.fields = append(v.fields, NewField("UnsetTags", "[]ObjectIdentifier", Tags().Keyword().SQL("UNSET TAG"), nil))
 	return v
 }
