@@ -578,7 +578,7 @@ func (tb *TableBuilder) ChangeColumnMaskingPolicy(name string, maskingPolicy str
 	if strings.TrimSpace(maskingPolicy) == "" {
 		return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" UNSET MASKING POLICY`, tb.QualifiedName(), EscapeString(name))
 	}
-	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" SET MASKING POLICY %v`, tb.QualifiedName(), EscapeString(name), EscapeString(maskingPolicy))
+	return fmt.Sprintf(`ALTER TABLE %s MODIFY COLUMN "%v" SET MASKING POLICY %v FORCE`, tb.QualifiedName(), EscapeString(name), EscapeString(maskingPolicy))
 }
 
 func (tb *TableBuilder) DropColumnDefault(name string) string {

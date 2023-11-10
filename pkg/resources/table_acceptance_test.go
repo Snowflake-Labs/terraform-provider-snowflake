@@ -420,6 +420,47 @@ func TestAcc_Table(t *testing.T) {
 	})
 }
 
+func TestAcc_TableWithMaskingPolicy(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	pol1Name := fmt.Sprintf("pol_%s_1", accName)
+	pol2Name := fmt.Sprintf("pol_%s_2", accName)
+	resource.ParallelTest(t, resource.TestCase{
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: tableConfigWithMaskingPolicy(accName,
+					acc.TestDatabaseName,
+					acc.TestSchemaName,
+					"pol1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.pol1", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.pol1", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.pol1", "name", pol1Name),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.pol2", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.pol2", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.pol2", "name", pol2Name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", fmt.Sprintf("\"%s\".\"%s\".\"%s\"", acc.TestDatabaseName, acc.TestSchemaName, pol1Name)),
+				),
+				Destroy: false,
+			},
+			{
+				Config: tableConfigWithMaskingPolicy(accName,
+					acc.TestDatabaseName,
+					acc.TestSchemaName,
+					"pol2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", fmt.Sprintf("\"%s\".\"%s\".\"%s\"", acc.TestDatabaseName, acc.TestSchemaName, pol2Name)),
+				),
+			},
+		},
+	})
+}
+
 func tableAndDataRetentionParameterConfigWithoutLifecycle(name string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_table" "test_table" {
@@ -541,6 +582,57 @@ resource "snowflake_table" "test_table" {
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName)
+}
+
+func tableConfigWithMaskingPolicy(name string,
+	databaseName string,
+	schemaName string,
+	maskingPolicyToApply string,
+) string {
+	s := `
+resource "snowflake_masking_policy" "pol1" {
+	name     = "pol_%[1]s_1"
+	database = "%[2]s"
+	schema   = "%[3]s"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
+	}
+	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+	return_data_type = "VARCHAR"
+	comment = "Masking policy test1 comment"
+}
+
+resource "snowflake_masking_policy" "pol2" {
+	name     = "pol_%[1]s_2"
+	database = "%[2]s"
+	schema   = "%[3]s"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
+	}
+	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+	return_data_type = "VARCHAR"
+	comment = "Masking policy test2 comment"
+}
+
+resource "snowflake_table" "test_table" {
+	name     = "%[1]s"
+	database = "%[2]s"
+	schema   = "%[3]s"
+	comment  = "Terraform acceptance test"
+	column {
+		name = "column1"
+		type = "VARCHAR(16)"
+		masking_policy = snowflake_masking_policy.%s.qualified_name
+	}
+}
+`
+	return fmt.Sprintf(s, name, databaseName, schemaName, maskingPolicyToApply)
 }
 
 func tableConfig2(name string, databaseName string, schemaName string) string {
