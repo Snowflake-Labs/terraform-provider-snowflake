@@ -352,7 +352,9 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 			opts.CSVFileExtension = sdk.String(v.(string))
 		}
 		opts.CSVParseHeader = sdk.Bool(d.Get("parse_header").(bool))
-		opts.CSVSkipHeader = sdk.Int(d.Get("skip_header").(int))
+		if v, ok := d.GetOk("skip_header"); ok {
+			opts.CSVSkipHeader = sdk.Int(v.(int))
+		}
 		opts.CSVSkipBlankLines = sdk.Bool(d.Get("skip_blank_lines").(bool))
 		if v, ok := d.GetOk("date_format"); ok {
 			opts.CSVDateFormat = sdk.String(v.(string))

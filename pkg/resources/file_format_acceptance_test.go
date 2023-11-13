@@ -28,7 +28,7 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "record_delimiter", "\r"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "field_delimiter", ";"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "file_extension", ".ssv"),
-					resource.TestCheckResourceAttr("snowflake_file_format.test", "skip_header", "1"),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "parse_header", "true"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "skip_blank_lines", "true"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "date_format", "YYY-MM-DD"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "time_format", "HH24:MI"),
@@ -374,7 +374,7 @@ resource "snowflake_file_format" "test" {
 	record_delimiter = "\r"
 	field_delimiter = ";"
 	file_extension = ".ssv"
-	skip_header = 1
+	parse_header = true
 	skip_blank_lines = true
 	date_format = "YYY-MM-DD"
 	time_format = "HH24:MI"
