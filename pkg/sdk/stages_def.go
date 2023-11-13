@@ -272,8 +272,8 @@ var StagesDef = g.NewInterface(
 			IfExists().
 			Name().
 			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
-			List("SetTags", g.KindOfT[TagAssociation](), g.KeywordOptions().SQL("SET TAG")).
-			List("UnsetTags", g.KindOfT[ObjectIdentifier](), g.KeywordOptions().SQL("UNSET TAG")).
+			NamedList("SET TAG", g.KindOfT[TagAssociation]()).
+			NamedList("UNSET TAG", g.KindOfT[ObjectIdentifier]()).
 			WithValidation(g.ValidIdentifierIfSet, "RenameTo").
 			WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetTags", "UnsetTags").
 			WithValidation(g.ConflictingFields, "IfExists", "UnsetTags").
