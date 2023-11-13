@@ -62,18 +62,43 @@ func (v *QueryStruct) OptionalSessionParametersUnset() *QueryStruct {
 	return v
 }
 
-func (v *QueryStruct) WithTags() *QueryStruct {
-	v.fields = append(v.fields, NewField("Tag", "[]TagAssociation", Tags().Keyword().Parentheses().SQL("TAG"), nil))
+func (v *QueryStruct) NamedListWithParens(sqlPrefix string, listItemKind string, transformer *KeywordTransformer) *QueryStruct {
+	if transformer != nil {
+		transformer = transformer.Parentheses().SQL(sqlPrefix)
+	} else {
+		transformer = KeywordOptions().Parentheses().SQL(sqlPrefix)
+	}
+	v.fields = append(v.fields, NewField(sqlToFieldName(sqlPrefix, true), KindOfSlice(listItemKind), Tags().Keyword(), transformer))
 	return v
 }
 
+func (v *QueryStruct) WithTags() *QueryStruct {
+	return v.NamedListWithParens("TAG", "TagAssociation", nil)
+}
+
 func (v *QueryStruct) SetTags() *QueryStruct {
-	v.fields = append(v.fields, NewField("SetTags", "[]TagAssociation", Tags().Keyword().SQL("SET TAG"), nil))
+	return v.setTags(KeywordOptions().Required())
+}
+
+func (v *QueryStruct) OptionalSetTags() *QueryStruct {
+	return v.setTags(nil)
+}
+
+func (v *QueryStruct) setTags(transformer *KeywordTransformer) *QueryStruct {
+	v.fields = append(v.fields, NewField("SetTags", "[]TagAssociation", Tags().Keyword().SQL("SET TAG"), transformer))
 	return v
 }
 
 func (v *QueryStruct) UnsetTags() *QueryStruct {
-	v.fields = append(v.fields, NewField("UnsetTags", "[]ObjectIdentifier", Tags().Keyword().SQL("UNSET TAG"), nil))
+	return v.unsetTags(KeywordOptions().Required())
+}
+
+func (v *QueryStruct) OptionalUnsetTags() *QueryStruct {
+	return v.unsetTags(nil)
+}
+
+func (v *QueryStruct) unsetTags(transformer *KeywordTransformer) *QueryStruct {
+	v.fields = append(v.fields, NewField("UnsetTags", "[]ObjectIdentifier", Tags().Keyword().SQL("UNSET TAG"), transformer))
 	return v
 }
 

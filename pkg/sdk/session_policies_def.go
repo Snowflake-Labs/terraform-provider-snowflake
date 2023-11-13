@@ -40,8 +40,8 @@ var SessionPoliciesDef = g.NewInterface(
 					WithValidation(g.AtLeastOneValueSet, "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"),
 				g.KeywordOptions().SQL("SET"),
 			).
-			SetTags().
-			UnsetTags().
+			OptionalSetTags().
+			OptionalUnsetTags().
 			OptionalQueryStructField(
 				"Unset",
 				g.NewQueryStruct("SessionPolicyUnset").
