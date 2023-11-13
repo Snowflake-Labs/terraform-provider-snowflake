@@ -83,8 +83,7 @@ func (v *QueryStruct) OptionalSetTags() *QueryStruct {
 }
 
 func (v *QueryStruct) setTags(transformer *KeywordTransformer) *QueryStruct {
-	v.fields = append(v.fields, NewField("SetTags", "[]TagAssociation", Tags().Keyword().SQL("SET TAG"), transformer))
-	return v
+	return v.PredefinedQueryStructField("SetTags", "[]TagAssociation", transformer)
 }
 
 func (v *QueryStruct) UnsetTags() *QueryStruct {
@@ -96,8 +95,7 @@ func (v *QueryStruct) OptionalUnsetTags() *QueryStruct {
 }
 
 func (v *QueryStruct) unsetTags(transformer *KeywordTransformer) *QueryStruct {
-	v.fields = append(v.fields, NewField("UnsetTags", "[]ObjectIdentifier", Tags().Keyword().SQL("UNSET TAG"), transformer))
-	return v
+	return v.PredefinedQueryStructField("UnsetTags", "[]ObjectIdentifier", transformer)
 }
 
 func (v *QueryStruct) OptionalLike() *QueryStruct {
