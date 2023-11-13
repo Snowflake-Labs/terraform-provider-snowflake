@@ -100,7 +100,7 @@ func TestStages_CreateOnS3(t *testing.T) {
 		opts.ExternalStageParams = &ExternalS3StageParams{
 			StorageIntegration: &integrationId,
 			Credentials: &ExternalStageS3Credentials{
-				AwsRole: String("aws-role"),
+				AWSRole: String("aws-role"),
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
@@ -110,8 +110,8 @@ func TestStages_CreateOnS3(t *testing.T) {
 		opts := defaultOpts()
 		opts.ExternalStageParams = &ExternalS3StageParams{
 			Credentials: &ExternalStageS3Credentials{
-				AwsKeyId: String("aws-key-id"),
-				AwsRole:  String("aws-role"),
+				AWSKeyId: String("aws-key-id"),
+				AWSRole:  String("aws-role"),
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams.Credentials", "AwsKeyId", "AwsRole"))
@@ -144,9 +144,9 @@ func TestStages_CreateOnS3(t *testing.T) {
 		opts.ExternalStageParams = &ExternalS3StageParams{
 			Url: "some url",
 			Credentials: &ExternalStageS3Credentials{
-				AwsKeyId:     String("aws-key-id"),
-				AwsSecretKey: String("aws-secret-key"),
-				AwsToken:     String("aws-token"),
+				AWSKeyId:     String("aws-key-id"),
+				AWSSecretKey: String("aws-secret-key"),
+				AWSToken:     String("aws-token"),
 			},
 		}
 		opts.DirectoryTableOptions = &ExternalS3DirectoryTableOptions{
@@ -313,8 +313,8 @@ func TestStages_CreateOnS3Compatible(t *testing.T) {
 		opts.Url = "some url"
 		opts.Endpoint = "some endpoint"
 		opts.Credentials = &ExternalStageS3CompatibleCredentials{
-			AwsKeyId:     String("aws-key-id"),
-			AwsSecretKey: String("aws-secret-key"),
+			AWSKeyId:     String("aws-key-id"),
+			AWSSecretKey: String("aws-secret-key"),
 		}
 		opts.FileFormat = &StageFileFormat{
 			Type: &FileFormatTypeCSV,
@@ -471,7 +471,7 @@ func TestStages_AlterExternalS3Stage(t *testing.T) {
 		opts.ExternalStageParams = &ExternalS3StageParams{
 			StorageIntegration: &integrationId,
 			Credentials: &ExternalStageS3Credentials{
-				AwsRole: String("aws-role"),
+				AWSRole: String("aws-role"),
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
@@ -481,8 +481,8 @@ func TestStages_AlterExternalS3Stage(t *testing.T) {
 		opts := defaultOpts()
 		opts.ExternalStageParams = &ExternalS3StageParams{
 			Credentials: &ExternalStageS3Credentials{
-				AwsKeyId: String("aws-key-id"),
-				AwsRole:  String("aws-role"),
+				AWSKeyId: String("aws-key-id"),
+				AWSRole:  String("aws-role"),
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams.Credentials", "AwsKeyId", "AwsRole"))

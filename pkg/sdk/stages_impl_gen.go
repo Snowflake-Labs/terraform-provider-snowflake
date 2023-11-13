@@ -173,10 +173,10 @@ func (r *CreateOnS3StageRequest) toOpts() *CreateOnS3StageOptions {
 		}
 		if r.ExternalStageParams.Credentials != nil {
 			opts.ExternalStageParams.Credentials = &ExternalStageS3Credentials{
-				AwsKeyId:     r.ExternalStageParams.Credentials.AwsKeyId,
-				AwsSecretKey: r.ExternalStageParams.Credentials.AwsSecretKey,
-				AwsToken:     r.ExternalStageParams.Credentials.AwsToken,
-				AwsRole:      r.ExternalStageParams.Credentials.AwsRole,
+				AWSKeyId:     r.ExternalStageParams.Credentials.AWSKeyId,
+				AWSSecretKey: r.ExternalStageParams.Credentials.AWSSecretKey,
+				AWSToken:     r.ExternalStageParams.Credentials.AWSToken,
+				AWSRole:      r.ExternalStageParams.Credentials.AWSRole,
 			}
 		}
 		if r.ExternalStageParams.Encryption != nil {
@@ -357,8 +357,8 @@ func (r *CreateOnS3CompatibleStageRequest) toOpts() *CreateOnS3CompatibleStageOp
 	}
 	if r.Credentials != nil {
 		opts.Credentials = &ExternalStageS3CompatibleCredentials{
-			AwsKeyId:     r.Credentials.AwsKeyId,
-			AwsSecretKey: r.Credentials.AwsSecretKey,
+			AWSKeyId:     r.Credentials.AWSKeyId,
+			AWSSecretKey: r.Credentials.AWSSecretKey,
 		}
 	}
 	if r.DirectoryTableOptions != nil {
@@ -456,10 +456,10 @@ func (r *AlterExternalS3StageStageRequest) toOpts() *AlterExternalS3StageStageOp
 		}
 		if r.ExternalStageParams.Credentials != nil {
 			opts.ExternalStageParams.Credentials = &ExternalStageS3Credentials{
-				AwsKeyId:     r.ExternalStageParams.Credentials.AwsKeyId,
-				AwsSecretKey: r.ExternalStageParams.Credentials.AwsSecretKey,
-				AwsToken:     r.ExternalStageParams.Credentials.AwsToken,
-				AwsRole:      r.ExternalStageParams.Credentials.AwsRole,
+				AWSKeyId:     r.ExternalStageParams.Credentials.AWSKeyId,
+				AWSSecretKey: r.ExternalStageParams.Credentials.AWSSecretKey,
+				AWSToken:     r.ExternalStageParams.Credentials.AWSToken,
+				AWSRole:      r.ExternalStageParams.Credentials.AWSRole,
 			}
 		}
 		if r.ExternalStageParams.Encryption != nil {

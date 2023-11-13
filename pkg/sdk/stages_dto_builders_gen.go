@@ -242,22 +242,22 @@ func NewExternalStageS3CredentialsRequest() *ExternalStageS3CredentialsRequest {
 }
 
 func (s *ExternalStageS3CredentialsRequest) WithAwsKeyId(AwsKeyId *string) *ExternalStageS3CredentialsRequest {
-	s.AwsKeyId = AwsKeyId
+	s.AWSKeyId = AwsKeyId
 	return s
 }
 
 func (s *ExternalStageS3CredentialsRequest) WithAwsSecretKey(AwsSecretKey *string) *ExternalStageS3CredentialsRequest {
-	s.AwsSecretKey = AwsSecretKey
+	s.AWSSecretKey = AwsSecretKey
 	return s
 }
 
 func (s *ExternalStageS3CredentialsRequest) WithAwsToken(AwsToken *string) *ExternalStageS3CredentialsRequest {
-	s.AwsToken = AwsToken
+	s.AWSToken = AwsToken
 	return s
 }
 
 func (s *ExternalStageS3CredentialsRequest) WithAwsRole(AwsRole *string) *ExternalStageS3CredentialsRequest {
-	s.AwsRole = AwsRole
+	s.AWSRole = AwsRole
 	return s
 }
 
@@ -589,8 +589,8 @@ func NewExternalStageS3CompatibleCredentialsRequest(
 	AwsSecretKey *string,
 ) *ExternalStageS3CompatibleCredentialsRequest {
 	s := ExternalStageS3CompatibleCredentialsRequest{}
-	s.AwsKeyId = AwsKeyId
-	s.AwsSecretKey = AwsSecretKey
+	s.AWSKeyId = AwsKeyId
+	s.AWSSecretKey = AwsSecretKey
 	return &s
 }
 

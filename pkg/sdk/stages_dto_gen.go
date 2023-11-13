@@ -85,10 +85,10 @@ type ExternalS3StageParamsRequest struct {
 }
 
 type ExternalStageS3CredentialsRequest struct {
-	AwsKeyId     *string
-	AwsSecretKey *string
-	AwsToken     *string
-	AwsRole      *string
+	AWSKeyId     *string
+	AWSSecretKey *string
+	AWSToken     *string
+	AWSRole      *string
 }
 
 type ExternalStageS3EncryptionRequest struct {
@@ -186,8 +186,8 @@ type CreateOnS3CompatibleStageRequest struct {
 }
 
 type ExternalStageS3CompatibleCredentialsRequest struct {
-	AwsKeyId     *string // required
-	AwsSecretKey *string // required
+	AWSKeyId     *string // required
+	AWSSecretKey *string // required
 }
 
 type AlterStageRequest struct {

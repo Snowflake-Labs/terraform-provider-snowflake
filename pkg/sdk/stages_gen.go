@@ -96,10 +96,10 @@ type ExternalS3StageParams struct {
 }
 
 type ExternalStageS3Credentials struct {
-	AwsKeyId     *string `ddl:"parameter,single_quotes" sql:"AWS_KEY_ID"`
-	AwsSecretKey *string `ddl:"parameter,single_quotes" sql:"AWS_SECRET_KEY"`
-	AwsToken     *string `ddl:"parameter,single_quotes" sql:"AWS_TOKEN"`
-	AwsRole      *string `ddl:"parameter,single_quotes" sql:"AWS_ROLE"`
+	AWSKeyId     *string `ddl:"parameter,single_quotes" sql:"AWS_KEY_ID"`
+	AWSSecretKey *string `ddl:"parameter,single_quotes" sql:"AWS_SECRET_KEY"`
+	AWSToken     *string `ddl:"parameter,single_quotes" sql:"AWS_TOKEN"`
+	AWSRole      *string `ddl:"parameter,single_quotes" sql:"AWS_ROLE"`
 }
 
 type ExternalStageS3Encryption struct {
@@ -206,8 +206,8 @@ type CreateOnS3CompatibleStageOptions struct {
 }
 
 type ExternalStageS3CompatibleCredentials struct {
-	AwsKeyId     *string `ddl:"parameter,single_quotes" sql:"AWS_KEY_ID"`
-	AwsSecretKey *string `ddl:"parameter,single_quotes" sql:"AWS_SECRET_KEY"`
+	AWSKeyId     *string `ddl:"parameter,single_quotes" sql:"AWS_KEY_ID"`
+	AWSSecretKey *string `ddl:"parameter,single_quotes" sql:"AWS_SECRET_KEY"`
 }
 
 // AlterStageOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-stage.

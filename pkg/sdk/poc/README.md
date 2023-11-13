@@ -100,8 +100,12 @@ find a better solution to solve the issue (add more logic to the templates ?)
 - generate getters for requests, at least for identifier/name
 - generate integration tests in child package (because now we keep them in `testint` package)
 - struct_to_builder is not supporting templated-like values. See stages_def.go where in SQL there could be value, where 'n' can be replaced with any number
-  - SKIP_FILE_n - this looks more like keyword without a space between SQL prefix and int
-  - SKIP_FILE_n% (e.g. SKIP_FILE_123%) - this is more template-like behaviour, notice that 'n' is inside the value (we cannot reproduce that right now with struct_to_builder capabilities)
+  - `SKIP_FILE_n` - this looks more like keyword without a space between SQL prefix and int
+  - `SKIP_FILE_n%` (e.g. `SKIP_FILE_123%`) - this is more template-like behaviour, notice that 'n' is inside the value (we cannot reproduce that right now with struct_to_builder capabilities)
+- fix builder generation 
+  - we can add `flatten` option in cases where some sql structs had to be nested to create correct sql representation
+    - for example encryption options in `stages_def.go` (instead of calling `.WithEncryption(NewEncryptionRequest(encryption))` we could call `.WithEncryption(encryption)`)
+  - operation names (or their sql struct names) should dictate more how constructors are made
 
 ##### Known issues
 - generating two converts when Show and Desc use the same data structure
