@@ -104,7 +104,7 @@ Integration status - indicates if given resource / datasource is using new SDK.
 | Function                            | ❌                    | snowflake_function                             | snowflake_function            | ❌                  |
 | External Function                   | ❌                    | snowflake_external_function                    | snowflake_external_function   | ❌                  |
 | Stored Procedure                    | ❌                    | snowflake_stored_procedure                     | snowflake_stored_procedure    | ❌                  |
-| Stream                              | ✅                    | snowflake_stream                               | snowflake_stream              | ❌                  |
+| Stream                              | ✅                    | snowflake_stream                               | snowflake_stream              | ✅                  |
 | Task                                | ✅                    | snowflake_task                                 | snowflake_task                | ❌                  |
 | Masking Policy                      | ✅                    | snowflake_masking_policy                       | snowflake_masking_policy      | ✅                  |
 | Row Access Policy                   | ❌                    | snowflake_row_access_policy                    | snowflake_row_access_policy   | ❌                  |

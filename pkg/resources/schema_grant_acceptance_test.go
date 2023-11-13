@@ -13,13 +13,13 @@ import (
 func TestAcc_SchemaGrant(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: schemaGrantConfig(name, normal),
+				Config: schemaGrantConfig(name, normal, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "schema_name", name),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_all", "false"),
@@ -29,7 +29,7 @@ func TestAcc_SchemaGrant(t *testing.T) {
 			},
 			// FUTURE SHARES
 			{
-				Config: schemaGrantConfig(name, onFuture),
+				Config: schemaGrantConfig(name, onFuture, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr("snowflake_schema_grant.test", "schema_name"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_all", "false"),
@@ -53,13 +53,13 @@ func TestAcc_SchemaGrant(t *testing.T) {
 func TestAcc_SchemaGrantOnAll(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: schemaGrantConfig(name, onAll),
+				Config: schemaGrantConfig(name, onAll, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr("snowflake_schema_grant.test", "schema_name"),
 					resource.TestCheckResourceAttr("snowflake_schema_grant.test", "on_all", "true"),
@@ -71,7 +71,7 @@ func TestAcc_SchemaGrantOnAll(t *testing.T) {
 	})
 }
 
-func schemaGrantConfig(name string, grantType grantType) string {
+func schemaGrantConfig(name string, grantType grantType, databaseName string) string {
 	var schemaNameConfig string
 	switch grantType {
 	case normal:
@@ -83,13 +83,9 @@ func schemaGrantConfig(name string, grantType grantType) string {
 	}
 
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-  name = "%v"
-}
-
 resource "snowflake_schema" "test" {
   name      = "%v"
-  database  = snowflake_database.test.name
+  database  = "%s"
   comment   = "Terraform acceptance test"
 }
 
@@ -102,14 +98,14 @@ resource "snowflake_share" "test" {
 }
 
 resource "snowflake_database_grant" "test" {
-  database_name = snowflake_schema.test.database
+  database_name = "%s"
   shares        = [snowflake_share.test.name]
 }
 
 resource "snowflake_schema_grant" "test" {
-  database_name = snowflake_schema.test.database
+  database_name = "%s"
   %v
   roles         = [snowflake_role.test.name]
 }
-`, name, name, name, name, schemaNameConfig)
+`, name, databaseName, name, name, databaseName, databaseName, schemaNameConfig)
 }

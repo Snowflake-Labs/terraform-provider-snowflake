@@ -64,7 +64,6 @@ var viewSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		Description:      "Specifies the query used to create the view.",
-		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
 	"created_on": {
@@ -81,7 +80,7 @@ func normalizeQuery(str string) string {
 
 // DiffSuppressStatement will suppress diffs between statements if they differ in only case or in
 // runs of whitespace (\s+ = \s). This is needed because the snowflake api does not faithfully
-// round-trip queries so we cannot do a simple character-wise comparison to detect changes.
+// round-trip queries, so we cannot do a simple character-wise comparison to detect changes.
 //
 // Warnings: We will have false positives in cases where a change in case or run of whitespace is
 // semantically significant.
@@ -279,11 +278,38 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	schema := viewID.SchemaName
 	view := viewID.ViewName
 	builder := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema)
-
 	db := meta.(*sql.DB)
+
+	// The only way to update the statement field in a view is to perform create or replace with the new statement.
+	// In case of any statement change, create or replace will be performed with all the old parameters, except statement
+	// and copy grants (which is always set to true to keep the permissions from the previous state).
+	if d.HasChange("statement") {
+		isSecureOld, _ := d.GetChange("is_secure")
+		commentOld, _ := d.GetChange("comment")
+		tagsOld, _ := d.GetChange("tag")
+
+		if isSecureOld.(bool) {
+			builder.WithSecure()
+		}
+
+		query, err := builder.
+			WithReplace().
+			WithStatement(d.Get("statement").(string)).
+			WithCopyGrants().
+			WithComment(commentOld.(string)).
+			WithTags(getTags(tagsOld).toSnowflakeTagValues()).
+			Create()
+		if err != nil {
+			return fmt.Errorf("error when building sql query on %v, err = %w", d.Id(), err)
+		}
+
+		if err := snowflake.Exec(db, query); err != nil {
+			return fmt.Errorf("error when changing property on %v and performing create or replace to update view statements, err = %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("name") {
 		name := d.Get("name")
-
 		q, err := builder.Rename(name.(string))
 		if err != nil {
 			return err
@@ -291,7 +317,6 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 		if err = snowflake.Exec(db, q); err != nil {
 			return fmt.Errorf("error renaming view %v", d.Id())
 		}
-
 		viewID := &ViewID{
 			DatabaseName: dbName,
 			SchemaName:   schema,
@@ -305,9 +330,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("comment") {
-		comment := d.Get("comment")
-
-		if c := comment.(string); c == "" {
+		if comment := d.Get("comment").(string); comment == "" {
 			q, err := builder.RemoveComment()
 			if err != nil {
 				return err
@@ -316,7 +339,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error unsetting comment for view %v", d.Id())
 			}
 		} else {
-			q, err := builder.ChangeComment(c)
+			q, err := builder.ChangeComment(comment)
 			if err != nil {
 				return err
 			}
@@ -325,10 +348,9 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	if d.HasChange("is_secure") {
-		secure := d.Get("is_secure")
 
-		if secure.(bool) {
+	if d.HasChange("is_secure") {
+		if d.Get("is_secure").(bool) {
 			q, err := builder.Secure()
 			if err != nil {
 				return err
@@ -346,6 +368,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
+
 	tagChangeErr := handleTagChanges(db, d, builder)
 	if tagChangeErr != nil {
 		return tagChangeErr

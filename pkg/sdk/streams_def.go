@@ -5,12 +5,12 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var (
-	onStreamDef = g.QueryStruct("OnStream").
+	onStreamDef = g.NewQueryStruct("OnStream").
 			OptionalSQL("AT").
 			OptionalSQL("BEFORE").
 			QueryStructField(
 			"Statement",
-			g.QueryStruct("OnStreamStatement").
+			g.NewQueryStruct("OnStreamStatement").
 				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals()).
 				OptionalTextAssignment("OFFSET", g.ParameterOptions().ArrowEquals()).
 				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals()).
@@ -64,7 +64,7 @@ var (
 		CustomOperation(
 			"CreateOnTable",
 			"https://docs.snowflake.com/en/sql-reference/sql/create-stream",
-			g.QueryStruct("CreateStreamOnTable").
+			g.NewQueryStruct("CreateStreamOnTable").
 				Create().
 				OrReplace().
 				SQL("STREAM").
@@ -84,7 +84,7 @@ var (
 		CustomOperation(
 			"CreateOnExternalTable",
 			"https://docs.snowflake.com/en/sql-reference/sql/create-stream",
-			g.QueryStruct("CreateStreamOnExternalTable").
+			g.NewQueryStruct("CreateStreamOnExternalTable").
 				Create().
 				OrReplace().
 				SQL("STREAM").
@@ -103,7 +103,7 @@ var (
 		CustomOperation(
 			"CreateOnDirectoryTable",
 			"https://docs.snowflake.com/en/sql-reference/sql/create-stream",
-			g.QueryStruct("CreateStreamOnDirectoryTable").
+			g.NewQueryStruct("CreateStreamOnDirectoryTable").
 				Create().
 				OrReplace().
 				SQL("STREAM").
@@ -120,7 +120,7 @@ var (
 		CustomOperation(
 			"CreateOnView",
 			"https://docs.snowflake.com/en/sql-reference/sql/create-stream",
-			g.QueryStruct("CreateStreamOnView").
+			g.NewQueryStruct("CreateStreamOnView").
 				Create().
 				OrReplace().
 				SQL("STREAM").
@@ -140,7 +140,7 @@ var (
 		CustomOperation(
 			"Clone",
 			"https://docs.snowflake.com/en/sql-reference/sql/create-stream#variant-syntax",
-			g.QueryStruct("CloneStream").
+			g.NewQueryStruct("CloneStream").
 				Create().
 				OrReplace().
 				SQL("STREAM").
@@ -151,22 +151,22 @@ var (
 		).
 		AlterOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/alter-stream",
-			g.QueryStruct("AlterStream").
+			g.NewQueryStruct("AlterStream").
 				Alter().
 				SQL("STREAM").
 				IfExists().
 				Name().
 				OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
 				OptionalSQL("UNSET COMMENT").
-				SetTags().
-				UnsetTags().
+				OptionalSetTags().
+				OptionalUnsetTags().
 				WithValidation(g.ValidIdentifier, "name").
 				WithValidation(g.ConflictingFields, "IfExists", "UnsetTags").
 				WithValidation(g.ExactlyOneValueSet, "SetComment", "UnsetComment", "SetTags", "UnsetTags"),
 		).
 		DropOperation(
 			"https://docs.snowflake.com/en/sql-reference/sql/drop-stream",
-			g.QueryStruct("DropStream").
+			g.NewQueryStruct("DropStream").
 				Drop().
 				SQL("STREAM").
 				IfExists().
@@ -177,7 +177,7 @@ var (
 			"https://docs.snowflake.com/en/sql-reference/sql/show-streams",
 			showStreamDbRowDef,
 			streamPlainStructDef,
-			g.QueryStruct("ShowStreams").
+			g.NewQueryStruct("ShowStreams").
 				Show().
 				Terse().
 				SQL("STREAMS").
@@ -192,7 +192,7 @@ var (
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-stream",
 			showStreamDbRowDef,
 			streamPlainStructDef,
-			g.QueryStruct("DescribeStream").
+			g.NewQueryStruct("DescribeStream").
 				Describe().
 				SQL("STREAM").
 				Name().

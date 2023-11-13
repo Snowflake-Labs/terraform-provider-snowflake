@@ -108,6 +108,9 @@ type CreateSchemaOptions struct {
 }
 
 func (opts *CreateSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
@@ -118,7 +121,7 @@ func (opts *CreateSchemaOptions) validate() error {
 		}
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("IfNotExists", "OrReplace"))
+		errs = append(errs, errOneOf("CreateSchemaOptions", "IfNotExists", "OrReplace"))
 	}
 	return errors.Join(errs...)
 }
@@ -149,18 +152,23 @@ type AlterSchemaOptions struct {
 	SwapWith DatabaseObjectIdentifier `ddl:"identifier" sql:"SWAP WITH"`
 	Set      *SchemaSet               `ddl:"list,no_parentheses" sql:"SET"`
 	Unset    *SchemaUnset             `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTag   []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
 	// One of
 	EnableManagedAccess  *bool `ddl:"keyword" sql:"ENABLE MANAGED ACCESS"`
 	DisableManagedAccess *bool `ddl:"keyword" sql:"DISABLE MANAGED ACCESS"`
 }
 
 func (opts *AlterSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.EnableManagedAccess, opts.DisableManagedAccess) {
-		errs = append(errs, errOneOf("NewName", "SwapWith", "Set", "Unset", "EnableManagedAccess", "DisableManagedAccess"))
+	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.EnableManagedAccess, opts.DisableManagedAccess) {
+		errs = append(errs, errOneOf("NewName", "SwapWith", "Set", "Unset", "SetTag", "UnsetTag", "EnableManagedAccess", "DisableManagedAccess"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
@@ -176,31 +184,29 @@ func (opts *AlterSchemaOptions) validate() error {
 }
 
 type SchemaSet struct {
-	DataRetentionTimeInDays    *int             `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int             `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	DefaultDDLCollation        *string          `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	Comment                    *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag                        []TagAssociation `ddl:"keyword" sql:"TAG"`
+	DataRetentionTimeInDays    *int    `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int    `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	DefaultDDLCollation        *string `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	Comment                    *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *SchemaSet) validate() error {
-	if valueSet(v.Tag) && anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errors.New("tag field cannot be set with other options")
+	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
+		return errAtLeastOneOf("SchemaSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDDLCollation", "Comment")
 	}
 	return nil
 }
 
 type SchemaUnset struct {
-	DataRetentionTimeInDays    *bool              `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *bool              `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	DefaultDDLCollation        *bool              `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
-	Comment                    *bool              `ddl:"keyword" sql:"COMMENT"`
-	Tag                        []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
+	DataRetentionTimeInDays    *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	DefaultDDLCollation        *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
+	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *SchemaUnset) validate() error {
-	if valueSet(v.Tag) && anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errors.New("tag field cannot be set with other options")
+	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
+		return errAtLeastOneOf("SchemaUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDDLCollation", "Comment")
 	}
 	return nil
 }
@@ -233,12 +239,15 @@ type DropSchemaOptions struct {
 }
 
 func (opts *DropSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.Cascade, opts.Restrict) {
-		errs = append(errs, errors.New("only one of the fields [ Cascade | Restrict ] can be set at once"))
+		errs = append(errs, errOneOf("DropSchemaOptions", "Cascade", "Restrict"))
 	}
 	return errors.Join(errs...)
 }
@@ -267,8 +276,11 @@ type undropSchemaOptions struct {
 }
 
 func (opts *undropSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -296,8 +308,11 @@ type describeSchemaOptions struct {
 }
 
 func (opts *describeSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -346,6 +361,9 @@ type ShowSchemaOptions struct {
 }
 
 func (opts *ShowSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 

@@ -90,7 +90,7 @@ func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) fu
 	}
 }
 
-func TestAcc_GrantRole(t *testing.T) {
+func TestAcc_RoleGrant(t *testing.T) {
 	role1 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	role2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	role3 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

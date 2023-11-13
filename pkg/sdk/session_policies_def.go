@@ -11,7 +11,7 @@ var SessionPoliciesDef = g.NewInterface(
 ).
 	CreateOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/create-session-policy",
-		g.QueryStruct("CreateSessionPolicy").
+		g.NewQueryStruct("CreateSessionPolicy").
 			Create().
 			OrReplace().
 			SQL("SESSION POLICY").
@@ -25,7 +25,7 @@ var SessionPoliciesDef = g.NewInterface(
 	).
 	AlterOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-session-policy",
-		g.QueryStruct("AlterSessionPolicy").
+		g.NewQueryStruct("AlterSessionPolicy").
 			Alter().
 			SQL("SESSION POLICY").
 			IfExists().
@@ -33,18 +33,18 @@ var SessionPoliciesDef = g.NewInterface(
 			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 			OptionalQueryStructField(
 				"Set",
-				g.QueryStruct("SessionPolicySet").
+				g.NewQueryStruct("SessionPolicySet").
 					OptionalNumberAssignment("SESSION_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
 					OptionalNumberAssignment("SESSION_UI_IDLE_TIMEOUT_MINS", g.ParameterOptions().NoQuotes()).
 					OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 					WithValidation(g.AtLeastOneValueSet, "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"),
 				g.KeywordOptions().SQL("SET"),
 			).
-			SetTags().
-			UnsetTags().
+			OptionalSetTags().
+			OptionalUnsetTags().
 			OptionalQueryStructField(
 				"Unset",
-				g.QueryStruct("SessionPolicyUnset").
+				g.NewQueryStruct("SessionPolicyUnset").
 					OptionalSQL("SESSION_IDLE_TIMEOUT_MINS").
 					OptionalSQL("SESSION_UI_IDLE_TIMEOUT_MINS").
 					OptionalSQL("COMMENT").
@@ -56,7 +56,7 @@ var SessionPoliciesDef = g.NewInterface(
 	).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-session-policy",
-		g.QueryStruct("DropSessionPolicy").
+		g.NewQueryStruct("DropSessionPolicy").
 			Drop().
 			SQL("SESSION POLICY").
 			IfExists().
@@ -83,7 +83,7 @@ var SessionPoliciesDef = g.NewInterface(
 			Field("Owner", "string").
 			Field("Comment", "string").
 			Field("Options", "string"),
-		g.QueryStruct("ShowSessionPolicies").
+		g.NewQueryStruct("ShowSessionPolicies").
 			Show().
 			SQL("SESSION POLICIES"),
 	).
@@ -102,7 +102,7 @@ var SessionPoliciesDef = g.NewInterface(
 			Field("SessionIdleTimeoutMins", "int").
 			Field("SessionUIIdleTimeoutMins", "int").
 			Field("Comment", "string"),
-		g.QueryStruct("DescribeSessionPolicy").
+		g.NewQueryStruct("DescribeSessionPolicy").
 			Describe().
 			SQL("SESSION POLICY").
 			Name().

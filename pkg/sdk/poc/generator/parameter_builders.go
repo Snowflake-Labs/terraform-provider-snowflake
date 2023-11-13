@@ -1,11 +1,11 @@
 package generator
 
-func (v *queryStruct) assignment(name string, kind string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) assignment(name string, kind string, transformer *ParameterTransformer) *QueryStruct {
 	v.fields = append(v.fields, NewField(name, kind, Tags().Parameter(), transformer))
 	return v
 }
 
-func (v *queryStruct) Assignment(sqlPrefix string, kind string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) Assignment(sqlPrefix string, kind string, transformer *ParameterTransformer) *QueryStruct {
 	if transformer != nil {
 		transformer = transformer.SQL(sqlPrefix)
 	} else {
@@ -14,49 +14,49 @@ func (v *queryStruct) Assignment(sqlPrefix string, kind string, transformer *Par
 	return v.assignment(sqlToFieldName(sqlPrefix, true), kind, transformer)
 }
 
-func (v *queryStruct) OptionalAssignment(sqlPrefix string, kind string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) OptionalAssignment(sqlPrefix string, kind string, transformer *ParameterTransformer) *QueryStruct {
 	if len(kind) > 0 && kind[0] != '*' {
 		kind = KindOfPointer(kind)
 	}
 	return v.Assignment(sqlPrefix, kind, transformer)
 }
 
-func (v *queryStruct) ListAssignment(sqlPrefix string, listItemKind string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) ListAssignment(sqlPrefix string, listItemKind string, transformer *ParameterTransformer) *QueryStruct {
 	return v.Assignment(sqlPrefix, KindOfSlice(listItemKind), transformer)
 }
 
-func (v *queryStruct) NumberAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) NumberAssignment(sqlPrefix string, transformer *ParameterTransformer) *QueryStruct {
 	return v.Assignment(sqlPrefix, "int", transformer)
 }
 
-func (v *queryStruct) OptionalNumberAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) OptionalNumberAssignment(sqlPrefix string, transformer *ParameterTransformer) *QueryStruct {
 	return v.Assignment(sqlPrefix, "*int", transformer)
 }
 
-func (v *queryStruct) TextAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) TextAssignment(sqlPrefix string, transformer *ParameterTransformer) *QueryStruct {
 	return v.Assignment(sqlPrefix, "string", transformer)
 }
 
-func (v *queryStruct) OptionalTextAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) OptionalTextAssignment(sqlPrefix string, transformer *ParameterTransformer) *QueryStruct {
 	return v.Assignment(sqlPrefix, "*string", transformer)
 }
 
-func (v *queryStruct) BooleanAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) BooleanAssignment(sqlPrefix string, transformer *ParameterTransformer) *QueryStruct {
 	return v.Assignment(sqlPrefix, "bool", transformer)
 }
 
-func (v *queryStruct) OptionalBooleanAssignment(sqlPrefix string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) OptionalBooleanAssignment(sqlPrefix string, transformer *ParameterTransformer) *QueryStruct {
 	return v.Assignment(sqlPrefix, "*bool", transformer)
 }
 
-func (v *queryStruct) OptionalIdentifierAssignment(sqlPrefix string, identifierKind string, transformer *ParameterTransformer) *queryStruct {
+func (v *QueryStruct) OptionalIdentifierAssignment(sqlPrefix string, identifierKind string, transformer *ParameterTransformer) *QueryStruct {
 	return v.OptionalAssignment(sqlPrefix, identifierKind, transformer)
 }
 
-func (v *queryStruct) OptionalComment() *queryStruct {
+func (v *QueryStruct) OptionalComment() *QueryStruct {
 	return v.OptionalTextAssignment("COMMENT", ParameterOptions().SingleQuotes())
 }
 
-func (v *queryStruct) SetComment() *queryStruct {
+func (v *QueryStruct) SetComment() *QueryStruct {
 	return v.OptionalTextAssignment("SET COMMENT", ParameterOptions().SingleQuotes())
 }

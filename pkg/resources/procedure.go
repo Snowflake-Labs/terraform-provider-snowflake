@@ -412,10 +412,12 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 			if err := d.Set("name", v.Name.String); err != nil {
 				return err
 			}
-			if err := d.Set("database", v.DatabaseName.String); err != nil {
+			database := strings.Trim(v.DatabaseName.String, "\"")
+			if err := d.Set("database", database); err != nil {
 				return err
 			}
-			if err := d.Set("schema", v.SchemaName.String); err != nil {
+			schema := strings.Trim(v.SchemaName.String, "\"")
+			if err := d.Set("schema", schema); err != nil {
 				return err
 			}
 			if err := d.Set("comment", v.Comment.String); err != nil {

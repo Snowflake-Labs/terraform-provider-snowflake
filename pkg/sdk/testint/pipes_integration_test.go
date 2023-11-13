@@ -304,12 +304,10 @@ func TestInt_PipeAlter(t *testing.T) {
 
 		tagValue := "abc"
 		alterOptions := &sdk.AlterPipeOptions{
-			SetTags: &sdk.PipeSetTags{
-				Tag: []sdk.TagAssociation{
-					{
-						Name:  tag.ID(),
-						Value: tagValue,
-					},
+			SetTag: []sdk.TagAssociation{
+				{
+					Name:  tag.ID(),
+					Value: tagValue,
 				},
 			},
 		}
@@ -323,10 +321,8 @@ func TestInt_PipeAlter(t *testing.T) {
 		assert.Equal(t, tagValue, returnedTagValue)
 
 		alterOptions = &sdk.AlterPipeOptions{
-			UnsetTags: &sdk.PipeUnsetTags{
-				Tag: []sdk.ObjectIdentifier{
-					tag.ID(),
-				},
+			UnsetTag: []sdk.ObjectIdentifier{
+				tag.ID(),
 			},
 		}
 

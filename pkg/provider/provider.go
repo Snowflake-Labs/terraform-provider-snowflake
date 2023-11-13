@@ -33,10 +33,10 @@ func Provider() *schema.Provider {
 			},
 			"username": {
 				Type:        schema.TypeString,
-				Description: "Username for username+password authentication. Can also be sourced from the `SNOWFLAKE_USER` environment variable. Required unless using `profile`.",
+				Description: "Username for username+password authentication. Can also be sourced from the `SNOWFLAKE_USERNAME` environment variable. Required unless using `profile`.",
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USER", nil),
-				Deprecated:  "Use `user` instead",
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USERNAME", nil),
+				Deprecated:  "Use `user` instead of `username`",
 			},
 			"password": {
 				Type:          schema.TypeString,
@@ -539,17 +539,18 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		Application: "terraform-provider-snowflake",
 	}
 
-	if v, ok := s.GetOk("account"); ok {
+	if v, ok := s.GetOk("account"); ok && v.(string) != "" {
 		config.Account = v.(string)
 	}
-	if v, ok := s.GetOk("user"); ok {
-		config.User = v.(string)
-	}
 	// backwards compatibility until we can remove this
-	if v, ok := s.GetOk("username"); ok {
+	if v, ok := s.GetOk("username"); ok && v.(string) != "" {
 		config.User = v.(string)
 	}
-	if v, ok := s.GetOk("password"); ok {
+	if v, ok := s.GetOk("user"); ok && v.(string) != "" {
+		config.User = v.(string)
+	}
+
+	if v, ok := s.GetOk("password"); ok && v.(string) != "" {
 		config.Password = v.(string)
 	}
 
@@ -590,7 +591,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		config.ClientIP = net.ParseIP(v.(string))
 	}
 
-	if v, ok := s.GetOk("protocol"); ok {
+	if v, ok := s.GetOk("protocol"); ok && v.(string) != "" {
 		config.Protocol = v.(string)
 	}
 
@@ -598,7 +599,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		config.Host = v.(string)
 	}
 
-	if v, ok := s.GetOk("port"); ok {
+	if v, ok := s.GetOk("port"); ok && v.(int) > 0 {
 		config.Port = v.(int)
 	}
 
@@ -626,27 +627,27 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		config.OktaURL = oktaURL
 	}
 
-	if v, ok := s.GetOk("login_timeout"); ok {
+	if v, ok := s.GetOk("login_timeout"); ok && v.(int) > 0 {
 		config.LoginTimeout = time.Second * time.Duration(int64(v.(int)))
 	}
 
-	if v, ok := s.GetOk("request_timeout"); ok {
+	if v, ok := s.GetOk("request_timeout"); ok && v.(int) > 0 {
 		config.RequestTimeout = time.Second * time.Duration(int64(v.(int)))
 	}
 
-	if v, ok := s.GetOk("jwt_expire_timeout"); ok {
+	if v, ok := s.GetOk("jwt_expire_timeout"); ok && v.(int) > 0 {
 		config.JWTExpireTimeout = time.Second * time.Duration(int64(v.(int)))
 	}
 
-	if v, ok := s.GetOk("client_timeout"); ok {
+	if v, ok := s.GetOk("client_timeout"); ok && v.(int) > 0 {
 		config.ClientTimeout = time.Second * time.Duration(int64(v.(int)))
 	}
 
-	if v, ok := s.GetOk("jwt_client_timeout"); ok {
+	if v, ok := s.GetOk("jwt_client_timeout"); ok && v.(int) > 0 {
 		config.JWTClientTimeout = time.Second * time.Duration(int64(v.(int)))
 	}
 
-	if v, ok := s.GetOk("external_browser_timeout"); ok {
+	if v, ok := s.GetOk("external_browser_timeout"); ok && v.(int) > 0 {
 		config.ExternalBrowserTimeout = time.Second * time.Duration(int64(v.(int)))
 	}
 
@@ -687,7 +688,11 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	privateKeyPath := s.Get("private_key_path").(string)
 	privateKey := s.Get("private_key").(string)
 	privateKeyPassphrase := s.Get("private_key_passphrase").(string)
-	if v, err := getPrivateKey(privateKeyPath, privateKey, privateKeyPassphrase); err != nil && v != nil {
+	v, err := getPrivateKey(privateKeyPath, privateKey, privateKeyPassphrase)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve private key: %w", err)
+	}
+	if v != nil {
 		config.PrivateKey = v
 	}
 
@@ -718,9 +723,6 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		profile := v.(string)
 		if profile == "default" {
 			defaultConfig := sdk.DefaultConfig()
-			if defaultConfig.Account == "" || defaultConfig.User == "" {
-				return "", errors.New("account and User must be set in provider config, ~/.snowflake/config, or as an environment variable")
-			}
 			config = sdk.MergeConfig(config, defaultConfig)
 		} else {
 			profileConfig, err := sdk.ProfileConfig(profile)

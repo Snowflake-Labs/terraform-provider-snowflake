@@ -1,26 +1,34 @@
 package generator
 
-func (v *queryStruct) SQL(sql string) *queryStruct {
+func (v *QueryStruct) SQL(sql string) *QueryStruct {
 	v.fields = append(v.fields, NewField(sqlToFieldName(sql, false), "bool", Tags().Static().SQL(sql), nil))
 	return v
 }
 
-func (v *queryStruct) Create() *queryStruct {
+func (v *QueryStruct) Create() *QueryStruct {
 	return v.SQL("CREATE")
 }
 
-func (v *queryStruct) Alter() *queryStruct {
+func (v *QueryStruct) Alter() *QueryStruct {
 	return v.SQL("ALTER")
 }
 
-func (v *queryStruct) Drop() *queryStruct {
+func (v *QueryStruct) Drop() *QueryStruct {
 	return v.SQL("DROP")
 }
 
-func (v *queryStruct) Show() *queryStruct {
+func (v *QueryStruct) Show() *QueryStruct {
 	return v.SQL("SHOW")
 }
 
-func (v *queryStruct) Describe() *queryStruct {
+func (v *QueryStruct) Describe() *QueryStruct {
 	return v.SQL("DESCRIBE")
+}
+
+func (v *QueryStruct) Grant() *QueryStruct {
+	return v.SQL("GRANT")
+}
+
+func (v *QueryStruct) Revoke() *QueryStruct {
+	return v.SQL("REVOKE")
 }

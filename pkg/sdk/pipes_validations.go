@@ -14,92 +14,80 @@ var (
 
 func (opts *CreatePipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(ErrNilOptions)
 	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if opts.copyStatement == "" {
-		return errCopyStatementRequired
+		errs = append(errs, errNotSet("CreatePipeOptions", "copyStatement"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (opts *AlterPipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(ErrNilOptions)
 	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(
 		opts.Set,
 		opts.Unset,
-		opts.SetTags,
-		opts.UnsetTags,
+		opts.SetTag,
+		opts.UnsetTag,
 		opts.Refresh,
 	); !ok {
-		return errAlterNeedsExactlyOneAction
+		errs = append(errs, errExactlyOneOf("AlterPipeOptions", "Set", "Unset", "SetTag", "UnsetTag", "Refresh"))
 	}
 	if set := opts.Set; valueSet(set) {
 		if !anyValueSet(set.ErrorIntegration, set.PipeExecutionPaused, set.Comment) {
-			return errAlterNeedsAtLeastOneProperty
+			errs = append(errs, errAtLeastOneOf("AlterPipeOptions.Set", "ErrorIntegration", "PipeExecutionPaused", "Comment"))
 		}
 	}
 	if unset := opts.Unset; valueSet(unset) {
 		if !anyValueSet(unset.PipeExecutionPaused, unset.Comment) {
-			return errAlterNeedsAtLeastOneProperty
+			errs = append(errs, errAtLeastOneOf("AlterPipeOptions.Unset", "PipeExecutionPaused", "Comment"))
 		}
 	}
-	if setTags := opts.SetTags; valueSet(setTags) {
-		if !valueSet(setTags.Tag) {
-			return errAlterNeedsAtLeastOneProperty
-		}
-	}
-	if unsetTags := opts.UnsetTags; valueSet(unsetTags) {
-		if !valueSet(unsetTags.Tag) {
-			return errAlterNeedsAtLeastOneProperty
-		}
-	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (opts *DropPipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(ErrNilOptions)
 	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (opts *ShowPipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(ErrNilOptions)
 	}
+	var errs []error
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		return ErrPatternRequiredForLikeKeyword
+		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
 	if valueSet(opts.In) && !exactlyOneValueSet(opts.In.Account, opts.In.Database, opts.In.Schema) {
-		return errScopeRequiredForInKeyword
+		errs = append(errs, errExactlyOneOf("ShowPipeOptions.In", "Account", "Database", "Schema"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (opts *describePipeOptions) validate() error {
 	if opts == nil {
-		return ErrNilOptions
+		return errors.Join(ErrNilOptions)
 	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	return nil
+	return errors.Join(errs...)
 }
-
-var (
-	errCopyStatementRequired        = errors.New("copy statement required")
-	errScopeRequiredForInKeyword    = errors.New("exactly one scope must be specified for in keyword")
-	errAlterNeedsExactlyOneAction   = errors.New("alter statement needs exactly one action from: set, unset, refresh")
-	errAlterNeedsAtLeastOneProperty = errors.New("alter statement needs at least one property")
-)

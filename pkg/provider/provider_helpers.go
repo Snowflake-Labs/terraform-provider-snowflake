@@ -31,6 +31,9 @@ func mergeSchemas(schemaCollections ...map[string]*schema.Resource) map[string]*
 }
 
 func getPrivateKey(privateKeyPath, privateKeyString, privateKeyPassphrase string) (*rsa.PrivateKey, error) {
+	if privateKeyPath == "" && privateKeyString == "" {
+		return nil, nil
+	}
 	privateKeyBytes := []byte(privateKeyString)
 	var err error
 	if len(privateKeyBytes) == 0 && privateKeyPath != "" {

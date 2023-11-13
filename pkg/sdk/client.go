@@ -30,6 +30,7 @@ type Client struct {
 	// DDL Commands
 	Accounts         Accounts
 	Alerts           Alerts
+	ApplicationRoles ApplicationRoles
 	Comments         Comments
 	DatabaseRoles    DatabaseRoles
 	Databases        Databases
@@ -53,6 +54,7 @@ type Client struct {
 	Tags             Tags
 	Tasks            Tasks
 	Users            Users
+	Views            Views
 	Warehouses       Warehouses
 }
 
@@ -152,6 +154,7 @@ func NewClientFromDB(db *sql.DB) *Client {
 func (c *Client) initialize() {
 	c.Accounts = &accounts{client: c}
 	c.Alerts = &alerts{client: c}
+	c.ApplicationRoles = &applicationRoles{client: c}
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
@@ -179,6 +182,7 @@ func (c *Client) initialize() {
 	c.Tags = &tags{client: c}
 	c.Tasks = &tasks{client: c}
 	c.Users = &users{client: c}
+	c.Views = &views{client: c}
 	c.Warehouses = &warehouses{client: c}
 }
 

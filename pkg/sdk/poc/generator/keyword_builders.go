@@ -1,87 +1,127 @@
 package generator
 
-func (v *queryStruct) OptionalSQL(sql string) *queryStruct {
+func (v *QueryStruct) OptionalSQL(sql string) *QueryStruct {
 	v.fields = append(v.fields, NewField(sqlToFieldName(sql, true), "*bool", Tags().Keyword().SQL(sql), nil))
 	return v
 }
 
-func (v *queryStruct) OrReplace() *queryStruct {
+func (v *QueryStruct) OrReplace() *QueryStruct {
 	return v.OptionalSQL("OR REPLACE")
 }
 
-func (v *queryStruct) IfNotExists() *queryStruct {
+func (v *QueryStruct) IfNotExists() *QueryStruct {
 	return v.OptionalSQL("IF NOT EXISTS")
 }
 
-func (v *queryStruct) IfExists() *queryStruct {
+func (v *QueryStruct) IfExists() *QueryStruct {
 	return v.OptionalSQL("IF EXISTS")
 }
 
-func (v *queryStruct) Terse() *queryStruct {
+func (v *QueryStruct) Terse() *QueryStruct {
 	return v.OptionalSQL("TERSE")
 }
 
-func (v *queryStruct) Text(name string, transformer *KeywordTransformer) *queryStruct {
+func (v *QueryStruct) Text(name string, transformer *KeywordTransformer) *QueryStruct {
 	v.fields = append(v.fields, NewField(name, "string", Tags().Keyword(), transformer))
 	return v
 }
 
-func (v *queryStruct) OptionalText(name string, transformer *KeywordTransformer) *queryStruct {
+func (v *QueryStruct) Number(name string, transformer *KeywordTransformer) *QueryStruct {
+	v.fields = append(v.fields, NewField(name, "int", Tags().Keyword(), transformer))
+	return v
+}
+
+func (v *QueryStruct) OptionalText(name string, transformer *KeywordTransformer) *QueryStruct {
 	v.fields = append(v.fields, NewField(name, "*string", Tags().Keyword(), transformer))
 	return v
 }
 
-// SessionParameters *SessionParameters `ddl:"list,no_parentheses"`
-func (v *queryStruct) SessionParameters() *queryStruct {
-	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
+func (v *QueryStruct) OptionalNumber(name string, transformer *KeywordTransformer) *QueryStruct {
+	v.fields = append(v.fields, NewField(name, "*int", Tags().Keyword(), transformer))
 	return v
 }
 
-func (v *queryStruct) OptionalSessionParameters() *queryStruct {
-	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
-	return v
-}
-
-func (v *queryStruct) OptionalSessionParametersUnset() *queryStruct {
-	v.fields = append(v.fields, NewField("SessionParametersUnset", "*SessionParametersUnset", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParametersUnset")))
-	return v
-}
-
-func (v *queryStruct) WithTags() *queryStruct {
-	v.fields = append(v.fields, NewField("Tag", "[]TagAssociation", Tags().Keyword().Parentheses().SQL("TAG"), nil))
-	return v
-}
-
-func (v *queryStruct) SetTags() *queryStruct {
-	v.fields = append(v.fields, NewField("SetTags", "[]TagAssociation", Tags().Keyword().SQL("SET TAG"), nil))
-	return v
-}
-
-func (v *queryStruct) UnsetTags() *queryStruct {
-	v.fields = append(v.fields, NewField("UnsetTags", "[]ObjectIdentifier", Tags().Keyword().SQL("UNSET TAG"), nil))
-	return v
-}
-
-func (v *queryStruct) OptionalLike() *queryStruct {
-	v.fields = append(v.fields, NewField("Like", "*Like", Tags().Keyword().SQL("LIKE"), nil))
-	return v
-}
-
-func (v *queryStruct) OptionalIn() *queryStruct {
-	v.fields = append(v.fields, NewField("In", "*In", Tags().Keyword().SQL("IN"), nil))
-	return v
-}
-
-func (v *queryStruct) OptionalStartsWith() *queryStruct {
-	v.fields = append(v.fields, NewField("StartsWith", "*string", Tags().Parameter().NoEquals().SingleQuotes().SQL("STARTS WITH"), nil))
-	return v
-}
-
-func (v *queryStruct) OptionalLimit() *queryStruct {
+func (v *QueryStruct) OptionalLimitFrom() *QueryStruct {
 	v.fields = append(v.fields, NewField("Limit", "*LimitFrom", Tags().Keyword().SQL("LIMIT"), nil))
 	return v
 }
 
-func (v *queryStruct) OptionalCopyGrants() *queryStruct {
+// SessionParameters *SessionParameters `ddl:"list,no_parentheses"`
+func (v *QueryStruct) SessionParameters() *QueryStruct {
+	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
+	return v
+}
+
+func (v *QueryStruct) OptionalSessionParameters() *QueryStruct {
+	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
+	return v
+}
+
+func (v *QueryStruct) OptionalSessionParametersUnset() *QueryStruct {
+	v.fields = append(v.fields, NewField("SessionParametersUnset", "*SessionParametersUnset", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParametersUnset")))
+	return v
+}
+
+func (v *QueryStruct) NamedListWithParens(sqlPrefix string, listItemKind string, transformer *KeywordTransformer) *QueryStruct {
+	if transformer != nil {
+		transformer = transformer.Parentheses().SQL(sqlPrefix)
+	} else {
+		transformer = KeywordOptions().Parentheses().SQL(sqlPrefix)
+	}
+	v.fields = append(v.fields, NewField(sqlToFieldName(sqlPrefix, true), KindOfSlice(listItemKind), Tags().Keyword(), transformer))
+	return v
+}
+
+func (v *QueryStruct) WithTags() *QueryStruct {
+	return v.NamedListWithParens("TAG", "TagAssociation", nil)
+}
+
+func (v *QueryStruct) SetTags() *QueryStruct {
+	return v.setTags(KeywordOptions().Required())
+}
+
+func (v *QueryStruct) OptionalSetTags() *QueryStruct {
+	return v.setTags(nil)
+}
+
+func (v *QueryStruct) setTags(transformer *KeywordTransformer) *QueryStruct {
+	v.fields = append(v.fields, NewField("SetTags", "[]TagAssociation", Tags().Keyword().SQL("SET TAG"), transformer))
+	return v
+}
+
+func (v *QueryStruct) UnsetTags() *QueryStruct {
+	return v.unsetTags(KeywordOptions().Required())
+}
+
+func (v *QueryStruct) OptionalUnsetTags() *QueryStruct {
+	return v.unsetTags(nil)
+}
+
+func (v *QueryStruct) unsetTags(transformer *KeywordTransformer) *QueryStruct {
+	v.fields = append(v.fields, NewField("UnsetTags", "[]ObjectIdentifier", Tags().Keyword().SQL("UNSET TAG"), transformer))
+	return v
+}
+
+func (v *QueryStruct) OptionalLike() *QueryStruct {
+	v.fields = append(v.fields, NewField("Like", "*Like", Tags().Keyword().SQL("LIKE"), nil))
+	return v
+}
+
+func (v *QueryStruct) OptionalIn() *QueryStruct {
+	v.fields = append(v.fields, NewField("In", "*In", Tags().Keyword().SQL("IN"), nil))
+	return v
+}
+
+func (v *QueryStruct) OptionalStartsWith() *QueryStruct {
+	v.fields = append(v.fields, NewField("StartsWith", "*string", Tags().Parameter().NoEquals().SingleQuotes().SQL("STARTS WITH"), nil))
+	return v
+}
+
+func (v *QueryStruct) OptionalLimit() *QueryStruct {
+	v.fields = append(v.fields, NewField("Limit", "*LimitFrom", Tags().Keyword().SQL("LIMIT"), nil))
+	return v
+}
+
+func (v *QueryStruct) OptionalCopyGrants() *QueryStruct {
 	return v.OptionalSQL("COPY GRANTS")
 }
