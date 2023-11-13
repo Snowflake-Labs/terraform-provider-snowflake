@@ -50,6 +50,7 @@ type Client struct {
 	SessionPolicies  SessionPolicies
 	Sessions         Sessions
 	Shares           Shares
+	Stages           Stages
 	Streams          Streams
 	Tags             Tags
 	Tasks            Tasks
@@ -177,6 +178,7 @@ func (c *Client) initialize() {
 	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}
+	c.Stages = &stages{client: c}
 	c.Streams = &streams{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
 	c.Tags = &tags{client: c}

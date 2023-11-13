@@ -68,7 +68,7 @@ var viewColumnMaskingPolicy = g.NewQueryStruct("ViewColumnMaskingPolicy").
 	Text("Name", g.KeywordOptions().Required()).
 	Identifier("MaskingPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
 	NamedListWithParens("USING", g.KindOfT[string](), nil). // TODO: double quotes here?
-	WithTags()
+	OptionalTags()
 
 var viewRowAccessPolicy = g.NewQueryStruct("ViewRowAccessPolicy").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
@@ -147,7 +147,7 @@ var ViewsDef = g.NewInterface(
 			// In the current docs ROW ACCESS POLICY and TAG are specified twice.
 			// It is a mistake probably so here they are present only once.
 			OptionalQueryStructField("RowAccessPolicy", viewRowAccessPolicy, g.KeywordOptions()).
-			WithTags().
+			OptionalTags().
 			SQL("AS").
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).
 			WithValidation(g.ValidIdentifier, "name").

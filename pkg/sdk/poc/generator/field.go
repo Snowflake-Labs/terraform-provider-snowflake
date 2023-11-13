@@ -138,7 +138,7 @@ func (f *Field) PathWithRoot() string {
 	if f.IsRoot() {
 		return f.Name
 	} else {
-		return fmt.Sprintf("%s.%s", f.Parent.Path(), f.Name)
+		return fmt.Sprintf("%s.%s", f.Parent.PathWithRoot(), f.Name)
 	}
 }
 

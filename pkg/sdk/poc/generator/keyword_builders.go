@@ -5,6 +5,11 @@ func (v *QueryStruct) OptionalSQL(sql string) *QueryStruct {
 	return v
 }
 
+func (v *QueryStruct) NamedList(sql string, itemKind string) *QueryStruct {
+	v.fields = append(v.fields, NewField(sqlToFieldName(sql, true), KindOfSlice(itemKind), Tags().Keyword().SQL(sql), nil))
+	return v
+}
+
 func (v *QueryStruct) OrReplace() *QueryStruct {
 	return v.OptionalSQL("OR REPLACE")
 }
@@ -42,24 +47,17 @@ func (v *QueryStruct) OptionalNumber(name string, transformer *KeywordTransforme
 }
 
 func (v *QueryStruct) OptionalLimitFrom() *QueryStruct {
-	v.fields = append(v.fields, NewField("Limit", "*LimitFrom", Tags().Keyword().SQL("LIMIT"), nil))
-	return v
-}
-
-// SessionParameters *SessionParameters `ddl:"list,no_parentheses"`
-func (v *QueryStruct) SessionParameters() *QueryStruct {
-	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
-	return v
+	return v.PredefinedQueryStructField("Limit", "*LimitFrom", KeywordOptions().SQL("LIMIT"))
 }
 
 func (v *QueryStruct) OptionalSessionParameters() *QueryStruct {
-	v.fields = append(v.fields, NewField("SessionParameters", "*SessionParameters", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParameters")))
-	return v
+	return v.PredefinedQueryStructField("SessionParameters", "*SessionParameters", ListOptions().NoParentheses()).
+		WithValidation(ValidateValue, "SessionParameters")
 }
 
 func (v *QueryStruct) OptionalSessionParametersUnset() *QueryStruct {
-	v.fields = append(v.fields, NewField("SessionParametersUnset", "*SessionParametersUnset", Tags().List().NoParentheses(), nil).withValidations(NewValidation(ValidateValue, "SessionParametersUnset")))
-	return v
+	return v.PredefinedQueryStructField("SessionParametersUnset", "*SessionParametersUnset", ListOptions().NoParentheses()).
+		WithValidation(ValidateValue, "SessionParametersUnset")
 }
 
 func (v *QueryStruct) NamedListWithParens(sqlPrefix string, listItemKind string, transformer *KeywordTransformer) *QueryStruct {
@@ -72,7 +70,7 @@ func (v *QueryStruct) NamedListWithParens(sqlPrefix string, listItemKind string,
 	return v
 }
 
-func (v *QueryStruct) WithTags() *QueryStruct {
+func (v *QueryStruct) OptionalTags() *QueryStruct {
 	return v.NamedListWithParens("TAG", "TagAssociation", nil)
 }
 
@@ -85,8 +83,7 @@ func (v *QueryStruct) OptionalSetTags() *QueryStruct {
 }
 
 func (v *QueryStruct) setTags(transformer *KeywordTransformer) *QueryStruct {
-	v.fields = append(v.fields, NewField("SetTags", "[]TagAssociation", Tags().Keyword().SQL("SET TAG"), transformer))
-	return v
+	return v.PredefinedQueryStructField("SetTags", "[]TagAssociation", transformer)
 }
 
 func (v *QueryStruct) UnsetTags() *QueryStruct {
@@ -98,28 +95,23 @@ func (v *QueryStruct) OptionalUnsetTags() *QueryStruct {
 }
 
 func (v *QueryStruct) unsetTags(transformer *KeywordTransformer) *QueryStruct {
-	v.fields = append(v.fields, NewField("UnsetTags", "[]ObjectIdentifier", Tags().Keyword().SQL("UNSET TAG"), transformer))
-	return v
+	return v.PredefinedQueryStructField("UnsetTags", "[]ObjectIdentifier", transformer)
 }
 
 func (v *QueryStruct) OptionalLike() *QueryStruct {
-	v.fields = append(v.fields, NewField("Like", "*Like", Tags().Keyword().SQL("LIKE"), nil))
-	return v
+	return v.PredefinedQueryStructField("Like", "*Like", KeywordOptions().SQL("LIKE"))
 }
 
 func (v *QueryStruct) OptionalIn() *QueryStruct {
-	v.fields = append(v.fields, NewField("In", "*In", Tags().Keyword().SQL("IN"), nil))
-	return v
+	return v.PredefinedQueryStructField("In", "*In", KeywordOptions().SQL("IN"))
 }
 
 func (v *QueryStruct) OptionalStartsWith() *QueryStruct {
-	v.fields = append(v.fields, NewField("StartsWith", "*string", Tags().Parameter().NoEquals().SingleQuotes().SQL("STARTS WITH"), nil))
-	return v
+	return v.PredefinedQueryStructField("StartsWith", "*string", ParameterOptions().NoEquals().SingleQuotes().SQL("STARTS WITH"))
 }
 
 func (v *QueryStruct) OptionalLimit() *QueryStruct {
-	v.fields = append(v.fields, NewField("Limit", "*LimitFrom", Tags().Keyword().SQL("LIMIT"), nil))
-	return v
+	return v.PredefinedQueryStructField("Limit", "*LimitFrom", KeywordOptions().SQL("LIMIT"))
 }
 
 func (v *QueryStruct) OptionalCopyGrants() *QueryStruct {

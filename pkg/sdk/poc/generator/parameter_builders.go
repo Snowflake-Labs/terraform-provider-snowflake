@@ -34,7 +34,7 @@ func (v *QueryStruct) OptionalNumberAssignment(sqlPrefix string, transformer *Pa
 }
 
 func (v *QueryStruct) TextAssignment(sqlPrefix string, transformer *ParameterTransformer) *QueryStruct {
-	return v.Assignment(sqlPrefix, "string", transformer)
+	return v.Assignment(sqlPrefix, "string", transformer.Required())
 }
 
 func (v *QueryStruct) OptionalTextAssignment(sqlPrefix string, transformer *ParameterTransformer) *QueryStruct {

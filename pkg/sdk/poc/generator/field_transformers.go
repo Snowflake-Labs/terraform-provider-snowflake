@@ -132,6 +132,7 @@ type ListTransformer struct {
 	sqlPrefix   string
 	parentheses string
 	equals      string
+	comma       string
 }
 
 func ListOptions() *ListTransformer {
@@ -158,6 +159,11 @@ func (v *ListTransformer) NoEquals() *ListTransformer {
 	return v
 }
 
+func (v *ListTransformer) NoComma() *ListTransformer {
+	v.equals = "no_comma"
+	return v
+}
+
 func (v *ListTransformer) SQL(sqlPrefix string) *ListTransformer {
 	v.sqlPrefix = sqlPrefix
 	return v
@@ -171,6 +177,7 @@ func (v *ListTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.parentheses)
 	addTagIfMissing(f.Tags, "ddl", v.equals)
+	addTagIfMissing(f.Tags, "ddl", v.comma)
 	return f
 }
 
