@@ -329,9 +329,8 @@ type CreateFileFormatOptions struct {
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
 	Type        FileFormatType         `ddl:"parameter" sql:"TYPE"`
-	Comment     *string                `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
-
 	FileFormatTypeOptions
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateFileFormatOptions) validate() error {

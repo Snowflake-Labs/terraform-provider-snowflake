@@ -70,7 +70,7 @@ func (v *QueryStruct) NamedListWithParens(sqlPrefix string, listItemKind string,
 	return v
 }
 
-func (v *QueryStruct) WithTags() *QueryStruct {
+func (v *QueryStruct) OptionalTags() *QueryStruct {
 	return v.NamedListWithParens("TAG", "TagAssociation", nil)
 }
 

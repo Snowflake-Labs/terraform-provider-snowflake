@@ -106,7 +106,7 @@ func TestStages_CreateOnS3(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
 	})
 
-	t.Run("validation: conflicting fields for [opts.ExternalStageParams.Credentials.AwsKeyId opts.ExternalStageParams.Credentials.AwsRole]", func(t *testing.T) {
+	t.Run("validation: conflicting fields for [opts.ExternalStageParams.Credentials.AWSKeyId opts.ExternalStageParams.Credentials.AWSRole]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ExternalStageParams = &ExternalS3StageParams{
 			Credentials: &ExternalStageS3Credentials{
@@ -114,7 +114,7 @@ func TestStages_CreateOnS3(t *testing.T) {
 				AWSRole:  String("aws-role"),
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams.Credentials", "AwsKeyId", "AwsRole"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams.Credentials", "AWSKeyId", "AWSRole"))
 	})
 
 	t.Run("all options - storage integration", func(t *testing.T) {
@@ -477,7 +477,7 @@ func TestStages_AlterExternalS3Stage(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams", "StorageIntegration", "Credentials"))
 	})
 
-	t.Run("validation: conflicting fields for [opts.ExternalStageParams.Credentials.AwsKeyId opts.ExternalStageParams.Credentials.AwsRole]", func(t *testing.T) {
+	t.Run("validation: conflicting fields for [opts.ExternalStageParams.Credentials.AWSKeyId opts.ExternalStageParams.Credentials.AWSRole]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ExternalStageParams = &ExternalS3StageParams{
 			Credentials: &ExternalStageS3Credentials{
@@ -485,7 +485,7 @@ func TestStages_AlterExternalS3Stage(t *testing.T) {
 				AWSRole:  String("aws-role"),
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams.Credentials", "AwsKeyId", "AwsRole"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf(".ExternalStageParams.Credentials", "AWSKeyId", "AWSRole"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
