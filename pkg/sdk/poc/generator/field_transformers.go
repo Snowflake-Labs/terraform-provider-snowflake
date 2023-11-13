@@ -7,9 +7,10 @@ type FieldTransformer interface {
 }
 
 type KeywordTransformer struct {
-	required  bool
-	sqlPrefix string
-	quotes    string
+	required    bool
+	sqlPrefix   string
+	quotes      string
+	parentheses string
 }
 
 func KeywordOptions() *KeywordTransformer {
@@ -41,6 +42,11 @@ func (v *KeywordTransformer) DoubleQuotes() *KeywordTransformer {
 	return v
 }
 
+func (v *KeywordTransformer) Parentheses() *KeywordTransformer {
+	v.parentheses = "parentheses"
+	return v
+}
+
 func (v *KeywordTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "keyword")
 	if v.required {
@@ -48,6 +54,7 @@ func (v *KeywordTransformer) Transform(f *Field) *Field {
 	}
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.quotes)
+	addTagIfMissing(f.Tags, "ddl", v.parentheses)
 	return f
 }
 

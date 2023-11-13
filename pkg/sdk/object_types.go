@@ -58,6 +58,7 @@ const (
 	ObjectTypeApplicationPackage ObjectType = "APPLICATION PACKAGE"
 	ObjectTypeApplicationRole    ObjectType = "APPLICATION ROLE"
 	ObjectTypeStreamlit          ObjectType = "STREAMLIT"
+	ObjectTypeColumn             ObjectType = "COLUMN"
 )
 
 func (o ObjectType) String() string {
