@@ -209,7 +209,7 @@ type UserObjectProperties struct {
 	MinsToUnlock         *int            `ddl:"parameter,single_quotes" sql:"MINS_TO_UNLOCK"`
 	DefaultWarehosue     *string         `ddl:"parameter,single_quotes" sql:"DEFAULT_WAREHOUSE"`
 	DefaultNamespace     *string         `ddl:"parameter,single_quotes" sql:"DEFAULT_NAMESPACE"`
-	DefaultRole          *string         `ddl:"parameter,single_quotes" sql:"DEFAULT_ROLE"`
+	DefaultRole          *string         `ddl:"parameter,no_quotes" sql:"DEFAULT_ROLE"`
 	DefaultSeconaryRoles *SecondaryRoles `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
 	MinsToBypassMFA      *int            `ddl:"parameter,single_quotes" sql:"MINS_TO_BYPASS_MFA"`
 	RSAPublicKey         *string         `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY"`

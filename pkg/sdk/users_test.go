@@ -29,8 +29,9 @@ func TestUserCreate(t *testing.T) {
 			name:        id,
 			IfNotExists: Bool(true),
 			ObjectProperties: &UserObjectProperties{
-				Password:  &password,
-				LoginName: &loginName,
+				Password:    &password,
+				LoginName:   &loginName,
+				DefaultRole: String("foo"),
 			},
 			ObjectParameters: &UserObjectParameters{
 				EnableUnredactedQuerySyntaxError: Bool(true),
@@ -42,7 +43,7 @@ func TestUserCreate(t *testing.T) {
 			Tags: tags,
 		}
 
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG ("db"."schema"."tag1" = 'v1')`, id.FullyQualifiedName(), password, loginName)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' DEFAULT_ROLE = foo ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG ("db"."schema"."tag1" = 'v1')`, id.FullyQualifiedName(), password, loginName)
 	})
 }
 
