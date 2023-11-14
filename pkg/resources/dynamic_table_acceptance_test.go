@@ -141,7 +141,7 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.TestStepDirectory(),
+				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
 				ConfigVariables: m(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					/*
