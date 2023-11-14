@@ -63,9 +63,10 @@ var dynamicTableShema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"query": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the query to use to populate the dynamic table.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the query to use to populate the dynamic table.",
+		DiffSuppressFunc: DiffSuppressStatement,
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -298,20 +299,25 @@ func UpdateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	request := sdk.NewAlterDynamicTableRequest(id)
 
+	runSet := false
 	set := sdk.NewDynamicTableSetRequest()
 	if d.HasChange("target_lag") {
 		tl := parseTargetLag(d.Get("target_lag"))
 		set.WithTargetLag(tl)
+		runSet = true
 	}
 
 	if d.HasChange("warehouse") {
 		warehouseName := d.Get("warehouse").(string)
 		set.WithWarehouse(sdk.NewAccountObjectIdentifier(warehouseName))
+		runSet = true
 	}
 
-	request.WithSet(set)
-	if err := client.DynamicTables.Alter(ctx, request); err != nil {
-		return err
+	if runSet {
+		request.WithSet(set)
+		if err := client.DynamicTables.Alter(ctx, request); err != nil {
+			return err
+		}
 	}
 
 	if d.HasChange("comment") {

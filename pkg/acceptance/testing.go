@@ -2,6 +2,8 @@ package acceptance
 
 import (
 	"context"
+	"path/filepath"
+	"strconv"
 	"sync"
 	"testing"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 )
 
 const (
@@ -71,4 +74,12 @@ func TestAccPreCheck(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+}
+
+// ConfigurationSameAsStepN should be used to obtain configuration for one of the previous steps to avoid duplication of configuration and var files.
+// Based on config.TestStepDirectory.
+func ConfigurationSameAsStepN(step int) func(config.TestStepConfigRequest) string {
+	return func(req config.TestStepConfigRequest) string {
+		return filepath.Join("testdata", req.TestName, strconv.Itoa(step))
+	}
 }

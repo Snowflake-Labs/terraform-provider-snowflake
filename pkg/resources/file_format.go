@@ -352,7 +352,9 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 			opts.CSVFileExtension = sdk.String(v.(string))
 		}
 		opts.CSVParseHeader = sdk.Bool(d.Get("parse_header").(bool))
-		opts.CSVSkipHeader = sdk.Int(d.Get("skip_header").(int))
+		if v, ok := d.GetOk("skip_header"); ok {
+			opts.CSVSkipHeader = sdk.Int(v.(int))
+		}
 		opts.CSVSkipBlankLines = sdk.Bool(d.Get("skip_blank_lines").(bool))
 		if v, ok := d.GetOk("date_format"); ok {
 			opts.CSVDateFormat = sdk.String(v.(string))
@@ -778,6 +780,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		id = newId
 	}
 
+	runSet := false
 	opts := sdk.AlterFileFormatOptions{}
 
 	switch d.Get("format_type") {
@@ -785,62 +788,77 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("compression") {
 			v := sdk.CSVCompression(d.Get("compression").(string))
 			opts.Set.CSVCompression = &v
+			runSet = true
 		}
 		if d.HasChange("record_delimiter") {
 			v := d.Get("record_delimiter").(string)
 			opts.Set.CSVRecordDelimiter = &v
+			runSet = true
 		}
 		if d.HasChange("field_delimiter") {
 			v := d.Get("field_delimiter").(string)
 			opts.Set.CSVFieldDelimiter = &v
+			runSet = true
 		}
 		if d.HasChange("file_extension") {
 			v := d.Get("file_extension").(string)
 			opts.Set.CSVFileExtension = &v
+			runSet = true
 		}
 		if d.HasChange("parse_header") {
 			v := d.Get("parse_header").(bool)
 			opts.Set.CSVParseHeader = &v
+			runSet = true
 		}
 		if d.HasChange("skip_header") {
 			v := d.Get("skip_header").(int)
 			opts.Set.CSVSkipHeader = &v
+			runSet = true
 		}
 		if d.HasChange("skip_blank_lines") {
 			v := d.Get("skip_blank_lines").(bool)
 			opts.Set.CSVSkipBlankLines = &v
+			runSet = true
 		}
 		if d.HasChange("date_format") {
 			v := d.Get("date_format").(string)
 			opts.Set.CSVDateFormat = &v
+			runSet = true
 		}
 		if d.HasChange("time_format") {
 			v := d.Get("time_format").(string)
 			opts.Set.CSVTimeFormat = &v
+			runSet = true
 		}
 		if d.HasChange("timestamp_format") {
 			v := d.Get("timestamp_format").(string)
 			opts.Set.CSVTimestampFormat = &v
+			runSet = true
 		}
 		if d.HasChange("binary_format") {
 			v := sdk.BinaryFormat(d.Get("binary_format").(string))
 			opts.Set.CSVBinaryFormat = &v
+			runSet = true
 		}
 		if d.HasChange("escape") {
 			v := d.Get("escape").(string)
 			opts.Set.CSVEscape = &v
+			runSet = true
 		}
 		if d.HasChange("escape_unenclosed_field") {
 			v := d.Get("escape_unenclosed_field").(string)
 			opts.Set.CSVEscapeUnenclosedField = &v
+			runSet = true
 		}
 		if d.HasChange("trim_space") {
 			v := d.Get("trim_space").(bool)
 			opts.Set.CSVTrimSpace = &v
+			runSet = true
 		}
 		if d.HasChange("field_optionally_enclosed_by") {
 			v := d.Get("field_optionally_enclosed_by").(string)
 			opts.Set.CSVFieldOptionallyEnclosedBy = &v
+			runSet = true
 		}
 		if d.HasChange("null_if") {
 			nullIf := []sdk.NullString{}
@@ -853,51 +871,63 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 				nullIf = append(nullIf, sdk.NullString{S: s.(string)})
 			}
 			opts.Set.CSVNullIf = &nullIf
+			runSet = true
 		}
 		if d.HasChange("error_on_column_count_mismatch") {
 			v := d.Get("error_on_column_count_mismatch").(bool)
 			opts.Set.CSVErrorOnColumnCountMismatch = &v
+			runSet = true
 		}
 		if d.HasChange("replace_invalid_characters") {
 			v := d.Get("replace_invalid_characters").(bool)
 			opts.Set.CSVReplaceInvalidCharacters = &v
+			runSet = true
 		}
 		if d.HasChange("empty_field_as_null") {
 			v := d.Get("empty_field_as_null").(bool)
 			opts.Set.CSVEmptyFieldAsNull = &v
+			runSet = true
 		}
 		if d.HasChange("skip_byte_order_mark") {
 			v := d.Get("skip_byte_order_mark").(bool)
 			opts.Set.CSVSkipByteOrderMark = &v
+			runSet = true
 		}
 		if d.HasChange("encoding") {
 			v := sdk.CSVEncoding(d.Get("encoding").(string))
 			opts.Set.CSVEncoding = &v
+			runSet = true
 		}
 	case sdk.FileFormatTypeJSON:
 		if d.HasChange("compression") {
 			comp := sdk.JSONCompression(d.Get("compression").(string))
 			opts.Set.JSONCompression = &comp
+			runSet = true
 		}
 		if d.HasChange("date_format") {
 			v := d.Get("date_format").(string)
 			opts.Set.JSONDateFormat = &v
+			runSet = true
 		}
 		if d.HasChange("time_format") {
 			v := d.Get("time_format").(string)
 			opts.Set.JSONTimeFormat = &v
+			runSet = true
 		}
 		if d.HasChange("timestamp_format") {
 			v := d.Get("timestamp_format").(string)
 			opts.Set.JSONTimestampFormat = &v
+			runSet = true
 		}
 		if d.HasChange("binary_format") {
 			v := sdk.BinaryFormat(d.Get("binary_format").(string))
 			opts.Set.JSONBinaryFormat = &v
+			runSet = true
 		}
 		if d.HasChange("trim_space") {
 			v := d.Get("trim_space").(bool)
 			opts.Set.JSONTrimSpace = &v
+			runSet = true
 		}
 		if d.HasChange("null_if") {
 			nullIf := []sdk.NullString{}
@@ -910,47 +940,58 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 				nullIf = append(nullIf, sdk.NullString{S: s.(string)})
 			}
 			opts.Set.JSONNullIf = &nullIf
+			runSet = true
 		}
 		if d.HasChange("file_extension") {
 			v := d.Get("file_extension").(string)
 			opts.Set.JSONFileExtension = &v
+			runSet = true
 		}
 		if d.HasChange("enable_octal") {
 			v := d.Get("enable_octal").(bool)
 			opts.Set.JSONEnableOctal = &v
+			runSet = true
 		}
 		if d.HasChange("allow_duplicate") {
 			v := d.Get("allow_duplicate").(bool)
 			opts.Set.JSONAllowDuplicate = &v
+			runSet = true
 		}
 		if d.HasChange("strip_outer_array") {
 			v := d.Get("strip_outer_array").(bool)
 			opts.Set.JSONStripOuterArray = &v
+			runSet = true
 		}
 		if d.HasChange("strip_null_values") {
 			v := d.Get("strip_null_values").(bool)
 			opts.Set.JSONStripNullValues = &v
+			runSet = true
 		}
 		if d.HasChange("replace_invalid_characters") {
 			v := d.Get("replace_invalid_characters").(bool)
 			opts.Set.JSONReplaceInvalidCharacters = &v
+			runSet = true
 		}
 		if d.HasChange("ignore_utf8_errors") {
 			v := d.Get("ignore_utf8_errors").(bool)
 			opts.Set.JSONIgnoreUTF8Errors = &v
+			runSet = true
 		}
 		if d.HasChange("skip_byte_order_mark") {
 			v := d.Get("skip_byte_order_mark").(bool)
 			opts.Set.JSONSkipByteOrderMark = &v
+			runSet = true
 		}
 	case sdk.FileFormatTypeAvro:
 		if d.HasChange("compression") {
 			comp := sdk.AvroCompression(d.Get("compression").(string))
 			opts.Set.AvroCompression = &comp
+			runSet = true
 		}
 		if d.HasChange("trim_space") {
 			v := d.Get("trim_space").(bool)
 			opts.Set.AvroTrimSpace = &v
+			runSet = true
 		}
 		if d.HasChange("null_if") {
 			nullIf := []sdk.NullString{}
@@ -963,11 +1004,13 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 				nullIf = append(nullIf, sdk.NullString{S: s.(string)})
 			}
 			opts.Set.AvroNullIf = &nullIf
+			runSet = true
 		}
 	case sdk.FileFormatTypeORC:
 		if d.HasChange("trim_space") {
 			v := d.Get("trim_space").(bool)
 			opts.Set.ORCTrimSpace = &v
+			runSet = true
 		}
 		if d.HasChange("null_if") {
 			nullIf := []sdk.NullString{}
@@ -980,19 +1023,23 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 				nullIf = append(nullIf, sdk.NullString{S: s.(string)})
 			}
 			opts.Set.ORCNullIf = &nullIf
+			runSet = true
 		}
 	case sdk.FileFormatTypeParquet:
 		if d.HasChange("compression") {
 			comp := sdk.ParquetCompression(d.Get("compression").(string))
 			opts.Set.ParquetCompression = &comp
+			runSet = true
 		}
 		if d.HasChange("binary_as_text") {
 			v := d.Get("binary_as_text").(bool)
 			opts.Set.ParquetBinaryAsText = &v
+			runSet = true
 		}
 		if d.HasChange("trim_space") {
 			v := d.Get("trim_space").(bool)
 			opts.Set.ParquetTrimSpace = &v
+			runSet = true
 		}
 		if d.HasChange("null_if") {
 			nullIf := []sdk.NullString{}
@@ -1005,42 +1052,51 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 				nullIf = append(nullIf, sdk.NullString{S: s.(string)})
 			}
 			opts.Set.ParquetNullIf = &nullIf
+			runSet = true
 		}
 	case sdk.FileFormatTypeXML:
 		if d.HasChange("compression") {
 			comp := sdk.XMLCompression(d.Get("compression").(string))
 			opts.Set.XMLCompression = &comp
+			runSet = true
 		}
 		if d.HasChange("ignore_utf8_errors") {
 			v := d.Get("ignore_utf8_errors").(bool)
 			opts.Set.XMLIgnoreUTF8Errors = &v
+			runSet = true
 		}
 		if d.HasChange("preserve_space") {
 			v := d.Get("preserve_space").(bool)
 			opts.Set.XMLPreserveSpace = &v
+			runSet = true
 		}
 		if d.HasChange("strip_outer_element") {
 			v := d.Get("strip_outer_element").(bool)
 			opts.Set.XMLStripOuterElement = &v
+			runSet = true
 		}
 		if d.HasChange("disable_snowflake_data") {
 			v := d.Get("disable_snowflake_data").(bool)
 			opts.Set.XMLDisableSnowflakeData = &v
+			runSet = true
 		}
 		if d.HasChange("disable_auto_convert") {
 			v := d.Get("disable_auto_convert").(bool)
 			opts.Set.XMLDisableAutoConvert = &v
+			runSet = true
 		}
 		if d.HasChange("skip_byte_order_mark") {
 			v := d.Get("skip_byte_order_mark").(bool)
 			opts.Set.XMLSkipByteOrderMark = &v
+			runSet = true
 		}
 	}
 
-	err = client.FileFormats.Alter(ctx, id, &opts)
-
-	if err != nil {
-		return err
+	if runSet {
+		err = client.FileFormats.Alter(ctx, id, &opts)
+		if err != nil {
+			return err
+		}
 	}
 
 	return ReadFileFormat(d, meta)
