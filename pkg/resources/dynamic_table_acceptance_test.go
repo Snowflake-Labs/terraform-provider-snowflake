@@ -102,33 +102,30 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2173 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2173 issue.
 func TestAcc_DynamicTable_issue2173(t *testing.T) {
-	resourceName := "snowflake_dynamic_table.dt"
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	tableName := name + "_table"
+	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := dynamicTableName + "_table"
 	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	otherSchema := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":       config.StringVariable(name),
-			"database":   config.StringVariable(acc.TestDatabaseName),
-			"schema":     config.StringVariable(acc.TestSchemaName),
-			"warehouse":  config.StringVariable(acc.TestWarehouseName),
-			"query":      config.StringVariable(query),
-			"comment":    config.StringVariable("Terraform acceptance test for GH issue 2173"),
-			"table_name": config.StringVariable(tableName),
+			"name":         config.StringVariable(dynamicTableName),
+			"database":     config.StringVariable(acc.TestDatabaseName),
+			"schema":       config.StringVariable(acc.TestSchemaName),
+			"warehouse":    config.StringVariable(acc.TestWarehouseName),
+			"query":        config.StringVariable(query),
+			"comment":      config.StringVariable("Terraform acceptance test for GH issue 2173"),
+			"table_name":   config.StringVariable(tableName),
+			"other_schema": config.StringVariable(otherSchema),
 		}
 	}
-	otherSchema := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck: func() {
-			acc.TestAccPreCheck(t)
-			createDynamicTableOutsideTerraform(t, otherSchema, name)
-		},
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: dropAdditionalSchemaAndCheckDynamicTableDestroy(t, otherSchema),
+		CheckDestroy: testAccCheckDynamicTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -137,26 +134,37 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr("snowflake_schema.other_schema", "name", otherSchema),
+					resource.TestCheckResourceAttr("snowflake_table.t", "name", tableName),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
+				PreConfig:       func() { createDynamicTableOutsideTerraform(t, otherSchema, dynamicTableName, query) },
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
+				),
+			},
+			{
+				// We use the same config here as in the previous step so the plan should be empty.
+				ConfigDirectory: acc.ConfigurationSameAsStepN(2),
 				ConfigVariables: m(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					/*
 					 * Before the fix this step resulted in
-					 *     # snowflake_dynamic_table.dt will be updated in-place
-					 *     ~ resource "snowflake_dynamic_table" "dt" {
-					 *     + comment              = "Terraform acceptance test for GH issue 2173"
-					 *     id                   = "terraform_test_database|terraform_test_schema|JJIVTACVOU"
-					 *     name                 = "JJIVTACVOU"
-					 *     ~ query                = "select id from \"terraform_test_database\".\"WFAUDTBOJW\".\"JJIVTACVOU_table\"" -> "select \"id\" from \"terraform_test_database\".\"terraform_test_schema\".\"JJIVTACVOU_table\""
-					 *     ~ schema               = "WFAUDTBOJW" -> "terraform_test_schema"
-					 *     # (13 unchanged attributes hidden) *
-					 *     # (1 unchanged block hidden)
-					 *     }
-					 * which matches the issue description exactly.
+					 *    # snowflake_dynamic_table.dt will be updated in-place
+					 *    ~ resource "snowflake_dynamic_table" "dt" {
+					 *        + comment              = "Terraform acceptance test for GH issue 2173"
+					 *          id                   = "terraform_test_database|terraform_test_schema|SFVNXKJFAA"
+					 *          name                 = "SFVNXKJFAA"
+					 *        ~ schema               = "MEYIYWUGGO" -> "terraform_test_schema"
+					 *          # (14 unchanged attributes hidden)
+					 *      }
+					 * which matches the issue description exactly (issue mentioned also query being changed but here for simplicity the same underlying table and query were used).
 					 */
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
@@ -182,7 +190,7 @@ func testAccCheckDynamicTableDestroy(s *terraform.State) error {
 	return nil
 }
 
-func createDynamicTableOutsideTerraform(t *testing.T, schemaName string, dynamicTableName string) {
+func createDynamicTableOutsideTerraform(t *testing.T, schemaName string, dynamicTableName string, query string) {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
 	if err != nil {
@@ -190,40 +198,8 @@ func createDynamicTableOutsideTerraform(t *testing.T, schemaName string, dynamic
 	}
 	ctx := context.Background()
 
-	schemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, schemaName)
-	if err := client.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{
-		IfNotExists: sdk.Bool(true),
-	}); err != nil {
-		t.Fatal(fmt.Errorf("error creating schema: %w", err))
-	}
-
-	tableName := dynamicTableName + "_table"
-	tableId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, schemaName, tableName)
-
-	_, err = client.ExecForTests(ctx, fmt.Sprintf("CREATE TABLE %s (id NUMBER)", tableId.FullyQualifiedName()))
-	if err != nil {
-		t.Fatal(fmt.Errorf("error creating table: %w", err))
-	}
-
-	query := fmt.Sprintf(`select id from "%v"."%v"."%v"`, acc.TestDatabaseName, schemaName, tableName)
 	dynamicTableId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, schemaName, dynamicTableName)
 	if err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(dynamicTableId, sdk.NewAccountObjectIdentifier(acc.TestWarehouseName), sdk.TargetLag{MaximumDuration: sdk.String("2 minutes")}, query)); err != nil {
 		t.Fatal(fmt.Errorf("error creating dynamic table: %w", err))
-	}
-}
-
-func dropAdditionalSchemaAndCheckDynamicTableDestroy(t *testing.T, schemaName string) resource.TestCheckFunc {
-	t.Helper()
-	return func(s *terraform.State) error {
-		client, err := sdk.NewDefaultClient()
-		if err != nil {
-			t.Fatal(err)
-		}
-		ctx := context.Background()
-
-		schemaId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, schemaName)
-		_ = client.Schemas.Drop(ctx, schemaId, nil)
-
-		return testAccCheckDynamicTableDestroy(s)
 	}
 }
