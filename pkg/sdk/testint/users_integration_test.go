@@ -98,8 +98,9 @@ func TestInt_UserCreate(t *testing.T) {
 		opts := &sdk.CreateUserOptions{
 			OrReplace: sdk.Bool(true),
 			ObjectProperties: &sdk.UserObjectProperties{
-				Password:  &password,
-				LoginName: &loginName,
+				Password:    &password,
+				LoginName:   &loginName,
+				DefaultRole: sdk.String("foo"),
 			},
 			ObjectParameters: &sdk.UserObjectParameters{
 				EnableUnredactedQuerySyntaxError: sdk.Bool(true),
@@ -116,6 +117,7 @@ func TestInt_UserCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, id.Name(), userDetails.Name.Value)
 		assert.Equal(t, strings.ToUpper(loginName), userDetails.LoginName.Value)
+		assert.Equal(t, "FOO", userDetails.DefaultRole.Value)
 
 		user, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
 			Like: &sdk.Like{

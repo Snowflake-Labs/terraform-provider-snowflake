@@ -80,10 +80,11 @@ var userSchema = map[string]*schema.Schema{
 		Description:      "Specifies the namespace (database only or database and schema) that is active by default for the user’s session upon login.",
 	},
 	"default_role": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Computed:    true,
-		Description: "Specifies the role that is active by default for the user’s session upon login.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Computed:         true,
+		DiffSuppressFunc: diffCaseInsensitive,
+		Description:      "Specifies the role that is active by default for the user’s session upon login.",
 	},
 	"default_secondary_roles": {
 		Type:        schema.TypeSet,
