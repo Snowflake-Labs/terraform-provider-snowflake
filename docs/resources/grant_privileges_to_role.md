@@ -129,6 +129,7 @@ resource "snowflake_grant_privileges_to_role" "g11" {
   role_name  = snowflake_role.r.name
   on_schema_object {
     all {
+      object_type_plural = "TABLES"
       in_database = snowflake_database.d.name
     }
   }
