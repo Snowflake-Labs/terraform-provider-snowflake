@@ -60,3 +60,29 @@ func sqlToFieldName(sql string, shouldExport bool) string {
 	}
 	return strings.Join(sqlWords, "")
 }
+
+func camelCase(s string) string {
+	// split into words
+	words := strings.Split(s, " ")
+	// convert to camel case
+	for i, word := range words {
+		if i == 0 {
+			words[i] = strings.ToLower(word)
+		} else {
+			words[i] = strings.ToUpper(word[:1]) + strings.ToLower(word[1:])
+		}
+	}
+	// join words
+	return strings.Join(words, "")
+}
+
+func pascalCase(s string) string {
+	// split into words
+	words := strings.Split(s, " ")
+	// convert to pascal case
+	for i, word := range words {
+		words[i] = strings.ToUpper(word[:1]) + strings.ToLower(word[1:])
+	}
+	// join words
+	return strings.Join(words, "")
+}

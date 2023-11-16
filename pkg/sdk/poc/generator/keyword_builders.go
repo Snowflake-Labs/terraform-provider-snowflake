@@ -21,6 +21,16 @@ func (v *QueryStruct) Terse() *QueryStruct {
 	return v.OptionalSQL("TERSE")
 }
 
+func (v *QueryStruct) Enum(name string, kind string) *QueryStruct {
+	v.fields = append(v.fields, NewField(name, kind, Tags().Keyword(), nil))
+	return v
+}
+
+func (v *QueryStruct) DataType(name string) *QueryStruct {
+	v.fields = append(v.fields, NewField(name, "DataType", Tags().Keyword(), nil))
+	return v
+}
+
 func (v *QueryStruct) Text(name string, transformer *KeywordTransformer) *QueryStruct {
 	v.fields = append(v.fields, NewField(name, "string", Tags().Keyword(), transformer))
 	return v
@@ -28,6 +38,11 @@ func (v *QueryStruct) Text(name string, transformer *KeywordTransformer) *QueryS
 
 func (v *QueryStruct) Number(name string, transformer *KeywordTransformer) *QueryStruct {
 	v.fields = append(v.fields, NewField(name, "int", Tags().Keyword(), transformer))
+	return v
+}
+
+func (v *QueryStruct) OptionalDataType(name string) *QueryStruct {
+	v.fields = append(v.fields, NewField(name, "*DataType", Tags().Keyword(), nil))
 	return v
 }
 

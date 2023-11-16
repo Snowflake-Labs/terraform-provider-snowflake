@@ -440,6 +440,7 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 		clauses: listClauses,
 		cm:      b.getModifier(field.Tag, "ddl", commaModifierType, Comma).(commaModifier),
 		pm:      b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier),
+		qm:      b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 	})
 	sClause := b.renderStaticClause(clauses...)
 	ddlTag := strings.Split(field.Tag.Get("ddl"), ",")[0]
@@ -556,6 +557,7 @@ type sqlListClause struct {
 	clauses []sqlClause
 	cm      commaModifier
 	pm      parenModifier
+	qm      quoteModifier
 }
 
 func (v sqlListClause) String() string {
@@ -564,7 +566,7 @@ func (v sqlListClause) String() string {
 	}
 	clauseStrings := make([]string, len(v.clauses))
 	for i, clause := range v.clauses {
-		clauseStrings[i] = clause.String()
+		clauseStrings[i] = v.qm.Modify(clause.String())
 	}
 	s := v.cm.Modify(clauseStrings)
 	s = v.pm.Modify(s)

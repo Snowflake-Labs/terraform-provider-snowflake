@@ -375,6 +375,30 @@ func TestBuilder_parseStruct(t *testing.T) {
 		assert.Equal(t, "EXAMPLE_PARAMETER = example", clauses[2].String())
 	})
 
+	t.Run("struct with slice field of strings", func(t *testing.T) {
+		s := &struct {
+			List []string `ddl:"parameter,parentheses" sql:"EXAMPLE_PARAMETER"`
+		}{
+			List: []string{"abc", "def", "123", "456"},
+		}
+		clauses, err := builder.parseStruct(s)
+		require.NoError(t, err)
+		assert.Len(t, clauses, 1)
+		assert.Equal(t, "EXAMPLE_PARAMETER = (abc, def, 123, 456)", clauses[0].String())
+	})
+
+	t.Run("struct with slice field of strings", func(t *testing.T) {
+		s := &struct {
+			List []string `ddl:"parameter,single_quotes,parentheses" sql:"EXAMPLE_PARAMETER"`
+		}{
+			List: []string{"abc", "def", "123", "456"},
+		}
+		clauses, err := builder.parseStruct(s)
+		require.NoError(t, err)
+		assert.Len(t, clauses, 1)
+		assert.Equal(t, "EXAMPLE_PARAMETER = ('abc', 'def', '123', '456')", clauses[0].String())
+	})
+
 	t.Run("struct with a slice field using ddl: keyword", func(t *testing.T) {
 		type testListElement struct {
 			K  *string `ddl:"parameter,single_quotes" sql:"KEY"`

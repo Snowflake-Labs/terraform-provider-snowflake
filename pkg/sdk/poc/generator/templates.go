@@ -1,6 +1,8 @@
 package generator
 
-import "text/template"
+import (
+	"text/template"
+)
 
 var PackageTemplate, _ = template.New("packageTemplate").Parse(`
 package {{ . }}
@@ -76,9 +78,19 @@ type {{ .DtoDecl }} struct {
 
 var ImplementationTemplate, _ = template.New("implementationTemplate").
 	Funcs(template.FuncMap{
-		"deref": func(p *DescriptionMappingKind) string { return string(*p) },
+		"deref":      func(p *DescriptionMappingKind) string { return string(*p) },
+		"camelCase":  camelCase,
+		"pascalCase": pascalCase,
 	}).
 	Parse(`
+{{ define "ENUM" - }}
+	type {{ .Kind }} string
+
+	const (
+		{{- range .Values }}
+		{{ .Kind }} {{ PascalCase $.Name }} = "{{ .Name }}"
+	)
+{{- end }}
 {{ define "MAPPING" -}}
 	&{{ .KindNoPtr }}{
 		{{- range .Fields }}
@@ -127,6 +139,11 @@ var _ {{ .Name }} = (*{{ $impl }})(nil)
 type {{ $impl }} struct {
 	client *Client
 }
+
+{{ range .Enums }}
+	{{ template "ENUM" .Enum }}
+{{ end }}
+
 {{ range .Operations }}
 	{{ if and (eq .Name "Show") .ShowMapping }}
 		func (v *{{ $impl }}) Show(ctx context.Context, request *{{ .OptsField.DtoDecl }}) ([]{{ .ShowMapping.To.Name }}, error) {
@@ -274,7 +291,7 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 
 var (
 {{- range .Operations }}
-	{{- if .OptsField }}	
+	{{- if .OptsField }}
 	_ validatable = new({{ .OptsField.KindNoPtr }})
 	{{- end }}
 {{- end }}
