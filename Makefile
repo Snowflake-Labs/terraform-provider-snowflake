@@ -34,10 +34,10 @@ terraform-fmt: ## Run terraform fmt
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
 
-install: ## display help for this makefile
+install: ## install the binary
 	go install -v ./...
 
-lint: # See https://golangci-lint.run/
+lint: # Run static code analysis, check formatting. See https://golangci-lint.run/
 	golangci-lint run ./... -v
 
 lint-fix: ## Run static code analysis, check formatting and try to fix findings
@@ -51,7 +51,7 @@ mod-check: mod ## check if there are any missing/unused modules
 
 pre-push: fmt docs mod lint   ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
-pre-push-check: fmt-check docs-check lint-check mod-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+pre-push-check: fmt-check docs-check lint-check mod-check ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
 sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
@@ -63,10 +63,10 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 		fi;
 
 test: ## run unit and integration tests
-	go test -v -cover -timeout=30m -parallel=4 ./...
+	go test -v -cover -timeout=30m ./...
 
 test-acceptance: ## run acceptance tests
-	TF_ACC=1 go test -v -cover -timeout 30m `go list ./... | grep -v pkg/sdk`
+	TF_ACC=1 go test -v -cover -timeout 30m (^TestAcc$)
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .
@@ -79,25 +79,25 @@ uninstall-tf: ## uninstalls plugin from where terraform can find it
 	rm -f $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
 
 generate-all-dto: ## Generate all DTOs for SDK interfaces
-	go generate ./internal/sdk/*_dto.go
+	go generate ./pkg/sdk/*_dto.go
 
-generate-dto-%: ./internal/sdk/%_dto.go ## Generate DTO for given SDK interface
+generate-dto-%: ./pkg/sdk/%_dto.go ## Generate DTO for given SDK interface
 	go generate $<
 
 clean-generator-poc:
-	rm -f ./internal/sdk/poc/example/*_gen.go
-	rm -f ./internal/sdk/poc/example/*_gen_test.go
+	rm -f ./pkg/sdk/poc/example/*_gen.go
+	rm -f ./pkg/sdk/poc/example/*_gen_test.go
 
 clean-generator-%: ## Clean generated files for specified resource
-	rm -f ./internal/sdk/$**_gen.go
-	rm -f ./internal/sdk/$**_gen_*test.go
+	rm -f ./pkg/sdk/$**_gen.go
+	rm -f ./pkg/sdk/$**_gen_*test.go
 
 run-generator-poc:
-	go generate ./internal/sdk/poc/example/*_def.go
-	go generate ./internal/sdk/poc/example/*_dto_gen.go
+	go generate ./pkg/sdk/poc/example/*_def.go
+	go generate ./pkg/sdk/poc/example/*_dto_gen.go
 
-run-generator-%: ./internal/sdk/%_def.go ## Run go generate on given object definition
+run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on given object definition
 	go generate $<
-	go generate ./internal/sdk/$*_dto_gen.go
+	go generate ./pkg/sdk/$*_dto_gen.go
 
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance tools uninstall-tf
