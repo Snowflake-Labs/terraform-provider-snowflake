@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.76.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.75.0...v0.76.0) (2023-11-15)
+
+
+### Features
+
+* Add "CREATE DYNAMIC TABLE" to schema_grant ([#2144](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2144)) ([6f026f6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6f026f64e6e24638df2b9d4110362836a9071011))
+* Add views to the SDK ([#2171](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2171)) ([ed079d3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ed079d3d06dc3af083da04ca18314c8e7b07308e))
+* Migrate application role to new sdk ([#2149](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2149)) ([7abb4db](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7abb4dbb645f0eb0fcb1d39414b1ed0c322916c9))
+* Migrate stage to the new sdk ([#2163](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2163)) ([1d08c46](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1d08c46c470cda2d6b7c7ed3d599d2c1a57b837b))
+* Poc custom error type ([#2052](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2052)) ([b86c4c3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b86c4c34d05f8b982fb6218a3a3a7500a23abf72))
+* Use tasks from the SDK followup ([#2153](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2153)) ([82c3c13](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/82c3c13b6166168e470d7cb9b2982a8979275f17))
+
+
+### Misc
+
+* Add migration guide ([#2142](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2142)) ([ee0f6af](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ee0f6af54dbd269f8bfa2c3d73a396d98d10a6ab))
+* Split existing alter operations ([#2156](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2156)) ([dbb7c91](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dbb7c9136c586490a0856cc07ae879be491c8150))
+
+
+### BugFixes
+
+* Fix [#1947](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1947), [#2134](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2134), [#2173](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2173), and [#2176](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2176) ([#2192](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2192)) ([98d8ccc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/98d8ccc3c52fbd76d9d24c5fc7091ec0afa30e1a))
+* provider muxing for plugin-framework ([#2130](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2130)) ([f3c85c0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f3c85c0ebe3e54dc91836fe998c2d7c8e3373a52))
+
+## [0.75.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.74.0...v0.75.0) (2023-10-26)
+
+
+### Features
+
+* add parse_header option to file format resource ([#2132](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2132)) ([1e6e54f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1e6e54f828efa60edd258b316709fc4dfd370f93))
+* Use streams from the new SDK in resource / datasource ([#2129](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2129)) ([5c633be](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5c633be461fd373d412b02b108e64b6cfc4eb856))
+* Use task from SDK in resource and data source ([#2140](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2140)) ([de23f2b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/de23f2ba939eb368d9734217e1bb2d4ebc75eef4))
+
+
+### Misc
+
+* Return multiple errors in existing validations ([#2122](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2122)) ([4d4bcdb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4d4bcdbe841807da2fa08d534eaf846234934f7c))
+* Set up a single warehouse for the SDK integration tests ([#2141](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2141)) ([16022ef](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/16022ef4171e7dccf2932ae6e8d451b51c93291c))
+
+
+### BugFixes
+
+* cleanup acc tests ([#2135](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2135)) ([5db751d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5db751d1aa71952b1528e81cf2fdcd05d9d5d0fb))
+* provider config ([#2136](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2136)) ([07b9b4f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/07b9b4fee800fe3f34890783cc463d4fc5904717))
+* view statement update ([#2152](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2152)) ([6de32ae](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6de32ae6ec16ad76fb40afddfcaa7f650322cb67))
+
 ## [0.74.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.73.0...v0.74.0) (2023-10-18)
 
 

@@ -142,7 +142,6 @@ func TestFileFormatsCreate(t *testing.T) {
 			name:        NewSchemaObjectIdentifier("db4", "schema5", "format6"),
 			IfNotExists: Bool(true),
 			Type:        FileFormatTypeXML,
-
 			FileFormatTypeOptions: FileFormatTypeOptions{
 				XMLCompression:          &XMLCompressionZstd,
 				XMLIgnoreUTF8Errors:     Bool(true),
@@ -151,9 +150,8 @@ func TestFileFormatsCreate(t *testing.T) {
 				XMLDisableSnowflakeData: Bool(true),
 				XMLDisableAutoConvert:   Bool(true),
 				XMLSkipByteOrderMark:    Bool(true),
-
-				Comment: String("test file format"),
 			},
+			Comment: String("test file format"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY FILE FORMAT IF NOT EXISTS "db4"."schema5"."format6" TYPE = XML COMPRESSION = ZSTD IGNORE_UTF8_ERRORS = true PRESERVE_SPACE = true STRIP_OUTER_ELEMENT = true DISABLE_SNOWFLAKE_DATA = true DISABLE_AUTO_CONVERT = true SKIP_BYTE_ORDER_MARK = true COMMENT = 'test file format'`)
 	})
@@ -162,7 +160,6 @@ func TestFileFormatsCreate(t *testing.T) {
 		opts := &CreateFileFormatOptions{
 			name: NewSchemaObjectIdentifier("test_db", "test_schema", "test_file_format"),
 			Type: FileFormatTypeCSV,
-
 			FileFormatTypeOptions: FileFormatTypeOptions{
 				CSVNullIf:                     &[]NullString{{"NULL"}},
 				CSVSkipBlankLines:             Bool(false),
@@ -171,9 +168,8 @@ func TestFileFormatsCreate(t *testing.T) {
 				CSVReplaceInvalidCharacters:   Bool(false),
 				CSVEmptyFieldAsNull:           Bool(false),
 				CSVSkipByteOrderMark:          Bool(false),
-
-				Comment: String("great comment"),
 			},
+			Comment: String("great comment"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `CREATE FILE FORMAT "test_db"."test_schema"."test_file_format" TYPE = CSV SKIP_BLANK_LINES = false TRIM_SPACE = false NULL_IF = ('NULL') ERROR_ON_COLUMN_COUNT_MISMATCH = true REPLACE_INVALID_CHARACTERS = false EMPTY_FIELD_AS_NULL = false SKIP_BYTE_ORDER_MARK = false COMMENT = 'great comment'`)
 	})

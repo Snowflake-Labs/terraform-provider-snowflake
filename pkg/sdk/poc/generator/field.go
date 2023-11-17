@@ -133,6 +133,15 @@ func (f *Field) Path() string {
 	}
 }
 
+// PathWithRoot returns the way through the tree to the top, with dot separator and root included (e.g. Struct.SomeField.SomeChild)
+func (f *Field) PathWithRoot() string {
+	if f.IsRoot() {
+		return f.Name
+	} else {
+		return fmt.Sprintf("%s.%s", f.Parent.PathWithRoot(), f.Name)
+	}
+}
+
 // DtoKind returns what should be fields kind in generated DTO, because it may differ from Kind
 func (f *Field) DtoKind() string {
 	switch {

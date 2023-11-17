@@ -272,8 +272,6 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 	{{- end -}}
 {{ end }}
 
-import "errors"
-
 var (
 {{- range .Operations }}
 	{{- if .OptsField }}
@@ -285,11 +283,11 @@ var (
 	{{- if .OptsField }}
 	func (opts *{{ .OptsField.KindNoPtr }}) validate() error {
 		if opts == nil {
-			return errors.Join(ErrNilOptions)
+			return ErrNilOptions
 		}
 		var errs []error
 		{{- template "VALIDATIONS" .OptsField }}
-		return errors.Join(errs...)
+		return JoinErrors(errs...)
 	}
 	{{- end }}
 {{ end }}

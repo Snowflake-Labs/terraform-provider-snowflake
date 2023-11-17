@@ -78,16 +78,14 @@ func TestSchemasAlter(t *testing.T) {
 	t.Run("set tags", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
 			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
-			Set: &SchemaSet{
-				Tag: []TagAssociation{
-					{
-						Name:  NewAccountObjectIdentifier("tag1"),
-						Value: "value1",
-					},
-					{
-						Name:  NewAccountObjectIdentifier("tag2"),
-						Value: "value2",
-					},
+			SetTag: []TagAssociation{
+				{
+					Name:  NewAccountObjectIdentifier("tag1"),
+					Value: "value1",
+				},
+				{
+					Name:  NewAccountObjectIdentifier("tag2"),
+					Value: "value2",
 				},
 			},
 		}
@@ -97,11 +95,9 @@ func TestSchemasAlter(t *testing.T) {
 	t.Run("unset tags", func(t *testing.T) {
 		opts := &AlterSchemaOptions{
 			name: NewDatabaseObjectIdentifier("database_name", "schema_name"),
-			Unset: &SchemaUnset{
-				Tag: []ObjectIdentifier{
-					NewAccountObjectIdentifier("tag1"),
-					NewAccountObjectIdentifier("tag2"),
-				},
+			UnsetTag: []ObjectIdentifier{
+				NewAccountObjectIdentifier("tag1"),
+				NewAccountObjectIdentifier("tag2"),
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER SCHEMA "database_name"."schema_name" UNSET TAG "tag1", "tag2"`)

@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -50,6 +51,10 @@ var (
 			Enabled:           true,
 			Schedule:          "5 MINUTE",
 			UserTaskTimeoutMs: 1800000,
+			SessionParams: map[string]string{
+				string(sdk.SessionParameterLockTimeout):      "1000",
+				string(sdk.SessionParameterStrictJSONOutput): "true",
+			},
 		},
 
 		ChildTask: &TaskSettings{
@@ -79,6 +84,10 @@ var (
 			Enabled:           true,
 			Schedule:          "5 MINUTE",
 			UserTaskTimeoutMs: 1800000,
+			SessionParams: map[string]string{
+				string(sdk.SessionParameterLockTimeout):      "1000",
+				string(sdk.SessionParameterStrictJSONOutput): "true",
+			},
 		},
 
 		ChildTask: &TaskSettings{
@@ -95,7 +104,7 @@ var (
 			When:    "TRUE",
 			Enabled: true,
 			SessionParams: map[string]string{
-				"TIMESTAMP_INPUT_FORMAT": "YYYY-MM-DD HH24",
+				string(sdk.SessionParameterTimestampInputFormat): "YYYY-MM-DD HH24",
 			},
 			Schedule:          "5 MINUTE",
 			UserTaskTimeoutMs: 1800000,
@@ -113,6 +122,10 @@ var (
 			Enabled:           true,
 			Schedule:          "15 MINUTE",
 			UserTaskTimeoutMs: 1800000,
+			SessionParams: map[string]string{
+				string(sdk.SessionParameterLockTimeout):      "1000",
+				string(sdk.SessionParameterStrictJSONOutput): "true",
+			},
 		},
 
 		ChildTask: &TaskSettings{
@@ -144,6 +157,11 @@ var (
 			Enabled:           false,
 			Schedule:          "5 MINUTE",
 			UserTaskTimeoutMs: 1800000,
+			// Changes session params: one is updated, one is removed, one is added
+			SessionParams: map[string]string{
+				string(sdk.SessionParameterLockTimeout):         "2000",
+				string(sdk.SessionParameterMultiStatementCount): "5",
+			},
 		},
 
 		ChildTask: &TaskSettings{
@@ -160,7 +178,7 @@ var (
 			When:    "TRUE",
 			Enabled: true,
 			SessionParams: map[string]string{
-				"TIMESTAMP_INPUT_FORMAT": "YYYY-MM-DD HH24",
+				string(sdk.SessionParameterTimestampInputFormat): "YYYY-MM-DD HH24",
 			},
 			Schedule:          "5 MINUTE",
 			UserTaskTimeoutMs: 0,
@@ -193,6 +211,9 @@ func TestAcc_Task(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", initialState.ChildTask.Schedule),
 					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", initialState.RootTask.UserTaskTimeoutMs),
 					resource.TestCheckNoResourceAttr("snowflake_task.solo_task", "user_task_timeout_ms"),
+					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
+					checkBool("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", true),
+					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
 				),
 			},
 			{
@@ -213,6 +234,9 @@ func TestAcc_Task(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", stepOne.ChildTask.Schedule),
 					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepOne.RootTask.UserTaskTimeoutMs),
 					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepOne.SoloTask.UserTaskTimeoutMs),
+					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
+					checkBool("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", true),
+					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
 				),
 			},
 			{
@@ -233,6 +257,9 @@ func TestAcc_Task(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", stepTwo.ChildTask.Schedule),
 					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepTwo.RootTask.UserTaskTimeoutMs),
 					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepTwo.SoloTask.UserTaskTimeoutMs),
+					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
+					checkBool("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", true),
+					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
 				),
 			},
 			{
@@ -253,6 +280,9 @@ func TestAcc_Task(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", stepThree.ChildTask.Schedule),
 					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepThree.RootTask.UserTaskTimeoutMs),
 					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepThree.SoloTask.UserTaskTimeoutMs),
+					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 2000),
+					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT"),
+					checkInt64("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT", 5),
 				),
 			},
 			{
@@ -279,6 +309,9 @@ func TestAcc_Task(t *testing.T) {
 					// `user_task_timeout_ms` by unsetting the
 					// USER_TASK_TIMEOUT_MS session variable.
 					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", initialState.ChildTask.UserTaskTimeoutMs),
+					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
+					checkBool("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", true),
+					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
 				),
 			},
 		},
@@ -302,12 +335,12 @@ resource "snowflake_task" "root_task" {
 	user_task_timeout_ms = {{ .RootTask.UserTaskTimeoutMs }}
 	{{- end }}
 
-	{{ if .ChildTask.SessionParams }}
+	{{ if .RootTask.SessionParams }}
 	session_parameters = {
-	{{ range $key, $value :=  .RootTask.SessionParams}}
+	{{ range $key, $value := .RootTask.SessionParams}}
         {{ $key }} = "{{ $value }}",
-	}
 	{{- end }}
+	}
 	{{- end }}
 }
 resource "snowflake_task" "child_task" {
@@ -325,10 +358,10 @@ resource "snowflake_task" "child_task" {
 
 	{{ if .ChildTask.SessionParams }}
 	session_parameters = {
-	{{ range $key, $value :=  .ChildTask.SessionParams}}
+	{{ range $key, $value := .ChildTask.SessionParams}}
         {{ $key }} = "{{ $value }}",
-	}
 	{{- end }}
+	}
 	{{- end }}
 }
 resource "snowflake_task" "solo_task" {
@@ -351,8 +384,8 @@ resource "snowflake_task" "solo_task" {
 	session_parameters = {
 	{{ range $key, $value :=  .SoloTask.SessionParams}}
         {{ $key }} = "{{ $value }}",
-	}
 	{{- end }}
+	}
 	{{- end }}
 }
 	`)
@@ -519,6 +552,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "1"),
 				),
 			},
 			{
@@ -529,6 +563,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", ""),
+					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "2"),
 				),
 			},
 			{
@@ -539,6 +574,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
+					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "1"),
 				),
 			},
 			{
@@ -549,6 +585,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", ""),
+					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "0"),
 				),
 			},
 		},
@@ -558,12 +595,13 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 func taskConfigManagedScheduled(name string, taskRootName string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_task" "test_task_root" {
-	name     	  = "%s"
-	database  	  = "%s"
-	schema    	  = "%s"
-	sql_statement = "SELECT 1"
-	enabled  	  = true
-	schedule      = "5 MINUTE"
+	name     	                    = "%s"
+	database  	                    = "%s"
+	schema    	                    = "%s"
+	sql_statement                   = "SELECT 1"
+	enabled  	                    = true
+	schedule                        = "5 MINUTE"
+    suspend_task_after_num_failures = 1
 }
 
 resource "snowflake_task" "test_task" {
@@ -581,12 +619,13 @@ resource "snowflake_task" "test_task" {
 func taskConfigManagedScheduled2(name string, taskRootName string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_task" "test_task_root" {
-	name     	  = "%s"
-	database  	  =  "%s"
-	schema    	  =  "%s"
-	sql_statement = "SELECT 1"
-	enabled  	  = true
-	schedule      = "5 MINUTE"
+	name     	                    = "%s"
+	database  	                    =  "%s"
+	schema    	                    =  "%s"
+	sql_statement                   = "SELECT 1"
+	enabled  	                    = true
+	schedule                        = "5 MINUTE"
+    suspend_task_after_num_failures = 2
 }
 
 resource "snowflake_task" "test_task" {

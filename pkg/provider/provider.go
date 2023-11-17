@@ -61,7 +61,7 @@ func Provider() *schema.Provider {
 			},
 			"validate_default_parameters": {
 				Type:        schema.TypeBool,
-				Description: "If true, disables the validation checks for Database, Schema, Warehouse and Role at the time a connection is established. Can also be sourced from the `SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS` environment variable.",
+				Description: "True by default. If false, disables the validation checks for Database, Schema, Warehouse and Role at the time a connection is established. Can also be sourced from the `SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS` environment variable.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS", nil),
 			},
@@ -180,7 +180,7 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_INSECURE_MODE", nil),
 			},
-			"oscp_fail_open": {
+			"ocsp_fail_open": {
 				Type:        schema.TypeBool,
 				Description: "True represents OCSP fail open mode. False represents OCSP fail closed mode. Fail open true by default. Can also be sourced from the `SNOWFLAKE_OCSP_FAIL_OPEN` environment variable.",
 				Optional:    true,
@@ -372,13 +372,12 @@ func Provider() *schema.Provider {
 				Deprecated:    "Use `token_accessor.0.redirect_uri` instead",
 			},
 			"browser_auth": {
-				Type:          schema.TypeBool,
-				Description:   "Required when `oauth_refresh_token` is used. Can also be sourced from `SNOWFLAKE_USE_BROWSER_AUTH` environment variable.",
-				Optional:      true,
-				Sensitive:     false,
-				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
-				Deprecated:    "Use `authenticator` instead",
-				ConflictsWith: []string{"password", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
+				Type:        schema.TypeBool,
+				Description: "Required when `oauth_refresh_token` is used. Can also be sourced from `SNOWFLAKE_USE_BROWSER_AUTH` environment variable.",
+				Optional:    true,
+				Sensitive:   false,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USE_BROWSER_AUTH", nil),
+				Deprecated:  "Use `authenticator` instead",
 			},
 			"private_key_path": {
 				Type:          schema.TypeString,
@@ -610,25 +609,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	}
 
 	if v, ok := s.GetOk("authenticator"); ok && v.(string) != "" {
-		authenticator := v.(string)
-		switch authenticator {
-		case "Snowflake":
-			config.Authenticator = gosnowflake.AuthTypeSnowflake
-		case "OAuth":
-			config.Authenticator = gosnowflake.AuthTypeOAuth
-		case "ExternalBrowser":
-			config.Authenticator = gosnowflake.AuthTypeExternalBrowser
-		case "Okta":
-			config.Authenticator = gosnowflake.AuthTypeOkta
-		case "JWT":
-			config.Authenticator = gosnowflake.AuthTypeJwt
-		case "TokenAccessor":
-			config.Authenticator = gosnowflake.AuthTypeTokenAccessor
-		case "UsernamePasswordMFA":
-			config.Authenticator = gosnowflake.AuthTypeUsernamePasswordMFA
-		default:
-			return nil, fmt.Errorf("invalid authenticator %s", authenticator)
-		}
+		config.Authenticator = toAuthenticatorType(v.(string))
 	}
 
 	if v, ok := s.GetOk("passcode"); ok && v.(string) != "" {
@@ -674,7 +655,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		config.InsecureMode = v.(bool)
 	}
 
-	if v, ok := s.GetOk("oscp_fail_open"); ok && v.(bool) {
+	if v, ok := s.GetOk("ocsp_fail_open"); ok && v.(bool) {
 		config.OCSPFailOpen = gosnowflake.OCSPFailOpenTrue
 	}
 
@@ -707,7 +688,11 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	privateKeyPath := s.Get("private_key_path").(string)
 	privateKey := s.Get("private_key").(string)
 	privateKeyPassphrase := s.Get("private_key_passphrase").(string)
-	if v, err := getPrivateKey(privateKeyPath, privateKey, privateKeyPassphrase); err != nil && v != nil {
+	v, err := getPrivateKey(privateKeyPath, privateKey, privateKeyPassphrase)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve private key: %w", err)
+	}
+	if v != nil {
 		config.PrivateKey = v
 	}
 

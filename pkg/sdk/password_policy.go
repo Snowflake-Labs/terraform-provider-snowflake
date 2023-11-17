@@ -53,10 +53,12 @@ type CreatePasswordPolicyOptions struct {
 }
 
 func (opts *CreatePasswordPolicyOptions) validate() error {
-	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
+	}
 	return nil
 }
 
@@ -88,27 +90,27 @@ type AlterPasswordPolicyOptions struct {
 }
 
 func (opts *AlterPasswordPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.NewName) {
-		return errExactlyOneOf("Set", "Unset", "NewName")
+		errs = append(errs, errExactlyOneOf("Set", "Unset", "NewName"))
 	}
-
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 type PasswordPolicySet struct {
@@ -209,8 +211,11 @@ type DropPasswordPolicyOptions struct {
 }
 
 func (opts *DropPasswordPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -240,7 +245,10 @@ type ShowPasswordPolicyOptions struct {
 	Limit            *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-func (input *ShowPasswordPolicyOptions) validate() error {
+func (opts *ShowPasswordPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -339,9 +347,12 @@ type describePasswordPolicyOptions struct {
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describePasswordPolicyOptions) validate() error {
-	if !ValidObjectIdentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describePasswordPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

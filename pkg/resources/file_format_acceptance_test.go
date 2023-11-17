@@ -7,6 +7,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_FileFormatCSV(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "record_delimiter", "\r"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "field_delimiter", ";"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "file_extension", ".ssv"),
-					resource.TestCheckResourceAttr("snowflake_file_format.test", "skip_header", "1"),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "parse_header", "true"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "skip_blank_lines", "true"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "date_format", "YYY-MM-DD"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "time_format", "HH24:MI"),
@@ -363,6 +364,40 @@ func TestAcc_FileFormatXMLDefaults(t *testing.T) {
 	})
 }
 
+// TestAcc_FileFormat_issue1947 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1947 issue.
+func TestAcc_FileFormat_issue1947(t *testing.T) {
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: fileFormatConfigFullDefaults(name, "XML", acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", name),
+				),
+			},
+			/*
+			 * Before the fix this step resulted in
+			 *     Error: only one of Rename or Set can be set at once.
+			 * which matches the issue description exactly
+			 */
+			{
+				// we set param which is not right for XML but this allows us to run update on terraform apply
+				Config: fileFormatConfigFullDefaultsWithAdditionalParam(name, "XML", acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", name),
+				),
+			},
+		},
+	})
+}
+
 func fileFormatConfigCSV(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
@@ -374,7 +409,7 @@ resource "snowflake_file_format" "test" {
 	record_delimiter = "\r"
 	field_delimiter = ";"
 	file_extension = ".ssv"
-	skip_header = 1
+	parse_header = true
 	skip_blank_lines = true
 	date_format = "YYY-MM-DD"
 	time_format = "HH24:MI"
@@ -492,6 +527,18 @@ resource "snowflake_file_format" "test" {
 	database = "%s"
 	schema = "%s"
 	format_type = "%s"
+}
+`, n, databaseName, schemaName, formatType)
+}
+
+func fileFormatConfigFullDefaultsWithAdditionalParam(n string, formatType string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_file_format" "test" {
+	name = "%v"
+	database = "%s"
+	schema = "%s"
+	format_type = "%s"
+    encoding = "UTF-16"
 }
 `, n, databaseName, schemaName, formatType)
 }

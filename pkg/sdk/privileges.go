@@ -127,6 +127,7 @@ const (
 	*/
 	SchemaPrivilegeAddSearchOptimization  SchemaPrivilege = "ADD SEARCH OPTIMIZATION"
 	SchemaPrivilegeCreateAlert            SchemaPrivilege = "CREATE ALERT"
+	SchemaPrivilegeCreateDynamicTable     SchemaPrivilege = "CREATE DYNAMIC TABLE"
 	SchemaPrivilegeCreateExternalTable    SchemaPrivilege = "CREATE EXTERNAL TABLE"
 	SchemaPrivilegeCreateFileFormat       SchemaPrivilege = "CREATE FILE FORMAT"
 	SchemaPrivilegeCreateFunction         SchemaPrivilege = "CREATE FUNCTION"

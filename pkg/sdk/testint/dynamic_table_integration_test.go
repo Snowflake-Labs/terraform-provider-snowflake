@@ -38,6 +38,13 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		require.Equal(t, name.Name(), entity.Name)
 		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
 		require.Equal(t, *targetLag.MaximumDuration, entity.TargetLag)
+
+		dynamicTableById, err := client.DynamicTables.ShowByID(ctx, name)
+		require.NoError(t, err)
+		require.NotNil(t, dynamicTableById)
+		require.Equal(t, name.Name(), dynamicTableById.Name)
+		require.Equal(t, testWarehouse(t).ID().Name(), dynamicTableById.Warehouse)
+		require.Equal(t, *targetLag.MaximumDuration, dynamicTableById.TargetLag)
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {
@@ -131,8 +138,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 
 		err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(sdk.Bool(true)).WithResume(sdk.Bool(true)))
 		require.Error(t, err)
-		expected := "alter statement needs exactly one action from: set, unset, refresh"
-		require.Equal(t, expected, err.Error())
+		sdk.ErrorsEqual(t, sdk.JoinErrors(sdk.ErrExactlyOneOf("alterDynamicTableOptions", "Suspend", "Resume", "Refresh", "Set")), err)
 	})
 
 	t.Run("alter with set", func(t *testing.T) {

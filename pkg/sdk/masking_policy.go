@@ -52,20 +52,23 @@ type CreateMaskingPolicyOptions struct {
 }
 
 func (opts *CreateMaskingPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !valueSet(opts.signature) {
-		return errNotSet("CreateMaskingPolicyOptions", "signature")
+		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "signature"))
 	}
 	if !valueSet(opts.returns) {
-		return errNotSet("CreateMaskingPolicyOptions", "returns")
+		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "returns"))
 	}
 	if !valueSet(opts.body) {
-		return errNotSet("CreateMaskingPolicyOptions", "body")
+		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "body"))
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, body string, opts *CreateMaskingPolicyOptions) error {
@@ -96,53 +99,56 @@ type AlterMaskingPolicyOptions struct {
 	NewName       *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 	Set           *MaskingPolicySet       `ddl:"keyword" sql:"SET"`
 	Unset         *MaskingPolicyUnset     `ddl:"keyword" sql:"UNSET"`
+	SetTag        []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag      []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterMaskingPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return errors.New("invalid object identifier")
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-
-	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.NewName) {
-		return errExactlyOneOf("Set", "Unset", "NewName")
+	if opts.NewName != nil && !ValidObjectIdentifier(opts.NewName) {
+		errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
 	}
-
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.NewName) {
+		errs = append(errs, errExactlyOneOf("AlterMaskingPolicyOptions", "Set", "Unset", "SetTag", "UnsetTag", "NewName"))
+	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 type MaskingPolicySet struct {
-	Body    *string          `ddl:"parameter,no_equals" sql:"BODY ->"`
-	Tag     []TagAssociation `ddl:"keyword" sql:"TAG"`
-	Comment *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Body    *string `ddl:"parameter,no_equals" sql:"BODY ->"`
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *MaskingPolicySet) validate() error {
-	if !exactlyOneValueSet(v.Body, v.Tag, v.Comment) {
-		return errors.New("only one parameter can be set at a time")
+	if !exactlyOneValueSet(v.Body, v.Comment) {
+		return errExactlyOneOf("MaskingPolicySet", "Body", "Comment")
 	}
 	return nil
 }
 
 type MaskingPolicyUnset struct {
-	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
-	Comment *bool              `ddl:"keyword" sql:"COMMENT"`
+	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *MaskingPolicyUnset) validate() error {
-	if !exactlyOneValueSet(v.Tag, v.Comment) {
-		return errors.New("only one parameter can be unset at a time")
+	if !exactlyOneValueSet(v.Comment) {
+		return errExactlyOneOf("MaskingPolicyUnset", "Comment")
 	}
 	return nil
 }
@@ -171,8 +177,11 @@ type DropMaskingPolicyOptions struct {
 }
 
 func (opts *DropMaskingPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	if !ValidObjectIdentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -205,7 +214,10 @@ type ShowMaskingPolicyOptions struct {
 	Limit           *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-func (input *ShowMaskingPolicyOptions) validate() error {
+func (opts *ShowMaskingPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -298,9 +310,12 @@ type describeMaskingPolicyOptions struct {
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describeMaskingPolicyOptions) validate() error {
-	if !ValidObjectIdentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describeMaskingPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

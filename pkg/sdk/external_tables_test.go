@@ -356,7 +356,7 @@ func TestExternalTablesAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(
 			t, opts,
 			ErrInvalidObjectIdentifier,
-			errOneOf("AlterExternalTableOptions", "Refresh", "AddFiles", "RemoveFiles", "AutoRefresh", "SetTag", "UnsetTag"),
+			errExactlyOneOf("AlterExternalTableOptions", "Refresh", "AddFiles", "RemoveFiles", "AutoRefresh", "SetTag", "UnsetTag"),
 		)
 	})
 }

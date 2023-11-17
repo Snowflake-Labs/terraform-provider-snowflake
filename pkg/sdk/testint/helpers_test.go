@@ -2,8 +2,10 @@ package testint
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -460,6 +462,19 @@ func createMaskingPolicy(t *testing.T, client *sdk.Client, database *sdk.Databas
 	return createMaskingPolicyWithOptions(t, client, database, schema, signature, sdk.DataTypeVARCHAR, expression, &sdk.CreateMaskingPolicyOptions{})
 }
 
+func createMaskingPolicyIdentity(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, columnType sdk.DataType) (*sdk.MaskingPolicy, func()) {
+	t.Helper()
+	name := "a"
+	signature := []sdk.TableColumnSignature{
+		{
+			Name: name,
+			Type: columnType,
+		},
+	}
+	expression := "a"
+	return createMaskingPolicyWithOptions(t, client, database, schema, signature, columnType, expression, &sdk.CreateMaskingPolicyOptions{})
+}
+
 func createMaskingPolicyWithOptions(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, signature []sdk.TableColumnSignature, returns sdk.DataType, expression string, options *sdk.CreateMaskingPolicyOptions) (*sdk.MaskingPolicy, func()) {
 	t.Helper()
 	var databaseCleanup func()
@@ -671,4 +686,88 @@ func createView(t *testing.T, client *sdk.Client, viewId sdk.SchemaObjectIdentif
 		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP VIEW %s`, viewId.FullyQualifiedName()))
 		require.NoError(t, err)
 	}
+}
+
+func putOnStage(t *testing.T, client *sdk.Client, stage *sdk.Stage, filename string) {
+	t.Helper()
+	ctx := context.Background()
+
+	path, err := filepath.Abs("./testdata/" + filename)
+	require.NoError(t, err)
+	absPath := "file://" + path
+
+	_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT '%s' @%s AUTO_COMPRESS = FALSE`, absPath, stage.ID().FullyQualifiedName()))
+	require.NoError(t, err)
+}
+
+func createApplicationPackage(t *testing.T, client *sdk.Client, name string) func() {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE APPLICATION PACKAGE "%s"`, name))
+	require.NoError(t, err)
+	return func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP APPLICATION PACKAGE "%s"`, name))
+		require.NoError(t, err)
+	}
+}
+
+func addApplicationPackageVersion(t *testing.T, client *sdk.Client, stage *sdk.Stage, appPackageName string, versionName string) {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`ALTER APPLICATION PACKAGE "%s" ADD VERSION %v USING '@%s'`, appPackageName, versionName, stage.ID().FullyQualifiedName()))
+	require.NoError(t, err)
+}
+
+func createApplication(t *testing.T, client *sdk.Client, name string, packageName string, version string) func() {
+	t.Helper()
+	ctx := context.Background()
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE APPLICATION "%s" FROM APPLICATION PACKAGE "%s" USING VERSION %s`, name, packageName, version))
+	require.NoError(t, err)
+	return func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP APPLICATION "%s"`, name))
+		require.NoError(t, err)
+	}
+}
+
+func createRowAccessPolicy(t *testing.T, client *sdk.Client, schema *sdk.Schema) (sdk.SchemaObjectIdentifier, func()) {
+	t.Helper()
+	ctx := context.Background()
+	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.String())
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE ROW ACCESS POLICY %s AS (A NUMBER) RETURNS BOOLEAN -> TRUE`, id.FullyQualifiedName()))
+	require.NoError(t, err)
+
+	return id, func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP ROW ACCESS POLICY %s`, id.FullyQualifiedName()))
+		require.NoError(t, err)
+	}
+}
+
+// TODO: extract getting row access policies as resource (like getting tag in system functions)
+// getRowAccessPolicyFor is based on https://docs.snowflake.com/en/user-guide/security-row-intro#obtain-database-objects-with-a-row-access-policy.
+func getRowAccessPolicyFor(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, objectType sdk.ObjectType) (*policyReference, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	s := &policyReference{}
+	policyReferencesId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), "INFORMATION_SCHEMA", "POLICY_REFERENCES")
+	err := client.QueryOneForTests(ctx, s, fmt.Sprintf(`SELECT * FROM TABLE(%s(REF_ENTITY_NAME => '%s', REF_ENTITY_DOMAIN => '%v'))`, policyReferencesId.FullyQualifiedName(), id.FullyQualifiedName(), objectType))
+
+	return s, err
+}
+
+type policyReference struct {
+	PolicyDb          string         `db:"POLICY_DB"`
+	PolicySchema      string         `db:"POLICY_SCHEMA"`
+	PolicyName        string         `db:"POLICY_NAME"`
+	PolicyKind        string         `db:"POLICY_KIND"`
+	RefDatabaseName   string         `db:"REF_DATABASE_NAME"`
+	RefSchemaName     string         `db:"REF_SCHEMA_NAME"`
+	RefEntityName     string         `db:"REF_ENTITY_NAME"`
+	RefEntityDomain   string         `db:"REF_ENTITY_DOMAIN"`
+	RefColumnName     sql.NullString `db:"REF_COLUMN_NAME"`
+	RefArgColumnNames string         `db:"REF_ARG_COLUMN_NAMES"`
+	TagDatabase       sql.NullString `db:"TAG_DATABASE"`
+	TagSchema         sql.NullString `db:"TAG_SCHEMA"`
+	TagName           sql.NullString `db:"TAG_NAME"`
+	PolicyStatus      string         `db:"POLICY_STATUS"`
 }

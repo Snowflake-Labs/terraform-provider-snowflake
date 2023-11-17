@@ -25,6 +25,22 @@ func (v *dbStruct) Field(dbName string, kind string) *dbStruct {
 	return v
 }
 
+func (v *dbStruct) Text(dbName string) *dbStruct {
+	return v.Field(dbName, "string")
+}
+
+func (v *dbStruct) OptionalText(dbName string) *dbStruct {
+	return v.Field(dbName, "sql.NullString")
+}
+
+func (v *dbStruct) Bool(dbName string) *dbStruct {
+	return v.Field(dbName, "bool")
+}
+
+func (v *dbStruct) OptionalBool(dbName string) *dbStruct {
+	return v.Field(dbName, "sql.NullBool")
+}
+
 func (v *dbStruct) IntoField() *Field {
 	f := NewField(v.name, v.name, nil, nil)
 	for _, field := range v.fields {

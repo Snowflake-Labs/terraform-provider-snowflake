@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
+	"github.com/snowflakedb/gosnowflake"
 	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
 )
@@ -30,6 +31,9 @@ func mergeSchemas(schemaCollections ...map[string]*schema.Resource) map[string]*
 }
 
 func getPrivateKey(privateKeyPath, privateKeyString, privateKeyPassphrase string) (*rsa.PrivateKey, error) {
+	if privateKeyPath == "" && privateKeyString == "" {
+		return nil, nil
+	}
 	privateKeyBytes := []byte(privateKeyString)
 	var err error
 	if len(privateKeyBytes) == 0 && privateKeyPath != "" {
@@ -39,6 +43,54 @@ func getPrivateKey(privateKeyPath, privateKeyString, privateKeyPassphrase string
 		}
 	}
 	return parsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
+}
+
+func toAuthenticatorType(authenticator string) gosnowflake.AuthType {
+	switch authenticator {
+	case "Snowflake":
+		return gosnowflake.AuthTypeSnowflake
+	case "OAuth":
+		return gosnowflake.AuthTypeOAuth
+	case "ExternalBrowser":
+		return gosnowflake.AuthTypeExternalBrowser
+	case "Okta":
+		return gosnowflake.AuthTypeOkta
+	case "JWT":
+		return gosnowflake.AuthTypeJwt
+	case "TokenAccessor":
+		return gosnowflake.AuthTypeTokenAccessor
+	case "UsernamePasswordMFA":
+		return gosnowflake.AuthTypeUsernamePasswordMFA
+	default:
+		return gosnowflake.AuthTypeSnowflake
+	}
+}
+
+func getInt64Env(key string, defaultValue int64) int64 {
+	s := os.Getenv(key)
+	if s == "" {
+		return defaultValue
+	}
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return defaultValue
+	}
+	return int64(i)
+}
+
+func getBoolEnv(key string, defaultValue bool) bool {
+	s := strings.ToLower(os.Getenv(key))
+	if s == "" {
+		return defaultValue
+	}
+	switch s {
+	case "true", "1":
+		return true
+	case "false", "0":
+		return false
+	default:
+		return defaultValue
+	}
 }
 
 func readFile(privateKeyPath string) ([]byte, error) {

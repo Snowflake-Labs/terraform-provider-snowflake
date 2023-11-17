@@ -42,11 +42,11 @@ type AlterPipeOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 
 	// One of
-	Set       *PipeSet       `ddl:"list,no_parentheses" sql:"SET"`
-	Unset     *PipeUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
-	SetTags   *PipeSetTags   `ddl:"list,no_parentheses" sql:"SET TAG"`
-	UnsetTags *PipeUnsetTags `ddl:"list,no_parentheses" sql:"UNSET TAG"`
-	Refresh   *PipeRefresh   `ddl:"keyword" sql:"REFRESH"`
+	Set      *PipeSet           `ddl:"list,no_parentheses" sql:"SET"`
+	Unset    *PipeUnset         `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTag   []TagAssociation   `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
+	Refresh  *PipeRefresh       `ddl:"keyword" sql:"REFRESH"`
 }
 
 type PipeSet struct {
@@ -58,14 +58,6 @@ type PipeSet struct {
 type PipeUnset struct {
 	PipeExecutionPaused *bool `ddl:"keyword" sql:"PIPE_EXECUTION_PAUSED"`
 	Comment             *bool `ddl:"keyword" sql:"COMMENT"`
-}
-
-type PipeSetTags struct {
-	Tag []TagAssociation `ddl:"keyword"`
-}
-
-type PipeUnsetTags struct {
-	Tag []ObjectIdentifier `ddl:"keyword"`
 }
 
 type PipeRefresh struct {
