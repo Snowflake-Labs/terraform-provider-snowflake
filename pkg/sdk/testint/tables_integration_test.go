@@ -48,6 +48,7 @@ func TestInt_Table(t *testing.T) {
 
 		assert.Equal(t, table.Name, name)
 	})
+
 	t.Run("create table: complete optionals", func(t *testing.T) {
 		maskingPolicy, _ := createMaskingPolicyWithOptions(t, client, database, schema, []sdk.TableColumnSignature{
 			{
@@ -204,6 +205,7 @@ func TestInt_Table(t *testing.T) {
 			assert.True(t, sourceTableColumns[i] == likeTableColumns[i])
 		}
 	})
+
 	t.Run("create table clone", func(t *testing.T) {
 		sourceTable, _ := createTable(t, client, database, schema)
 		name := random.String()
@@ -419,6 +421,7 @@ func TestInt_Table(t *testing.T) {
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 	})
+
 	t.Run("alter table: set tags", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -444,6 +447,7 @@ func TestInt_Table(t *testing.T) {
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 	})
+
 	t.Run("alter table: unset tags", func(t *testing.T) {
 		columnTags := []sdk.TagAssociationRequest{
 			{
@@ -546,6 +550,7 @@ func TestInt_Table(t *testing.T) {
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 	})
+
 	t.Run("alter constraint: alter", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -826,6 +831,7 @@ func TestInt_Table(t *testing.T) {
 		assert.Empty(t, table2.Owner)
 		require.NoError(t, err)
 	})
+
 	t.Run("with starts with", func(t *testing.T) {
 		table, tableCleanup := createTable(t, client, database, schema)
 		t.Cleanup(tableCleanup)
@@ -837,6 +843,7 @@ func TestInt_Table(t *testing.T) {
 		assert.NotEmpty(t, table2.Owner)
 		require.NoError(t, err)
 	})
+
 	t.Run("when searching a non-existent table", func(t *testing.T) {
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithLikePattern("non-existent"))
 		require.NoError(t, err)

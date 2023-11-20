@@ -103,6 +103,7 @@ type ColumnIdentityRequest struct {
 	Start     int // required
 	Increment int // required
 }
+
 type ColumnMaskingPolicyRequest struct {
 	with  *bool
 	name  SchemaObjectIdentifier // required
@@ -326,6 +327,7 @@ type TableClusteringActionRequest struct {
 	ChangeReclusterState *ReclusterState
 	DropClusteringKey    *bool
 }
+
 type TableReclusterActionRequest struct {
 	MaxSize   *int
 	Condition *string
@@ -363,6 +365,7 @@ type TableColumnAddInlineConstraintRequest struct {
 	Type       ColumnConstraintType
 	ForeignKey *ColumnAddForeignKey
 }
+
 type ColumnAddForeignKeyRequest struct {
 	TableName  string
 	ColumnName string
@@ -385,15 +388,18 @@ type TableColumnAlterActionRequest struct {
 	Comment           *string
 	UnsetComment      *bool
 }
+
 type TableColumnAlterSetMaskingPolicyActionRequest struct {
 	ColumnName        string                 // required
 	MaskingPolicyName SchemaObjectIdentifier // required
 	Using             []string               // required
 	Force             *bool
 }
+
 type TableColumnAlterUnsetMaskingPolicyActionRequest struct {
 	ColumnName string // required
 }
+
 type TableColumnAlterSetTagsActionRequest struct {
 	ColumnName string           // required
 	Tags       []TagAssociation // required
@@ -408,16 +414,19 @@ type TableColumnNotNullConstraintRequest struct {
 	Set  *bool
 	Drop *bool
 }
+
 type TableConstraintActionRequest struct {
 	Add    *OutOfLineConstraintRequest
 	Rename *TableConstraintRenameActionRequest
 	Alter  *TableConstraintAlterActionRequest
 	Drop   *TableConstraintDropActionRequest
 }
+
 type TableConstraintRenameActionRequest struct {
 	OldName string
 	NewName string
 }
+
 type TableConstraintAlterActionRequest struct {
 	// One of
 	ConstraintName *string
@@ -434,6 +443,7 @@ type TableConstraintAlterActionRequest struct {
 	Rely        *bool
 	NoRely      *bool
 }
+
 type TableConstraintDropActionRequest struct {
 	// One of
 	ConstraintName *string
@@ -477,6 +487,7 @@ type TableExternalTableColumnAddActionRequest struct {
 	Type       DataType
 	Expression []string
 }
+
 type TableExternalTableColumnRenameActionRequest struct {
 	OldName string
 	NewName string
@@ -485,6 +496,7 @@ type TableExternalTableColumnRenameActionRequest struct {
 type TableExternalTableColumnDropActionRequest struct {
 	Columns []string
 }
+
 type ShowTableByIdRequest struct {
 	Terse      *bool
 	History    *bool
@@ -493,6 +505,7 @@ type ShowTableByIdRequest struct {
 	StartsWith *string
 	LimitFrom  *LimitFrom
 }
+
 type ShowTableRequest struct {
 	Terse       *bool
 	History     *bool
@@ -501,6 +514,7 @@ type ShowTableRequest struct {
 	StartsWith  *string
 	LimitFrom   *LimitFrom
 }
+
 type ShowTableInRequest struct {
 	Account  *bool
 	Database AccountObjectIdentifier

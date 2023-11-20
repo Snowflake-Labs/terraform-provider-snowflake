@@ -226,8 +226,8 @@ type StageCopyOptionsInnerValue struct {
 }
 
 type alterTableOptions struct {
-	alter    bool                   `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
-	table    bool                   `ddl:"static" sql:"TABLE"` //lint:ignore U1000 This is used in the ddl tag
+	alter    bool                   `ddl:"static" sql:"ALTER"`
+	table    bool                   `ddl:"static" sql:"TABLE"`
 	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 
@@ -264,7 +264,7 @@ type TableReclusterAction struct {
 
 type TableReclusterChangeState struct {
 	State     *ReclusterState `ddl:"keyword"`
-	recluster bool            `ddl:"static" sql:"RECLUSTER"` //lint:ignore U1000 This is used in the ddl tag
+	recluster bool            `ddl:"static" sql:"RECLUSTER"`
 }
 
 type ReclusterState string
@@ -343,22 +343,22 @@ type TableColumnAlterUnsetMaskingPolicyAction struct {
 }
 
 type TableColumnAlterSetTagsAction struct {
-	alter      bool             `ddl:"static" sql:"ALTER COLUMN"` //lint:ignore U1000 This is used in the ddl tag
+	alter      bool             `ddl:"static" sql:"ALTER COLUMN"`
 	ColumnName string           `ddl:"keyword"`
-	set        bool             `ddl:"static" sql:"SET"` //lint:ignore U1000 This is used in the ddl tag
+	set        bool             `ddl:"static" sql:"SET"`
 	Tags       []TagAssociation `ddl:"keyword" sql:"TAG"`
 }
 
 type TableColumnAlterUnsetTagsAction struct {
-	alter      bool               `ddl:"static" sql:"ALTER COLUMN"` //lint:ignore U1000 This is used in the ddl tag
+	alter      bool               `ddl:"static" sql:"ALTER COLUMN"`
 	ColumnName string             `ddl:"keyword"`
-	unset      bool               `ddl:"static" sql:"UNSET"` //lint:ignore U1000 This is used in the ddl tag
+	unset      bool               `ddl:"static" sql:"UNSET"`
 	Tags       []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
 }
 
 type TableColumnAlterDropColumns struct {
-	dropColumn bool     `ddl:"static" sql:"DROP COLUMN"` //lint:ignore U1000 This is used in the ddl tag
-	Columns    []string `ddl:"keyword"`                  //lint:ignore U1000 This is used in the ddl tag
+	dropColumn bool     `ddl:"static" sql:"DROP COLUMN"`
+	Columns    []string `ddl:"keyword"`
 }
 
 type TableColumnAlterSequenceName interface {

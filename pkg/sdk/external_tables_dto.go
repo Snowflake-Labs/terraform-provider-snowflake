@@ -81,6 +81,9 @@ func (v *ColumnInlineConstraintRequest) toOpts() *ColumnInlineConstraint {
 }
 
 func (v *InlineForeignKeyRequest) toOpts() *InlineForeignKey {
+	if v == nil {
+		return nil
+	}
 	return &InlineForeignKey{
 		TableName:  v.TableName,
 		ColumnName: v.ColumnName,
