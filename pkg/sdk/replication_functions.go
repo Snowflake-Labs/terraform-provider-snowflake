@@ -2,13 +2,14 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"time"
 )
 
 var _ validatable = new(ShowRegionsOptions)
 
 type ReplicationFunctions interface {
-	ShowReplicationAcccounts(ctx context.Context) ([]*ReplicationAccount, error)
+	ShowReplicationAccounts(ctx context.Context) ([]*ReplicationAccount, error)
 	// todo: ShowReplicationDatabases(ctx context.Context, opts *ShowReplicationDatabasesOptions) ([]*ReplicationDatabase, error)
 	ShowRegions(ctx context.Context, opts *ShowRegionsOptions) ([]*Region, error)
 }
@@ -37,7 +38,8 @@ func (v *ReplicationAccount) ID() AccountIdentifier {
 	}
 }
 
-func (c *replicationFunctions) ShowReplicationAcccounts(ctx context.Context) ([]*ReplicationAccount, error) {
+// ShowReplicationAccounts is based on https://docs.snowflake.com/en/sql-reference/sql/show-replication-accounts.
+func (c *replicationFunctions) ShowReplicationAccounts(ctx context.Context) ([]*ReplicationAccount, error) {
 	rows := []ReplicationAccount{}
 	sql := "SHOW REPLICATION ACCOUNTS"
 	err := c.client.query(ctx, &rows, sql)
@@ -93,9 +95,13 @@ type ShowRegionsOptions struct {
 }
 
 func (opts *ShowRegionsOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
+// ShowRegions is based on https://docs.snowflake.com/en/sql-reference/sql/show-regions.
 func (c *replicationFunctions) ShowRegions(ctx context.Context, opts *ShowRegionsOptions) ([]*Region, error) {
 	if opts == nil {
 		opts = &ShowRegionsOptions{}

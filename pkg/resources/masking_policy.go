@@ -290,7 +290,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		newName := n.(string)
 		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName)
 		alterOptions := &sdk.AlterMaskingPolicyOptions{
-			NewName: newID,
+			NewName: &newID,
 		}
 		err := client.MaskingPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {

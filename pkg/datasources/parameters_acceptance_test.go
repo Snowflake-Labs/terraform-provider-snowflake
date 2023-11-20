@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_ParametersOnAccount(t *testing.T) {
@@ -57,7 +57,6 @@ func TestAcc_ParametersOnObject(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.0.key"),
-					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.0.type"),
 					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "object_type", "DATABASE"),
 					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "object_name", dbName),
 				),

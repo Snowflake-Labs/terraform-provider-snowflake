@@ -17,15 +17,10 @@ var (
 )
 
 type ResourceMonitors interface {
-	// Create creates a resource monitor.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error
-	// Alter modifies an existing resource monitor
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error
-	// Drop removes a resource monitor.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
-	// Show returns a list of resource monitor.
-	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]*ResourceMonitor, error)
-	// ShowByID returns a resource monitor by ID
+	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
 }
 
@@ -68,7 +63,7 @@ type resourceMonitorRow struct {
 	NotifyUsers        sql.NullString `db:"notify_users"`
 }
 
-func (row *resourceMonitorRow) toResourceMonitor() (*ResourceMonitor, error) {
+func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 	resourceMonitor := &ResourceMonitor{
 		Name: row.Name,
 	}
@@ -182,7 +177,7 @@ func (v *ResourceMonitor) ObjectType() ObjectType {
 	return ObjectTypeResourceMonitor
 }
 
-// CreateResourceMonitorOptions contains options for creating a resource monitor.
+// CreateResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-resource-monitor.
 type CreateResourceMonitorOptions struct {
 	create          bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace       *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -201,8 +196,11 @@ type ResourceMonitorWith struct {
 }
 
 func (opts *CreateResourceMonitorOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -274,7 +272,7 @@ const (
 	FrequencyNever   Frequency = "NEVER"
 )
 
-// AlterResourceMonitorOptions contains options for altering a resource monitor.
+// AlterResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-resource-monitor.
 type AlterResourceMonitorOptions struct {
 	alter           bool                    `ddl:"static" sql:"ALTER"`
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
@@ -286,17 +284,22 @@ type AlterResourceMonitorOptions struct {
 }
 
 func (opts *AlterResourceMonitorOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-	if opts.Set == nil {
-		return nil
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if (opts.Set.Frequency != nil && opts.Set.StartTimestamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimestamp != nil) {
-		return errors.New("must specify frequency and start time together")
+	if valueSet(opts.Set) {
+		if (opts.Set.Frequency != nil && opts.Set.StartTimestamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimestamp != nil) {
+			errs = append(errs, errors.New("must specify frequency and start time together"))
+		}
 	}
-
-	return nil
+	if !exactlyOneValueSet(opts.Set, opts.NotifyUsers) && opts.Triggers == nil {
+		errs = append(errs, errExactlyOneOf("AlterResourceMonitorOptions", "Set", "NotifyUsers", "Triggers"))
+	}
+	return errors.Join(errs...)
 }
 
 func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error {
@@ -324,7 +327,7 @@ type ResourceMonitorSet struct {
 	EndTimestamp   *string    `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
 }
 
-// resourceMonitorDropOptions contains options for dropping a resource monitor.
+// dropResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-resource-monitor.
 type dropResourceMonitorOptions struct {
 	drop            bool                    `ddl:"static" sql:"DROP"`
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
@@ -332,8 +335,11 @@ type dropResourceMonitorOptions struct {
 }
 
 func (opts *dropResourceMonitorOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -353,7 +359,7 @@ func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier)
 	return err
 }
 
-// ShowResourceMonitorOptions contains options for listing resource monitors.
+// ShowResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-resource-monitors.
 type ShowResourceMonitorOptions struct {
 	show             bool  `ddl:"static" sql:"SHOW"`
 	resourceMonitors bool  `ddl:"static" sql:"RESOURCE MONITORS"`
@@ -361,13 +367,14 @@ type ShowResourceMonitorOptions struct {
 }
 
 func (opts *ShowResourceMonitorOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
-func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]*ResourceMonitor, error) {
-	if opts == nil {
-		opts = &ShowResourceMonitorOptions{}
-	}
+func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error) {
+	opts = createIfNil(opts)
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
@@ -380,13 +387,13 @@ func (v *resourceMonitors) Show(ctx context.Context, opts *ShowResourceMonitorOp
 	if err != nil {
 		return nil, err
 	}
-	resourceMonitors := make([]*ResourceMonitor, 0, len(rows))
+	resourceMonitors := make([]ResourceMonitor, 0, len(rows))
 	for _, row := range rows {
-		resourceMonitor, err := row.toResourceMonitor()
+		resourceMonitor, err := row.convert()
 		if err != nil {
 			return nil, err
 		}
-		resourceMonitors = append(resourceMonitors, resourceMonitor)
+		resourceMonitors = append(resourceMonitors, *resourceMonitor)
 	}
 	return resourceMonitors, nil
 }
@@ -402,7 +409,7 @@ func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentif
 	}
 	for _, resourceMonitor := range resourceMonitors {
 		if resourceMonitor.Name == id.Name() {
-			return resourceMonitor, nil
+			return &resourceMonitor, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized

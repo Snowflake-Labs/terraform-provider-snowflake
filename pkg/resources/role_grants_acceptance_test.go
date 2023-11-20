@@ -9,9 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func MustParseInt(t *testing.T, input string) int64 {
@@ -89,7 +90,7 @@ func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) fu
 	}
 }
 
-func TestAcc_GrantRole(t *testing.T) {
+func TestAcc_RoleGrant(t *testing.T) {
 	role1 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	role2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	role3 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -112,7 +113,8 @@ func TestAcc_GrantRole(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// test setup + removing a role

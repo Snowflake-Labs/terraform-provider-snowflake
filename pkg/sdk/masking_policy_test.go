@@ -1,38 +1,64 @@
 package sdk
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/stretchr/testify/require"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 )
 
 func TestMaskingPolicyCreate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	signature := []TableColumnSignature{
+		{
+			Name: "col1",
+			Type: DataTypeVARCHAR,
+		},
+		{
+			Name: "col2",
+			Type: DataTypeVARCHAR,
+		},
+	}
+	expression := "REPLACE('X', 1, 2)"
 
-	t.Run("empty options", func(t *testing.T) {
-		opts := &CreateMaskingPolicyOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "CREATE MASKING POLICY RETURNS ->"
-		assert.Equal(t, expected, actual)
+	t.Run("validation: no body", func(t *testing.T) {
+		opts := &CreateMaskingPolicyOptions{
+			name:      id,
+			signature: signature,
+			returns:   DataTypeVARCHAR,
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaskingPolicyOptions", "body"))
+	})
+
+	t.Run("validation: no signature", func(t *testing.T) {
+		opts := &CreateMaskingPolicyOptions{
+			name:    id,
+			body:    expression,
+			returns: DataTypeVARCHAR,
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaskingPolicyOptions", "signature"))
+	})
+
+	t.Run("validation: no returns", func(t *testing.T) {
+		opts := &CreateMaskingPolicyOptions{
+			name:      id,
+			signature: signature,
+			body:      expression,
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaskingPolicyOptions", "returns"))
+	})
+
+	t.Run("only required options", func(t *testing.T) {
+		opts := &CreateMaskingPolicyOptions{
+			name:      id,
+			signature: signature,
+			body:      expression,
+			returns:   DataTypeVARCHAR,
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE MASKING POLICY %s AS ("col1" VARCHAR, "col2" VARCHAR) RETURNS %s -> %s`, id.FullyQualifiedName(), DataTypeVARCHAR, expression)
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
-		signature := []TableColumnSignature{
-			{
-				Name: "col1",
-				Type: DataTypeVARCHAR,
-			},
-			{
-				Name: "col2",
-				Type: DataTypeVARCHAR,
-			},
-		}
-		expression := "REPLACE('X', 1, 2)"
-		comment := randomString(t)
+		comment := random.String()
 
 		opts := &CreateMaskingPolicyOptions{
 			OrReplace:           Bool(true),
@@ -45,46 +71,35 @@ func TestMaskingPolicyCreate(t *testing.T) {
 			ExemptOtherPolicies: Bool(true),
 		}
 
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf(`CREATE OR REPLACE MASKING POLICY IF NOT EXISTS %s AS ("col1" VARCHAR, "col2" VARCHAR) RETURNS %s -> %s COMMENT = '%s' EXEMPT_OTHER_POLICIES = %t`, id.FullyQualifiedName(), DataTypeVARCHAR, expression, comment, true)
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE MASKING POLICY IF NOT EXISTS %s AS ("col1" VARCHAR, "col2" VARCHAR) RETURNS %s -> %s COMMENT = '%s' EXEMPT_OTHER_POLICIES = %t`, id.FullyQualifiedName(), DataTypeVARCHAR, expression, comment, true)
 	})
 }
 
+// TODO: add tests for body and tags
 func TestMaskingPolicyAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
-	t.Run("empty options", func(t *testing.T) {
+	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &AlterMaskingPolicyOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "ALTER MASKING POLICY"
-		assert.Equal(t, expected, actual)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("only name", func(t *testing.T) {
+	t.Run("validation: no option", func(t *testing.T) {
 		opts := &AlterMaskingPolicyOptions{
 			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER MASKING POLICY %s", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaskingPolicyOptions", "Set", "Unset", "SetTag", "UnsetTag", "NewName"))
 	})
 
 	t.Run("with set", func(t *testing.T) {
-		newComment := randomString(t)
+		newComment := random.String()
 		opts := &AlterMaskingPolicyOptions{
 			name: id,
 			Set: &MaskingPolicySet{
 				Comment: String(newComment),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER MASKING POLICY %s SET COMMENT = '%s'", id.FullyQualifiedName(), newComment)
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MASKING POLICY %s SET COMMENT = '%s'", id.FullyQualifiedName(), newComment)
 	})
 
 	t.Run("with unset", func(t *testing.T) {
@@ -94,56 +109,41 @@ func TestMaskingPolicyAlter(t *testing.T) {
 				Comment: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER MASKING POLICY %s UNSET COMMENT", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MASKING POLICY %s UNSET COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.UUID())
 		opts := &AlterMaskingPolicyOptions{
 			name:    id,
-			NewName: newID,
+			NewName: &newID,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER MASKING POLICY %s RENAME TO %s", id.FullyQualifiedName(), newID.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MASKING POLICY %s RENAME TO %s", id.FullyQualifiedName(), newID.FullyQualifiedName())
 	})
 }
 
 func TestMaskingPolicyDrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
-	t.Run("empty options", func(t *testing.T) {
+	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &DropMaskingPolicyOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "DROP MASKING POLICY"
-		assert.Equal(t, expected, actual)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &DropMaskingPolicyOptions{
 			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("DROP MASKING POLICY %s", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "DROP MASKING POLICY %s", id.FullyQualifiedName())
 	})
 }
 
 func TestMaskingPolicyShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowMaskingPolicyOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "SHOW MASKING POLICIES"
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES")
 	})
 
 	t.Run("with like", func(t *testing.T) {
@@ -152,10 +152,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 				Pattern: String(id.Name()),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("SHOW MASKING POLICIES LIKE '%s'", id.Name())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIKE '%s'", id.Name())
 	})
 
 	t.Run("with like and in account", func(t *testing.T) {
@@ -167,10 +164,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 				Account: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("SHOW MASKING POLICIES LIKE '%s' IN ACCOUNT", id.Name())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIKE '%s' IN ACCOUNT", id.Name())
 	})
 
 	t.Run("with like and in database", func(t *testing.T) {
@@ -183,10 +177,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 				Database: databaseIdentifier,
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("SHOW MASKING POLICIES LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
 	})
 
 	t.Run("with like and in schema", func(t *testing.T) {
@@ -199,41 +190,29 @@ func TestMaskingPolicyShow(t *testing.T) {
 				Schema: schemaIdentifier,
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("SHOW MASKING POLICIES LIKE '%s' IN SCHEMA %s", id.Name(), schemaIdentifier.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIKE '%s' IN SCHEMA %s", id.Name(), schemaIdentifier.FullyQualifiedName())
 	})
 
 	t.Run("with limit", func(t *testing.T) {
 		opts := &ShowMaskingPolicyOptions{
 			Limit: Int(10),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "SHOW MASKING POLICIES LIMIT 10"
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIMIT 10")
 	})
 }
 
 func TestMaskingPolicyDescribe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
-	t.Run("empty options", func(t *testing.T) {
+	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &describeMaskingPolicyOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "DESCRIBE MASKING POLICY"
-		assert.Equal(t, expected, actual)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &describeMaskingPolicyOptions{
 			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("DESCRIBE MASKING POLICY %s", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE MASKING POLICY %s", id.FullyQualifiedName())
 	})
 }

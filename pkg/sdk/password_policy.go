@@ -7,31 +7,22 @@ import (
 	"time"
 )
 
-// Compile-time proof of interface implementation.
 var _ PasswordPolicies = (*passwordPolicies)(nil)
 
 var (
 	_ validatable = new(CreatePasswordPolicyOptions)
 	_ validatable = new(AlterPasswordPolicyOptions)
 	_ validatable = new(DropPasswordPolicyOptions)
-	_ validatable = new(PasswordPolicyShowOptions)
+	_ validatable = new(ShowPasswordPolicyOptions)
 	_ validatable = new(describePasswordPolicyOptions)
 )
 
-// PasswordPolicies describes all the password policy related methods that the
-// Snowflake API supports.
 type PasswordPolicies interface {
-	// Create creates a new password policy.
 	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreatePasswordPolicyOptions) error
-	// Alter modifies an existing password policy.
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterPasswordPolicyOptions) error
-	// Drop removes a password policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPasswordPolicyOptions) error
-	// Show returns a list of password policies.
-	Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]*PasswordPolicy, error)
-	// ShowByID returns a password policy by ID.
+	Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
-	// Describe returns the details of a password policy.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicyDetails, error)
 }
 
@@ -40,6 +31,7 @@ type passwordPolicies struct {
 	client *Client
 }
 
+// CreatePasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-password-policy.
 type CreatePasswordPolicyOptions struct {
 	create         bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace      *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -61,10 +53,12 @@ type CreatePasswordPolicyOptions struct {
 }
 
 func (opts *CreatePasswordPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
+	}
 	return nil
 }
 
@@ -84,43 +78,39 @@ func (v *passwordPolicies) Create(ctx context.Context, id SchemaObjectIdentifier
 	return err
 }
 
+// AlterPasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-password-policy.
 type AlterPasswordPolicyOptions struct {
-	alter          bool                   `ddl:"static" sql:"ALTER"`
-	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
-	IfExists       *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name           SchemaObjectIdentifier `ddl:"identifier"`
-	NewName        SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set            *PasswordPolicySet     `ddl:"keyword" sql:"SET"`
-	Unset          *PasswordPolicyUnset   `ddl:"keyword" sql:"UNSET"`
+	alter          bool                    `ddl:"static" sql:"ALTER"`
+	passwordPolicy bool                    `ddl:"static" sql:"PASSWORD POLICY"`
+	IfExists       *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name           SchemaObjectIdentifier  `ddl:"identifier"`
+	NewName        *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Set            *PasswordPolicySet      `ddl:"keyword" sql:"SET"`
+	Unset          *PasswordPolicyUnset    `ddl:"keyword" sql:"UNSET"`
 }
 
 func (opts *AlterPasswordPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-
-	if everyValueNil(opts.Set, opts.Unset) {
-		if !validObjectidentifier(opts.NewName) {
-			return ErrInvalidObjectIdentifier
-		}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-
-	if !valueSet(opts.NewName) && !exactlyOneValueSet(opts.Set, opts.Unset) {
-		return errors.New("cannot set and unset parameters in the same ALTER statement")
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.NewName) {
+		errs = append(errs, errExactlyOneOf("Set", "Unset", "NewName"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 type PasswordPolicySet struct {
@@ -212,6 +202,7 @@ func (v *passwordPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier,
 	return err
 }
 
+// DropPasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-password-policy.
 type DropPasswordPolicyOptions struct {
 	drop           bool                   `ddl:"static" sql:"DROP"`
 	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
@@ -220,8 +211,11 @@ type DropPasswordPolicyOptions struct {
 }
 
 func (opts *DropPasswordPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -242,8 +236,8 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 	return err
 }
 
-// PasswordPolicyShowOptions represents the options for listing password policies.
-type PasswordPolicyShowOptions struct {
+// ShowPasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-password-policies.
+type ShowPasswordPolicyOptions struct {
 	show             bool  `ddl:"static" sql:"SHOW"`
 	passwordPolicies bool  `ddl:"static" sql:"PASSWORD POLICIES"`
 	Like             *Like `ddl:"keyword" sql:"LIKE"`
@@ -251,11 +245,14 @@ type PasswordPolicyShowOptions struct {
 	Limit            *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-func (input *PasswordPolicyShowOptions) validate() error {
+func (opts *ShowPasswordPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
-// PasswordPolicys is a user friendly result for a CREATE PASSWORD POLICY query.
+// PasswordPolicy is a user-friendly result for a CREATE PASSWORD POLICY query.
 type PasswordPolicy struct {
 	CreatedOn    time.Time
 	Name         string
@@ -287,8 +284,8 @@ type passwordPolicyDBRow struct {
 	Options       string    `db:"options"`
 }
 
-func (row passwordPolicyDBRow) toPasswordPolicy() *PasswordPolicy {
-	return &PasswordPolicy{
+func (row passwordPolicyDBRow) convert() PasswordPolicy {
+	return PasswordPolicy{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
 		DatabaseName: row.DatabaseName,
@@ -300,10 +297,8 @@ func (row passwordPolicyDBRow) toPasswordPolicy() *PasswordPolicy {
 }
 
 // List all the password policies by pattern.
-func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOptions) ([]*PasswordPolicy, error) {
-	if opts == nil {
-		opts = &PasswordPolicyShowOptions{}
-	}
+func (v *passwordPolicies) Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error) {
+	opts = createIfNil(opts)
 	if err := opts.validate(); err != nil {
 		return nil, err
 	}
@@ -311,22 +306,21 @@ func (v *passwordPolicies) Show(ctx context.Context, opts *PasswordPolicyShowOpt
 	if err != nil {
 		return nil, err
 	}
-	dest := []passwordPolicyDBRow{}
-
+	var dest []passwordPolicyDBRow
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, err
 	}
-	resultList := make([]*PasswordPolicy, len(dest))
+	resultList := make([]PasswordPolicy, len(dest))
 	for i, row := range dest {
-		resultList[i] = row.toPasswordPolicy()
+		resultList[i] = row.convert()
 	}
 
 	return resultList, nil
 }
 
 func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error) {
-	passwordPolicies, err := v.Show(ctx, &PasswordPolicyShowOptions{
+	passwordPolicies, err := v.Show(ctx, &ShowPasswordPolicyOptions{
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
@@ -340,21 +334,25 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 
 	for _, passwordPolicy := range passwordPolicies {
 		if passwordPolicy.ID().name == id.Name() {
-			return passwordPolicy, nil
+			return &passwordPolicy, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
+// describePasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-password-policy.
 type describePasswordPolicyOptions struct {
 	describe       bool                   `ddl:"static" sql:"DESCRIBE"`
 	passwordPolicy bool                   `ddl:"static" sql:"PASSWORD POLICY"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describePasswordPolicyOptions) validate() error {
-	if !validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describePasswordPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

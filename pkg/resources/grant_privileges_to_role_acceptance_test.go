@@ -5,15 +5,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccGrantPrivilegesToRole_onAccount(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +49,7 @@ func TestAccGrantPrivilegesToRole_onAccount(t *testing.T) {
 }
 
 /*
-	func TestAccGrantPrivilegesToRole_onAccountAllPrivileges(t *testing.T) {
+	func TestAcc_GrantPrivilegesToRole_onAccountAllPrivileges(t *testing.T) {
 		name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 		resource.ParallelTest(t, resource.TestCase{
@@ -106,19 +108,20 @@ func grantPrivilegesToRole_onAccountConfigAllPrivileges(name string) string {
 	`, name)
 }
 
-func TestAccGrantPrivilegesToRole_onAccountObject(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onAccountObject(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onAccountObjectConfig(name, []string{"CREATE DATABASE ROLE"}),
+				Config: grantPrivilegesToRole_onAccountObjectConfig(name, []string{"CREATE DATABASE ROLE"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.0.object_name", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.0.object_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.0.object_type", "DATABASE"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "CREATE DATABASE ROLE"),
@@ -126,7 +129,7 @@ func TestAccGrantPrivilegesToRole_onAccountObject(t *testing.T) {
 			},
 			// ADD PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onAccountObjectConfig(name, []string{"MONITOR", "CREATE SCHEMA"}),
+				Config: grantPrivilegesToRole_onAccountObjectConfig(name, []string{"MONITOR", "CREATE SCHEMA"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
@@ -144,19 +147,20 @@ func TestAccGrantPrivilegesToRole_onAccountObject(t *testing.T) {
 	})
 }
 
-func TestAccGrantPrivilegesToRole_onAccountObjectAllPrivileges(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onAccountObjectAllPrivileges(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onAccountObjectConfigAllPrivileges(name),
+				Config: grantPrivilegesToRole_onAccountObjectConfigAllPrivileges(name, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.0.object_name", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.0.object_name", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_account_object.0.object_type", "DATABASE"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "all_privileges", "true"),
 				),
@@ -171,7 +175,7 @@ func TestAccGrantPrivilegesToRole_onAccountObjectAllPrivileges(t *testing.T) {
 	})
 }
 
-func grantPrivilegesToRole_onAccountObjectConfig(name string, privileges []string) string {
+func grantPrivilegesToRole_onAccountObjectConfig(name string, privileges []string, databaseName string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
 		doubleQuotePrivileges[i] = fmt.Sprintf(`"%v"`, p)
@@ -182,28 +186,20 @@ func grantPrivilegesToRole_onAccountObjectConfig(name string, privileges []strin
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
 	resource "snowflake_grant_privileges_to_role" "g" {
 		privileges = [%v]
 		role_name  = snowflake_role.r.name
 		on_account_object {
 			object_type = "DATABASE"
-			object_name = snowflake_database.d.name
+			object_name = "%s"
 		}
 	}
-	`, name, name, privilegesString)
+	`, name, privilegesString, databaseName)
 }
 
-func grantPrivilegesToRole_onAccountObjectConfigAllPrivileges(name string) string {
+func grantPrivilegesToRole_onAccountObjectConfigAllPrivileges(name string, databaseName string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_role" "r" {
-		name = "%v"
-	}
-
-	resource "snowflake_database" "d" {
 		name = "%v"
 	}
 
@@ -212,25 +208,26 @@ func grantPrivilegesToRole_onAccountObjectConfigAllPrivileges(name string) strin
 		role_name  = snowflake_role.r.name
 		on_account_object {
 			object_type = "DATABASE"
-			object_name = snowflake_database.d.name
+			object_name = "%s"
 		}
 	}
-	`, name, name)
+	`, name, databaseName)
 }
 
-func TestAccGrantPrivilegesToRole_onSchema(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchema(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchemaConfig(name, []string{"MONITOR", "USAGE"}),
+				Config: grantPrivilegesToRole_onSchemaConfig(name, []string{"MONITOR", "USAGE"}, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.0.schema_name", fmt.Sprintf("\"%v\".\"%v\"", name, name)),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.0.schema_name", fmt.Sprintf("\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName)),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "MONITOR"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.1", "USAGE"),
@@ -238,7 +235,7 @@ func TestAccGrantPrivilegesToRole_onSchema(t *testing.T) {
 			},
 			// ADD PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onSchemaConfig(name, []string{"MONITOR"}),
+				Config: grantPrivilegesToRole_onSchemaConfig(name, []string{"MONITOR"}, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
@@ -255,7 +252,7 @@ func TestAccGrantPrivilegesToRole_onSchema(t *testing.T) {
 	})
 }
 
-func grantPrivilegesToRole_onSchemaConfig(name string, privileges []string) string {
+func grantPrivilegesToRole_onSchemaConfig(name string, privileges []string, databaseName string, schemaName string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
 		doubleQuotePrivileges[i] = fmt.Sprintf(`"%v"`, p)
@@ -266,65 +263,46 @@ func grantPrivilegesToRole_onSchemaConfig(name string, privileges []string) stri
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
-	resource "snowflake_schema" "s" {
-		name = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema {
 		  schema_name = "\"%s\".\"%s\""
 		}
 	}
-	`, name, name, name, privilegesString, name, name)
+	`, name, privilegesString, databaseName, schemaName)
 }
 
-func grantPrivilegesToRole_onSchemaConfigAllPrivileges(name string) string {
+func grantPrivilegesToRole_onSchemaConfigAllPrivileges(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_role" "r" {
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
-	resource "snowflake_schema" "s" {
-		name = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		all_privileges = true
 		on_schema {
-		  schema_name = "\"%s\".\"%s\""
+			schema_name = "\"%s\".\"%s\""
 		}
 	}
-	`, name, name, name, name, name)
+	`, name, databaseName, schemaName)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaConfigAllPrivileges(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaConfigAllPrivileges(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchemaConfigAllPrivileges(name),
+				Config: grantPrivilegesToRole_onSchemaConfigAllPrivileges(name, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.0.schema_name", fmt.Sprintf("\"%v\".\"%v\"", name, name)),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.0.schema_name", fmt.Sprintf("\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName)),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "all_privileges", "true"),
 				),
 			},
@@ -338,19 +316,20 @@ func TestAccGrantPrivilegesToRole_onSchemaConfigAllPrivileges(t *testing.T) {
 	})
 }
 
-func TestAccGrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchema_allSchemasInDatabaseConfig(name, []string{"MONITOR", "USAGE"}),
+				Config: grantPrivilegesToRole_onSchema_allSchemasInDatabaseConfig(name, []string{"MONITOR", "USAGE"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.0.all_schemas_in_database", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.0.all_schemas_in_database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "MONITOR"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.1", "USAGE"),
@@ -358,7 +337,7 @@ func TestAccGrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
 			},
 			// REMOVE PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onSchema_allSchemasInDatabaseConfig(name, []string{"MONITOR"}),
+				Config: grantPrivilegesToRole_onSchema_allSchemasInDatabaseConfig(name, []string{"MONITOR"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
@@ -375,19 +354,20 @@ func TestAccGrantPrivilegesToRole_onSchema_allSchemasInDatabase(t *testing.T) {
 	})
 }
 
-func TestAccGrantPrivilegesToRole_onSchema_futureSchemasInDatabase(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchema_futureSchemasInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchema_futureSchemasInDatabaseConfig(name, []string{"MONITOR", "USAGE"}),
+				Config: grantPrivilegesToRole_onSchema_futureSchemasInDatabaseConfig(name, []string{"MONITOR", "USAGE"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.0.future_schemas_in_database", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema.0.future_schemas_in_database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "MONITOR"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.1", "USAGE"),
@@ -403,7 +383,7 @@ func TestAccGrantPrivilegesToRole_onSchema_futureSchemasInDatabase(t *testing.T)
 	})
 }
 
-func grantPrivilegesToRole_onSchema_allSchemasInDatabaseConfig(name string, privileges []string) string {
+func grantPrivilegesToRole_onSchema_allSchemasInDatabaseConfig(name string, privileges []string, databaseName string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
 		doubleQuotePrivileges[i] = fmt.Sprintf(`"%v"`, p)
@@ -414,27 +394,18 @@ func grantPrivilegesToRole_onSchema_allSchemasInDatabaseConfig(name string, priv
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
-	resource "snowflake_schema" "s" {
-		name = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema {
-			all_schemas_in_database = snowflake_database.d.name
+			all_schemas_in_database = "%s"
+
 		}
 	}
-	`, name, name, name, privilegesString)
+	`, name, privilegesString, databaseName)
 }
 
-func grantPrivilegesToRole_onSchema_futureSchemasInDatabaseConfig(name string, privileges []string) string {
+func grantPrivilegesToRole_onSchema_futureSchemasInDatabaseConfig(name string, privileges []string, databaseName string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
 		doubleQuotePrivileges[i] = fmt.Sprintf(`"%v"`, p)
@@ -445,40 +416,32 @@ func grantPrivilegesToRole_onSchema_futureSchemasInDatabaseConfig(name string, p
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
-	resource "snowflake_schema" "s" {
-		name = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema {
-			future_schemas_in_database = snowflake_database.d.name
+			future_schemas_in_database = "%s"
+
 		}
 	}
-	`, name, name, name, privilegesString)
+	`, name, privilegesString, databaseName)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_objectType(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_objectType(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_objectType(name, []string{"SELECT", "REFERENCES"}),
+				Config: grantPrivilegesToRole_onSchemaObject_objectType(name, []string{"SELECT", "REFERENCES"}, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.object_type", "VIEW"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.object_name", fmt.Sprintf(`"%v"."%v"."%v"`, name, name, name)),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.object_name", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, name)),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "REFERENCES"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.1", "SELECT"),
@@ -486,7 +449,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_objectType(t *testing.T) {
 			},
 			// REMOVE PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_objectType(name, []string{"SELECT"}),
+				Config: grantPrivilegesToRole_onSchemaObject_objectType(name, []string{"SELECT"}, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
@@ -503,7 +466,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_objectType(t *testing.T) {
 	})
 }
 
-func grantPrivilegesToRole_onSchemaObject_objectType(name string, privileges []string) string {
+func grantPrivilegesToRole_onSchemaObject_objectType(name string, privileges []string, databaseName string, schemaName string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
 		doubleQuotePrivileges[i] = fmt.Sprintf(`"%v"`, p)
@@ -514,25 +477,16 @@ func grantPrivilegesToRole_onSchemaObject_objectType(name string, privileges []s
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
-	resource "snowflake_schema" "s" {
-		name = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource "snowflake_view" "v" {
 		name        = "%v"
-		database    = snowflake_database.d.name
-		schema      = snowflake_schema.s.name
+		database    = "%s"
+		schema      = "%s"
 		is_secure   = true
 		statement   = "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	}
 
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s , snowflake_view.v]
+		depends_on = [ snowflake_view.v]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema_object {
@@ -540,24 +494,25 @@ func grantPrivilegesToRole_onSchemaObject_objectType(name string, privileges []s
 			object_name = "\"%s\".\"%s\".\"%s\""
 		}
 	}
-	`, name, name, name, name, privilegesString, name, name, name)
+	`, name, name, databaseName, schemaName, privilegesString, databaseName, schemaName, name)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_allInSchema(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_allInSchema(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_allInSchema(name, []string{"SELECT", "REFERENCES"}),
+				Config: grantPrivilegesToRole_onSchemaObject_allInSchema(name, []string{"SELECT", "REFERENCES"}, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.all.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.all.0.object_type_plural", "TABLES"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.all.0.in_schema", fmt.Sprintf(`"%v"."%v"`, name, name)),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.all.0.in_schema", fmt.Sprintf(`"%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName)),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "REFERENCES"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.1", "SELECT"),
@@ -565,7 +520,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_allInSchema(t *testing.T) {
 			},
 			// REMOVE PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_allInSchema(name, []string{"SELECT"}),
+				Config: grantPrivilegesToRole_onSchemaObject_allInSchema(name, []string{"SELECT"}, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
@@ -582,7 +537,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_allInSchema(t *testing.T) {
 	})
 }
 
-func grantPrivilegesToRole_onSchemaObject_allInSchema(name string, privileges []string) string {
+func grantPrivilegesToRole_onSchemaObject_allInSchema(name string, privileges []string, databaseName string, schemaName string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
 		doubleQuotePrivileges[i] = fmt.Sprintf(`"%v"`, p)
@@ -593,17 +548,7 @@ func grantPrivilegesToRole_onSchemaObject_allInSchema(name string, privileges []
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
-	resource "snowflake_schema" "s" {
-		name = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema_object {
@@ -613,24 +558,25 @@ func grantPrivilegesToRole_onSchemaObject_allInSchema(name string, privileges []
 			}
 		}
 	}
-	`, name, name, name, privilegesString, name, name)
+	`, name, privilegesString, databaseName, schemaName)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_allInDatabase(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_allInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_allInDatabase(name, []string{"SELECT", "REFERENCES"}),
+				Config: grantPrivilegesToRole_onSchemaObject_allInDatabase(name, []string{"SELECT", "REFERENCES"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.all.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.all.0.object_type_plural", "TABLES"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.all.0.in_database", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.all.0.in_database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "REFERENCES"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.1", "SELECT"),
@@ -638,7 +584,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_allInDatabase(t *testing.T) {
 			},
 			// REMOVE PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_allInDatabase(name, []string{"SELECT"}),
+				Config: grantPrivilegesToRole_onSchemaObject_allInDatabase(name, []string{"SELECT"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
@@ -655,7 +601,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_allInDatabase(t *testing.T) {
 	})
 }
 
-func grantPrivilegesToRole_onSchemaObject_allInDatabase(name string, privileges []string) string {
+func grantPrivilegesToRole_onSchemaObject_allInDatabase(name string, privileges []string, databaseName string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
 		doubleQuotePrivileges[i] = fmt.Sprintf(`"%v"`, p)
@@ -666,44 +612,35 @@ func grantPrivilegesToRole_onSchemaObject_allInDatabase(name string, privileges 
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
-	resource "snowflake_schema" "s" {
-		name = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema_object {
 			all {
 				object_type_plural = "TABLES"
-				in_database = snowflake_database.d.name
+				in_database = "%s"
 			}
 		}
 	}
-	`, name, name, name, privilegesString)
+	`, name, privilegesString, databaseName)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_futureInSchema(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInSchema(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_futureInSchema(name, []string{"SELECT", "REFERENCES"}),
+				Config: grantPrivilegesToRole_onSchemaObject_futureInSchema(name, []string{"SELECT", "REFERENCES"}, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.0.object_type_plural", "TABLES"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.0.in_schema", fmt.Sprintf(`"%v"."%v"`, name, name)),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.0.in_schema", fmt.Sprintf(`"%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName)),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "REFERENCES"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.1", "SELECT"),
@@ -711,7 +648,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_futureInSchema(t *testing.T) {
 			},
 			// REMOVE PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_futureInSchema(name, []string{"SELECT"}),
+				Config: grantPrivilegesToRole_onSchemaObject_futureInSchema(name, []string{"SELECT"}, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
@@ -728,7 +665,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_futureInSchema(t *testing.T) {
 	})
 }
 
-func grantPrivilegesToRole_onSchemaObject_futureInSchema(name string, privileges []string) string {
+func grantPrivilegesToRole_onSchemaObject_futureInSchema(name string, privileges []string, databaseName string, schemaName string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
 		doubleQuotePrivileges[i] = fmt.Sprintf(`"%v"`, p)
@@ -739,17 +676,7 @@ func grantPrivilegesToRole_onSchemaObject_futureInSchema(name string, privileges
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
-	resource "snowflake_schema" "s" {
-		name = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema_object {
@@ -759,24 +686,25 @@ func grantPrivilegesToRole_onSchemaObject_futureInSchema(name string, privileges
 			}
 		}
 	}
-	`, name, name, name, privilegesString, name, name)
+	`, name, privilegesString, databaseName, schemaName)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_futureInDatabase(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	objectType := "TABLES"
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT", "REFERENCES"}),
+				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT", "REFERENCES"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.0.object_type_plural", "TABLES"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.0.in_database", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.0.in_database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "REFERENCES"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.1", "SELECT"),
@@ -784,7 +712,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_futureInDatabase(t *testing.T) 
 			},
 			// REMOVE PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT"}),
+				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),
@@ -801,7 +729,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_futureInDatabase(t *testing.T) 
 	})
 }
 
-func grantPrivilegesToRole_onSchemaObject_futureInDatabase(name string, objectType string, privileges []string) string {
+func grantPrivilegesToRole_onSchemaObject_futureInDatabase(name string, objectType string, privileges []string, databaseName string) string {
 	doubleQuotePrivileges := make([]string, len(privileges))
 	for i, p := range privileges {
 		doubleQuotePrivileges[i] = fmt.Sprintf(`"%v"`, p)
@@ -812,34 +740,25 @@ func grantPrivilegesToRole_onSchemaObject_futureInDatabase(name string, objectTy
 		name = "%v"
 	}
 
-	resource "snowflake_database" "d" {
-		name = "%v"
-	}
-
-	resource "snowflake_schema" "s" {
-		name = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource "snowflake_grant_privileges_to_role" "g" {
-		depends_on = [ snowflake_schema.s ]
 		role_name = snowflake_role.r.name
 		privileges = [%s]
 		on_schema_object {
 			future {
 				object_type_plural = "%s"
-				in_database = snowflake_database.d.name
+				in_database = "%s"
 			}
 		}
 	}
-	`, name, name, name, privilegesString, objectType)
+	`, name, privilegesString, objectType, databaseName)
 }
 
-func TestAccGrantPrivilegesToRole_multipleResources(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_multipleResources(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -903,21 +822,22 @@ func grantPrivilegesToRole_multipleResources(name string, privileges1, privilege
 	`, name, privilegesString1, privilegesString2)
 }
 
-func TestAccGrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable(t *testing.T) {
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	objectType := "EXTERNAL TABLES"
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT", "REFERENCES"}),
+				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT", "REFERENCES"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.0.object_type_plural", "EXTERNAL TABLES"),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.0.in_database", name),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "on_schema_object.0.future.0.in_database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.0", "REFERENCES"),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.1", "SELECT"),
@@ -925,7 +845,7 @@ func TestAccGrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable(
 			},
 			// REMOVE PRIVILEGE
 			{
-				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT"}),
+				Config: grantPrivilegesToRole_onSchemaObject_futureInDatabase(name, objectType, []string{"SELECT"}, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "role_name", name),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.g", "privileges.#", "1"),

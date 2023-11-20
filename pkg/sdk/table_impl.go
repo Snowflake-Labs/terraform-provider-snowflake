@@ -1,6 +1,10 @@
 package sdk
 
-import "context"
+import (
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+)
 
 var _ Tables = (*tables)(nil)
 
@@ -62,7 +66,7 @@ func (v *tables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tabl
 		return nil, err
 	}
 
-	return findOne(tables, func(r Table) bool { return r.Name == id.Name() })
+	return collections.FindOne(tables, func(r Table) bool { return r.Name == id.Name() })
 }
 
 func (s *AlterTableRequest) toOpts() *alterTableOptions {
@@ -107,7 +111,7 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 		tableSet = convertAlterTableSet(*s.Set)
 	}
 
-	tagAssociations := []TagAssociation{}
+	tagAssociations := make([]TagAssociation, 0, len(s.SetTags))
 	for _, tagRequest := range s.SetTags {
 		tagAssociations = append(tagAssociations, TagAssociation(tagRequest))
 	}
@@ -163,24 +167,22 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 }
 
 func convertAlterTableSet(request TableSetRequest) *TableSet {
-	stageFileFormats := []StageFileFormat{}
+	stageFileFormats := make([]StageFileFormat, 0, len(request.StageFileFormat))
 	for _, stageFileFormat := range request.StageFileFormat {
 		var options *FileFormatTypeOptions
 		if stageFileFormat.Options != nil {
-			options = convertFileFormatTypeOptions(*stageFileFormat.Options)
+			options = stageFileFormat.Options.toOpts()
 		}
 		stageFileFormats = append(stageFileFormats, StageFileFormat{
-			InnerValue: StageFileFormatInnerValue{
-				FormatName: stageFileFormat.FormatName,
-				FormatType: stageFileFormat.FormatType,
-				Options:    options,
-			},
+			FormatName: stageFileFormat.FormatName,
+			Type:       stageFileFormat.Type,
+			Options:    options,
 		})
 	}
-	stageCopyOptions := []StageCopyOption{}
+	stageCopyOptions := make([]StageCopyOption, 0, len(request.StageCopyOptions))
 	for _, stageCopyOption := range request.StageCopyOptions {
 		stageCopyOptions = append(stageCopyOptions, StageCopyOption{
-			InnerValue: StageCopyOptionsInnerValue(stageCopyOption),
+			InnerValue: *stageCopyOption.toOpts(),
 		})
 	}
 
@@ -199,14 +201,14 @@ func convertAlterTableSet(request TableSetRequest) *TableSet {
 func convertSearchOptimizationAction(request TableSearchOptimizationActionRequest) *TableSearchOptimizationAction {
 	if len(request.AddSearchOptimizationOn) > 0 {
 		return &TableSearchOptimizationAction{
-			Add: &AddSearchOptimaztion{
+			Add: &AddSearchOptimization{
 				On: request.AddSearchOptimizationOn,
 			},
 		}
 	}
 	if len(request.DropSearchOptimizationOn) > 0 {
 		return &TableSearchOptimizationAction{
-			Drop: &DropSearchOptimaztion{
+			Drop: &DropSearchOptimization{
 				On: request.DropSearchOptimizationOn,
 			},
 		}
@@ -370,7 +372,7 @@ func convertTableColumnAction(request TableColumnActionRequest) *TableColumnActi
 		}
 	}
 	if len(request.Alter) > 0 {
-		alterActions := []TableColumnAlterAction{}
+		var alterActions []TableColumnAlterAction
 		for _, alterAction := range request.Alter {
 			var notNullConstraint *TableColumnNotNullConstraint
 			if alterAction.NotNullConstraint != nil {
@@ -438,12 +440,9 @@ func convertTableColumnAction(request TableColumnActionRequest) *TableColumnActi
 }
 
 func (s *CreateTableRequest) toOpts() *createTableOptions {
-	tagAssociations := []TagAssociation{}
-	for _, tagRequest := range tagAssociations {
-		tagAssociations = append(tagAssociations, TagAssociation{
-			Name:  tagRequest.Name,
-			Value: tagRequest.Value,
-		})
+	tagAssociations := make([]TagAssociation, 0, len(s.Tags))
+	for _, tagRequest := range s.Tags {
+		tagAssociations = append(tagAssociations, TagAssociation(tagRequest))
 	}
 	var rowAccessPolicy *RowAccessPolicy
 	if s.RowAccessPolicy != nil {
@@ -503,7 +502,7 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 		StageCopyOptions:           convertStageCopyOptions(s.stageCopyOptions),
 		StageFileFormat:            convertStageFileFormatOptions(s.stageFileFormat),
 		DataRetentionTimeInDays:    s.DataRetentionTimeInDays,
-		MaxDataExtentionTimeInDays: s.MaxDataExtensionTimeInDays,
+		MaxDataExtensionTimeInDays: s.MaxDataExtensionTimeInDays,
 		ChangeTracking:             s.ChangeTracking,
 		DefaultDDLCollation:        s.DefaultDDLCollation,
 		CopyGrants:                 s.CopyGrants,
@@ -514,7 +513,7 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 }
 
 func (s *CreateTableAsSelectRequest) toOpts() *createTableAsSelectOptions {
-	columns := []TableAsSelectColumn{}
+	columns := make([]TableAsSelectColumn, 0, len(s.columns))
 	for _, column := range s.columns {
 		var maskingPolicy *TableAsSelectColumnMaskingPolicy
 		if column.maskingPolicyName != nil {
@@ -576,97 +575,121 @@ func (s *CreateTableCloneRequest) toOpts() *createTableCloneOptions {
 }
 
 func convertStageCopyOptions(copyOptionRequests []StageCopyOptionsRequest) []StageCopyOption {
-	copyOptions := []StageCopyOption{}
+	copyOptions := make([]StageCopyOption, 0, len(copyOptionRequests))
 	for _, request := range copyOptionRequests {
-		innerValue := StageCopyOptionsInnerValue(request)
+		innerValue := request.toOpts()
 		copyOptions = append(copyOptions, StageCopyOption{
-			InnerValue: innerValue,
+			InnerValue: *innerValue,
 		})
 	}
 	return copyOptions
 }
 
+func (v *StageCopyOptionsRequest) toOpts() *StageCopyOptionsInnerValue {
+	return &StageCopyOptionsInnerValue{
+		OnError:           v.OnError.toOpts(),
+		SizeLimit:         v.SizeLimit,
+		Purge:             v.Purge,
+		ReturnFailedOnly:  v.ReturnFailedOnly,
+		MatchByColumnName: v.MatchByColumnName,
+		EnforceLength:     v.EnforceLength,
+		TruncateColumns:   v.Truncatecolumns,
+		Force:             v.Force,
+	}
+}
+
+func (v *StageCopyOnErrorOptionsRequest) toOpts() *StageCopyOnErrorOptions {
+	return &StageCopyOnErrorOptions{
+		Continue:       v.Continue,
+		SkipFile:       v.SkipFile,
+		AbortStatement: v.AbortStatement,
+	}
+}
+
 func convertStageFileFormatOptions(stageFileFormatRequests []StageFileFormatRequest) []StageFileFormat {
-	fileFormats := []StageFileFormat{}
+	fileFormats := make([]StageFileFormat, 0, len(stageFileFormatRequests))
 	for _, request := range stageFileFormatRequests {
 		var options *FileFormatTypeOptions
 		if request.Options != nil {
-			options = convertFileFormatTypeOptions(*request.Options)
+			options = request.Options.toOpts()
 		}
-		innerValue := StageFileFormatInnerValue{
+		format := StageFileFormat{
 			FormatName: request.FormatName,
-			FormatType: request.FormatType,
+			Type:       request.Type,
 			Options:    options,
 		}
-		fileFormats = append(fileFormats, StageFileFormat{InnerValue: innerValue})
+		fileFormats = append(fileFormats, format)
 	}
 	return fileFormats
 }
 
-func convertFileFormatTypeOptions(request FileFormatTypeOptionsRequest) *FileFormatTypeOptions {
+func (v *FileFormatTypeOptionsRequest) toOpts() *FileFormatTypeOptions {
+	if v == nil {
+		return nil
+	}
 	return &FileFormatTypeOptions{
-		CSVCompression:                  request.CSVCompression,
-		CSVRecordDelimiter:              request.CSVRecordDelimiter,
-		CSVFieldDelimiter:               request.CSVFieldDelimiter,
-		CSVFileExtension:                request.CSVFileExtension,
-		CSVParseHeader:                  request.CSVParseHeader,
-		CSVSkipHeader:                   request.CSVSkipHeader,
-		CSVSkipBlankLines:               request.CSVSkipBlankLines,
-		CSVDateFormat:                   request.CSVDateFormat,
-		CSVTimeFormat:                   request.CSVTimeFormat,
-		CSVTimestampFormat:              request.CSVTimestampFormat,
-		CSVBinaryFormat:                 request.CSVBinaryFormat,
-		CSVEscape:                       request.CSVEscape,
-		CSVEscapeUnenclosedField:        request.CSVEscapeUnenclosedField,
-		CSVTrimSpace:                    request.CSVTrimSpace,
-		CSVFieldOptionallyEnclosedBy:    request.CSVFieldOptionallyEnclosedBy,
-		CSVNullIf:                       request.CSVNullIf,
-		CSVErrorOnColumnCountMismatch:   request.CSVErrorOnColumnCountMismatch,
-		CSVReplaceInvalidCharacters:     request.CSVReplaceInvalidCharacters,
-		CSVEmptyFieldAsNull:             request.CSVEmptyFieldAsNull,
-		CSVSkipByteOrderMark:            request.CSVSkipByteOrderMark,
-		CSVEncoding:                     request.CSVEncoding,
-		JSONCompression:                 request.JSONCompression,
-		JSONDateFormat:                  request.JSONDateFormat,
-		JSONTimeFormat:                  request.JSONTimeFormat,
-		JSONTimestampFormat:             request.JSONTimestampFormat,
-		JSONBinaryFormat:                request.JSONBinaryFormat,
-		JSONTrimSpace:                   request.JSONTrimSpace,
-		JSONNullIf:                      request.JSONNullIf,
-		JSONFileExtension:               request.JSONFileExtension,
-		JSONEnableOctal:                 request.JSONEnableOctal,
-		JSONAllowDuplicate:              request.JSONAllowDuplicate,
-		JSONStripOuterArray:             request.JSONStripOuterArray,
-		JSONStripNullValues:             request.JSONStripNullValues,
-		JSONReplaceInvalidCharacters:    request.JSONReplaceInvalidCharacters,
-		JSONIgnoreUTF8Errors:            request.JSONIgnoreUTF8Errors,
-		JSONSkipByteOrderMark:           request.JSONSkipByteOrderMark,
-		AvroCompression:                 request.AvroCompression,
-		AvroTrimSpace:                   request.AvroTrimSpace,
-		AvroReplaceInvalidCharacters:    request.AvroReplaceInvalidCharacters,
-		AvroNullIf:                      request.AvroNullIf,
-		ORCTrimSpace:                    request.ORCTrimSpace,
-		ORCReplaceInvalidCharacters:     request.ORCReplaceInvalidCharacters,
-		ORCNullIf:                       request.ORCNullIf,
-		ParquetCompression:              request.ParquetCompression,
-		ParquetSnappyCompression:        request.ParquetSnappyCompression,
-		ParquetBinaryAsText:             request.ParquetBinaryAsText,
-		ParquetTrimSpace:                request.ParquetTrimSpace,
-		ParquetReplaceInvalidCharacters: request.ParquetReplaceInvalidCharacters,
-		ParquetNullIf:                   request.ParquetNullIf,
-		XMLCompression:                  request.XMLCompression,
-		XMLIgnoreUTF8Errors:             request.XMLIgnoreUTF8Errors,
-		XMLPreserveSpace:                request.XMLPreserveSpace,
-		XMLStripOuterElement:            request.XMLStripOuterElement,
-		XMLDisableSnowflakeData:         request.XMLDisableSnowflakeData,
-		XMLDisableAutoConvert:           request.XMLDisableAutoConvert,
-		XMLReplaceInvalidCharacters:     request.XMLReplaceInvalidCharacters,
-		XMLSkipByteOrderMark:            request.XMLSkipByteOrderMark,
+		CSVCompression:                  v.CSVCompression,
+		CSVRecordDelimiter:              v.CSVRecordDelimiter,
+		CSVFieldDelimiter:               v.CSVFieldDelimiter,
+		CSVFileExtension:                v.CSVFileExtension,
+		CSVParseHeader:                  v.CSVParseHeader,
+		CSVSkipHeader:                   v.CSVSkipHeader,
+		CSVSkipBlankLines:               v.CSVSkipBlankLines,
+		CSVDateFormat:                   v.CSVDateFormat,
+		CSVTimeFormat:                   v.CSVTimeFormat,
+		CSVTimestampFormat:              v.CSVTimestampFormat,
+		CSVBinaryFormat:                 v.CSVBinaryFormat,
+		CSVEscape:                       v.CSVEscape,
+		CSVEscapeUnenclosedField:        v.CSVEscapeUnenclosedField,
+		CSVTrimSpace:                    v.CSVTrimSpace,
+		CSVFieldOptionallyEnclosedBy:    v.CSVFieldOptionallyEnclosedBy,
+		CSVNullIf:                       v.CSVNullIf,
+		CSVErrorOnColumnCountMismatch:   v.CSVErrorOnColumnCountMismatch,
+		CSVReplaceInvalidCharacters:     v.CSVReplaceInvalidCharacters,
+		CSVEmptyFieldAsNull:             v.CSVEmptyFieldAsNull,
+		CSVSkipByteOrderMark:            v.CSVSkipByteOrderMark,
+		CSVEncoding:                     v.CSVEncoding,
+		JSONCompression:                 v.JSONCompression,
+		JSONDateFormat:                  v.JSONDateFormat,
+		JSONTimeFormat:                  v.JSONTimeFormat,
+		JSONTimestampFormat:             v.JSONTimestampFormat,
+		JSONBinaryFormat:                v.JSONBinaryFormat,
+		JSONTrimSpace:                   v.JSONTrimSpace,
+		JSONNullIf:                      v.JSONNullIf,
+		JSONFileExtension:               v.JSONFileExtension,
+		JSONEnableOctal:                 v.JSONEnableOctal,
+		JSONAllowDuplicate:              v.JSONAllowDuplicate,
+		JSONStripOuterArray:             v.JSONStripOuterArray,
+		JSONStripNullValues:             v.JSONStripNullValues,
+		JSONReplaceInvalidCharacters:    v.JSONReplaceInvalidCharacters,
+		JSONIgnoreUTF8Errors:            v.JSONIgnoreUTF8Errors,
+		JSONSkipByteOrderMark:           v.JSONSkipByteOrderMark,
+		AvroCompression:                 v.AvroCompression,
+		AvroTrimSpace:                   v.AvroTrimSpace,
+		AvroReplaceInvalidCharacters:    v.AvroReplaceInvalidCharacters,
+		AvroNullIf:                      v.AvroNullIf,
+		ORCTrimSpace:                    v.ORCTrimSpace,
+		ORCReplaceInvalidCharacters:     v.ORCReplaceInvalidCharacters,
+		ORCNullIf:                       v.ORCNullIf,
+		ParquetCompression:              v.ParquetCompression,
+		ParquetSnappyCompression:        v.ParquetSnappyCompression,
+		ParquetBinaryAsText:             v.ParquetBinaryAsText,
+		ParquetTrimSpace:                v.ParquetTrimSpace,
+		ParquetReplaceInvalidCharacters: v.ParquetReplaceInvalidCharacters,
+		ParquetNullIf:                   v.ParquetNullIf,
+		XMLCompression:                  v.XMLCompression,
+		XMLIgnoreUTF8Errors:             v.XMLIgnoreUTF8Errors,
+		XMLPreserveSpace:                v.XMLPreserveSpace,
+		XMLStripOuterElement:            v.XMLStripOuterElement,
+		XMLDisableSnowflakeData:         v.XMLDisableSnowflakeData,
+		XMLDisableAutoConvert:           v.XMLDisableAutoConvert,
+		XMLReplaceInvalidCharacters:     v.XMLReplaceInvalidCharacters,
+		XMLSkipByteOrderMark:            v.XMLSkipByteOrderMark,
 	}
 }
 
 func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
-	columns := []TableColumn{}
+	columns := make([]TableColumn, 0, len(columnRequests))
 	for _, columnRequest := range columnRequests {
 		var defaultValue *ColumnDefaultValue
 		if columnRequest.defaultValue != nil {
@@ -701,8 +724,9 @@ func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 				}
 			}
 			inlineConstraint = &ColumnInlineConstraint{
-				Name:               columnRequest.inlineConstraint.Name,
-				Type:               columnRequest.inlineConstraint.type_,
+				NotNull:            columnRequest.notNull,
+				Name:               &columnRequest.inlineConstraint.Name,
+				Type:               &columnRequest.inlineConstraint.type_,
 				ForeignKey:         foreignKey,
 				Enforced:           columnRequest.inlineConstraint.enforced,
 				NotEnforced:        columnRequest.inlineConstraint.notEnforced,

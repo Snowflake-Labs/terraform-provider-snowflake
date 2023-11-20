@@ -1,9 +1,8 @@
 package sdk
 
 import (
+	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
 )
@@ -15,10 +14,7 @@ func TestWarehouseCreate(t *testing.T) {
 				name: "mywarehouse",
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE WAREHOUSE "mywarehouse"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE WAREHOUSE "mywarehouse"`)
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -54,52 +50,49 @@ func TestWarehouseCreate(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89 TAG ("db1"."schema1"."tag1" = 'v1', "db1"."schema1"."tag2" = 'v2')`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE WAREHOUSE IF NOT EXISTS "completewarehouse" WAREHOUSE_TYPE = 'STANDARD' WAREHOUSE_SIZE = 'X4LARGE' MAX_CLUSTER_COUNT = 8 MIN_CLUSTER_COUNT = 3 SCALING_POLICY = 'ECONOMY' AUTO_SUSPEND = 1000 AUTO_RESUME = true INITIALLY_SUSPENDED = false RESOURCE_MONITOR = "myresmon" COMMENT = 'hello' ENABLE_QUERY_ACCELERATION = true QUERY_ACCELERATION_MAX_SCALE_FACTOR = 62 MAX_CONCURRENCY_LEVEL = 7 STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 29 STATEMENT_TIMEOUT_IN_SECONDS = 89 TAG ("db1"."schema1"."tag1" = 'v1', "db1"."schema1"."tag2" = 'v2')`)
 	})
 }
 
 func TestWarehouseSizing(t *testing.T) {
-	t.Run("Min bigger than Max", func(t *testing.T) {
+	t.Run("validation: Min bigger than Max", func(t *testing.T) {
 		opts := &CreateWarehouseOptions{
 			name:            NewAccountObjectIdentifier("mywarehouse"),
 			MaxClusterCount: Int(1),
 			MinClusterCount: Int(2),
 		}
-		err := opts.validate()
-		require.Error(t, err)
+		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount"))
 	})
+
 	t.Run("Max equal Min", func(t *testing.T) {
 		opts := &CreateWarehouseOptions{
 			name:            NewAccountObjectIdentifier("mywarehouse"),
 			MaxClusterCount: Int(2),
 			MinClusterCount: Int(2),
 		}
-		lerr := opts.validate()
-		require.NoError(t, lerr)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE WAREHOUSE \"mywarehouse\" MAX_CLUSTER_COUNT = 2 MIN_CLUSTER_COUNT = 2")
 	})
+
 	t.Run("Max greater than Min", func(t *testing.T) {
 		opts := &CreateWarehouseOptions{
 			name:            NewAccountObjectIdentifier("mywarehouse"),
 			MaxClusterCount: Int(2),
 			MinClusterCount: Int(1),
 		}
-		err := opts.validate()
-		require.NoError(t, err)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE WAREHOUSE \"mywarehouse\" MAX_CLUSTER_COUNT = 2 MIN_CLUSTER_COUNT = 1")
 	})
+
 	t.Run("Allow large Min Max Values", func(t *testing.T) {
 		opts := &CreateWarehouseOptions{
 			name:            NewAccountObjectIdentifier("mywarehouse"),
 			MaxClusterCount: Int(100),
 			MinClusterCount: Int(11),
 		}
-		err := opts.validate()
-		require.NoError(t, err)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE WAREHOUSE \"mywarehouse\" MAX_CLUSTER_COUNT = 100 MIN_CLUSTER_COUNT = 11")
 	})
 }
 
+// TODO: add validation tests
 func TestWarehouseAlter(t *testing.T) {
 	t.Run("with set params", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
@@ -108,79 +101,61 @@ func TestWarehouseAlter(t *testing.T) {
 				WarehouseType:                   &WarehouseTypeSnowparkOptimized,
 				WaitForCompletion:               Bool(false),
 				MinClusterCount:                 Int(4),
+				MaxClusterCount:                 Int(5),
 				AutoSuspend:                     Int(200),
 				ResourceMonitor:                 NewAccountObjectIdentifier("resmon"),
 				EnableQueryAcceleration:         Bool(false),
 				StatementQueuedTimeoutInSeconds: Int(1200),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" SET WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED' WAIT_FOR_COMPLETION = false MIN_CLUSTER_COUNT = 4 AUTO_SUSPEND = 200 RESOURCE_MONITOR = "resmon" ENABLE_QUERY_ACCELERATION = false STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 1200`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SET WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED' WAIT_FOR_COMPLETION = false MAX_CLUSTER_COUNT = 5 MIN_CLUSTER_COUNT = 4 AUTO_SUSPEND = 200 RESOURCE_MONITOR = "resmon" ENABLE_QUERY_ACCELERATION = false STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 1200`)
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
-			Set: &WarehouseSet{
-				Tag: []TagAssociation{
-					{
-						Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
-						Value: "v1",
-					},
-					{
-						Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
-						Value: "v2",
-					},
+			name: NewAccountObjectIdentifier("mywarehouse"),
+			SetTag: []TagAssociation{
+				{
+					Name:  NewSchemaObjectIdentifier("db", "schema", "tag1"),
+					Value: "v1",
+				},
+				{
+					Name:  NewSchemaObjectIdentifier("db", "schema", "tag2"),
+					Value: "v2",
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SET TAG "db"."schema"."tag1" = 'v1', "db"."schema"."tag2" = 'v2'`)
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			Unset: &WarehouseUnset{
-				Tag: []ObjectIdentifier{
-					NewSchemaObjectIdentifier("db", "schema", "tag1"),
-				},
+			UnsetTag: []ObjectIdentifier{
+				NewSchemaObjectIdentifier("db", "schema", "tag1"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db"."schema"."tag1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db"."schema"."tag1"`)
 	})
 
 	t.Run("with unset params", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 			Unset: &WarehouseUnset{
-				WarehouseSize:   Bool(true),
 				MaxClusterCount: Bool(true),
 				AutoResume:      Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" UNSET WAREHOUSE_SIZE, MAX_CLUSTER_COUNT, AUTO_RESUME`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET MAX_CLUSTER_COUNT, AUTO_RESUME`)
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newname := NewAccountObjectIdentifier("newname")
+		newName := NewAccountObjectIdentifier("newName")
 		opts := &AlterWarehouseOptions{
-			name:    NewAccountObjectIdentifier("oldname"),
-			NewName: newname,
+			name:    NewAccountObjectIdentifier("oldName"),
+			NewName: &newName,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "oldname" RENAME TO "newname"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "oldName" RENAME TO "newName"`)
 	})
 
 	t.Run("suspend", func(t *testing.T) {
@@ -188,10 +163,7 @@ func TestWarehouseAlter(t *testing.T) {
 			name:    NewAccountObjectIdentifier("mywarehouse"),
 			Suspend: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" SUSPEND`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SUSPEND`)
 	})
 
 	t.Run("resume", func(t *testing.T) {
@@ -200,10 +172,7 @@ func TestWarehouseAlter(t *testing.T) {
 			Resume:      Bool(true),
 			IfSuspended: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" RESUME IF SUSPENDED`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" RESUME IF SUSPENDED`)
 	})
 
 	t.Run("abort all queries", func(t *testing.T) {
@@ -211,48 +180,35 @@ func TestWarehouseAlter(t *testing.T) {
 			name:            NewAccountObjectIdentifier("mywarehouse"),
 			AbortAllQueries: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" ABORT ALL QUERIES`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" ABORT ALL QUERIES`)
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			Set: &WarehouseSet{
-				Tag: []TagAssociation{
-					{
-						Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
-						Value: "v1",
-					},
-					{
-						Name:  NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
-						Value: "v2",
-					},
+			SetTag: []TagAssociation{
+				{
+					Name:  NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+					Value: "v1",
+				},
+				{
+					Name:  NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
+					Value: "v2",
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" SET TAG "db1"."schema1"."tag1" = 'v1', "db2"."schema2"."tag2" = 'v2'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SET TAG "db1"."schema1"."tag1" = 'v1', "db2"."schema2"."tag2" = 'v2'`)
 	})
 
 	t.Run("with unset tag", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
-			Unset: &WarehouseUnset{
-				Tag: []ObjectIdentifier{
-					NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
-					NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
-				},
+			UnsetTag: []ObjectIdentifier{
+				NewSchemaObjectIdentifier("db1", "schema1", "tag1"),
+				NewSchemaObjectIdentifier("db2", "schema2", "tag2"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db1"."schema1"."tag1", "db2"."schema2"."tag2"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" UNSET TAG "db1"."schema1"."tag1", "db2"."schema2"."tag2"`)
 	})
 }
 
@@ -261,10 +217,7 @@ func TestWarehouseDrop(t *testing.T) {
 		opts := &DropWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP WAREHOUSE "mywarehouse"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP WAREHOUSE "mywarehouse"`)
 	})
 
 	t.Run("with if exists", func(t *testing.T) {
@@ -272,20 +225,14 @@ func TestWarehouseDrop(t *testing.T) {
 			name:     NewAccountObjectIdentifier("mywarehouse"),
 			IfExists: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP WAREHOUSE IF EXISTS "mywarehouse"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP WAREHOUSE IF EXISTS "mywarehouse"`)
 	})
 }
 
 func TestWarehouseShow(t *testing.T) {
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowWarehouseOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW WAREHOUSES`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW WAREHOUSES`)
 	})
 
 	t.Run("with like", func(t *testing.T) {
@@ -294,22 +241,16 @@ func TestWarehouseShow(t *testing.T) {
 				Pattern: String("mywarehouse"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW WAREHOUSES LIKE 'mywarehouse'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW WAREHOUSES LIKE 'mywarehouse'`)
 	})
 }
 
 func TestWarehouseDescribe(t *testing.T) {
 	t.Run("only name", func(t *testing.T) {
-		opts := &warehouseDescribeOptions{
+		opts := &describeWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DESCRIBE WAREHOUSE "mywarehouse"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE WAREHOUSE "mywarehouse"`)
 	})
 }
 

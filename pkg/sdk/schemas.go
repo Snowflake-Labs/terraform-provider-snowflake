@@ -17,21 +17,13 @@ var (
 )
 
 type Schemas interface {
-	// Create creates a schema.
 	Create(ctx context.Context, id DatabaseObjectIdentifier, opts *CreateSchemaOptions) error
-	// Alter modifies an existing schema.
 	Alter(ctx context.Context, id DatabaseObjectIdentifier, opts *AlterSchemaOptions) error
-	// Drop removes a schema.
 	Drop(ctx context.Context, id DatabaseObjectIdentifier, opts *DropSchemaOptions) error
-	// Undrop restores the most recent version of a dropped schema.
 	Undrop(ctx context.Context, id DatabaseObjectIdentifier) error
-	// Describe lists objects in the schema.
 	Describe(ctx context.Context, id DatabaseObjectIdentifier) ([]SchemaDetails, error)
-	// Show returns a list of schemas.
 	Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, error)
-	// ShowByID returns a schema by ID.
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error)
-	// Use sets the active schema for the current session.
 	Use(ctx context.Context, id DatabaseObjectIdentifier) error
 }
 
@@ -85,14 +77,16 @@ func (row schemaDBRow) toSchema() Schema {
 		options = &row.Options.String
 	}
 	return Schema{
-		CreatedOn:    row.CreatedOn,
-		Name:         row.Name,
-		IsDefault:    row.IsDefault == "Y",
-		IsCurrent:    row.IsCurrent == "Y",
-		DatabaseName: row.DatabaseName,
-		Owner:        row.Owner,
-		Comment:      comment,
-		Options:      options,
+		CreatedOn:     row.CreatedOn,
+		Name:          row.Name,
+		IsDefault:     row.IsDefault == "Y",
+		IsCurrent:     row.IsCurrent == "Y",
+		DatabaseName:  row.DatabaseName,
+		Owner:         row.Owner,
+		Comment:       comment,
+		Options:       options,
+		RetentionTime: row.RetentionTime,
+		OwnerRoleType: row.OwnerRoleType,
 	}
 }
 
@@ -114,8 +108,11 @@ type CreateSchemaOptions struct {
 }
 
 func (opts *CreateSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.Clone) {
@@ -124,7 +121,7 @@ func (opts *CreateSchemaOptions) validate() error {
 		}
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
-		errs = append(errs, errOneOf("IfNotExists", "OrReplace"))
+		errs = append(errs, errOneOf("CreateSchemaOptions", "IfNotExists", "OrReplace"))
 	}
 	return errors.Join(errs...)
 }
@@ -155,18 +152,23 @@ type AlterSchemaOptions struct {
 	SwapWith DatabaseObjectIdentifier `ddl:"identifier" sql:"SWAP WITH"`
 	Set      *SchemaSet               `ddl:"list,no_parentheses" sql:"SET"`
 	Unset    *SchemaUnset             `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTag   []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
 	// One of
 	EnableManagedAccess  *bool `ddl:"keyword" sql:"ENABLE MANAGED ACCESS"`
 	DisableManagedAccess *bool `ddl:"keyword" sql:"DISABLE MANAGED ACCESS"`
 }
 
 func (opts *AlterSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.EnableManagedAccess, opts.DisableManagedAccess) {
-		errs = append(errs, errOneOf("NewName", "SwapWith", "Set", "Unset", "EnableManagedAccess", "DisableManagedAccess"))
+	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.EnableManagedAccess, opts.DisableManagedAccess) {
+		errs = append(errs, errOneOf("NewName", "SwapWith", "Set", "Unset", "SetTag", "UnsetTag", "EnableManagedAccess", "DisableManagedAccess"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
@@ -182,31 +184,29 @@ func (opts *AlterSchemaOptions) validate() error {
 }
 
 type SchemaSet struct {
-	DataRetentionTimeInDays    *int             `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int             `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	DefaultDDLCollation        *string          `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	Comment                    *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag                        []TagAssociation `ddl:"keyword" sql:"TAG"`
+	DataRetentionTimeInDays    *int    `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int    `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	DefaultDDLCollation        *string `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	Comment                    *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *SchemaSet) validate() error {
-	if valueSet(v.Tag) && anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errors.New("tag field cannot be set with other options")
+	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
+		return errAtLeastOneOf("SchemaSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDDLCollation", "Comment")
 	}
 	return nil
 }
 
 type SchemaUnset struct {
-	DataRetentionTimeInDays    *bool              `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *bool              `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	DefaultDDLCollation        *bool              `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
-	Comment                    *bool              `ddl:"keyword" sql:"COMMENT"`
-	Tag                        []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
+	DataRetentionTimeInDays    *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	DefaultDDLCollation        *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
+	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *SchemaUnset) validate() error {
-	if valueSet(v.Tag) && anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errors.New("tag field cannot be set with other options")
+	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
+		return errAtLeastOneOf("SchemaUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDDLCollation", "Comment")
 	}
 	return nil
 }
@@ -239,12 +239,15 @@ type DropSchemaOptions struct {
 }
 
 func (opts *DropSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.Cascade, opts.Restrict) {
-		errs = append(errs, errors.New("only one of the fields [ Cascade | Restrict ] can be set at once"))
+		errs = append(errs, errOneOf("DropSchemaOptions", "Cascade", "Restrict"))
 	}
 	return errors.Join(errs...)
 }
@@ -265,6 +268,7 @@ func (v *schemas) Drop(ctx context.Context, id DatabaseObjectIdentifier, opts *D
 	return err
 }
 
+// undropSchemaOptions is based on https://docs.snowflake.com/en/sql-reference/sql/undrop-schema.
 type undropSchemaOptions struct {
 	undrop bool                     `ddl:"static" sql:"UNDROP"`
 	schema bool                     `ddl:"static" sql:"SCHEMA"`
@@ -272,8 +276,11 @@ type undropSchemaOptions struct {
 }
 
 func (opts *undropSchemaOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -293,6 +300,7 @@ func (v *schemas) Undrop(ctx context.Context, id DatabaseObjectIdentifier) error
 	return err
 }
 
+// describeSchemaOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-schema.
 type describeSchemaOptions struct {
 	describe bool                     `ddl:"static" sql:"DESCRIBE"`
 	database bool                     `ddl:"static" sql:"SCHEMA"`
@@ -300,8 +308,11 @@ type describeSchemaOptions struct {
 }
 
 func (opts *describeSchemaOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -350,6 +361,9 @@ type ShowSchemaOptions struct {
 }
 
 func (opts *ShowSchemaOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 

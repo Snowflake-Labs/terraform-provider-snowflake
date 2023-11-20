@@ -5,23 +5,25 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_ExternalStage(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: externalStageConfig(accName),
+				Config: externalStageConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "database", accName),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "comment", "Terraform acceptance test"),
 				),
 			},
@@ -29,25 +31,14 @@ func TestAcc_ExternalStage(t *testing.T) {
 	})
 }
 
-func externalStageConfig(n string) string {
+func externalStageConfig(n, databaseName, schemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_stage" "test" {
 	name = "%v"
 	url = "s3://com.example.bucket/prefix"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "%s"
+	schema = "%s"
 	comment = "Terraform acceptance test"
 }
-`, n, n, n)
+`, n, databaseName, schemaName)
 }

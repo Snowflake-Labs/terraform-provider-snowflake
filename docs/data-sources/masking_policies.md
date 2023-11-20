@@ -42,5 +42,3 @@ Read-Only:
 - `kind` (String)
 - `name` (String)
 - `schema` (String)
-
-

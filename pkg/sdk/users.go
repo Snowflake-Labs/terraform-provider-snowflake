@@ -17,17 +17,11 @@ var (
 )
 
 type Users interface {
-	// Create creates a user.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateUserOptions) error
-	// Alter modifies an existing user
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterUserOptions) error
-	// Drop removes a user.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
-	// Describe returns the details of a user.
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*UserDetails, error)
-	// Show returns a list of users.
-	Show(ctx context.Context, opts *ShowUserOptions) ([]*User, error)
-	// ShowByID returns a user by ID
+	Show(ctx context.Context, opts *ShowUserOptions) ([]User, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User, error)
 }
 
@@ -94,7 +88,7 @@ type userDBRow struct {
 	HasRsaPublicKey       bool           `db:"has_rsa_public_key"`
 }
 
-func (row userDBRow) toUser() *User {
+func (row userDBRow) convert() *User {
 	user := &User{
 		Name:                  row.Name,
 		CreatedOn:             row.CreatedOn,
@@ -156,8 +150,7 @@ func (v *User) ObjectType() ObjectType {
 	return ObjectTypeUser
 }
 
-// CreateUserOptions contains options for creating a user.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/create-user.
+// CreateUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-user.
 type CreateUserOptions struct {
 	create            bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace         *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -177,8 +170,11 @@ type UserTag struct {
 }
 
 func (opts *CreateUserOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -213,7 +209,7 @@ type UserObjectProperties struct {
 	MinsToUnlock         *int            `ddl:"parameter,single_quotes" sql:"MINS_TO_UNLOCK"`
 	DefaultWarehosue     *string         `ddl:"parameter,single_quotes" sql:"DEFAULT_WAREHOUSE"`
 	DefaultNamespace     *string         `ddl:"parameter,single_quotes" sql:"DEFAULT_NAMESPACE"`
-	DefaultRole          *string         `ddl:"parameter,single_quotes" sql:"DEFAULT_ROLE"`
+	DefaultRole          *string         `ddl:"parameter,no_quotes" sql:"DEFAULT_ROLE"`
 	DefaultSeconaryRoles *SecondaryRoles `ddl:"keyword" sql:"DEFAULT_SECONDARY_ROLES"`
 	MinsToBypassMFA      *int            `ddl:"parameter,single_quotes" sql:"MINS_TO_BYPASS_MFA"`
 	RSAPublicKey         *string         `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY"`
@@ -262,8 +258,7 @@ type UserObjectParametersUnset struct {
 	NetworkPolicy                    *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 }
 
-// AlterUserOptions contains options for altering a user.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/alter-user.
+// AlterUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-user.
 type AlterUserOptions struct {
 	alter    bool                    `ddl:"static" sql:"ALTER"`
 	user     bool                    `ddl:"static" sql:"USER"`
@@ -278,40 +273,37 @@ type AlterUserOptions struct {
 	RemoveDelegatedAuthorization *RemoveDelegatedAuthorization `ddl:"keyword"`
 	Set                          *UserSet                      `ddl:"keyword" sql:"SET"`
 	Unset                        *UserUnset                    `ddl:"keyword" sql:"UNSET"`
+	SetTag                       []TagAssociation              `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag                     []ObjectIdentifier            `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterUserOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-	if ok := exactlyOneValueSet(
-		opts.NewName,
-		opts.ResetPassword,
-		opts.AbortAllQueries,
-		opts.AddDelegatedAuthorization,
-		opts.RemoveDelegatedAuthorization,
-		opts.Set,
-		opts.Unset,
-	); !ok {
-		return fmt.Errorf(`exactly one of reset password, abort all queries, add deletegated authorization, remove deletegated authorization, set [tag], unset [tag] must be set`)
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !exactlyOneValueSet(opts.NewName, opts.ResetPassword, opts.AbortAllQueries, opts.AddDelegatedAuthorization, opts.RemoveDelegatedAuthorization, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag) {
+		errs = append(errs, errExactlyOneOf("AlterUserOptions", "NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset", "SetTag", "UnsetTag"))
 	}
 	if valueSet(opts.RemoveDelegatedAuthorization) {
 		if err := opts.RemoveDelegatedAuthorization.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 func (v *users) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterUserOptions) error {
@@ -334,6 +326,7 @@ type AddDelegatedAuthorization struct {
 	Role        string `ddl:"parameter,no_equals" sql:"ADD DELEGATED AUTHORIZATION OF ROLE"`
 	Integration string `ddl:"parameter,no_equals" sql:"TO SECURITY INTEGRATION"`
 }
+
 type RemoveDelegatedAuthorization struct {
 	// one of
 	Role           *string `ddl:"parameter,no_equals" sql:"REMOVE DELEGATED AUTHORIZATION OF ROLE"`
@@ -343,35 +336,27 @@ type RemoveDelegatedAuthorization struct {
 }
 
 func (opts *RemoveDelegatedAuthorization) validate() error {
+	var errs []error
 	if !exactlyOneValueSet(opts.Role, opts.Authorizations) {
-		return fmt.Errorf("exactly one of role or authorizations must be set")
+		errs = append(errs, errExactlyOneOf("RemoveDelegatedAuthorization", "Role", "Authorization"))
 	}
 	if !valueSet(opts.Integration) {
-		return fmt.Errorf("integration name must be set")
+		errs = append(errs, errNotSet("RemoveDelegatedAuthorization", "Integration"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type UserSet struct {
 	PasswordPolicy    *string               `ddl:"parameter" sql:"PASSWORD POLICY"`
 	SessionPolicy     *string               `ddl:"parameter" sql:"SESSION POLICY"`
-	Tags              []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 	ObjectProperties  *UserObjectProperties `ddl:"keyword"`
 	ObjectParameters  *UserObjectParameters `ddl:"keyword"`
 	SessionParameters *SessionParameters    `ddl:"keyword"`
 }
 
 func (opts *UserSet) validate() error {
-	if !anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return fmt.Errorf("at least one of password policy, tag, object properties, object parameters, or session parameters must be set")
-	}
-	if moreThanOneValueSet(opts.SessionPolicy, opts.PasswordPolicy, opts.Tags) {
-		return fmt.Errorf("setting session policy, password policy and tags must be done separately")
-	}
-	if anyValueSet(opts.ObjectParameters, opts.SessionParameters, opts.ObjectProperties) {
-		if anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.Tags) {
-			return fmt.Errorf("cannot set both {object parameters, session parameters,object properties} and password policy, session policy, or tag")
-		}
+	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
+		return errExactlyOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
 	return nil
 }
@@ -379,21 +364,19 @@ func (opts *UserSet) validate() error {
 type UserUnset struct {
 	PasswordPolicy    *bool                      `ddl:"keyword" sql:"PASSWORD POLICY"`
 	SessionPolicy     *bool                      `ddl:"keyword" sql:"SESSION POLICY"`
-	Tags              *[]string                  `ddl:"keyword" sql:"TAG"`
 	ObjectProperties  *UserObjectPropertiesUnset `ddl:"list"`
 	ObjectParameters  *UserObjectParametersUnset `ddl:"list"`
 	SessionParameters *SessionParametersUnset    `ddl:"list"`
 }
 
 func (opts *UserUnset) validate() error {
-	if !exactlyOneValueSet(opts.Tags, opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return fmt.Errorf("exactly one of password policy, tag, object properties, object parameters, or session parameters must be set")
+	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
+		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
 	return nil
 }
 
-// DropUserOptions contains options for dropping a user.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/drop-user.
+// DropUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-user.
 type DropUserOptions struct {
 	drop bool                    `ddl:"static" sql:"DROP"`
 	user bool                    `ddl:"static" sql:"USER"`
@@ -401,8 +384,11 @@ type DropUserOptions struct {
 }
 
 func (opts *DropUserOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -410,7 +396,6 @@ func (opts *DropUserOptions) validate() error {
 func (v *users) Drop(ctx context.Context, id AccountObjectIdentifier) error {
 	opts := &DropUserOptions{}
 	opts.name = id
-
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate drop options: %w", err)
 	}
@@ -528,17 +513,19 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 	return v
 }
 
-// describeUserOptions contains options for describing the properties specified for users, as well as the default values of the properties.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/desc-user.
+// describeUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-user.
 type describeUserOptions struct {
 	describe bool                    `ddl:"static" sql:"DESCRIBE"`
 	user     bool                    `ddl:"static" sql:"USER"`
 	name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describeUserOptions) validate() error {
-	if !validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describeUserOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -564,8 +551,7 @@ func (v *users) Describe(ctx context.Context, id AccountObjectIdentifier) (*User
 	return userDetailsFromRows(dest), nil
 }
 
-// ShowUserOptions contains options for listing users.
-// Based on https://docs.snowflake.com/en/sql-reference/sql/show-users.
+// ShowUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-users.
 type ShowUserOptions struct {
 	show       bool    `ddl:"static" sql:"SHOW"`
 	Terse      *bool   `ddl:"static" sql:"TERSE"`
@@ -576,32 +562,20 @@ type ShowUserOptions struct {
 	From       *string `ddl:"parameter,no_equals,single_quotes" sql:"FROM"`
 }
 
-func (input *ShowUserOptions) validate() error {
+func (opts *ShowUserOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
-func (v *users) Show(ctx context.Context, opts *ShowUserOptions) ([]*User, error) {
-	if opts == nil {
-		opts = &ShowUserOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (v *users) Show(ctx context.Context, opts *ShowUserOptions) ([]User, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[userDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var dest []userDBRow
-
-	err = v.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]*User, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.toUser()
-	}
-
+	resultList := convertRows[userDBRow, User](dbRows)
 	return resultList, nil
 }
 
@@ -617,7 +591,7 @@ func (v *users) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User
 
 	for _, user := range users {
 		if user.ID().name == id.Name() {
-			return user, nil
+			return &user, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized

@@ -25,6 +25,7 @@ type CreateTableUsingTemplateRequest struct {
 	copyGrants *bool
 	Query      string // required
 }
+
 type CreateTableLikeRequest struct {
 	orReplace   *bool
 	name        SchemaObjectIdentifier // required
@@ -32,6 +33,7 @@ type CreateTableLikeRequest struct {
 	clusterBy   []string
 	copyGrants  *bool
 }
+
 type CreateTableCloneRequest struct {
 	orReplace   *bool
 	name        SchemaObjectIdentifier // required
@@ -39,10 +41,12 @@ type CreateTableCloneRequest struct {
 	copyGrants  *bool
 	ClonePoint  *ClonePointRequest
 }
+
 type ClonePointRequest struct {
 	Moment CloneMoment
 	At     TimeTravelRequest
 }
+
 type TimeTravelRequest struct {
 	Timestamp *time.Time
 	Offset    *int
@@ -70,9 +74,10 @@ type CreateTableRequest struct {
 	Tags                       []TagAssociationRequest
 	Comment                    *string
 }
+
 type RowAccessPolicyRequest struct {
-	Name SchemaObjectIdentifier // request
-	On   []string
+	Name SchemaObjectIdentifier // required
+	On   []string               // required
 }
 
 type TableColumnRequest struct {
@@ -103,7 +108,9 @@ type ColumnMaskingPolicyRequest struct {
 	name  SchemaObjectIdentifier // required
 	using []string
 }
+
 type ColumnInlineConstraintRequest struct {
+	notNull            *bool
 	Name               string               // required
 	type_              ColumnConstraintType // required
 	foreignKey         *InlineForeignKeyRequest
@@ -120,6 +127,7 @@ type ColumnInlineConstraintRequest struct {
 	rely               *bool
 	noRely             *bool
 }
+
 type OutOfLineConstraintRequest struct {
 	Name       string               // required
 	Type       ColumnConstraintType // required
@@ -140,41 +148,19 @@ type OutOfLineConstraintRequest struct {
 	Rely               *bool
 	NoRely             *bool
 }
+
 type InlineForeignKeyRequest struct {
 	TableName  string // required
 	ColumnName []string
 	Match      *MatchType
-	On         *ForeignKeyOnActionRequest
+	On         *ForeignKeyOnAction
 }
 
 type OutOfLineForeignKeyRequest struct {
 	TableName   SchemaObjectIdentifier // required
 	ColumnNames []string               // required
 	Match       *MatchType
-	On          *ForeignKeyOnActionRequest
-}
-type ForeignKeyOnActionRequest struct {
-	OnUpdate *ForeignKeyAction
-	OnDelete *ForeignKeyAction
-}
-
-type StageFileFormatRequest struct {
-	// One of
-	FormatName *string
-	FormatType *FileFormatType
-
-	// Optional
-	Options *FileFormatTypeOptionsRequest
-}
-type StageCopyOptionsRequest struct {
-	OnError           StageCopyOptionsOnError // required
-	SizeLimit         *int
-	Purge             *bool
-	ReturnFailedOnly  *bool
-	MatchByColumnName *StageCopyOptionsMatchByColumnName
-	EnforceLength     *bool
-	TruncateColumns   *bool
-	Force             *bool
+	On          *ForeignKeyOnAction
 }
 
 type AlterTableRequest struct {
@@ -196,6 +182,7 @@ type AlterTableRequest struct {
 	DropAndAddRowAccessPolicy *DropAndAddRowAccessPolicyRequest
 	DropAllAccessRowPolicies  *bool
 }
+
 type DropTableRequest struct {
 	IfExists *bool
 	Name     SchemaObjectIdentifier // required
@@ -519,7 +506,8 @@ type ShowTableInRequest struct {
 	Database AccountObjectIdentifier
 	Schema   DatabaseObjectIdentifier
 }
+
 type LimitFromRequest struct {
-	Rows int // required
-	From string
+	rows *int
+	from *string
 }

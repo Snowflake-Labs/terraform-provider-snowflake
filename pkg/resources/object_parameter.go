@@ -1,26 +1,22 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"reflect"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 var objectParameterSchema = map[string]*schema.Schema{
 	"key": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  "Name of object parameter. Valid values are those in [object parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#object-parameters).",
-		ValidateFunc: validation.StringInSlice(maps.Keys(snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)), false),
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Name of object parameter. Valid values are those in [object parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#object-parameters).",
 	},
 	"value": {
 		Type:        schema.TypeString,
@@ -39,7 +35,6 @@ var objectParameterSchema = map[string]*schema.Schema{
 		ForceNew:     true,
 		Description:  "Type of object to which the parameter applies. Valid values are those in [object types](https://docs.snowflake.com/en/sql-reference/parameters.html#object-types). If no value is provided, then the resource will default to setting the object parameter at account level.",
 		RequiredWith: []string{"object_identifier"},
-		ValidateFunc: validation.StringInSlice(snowflake.GetParameterObjectTypeSetAsStrings(), false),
 	},
 	"object_identifier": {
 		Type:         schema.TypeList,
@@ -91,59 +86,51 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	parameter := sdk.ObjectParameter(key)
 
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)[key]
-	if parameterDefault.Validate != nil {
-		if err := parameterDefault.Validate(value); err != nil {
-			return err
-		}
+	o := sdk.Object{}
+	if v, ok := d.GetOk("object_identifier"); ok {
+		objectDatabase, objectSchema, objectName := expandObjectIdentifier(v.([]interface{}))
+		fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+		fullyQualifierObjectIdentifier = strings.Trim(fullyQualifierObjectIdentifier, "\"")
+		o.Name = sdk.NewObjectIdentifierFromFullyQualifiedName(fullyQualifierObjectIdentifier)
+		o.ObjectType = sdk.ObjectType(d.Get("object_type").(string))
 	}
-
-	// add quotes to value if it is a string
-	typeString := reflect.TypeOf("")
-	if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
-		value = fmt.Sprintf("'%s'", snowflake.EscapeString(value))
-	}
-
-	builder := snowflake.NewObjectParameter(key, value, db)
 
 	onAccount := d.Get("on_account").(bool)
 	if onAccount {
-		builder.SetOnAccount(onAccount)
-	}
-
-	var fullyQualifierObjectIdentifier string
-	if v, ok := d.GetOk("object_identifier"); ok {
-		objectDatabase, objectSchema, objectName := expandObjectIdentifier(v.([]interface{}))
-		fullyQualifierObjectIdentifier = snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
-		builder.WithObjectIdentifier(fullyQualifierObjectIdentifier)
-	}
-
-	var objectType snowflake.ObjectType
-	if v, ok := d.GetOk("object_type"); ok {
-		objectType = snowflake.ObjectType(v.(string))
-		if ok := slices.Contains(parameterDefault.AllowedObjectTypes, objectType); !ok {
-			return fmt.Errorf("object_type '%v' is not allowed for parameter '%v'", objectType, key)
+		err := client.Parameters.SetObjectParameterOnAccount(ctx, parameter, value)
+		if err != nil {
+			return fmt.Errorf("error creating object parameter err = %w", err)
 		}
-		builder.WithObjectType(objectType)
+	} else {
+		err := client.Parameters.SetObjectParameterOnObject(ctx, o, parameter, value)
+		if err != nil {
+			return fmt.Errorf("error setting object parameter err = %w", err)
+		}
 	}
 
-	err := builder.SetParameter()
-	if err != nil {
-		return fmt.Errorf("error creating object parameter err = %w", err)
-	}
-	id := fmt.Sprintf("%v|%v|%v", key, objectType, fullyQualifierObjectIdentifier)
-	d.SetId(id)
-	var p *snowflake.Parameter
-	if fullyQualifierObjectIdentifier != "" {
-		p, err = snowflake.ShowObjectParameter(db, key, objectType, fullyQualifierObjectIdentifier)
+	var id string
+	if onAccount {
+		id = fmt.Sprintf("%v||", key)
 	} else {
-		p, err = snowflake.ShowAccountParameter(db, key)
+		id = fmt.Sprintf("%v|%v|%v", key, o.ObjectType, o.Name.FullyQualifiedName())
+	}
+
+	d.SetId(id)
+	var err error
+	var p *sdk.Parameter
+	if onAccount {
+		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
+	} else {
+		p, err = client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameter(key), o)
 	}
 	if err != nil {
 		return fmt.Errorf("error reading object parameter err = %w", err)
 	}
-	err = d.Set("value", p.Value.String)
+	err = d.Set("value", p.Value)
 	if err != nil {
 		return err
 	}
@@ -153,6 +140,8 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 // ReadObjectParameter implements schema.ReadFunc.
 func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 	id := d.Id()
 	parts := strings.Split(id, "|")
 	if len(parts) != 3 {
@@ -162,19 +151,23 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unexpected format of ID (%v), expected key|object_type|object_identifier", id)
 	}
 	key := parts[0]
-	var p *snowflake.Parameter
+	var p *sdk.Parameter
 	var err error
 	if parts[1] == "" {
-		p, err = snowflake.ShowAccountParameter(db, key)
+		p, err = client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
 	} else {
-		objectType := snowflake.ObjectType(parts[1])
+		objectType := sdk.ObjectType(parts[1])
 		objectIdentifier := parts[2]
-		p, err = snowflake.ShowObjectParameter(db, key, objectType, objectIdentifier)
+		objectIdentifier = strings.Trim(objectIdentifier, "\"")
+		p, err = client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameter(key), sdk.Object{
+			ObjectType: objectType,
+			Name:       sdk.NewObjectIdentifierFromFullyQualifiedName(objectIdentifier),
+		})
 	}
 	if err != nil {
 		return fmt.Errorf("error reading object parameter err = %w", err)
 	}
-	if err := d.Set("value", p.Value.String); err != nil {
+	if err := d.Set("value", p.Value); err != nil {
 		return err
 	}
 	return nil
@@ -188,44 +181,41 @@ func UpdateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 // DeleteObjectParameter implements schema.DeleteFunc.
 func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	key := d.Get("key").(string)
-	parameterDefault := snowflake.GetParameterDefaults(snowflake.ParameterTypeObject)[key]
-	defaultValue := parameterDefault.DefaultValue
-	value := fmt.Sprintf("%v", defaultValue)
-
-	// add quotes to value if it is a string
-	typeString := reflect.TypeOf("")
-	if reflect.TypeOf(parameterDefault.DefaultValue) == typeString {
-		value = fmt.Sprintf("'%s'", value)
-	}
-	builder := snowflake.NewObjectParameter(key, value, db)
 
 	onAccount := d.Get("on_account").(bool)
 	if onAccount {
-		builder.SetOnAccount(onAccount)
-	}
-
-	var fullyQualifierObjectIdentifier string
-	if v, ok := d.GetOk("object_identifier"); ok {
-		objectDatabase, objectSchema, objectName := expandObjectIdentifier(v.([]interface{}))
-		fullyQualifierObjectIdentifier = snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
-		builder.WithObjectIdentifier(fullyQualifierObjectIdentifier)
-	}
-
-	var objectType snowflake.ObjectType
-	if v, ok := d.GetOk("object_type"); ok {
-		objectType = snowflake.ObjectType(v.(string))
-		if ok := slices.Contains(parameterDefault.AllowedObjectTypes, objectType); !ok {
-			return fmt.Errorf("object_type '%v' is not allowed for parameter '%v'", objectType, key)
+		defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
+		if err != nil {
+			return err
 		}
-		builder.WithObjectType(objectType)
+		defaultValue := defaultParameter.Default
+		err = client.Parameters.SetAccountParameter(ctx, sdk.AccountParameter(key), defaultValue)
+		if err != nil {
+			return fmt.Errorf("error resetting account parameter err = %w", err)
+		}
+	} else {
+		v := d.Get("object_identifier")
+		objectDatabase, objectSchema, objectName := expandObjectIdentifier(v.([]interface{}))
+		fullyQualifierObjectIdentifier := snowflakeValidation.FormatFullyQualifiedObjectID(objectDatabase, objectSchema, objectName)
+		fullyQualifierObjectIdentifier = strings.Trim(fullyQualifierObjectIdentifier, "\"")
+		o := sdk.Object{
+			ObjectType: sdk.ObjectType(d.Get("object_type").(string)),
+			Name:       sdk.NewObjectIdentifierFromFullyQualifiedName(fullyQualifierObjectIdentifier),
+		}
+		objectParameter := sdk.ObjectParameter(key)
+		defaultParameter, err := client.Parameters.ShowObjectParameter(ctx, objectParameter, o)
+		if err != nil {
+			return err
+		}
+		defaultValue := defaultParameter.Default
+		err = client.Parameters.SetObjectParameterOnObject(ctx, o, objectParameter, defaultValue)
+		if err != nil {
+			return fmt.Errorf("error resetting object parameter err = %w", err)
+		}
 	}
-
-	err := builder.SetParameter()
-	if err != nil {
-		return fmt.Errorf("error deleting object parameter err = %w", err)
-	}
-
 	d.SetId("")
 	return nil
 }

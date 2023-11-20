@@ -10,7 +10,6 @@ import (
 	"github.com/buger/jsonparser"
 )
 
-// Compile-time proof of interface implementation.
 var _ MaskingPolicies = (*maskingPolicies)(nil)
 
 var (
@@ -21,28 +20,20 @@ var (
 	_ validatable = new(describeMaskingPolicyOptions)
 )
 
-// MaskingPolicies describes all the masking policy related methods that the
-// Snowflake API supports.
 type MaskingPolicies interface {
-	// Create creates a new masking policy.
 	Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, expression string, opts *CreateMaskingPolicyOptions) error
-	// Alter modifies an existing masking policy.
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterMaskingPolicyOptions) error
-	// Drop removes a masking policy.
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
-	// Show returns a list of masking policies.
-	Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]*MaskingPolicy, error)
-	// ShowByID returns a masking policy by ID
+	Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
-	// Describe returns the details of a masking policy.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicyDetails, error)
 }
 
-// maskingPolicies implements MaskingPolicies.
 type maskingPolicies struct {
 	client *Client
 }
 
+// CreateMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-masking-policy.
 type CreateMaskingPolicyOptions struct {
 	create        bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace     *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -61,11 +52,23 @@ type CreateMaskingPolicyOptions struct {
 }
 
 func (opts *CreateMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-
-	return nil
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !valueSet(opts.signature) {
+		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "signature"))
+	}
+	if !valueSet(opts.returns) {
+		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "returns"))
+	}
+	if !valueSet(opts.body) {
+		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "body"))
+	}
+	return errors.Join(errs...)
 }
 
 func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, body string, opts *CreateMaskingPolicyOptions) error {
@@ -87,67 +90,65 @@ func (v *maskingPolicies) Create(ctx context.Context, id SchemaObjectIdentifier,
 	return err
 }
 
+// AlterMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-masking-policy.
 type AlterMaskingPolicyOptions struct {
-	alter         bool                   `ddl:"static" sql:"ALTER"`
-	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
-	IfExists      *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name          SchemaObjectIdentifier `ddl:"identifier"`
-	NewName       SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set           *MaskingPolicySet      `ddl:"keyword" sql:"SET"`
-	Unset         *MaskingPolicyUnset    `ddl:"keyword" sql:"UNSET"`
+	alter         bool                    `ddl:"static" sql:"ALTER"`
+	maskingPolicy bool                    `ddl:"static" sql:"MASKING POLICY"`
+	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name          SchemaObjectIdentifier  `ddl:"identifier"`
+	NewName       *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Set           *MaskingPolicySet       `ddl:"keyword" sql:"SET"`
+	Unset         *MaskingPolicyUnset     `ddl:"keyword" sql:"UNSET"`
+	SetTag        []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag      []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-
-	if everyValueNil(opts.Set, opts.Unset) {
-		if !validObjectidentifier(opts.NewName) {
-			return ErrInvalidObjectIdentifier
-		}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-
-	if !valueSet(opts.NewName) && !exactlyOneValueSet(opts.Set, opts.Unset) {
-		return errors.New("cannot use both set and unset")
+	if opts.NewName != nil && !ValidObjectIdentifier(opts.NewName) {
+		errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
 	}
-
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.NewName) {
+		errs = append(errs, errExactlyOneOf("AlterMaskingPolicyOptions", "Set", "Unset", "SetTag", "UnsetTag", "NewName"))
+	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 type MaskingPolicySet struct {
-	Body    *string          `ddl:"parameter,no_equals" sql:"BODY ->"`
-	Tag     []TagAssociation `ddl:"keyword" sql:"TAG"`
-	Comment *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Body    *string `ddl:"parameter,no_equals" sql:"BODY ->"`
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *MaskingPolicySet) validate() error {
-	if !exactlyOneValueSet(v.Body, v.Tag, v.Comment) {
-		return errors.New("only one parameter can be set at a time")
+	if !exactlyOneValueSet(v.Body, v.Comment) {
+		return errExactlyOneOf("MaskingPolicySet", "Body", "Comment")
 	}
 	return nil
 }
 
 type MaskingPolicyUnset struct {
-	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
-	Comment *bool              `ddl:"keyword" sql:"COMMENT"`
+	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *MaskingPolicyUnset) validate() error {
-	if !exactlyOneValueSet(v.Tag, v.Comment) {
-		return errors.New("only one parameter can be unset at a time")
+	if !exactlyOneValueSet(v.Comment) {
+		return errExactlyOneOf("MaskingPolicyUnset", "Comment")
 	}
 	return nil
 }
@@ -168,6 +169,7 @@ func (v *maskingPolicies) Alter(ctx context.Context, id SchemaObjectIdentifier, 
 	return err
 }
 
+// DropMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-masking-policy.
 type DropMaskingPolicyOptions struct {
 	drop          bool                   `ddl:"static" sql:"DROP"`
 	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
@@ -175,8 +177,11 @@ type DropMaskingPolicyOptions struct {
 }
 
 func (opts *DropMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -200,7 +205,7 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier) e
 	return err
 }
 
-// ShowMaskingPolicyOptions represents the options for listing masking policies.
+// ShowMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-masking-policies.
 type ShowMaskingPolicyOptions struct {
 	show            bool  `ddl:"static" sql:"SHOW"`
 	maskingPolicies bool  `ddl:"static" sql:"MASKING POLICIES"`
@@ -209,7 +214,10 @@ type ShowMaskingPolicyOptions struct {
 	Limit           *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
 }
 
-func (input *ShowMaskingPolicyOptions) validate() error {
+func (opts *ShowMaskingPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -246,7 +254,7 @@ type maskingPolicyDBRow struct {
 	Options       string    `db:"options"`
 }
 
-func (row maskingPolicyDBRow) toMaskingPolicy() *MaskingPolicy {
+func (row maskingPolicyDBRow) convert() *MaskingPolicy {
 	exemptOtherPolicies, err := jsonparser.GetBoolean([]byte(row.Options), "EXEMPT_OTHER_POLICIES")
 	if err != nil {
 		exemptOtherPolicies = false
@@ -264,28 +272,13 @@ func (row maskingPolicyDBRow) toMaskingPolicy() *MaskingPolicy {
 }
 
 // List all the masking policies by pattern.
-func (v *maskingPolicies) Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]*MaskingPolicy, error) {
-	if opts == nil {
-		opts = &ShowMaskingPolicyOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (v *maskingPolicies) Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[maskingPolicyDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	dest := []maskingPolicyDBRow{}
-
-	err = v.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]*MaskingPolicy, len(dest))
-	for i, row := range dest {
-		resultList[i] = row.toMaskingPolicy()
-	}
-
+	resultList := convertRows[maskingPolicyDBRow, MaskingPolicy](dbRows)
 	return resultList, nil
 }
 
@@ -304,21 +297,25 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 
 	for _, maskingPolicy := range maskingPolicies {
 		if maskingPolicy.ID().name == id.Name() {
-			return maskingPolicy, nil
+			return &maskingPolicy, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
+// describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.
 type describeMaskingPolicyOptions struct {
 	describe      bool                   `ddl:"static" sql:"DESCRIBE"`
 	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describeMaskingPolicyOptions) validate() error {
-	if !validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describeMaskingPolicyOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

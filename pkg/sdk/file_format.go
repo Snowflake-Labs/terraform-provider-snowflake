@@ -21,17 +21,11 @@ var (
 )
 
 type FileFormats interface {
-	// Create creates a FileFormat.
 	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreateFileFormatOptions) error
-	// Alter modifies an existing FileFormat
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterFileFormatOptions) error
-	// Drop removes a FileFormat.
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropFileFormatOptions) error
-	// Show returns a list of fileFormats.
-	Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]*FileFormat, error)
-	// ShowByID returns a FileFormat by ID
+	Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]FileFormat, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error)
-	// Describe returns the details of a FileFormat.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*FileFormatDetails, error)
 }
 
@@ -114,7 +108,7 @@ type showFileFormatsOptionsResult struct {
 	DisableAutoConvert   bool `json:"DISABLE_AUTO_CONVERT"`
 }
 
-func (row *FileFormatRow) toFileFormat() *FileFormat {
+func (row FileFormatRow) convert() *FileFormat {
 	inputOptions := showFileFormatsOptionsResult{}
 	err := json.Unmarshal([]byte(row.FormatOptions), &inputOptions)
 	if err != nil {
@@ -132,9 +126,9 @@ func (row *FileFormatRow) toFileFormat() *FileFormat {
 		Options:       FileFormatTypeOptions{},
 	}
 
-	newNullIf := []NullString{}
-	for _, s := range inputOptions.NullIf {
-		newNullIf = append(newNullIf, NullString{s})
+	newNullIf := make([]NullString, len(inputOptions.NullIf))
+	for i, s := range inputOptions.NullIf {
+		newNullIf[i] = NullString{s}
 	}
 
 	switch ff.Type {
@@ -207,7 +201,7 @@ func (row *FileFormatRow) toFileFormat() *FileFormat {
 
 type FileFormatType string
 
-const (
+var (
 	FileFormatTypeCSV     FileFormatType = "CSV"
 	FileFormatTypeJSON    FileFormatType = "JSON"
 	FileFormatTypeAvro    FileFormatType = "AVRO"
@@ -326,6 +320,7 @@ type NullString struct {
 	S string `ddl:"parameter,no_equals,single_quotes"`
 }
 
+// CreateFileFormatOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-file-format.
 type CreateFileFormatOptions struct {
 	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -334,8 +329,8 @@ type CreateFileFormatOptions struct {
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
 	Type        FileFormatType         `ddl:"parameter" sql:"TYPE"`
-
 	FileFormatTypeOptions
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateFileFormatOptions) validate() error {
@@ -346,7 +341,7 @@ func (opts *CreateFileFormatOptions) validate() error {
 			continue
 		}
 		if anyValueSet(fields[formatType]...) {
-			return fmt.Errorf("Cannot set %s fields when TYPE = %s", formatType, opts.Type)
+			return fmt.Errorf("cannot set %s fields when TYPE = %s", formatType, opts.Type)
 		}
 	}
 
@@ -374,19 +369,21 @@ func (v *fileFormats) Create(ctx context.Context, id SchemaObjectIdentifier, opt
 	return err
 }
 
+// AlterFileFormatOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-file-format.
 type AlterFileFormatOptions struct {
 	alter      bool                   `ddl:"static" sql:"ALTER"`
 	fileFormat bool                   `ddl:"static" sql:"FILE FORMAT"`
 	IfExists   *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name       SchemaObjectIdentifier `ddl:"identifier"`
 
-	Rename *AlterFileFormatRenameOptions
-	Set    *FileFormatTypeOptions `ddl:"list,no_comma" sql:"SET"`
+	Rename     *AlterFileFormatRenameOptions
+	Set        *FileFormatTypeOptions `ddl:"list,no_comma" sql:"SET"`
+	SetComment *string                `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
 }
 
 func (opts *AlterFileFormatOptions) validate() error {
 	if !exactlyOneValueSet(opts.Rename, opts.Set) {
-		return fmt.Errorf("Only one of Rename or Set can be set at once.")
+		return fmt.Errorf("only one of Rename or Set can be set at once.")
 	}
 	if valueSet(opts.Set) {
 		err := opts.Set.validate()
@@ -470,8 +467,6 @@ type FileFormatTypeOptions struct {
 	XMLDisableAutoConvert       *bool           `ddl:"parameter" sql:"DISABLE_AUTO_CONVERT"`
 	XMLReplaceInvalidCharacters *bool           `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
 	XMLSkipByteOrderMark        *bool           `ddl:"parameter" sql:"SKIP_BYTE_ORDER_MARK"`
-
-	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *FileFormatTypeOptions) fieldsByType() map[FileFormatType][]any {
@@ -600,6 +595,7 @@ func (v *fileFormats) Alter(ctx context.Context, id SchemaObjectIdentifier, opts
 	return err
 }
 
+// DropFileFormatOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-file-format.
 type DropFileFormatOptions struct {
 	drop       bool                   `ddl:"static" sql:"DROP"`
 	fileFormat string                 `ddl:"static" sql:"FILE FORMAT"`
@@ -627,6 +623,7 @@ func (v *fileFormats) Drop(ctx context.Context, id SchemaObjectIdentifier, opts 
 	return err
 }
 
+// ShowFileFormatsOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-file-formats.
 type ShowFileFormatsOptions struct {
 	show        bool  `ddl:"static" sql:"SHOW"`
 	fileFormats bool  `ddl:"static" sql:"FILE FORMATS"`
@@ -638,24 +635,14 @@ func (opts *ShowFileFormatsOptions) validate() error {
 	return nil
 }
 
-func (v *fileFormats) Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]*FileFormat, error) {
-	if opts == nil {
-		opts = &ShowFileFormatsOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (v *fileFormats) Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]FileFormat, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[FileFormatRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []FileFormatRow
-	err = v.client.query(ctx, &rows, sql)
-	fileFormats := make([]*FileFormat, len(rows))
-	for i, row := range rows {
-		fileFormats[i] = row.toFileFormat()
-	}
-	return fileFormats, err
+	resultList := convertRows[FileFormatRow, FileFormat](dbRows)
+	return resultList, nil
 }
 
 func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error) {
@@ -670,9 +657,9 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 	if err != nil {
 		return nil, err
 	}
-	for _, FileFormat := range fileFormats {
-		if reflect.DeepEqual(FileFormat.ID(), id) {
-			return FileFormat, nil
+	for _, f := range fileFormats {
+		if reflect.DeepEqual(f.ID(), id) {
+			return &f, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
@@ -690,6 +677,7 @@ type FileFormatDetailsRow struct {
 	Property_Default string
 }
 
+// describeFileFormatOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-file-format.
 type describeFileFormatOptions struct {
 	describe   bool                   `ddl:"static" sql:"DESCRIBE"`
 	fileFormat string                 `ddl:"static" sql:"FILE FORMAT"`
@@ -748,7 +736,7 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 			case "PARSE_HEADER":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
-					return nil, fmt.Errorf(`cannot cast SKIP_HEADER value "%s" to bool: %w`, v, err)
+					return nil, fmt.Errorf(`cannot cast PARSE_HEADER value "%s" to bool: %w`, v, err)
 				}
 				details.Options.CSVParseHeader = &b
 			case "DATE_FORMAT":

@@ -48,5 +48,3 @@ Read-Only:
 - `last_name` (String)
 - `login_name` (String)
 - `name` (String)
-
-

@@ -42,5 +42,3 @@ Read-Only:
 - `language` (String)
 - `name` (String)
 - `schema` (String)
-
-

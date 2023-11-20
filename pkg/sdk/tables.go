@@ -39,6 +39,7 @@ type TableAsSelectColumn struct {
 	Type          *DataType                         `ddl:"keyword"`
 	MaskingPolicy *TableAsSelectColumnMaskingPolicy `ddl:"keyword"`
 }
+
 type TableAsSelectColumnMaskingPolicy struct {
 	With          *bool                  `ddl:"keyword" sql:"WITH"`
 	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
@@ -53,6 +54,7 @@ type createTableUsingTemplateOptions struct {
 	CopyGrants *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	Query      []string               `ddl:"parameter,no_equals,parentheses" sql:"USING TEMPLATE"`
 }
+
 type createTableLikeOptions struct {
 	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -63,6 +65,7 @@ type createTableLikeOptions struct {
 	ClusterBy   []string               `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
 	CopyGrants  *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 }
+
 type createTableCloneOptions struct {
 	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -73,6 +76,7 @@ type createTableCloneOptions struct {
 	ClonePoint  *ClonePoint            `ddl:"keyword"`
 	CopyGrants  *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 }
+
 type ClonePoint struct {
 	Moment CloneMoment `ddl:"parameter,no_equals"`
 	At     TimeTravel  `ddl:"list,parentheses,no_comma"`
@@ -102,19 +106,13 @@ type createTableOptions struct {
 	StageFileFormat            []StageFileFormat          `ddl:"parameter,equals,parentheses" sql:"STAGE_FILE_FORMAT"`
 	StageCopyOptions           []StageCopyOption          `ddl:"parameter,equals,parentheses" sql:"STAGE_COPY_OPTIONS"`
 	DataRetentionTimeInDays    *int                       `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtentionTimeInDays *int                       `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int                       `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
 	ChangeTracking             *bool                      `ddl:"parameter" sql:"CHANGE_TRACKING"`
 	DefaultDDLCollation        *string                    `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
 	CopyGrants                 *bool                      `ddl:"keyword" sql:"COPY GRANTS"`
 	RowAccessPolicy            *RowAccessPolicy           `ddl:"keyword"`
 	Tags                       []TagAssociation           `ddl:"keyword,parentheses" sql:"TAG"`
 	Comment                    *string                    `ddl:"parameter,single_quotes" sql:"COMMENT"`
-}
-type RowAccessPolicy struct {
-	With            *bool                  `ddl:"keyword" sql:"WITH"`
-	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"`
-	Name            SchemaObjectIdentifier `ddl:"identifier"`
-	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
 }
 
 type TableScope string
@@ -162,26 +160,6 @@ type ColumnMaskingPolicy struct {
 	Using         []string               `ddl:"keyword,parentheses" sql:"USING"`
 }
 
-type ColumnInlineConstraint struct {
-	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
-	Type       ColumnConstraintType `ddl:"keyword"`
-	ForeignKey *InlineForeignKey    `ddl:"keyword" sql:"FOREIGN KEY"`
-
-	// Optional
-	Enforced           *bool `ddl:"keyword" sql:"ENFORCED"`
-	NotEnforced        *bool `ddl:"keyword" sql:"NOT ENFORCED"`
-	Deferrable         *bool `ddl:"keyword" sql:"DEFERRABLE"`
-	NotDeferrable      *bool `ddl:"keyword" sql:"NOT DEFERRABLE"`
-	InitiallyDeferred  *bool `ddl:"keyword" sql:"INITIALLY DEFERRED"`
-	InitiallyImmediate *bool `ddl:"keyword" sql:"INITIALLY IMMEDIATE"`
-	Enable             *bool `ddl:"keyword" sql:"ENABLE"`
-	Disable            *bool `ddl:"keyword" sql:"DISABLE"`
-	Validate           *bool `ddl:"keyword" sql:"VALIDATE"`
-	NoValidate         *bool `ddl:"keyword" sql:"NOVALIDATE"`
-	Rely               *bool `ddl:"keyword" sql:"RELY"`
-	NoRely             *bool `ddl:"keyword" sql:"NORELY"`
-}
-
 type CreateOutOfLineConstraint struct {
 	Name       string               `ddl:"parameter,no_equals" sql:", CONSTRAINT"`
 	Type       ColumnConstraintType `ddl:"keyword"`
@@ -224,21 +202,6 @@ type AlterOutOfLineConstraint struct {
 	NoRely             *bool `ddl:"keyword" sql:"NORELY"`
 }
 
-type ColumnConstraintType string
-
-const (
-	ColumnConstraintTypeUnique     ColumnConstraintType = "UNIQUE"
-	ColumnConstraintTypePrimaryKey ColumnConstraintType = "PRIMARY KEY"
-	ColumnConstraintTypeForeignKey ColumnConstraintType = "FOREIGN KEY"
-)
-
-type InlineForeignKey struct {
-	TableName  string              `ddl:"keyword" sql:"REFERENCES"`
-	ColumnName []string            `ddl:"keyword,parentheses"`
-	Match      *MatchType          `ddl:"keyword" sql:"MATCH"`
-	On         *ForeignKeyOnAction `ddl:"keyword" sql:"ON"`
-}
-
 type OutOfLineForeignKey struct {
 	references  bool                   `ddl:"static" sql:"REFERENCES"`
 	TableName   SchemaObjectIdentifier `ddl:"identifier"`
@@ -247,110 +210,20 @@ type OutOfLineForeignKey struct {
 	On          *ForeignKeyOnAction    `ddl:"keyword"`
 }
 
-type MatchType string
-
-const (
-	FullMatchType    MatchType = "FULL"
-	SimpleMatchType  MatchType = "SIMPLE"
-	PartialMatchType MatchType = "PARTIAL"
-)
-
-type ForeignKeyOnAction struct {
-	OnUpdate *ForeignKeyAction `ddl:"parameter,no_equals" sql:"ON UPDATE"`
-	OnDelete *ForeignKeyAction `ddl:"parameter,no_equals" sql:"ON DELETE"`
-}
-
-type ForeignKeyAction string
-
-const (
-	ForeignKeyCascadeAction    ForeignKeyAction = "CASCADE"
-	ForeignKeySetNullAction    ForeignKeyAction = "SET NULL"
-	ForeignKeySetDefaultAction ForeignKeyAction = "SET DEFAULT"
-	ForeignKeyRestrictAction   ForeignKeyAction = "RESTRICT"
-	ForeignKeyNoAction         ForeignKeyAction = "NO ACTION"
-)
-
-type StageFileFormat struct {
-	InnerValue StageFileFormatInnerValue `ddl:"keyword"`
-}
-
-type StageFileFormatInnerValue struct {
-	// One of
-	FormatName *string         `ddl:"parameter,no_quotes" sql:"FORMAT_NAME"`
-	FormatType *FileFormatType `ddl:"parameter" sql:"TYPE"`
-
-	Options *FileFormatTypeOptions
-}
-
 type StageCopyOption struct {
 	InnerValue StageCopyOptionsInnerValue `ddl:"keyword"`
 }
+
 type StageCopyOptionsInnerValue struct {
-	OnError           StageCopyOptionsOnError            `ddl:"parameter" sql:"ON_ERROR"`
-	SizeLimit         *int                               `ddl:"parameter" sql:"SIZE_LIMIT"`
-	Purge             *bool                              `ddl:"parameter" sql:"PURGE"`
-	ReturnFailedOnly  *bool                              `ddl:"parameter" sql:"RETURN_FAILED_ONLY"`
-	MatchByColumnName *StageCopyOptionsMatchByColumnName `ddl:"parameter" sql:"MATCH_BY_COLUMN_NAME"`
-	EnforceLength     *bool                              `ddl:"parameter" sql:"ENFORCE_LENGTH"`
-	TruncateColumns   *bool                              `ddl:"parameter" sql:"TRUNCATECOLUMNS"`
-	Force             *bool                              `ddl:"parameter" sql:"FORCE"`
+	OnError           *StageCopyOnErrorOptions  `ddl:"parameter" sql:"ON_ERROR"`
+	SizeLimit         *int                      `ddl:"parameter" sql:"SIZE_LIMIT"`
+	Purge             *bool                     `ddl:"parameter" sql:"PURGE"`
+	ReturnFailedOnly  *bool                     `ddl:"parameter" sql:"RETURN_FAILED_ONLY"`
+	MatchByColumnName *StageCopyColumnMapOption `ddl:"parameter" sql:"MATCH_BY_COLUMN_NAME"`
+	EnforceLength     *bool                     `ddl:"parameter" sql:"ENFORCE_LENGTH"`
+	TruncateColumns   *bool                     `ddl:"parameter" sql:"TRUNCATECOLUMNS"`
+	Force             *bool                     `ddl:"parameter" sql:"FORCE"`
 }
-
-type StageCopyOptionsOnError interface {
-	stageCopyOptionsOnError()
-	String() string
-}
-
-type StageCopyOptionsOnErrorContinue struct{}
-
-func (StageCopyOptionsOnErrorContinue) stageCopyOptionsOnError() {}
-func (StageCopyOptionsOnErrorContinue) String() string {
-	return "CONTINUE"
-}
-
-type StageCopyOptionsOnErrorSkipFile struct{}
-
-func (StageCopyOptionsOnErrorSkipFile) stageCopyOptionsOnError() {}
-
-func (StageCopyOptionsOnErrorSkipFile) String() string {
-	return "SKIP_FILE"
-}
-
-type StageCopyOptionsOnErrorSkipFileNum struct {
-	Value int
-}
-
-func (StageCopyOptionsOnErrorSkipFileNum) stageCopyOptionsOnError() {}
-
-func (opt StageCopyOptionsOnErrorSkipFileNum) String() string {
-	return fmt.Sprintf("SKIP_FILE_%v", opt.Value)
-}
-
-type StageCopyOptionsOnErrorSkipFileNumPercentage struct {
-	Value int
-}
-
-func (StageCopyOptionsOnErrorSkipFileNumPercentage) stageCopyOptionsOnError() {}
-
-func (opt StageCopyOptionsOnErrorSkipFileNumPercentage) String() string {
-	return fmt.Sprintf("'SKIP_FILE_%d%%'", opt.Value)
-}
-
-type StageCopyOptionsOnErrorAbortStatement struct{}
-
-func (StageCopyOptionsOnErrorAbortStatement) stageCopyOptionsOnError() {}
-
-func (StageCopyOptionsOnErrorAbortStatement) String() string {
-	return "ABORT_STATEMENT"
-}
-
-type StageCopyOptionsMatchByColumnName string
-
-const (
-	CopyOptionsMatchByColumnNameCaseSensitive   StageCopyOptionsMatchByColumnName = "CASE_SENSITIVE"
-	CopyOptionsMatchByColumnNameCaseInsensitive StageCopyOptionsMatchByColumnName = "CASE_INSENSITIVE"
-	CopyOptionsMatchByColumnNameNone            StageCopyOptionsMatchByColumnName = "NONE"
-)
 
 type alterTableOptions struct {
 	alter    bool                   `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
@@ -383,6 +256,7 @@ type TableClusteringAction struct {
 	ChangeReclusterState *TableReclusterChangeState `ddl:"keyword"`
 	DropClusteringKey    *bool                      `ddl:"keyword" sql:"DROP CLUSTERING KEY"`
 }
+
 type TableReclusterAction struct {
 	MaxSize   *int    `ddl:"parameter" sql:"MAX_SIZE"`
 	Condition *string `ddl:"parameter,no_equals" sql:"WHERE"`
@@ -429,6 +303,7 @@ type TableColumnAddInlineConstraint struct {
 	Type       ColumnConstraintType `ddl:"keyword"`
 	ForeignKey *ColumnAddForeignKey `ddl:"keyword"`
 }
+
 type ColumnAddForeignKey struct {
 	TableName  string `ddl:"keyword" sql:"REFERENCES"`
 	ColumnName string `ddl:"keyword,parentheses"`
@@ -460,11 +335,13 @@ type TableColumnAlterSetMaskingPolicyAction struct {
 	Using             []string               `ddl:"keyword,parentheses" sql:"USING"`
 	Force             *bool                  `ddl:"keyword" sql:"FORCE"`
 }
+
 type TableColumnAlterUnsetMaskingPolicyAction struct {
 	alter            bool   `ddl:"static" sql:"ALTER COLUMN"`
 	ColumnName       string `ddl:"keyword"`
 	setMaskingPolicy bool   `ddl:"static" sql:"UNSET MASKING POLICY"`
 }
+
 type TableColumnAlterSetTagsAction struct {
 	alter      bool             `ddl:"static" sql:"ALTER COLUMN"` //lint:ignore U1000 This is used in the ddl tag
 	ColumnName string           `ddl:"keyword"`
@@ -478,6 +355,7 @@ type TableColumnAlterUnsetTagsAction struct {
 	unset      bool               `ddl:"static" sql:"UNSET"` //lint:ignore U1000 This is used in the ddl tag
 	Tags       []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
 }
+
 type TableColumnAlterDropColumns struct {
 	dropColumn bool     `ddl:"static" sql:"DROP COLUMN"` //lint:ignore U1000 This is used in the ddl tag
 	Columns    []string `ddl:"keyword"`                  //lint:ignore U1000 This is used in the ddl tag
@@ -486,6 +364,7 @@ type TableColumnAlterDropColumns struct {
 type TableColumnAlterSequenceName interface {
 	String() string
 }
+
 type SequenceName string
 
 func (sn SequenceName) String() string {
@@ -496,16 +375,19 @@ type TableColumnNotNullConstraint struct {
 	Set  *bool `ddl:"keyword" sql:"SET NOT NULL"`
 	Drop *bool `ddl:"keyword" sql:"DROP NOT NULL"`
 }
+
 type TableConstraintAction struct {
 	Add    *AlterOutOfLineConstraint    `ddl:"keyword" sql:"ADD"`
 	Rename *TableConstraintRenameAction `ddl:"keyword" sql:"RENAME CONSTRAINT"`
 	Alter  *TableConstraintAlterAction  `ddl:"keyword" sql:"ALTER"`
 	Drop   *TableConstraintDropAction   `ddl:"keyword" sql:"DROP"`
 }
+
 type TableConstraintRenameAction struct {
 	OldName string `ddl:"keyword"`
 	NewName string `ddl:"parameter,no_equals" sql:"TO"`
 }
+
 type TableConstraintAlterAction struct {
 	// One of
 	ConstraintName *string  `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
@@ -522,6 +404,7 @@ type TableConstraintAlterAction struct {
 	Rely        *bool `ddl:"keyword" sql:"RELY"`
 	NoRely      *bool `ddl:"keyword" sql:"NORELY"`
 }
+
 type TableConstraintDropAction struct {
 	// One of
 	ConstraintName *string  `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
@@ -552,6 +435,7 @@ type TableExternalTableColumnAddAction struct {
 	Type       DataType `ddl:"keyword"`
 	Expression []string `ddl:"parameter,no_equals,parentheses" sql:"AS"`
 }
+
 type TableExternalTableColumnRenameAction struct {
 	OldName string `ddl:"parameter,no_equals" sql:"RENAME COLUMN"`
 	NewName string `ddl:"parameter,no_equals" sql:"TO"`
@@ -560,17 +444,20 @@ type TableExternalTableColumnRenameAction struct {
 type TableExternalTableColumnDropAction struct {
 	Columns []string `ddl:"keyword" sql:"DROP COLUMN"`
 }
+
 type TableSearchOptimizationAction struct {
 	// One of
-	Add  *AddSearchOptimaztion  `ddl:"keyword"`
-	Drop *DropSearchOptimaztion `ddl:"keyword"`
+	Add  *AddSearchOptimization  `ddl:"keyword"`
+	Drop *DropSearchOptimization `ddl:"keyword"`
 }
-type AddSearchOptimaztion struct {
+
+type AddSearchOptimization struct {
 	addSearchOptimization bool `ddl:"static" sql:"ADD SEARCH OPTIMIZATION"`
 	// Optional
 	On []string `ddl:"keyword" sql:"ON"`
 }
-type DropSearchOptimaztion struct {
+
+type DropSearchOptimization struct {
 	dropSearchOptimization bool `ddl:"static" sql:"DROP SEARCH OPTIMIZATION"`
 	// Optional
 	On []string `ddl:"keyword" sql:"ON"`
@@ -651,6 +538,7 @@ type tableDBRow struct {
 	OwnerRoleType              sql.NullString `db:"owner_role_type"`
 	IsEvent                    sql.NullString `db:"is_event"`
 }
+
 type Table struct {
 	CreatedOn                  string
 	Name                       string

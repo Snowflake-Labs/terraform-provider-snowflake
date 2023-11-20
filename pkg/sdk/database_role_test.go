@@ -2,10 +2,12 @@ package sdk
 
 import (
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 )
 
 func TestDatabaseRoleCreate(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
+	id := RandomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *createDatabaseRoleOptions {
 		return &createDatabaseRoleOptions{
@@ -15,7 +17,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *createDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -28,7 +30,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("createDatabaseRoleOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("validation: multiple errors", func(t *testing.T) {
@@ -36,7 +38,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 		opts.name = NewDatabaseObjectIdentifier("", "")
 		opts.IfNotExists = Bool(true)
 		opts.OrReplace = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("createDatabaseRoleOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -54,7 +56,7 @@ func TestDatabaseRoleCreate(t *testing.T) {
 }
 
 func TestDatabaseRoleAlter(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
+	id := RandomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *alterDatabaseRoleOptions {
 		return &alterDatabaseRoleOptions{
@@ -64,7 +66,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *alterDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -75,7 +77,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 
 	t.Run("validation: no alter action", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset"))
 	})
 
 	t.Run("validation: multiple alter actions", func(t *testing.T) {
@@ -86,7 +88,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 		opts.Unset = &DatabaseRoleUnset{
 			Comment: true,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset"))
 	})
 
 	t.Run("validation: invalid new name", func(t *testing.T) {
@@ -98,13 +100,13 @@ func TestDatabaseRoleAlter(t *testing.T) {
 	})
 
 	t.Run("validation: new name from different db", func(t *testing.T) {
-		newId := NewDatabaseObjectIdentifier(id.DatabaseName()+randomStringN(t, 1), randomStringN(t, 12))
+		newId := NewDatabaseObjectIdentifier(id.DatabaseName()+random.StringN(1), random.StringN(12))
 
 		opts := defaultOpts()
 		opts.Rename = &DatabaseRoleRename{
 			Name: newId,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errDifferentDatabase)
+		assertOptsInvalidJoinedErrors(t, opts, ErrDifferentDatabase)
 	})
 
 	t.Run("validation: no property to unset", func(t *testing.T) {
@@ -112,11 +114,11 @@ func TestDatabaseRoleAlter(t *testing.T) {
 		opts.Unset = &DatabaseRoleUnset{
 			Comment: false,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsAtLeastOneProperty)
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("alterDatabaseRoleOptions.Unset", "Comment"))
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newId := NewDatabaseObjectIdentifier(id.DatabaseName(), randomStringN(t, 12))
+		newId := NewDatabaseObjectIdentifier(id.DatabaseName(), random.StringN(12))
 
 		opts := defaultOpts()
 		opts.Rename = &DatabaseRoleRename{
@@ -154,7 +156,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 }
 
 func TestDatabaseRoleDrop(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
+	id := RandomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *dropDatabaseRoleOptions {
 		return &dropDatabaseRoleOptions{
@@ -164,7 +166,7 @@ func TestDatabaseRoleDrop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *dropDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -186,7 +188,7 @@ func TestDatabaseRoleDrop(t *testing.T) {
 }
 
 func TestDatabaseRolesShow(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	defaultOpts := func() *showDatabaseRoleOptions {
 		return &showDatabaseRoleOptions{
@@ -195,8 +197,8 @@ func TestDatabaseRolesShow(t *testing.T) {
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *PipeShowOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		var opts *showDatabaseRoleOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -208,7 +210,7 @@ func TestDatabaseRolesShow(t *testing.T) {
 	t.Run("validation: empty like", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Like = &Like{}
-		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
+		assertOptsInvalidJoinedErrors(t, opts, ErrPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("show", func(t *testing.T) {
@@ -226,9 +228,9 @@ func TestDatabaseRolesShow(t *testing.T) {
 }
 
 func TestDatabaseRoles_Grant(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
-	databaseRoleId := randomDatabaseObjectIdentifier(t)
-	accountRoleId := randomAccountObjectIdentifier(t)
+	id := RandomDatabaseObjectIdentifier()
+	databaseRoleId := RandomDatabaseObjectIdentifier()
+	accountRoleId := RandomAccountObjectIdentifier()
 
 	setUpOpts := func() *grantDatabaseRoleOptions {
 		return &grantDatabaseRoleOptions{
@@ -238,7 +240,7 @@ func TestDatabaseRoles_Grant(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *grantDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
@@ -275,9 +277,9 @@ func TestDatabaseRoles_Grant(t *testing.T) {
 }
 
 func TestDatabaseRoles_Revoke(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
-	databaseRoleId := randomDatabaseObjectIdentifier(t)
-	accountRoleId := randomAccountObjectIdentifier(t)
+	id := RandomDatabaseObjectIdentifier()
+	databaseRoleId := RandomDatabaseObjectIdentifier()
+	accountRoleId := RandomAccountObjectIdentifier()
 
 	setUpOpts := func() *revokeDatabaseRoleOptions {
 		return &revokeDatabaseRoleOptions{
@@ -287,7 +289,7 @@ func TestDatabaseRoles_Revoke(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *revokeDatabaseRoleOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
@@ -324,8 +326,8 @@ func TestDatabaseRoles_Revoke(t *testing.T) {
 }
 
 func TestDatabaseRoles_GrantToShare(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
-	share := randomAccountObjectIdentifier(t)
+	id := RandomDatabaseObjectIdentifier()
+	share := RandomAccountObjectIdentifier()
 
 	setUpOpts := func() *grantDatabaseRoleToShareOptions {
 		return &grantDatabaseRoleToShareOptions{
@@ -336,7 +338,7 @@ func TestDatabaseRoles_GrantToShare(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *grantDatabaseRoleToShareOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {
@@ -359,8 +361,8 @@ func TestDatabaseRoles_GrantToShare(t *testing.T) {
 }
 
 func TestDatabaseRoles_RevokeFromShare(t *testing.T) {
-	id := randomDatabaseObjectIdentifier(t)
-	share := randomAccountObjectIdentifier(t)
+	id := RandomDatabaseObjectIdentifier()
+	share := RandomAccountObjectIdentifier()
 
 	setUpOpts := func() *revokeDatabaseRoleFromShareOptions {
 		return &revokeDatabaseRoleFromShareOptions{
@@ -371,7 +373,7 @@ func TestDatabaseRoles_RevokeFromShare(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *revokeDatabaseRoleFromShareOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: invalid identifier", func(t *testing.T) {

@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTableCreate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *createTableOptions {
 		return &createTableOptions{
@@ -19,7 +20,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *createTableOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -27,17 +28,19 @@ func TestTableCreate(t *testing.T) {
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
+
 	t.Run("validation: no columns", func(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsInvalidJoinedErrors(t, opts, errTableNeedsAtLeastOneColumn)
 	})
+
 	t.Run("validation: both expression and identity of a column are present ", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = RandomSchemaObjectIdentifier()
 		opts.Columns = []TableColumn{{
-			Name: "",
+			Name: "a",
 			DefaultValue: &ColumnDefaultValue{
-				Expression: String(""),
+				Expression: String("expr"),
 				Identity: &ColumnIdentity{
 					Start:     10,
 					Increment: 1,
@@ -46,6 +49,7 @@ func TestTableCreate(t *testing.T) {
 		}}
 		assertOptsInvalidJoinedErrors(t, opts, errColumnDefaultValueNeedsExactlyOneValue)
 	})
+
 	t.Run("validation: column masking policy incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
@@ -57,6 +61,7 @@ func TestTableCreate(t *testing.T) {
 		}}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
+
 	t.Run("validation: column tag association's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
@@ -73,6 +78,7 @@ func TestTableCreate(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
+
 	t.Run("validation: outOfLineConstraint's foreign key incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OutOfLineConstraint = &CreateOutOfLineConstraint{
@@ -82,14 +88,13 @@ func TestTableCreate(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
+
 	t.Run("validation: stageFileFormat's both format name and format type are present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.StageFileFormat = []StageFileFormat{
 			{
-				InnerValue: StageFileFormatInnerValue{
-					FormatName: String(""),
-					FormatType: Pointer(FileFormatTypeCSV),
-				},
+				FormatName: String("some_format"),
+				Type:       Pointer(FileFormatTypeCSV),
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errStageFileFormatValueNeedsExactlyOneValue)
@@ -99,14 +104,13 @@ func TestTableCreate(t *testing.T) {
 		opts := defaultOpts()
 		opts.StageFileFormat = []StageFileFormat{
 			{
-				InnerValue: StageFileFormatInnerValue{
-					FormatName: String(""),
-					FormatType: Pointer(FileFormatTypeCSV),
-				},
+				FormatName: String("some_format"),
+				Type:       Pointer(FileFormatTypeCSV),
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errStageFileFormatValueNeedsExactlyOneValue)
 	})
+
 	t.Run("validation: rowAccessPolicy's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &RowAccessPolicy{
@@ -122,15 +126,16 @@ func TestTableCreate(t *testing.T) {
 		expected := "CREATE TABLE ( )"
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("with complete options", func(t *testing.T) {
-		columnComment := randomString(t)
-		tableComment := randomString(t)
+		columnComment := random.String()
+		tableComment := random.String()
 		collation := "de"
-		id := randomSchemaObjectIdentifier(t)
+		id := RandomSchemaObjectIdentifier()
 		columnName := "FIRST_COLUMN"
 		columnType, err := ToDataType("VARCHAR")
 		maskingPolicy := ColumnMaskingPolicy{
-			Name:  randomSchemaObjectIdentifier(t),
+			Name:  RandomSchemaObjectIdentifier(),
 			Using: []string{"FOO", "BAR"},
 		}
 		columnTags := []TagAssociation{
@@ -155,8 +160,8 @@ func TestTableCreate(t *testing.T) {
 			},
 		}
 		inlineConstraint := ColumnInlineConstraint{
-			Name: "INLINE_CONSTRAINT",
-			Type: ColumnConstraintTypePrimaryKey,
+			Name: String("INLINE_CONSTRAINT"),
+			Type: Pointer(ColumnConstraintTypePrimaryKey),
 		}
 		require.NoError(t, err)
 		outOfLineConstraint := CreateOutOfLineConstraint{
@@ -164,7 +169,7 @@ func TestTableCreate(t *testing.T) {
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},
 			ForeignKey: &OutOfLineForeignKey{
-				TableName:   randomSchemaObjectIdentifier(t),
+				TableName:   RandomSchemaObjectIdentifier(),
 				ColumnNames: []string{"COLUMN_3", "COLUMN_4"},
 				Match:       Pointer(FullMatchType),
 				On: &ForeignKeyOnAction{
@@ -174,22 +179,20 @@ func TestTableCreate(t *testing.T) {
 			},
 		}
 		stageFileFormat := []StageFileFormat{{
-			StageFileFormatInnerValue{
-				FormatType: Pointer(FileFormatTypeCSV),
-				Options: &FileFormatTypeOptions{
-					CSVCompression: Pointer(CSVCompressionAuto),
-				},
+			Type: Pointer(FileFormatTypeCSV),
+			Options: &FileFormatTypeOptions{
+				CSVCompression: Pointer(CSVCompressionAuto),
 			},
 		}}
 		stageCopyOptions := []StageCopyOption{
 			{
 				StageCopyOptionsInnerValue{
-					OnError: StageCopyOptionsOnErrorSkipFileNum{10},
+					OnError: &StageCopyOnErrorOptions{SkipFile: Bool(true)},
 				},
 			},
 		}
 		rowAccessPolicy := RowAccessPolicy{
-			Name: randomSchemaObjectIdentifier(t),
+			Name: RandomSchemaObjectIdentifier(),
 			On:   []string{"COLUMN_1", "COLUMN_2"},
 		}
 		opts := &createTableOptions{
@@ -216,7 +219,7 @@ func TestTableCreate(t *testing.T) {
 			StageFileFormat:            stageFileFormat,
 			StageCopyOptions:           stageCopyOptions,
 			DataRetentionTimeInDays:    Int(10),
-			MaxDataExtentionTimeInDays: Int(100),
+			MaxDataExtensionTimeInDays: Int(100),
 			ChangeTracking:             Bool(true),
 			DefaultDDLCollation:        String("en"),
 			CopyGrants:                 Bool(true),
@@ -227,7 +230,7 @@ func TestTableCreate(t *testing.T) {
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
 		expected := fmt.Sprintf(
-			`CREATE TABLE %s ( %s %s COLLATE 'de' COMMENT '%s' IDENTITY START 10 INCREMENT 1 NOT NULL MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY , CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT ) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_10) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
+			`CREATE TABLE %s ( %s %s COLLATE 'de' COMMENT '%s' IDENTITY START 10 INCREMENT 1 NOT NULL MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY , CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT ) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
 			id.FullyQualifiedName(),
 			columnName,
 			columnType,
@@ -249,17 +252,18 @@ func TestTableCreateAsSelect(t *testing.T) {
 		expected := "CREATE TABLE ( )"
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("with complete options", func(t *testing.T) {
-		id := randomSchemaObjectIdentifier(t)
+		id := RandomSchemaObjectIdentifier()
 		columnName := "FIRST_COLUMN"
 		columnType, err := ToDataType("VARCHAR")
 		require.NoError(t, err)
 		maskingPolicy := TableAsSelectColumnMaskingPolicy{
 			With: Bool(true),
-			Name: randomSchemaObjectIdentifier(t),
+			Name: RandomSchemaObjectIdentifier(),
 		}
 		rowAccessPolicy := RowAccessPolicy{
-			Name: randomSchemaObjectIdentifier(t),
+			Name: RandomSchemaObjectIdentifier(),
 			On:   []string{"COLUMN_1", "COLUMN_2"},
 		}
 		opts := &createTableAsSelectOptions{
@@ -290,7 +294,7 @@ func TestTableCreateAsSelect(t *testing.T) {
 }
 
 func TestTableCreateUsingTemplate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *createTableAsSelectOptions {
 		return &createTableAsSelectOptions{
@@ -300,7 +304,7 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *createTableAsSelectOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -321,8 +325,9 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 		expected := "CREATE TABLE"
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("with complete options", func(t *testing.T) {
-		id := randomSchemaObjectIdentifier(t)
+		id := RandomSchemaObjectIdentifier()
 		opts := &createTableUsingTemplateOptions{
 			OrReplace:  Bool(true),
 			name:       id,
@@ -339,16 +344,17 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 }
 
 func TestTableCreateLike(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *createTableLikeOptions {
 		return &createTableLikeOptions{
 			name: id,
 		}
 	}
+
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *createTableLikeOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -356,6 +362,7 @@ func TestTableCreateLike(t *testing.T) {
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
+
 	t.Run("validation: source table's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SourceTable = NewSchemaObjectIdentifier("", "", "")
@@ -369,9 +376,10 @@ func TestTableCreateLike(t *testing.T) {
 		expected := "CREATE TABLE LIKE"
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("with complete options", func(t *testing.T) {
-		id := randomSchemaObjectIdentifier(t)
-		sourceTable := randomSchemaObjectIdentifier(t)
+		id := RandomSchemaObjectIdentifier()
+		sourceTable := RandomSchemaObjectIdentifier()
 		opts := &createTableLikeOptions{
 			OrReplace:   Bool(true),
 			name:        id,
@@ -390,16 +398,17 @@ func TestTableCreateLike(t *testing.T) {
 }
 
 func TestTableCreateClone(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *createTableCloneOptions {
 		return &createTableCloneOptions{
 			name: id,
 		}
 	}
+
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *createTableCloneOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -415,9 +424,10 @@ func TestTableCreateClone(t *testing.T) {
 		expected := "CREATE TABLE CLONE"
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("with complete options", func(t *testing.T) {
-		id := randomSchemaObjectIdentifier(t)
-		sourceTable := randomSchemaObjectIdentifier(t)
+		id := RandomSchemaObjectIdentifier()
+		sourceTable := RandomSchemaObjectIdentifier()
 		clonePoint := ClonePoint{
 			Moment: CloneMomentAt,
 			At: TimeTravel{
@@ -442,7 +452,7 @@ func TestTableCreateClone(t *testing.T) {
 }
 
 func TestTableAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *alterTableOptions {
 		return &alterTableOptions{
@@ -452,7 +462,7 @@ func TestTableAlter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *alterTableOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -469,18 +479,21 @@ func TestTableAlter(t *testing.T) {
 
 		assertOptsInvalidJoinedErrors(t, opts, errAlterTableNeedsExactlyOneAction)
 	})
+
 	t.Run("validation: NewName's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.NewName = Pointer(NewSchemaObjectIdentifier("", "", ""))
 		opts.SwapWith = Pointer(NewSchemaObjectIdentifier("test", "test", "test"))
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
-	t.Run("validation: SwapWith's incorrect identifier", func(t *testing.T) {
+
+	t.Run("validation: SwapWith incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SwapWith = Pointer(NewSchemaObjectIdentifier("", "", ""))
 		opts.NewName = Pointer(NewSchemaObjectIdentifier("test", "test", "test"))
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
+
 	t.Run("validation: Clustering action's ClusterBy and Recluster are present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ClusteringAction = &TableClusteringAction{
@@ -492,6 +505,7 @@ func TestTableAlter(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errTableClusteringActionNeedsExactlyOneAction)
 	})
+
 	t.Run("validation: Column action's Add and Rename are present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ColumnAction = &TableColumnAction{
@@ -503,6 +517,7 @@ func TestTableAlter(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errTableColumnActionNeedsExactlyOneAction)
 	})
+
 	t.Run("validation: Column alter action's DropDefault and SetDefault are present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ColumnAction = &TableColumnAction{
@@ -513,6 +528,7 @@ func TestTableAlter(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errTableColumnAlterActionNeedsExactlyOneAction)
 	})
+
 	t.Run("validation: Constraint alter action's ConstraintName and Unique are present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ConstraintAction = &TableConstraintAction{
@@ -523,6 +539,7 @@ func TestTableAlter(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errTableConstraintAlterActionNeedsExactlyOneAction)
 	})
+
 	t.Run("validation: Constraint drop action's ConstraintName and Unique are present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ConstraintAction = &TableConstraintAction{
@@ -533,6 +550,7 @@ func TestTableAlter(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errTableConstraintDropActionNeedsExactlyOneAction)
 	})
+
 	t.Run("validation: External action's Add and Rename are present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ExternalTableAction = &TableExternalTableAction{
@@ -544,11 +562,12 @@ func TestTableAlter(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errTableExternalActionNeedsExactlyOneAction)
 	})
+
 	t.Run("validation: SearchOptimization action's Add and Drop are present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SearchOptimizationAction = &TableSearchOptimizationAction{
-			Add:  &AddSearchOptimaztion{},
-			Drop: &DropSearchOptimaztion{},
+			Add:  &AddSearchOptimization{},
+			Drop: &DropSearchOptimization{},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errTableSearchOptimizationActionNeedsExactlyOneAction)
 	})
@@ -572,7 +591,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("rename", func(t *testing.T) {
-		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
+		newID := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.UUID())
 		opts := &alterTableOptions{
 			name:    id,
 			NewName: &newID,
@@ -582,8 +601,9 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s RENAME TO %s", id.FullyQualifiedName(), newID.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("swap with", func(t *testing.T) {
-		targetTableId := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, randomUUID(t))
+		targetTableId := NewSchemaObjectIdentifier(id.databaseName, id.schemaName, random.UUID())
 		opts := &alterTableOptions{
 			name:     id,
 			SwapWith: &targetTableId,
@@ -593,6 +613,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s SWAP WITH %s", id.FullyQualifiedName(), targetTableId.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("cluster by", func(t *testing.T) {
 		clusterByColumns := []string{"date", "id"}
 		opts := &alterTableOptions{
@@ -606,6 +627,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s CLUSTER BY (date, id)", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("recluster", func(t *testing.T) {
 		condition := "name = 'John'"
 		opts := &alterTableOptions{
@@ -622,6 +644,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s RECLUSTER MAX_SIZE = 1024 WHERE name = 'John'", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("suspend recluster", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
@@ -748,8 +771,9 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s ALTER COLUMN_1 DROP DEFAULT, COLUMN_1 SET DEFAULT SEQUENCE_1.NEXTVAL, COLUMN_1 UNSET COMMENT, COLUMN_2 DROP DEFAULT, COLUMN_2 SET DEFAULT SEQUENCE_2.NEXTVAL, COLUMN_2 COMMENT 'comment', COLUMN_2 SET DATA TYPE BOOLEAN, COLUMN_2 DROP NOT NULL", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
-	t.Run("alter: unset masking policy", func(t *testing.T) {
-		maskingPolicyName := randomSchemaObjectIdentifier(t)
+
+	t.Run("alter: set masking policy", func(t *testing.T) {
+		maskingPolicyName := RandomSchemaObjectIdentifier()
 		opts := &alterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
@@ -766,8 +790,8 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s ALTER COLUMN COLUMN_1 SET MASKING POLICY %s USING (FOO, BAR) FORCE", id.FullyQualifiedName(), maskingPolicyName.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("alter: unset masking policy", func(t *testing.T) {
-		maskingPolicyName := randomSchemaObjectIdentifier(t)
 		opts := &alterTableOptions{
 			name: id,
 			ColumnAction: &TableColumnAction{
@@ -778,9 +802,10 @@ func TestTableAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER TABLE %s ALTER COLUMN COLUMN_1 UNSET MASKING POLICY %s", id.FullyQualifiedName(), maskingPolicyName.FullyQualifiedName())
+		expected := fmt.Sprintf("ALTER TABLE %s ALTER COLUMN COLUMN_1 UNSET MASKING POLICY", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("alter: set tags", func(t *testing.T) {
 		columnTags := []TagAssociation{
 			{
@@ -806,6 +831,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf(`ALTER TABLE %s ALTER COLUMN COLUMN_1 SET TAG "db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2'`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("alter: unset tags", func(t *testing.T) {
 		columnTags := []ObjectIdentifier{
 			NewSchemaObjectIdentifier("db", "schema", "column_tag1"),
@@ -825,6 +851,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf(`ALTER TABLE %s ALTER COLUMN COLUMN_1 UNSET TAG "db"."schema"."column_tag1", "db"."schema"."column_tag2"`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("alter: drop columns", func(t *testing.T) {
 		columns := []string{"COLUMN_1", "COLUMN_2"}
 		opts := &alterTableOptions{
@@ -840,13 +867,14 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s DROP COLUMN COLUMN_1, COLUMN_2", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("alter constraint: add", func(t *testing.T) {
 		outOfLineConstraint := AlterOutOfLineConstraint{
 			Name:    "OUT_OF_LINE_CONSTRAINT",
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},
 			ForeignKey: &OutOfLineForeignKey{
-				TableName:   randomSchemaObjectIdentifier(t),
+				TableName:   RandomSchemaObjectIdentifier(),
 				ColumnNames: []string{"COLUMN_3", "COLUMN_4"},
 				Match:       Pointer(FullMatchType),
 				On: &ForeignKeyOnAction{
@@ -918,6 +946,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s DROP CONSTRAINT OUT_OF_LINE_CONSTRAINT (COLUMN_3, COLUMN_4) CASCADE", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("external table: add", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
@@ -934,6 +963,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s ADD COLUMN COLUMN_1 BOOLEAN AS (SELECT 1)", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("external table: rename", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
@@ -949,6 +979,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s RENAME COLUMN OLD_NAME_COLUMN TO NEW_NAME_COLUMN", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("external table: drop", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
@@ -963,11 +994,12 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf("ALTER TABLE %s DROP COLUMN COLUMN_3, COLUMN_4", id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
-	t.Run("add search optimiaztion", func(t *testing.T) {
+
+	t.Run("add search optimization", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
 			SearchOptimizationAction: &TableSearchOptimizationAction{
-				Add: &AddSearchOptimaztion{
+				Add: &AddSearchOptimization{
 					On: []string{"SUBSTRING(*)", "GEO(*)"},
 				},
 			},
@@ -978,11 +1010,11 @@ func TestTableAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("drop search optimiaztion", func(t *testing.T) {
+	t.Run("drop search optimization", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
 			SearchOptimizationAction: &TableSearchOptimizationAction{
-				Drop: &DropSearchOptimaztion{
+				Drop: &DropSearchOptimization{
 					On: []string{"SUBSTRING(*)", "FOO"},
 				},
 			},
@@ -993,11 +1025,11 @@ func TestTableAlter(t *testing.T) {
 		assert.Equal(t, expected, actual)
 	})
 
-	t.Run("drop search optimiaztion", func(t *testing.T) {
+	t.Run("drop search optimization", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
 			SearchOptimizationAction: &TableSearchOptimizationAction{
-				Drop: &DropSearchOptimaztion{
+				Drop: &DropSearchOptimization{
 					On: []string{"SUBSTRING(*)", "FOO"},
 				},
 			},
@@ -1009,22 +1041,20 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("set: with complete options", func(t *testing.T) {
-		comment := randomString(t)
+		comment := random.String()
 		opts := &alterTableOptions{
 			name: id,
 			Set: &TableSet{
 				EnableSchemaEvolution: Bool(true),
 				StageFileFormat: []StageFileFormat{
 					{
-						InnerValue: StageFileFormatInnerValue{
-							FormatType: Pointer(FileFormatTypeCSV),
-						},
+						Type: Pointer(FileFormatTypeCSV),
 					},
 				},
 				StageCopyOptions: []StageCopyOption{
 					{
 						InnerValue: StageCopyOptionsInnerValue{
-							OnError: StageCopyOptionsOnErrorSkipFileNumPercentage{Value: 10},
+							OnError: &StageCopyOnErrorOptions{SkipFile: Bool(true)},
 						},
 					},
 				},
@@ -1037,9 +1067,10 @@ func TestTableAlter(t *testing.T) {
 		}
 		actual, err := structToSQL(opts)
 		require.NoError(t, err)
-		expected := fmt.Sprintf(`ALTER TABLE %s SET ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%') DATA_RETENTION_TIME_IN_DAYS = 30 MAX_DATA_EXTENSION_TIME_IN_DAYS = 90 CHANGE_TRACKING = false DEFAULT_DDL_COLLATION = 'us' COMMENT = '%s'`, id.FullyQualifiedName(), comment)
+		expected := fmt.Sprintf(`ALTER TABLE %s SET ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 30 MAX_DATA_EXTENSION_TIME_IN_DAYS = 90 CHANGE_TRACKING = false DEFAULT_DDL_COLLATION = 'us' COMMENT = '%s'`, id.FullyQualifiedName(), comment)
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("set tags", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
@@ -1059,6 +1090,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf(`ALTER TABLE %s SET TAG "db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2'`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("unset tags", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
@@ -1072,6 +1104,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf(`ALTER TABLE %s UNSET TAG "db"."schema"."table_tag1", "db"."schema"."table_tag2"`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("unset: complete options", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
@@ -1089,6 +1122,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf(`ALTER TABLE %s UNSET DATA_RETENTION_TIME_IN_DAYS MAX_DATA_EXTENSION_TIME_IN_DAYS CHANGE_TRACKING DEFAULT_DDL_COLLATION ENABLE_SCHEMA_EVOLUTION COMMENT`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("add row access policy", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
@@ -1102,6 +1136,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf(`ALTER TABLE %s ADD ROW ACCESS POLICY ROW_ACCESS_POLICY_1 ON (FIRST_COLUMN)`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("drop row access policy", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name:                id,
@@ -1112,6 +1147,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf(`ALTER TABLE %s DROP ROW ACCESS POLICY ROW_ACCESS_POLICY_1`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("drop and add row access policy", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name: id,
@@ -1128,6 +1164,7 @@ func TestTableAlter(t *testing.T) {
 		expected := fmt.Sprintf(`ALTER TABLE %s DROP ROW ACCESS POLICY ROW_ACCESS_POLICY_1 , ADD ROW ACCESS POLICY ROW_ACCESS_POLICY_2 ON (FIRST_COLUMN)`, id.FullyQualifiedName())
 		assert.Equal(t, expected, actual)
 	})
+
 	t.Run("drop all row access policies", func(t *testing.T) {
 		opts := &alterTableOptions{
 			name:                     id,
@@ -1141,7 +1178,7 @@ func TestTableAlter(t *testing.T) {
 }
 
 func TestTableDrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *dropTableOptions {
 		return &dropTableOptions{
@@ -1151,7 +1188,7 @@ func TestTableDrop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *dropTableOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -1173,21 +1210,21 @@ func TestTableDrop(t *testing.T) {
 }
 
 func TestTableShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	defaultOpts := func() *showTableOptions {
 		return &showTableOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *PipeShowOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		var opts *ShowPipeOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: empty like", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Like = &Like{}
-		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
+		assertOptsInvalidJoinedErrors(t, opts, ErrPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("show", func(t *testing.T) {

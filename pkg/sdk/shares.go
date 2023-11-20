@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -10,25 +11,18 @@ import (
 var (
 	_ validatable = new(CreateShareOptions)
 	_ validatable = new(AlterShareOptions)
-	_ validatable = new(shareDropOptions)
+	_ validatable = new(dropShareOptions)
 	_ validatable = new(ShowShareOptions)
-	_ validatable = new(shareDescribeOptions)
+	_ validatable = new(describeShareOptions)
 )
 
 type Shares interface {
-	// Create creates a share.
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error
-	// Alter modifies an existing share
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterShareOptions) error
-	// Drop removes a share.
 	Drop(ctx context.Context, id AccountObjectIdentifier) error
-	// Show returns a list of shares.
-	Show(ctx context.Context, opts *ShowShareOptions) ([]*Share, error)
-	// ShowByID returns a share by ID.
+	Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
-	// Describe returns the details of an outbound share.
 	DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error)
-	// Describe returns the details of an inbound share.
 	DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error)
 }
 
@@ -78,7 +72,7 @@ type shareRow struct {
 	Comment      string    `db:"comment"`
 }
 
-func (r *shareRow) toShare() *Share {
+func (r shareRow) convert() *Share {
 	toAccounts := strings.Split(r.To, ",")
 	var to []AccountIdentifier
 	if len(toAccounts) != 0 {
@@ -108,6 +102,7 @@ func (r *shareRow) toShare() *Share {
 	}
 }
 
+// CreateShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-share.
 type CreateShareOptions struct {
 	create    bool                    `ddl:"static" sql:"CREATE"`
 	OrReplace *bool                   `ddl:"keyword" sql:"OR REPLACE"`
@@ -117,8 +112,11 @@ type CreateShareOptions struct {
 }
 
 func (opts *CreateShareOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return fmt.Errorf("not a valid object identifier: %s", opts.name)
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -139,18 +137,25 @@ func (v *shares) Create(ctx context.Context, id AccountObjectIdentifier, opts *C
 	return err
 }
 
-type shareDropOptions struct {
+// dropShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-share.
+type dropShareOptions struct {
 	drop  bool                    `ddl:"static" sql:"DROP"`
 	share bool                    `ddl:"static" sql:"SHARE"`
 	name  AccountObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *shareDropOptions) validate() error {
+func (opts *dropShareOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
+	}
 	return nil
 }
 
 func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
-	opts := &shareDropOptions{
+	opts := &dropShareOptions{
 		name: id,
 	}
 	if err := opts.validate(); err != nil {
@@ -164,6 +169,7 @@ func (v *shares) Drop(ctx context.Context, id AccountObjectIdentifier) error {
 	return err
 }
 
+// AlterShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-share.
 type AlterShareOptions struct {
 	alter    bool                    `ddl:"static" sql:"ALTER"`
 	share    bool                    `ddl:"static" sql:"SHARE"`
@@ -173,36 +179,42 @@ type AlterShareOptions struct {
 	Remove   *ShareRemove            `ddl:"keyword" sql:"REMOVE"`
 	Set      *ShareSet               `ddl:"keyword" sql:"SET"`
 	Unset    *ShareUnset             `ddl:"keyword" sql:"UNSET"`
+	SetTag   []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterShareOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return fmt.Errorf("not a valid object identifier: %s", opts.name)
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-	if ok := exactlyOneValueSet(opts.Add, opts.Remove, opts.Set, opts.Unset); !ok {
-		return fmt.Errorf("exactly one of add, remove, set, unset must be set")
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !exactlyOneValueSet(opts.Add, opts.Remove, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag) {
+		errs = append(errs, errExactlyOneOf("AlterShareOptions", "Add", "Remove", "Set", "Unset", "SetTag", "UnsetTag"))
 	}
 	if valueSet(opts.Add) {
 		if err := opts.Add.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Remove) {
 		if err := opts.Remove.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type ShareAdd struct {
@@ -231,24 +243,22 @@ func (v *ShareRemove) validate() error {
 type ShareSet struct {
 	Accounts []AccountIdentifier `ddl:"parameter" sql:"ACCOUNTS"`
 	Comment  *string             `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Tag      []TagAssociation    `ddl:"keyword" sql:"TAG"`
 }
 
 func (v *ShareSet) validate() error {
-	if valueSet(v.Tag) && anyValueSet(v.Accounts, v.Comment) {
-		return fmt.Errorf("accounts and comment cannot be set when tag is set")
+	if !anyValueSet(v.Accounts, v.Comment) {
+		return errAtLeastOneOf("ShareSet", "Accounts", "Comment")
 	}
 	return nil
 }
 
 type ShareUnset struct {
-	Tag     []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
-	Comment *bool              `ddl:"keyword" sql:"COMMENT"`
+	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *ShareUnset) validate() error {
-	if ok := exactlyOneValueSet(v.Comment, v.Tag); !ok {
-		return fmt.Errorf("exactly one of comment, tag must be set")
+	if !exactlyOneValueSet(v.Comment) {
+		return errExactlyOneOf("ShareUnset", "Comment")
 	}
 	return nil
 }
@@ -269,6 +279,7 @@ func (v *shares) Alter(ctx context.Context, id AccountObjectIdentifier, opts *Al
 	return err
 }
 
+// ShowShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-shares.
 type ShowShareOptions struct {
 	show       bool       `ddl:"static" sql:"SHOW"`
 	shares     bool       `ddl:"static" sql:"SHARES"`
@@ -278,30 +289,20 @@ type ShowShareOptions struct {
 }
 
 func (opts *ShowShareOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
-func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]*Share, error) {
-	if opts == nil {
-		opts = &ShowShareOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (s *shares) Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[shareRow](s.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	var rows []*shareRow
-	err = s.client.query(ctx, &rows, sql)
-	if err != nil {
-		return nil, err
-	}
-	shares := make([]*Share, 0, len(rows))
-	for _, row := range rows {
-		shares = append(shares, row.toShare())
-	}
-	return shares, nil
+	resultList := convertRows[shareRow, Share](dbRows)
+	return resultList, nil
 }
 
 func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error) {
@@ -315,7 +316,7 @@ func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Sha
 	}
 	for _, share := range shares {
 		if share.Name.Name() == id.Name() {
-			return share, nil
+			return &share, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
@@ -356,21 +357,25 @@ func shareDetailsFromRows(rows []shareDetailsRow) *ShareDetails {
 	return v
 }
 
-type shareDescribeOptions struct {
+// describeShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-share.
+type describeShareOptions struct {
 	describe bool             `ddl:"static" sql:"DESCRIBE"`
 	share    bool             `ddl:"static" sql:"SHARE"`
 	name     ObjectIdentifier `ddl:"identifier"`
 }
 
-func (opts *shareDescribeOptions) validate() error {
-	if ok := validObjectidentifier(opts.name); !ok {
-		return ErrInvalidObjectIdentifier
+func (opts *describeShareOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
 
 func (c *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error) {
-	opts := &shareDescribeOptions{
+	opts := &describeShareOptions{
 		name: id,
 	}
 	sql, err := structToSQL(opts)
@@ -386,7 +391,7 @@ func (c *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifie
 }
 
 func (c *shares) DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error) {
-	opts := &shareDescribeOptions{
+	opts := &describeShareOptions{
 		name: id,
 	}
 	sql, err := structToSQL(opts)

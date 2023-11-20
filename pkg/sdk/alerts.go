@@ -18,25 +18,19 @@ var (
 )
 
 type Alerts interface {
-	// Create creates a new alert.
 	Create(ctx context.Context, id SchemaObjectIdentifier, warehouse AccountObjectIdentifier, schedule string, condition string, action string, opts *CreateAlertOptions) error
-	// Alter modifies an existing alert.
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterAlertOptions) error
-	// Drop removes an alert.
 	Drop(ctx context.Context, id SchemaObjectIdentifier) error
-	// Show returns a list of alerts
-	Show(ctx context.Context, opts *ShowAlertOptions) ([]*Alert, error)
-	// ShowByID returns an alert by ID
+	Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Alert, error)
-	// Describe returns the details of an alert.
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*AlertDetails, error)
 }
 
-// alerts implements Alerts
 type alerts struct {
 	client *Client
 }
 
+// CreateAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-alert.
 type CreateAlertOptions struct {
 	create      bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace   *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -61,10 +55,12 @@ type AlertCondition struct {
 }
 
 func (opts *CreateAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
+	}
 	return nil
 }
 
@@ -105,6 +101,7 @@ var (
 	AlertStateSuspended AlertState = "suspended"
 )
 
+// AlterAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-alert.
 type AlterAlertOptions struct {
 	alter    bool                   `ddl:"static" sql:"ALTER"`
 	alert    bool                   `ddl:"static" sql:"ALERT"`
@@ -120,27 +117,17 @@ type AlterAlertOptions struct {
 }
 
 func (opts *AlterAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errors.New("invalid object identifier")
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-
-	if everyValueNil(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
-		return errors.New("No alter action specified")
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if !exactlyOneValueSet(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
-		return errors.New(`
-		Only one of the following actions can be performed at a time:
-		{
-			RESUME | SUSPEND,
-			SET,
-			UNSET,
-			MODIFY CONDITION EXISTS,
-			MODIFY ACTION
-		}
-		`)
+		errs = append(errs, errExactlyOneOf("AlterAlertOptions", "Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
 	}
-
-	return nil
+	return errors.Join(errs...)
 }
 
 type AlertSet struct {
@@ -172,6 +159,7 @@ func (v *alerts) Alter(ctx context.Context, id SchemaObjectIdentifier, opts *Alt
 	return err
 }
 
+// DropAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-alert.
 type dropAlertOptions struct {
 	drop  bool                   `ddl:"static" sql:"DROP"`
 	alert bool                   `ddl:"static" sql:"ALERT"`
@@ -179,8 +167,11 @@ type dropAlertOptions struct {
 }
 
 func (opts *dropAlertOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return ErrInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -204,6 +195,7 @@ func (v *alerts) Drop(ctx context.Context, id SchemaObjectIdentifier) error {
 	return err
 }
 
+// ShowAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-alerts.
 type ShowAlertOptions struct {
 	show   bool  `ddl:"static" sql:"SHOW"`
 	Terse  *bool `ddl:"keyword" sql:"TERSE"`
@@ -252,7 +244,7 @@ type alertDBRow struct {
 	Action       string    `db:"action"`
 }
 
-func (row alertDBRow) toAlert() (*Alert, error) {
+func (row alertDBRow) convert() *Alert {
 	return &Alert{
 		CreatedOn:    row.CreatedOn,
 		Name:         row.Name,
@@ -265,39 +257,23 @@ func (row alertDBRow) toAlert() (*Alert, error) {
 		State:        AlertState(row.State),
 		Condition:    row.Condition,
 		Action:       row.Action,
-	}, nil
+	}
 }
 
 func (opts *ShowAlertOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
-func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]*Alert, error) {
-	if opts == nil {
-		opts = &ShowAlertOptions{}
-	}
-	if err := opts.validate(); err != nil {
-		return nil, err
-	}
-	sql, err := structToSQL(opts)
+func (v *alerts) Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error) {
+	opts = createIfNil(opts)
+	dbRows, err := validateAndQuery[alertDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	dest := []alertDBRow{}
-
-	err = v.client.query(ctx, &dest, sql)
-	if err != nil {
-		return nil, err
-	}
-	resultList := make([]*Alert, len(dest))
-	for i, row := range dest {
-		alert, err := row.toAlert()
-		if err != nil {
-			return nil, err
-		}
-		resultList[i] = alert
-	}
-
+	resultList := convertRows[alertDBRow, Alert](dbRows)
 	return resultList, nil
 }
 
@@ -316,21 +292,25 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 
 	for _, alert := range alerts {
 		if alert.ID().name == id.Name() {
-			return alert, nil
+			return &alert, nil
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
 }
 
+// describeAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-alert.
 type describeAlertOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"`
 	alert    bool                   `ddl:"static" sql:"ALERT"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-func (v *describeAlertOptions) validate() error {
-	if !validObjectidentifier(v.name) {
-		return ErrInvalidObjectIdentifier
+func (opts *describeAlertOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

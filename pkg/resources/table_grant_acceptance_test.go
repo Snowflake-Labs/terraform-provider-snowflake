@@ -5,23 +5,25 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccTableGrant_onAll(t *testing.T) {
+func TestAcc_TableGrant_onAll(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableGrantConfig(name, onAll, "SELECT"),
+				Config: tableGrantConfig(name, onAll, "SELECT", acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "on_all", "true"),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "privilege", "SELECT"),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "with_grant_option", "false"),
@@ -43,19 +45,20 @@ func TestAccTableGrant_onAll(t *testing.T) {
 	})
 }
 
-func TestAccTableGrant_onFuture(t *testing.T) {
+func TestAcc_TableGrant_onFuture(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableGrantConfig(name, onFuture, "SELECT"),
+				Config: tableGrantConfig(name, onFuture, "SELECT", acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "on_future", "true"),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "privilege", "SELECT"),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "with_grant_option", "false"),
@@ -78,23 +81,21 @@ func TestAccTableGrant_onFuture(t *testing.T) {
 	})
 }
 
-func TestAccTableGrant_defaults(t *testing.T) {
+func TestAcc_TableGrant_defaults(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+	resource.Test(t, resource.TestCase{
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableGrantConfig(name, normal, "SELECT"),
+				Config: tableGrantConfig(name, normal, "SELECT", acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.d", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "database", name),
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "table_name", name),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "privilege", "SELECT"),
 					testRolesAndShares(t, "snowflake_table_grant.g", []string{name}),
@@ -102,15 +103,12 @@ func TestAccTableGrant_defaults(t *testing.T) {
 			},
 			// UPDATE ALL PRIVILEGES
 			{
-				Config: tableGrantConfig(name, normal, "ALL PRIVILEGES"),
+				Config: tableGrantConfig(name, normal, "ALL PRIVILEGES", acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.d", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "name", name),
-					resource.TestCheckResourceAttr("snowflake_schema.s", "database", name),
 					resource.TestCheckResourceAttr("snowflake_role.r", "name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", name),
-					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", name),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "database_name", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table_grant.g", "schema_name", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "table_name", name),
 					resource.TestCheckResourceAttr("snowflake_table_grant.g", "privilege", "ALL PRIVILEGES"),
 					testRolesAndShares(t, "snowflake_table_grant.g", []string{name}),
@@ -129,7 +127,7 @@ func TestAccTableGrant_defaults(t *testing.T) {
 	})
 }
 
-func tableGrantConfig(name string, grantType grantType, privilege string) string {
+func tableGrantConfig(name string, grantType grantType, privilege string, databaseName string, schemaName string) string {
 	var tableNameConfig string
 	switch grantType {
 	case normal:
@@ -141,23 +139,14 @@ func tableGrantConfig(name string, grantType grantType, privilege string) string
 	}
 
 	return fmt.Sprintf(`
-resource snowflake_database d {
-	name = "%s"
-}
-
-resource snowflake_schema s {
-	name = "%s"
-	database = snowflake_database.d.name
-}
-
 resource snowflake_role r {
   name = "%s"
 }
 
 resource snowflake_table t {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
 	name     = "%s"
+	database = "%s"
+	schema   = "%s"
 
 	column {
 		name = "id"
@@ -166,14 +155,14 @@ resource snowflake_table t {
 }
 
 resource snowflake_table_grant g {
-    %s
-	database_name = snowflake_database.d.name
-	schema_name = snowflake_schema.s.name
+	database_name = "%s"
+	schema_name   = "%s"
+	%s
 	privilege = "%s"
 	roles = [
 		snowflake_role.r.name
 	]
 }
 
-`, name, name, name, name, tableNameConfig, privilege)
+`, name, name, databaseName, schemaName, databaseName, schemaName, tableNameConfig, privilege)
 }

@@ -7,10 +7,10 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -131,9 +131,6 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] alert (%s) not found", d.Id())
 		d.SetId("")
 		return nil
-	}
-	if err != nil {
-		return err
 	}
 
 	if err := d.Set("enabled", alert.State == sdk.AlertStateStarted); err != nil {
@@ -282,7 +279,7 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 
 	enabled := d.Get("enabled").(bool)
 	if d.HasChanges("enabled", "warehouse", "alert_schedule", "condition", "action", "comment") {
-		if err := snowflake.WaitSuspendAlert(ctx, client, objectIdentifier); err != nil {
+		if err := waitSuspendAlert(ctx, client, objectIdentifier); err != nil {
 			log.Printf("[WARN] failed to suspend alert %s", objectIdentifier.Name())
 		}
 	}
@@ -344,11 +341,11 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if enabled {
-		if err := snowflake.WaitResumeAlert(ctx, client, objectIdentifier); err != nil {
+		if err := waitResumeAlert(ctx, client, objectIdentifier); err != nil {
 			log.Printf("[WARN] failed to resume alert %s", objectIdentifier.Name())
 		}
 	} else {
-		if err := snowflake.WaitSuspendAlert(ctx, client, objectIdentifier); err != nil {
+		if err := waitSuspendAlert(ctx, client, objectIdentifier); err != nil {
 			log.Printf("[WARN] failed to suspend alert %s", objectIdentifier.Name())
 		}
 	}
@@ -369,4 +366,36 @@ func DeleteAlert(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId("")
 	return nil
+}
+
+func waitResumeAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	resumeAlert := func() (error, bool) {
+		opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionResume}
+		err := client.Alerts.Alter(ctx, id, &opts)
+		if err != nil {
+			return fmt.Errorf("error resuming alert %v err = %w", id.Name(), err), false
+		}
+		alert, err := client.Alerts.ShowByID(ctx, id)
+		if err != nil {
+			return err, false
+		}
+		return nil, alert.State == sdk.AlertStateStarted
+	}
+	return helpers.Retry(5, 10*time.Second, resumeAlert)
+}
+
+func waitSuspendAlert(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	suspendAlert := func() (error, bool) {
+		opts := sdk.AlterAlertOptions{Action: &sdk.AlertActionSuspend}
+		err := client.Alerts.Alter(ctx, id, &opts)
+		if err != nil {
+			return fmt.Errorf("error suspending alert %v err = %w", id.Name(), err), false
+		}
+		alert, err := client.Alerts.ShowByID(ctx, id)
+		if err != nil {
+			return err, false
+		}
+		return nil, alert.State == sdk.AlertStateSuspended
+	}
+	return helpers.Retry(5, 10*time.Second, suspendAlert)
 }

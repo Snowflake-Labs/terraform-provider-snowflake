@@ -113,14 +113,14 @@ func getRoleSweeper(client *Client, prefix string) func() error {
 			log.Printf("[DEBUG] Sweeping all roles with prefix %s", prefix)
 		}
 		ctx := context.Background()
-		roles, err := client.Roles.Show(ctx, nil)
+		roles, err := client.Roles.Show(ctx, NewShowRoleRequest())
 		if err != nil {
 			return err
 		}
 		for _, role := range roles {
 			if (prefix == "" || strings.HasPrefix(role.Name, prefix)) && !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "SYSADMIN", "ORGADMIN", "USERADMIN", "PUBLIC"}, role.Name) {
 				log.Printf("[DEBUG] Dropping role %s", role.Name)
-				if err := client.Roles.Drop(ctx, role.ID(), nil); err != nil {
+				if err := client.Roles.Drop(ctx, NewDropRoleRequest(role.ID())); err != nil {
 					return err
 				}
 			} else {
@@ -145,7 +145,7 @@ func getShareSweeper(client *Client, prefix string) func() error {
 		}
 		for _, share := range shares {
 			if (share.Kind == ShareKindOutbound) && (prefix == "" || strings.HasPrefix(share.Name.Name(), prefix)) {
-				log.Printf("[DEBUG] Dropping share %s", share.Name.Name())
+				log.Printf("[DEBUG] Dropping share %s", share.ID().Name())
 				if err := client.Shares.Drop(ctx, share.ID()); err != nil {
 					return err
 				}
@@ -170,7 +170,7 @@ func getDatabaseSweeper(client *Client, prefix string) func() error {
 			return err
 		}
 		for _, db := range dbs {
-			if (prefix == "" || strings.HasPrefix(db.Name, prefix)) && db.Name != "SNOWFLAKE" {
+			if (prefix == "" || strings.HasPrefix(db.Name, prefix)) && db.Name != "SNOWFLAKE" && db.Name != "terraform_test_database" {
 				log.Printf("[DEBUG] Dropping database %s", db.Name)
 				if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
 					return err
@@ -196,7 +196,7 @@ func getWarehouseSweeper(client *Client, prefix string) func() error {
 			return err
 		}
 		for _, wh := range whs {
-			if (prefix == "" || strings.HasPrefix(wh.Name, prefix)) && wh.Name != "SNOWFLAKE" {
+			if (prefix == "" || strings.HasPrefix(wh.Name, prefix)) && wh.Name != "SNOWFLAKE" && wh.Name != "terraform_test_warehouse" {
 				log.Printf("[DEBUG] Dropping warehouse %s", wh.Name)
 				if err := client.Warehouses.Drop(ctx, wh.ID(), nil); err != nil {
 					return err

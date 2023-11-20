@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccTableConstraint_fk(t *testing.T) {
+func TestAcc_TableConstraint_fk(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableConstraintFKConfig(name),
+				Config: tableConstraintFKConfig(name, acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_constraint.fk", "type", "FOREIGN KEY"),
@@ -29,22 +31,12 @@ func TestAccTableConstraint_fk(t *testing.T) {
 	})
 }
 
-func tableConstraintFKConfig(n string) string {
+func tableConstraintFKConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-
-resource "snowflake_database" "d" {
-	name = "%s"
-}
-
-resource "snowflake_schema" "s" {
-	name = "%s"
-	database = snowflake_database.d.name
-}
-
 resource "snowflake_table" "t" {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
 	name     = "%s"
+	database = "%s"
+	schema   = "%s"
 
 	column {
 		name = "col1"
@@ -53,10 +45,9 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_table" "fk_t" {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
 	name     = "fk_%s"
-
+	database = "%s"
+	schema   = "%s"
 	column {
 		name     = "fk_col1"
 		type     = "text"
@@ -81,18 +72,19 @@ resource "snowflake_table_constraint" "fk" {
 	comment = "hello fk"
 }
 
-`, n, n, n, n, n)
+`, n, databaseName, schemaName, n, databaseName, schemaName, n)
 }
 
-func TestAccTableConstraint_unique(t *testing.T) {
+func TestAcc_TableConstraint_unique(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tableConstraintUniqueConfig(name),
+				Config: tableConstraintUniqueConfig(name, acc.TestDatabaseName, acc.TestSchemaName),
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
@@ -105,22 +97,12 @@ func TestAccTableConstraint_unique(t *testing.T) {
 	})
 }
 
-func tableConstraintUniqueConfig(n string) string {
+func tableConstraintUniqueConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-
-resource "snowflake_database" "d" {
-	name = "%s"
-}
-
-resource "snowflake_schema" "s" {
-	name = "%s"
-	database = snowflake_database.d.name
-}
-
 resource "snowflake_table" "t" {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
 	name     = "%s"
+	database = "%s"
+	schema   = "%s"
 
 	column {
 		name = "col1"
@@ -129,9 +111,9 @@ resource "snowflake_table" "t" {
 }
 
 resource "snowflake_table" "unique_t" {
-	database = snowflake_database.d.name
-	schema   = snowflake_schema.s.name
 	name     = "unique_%s"
+	database = "%s"
+	schema   = "%s"
 
 	column {
 		name     = "unique_col1"
@@ -151,5 +133,5 @@ resource "snowflake_table_constraint" "unique" {
 	comment = "hello unique"
 }
 
-`, n, n, n, n, n)
+`, n, databaseName, schemaName, n, databaseName, schemaName, n)
 }

@@ -1,6 +1,10 @@
 package sdk
 
-import "context"
+import (
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+)
 
 var _ DatabaseRoles = (*databaseRoles)(nil)
 
@@ -42,7 +46,7 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 		return nil, err
 	}
 
-	return findOne(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
+	return collections.FindOne(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
 }
 
 func (v *databaseRoles) Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error {

@@ -15,10 +15,10 @@ var (
 
 func (opts *createTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if len(opts.Columns) == 0 {
@@ -34,34 +34,34 @@ func (opts *createTableOptions) validate() error {
 			}
 		}
 		if column.MaskingPolicy != nil {
-			if !validObjectidentifier(column.MaskingPolicy.Name) {
+			if !ValidObjectIdentifier(column.MaskingPolicy.Name) {
 				errs = append(errs, ErrInvalidObjectIdentifier)
 			}
 		}
 		for _, tag := range column.Tags {
-			if !validObjectidentifier(tag.Name) {
+			if !ValidObjectIdentifier(tag.Name) {
 				errs = append(errs, ErrInvalidObjectIdentifier)
 			}
 		}
 	}
 	if outOfLineConstraint := opts.OutOfLineConstraint; valueSet(outOfLineConstraint) {
 		if foreignKey := outOfLineConstraint.ForeignKey; valueSet(foreignKey) {
-			if !validObjectidentifier(foreignKey.TableName) {
+			if !ValidObjectIdentifier(foreignKey.TableName) {
 				errs = append(errs, ErrInvalidObjectIdentifier)
 			}
 		}
 	}
 	for _, stageFileFormat := range opts.StageFileFormat {
 		if ok := exactlyOneValueSet(
-			stageFileFormat.InnerValue.FormatName,
-			stageFileFormat.InnerValue.FormatType,
+			stageFileFormat.FormatName,
+			stageFileFormat.Type,
 		); !ok {
 			errs = append(errs, errStageFileFormatValueNeedsExactlyOneValue)
 		}
 	}
 
 	if opts.RowAccessPolicy != nil {
-		if !validObjectidentifier(opts.RowAccessPolicy.Name) {
+		if !ValidObjectIdentifier(opts.RowAccessPolicy.Name) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 	}
@@ -71,10 +71,10 @@ func (opts *createTableOptions) validate() error {
 
 func (opts *createTableAsSelectOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if len(opts.Columns) == 0 {
@@ -85,13 +85,13 @@ func (opts *createTableAsSelectOptions) validate() error {
 
 func (opts *createTableLikeOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !validObjectidentifier(opts.SourceTable) {
+	if !ValidObjectIdentifier(opts.SourceTable) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -99,10 +99,10 @@ func (opts *createTableLikeOptions) validate() error {
 
 func (opts *createTableUsingTemplateOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -110,13 +110,13 @@ func (opts *createTableUsingTemplateOptions) validate() error {
 
 func (opts *createTableCloneOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !validObjectidentifier(opts.SourceTable) {
+	if !ValidObjectIdentifier(opts.SourceTable) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -124,10 +124,10 @@ func (opts *createTableCloneOptions) validate() error {
 
 func (opts *alterTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(
@@ -150,12 +150,12 @@ func (opts *alterTableOptions) validate() error {
 		errs = append(errs, errAlterTableNeedsExactlyOneAction)
 	}
 	if opts.NewName != nil {
-		if !validObjectidentifier(*opts.NewName) {
+		if !ValidObjectIdentifier(*opts.NewName) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 	}
 	if opts.SwapWith != nil {
-		if !validObjectidentifier(*opts.SwapWith) {
+		if !ValidObjectIdentifier(*opts.SwapWith) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
 	}
@@ -241,10 +241,10 @@ func (opts *alterTableOptions) validate() error {
 
 func (opts *dropTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
+	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
@@ -252,11 +252,11 @@ func (opts *dropTableOptions) validate() error {
 
 func (opts *showTableOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		errs = append(errs, errPatternRequiredForLikeKeyword)
+		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
 	return errors.Join(errs...)
 }

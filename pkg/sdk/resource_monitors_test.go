@@ -1,24 +1,16 @@
 package sdk
 
 import (
-	"fmt"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestResourceMonitorCreate(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
-	t.Run("empty options", func(t *testing.T) {
+	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &CreateResourceMonitorOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "CREATE RESOURCE MONITOR"
-		assert.Equal(t, expected, actual)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -51,36 +43,26 @@ func TestResourceMonitorCreate(t *testing.T) {
 			name: id,
 		}
 
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf(`CREATE OR REPLACE RESOURCE MONITOR %s WITH CREDIT_QUOTA = 100 FREQUENCY = MONTHLY START_TIMESTAMP = 'IMMIEDIATELY' END_TIMESTAMP = '%s' NOTIFY_USERS = ("FIRST_USER", "SECOND_USER") TRIGGERS ON 50 PERCENT DO SUSPEND_IMMEDIATE ON 100 PERCENT DO NOTIFY`,
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE RESOURCE MONITOR %s WITH CREDIT_QUOTA = 100 FREQUENCY = MONTHLY START_TIMESTAMP = 'IMMIEDIATELY' END_TIMESTAMP = '%s' NOTIFY_USERS = ("FIRST_USER", "SECOND_USER") TRIGGERS ON 50 PERCENT DO SUSPEND_IMMEDIATE ON 100 PERCENT DO NOTIFY`,
 			id.FullyQualifiedName(),
 			endTimeStamp,
 		)
-
-		assert.Equal(t, expected, actual)
 	})
 }
 
 func TestResourceMonitorAlter(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
-	t.Run("empty options", func(t *testing.T) {
+	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &AlterResourceMonitorOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "ALTER RESOURCE MONITOR"
-		assert.Equal(t, expected, actual)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &AlterResourceMonitorOptions{
 			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER RESOURCE MONITOR %s", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterResourceMonitorOptions", "Set", "NotifyUsers", "Triggers"))
 	})
 
 	t.Run("with a single set", func(t *testing.T) {
@@ -91,10 +73,7 @@ func TestResourceMonitorAlter(t *testing.T) {
 				CreditQuota: newCreditQuota,
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d", id.FullyQualifiedName(), *newCreditQuota)
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d", id.FullyQualifiedName(), *newCreditQuota)
 	})
 
 	t.Run("with a multitple set", func(t *testing.T) {
@@ -109,44 +88,32 @@ func TestResourceMonitorAlter(t *testing.T) {
 				StartTimestamp: &newStartTimeStamp,
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = '%s'", id.FullyQualifiedName(), *newCreditQuota, newFrequency, newStartTimeStamp)
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = '%s'", id.FullyQualifiedName(), *newCreditQuota, newFrequency, newStartTimeStamp)
 	})
 }
 
 func TestResourceMonitorDrop(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &dropResourceMonitorOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "DROP RESOURCE MONITOR"
-		assert.Equal(t, expected, actual)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("only name", func(t *testing.T) {
 		opts := &dropResourceMonitorOptions{
 			name: id,
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("DROP RESOURCE MONITOR %s", id.FullyQualifiedName())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "DROP RESOURCE MONITOR %s", id.FullyQualifiedName())
 	})
 }
 
 func TestResourceMonitorShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowResourceMonitorOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := "SHOW RESOURCE MONITORS"
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW RESOURCE MONITORS")
 	})
 
 	t.Run("with like", func(t *testing.T) {
@@ -155,9 +122,6 @@ func TestResourceMonitorShow(t *testing.T) {
 				Pattern: String(id.Name()),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := fmt.Sprintf("SHOW RESOURCE MONITORS LIKE '%s'", id.Name())
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, "SHOW RESOURCE MONITORS LIKE '%s'", id.Name())
 	})
 }

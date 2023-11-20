@@ -18,6 +18,8 @@ type Client struct {
 	db             *sqlx.DB
 	sessionID      string
 	accountLocator string
+	dryRun         bool
+	traceLogs      []string
 
 	// System-Defined Functions
 	ContextFunctions     ContextFunctions
@@ -28,28 +30,59 @@ type Client struct {
 	// DDL Commands
 	Accounts         Accounts
 	Alerts           Alerts
+	ApplicationRoles ApplicationRoles
 	Comments         Comments
-	Databases        Databases
 	DatabaseRoles    DatabaseRoles
+	Databases        Databases
+	DynamicTables    DynamicTables
+	ExternalTables   ExternalTables
 	FailoverGroups   FailoverGroups
 	FileFormats      FileFormats
 	Grants           Grants
 	MaskingPolicies  MaskingPolicies
+	NetworkPolicies  NetworkPolicies
+	Parameters       Parameters
 	PasswordPolicies PasswordPolicies
 	Pipes            Pipes
 	ResourceMonitors ResourceMonitors
 	Roles            Roles
+	Schemas          Schemas
 	SessionPolicies  SessionPolicies
 	Sessions         Sessions
 	Shares           Shares
+	Stages           Stages
+	Streams          Streams
 	Tables           Tables
+	Tags             Tags
+	Tasks            Tasks
 	Users            Users
-	Schemas          Schemas
+	Views            Views
 	Warehouses       Warehouses
+}
+
+func (c *Client) GetAccountLocator() string {
+	return c.accountLocator
+}
+
+func (c *Client) GetConfig() *gosnowflake.Config {
+	return c.config
+}
+
+func (c *Client) GetConn() *sqlx.DB {
+	return c.db
 }
 
 func NewDefaultClient() (*Client, error) {
 	return NewClient(nil)
+}
+
+func NewDryRunClient() *Client {
+	client := &Client{
+		dryRun:    true,
+		traceLogs: []string{},
+	}
+	client.initialize()
+	return client
 }
 
 func NewClient(cfg *gosnowflake.Config) (*Client, error) {
@@ -123,28 +156,42 @@ func NewClientFromDB(db *sql.DB) *Client {
 func (c *Client) initialize() {
 	c.Accounts = &accounts{client: c}
 	c.Alerts = &alerts{client: c}
+	c.ApplicationRoles = &applicationRoles{client: c}
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
-	c.Databases = &databases{client: c}
 	c.DatabaseRoles = &databaseRoles{client: c}
+	c.Databases = &databases{client: c}
+	c.DynamicTables = &dynamicTables{client: c}
+	c.ExternalTables = &externalTables{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}
 	c.FileFormats = &fileFormats{client: c}
 	c.Grants = &grants{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
+	c.NetworkPolicies = &networkPolicies{client: c}
+	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
 	c.Pipes = &pipes{client: c}
 	c.ReplicationFunctions = &replicationFunctions{client: c}
 	c.ResourceMonitors = &resourceMonitors{client: c}
 	c.Roles = &roles{client: c}
+	c.Schemas = &schemas{client: c}
 	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}
-	c.Schemas = &schemas{client: c}
+	c.Stages = &stages{client: c}
+	c.Streams = &streams{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
 	c.Tables = &tables{client: c}
+	c.Tags = &tags{client: c}
+	c.Tasks = &tasks{client: c}
 	c.Users = &users{client: c}
+	c.Views = &views{client: c}
 	c.Warehouses = &warehouses{client: c}
+}
+
+func (c *Client) TraceLogs() []string {
+	return c.traceLogs
 }
 
 func (c *Client) Ping() error {
@@ -166,6 +213,11 @@ const (
 
 // Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
+	if c.dryRun {
+		c.traceLogs = append(c.traceLogs, sql)
+		log.Printf("[DEBUG] sql-conn-exec-dry: %v\n", sql)
+		return nil, nil
+	}
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	result, err := c.db.ExecContext(ctx, sql)
 	return result, decodeDriverError(err)
@@ -173,12 +225,22 @@ func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 
 // query runs a query and returns the rows. dest is expected to be a slice of structs.
 func (c *Client) query(ctx context.Context, dest interface{}, sql string) error {
+	if c.dryRun {
+		c.traceLogs = append(c.traceLogs, sql)
+		log.Printf("[DEBUG] sql-conn-query-dry: %v\n", sql)
+		return nil
+	}
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	return decodeDriverError(c.db.SelectContext(ctx, dest, sql))
 }
 
 // queryOne runs a query and returns one row. dest is expected to be a pointer to a struct.
 func (c *Client) queryOne(ctx context.Context, dest interface{}, sql string) error {
+	if c.dryRun {
+		c.traceLogs = append(c.traceLogs, sql)
+		log.Printf("[DEBUG] sql-conn-query-one-dry: %v\n", sql)
+		return nil
+	}
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	return decodeDriverError(c.db.GetContext(ctx, dest, sql))
 }

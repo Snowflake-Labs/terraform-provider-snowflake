@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_Procedure(t *testing.T) {
@@ -15,19 +16,18 @@ func TestAcc_Procedure(t *testing.T) {
 		t.Skip("Skipping TestAcc_Procedure")
 	}
 
-	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	procName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	expBody1 := "return \"Hi\"\n"
 	expBody2 := "var X=3\nreturn X\n"
 	expBody3 := "var X=1\nreturn X\n"
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: procedureConfig(dbName, schemaName, procName),
+				Config: procedureConfig(procName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc", "name", procName),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc", "comment", "Terraform acceptance test"),
@@ -63,23 +63,12 @@ func TestAcc_Procedure(t *testing.T) {
 	})
 }
 
-func procedureConfig(db, schema, name string) string {
+func procedureConfig(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_database" "test_database" {
-		name    = "%s"
-		comment = "Terraform acceptance test"
-	}
-	
-	resource "snowflake_schema" "test_schema" {
-		name     = "%s"
-		database = snowflake_database.test_database.name
-		comment  = "Terraform acceptance test"
-	}
-
 	resource "snowflake_procedure" "test_proc_simple" {
 		name = "%s"
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
+		database = "%s"
+		schema   = "%s"
 		return_type = "varchar"
 		language = "javascript"
 		statement = <<-EOF
@@ -89,8 +78,8 @@ func procedureConfig(db, schema, name string) string {
 
 	resource "snowflake_procedure" "test_proc" {
 		name = "%s"
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
+		database = "%s"
+		schema   = "%s"
 		arguments {
 			name = "arg1"
 			type = "varchar"
@@ -106,8 +95,8 @@ func procedureConfig(db, schema, name string) string {
 
 	resource "snowflake_procedure" "test_proc_complex" {
 		name = "%s"
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
+		database = "%s"
+		schema   = "%s"
 		arguments {
 			name = "arg1"
 			type = "varchar"
@@ -115,7 +104,7 @@ func procedureConfig(db, schema, name string) string {
 		arguments {
 			name = "arg2"
 			type = "DATE"
-		}		
+		}
 		comment = "Proc with 2 args"
 		return_type = "VARCHAR"
 		execute_as = "CALLER"
@@ -130,8 +119,8 @@ func procedureConfig(db, schema, name string) string {
 
 	resource "snowflake_procedure" "test_proc_sql" {
 		name = "%s_sql"
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
+		database = "%s"
+		schema   = "%s"
 		language = "SQL"
 		return_type         = "INTEGER"
 		execute_as          = "CALLER"
@@ -148,5 +137,5 @@ func procedureConfig(db, schema, name string) string {
 	  end;
 	  EOT
 	  }
-	`, db, schema, name, name, name, name)
+	`, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName)
 }

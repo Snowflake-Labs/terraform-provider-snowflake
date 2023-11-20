@@ -252,20 +252,6 @@ func (s *CreateTableRequest) WithComment(Comment *string) *CreateTableRequest {
 	return s
 }
 
-func NewRowAccessPolicyRequest() *RowAccessPolicyRequest {
-	return &RowAccessPolicyRequest{}
-}
-
-func (s *RowAccessPolicyRequest) WithName(Name SchemaObjectIdentifier) *RowAccessPolicyRequest {
-	s.Name = Name
-	return s
-}
-
-func (s *RowAccessPolicyRequest) WithOn(On []string) *RowAccessPolicyRequest {
-	s.On = On
-	return s
-}
-
 func NewTableColumnRequest(
 	name string,
 	type_ DataType,
@@ -366,6 +352,11 @@ func NewColumnInlineConstraintRequest(
 	s.Name = Name
 	s.type_ = type_
 	return &s
+}
+
+func (s *ColumnInlineConstraintRequest) WithNotNull(notNull *bool) *ColumnInlineConstraintRequest {
+	s.notNull = notNull
+	return s
 }
 
 func (s *ColumnInlineConstraintRequest) WithForeignKey(foreignKey *InlineForeignKeyRequest) *ColumnInlineConstraintRequest {
@@ -531,7 +522,7 @@ func (s *InlineForeignKeyRequest) WithMatch(Match *MatchType) *InlineForeignKeyR
 	return s
 }
 
-func (s *InlineForeignKeyRequest) WithOn(On *ForeignKeyOnActionRequest) *InlineForeignKeyRequest {
+func (s *InlineForeignKeyRequest) WithOn(On *ForeignKeyOnAction) *InlineForeignKeyRequest {
 	s.On = On
 	return s
 }
@@ -551,84 +542,22 @@ func (s *OutOfLineForeignKeyRequest) WithMatch(Match *MatchType) *OutOfLineForei
 	return s
 }
 
-func (s *OutOfLineForeignKeyRequest) WithOn(On *ForeignKeyOnActionRequest) *OutOfLineForeignKeyRequest {
+func (s *OutOfLineForeignKeyRequest) WithOn(On *ForeignKeyOnAction) *OutOfLineForeignKeyRequest {
 	s.On = On
 	return s
 }
 
-func NewForeignKeyOnActionRequest() *ForeignKeyOnActionRequest {
-	return &ForeignKeyOnActionRequest{}
+func NewForeignKeyOnAction() *ForeignKeyOnAction {
+	return &ForeignKeyOnAction{}
 }
 
-func (s *ForeignKeyOnActionRequest) WithOnUpdate(OnUpdate *ForeignKeyAction) *ForeignKeyOnActionRequest {
+func (s *ForeignKeyOnAction) WithOnUpdate(OnUpdate *ForeignKeyAction) *ForeignKeyOnAction {
 	s.OnUpdate = OnUpdate
 	return s
 }
 
-func (s *ForeignKeyOnActionRequest) WithOnDelete(OnDelete *ForeignKeyAction) *ForeignKeyOnActionRequest {
+func (s *ForeignKeyOnAction) WithOnDelete(OnDelete *ForeignKeyAction) *ForeignKeyOnAction {
 	s.OnDelete = OnDelete
-	return s
-}
-
-func NewStageFileFormatRequest() *StageFileFormatRequest {
-	return &StageFileFormatRequest{}
-}
-
-func (s *StageFileFormatRequest) WithFormatName(FormatName *string) *StageFileFormatRequest {
-	s.FormatName = FormatName
-	return s
-}
-
-func (s *StageFileFormatRequest) WithFormatType(FormatType *FileFormatType) *StageFileFormatRequest {
-	s.FormatType = FormatType
-	return s
-}
-
-func (s *StageFileFormatRequest) WithOptions(Options *FileFormatTypeOptionsRequest) *StageFileFormatRequest {
-	s.Options = Options
-	return s
-}
-
-func NewStageCopyOptionsRequest(
-	OnError StageCopyOptionsOnError,
-) *StageCopyOptionsRequest {
-	s := StageCopyOptionsRequest{}
-	s.OnError = OnError
-	return &s
-}
-
-func (s *StageCopyOptionsRequest) WithSizeLimit(SizeLimit *int) *StageCopyOptionsRequest {
-	s.SizeLimit = SizeLimit
-	return s
-}
-
-func (s *StageCopyOptionsRequest) WithPurge(Purge *bool) *StageCopyOptionsRequest {
-	s.Purge = Purge
-	return s
-}
-
-func (s *StageCopyOptionsRequest) WithReturnFailedOnly(ReturnFailedOnly *bool) *StageCopyOptionsRequest {
-	s.ReturnFailedOnly = ReturnFailedOnly
-	return s
-}
-
-func (s *StageCopyOptionsRequest) WithMatchByColumnName(MatchByColumnName *StageCopyOptionsMatchByColumnName) *StageCopyOptionsRequest {
-	s.MatchByColumnName = MatchByColumnName
-	return s
-}
-
-func (s *StageCopyOptionsRequest) WithEnforceLength(EnforceLength *bool) *StageCopyOptionsRequest {
-	s.EnforceLength = EnforceLength
-	return s
-}
-
-func (s *StageCopyOptionsRequest) WithTruncateColumns(TruncateColumns *bool) *StageCopyOptionsRequest {
-	s.TruncateColumns = TruncateColumns
-	return s
-}
-
-func (s *StageCopyOptionsRequest) WithForce(Force *bool) *StageCopyOptionsRequest {
-	s.Force = Force
 	return s
 }
 
@@ -1687,15 +1616,16 @@ func (s *ShowTableInRequest) WithSchema(Schema DatabaseObjectIdentifier) *ShowTa
 	return s
 }
 
-func NewLimitFromRequest(
-	Rows int,
-) *LimitFromRequest {
-	s := LimitFromRequest{}
-	s.Rows = Rows
-	return &s
+func NewLimitFromRequest() *LimitFromRequest {
+	return &LimitFromRequest{}
 }
 
-func (s *LimitFromRequest) WithFrom(From string) *LimitFromRequest {
-	s.From = From
+func (s *LimitFromRequest) WithRows(rows *int) *LimitFromRequest {
+	s.rows = rows
+	return s
+}
+
+func (s *LimitFromRequest) WithFrom(from *string) *LimitFromRequest {
+	s.from = from
 	return s
 }

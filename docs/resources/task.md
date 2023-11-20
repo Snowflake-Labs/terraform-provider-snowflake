@@ -88,6 +88,7 @@ resource "snowflake_task" "test_task" {
 - `error_integration` (String) Specifies the name of the notification integration used for error notifications.
 - `schedule` (String) The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflict with after)
 - `session_parameters` (Map of String) Specifies session parameters to set for the session when the task runs. A task supports all session parameters.
+- `suspend_task_after_num_failures` (Number) Specifies the number of consecutive failed task runs after which the current task is suspended automatically. The default is 0 (no automatic suspension).
 - `user_task_managed_initial_warehouse_size` (String) Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. (Conflicts with warehouse)
 - `user_task_timeout_ms` (Number) Specifies the time limit on a single run of the task before it times out (in milliseconds).
 - `warehouse` (String) The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. (Conflicts with user_task_managed_initial_warehouse_size)

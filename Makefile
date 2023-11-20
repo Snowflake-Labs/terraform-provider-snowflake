@@ -1,7 +1,8 @@
 export GO111MODULE=on
-export TF_ACC_TERRAFORM_VERSION=1.4.1
+export TF_ACC_TERRAFORM_VERSION=1.5.7
 export SKIP_EXTERNAL_TABLE_TESTS=true
 export SKIP_SCIM_INTEGRATION_TESTS=true
+export SKIP_TABLE_DATA_RETENTION_TESTS=true
 
 BASE_BINARY_NAME=terraform-provider-snowflake
 TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
@@ -37,7 +38,7 @@ lint-ci: ## run the fast go linters
 .PHONY: lint-ci
 
 test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 1200s -v $(COVERAGE_FLAGS) ./...
+	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 2000s -v $(COVERAGE_FLAGS) ./...
 .PHONY: test-acceptance
 
 build-local: ## build the binary locally
@@ -91,3 +92,21 @@ generate-all-dto: ## Generate all DTOs for SDK interfaces
 
 generate-dto-%: ./pkg/sdk/%_dto.go ## Generate DTO for given SDK interface
 	go generate $<
+
+run-generator-poc:
+	go generate ./pkg/sdk/poc/example/*_def.go
+	go generate ./pkg/sdk/poc/example/*_dto_gen.go
+.PHONY: run-generator-poc
+
+clean-generator-poc:
+	rm -f ./pkg/sdk/poc/example/*_gen.go
+	rm -f ./pkg/sdk/poc/example/*_gen_test.go
+.PHONY: run-generator-poc
+
+run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on given object definition
+	go generate $<
+	go generate ./pkg/sdk/$*_dto_gen.go
+
+clean-generator-%: ## Clean generated files for specified resource
+	rm -f ./pkg/sdk/$**_gen.go
+	rm -f ./pkg/sdk/$**_gen_*test.go

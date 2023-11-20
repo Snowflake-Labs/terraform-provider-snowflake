@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 )
 
 var (
@@ -20,6 +21,7 @@ type comments struct {
 
 var _ Comments = (*comments)(nil)
 
+// SetCommentOptions is based on https://docs.snowflake.com/en/sql-reference/sql/comment.
 type SetCommentOptions struct {
 	comment    bool             `ddl:"static" sql:"COMMENT"`
 	IfExists   *bool            `ddl:"keyword" sql:"IF EXISTS"`
@@ -30,6 +32,9 @@ type SetCommentOptions struct {
 }
 
 func (opts *SetCommentOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -49,6 +54,7 @@ func (c *comments) Set(ctx context.Context, opts *SetCommentOptions) error {
 	return err
 }
 
+// SetColumnCommentOptions is based on https://docs.snowflake.com/en/sql-reference/sql/comment.
 type SetColumnCommentOptions struct {
 	comment  bool             `ddl:"static" sql:"COMMENT"`
 	IfExists *bool            `ddl:"keyword" sql:"IF EXISTS"`
@@ -58,6 +64,9 @@ type SetColumnCommentOptions struct {
 }
 
 func (opts *SetColumnCommentOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 

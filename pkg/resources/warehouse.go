@@ -45,14 +45,14 @@ var warehouseSchema = map[string]*schema.Schema{
 		Description:  "Specifies the maximum number of server clusters for the warehouse.",
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntBetween(1, 10),
+		ValidateFunc: validation.IntAtLeast(1),
 	},
 	"min_cluster_count": {
 		Type:         schema.TypeInt,
 		Description:  "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
 		Optional:     true,
 		Computed:     true,
-		ValidateFunc: validation.IntBetween(1, 10),
+		ValidateFunc: validation.IntAtLeast(1),
 	},
 	"scaling_policy": {
 		Type:        schema.TypeString,
@@ -286,7 +286,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("name"); ok {
 			newName := sdk.NewAccountObjectIdentifier(v.(string))
 			err := client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
-				NewName: newName,
+				NewName: &newName,
 			})
 			if err != nil {
 				return err
