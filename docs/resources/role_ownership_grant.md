@@ -61,5 +61,5 @@ resource "snowflake_role_ownership_grant" "grant" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_role_ownership_grant.example rolename
+terraform import snowflake_role_ownership_grant.example "<on_role_name>|<to_role_name>|<current_grants>"
 ```
