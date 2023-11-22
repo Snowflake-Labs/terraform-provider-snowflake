@@ -35,6 +35,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 		for _, file := range otherTestFiles {
 			for _, method := range allExportedMethodsInFile(file.fileSrc) {
 				assertMethodNameDoesNotMatch(t, &file, method, acceptanceTestNameRegex)
+				assertMethodNameMatches(t, &file, method, testNameRegex)
 			}
 		}
 	})
