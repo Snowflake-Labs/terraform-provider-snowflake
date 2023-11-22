@@ -13,7 +13,7 @@ import (
 
 func TestAcc_Pipe(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_PIPE_TESTS"); ok {
-		t.Skip("Skipping TestAccPipe")
+		t.Skip("Skipping TestAcc_Pipe")
 	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 

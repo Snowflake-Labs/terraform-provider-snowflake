@@ -12,7 +12,7 @@ import (
 
 func TestAcc_ExternalTables(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_EXTERNAL_TABLE_TESTS"); ok {
-		t.Skip("Skipping TestAccExternalTable")
+		t.Skip("Skipping TestAcc_ExternalTables")
 	}
 
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
