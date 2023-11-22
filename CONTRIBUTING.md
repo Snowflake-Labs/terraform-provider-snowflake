@@ -6,7 +6,7 @@
 2. Ensure that your `GOPATH` is set to the desired location
 3. Fork this repo and clone it into `$GOPATH/src/github.com/Snowflake-Labs/terraform-provider-snowflake`
 4. cd to `terraform-provider-snowflake` and install all the required packages with `go get`
-5. Build provider with `go install`
+5. Build and install provider with `make install`
 
 ## Testing
 
@@ -67,7 +67,18 @@ We've included an example env file `test.env.example` with the environment varia
 
 ## Advanced Debugging
 
-If you want to build and test the provider locally there is a make target `make install-tf` that will build the provider binary and install it in a location that terraform can find.
+If you want to build and test the provider locally you should edit you `~.terraformrc` file to include the following:
+
+```
+provider_installation {
+
+  dev_overrides {
+      "registry.terraform.io/Snowflake-Labs/snowflake" = "<path_to_binary>"
+  }
+
+  direct {}
+}
+```
 
 To debug the provider with a debugger:
 
