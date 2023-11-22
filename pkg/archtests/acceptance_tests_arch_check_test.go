@@ -8,7 +8,7 @@ import (
 
 func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 	resourcesPath := "../resources/"
-	resourcesFiles, err := filesInDirectory(resourcesPath, nil)
+	resourcesFiles, err := allFilesInDirectory(resourcesPath)
 	require.NoError(t, err)
 
 	t.Run("acceptance tests files have the right package", func(t *testing.T) {
@@ -23,7 +23,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 		acceptanceTestFiles := filterFiles(resourcesFiles, fileNameFilterProvider(acceptanceTestFileRegex))
 
 		for _, file := range acceptanceTestFiles {
-			for _, method := range allExportedMethodsInFile(file.fileSrc) {
+			for _, method := range file.allExportedMethods() {
 				assertAcceptanceTestNamedCorrectly(t, &file, method)
 			}
 		}
@@ -33,7 +33,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 		otherTestFiles := filterFiles(resourcesFiles, fileNameFilterWithExclusionsProvider(testFileRegex, acceptanceTestFileRegex))
 
 		for _, file := range otherTestFiles {
-			for _, method := range allExportedMethodsInFile(file.fileSrc) {
+			for _, method := range file.allExportedMethods() {
 				assertMethodNameDoesNotMatch(t, &file, method, acceptanceTestNameRegex)
 				assertMethodNameMatches(t, &file, method, testNameRegex)
 			}
@@ -45,7 +45,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 		packageFiles := filterFiles(resourcesFiles, packageFilterProvider("resources_test"))
 
 		for _, file := range packageFiles {
-			for _, method := range allExportedMethodsInFile(file.fileSrc) {
+			for _, method := range file.allExportedMethods() {
 				assertAcceptanceTestNamedCorrectly(t, &file, method)
 			}
 		}
