@@ -14,7 +14,7 @@ func NewDirectory(path string) *Directory {
 	return &Directory{path: path}
 }
 
-func (d *Directory) allFiles() ([]File, error) {
+func (d *Directory) AllFiles() ([]File, error) {
 	return d.files(nil)
 }
 

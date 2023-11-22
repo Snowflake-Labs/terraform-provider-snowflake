@@ -6,27 +6,27 @@ import (
 )
 
 var (
-	acceptanceTestFileRegex *regexp.Regexp
-	acceptanceTestNameRegex *regexp.Regexp
-	testFileRegex           *regexp.Regexp
-	testNameRegex           *regexp.Regexp
+	AcceptanceTestFileRegex *regexp.Regexp
+	AcceptanceTestNameRegex *regexp.Regexp
+	TestFileRegex           *regexp.Regexp
+	TestNameRegex           *regexp.Regexp
 )
 
 func init() {
 	var err error
-	acceptanceTestFileRegex, err = regexp.Compile("^.*_acceptance_test.go$")
+	AcceptanceTestFileRegex, err = regexp.Compile("^.*_acceptance_test.go$")
 	if err != nil {
 		panic(err)
 	}
-	acceptanceTestNameRegex, err = regexp.Compile("^TestAcc_.*$")
+	AcceptanceTestNameRegex, err = regexp.Compile("^TestAcc_.*$")
 	if err != nil {
 		panic(err)
 	}
-	testFileRegex, err = regexp.Compile("^.*_test.go$")
+	TestFileRegex, err = regexp.Compile("^.*_test.go$")
 	if err != nil {
 		panic(err)
 	}
-	testNameRegex, err = regexp.Compile("^Test.*$")
+	TestNameRegex, err = regexp.Compile("^Test.*$")
 	if err != nil {
 		panic(err)
 	}
@@ -46,7 +46,7 @@ func NewFile(packageName string, fileName string, fileSrc *ast.File) *File {
 	}
 }
 
-func (f *File) allExportedMethods() []Method {
+func (f *File) AllExportedMethods() []Method {
 	allExportedMethods := make([]Method, 0)
 	for _, d := range f.fileSrc.Decls {
 		switch d.(type) {

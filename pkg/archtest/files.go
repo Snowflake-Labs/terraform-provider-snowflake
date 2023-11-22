@@ -3,7 +3,7 @@ package archtest
 type FileFilter = func(*File) bool
 type FileReceiver = func(*File)
 
-func filterFiles(files []File, filter FileFilter) []File {
+func FilterFiles(files []File, filter FileFilter) []File {
 	filteredFiles := make([]File, 0)
 	for _, f := range files {
 		if filter(&f) {
@@ -13,7 +13,7 @@ func filterFiles(files []File, filter FileFilter) []File {
 	return filteredFiles
 }
 
-func iterateFiles(files []File, receiver FileReceiver) {
+func IterateFiles(files []File, receiver FileReceiver) {
 	for _, file := range files {
 		receiver(&file)
 	}

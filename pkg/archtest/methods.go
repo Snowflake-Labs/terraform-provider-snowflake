@@ -2,7 +2,7 @@ package archtest
 
 type MethodReceiver = func(method *Method)
 
-func iterateMethods(methods []Method, receiver MethodReceiver) {
+func IterateMethods(methods []Method, receiver MethodReceiver) {
 	for _, method := range methods {
 		receiver(&method)
 	}
