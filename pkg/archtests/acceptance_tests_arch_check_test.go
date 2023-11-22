@@ -1,62 +1,52 @@
 package archtests
 
 import (
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"io/fs"
-	"regexp"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 	resourcesPath := "../resources/"
-	acceptanceTestFileRegex, err := regexp.Compile("^.*_acceptance_test.go$")
+	resourcesFiles, err := filesInDirectory(resourcesPath, nil)
 	require.NoError(t, err)
-	acceptanceTestFileNameRegex, err := regexp.Compile("^TestAcc_.*$")
 
-	t.Run("acceptance tests for resources have the right package", func(t *testing.T) {
-		packagesDict, err := parser.ParseDir(token.NewFileSet(), resourcesPath, fileNameFilterProvider(acceptanceTestFileRegex), 0)
-		require.NoError(t, err)
+	t.Run("acceptance tests files have the right package", func(t *testing.T) {
+		acceptanceTestFiles := filterFiles(resourcesFiles, fileNameFilterProvider(acceptanceTestFileRegex))
 
-		assert.Len(t, packagesDict, 1)
-		assert.Contains(t, packagesDict, "resources_test")
-		assert.NotContains(t, packagesDict, "resources")
+		for _, file := range acceptanceTestFiles {
+			assertPackage(t, &file, "resources_test")
+		}
 	})
 
 	t.Run("acceptance tests are named correctly", func(t *testing.T) {
-		packagesDict, err := parser.ParseDir(token.NewFileSet(), resourcesPath, fileNameFilterProvider(acceptanceTestFileRegex), 0)
-		require.NoError(t, err)
+		acceptanceTestFiles := filterFiles(resourcesFiles, fileNameFilterProvider(acceptanceTestFileRegex))
 
-		allMatchingFiles := packagesDict["resources_test"].Files
-		for name, src := range allMatchingFiles {
-			exportedMethods := allExportedMethodsInFile(src)
-			for _, method := range exportedMethods {
-				assert.Truef(t, acceptanceTestFileNameRegex.Match([]byte(method)), "filename %s contains exported method %s which does not match %s", name, method, acceptanceTestFileNameRegex.String())
+		for _, file := range acceptanceTestFiles {
+			for _, method := range allExportedMethodsInFile(file.fileSrc) {
+				assertAcceptanceTestNamedCorrectly(t, &file, method)
 			}
 		}
 	})
-}
 
-func fileNameFilterProvider(regex *regexp.Regexp) func(fi fs.FileInfo) bool {
-	return func(fi fs.FileInfo) bool {
-		return regex.Match([]byte(fi.Name()))
-	}
-}
+	t.Run("there are no acceptance tests in other test files in the directory", func(t *testing.T) {
+		otherTestFiles := filterFiles(resourcesFiles, fileNameFilterWithExclusionsProvider(testFileRegex, acceptanceTestFileRegex))
 
-func allExportedMethodsInFile(src *ast.File) []string {
-	allExportedMethods := make([]string, 0)
-	for _, d := range src.Decls {
-		switch d.(type) {
-		case *ast.FuncDecl:
-			name := d.(*ast.FuncDecl).Name.Name
-			if ast.IsExported(name) {
-				allExportedMethods = append(allExportedMethods, name)
+		for _, file := range otherTestFiles {
+			for _, method := range allExportedMethodsInFile(file.fileSrc) {
+				assertMethodNameDoesNotMatch(t, &file, method, acceptanceTestNameRegex)
 			}
 		}
-	}
-	return allExportedMethods
+	})
+
+	t.Run("there are only acceptance tests in package resources_test", func(t *testing.T) {
+		t.Skipf("Currently there are non-acceptance tests in resources_test package")
+		packageFiles := filterFiles(resourcesFiles, packageFilterProvider("resources_test"))
+
+		for _, file := range packageFiles {
+			for _, method := range allExportedMethodsInFile(file.fileSrc) {
+				assertAcceptanceTestNamedCorrectly(t, &file, method)
+			}
+		}
+	})
 }
