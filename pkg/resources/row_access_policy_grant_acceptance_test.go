@@ -13,7 +13,7 @@ import (
 
 func TestAcc_RowAccessPolicyGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_ROW_ACCESS_POLICY_TESTS"); ok {
-		t.Skip("Skipping TestAccRowAccessPolicy")
+		t.Skip("Skipping TestAcc_RowAccessPolicyGrant")
 	}
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

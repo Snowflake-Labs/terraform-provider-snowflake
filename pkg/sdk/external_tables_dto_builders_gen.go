@@ -2,8 +2,6 @@
 
 package sdk
 
-import ()
-
 func NewCreateExternalTableRequest(
 	name SchemaObjectIdentifier,
 	location string,

@@ -1,27 +1,57 @@
-export GO111MODULE=on
-export TF_ACC_TERRAFORM_VERSION=1.5.7
-export SKIP_EXTERNAL_TABLE_TESTS=true
-export SKIP_SCIM_INTEGRATION_TESTS=true
-export SKIP_TABLE_DATA_RETENTION_TESTS=true
+export SKIP_EMAIL_INTEGRATION_TESTS=true
+export SKIP_EXTERNAL_TABLE_TEST=true
+export SKIP_NOTIFICATION_INTEGRATION_TESTS=true
+export SKIP_SAML_INTEGRATION_TESTS=true
+export SKIP_STREAM_TEST=true
+export BASE_BINARY_NAME=terraform-provider-snowflake
+export TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
+export TERRAFORM_PLUGIN_LOCAL_INSTALL=$(TERRAFORM_PLUGINS_DIR)/$(BASE_BINARY_NAME)
 
-BASE_BINARY_NAME=terraform-provider-snowflake
-TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
-TERRAFORM_PLUGIN_LOCAL_INSTALL=$(TERRAFORM_PLUGINS_DIR)/$(BASE_BINARY_NAME)
-COVERAGE_REPORT_FILE=coverage.txt
-COVERAGE_FLAGS=-coverprofile=$(COVERAGE_REPORT_FILE) -covermode=atomic
-
-help: ## display help for this makefile
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-.PHONY: help
+default: help
 
 dev-setup: ## setup development dependencies
 	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.3
-	@which ./bin/reviewdog || curl -sSfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b ./bin v0.14.2
-.PHONY: dev-setup
+	cd tools && go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	cd tools && go install mvdan.cc/gofumpt
 
 dev-cleanup: ## cleanup development dependencies
 	rm -rf bin/*
-.PHONY: dev-cleanup
+
+docs: ## generate docs
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
+
+docs-check: docs ## check that docs have been generated
+	git diff --exit-code -- docs
+
+fmt: terraform-fmt ## Run terraform fmt and gofumpt
+	gofumpt -l -w .
+
+terraform-fmt: ## Run terraform fmt
+	terraform fmt -recursive ./examples/
+	terraform fmt -recursive ./pkg/resources/testdata/
+	terraform fmt -recursive ./pkg/datasources/testdata/
+
+help:
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
+
+install: ## install the binary
+	go install -v ./...
+
+lint: # Run static code analysis, check formatting. See https://golangci-lint.run/
+	golangci-lint run ./... -v
+
+lint-fix: ## Run static code analysis, check formatting and try to fix findings
+	golangci-lint run ./... -v --fix
+
+mod: ## add missing and remove unused modules
+	go mod tidy -compat=1.20
+
+mod-check: mod ## check if there are any missing/unused modules
+	git diff --exit-code -- go.mod go.sum
+
+pre-push: fmt docs mod lint   ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+
+pre-push-check: fmt-check docs-check lint-check mod-check ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
 sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
@@ -31,82 +61,43 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 			SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
 			else echo "Aborting..."; \
 		fi;
-.PHONY: sweep
 
-lint-ci: ## run the fast go linters
-	./bin/reviewdog -conf .reviewdog.yml -reporter=github-pr-review -tee -fail-on-error=true
-.PHONY: lint-ci
+test: ## run unit and integration tests
+	go test -v -cover -timeout=30m ./...
 
-test-acceptance: ## runs all tests, including the acceptance tests which create and destroys real resources
-	SKIP_MANAGED_ACCOUNT_TEST=1 SKIP_EMAIL_INTEGRATION_TESTS=1 TF_ACC=1 go test -timeout 2000s -v $(COVERAGE_FLAGS) ./...
-.PHONY: test-acceptance
+test-acceptance: ## run acceptance tests
+	TF_ACC=1 go test -run "^TestAcc_" -v -cover -timeout=30m ./...
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .
-.PHONY: build-local
 
 install-tf: build-local ## installs plugin where terraform can find it
 	mkdir -p $(TERRAFORM_PLUGINS_DIR)
 	cp ./$(BASE_BINARY_NAME) $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
-.PHONY: install-tf
 
 uninstall-tf: ## uninstalls plugin from where terraform can find it
 	rm -f $(TERRAFORM_PLUGIN_LOCAL_INSTALL)
-.PHONY: uninstall-tf
-
-clean: ## clean local binaries
-	rm -f $(BASE_BINARY_NAME)
-	go clean
-.PHONY: clean
-
-docs: ## generate docs for terraform plugin
-	SNOWFLAKE_USER= SNOWFLAKE_ACCOUNT= go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-.PHONY: docs
-
-docs-check: docs ## check that docs have been generated
-	git diff --exit-code -- docs
-.PHONY: docs-check
-
-mod: ## add missing and remove unused modules
-	go mod tidy -compat=1.20
-.PHONY: mod
-
-mod-check: mod ## check if there are any missing/unused modules
-	git diff --exit-code -- go.mod go.sum
-.PHONY: mod-check
-
-lint-check: ## Run static code analysis and check formatting
-	./bin/golangci-lint run ./... -v
-.PHONY: lint-check
-
-lint-fix: ## Run static code analysis, check formatting and try to fix findings
-	./bin/golangci-lint run ./... -v --fix
-.PHONY: lint-fix
-
-pre-push: docs-check lint-check mod-check; ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
-.PHONY: pre-push
 
 generate-all-dto: ## Generate all DTOs for SDK interfaces
 	go generate ./pkg/sdk/*_dto.go
-.PHONY: generate-all
 
 generate-dto-%: ./pkg/sdk/%_dto.go ## Generate DTO for given SDK interface
 	go generate $<
 
-run-generator-poc:
-	go generate ./pkg/sdk/poc/example/*_def.go
-	go generate ./pkg/sdk/poc/example/*_dto_gen.go
-.PHONY: run-generator-poc
-
 clean-generator-poc:
 	rm -f ./pkg/sdk/poc/example/*_gen.go
 	rm -f ./pkg/sdk/poc/example/*_gen_test.go
-.PHONY: run-generator-poc
+
+clean-generator-%: ## Clean generated files for specified resource
+	rm -f ./pkg/sdk/$**_gen.go
+	rm -f ./pkg/sdk/$**_gen_*test.go
+
+run-generator-poc:
+	go generate ./pkg/sdk/poc/example/*_def.go
+	go generate ./pkg/sdk/poc/example/*_dto_gen.go
 
 run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on given object definition
 	go generate $<
 	go generate ./pkg/sdk/$*_dto_gen.go
 
-clean-generator-%: ## Clean generated files for specified resource
-	rm -f ./pkg/sdk/$**_gen.go
-	rm -f ./pkg/sdk/$**_gen_*test.go
+.PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf

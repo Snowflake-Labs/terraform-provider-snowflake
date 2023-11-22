@@ -274,7 +274,7 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 
 var (
 {{- range .Operations }}
-	{{- if .OptsField }}	
+	{{- if .OptsField }}
 	_ validatable = new({{ .OptsField.KindNoPtr }})
 	{{- end }}
 {{- end }}

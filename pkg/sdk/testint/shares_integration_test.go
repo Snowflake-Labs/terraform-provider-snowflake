@@ -128,6 +128,7 @@ func TestInt_SharesAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("add and remove accounts", func(t *testing.T) {
+		t.Skipf("Snowflake secondary account is not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
 		shareTest, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
@@ -183,6 +184,7 @@ func TestInt_SharesAlter(t *testing.T) {
 	})
 
 	t.Run("set accounts", func(t *testing.T) {
+		t.Skipf("Snowflake secondary account is not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
 		shareTest, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
@@ -361,6 +363,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 	providerClient := testClient(t)
 
 	t.Run("describe share", func(t *testing.T) {
+		t.Skipf("Snowflake secondary account is not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
 		shareTest, shareCleanup := createShare(t, providerClient)
 		t.Cleanup(shareCleanup)
 
