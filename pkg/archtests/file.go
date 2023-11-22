@@ -38,6 +38,14 @@ type File struct {
 	fileSrc     *ast.File
 }
 
+func NewFile(packageName string, fileName string, fileSrc *ast.File) *File {
+	return &File{
+		packageName: packageName,
+		fileName:    fileName,
+		fileSrc:     fileSrc,
+	}
+}
+
 func (f *File) allExportedMethods() []string {
 	allExportedMethods := make([]string, 0)
 	for _, d := range f.fileSrc.Decls {

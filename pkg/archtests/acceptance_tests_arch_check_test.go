@@ -7,8 +7,8 @@ import (
 )
 
 func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
-	resourcesPath := "../resources/"
-	resourcesFiles, err := allFilesInDirectory(resourcesPath)
+	resourcesDirectory := NewDirectory("../resources/")
+	resourcesFiles, err := resourcesDirectory.allFiles()
 	require.NoError(t, err)
 
 	t.Run("acceptance tests files have the right package", func(t *testing.T) {
