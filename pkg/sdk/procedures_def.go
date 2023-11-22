@@ -68,11 +68,10 @@ var procedureSet = g.NewQueryStruct("ProcedureSet").
 var procedureUnset = g.NewQueryStruct("ProcedureUnset").OptionalSQL("COMMENT")
 
 var (
-	procedureStrictOrNot   = g.NewQueryStruct("ProcedureStrictOrNot").OptionalSQL("STRICT").OptionalSQL("CALLED ON NULL INPUT")
-	procedureVolatileOrNot = g.NewQueryStruct("ProcedureVolatileOrNot").OptionalSQL("VOLATILE").OptionalSQL("IMMUTABLE")
-	procedureExecuteAs     = g.NewQueryStruct("ProcedureExecuteAs").OptionalSQL("CALLER").OptionalSQL("OWNER")
-	procedureImport        = g.NewQueryStruct("ProcedureImport").Text("Import", g.KeywordOptions().SingleQuotes())
-	procedurePackage       = g.NewQueryStruct("ProcedurePackage").Text("Package", g.KeywordOptions().SingleQuotes())
+	procedureStrictOrNot = g.NewQueryStruct("ProcedureStrictOrNot").OptionalSQL("STRICT").OptionalSQL("CALLED ON NULL INPUT")
+	procedureExecuteAs   = g.NewQueryStruct("ProcedureExecuteAs").OptionalSQL("CALLER").OptionalSQL("OWNER")
+	procedureImport      = g.NewQueryStruct("ProcedureImport").Text("Import", g.KeywordOptions().SingleQuotes())
+	procedurePackage     = g.NewQueryStruct("ProcedurePackage").Text("Package", g.KeywordOptions().SingleQuotes())
 )
 
 var ProceduresDef = g.NewInterface(
@@ -124,11 +123,6 @@ var ProceduresDef = g.NewInterface(
 			procedureStrictOrNot,
 			g.KeywordOptions(),
 		).
-		OptionalQueryStructField(
-			"VolatileOrNot",
-			procedureVolatileOrNot,
-			g.KeywordOptions(),
-		).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		OptionalQueryStructField(
 			"ExecuteAs",
@@ -160,11 +154,6 @@ var ProceduresDef = g.NewInterface(
 		OptionalQueryStructField(
 			"StrictOrNot",
 			procedureStrictOrNot,
-			g.KeywordOptions(),
-		).
-		OptionalQueryStructField(
-			"VolatileOrNot",
-			procedureVolatileOrNot,
 			g.KeywordOptions(),
 		).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
@@ -218,11 +207,6 @@ var ProceduresDef = g.NewInterface(
 			procedureStrictOrNot,
 			g.KeywordOptions(),
 		).
-		OptionalQueryStructField(
-			"VolatileOrNot",
-			procedureVolatileOrNot,
-			g.KeywordOptions(),
-		).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		OptionalQueryStructField(
 			"ExecuteAs",
@@ -269,11 +253,6 @@ var ProceduresDef = g.NewInterface(
 			procedureStrictOrNot,
 			g.KeywordOptions(),
 		).
-		OptionalQueryStructField(
-			"VolatileOrNot",
-			procedureVolatileOrNot,
-			g.KeywordOptions(),
-		).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		OptionalQueryStructField(
 			"ExecuteAs",
@@ -305,11 +284,6 @@ var ProceduresDef = g.NewInterface(
 		OptionalQueryStructField(
 			"StrictOrNot",
 			procedureStrictOrNot,
-			g.KeywordOptions(),
-		).
-		OptionalQueryStructField(
-			"VolatileOrNot",
-			procedureVolatileOrNot,
 			g.KeywordOptions(),
 		).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).

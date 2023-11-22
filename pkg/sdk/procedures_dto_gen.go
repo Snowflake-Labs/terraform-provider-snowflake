@@ -28,16 +28,15 @@ type CreateProcedureForJavaProcedureRequest struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []ProcedureSecretRequest
 	TargetPath                 *string
-	StrictOrNot                *ProcedureStrictOrNotRequest
-	VolatileOrNot              *ProcedureVolatileOrNotRequest
+	NullInputBehavior          *ProcedureNullInputBehavior
 	Comment                    *string
-	ExecuteAs                  *ProcedureExecuteAsRequest
-	As                         *string
+	ExecuteAs                  *ProcedureExecuteAs
+	ProcedureDefinition        *string
 }
 
 type ProcedureArgumentRequest struct {
 	ArgName     string
-	ArgDataType string
+	ArgDataType DataType
 }
 
 type ProcedureReturnsRequest struct {
@@ -46,7 +45,7 @@ type ProcedureReturnsRequest struct {
 }
 
 type ProcedureReturnsResultDataTypeRequest struct {
-	ResultDataType string
+	ResultDataType DataType
 	Null           *bool
 	NotNull        *bool
 }
@@ -57,7 +56,7 @@ type ProcedureReturnsTableRequest struct {
 
 type ProcedureColumnRequest struct {
 	ColumnName     string
-	ColumnDataType string
+	ColumnDataType DataType
 }
 
 type ProcedurePackageRequest struct {
@@ -73,37 +72,21 @@ type ProcedureSecretRequest struct {
 	SecretName         string
 }
 
-type ProcedureStrictOrNotRequest struct {
-	Strict            *bool
-	CalledOnNullInput *bool
-}
-
-type ProcedureVolatileOrNotRequest struct {
-	Volatile  *bool
-	Immutable *bool
-}
-
-type ProcedureExecuteAsRequest struct {
-	Caller *bool
-	Owner  *bool
-}
-
 type CreateProcedureForJavaScriptProcedureRequest struct {
-	OrReplace     *bool
-	Secure        *bool
-	name          SchemaObjectIdentifier // required
-	Arguments     []ProcedureArgumentRequest
-	CopyGrants    *bool
-	Returns       *ProcedureReturns2Request
-	StrictOrNot   *ProcedureStrictOrNotRequest
-	VolatileOrNot *ProcedureVolatileOrNotRequest
-	Comment       *string
-	ExecuteAs     *ProcedureExecuteAsRequest
-	As            *string
+	OrReplace           *bool
+	Secure              *bool
+	name                SchemaObjectIdentifier // required
+	Arguments           []ProcedureArgumentRequest
+	CopyGrants          *bool
+	Returns             *ProcedureReturns2Request
+	NullInputBehavior   *ProcedureNullInputBehavior
+	Comment             *string
+	ExecuteAs           *ProcedureExecuteAs
+	ProcedureDefinition *string
 }
 
 type ProcedureReturns2Request struct {
-	ResultDataType string
+	ResultDataType DataType
 	NotNull        *bool
 }
 
@@ -120,44 +103,41 @@ type CreateProcedureForPythonProcedureRequest struct {
 	Handler                    string
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []ProcedureSecretRequest
-	StrictOrNot                *ProcedureStrictOrNotRequest
-	VolatileOrNot              *ProcedureVolatileOrNotRequest
+	NullInputBehavior          *ProcedureNullInputBehavior
 	Comment                    *string
-	ExecuteAs                  *ProcedureExecuteAsRequest
-	As                         *string
+	ExecuteAs                  *ProcedureExecuteAs
+	ProcedureDefinition        *string
 }
 
 type CreateProcedureForScalaProcedureRequest struct {
-	OrReplace      *bool
-	Secure         *bool
-	name           SchemaObjectIdentifier // required
-	Arguments      []ProcedureArgumentRequest
-	CopyGrants     *bool
-	Returns        *ProcedureReturnsRequest
-	RuntimeVersion *string
-	Packages       []ProcedurePackageRequest
-	Imports        []ProcedureImportRequest
-	Handler        string
-	TargetPath     *string
-	StrictOrNot    *ProcedureStrictOrNotRequest
-	VolatileOrNot  *ProcedureVolatileOrNotRequest
-	Comment        *string
-	ExecuteAs      *ProcedureExecuteAsRequest
-	As             *string
+	OrReplace           *bool
+	Secure              *bool
+	name                SchemaObjectIdentifier // required
+	Arguments           []ProcedureArgumentRequest
+	CopyGrants          *bool
+	Returns             *ProcedureReturnsRequest
+	RuntimeVersion      *string
+	Packages            []ProcedurePackageRequest
+	Imports             []ProcedureImportRequest
+	Handler             string
+	TargetPath          *string
+	NullInputBehavior   *ProcedureNullInputBehavior
+	Comment             *string
+	ExecuteAs           *ProcedureExecuteAs
+	ProcedureDefinition *string
 }
 
 type CreateProcedureForSQLProcedureRequest struct {
-	OrReplace     *bool
-	Secure        *bool
-	name          SchemaObjectIdentifier // required
-	Arguments     []ProcedureArgumentRequest
-	CopyGrants    *bool
-	Returns       *ProcedureReturns3Request
-	StrictOrNot   *ProcedureStrictOrNotRequest
-	VolatileOrNot *ProcedureVolatileOrNotRequest
-	Comment       *string
-	ExecuteAs     *ProcedureExecuteAsRequest
-	As            string
+	OrReplace           *bool
+	Secure              *bool
+	name                SchemaObjectIdentifier // required
+	Arguments           []ProcedureArgumentRequest
+	CopyGrants          *bool
+	Returns             *ProcedureReturns3Request
+	NullInputBehavior   *ProcedureNullInputBehavior
+	Comment             *string
+	ExecuteAs           *ProcedureExecuteAs
+	ProcedureDefinition *string
 }
 
 type ProcedureReturns3Request struct {
@@ -172,14 +152,14 @@ type AlterProcedureRequest struct {
 	ArgumentTypes []ProcedureArgumentTypeRequest
 	Set           *ProcedureSetRequest
 	Unset         *ProcedureUnsetRequest
-	ExecuteAs     *ProcedureExecuteAsRequest
+	ExecuteAs     *ProcedureExecuteAs
 	RenameTo      *SchemaObjectIdentifier
 	SetTags       []TagAssociation
 	UnsetTags     []ObjectIdentifier
 }
 
 type ProcedureArgumentTypeRequest struct {
-	ArgDataType string
+	ArgDataType DataType
 }
 
 type ProcedureSetRequest struct {

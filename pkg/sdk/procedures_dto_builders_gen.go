@@ -72,13 +72,8 @@ func (s *CreateProcedureForJavaProcedureRequest) WithTargetPath(TargetPath *stri
 	return s
 }
 
-func (s *CreateProcedureForJavaProcedureRequest) WithStrictOrNot(StrictOrNot *ProcedureStrictOrNotRequest) *CreateProcedureForJavaProcedureRequest {
-	s.StrictOrNot = StrictOrNot
-	return s
-}
-
-func (s *CreateProcedureForJavaProcedureRequest) WithVolatileOrNot(VolatileOrNot *ProcedureVolatileOrNotRequest) *CreateProcedureForJavaProcedureRequest {
-	s.VolatileOrNot = VolatileOrNot
+func (s *CreateProcedureForJavaProcedureRequest) WithNullInputBehavior(NullInputBehavior ProcedureNullInputBehavior) *CreateProcedureForJavaProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
@@ -87,13 +82,13 @@ func (s *CreateProcedureForJavaProcedureRequest) WithComment(Comment *string) *C
 	return s
 }
 
-func (s *CreateProcedureForJavaProcedureRequest) WithExecuteAs(ExecuteAs *ProcedureExecuteAsRequest) *CreateProcedureForJavaProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateProcedureForJavaProcedureRequest) WithExecuteAs(ExecuteAs ProcedureExecuteAs) *CreateProcedureForJavaProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
-func (s *CreateProcedureForJavaProcedureRequest) WithAs(As *string) *CreateProcedureForJavaProcedureRequest {
-	s.As = As
+func (s *CreateProcedureForJavaProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateProcedureForJavaProcedureRequest {
+	s.ProcedureDefinition = ProcedureDefinition
 	return s
 }
 
@@ -106,7 +101,7 @@ func (s *ProcedureArgumentRequest) WithArgName(ArgName string) *ProcedureArgumen
 	return s
 }
 
-func (s *ProcedureArgumentRequest) WithArgDataType(ArgDataType string) *ProcedureArgumentRequest {
+func (s *ProcedureArgumentRequest) WithArgDataType(ArgDataType DataType) *ProcedureArgumentRequest {
 	s.ArgDataType = ArgDataType
 	return s
 }
@@ -129,7 +124,7 @@ func NewProcedureReturnsResultDataTypeRequest() *ProcedureReturnsResultDataTypeR
 	return &ProcedureReturnsResultDataTypeRequest{}
 }
 
-func (s *ProcedureReturnsResultDataTypeRequest) WithResultDataType(ResultDataType string) *ProcedureReturnsResultDataTypeRequest {
+func (s *ProcedureReturnsResultDataTypeRequest) WithResultDataType(ResultDataType DataType) *ProcedureReturnsResultDataTypeRequest {
 	s.ResultDataType = ResultDataType
 	return s
 }
@@ -162,7 +157,7 @@ func (s *ProcedureColumnRequest) WithColumnName(ColumnName string) *ProcedureCol
 	return s
 }
 
-func (s *ProcedureColumnRequest) WithColumnDataType(ColumnDataType string) *ProcedureColumnRequest {
+func (s *ProcedureColumnRequest) WithColumnDataType(ColumnDataType DataType) *ProcedureColumnRequest {
 	s.ColumnDataType = ColumnDataType
 	return s
 }
@@ -199,48 +194,6 @@ func (s *ProcedureSecretRequest) WithSecretName(SecretName string) *ProcedureSec
 	return s
 }
 
-func NewProcedureStrictOrNotRequest() *ProcedureStrictOrNotRequest {
-	return &ProcedureStrictOrNotRequest{}
-}
-
-func (s *ProcedureStrictOrNotRequest) WithStrict(Strict *bool) *ProcedureStrictOrNotRequest {
-	s.Strict = Strict
-	return s
-}
-
-func (s *ProcedureStrictOrNotRequest) WithCalledOnNullInput(CalledOnNullInput *bool) *ProcedureStrictOrNotRequest {
-	s.CalledOnNullInput = CalledOnNullInput
-	return s
-}
-
-func NewProcedureVolatileOrNotRequest() *ProcedureVolatileOrNotRequest {
-	return &ProcedureVolatileOrNotRequest{}
-}
-
-func (s *ProcedureVolatileOrNotRequest) WithVolatile(Volatile *bool) *ProcedureVolatileOrNotRequest {
-	s.Volatile = Volatile
-	return s
-}
-
-func (s *ProcedureVolatileOrNotRequest) WithImmutable(Immutable *bool) *ProcedureVolatileOrNotRequest {
-	s.Immutable = Immutable
-	return s
-}
-
-func NewProcedureExecuteAsRequest() *ProcedureExecuteAsRequest {
-	return &ProcedureExecuteAsRequest{}
-}
-
-func (s *ProcedureExecuteAsRequest) WithCaller(Caller *bool) *ProcedureExecuteAsRequest {
-	s.Caller = Caller
-	return s
-}
-
-func (s *ProcedureExecuteAsRequest) WithOwner(Owner *bool) *ProcedureExecuteAsRequest {
-	s.Owner = Owner
-	return s
-}
-
 func NewCreateProcedureForJavaScriptProcedureRequest(
 	name SchemaObjectIdentifier,
 ) *CreateProcedureForJavaScriptProcedureRequest {
@@ -274,13 +227,8 @@ func (s *CreateProcedureForJavaScriptProcedureRequest) WithReturns(Returns *Proc
 	return s
 }
 
-func (s *CreateProcedureForJavaScriptProcedureRequest) WithStrictOrNot(StrictOrNot *ProcedureStrictOrNotRequest) *CreateProcedureForJavaScriptProcedureRequest {
-	s.StrictOrNot = StrictOrNot
-	return s
-}
-
-func (s *CreateProcedureForJavaScriptProcedureRequest) WithVolatileOrNot(VolatileOrNot *ProcedureVolatileOrNotRequest) *CreateProcedureForJavaScriptProcedureRequest {
-	s.VolatileOrNot = VolatileOrNot
+func (s *CreateProcedureForJavaScriptProcedureRequest) WithNullInputBehavior(NullInputBehavior ProcedureNullInputBehavior) *CreateProcedureForJavaScriptProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
@@ -289,13 +237,13 @@ func (s *CreateProcedureForJavaScriptProcedureRequest) WithComment(Comment *stri
 	return s
 }
 
-func (s *CreateProcedureForJavaScriptProcedureRequest) WithExecuteAs(ExecuteAs *ProcedureExecuteAsRequest) *CreateProcedureForJavaScriptProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateProcedureForJavaScriptProcedureRequest) WithExecuteAs(ExecuteAs ProcedureExecuteAs) *CreateProcedureForJavaScriptProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
-func (s *CreateProcedureForJavaScriptProcedureRequest) WithAs(As *string) *CreateProcedureForJavaScriptProcedureRequest {
-	s.As = As
+func (s *CreateProcedureForJavaScriptProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateProcedureForJavaScriptProcedureRequest {
+	s.ProcedureDefinition = ProcedureDefinition
 	return s
 }
 
@@ -303,7 +251,7 @@ func NewProcedureReturns2Request() *ProcedureReturns2Request {
 	return &ProcedureReturns2Request{}
 }
 
-func (s *ProcedureReturns2Request) WithResultDataType(ResultDataType string) *ProcedureReturns2Request {
+func (s *ProcedureReturns2Request) WithResultDataType(ResultDataType DataType) *ProcedureReturns2Request {
 	s.ResultDataType = ResultDataType
 	return s
 }
@@ -376,13 +324,8 @@ func (s *CreateProcedureForPythonProcedureRequest) WithSecrets(Secrets []Procedu
 	return s
 }
 
-func (s *CreateProcedureForPythonProcedureRequest) WithStrictOrNot(StrictOrNot *ProcedureStrictOrNotRequest) *CreateProcedureForPythonProcedureRequest {
-	s.StrictOrNot = StrictOrNot
-	return s
-}
-
-func (s *CreateProcedureForPythonProcedureRequest) WithVolatileOrNot(VolatileOrNot *ProcedureVolatileOrNotRequest) *CreateProcedureForPythonProcedureRequest {
-	s.VolatileOrNot = VolatileOrNot
+func (s *CreateProcedureForPythonProcedureRequest) WithNullInputBehavior(NullInputBehavior ProcedureNullInputBehavior) *CreateProcedureForPythonProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
@@ -391,13 +334,13 @@ func (s *CreateProcedureForPythonProcedureRequest) WithComment(Comment *string) 
 	return s
 }
 
-func (s *CreateProcedureForPythonProcedureRequest) WithExecuteAs(ExecuteAs *ProcedureExecuteAsRequest) *CreateProcedureForPythonProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateProcedureForPythonProcedureRequest) WithExecuteAs(ExecuteAs ProcedureExecuteAs) *CreateProcedureForPythonProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
-func (s *CreateProcedureForPythonProcedureRequest) WithAs(As *string) *CreateProcedureForPythonProcedureRequest {
-	s.As = As
+func (s *CreateProcedureForPythonProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateProcedureForPythonProcedureRequest {
+	s.ProcedureDefinition = ProcedureDefinition
 	return s
 }
 
@@ -459,13 +402,8 @@ func (s *CreateProcedureForScalaProcedureRequest) WithTargetPath(TargetPath *str
 	return s
 }
 
-func (s *CreateProcedureForScalaProcedureRequest) WithStrictOrNot(StrictOrNot *ProcedureStrictOrNotRequest) *CreateProcedureForScalaProcedureRequest {
-	s.StrictOrNot = StrictOrNot
-	return s
-}
-
-func (s *CreateProcedureForScalaProcedureRequest) WithVolatileOrNot(VolatileOrNot *ProcedureVolatileOrNotRequest) *CreateProcedureForScalaProcedureRequest {
-	s.VolatileOrNot = VolatileOrNot
+func (s *CreateProcedureForScalaProcedureRequest) WithNullInputBehavior(NullInputBehavior ProcedureNullInputBehavior) *CreateProcedureForScalaProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
@@ -474,13 +412,13 @@ func (s *CreateProcedureForScalaProcedureRequest) WithComment(Comment *string) *
 	return s
 }
 
-func (s *CreateProcedureForScalaProcedureRequest) WithExecuteAs(ExecuteAs *ProcedureExecuteAsRequest) *CreateProcedureForScalaProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateProcedureForScalaProcedureRequest) WithExecuteAs(ExecuteAs ProcedureExecuteAs) *CreateProcedureForScalaProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
-func (s *CreateProcedureForScalaProcedureRequest) WithAs(As *string) *CreateProcedureForScalaProcedureRequest {
-	s.As = As
+func (s *CreateProcedureForScalaProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateProcedureForScalaProcedureRequest {
+	s.ProcedureDefinition = ProcedureDefinition
 	return s
 }
 
@@ -517,13 +455,8 @@ func (s *CreateProcedureForSQLProcedureRequest) WithReturns(Returns *ProcedureRe
 	return s
 }
 
-func (s *CreateProcedureForSQLProcedureRequest) WithStrictOrNot(StrictOrNot *ProcedureStrictOrNotRequest) *CreateProcedureForSQLProcedureRequest {
-	s.StrictOrNot = StrictOrNot
-	return s
-}
-
-func (s *CreateProcedureForSQLProcedureRequest) WithVolatileOrNot(VolatileOrNot *ProcedureVolatileOrNotRequest) *CreateProcedureForSQLProcedureRequest {
-	s.VolatileOrNot = VolatileOrNot
+func (s *CreateProcedureForSQLProcedureRequest) WithNullInputBehavior(NullInputBehavior ProcedureNullInputBehavior) *CreateProcedureForSQLProcedureRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
@@ -532,13 +465,13 @@ func (s *CreateProcedureForSQLProcedureRequest) WithComment(Comment *string) *Cr
 	return s
 }
 
-func (s *CreateProcedureForSQLProcedureRequest) WithExecuteAs(ExecuteAs *ProcedureExecuteAsRequest) *CreateProcedureForSQLProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *CreateProcedureForSQLProcedureRequest) WithExecuteAs(ExecuteAs ProcedureExecuteAs) *CreateProcedureForSQLProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
-func (s *CreateProcedureForSQLProcedureRequest) WithAs(As string) *CreateProcedureForSQLProcedureRequest {
-	s.As = As
+func (s *CreateProcedureForSQLProcedureRequest) WithProcedureDefinition(ProcedureDefinition *string) *CreateProcedureForSQLProcedureRequest {
+	s.ProcedureDefinition = ProcedureDefinition
 	return s
 }
 
@@ -589,8 +522,8 @@ func (s *AlterProcedureRequest) WithUnset(Unset *ProcedureUnsetRequest) *AlterPr
 	return s
 }
 
-func (s *AlterProcedureRequest) WithExecuteAs(ExecuteAs *ProcedureExecuteAsRequest) *AlterProcedureRequest {
-	s.ExecuteAs = ExecuteAs
+func (s *AlterProcedureRequest) WithExecuteAs(ExecuteAs ProcedureExecuteAs) *AlterProcedureRequest {
+	s.ExecuteAs = &ExecuteAs
 	return s
 }
 
@@ -613,7 +546,7 @@ func NewProcedureArgumentTypeRequest() *ProcedureArgumentTypeRequest {
 	return &ProcedureArgumentTypeRequest{}
 }
 
-func (s *ProcedureArgumentTypeRequest) WithArgDataType(ArgDataType string) *ProcedureArgumentTypeRequest {
+func (s *ProcedureArgumentTypeRequest) WithArgDataType(ArgDataType DataType) *ProcedureArgumentTypeRequest {
 	s.ArgDataType = ArgDataType
 	return s
 }

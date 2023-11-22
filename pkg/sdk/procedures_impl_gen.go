@@ -92,7 +92,7 @@ func (r *CreateProcedureForJavaProcedureRequest) toOpts() *CreateProcedureForJav
 
 		Comment: r.Comment,
 
-		As: r.As,
+		ProcedureDefinition: r.ProcedureDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
@@ -155,24 +155,8 @@ func (r *CreateProcedureForJavaProcedureRequest) toOpts() *CreateProcedureForJav
 		}
 		opts.Secrets = s
 	}
-	if r.StrictOrNot != nil {
-		opts.StrictOrNot = &ProcedureStrictOrNot{
-			Strict:            r.StrictOrNot.Strict,
-			CalledOnNullInput: r.StrictOrNot.CalledOnNullInput,
-		}
-	}
-	if r.VolatileOrNot != nil {
-		opts.VolatileOrNot = &ProcedureVolatileOrNot{
-			Volatile:  r.VolatileOrNot.Volatile,
-			Immutable: r.VolatileOrNot.Immutable,
-		}
-	}
-	if r.ExecuteAs != nil {
-		opts.ExecuteAs = &ProcedureExecuteAs{
-			Caller: r.ExecuteAs.Caller,
-			Owner:  r.ExecuteAs.Owner,
-		}
-	}
+	opts.NullInputBehavior = r.NullInputBehavior
+	opts.ExecuteAs = r.ExecuteAs
 	return opts
 }
 
@@ -186,7 +170,7 @@ func (r *CreateProcedureForJavaScriptProcedureRequest) toOpts() *CreateProcedure
 
 		Comment: r.Comment,
 
-		As: r.As,
+		ProcedureDefinition: r.ProcedureDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
@@ -204,24 +188,8 @@ func (r *CreateProcedureForJavaScriptProcedureRequest) toOpts() *CreateProcedure
 			NotNull:        r.Returns.NotNull,
 		}
 	}
-	if r.StrictOrNot != nil {
-		opts.StrictOrNot = &ProcedureStrictOrNot{
-			Strict:            r.StrictOrNot.Strict,
-			CalledOnNullInput: r.StrictOrNot.CalledOnNullInput,
-		}
-	}
-	if r.VolatileOrNot != nil {
-		opts.VolatileOrNot = &ProcedureVolatileOrNot{
-			Volatile:  r.VolatileOrNot.Volatile,
-			Immutable: r.VolatileOrNot.Immutable,
-		}
-	}
-	if r.ExecuteAs != nil {
-		opts.ExecuteAs = &ProcedureExecuteAs{
-			Caller: r.ExecuteAs.Caller,
-			Owner:  r.ExecuteAs.Owner,
-		}
-	}
+	opts.NullInputBehavior = r.NullInputBehavior
+	opts.ExecuteAs = r.ExecuteAs
 	return opts
 }
 
@@ -240,7 +208,7 @@ func (r *CreateProcedureForPythonProcedureRequest) toOpts() *CreateProcedureForP
 
 		Comment: r.Comment,
 
-		As: r.As,
+		ProcedureDefinition: r.ProcedureDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
@@ -303,24 +271,8 @@ func (r *CreateProcedureForPythonProcedureRequest) toOpts() *CreateProcedureForP
 		}
 		opts.Secrets = s
 	}
-	if r.StrictOrNot != nil {
-		opts.StrictOrNot = &ProcedureStrictOrNot{
-			Strict:            r.StrictOrNot.Strict,
-			CalledOnNullInput: r.StrictOrNot.CalledOnNullInput,
-		}
-	}
-	if r.VolatileOrNot != nil {
-		opts.VolatileOrNot = &ProcedureVolatileOrNot{
-			Volatile:  r.VolatileOrNot.Volatile,
-			Immutable: r.VolatileOrNot.Immutable,
-		}
-	}
-	if r.ExecuteAs != nil {
-		opts.ExecuteAs = &ProcedureExecuteAs{
-			Caller: r.ExecuteAs.Caller,
-			Owner:  r.ExecuteAs.Owner,
-		}
-	}
+	opts.NullInputBehavior = r.NullInputBehavior
+	opts.ExecuteAs = r.ExecuteAs
 	return opts
 }
 
@@ -339,7 +291,7 @@ func (r *CreateProcedureForScalaProcedureRequest) toOpts() *CreateProcedureForSc
 
 		Comment: r.Comment,
 
-		As: r.As,
+		ProcedureDefinition: r.ProcedureDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
@@ -392,24 +344,8 @@ func (r *CreateProcedureForScalaProcedureRequest) toOpts() *CreateProcedureForSc
 		}
 		opts.Imports = s
 	}
-	if r.StrictOrNot != nil {
-		opts.StrictOrNot = &ProcedureStrictOrNot{
-			Strict:            r.StrictOrNot.Strict,
-			CalledOnNullInput: r.StrictOrNot.CalledOnNullInput,
-		}
-	}
-	if r.VolatileOrNot != nil {
-		opts.VolatileOrNot = &ProcedureVolatileOrNot{
-			Volatile:  r.VolatileOrNot.Volatile,
-			Immutable: r.VolatileOrNot.Immutable,
-		}
-	}
-	if r.ExecuteAs != nil {
-		opts.ExecuteAs = &ProcedureExecuteAs{
-			Caller: r.ExecuteAs.Caller,
-			Owner:  r.ExecuteAs.Owner,
-		}
-	}
+	opts.NullInputBehavior = r.NullInputBehavior
+	opts.ExecuteAs = r.ExecuteAs
 	return opts
 }
 
@@ -423,7 +359,7 @@ func (r *CreateProcedureForSQLProcedureRequest) toOpts() *CreateProcedureForSQLP
 
 		Comment: r.Comment,
 
-		As: r.As,
+		ProcedureDefinition: r.ProcedureDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
@@ -458,24 +394,8 @@ func (r *CreateProcedureForSQLProcedureRequest) toOpts() *CreateProcedureForSQLP
 			}
 		}
 	}
-	if r.StrictOrNot != nil {
-		opts.StrictOrNot = &ProcedureStrictOrNot{
-			Strict:            r.StrictOrNot.Strict,
-			CalledOnNullInput: r.StrictOrNot.CalledOnNullInput,
-		}
-	}
-	if r.VolatileOrNot != nil {
-		opts.VolatileOrNot = &ProcedureVolatileOrNot{
-			Volatile:  r.VolatileOrNot.Volatile,
-			Immutable: r.VolatileOrNot.Immutable,
-		}
-	}
-	if r.ExecuteAs != nil {
-		opts.ExecuteAs = &ProcedureExecuteAs{
-			Caller: r.ExecuteAs.Caller,
-			Owner:  r.ExecuteAs.Owner,
-		}
-	}
+	opts.NullInputBehavior = r.NullInputBehavior
+	opts.ExecuteAs = r.ExecuteAs
 	return opts
 }
 
@@ -509,12 +429,7 @@ func (r *AlterProcedureRequest) toOpts() *AlterProcedureOptions {
 			Comment: r.Unset.Comment,
 		}
 	}
-	if r.ExecuteAs != nil {
-		opts.ExecuteAs = &ProcedureExecuteAs{
-			Caller: r.ExecuteAs.Caller,
-			Owner:  r.ExecuteAs.Owner,
-		}
-	}
+	opts.ExecuteAs = r.ExecuteAs
 	return opts
 }
 
