@@ -1,4 +1,4 @@
-package archtests
+package archtest
 
 type MethodReceiver = func(method *Method)
 

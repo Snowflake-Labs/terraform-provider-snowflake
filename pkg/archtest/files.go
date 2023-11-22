@@ -1,4 +1,4 @@
-package archtests
+package archtest
 
 type FileFilter = func(*File) bool
 type FileReceiver = func(*File)

@@ -1,4 +1,4 @@
-package archtests
+package archtest
 
 import (
 	"regexp"
