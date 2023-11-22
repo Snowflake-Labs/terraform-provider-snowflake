@@ -46,6 +46,14 @@ func NewFile(packageName string, fileName string, fileSrc *ast.File) *File {
 	}
 }
 
+func (f *File) PackageName() string {
+	return f.packageName
+}
+
+func (f *File) FileName() string {
+	return f.fileName
+}
+
 func (f *File) AllExportedMethods() []Method {
 	allExportedMethods := make([]Method, 0)
 	for _, d := range f.fileSrc.Decls {
