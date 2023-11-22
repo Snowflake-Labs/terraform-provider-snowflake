@@ -46,14 +46,14 @@ func NewFile(packageName string, fileName string, fileSrc *ast.File) *File {
 	}
 }
 
-func (f *File) allExportedMethods() []string {
-	allExportedMethods := make([]string, 0)
+func (f *File) allExportedMethods() []Method {
+	allExportedMethods := make([]Method, 0)
 	for _, d := range f.fileSrc.Decls {
 		switch d.(type) {
 		case *ast.FuncDecl:
 			name := d.(*ast.FuncDecl).Name.Name
 			if ast.IsExported(name) {
-				allExportedMethods = append(allExportedMethods, name)
+				allExportedMethods = append(allExportedMethods, *NewMethod(name))
 			}
 		}
 	}
