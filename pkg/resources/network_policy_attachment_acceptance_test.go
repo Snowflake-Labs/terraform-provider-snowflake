@@ -13,7 +13,7 @@ import (
 
 func TestAcc_NetworkPolicyAttachment(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_NETWORK_POLICY_TESTS"); ok {
-		t.Skip("Skipping TestAccNetworkPolicyAttachment")
+		t.Skip("Skipping TestAcc_NetworkPolicyAttachment")
 	}
 
 	user1 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

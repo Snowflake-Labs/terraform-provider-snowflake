@@ -12,7 +12,7 @@ import (
 
 func TestAcc_SystemGenerateSCIMAccessToken(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SCIM_INTEGRATION_TESTS"); ok {
-		t.Skip("Skipping TestAccScimIntegration")
+		t.Skip("Skipping TestAcc_SystemGenerateSCIMAccessToken")
 	}
 
 	scimIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
