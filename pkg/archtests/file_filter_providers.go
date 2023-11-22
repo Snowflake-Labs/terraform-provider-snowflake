@@ -2,18 +2,6 @@ package archtests
 
 import "regexp"
 
-type FileFilter = func(*File) bool
-
-func filterFiles(files []File, filter FileFilter) []File {
-	filteredFiles := make([]File, 0)
-	for _, f := range files {
-		if filter(&f) {
-			filteredFiles = append(filteredFiles, f)
-		}
-	}
-	return filteredFiles
-}
-
 func fileNameFilterProvider(regex *regexp.Regexp) FileFilter {
 	return func(f *File) bool {
 		return regex.Match([]byte(f.fileName))

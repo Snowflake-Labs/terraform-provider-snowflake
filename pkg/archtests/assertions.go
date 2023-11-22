@@ -22,11 +22,3 @@ func assertMethodNameMatches(t *testing.T, f *File, methodName string, regex *re
 func assertMethodNameDoesNotMatch(t *testing.T, f *File, methodName string, regex *regexp.Regexp) {
 	assert.Falsef(t, regex.MatchString(methodName), "filename %s contains exported method %s which matches %s", f.fileName, methodName, regex.String())
 }
-
-//func assertMethodNameMatchesExcluding(t *testing.T, f *File, methodName string, regex *regexp.Regexp, exclusionRegex ...*regexp.Regexp) {
-//	matches := regex.MatchString(methodName)
-//	for _, e := range exclusionRegex {
-//		matches = matches && !e.MatchString(methodName)
-//	}
-//	assert.Truef(t, matches, "filename %s contains exported method %s which does not match given combination of regexps", f.fileName, methodName)
-//}

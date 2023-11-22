@@ -14,40 +14,40 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 	t.Run("acceptance tests files have the right package", func(t *testing.T) {
 		acceptanceTestFiles := filterFiles(resourcesFiles, fileNameFilterProvider(acceptanceTestFileRegex))
 
-		for _, file := range acceptanceTestFiles {
-			assertPackage(t, &file, "resources_test")
-		}
+		iterateFiles(acceptanceTestFiles, func(f *File) {
+			assertPackage(t, f, "resources_test")
+		})
 	})
 
 	t.Run("acceptance tests are named correctly", func(t *testing.T) {
 		acceptanceTestFiles := filterFiles(resourcesFiles, fileNameFilterProvider(acceptanceTestFileRegex))
 
-		for _, file := range acceptanceTestFiles {
-			for _, method := range file.allExportedMethods() {
-				assertAcceptanceTestNamedCorrectly(t, &file, method)
+		iterateFiles(acceptanceTestFiles, func(f *File) {
+			for _, method := range f.allExportedMethods() {
+				assertAcceptanceTestNamedCorrectly(t, f, method)
 			}
-		}
+		})
 	})
 
 	t.Run("there are no acceptance tests in other test files in the directory", func(t *testing.T) {
 		otherTestFiles := filterFiles(resourcesFiles, fileNameFilterWithExclusionsProvider(testFileRegex, acceptanceTestFileRegex))
 
-		for _, file := range otherTestFiles {
-			for _, method := range file.allExportedMethods() {
-				assertMethodNameDoesNotMatch(t, &file, method, acceptanceTestNameRegex)
-				assertMethodNameMatches(t, &file, method, testNameRegex)
+		iterateFiles(otherTestFiles, func(f *File) {
+			for _, method := range f.allExportedMethods() {
+				assertMethodNameDoesNotMatch(t, f, method, acceptanceTestNameRegex)
+				assertMethodNameMatches(t, f, method, testNameRegex)
 			}
-		}
+		})
 	})
 
 	t.Run("there are only acceptance tests in package resources_test", func(t *testing.T) {
 		t.Skipf("Currently there are non-acceptance tests in resources_test package")
 		packageFiles := filterFiles(resourcesFiles, packageFilterProvider("resources_test"))
 
-		for _, file := range packageFiles {
-			for _, method := range file.allExportedMethods() {
-				assertAcceptanceTestNamedCorrectly(t, &file, method)
+		iterateFiles(packageFiles, func(f *File) {
+			for _, method := range f.allExportedMethods() {
+				assertAcceptanceTestNamedCorrectly(t, f, method)
 			}
-		}
+		})
 	})
 }
