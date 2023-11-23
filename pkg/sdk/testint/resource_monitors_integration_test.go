@@ -235,9 +235,9 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		assert.Equal(t, 1, len(resourceMonitors))
 		resourceMonitor = &resourceMonitors[0]
 		assert.Equal(t, *frequency, resourceMonitor.Frequency)
-		startTime, err := ParseTimestampWithOffset(resourceMonitor.StartTime)
+		startTime, err := parseTimestampWithOffset(resourceMonitor.StartTime)
 		require.NoError(t, err)
-		endTime, err := ParseTimestampWithOffset(resourceMonitor.EndTime)
+		endTime, err := parseTimestampWithOffset(resourceMonitor.EndTime)
 		require.NoError(t, err)
 		assert.Equal(t, startTimeStamp, startTime.Format("2006-01-01 15:04"))
 		assert.Equal(t, endTimeStamp, endTime.Format("2006-01-01 15:04"))
