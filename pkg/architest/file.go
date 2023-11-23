@@ -1,4 +1,4 @@
-package archtest
+package architest
 
 import (
 	"go/ast"
@@ -54,8 +54,8 @@ func (f *File) FileName() string {
 	return f.fileName
 }
 
-func (f *File) AllExportedMethods() []Method {
-	allExportedMethods := make([]Method, 0)
+func (f *File) AllExportedMethods() Methods {
+	allExportedMethods := make(Methods, 0)
 	for _, d := range f.fileSrc.Decls {
 		switch d.(type) {
 		case *ast.FuncDecl:

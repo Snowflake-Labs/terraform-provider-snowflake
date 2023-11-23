@@ -1,4 +1,4 @@
-package archtest
+package architest
 
 type Method struct {
 	name string

@@ -1,9 +1,9 @@
-package archtest_test
+package architest_test
 
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/archtest"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/architest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +20,7 @@ func Test_Directory(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run("list all files in the given directory", func(t *testing.T) {
-			dir := archtest.NewDirectory(tt.directory)
+			dir := architest.NewDirectory(tt.directory)
 
 			allFiles := dir.AllFiles()
 			assert.Len(t, allFiles, len(tt.expectedFileNames))

@@ -1,8 +1,9 @@
-package archtest
+package architest
 
 type MethodReceiver = func(method *Method)
+type Methods []Method
 
-func IterateMethods(methods []Method, receiver MethodReceiver) {
+func (methods Methods) All(receiver MethodReceiver) {
 	for _, method := range methods {
 		receiver(&method)
 	}

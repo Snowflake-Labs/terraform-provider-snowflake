@@ -1,4 +1,4 @@
-package archtest
+package architest
 
 import "regexp"
 
