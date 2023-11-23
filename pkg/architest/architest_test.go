@@ -42,3 +42,27 @@ func Test_Directory(t *testing.T) {
 		})
 	}
 }
+
+func Test_Files(t *testing.T) {
+	tests := []struct {
+		filePath            string
+		expectedMethodNames []string
+	}{
+		{filePath: "testdata/dir1/sample1.go", expectedMethodNames: []string{}},
+		{filePath: "testdata/dir1/sample2.go", expectedMethodNames: []string{"A"}},
+	}
+	for _, tt := range tests {
+		t.Run("list all methods in file", func(t *testing.T) {
+			file := architest.NewFileFromPath(tt.filePath)
+
+			exportedMethods := file.ExportedMethods()
+			assert.Len(t, exportedMethods, len(tt.expectedMethodNames))
+
+			methodNames := make([]string, 0, len(exportedMethods))
+			for _, m := range exportedMethods {
+				methodNames = append(methodNames, m.Name())
+			}
+			assert.ElementsMatch(t, methodNames, tt.expectedMethodNames)
+		})
+	}
+}

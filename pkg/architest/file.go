@@ -2,6 +2,9 @@ package architest
 
 import (
 	"go/ast"
+	"go/parser"
+	"go/token"
+	"path/filepath"
 	"regexp"
 )
 
@@ -44,6 +47,14 @@ func NewFile(packageName string, fileName string, fileSrc *ast.File) *File {
 		fileName:    fileName,
 		fileSrc:     fileSrc,
 	}
+}
+
+func NewFileFromPath(path string) *File {
+	file, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+	if err != nil {
+		panic(err)
+	}
+	return NewFile(file.Name.Name, filepath.Base(path), file)
 }
 
 func (f *File) PackageName() string {
