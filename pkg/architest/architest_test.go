@@ -30,6 +30,7 @@ func Test_Directory(t *testing.T) {
 		{directory: "testdata/dir1", expectedFileNames: []string{"testdata/dir1/sample1.go", "testdata/dir1/sample2.go", "testdata/dir1/different1.go"}, expectedPackageNames: []string{"dir1"}},
 		{directory: "testdata/dir2", expectedFileNames: []string{"testdata/dir2/sample1.go", "testdata/dir2/sample1_test.go"}, expectedPackageNames: []string{"dir2", "dir2_test"}},
 		{directory: "testdata/dir3", expectedFileNames: []string{"testdata/dir3/sample1.go", "testdata/dir3/sample1_acceptance_test.go"}, expectedPackageNames: []string{"dir3", "dir3_test"}},
+		{directory: "testdata/dir4", expectedFileNames: []string{"testdata/dir4/sample1.go", "testdata/dir4/sample1_integration_test.go"}, expectedPackageNames: []string{"dir4", "dir4_test"}},
 	}
 	for _, tt := range tests1 {
 		t.Run("list all files in the given directory", func(t *testing.T) {
@@ -67,8 +68,13 @@ func Test_Directory(t *testing.T) {
 		{directory: "testdata/dir2", filter: architest.PackageFilterProvider("dir2_test"), expectedFileNames: []string{"testdata/dir2/sample1_test.go"}},
 		{directory: "testdata/dir2", filter: architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex), expectedFileNames: []string{}},
 		{directory: "testdata/dir3", filter: architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex), expectedFileNames: []string{"testdata/dir3/sample1_acceptance_test.go"}},
+		{directory: "testdata/dir4", filter: architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex), expectedFileNames: []string{}},
+		{directory: "testdata/dir2", filter: architest.FileNameRegexFilterProvider(architest.IntegrationTestFileRegex), expectedFileNames: []string{}},
+		{directory: "testdata/dir3", filter: architest.FileNameRegexFilterProvider(architest.IntegrationTestFileRegex), expectedFileNames: []string{}},
+		{directory: "testdata/dir4", filter: architest.FileNameRegexFilterProvider(architest.IntegrationTestFileRegex), expectedFileNames: []string{"testdata/dir4/sample1_integration_test.go"}},
 		{directory: "testdata/dir2", filter: architest.FileNameRegexFilterProvider(architest.TestFileRegex), expectedFileNames: []string{"testdata/dir2/sample1_test.go"}},
 		{directory: "testdata/dir3", filter: architest.FileNameRegexFilterProvider(architest.TestFileRegex), expectedFileNames: []string{"testdata/dir3/sample1_acceptance_test.go"}},
+		{directory: "testdata/dir4", filter: architest.FileNameRegexFilterProvider(architest.TestFileRegex), expectedFileNames: []string{"testdata/dir4/sample1_integration_test.go"}},
 	}
 	for _, tt := range tests2 {
 		t.Run("list only files matching filter in the given directory", func(t *testing.T) {
@@ -219,7 +225,10 @@ func Test_Assertions(t *testing.T) {
 		{methodName: "ATestAcc_", correct: false},
 		{methodName: "TestAcc", correct: false},
 		{methodName: "Test_", correct: false},
+		{methodName: "Test", correct: false},
+		{methodName: "Test_asdf", correct: false},
 		{methodName: "TestAccc_", correct: false},
+		{methodName: "TestInt_Abc", correct: false},
 	}
 	for _, tt := range tests2 {
 		t.Run(fmt.Sprintf("acceptance test name assertions for method %s", tt.methodName), func(t *testing.T) {
@@ -273,6 +282,33 @@ func Test_Assertions(t *testing.T) {
 			tut := &testing.T{}
 
 			method.AssertTestNamedCorrectly(tut)
+
+			assert.Equal(t, !tt.correct, tut.Failed())
+		})
+	}
+
+	tests5 := []struct {
+		methodName string
+		correct    bool
+	}{
+		{methodName: "TestInt_abc", correct: true},
+		{methodName: "TestInt_TestInt_Test", correct: true},
+		{methodName: "TestInt_", correct: false},
+		{methodName: "ATestInt_", correct: false},
+		{methodName: "TestInt", correct: false},
+		{methodName: "Test_", correct: false},
+		{methodName: "Test", correct: false},
+		{methodName: "Test_asdf", correct: false},
+		{methodName: "TestIntt_", correct: false},
+		{methodName: "TestAcc_Abc", correct: false},
+	}
+	for _, tt := range tests5 {
+		t.Run(fmt.Sprintf("intagration test name assertions for method %s", tt.methodName), func(t *testing.T) {
+			file := architest.NewFileFromPath("testdata/dir1/sample1.go")
+			method := architest.NewMethod(tt.methodName, file)
+			tut := &testing.T{}
+
+			method.AssertIntegrationTestNamedCorrectly(tut)
 
 			assert.Equal(t, !tt.correct, tut.Failed())
 		})
