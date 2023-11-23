@@ -2,8 +2,9 @@ package archtest
 
 type FileFilter = func(*File) bool
 type FileReceiver = func(*File)
+type Files []File
 
-func FilterFiles(files []File, filter FileFilter) []File {
+func (files Files) Filter(filter FileFilter) Files {
 	filteredFiles := make([]File, 0)
 	for _, f := range files {
 		if filter(&f) {
@@ -13,7 +14,7 @@ func FilterFiles(files []File, filter FileFilter) []File {
 	return filteredFiles
 }
 
-func IterateFiles(files []File, receiver FileReceiver) {
+func (files Files) All(receiver FileReceiver) {
 	for _, file := range files {
 		receiver(&file)
 	}

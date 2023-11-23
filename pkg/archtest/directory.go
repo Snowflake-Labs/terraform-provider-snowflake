@@ -14,20 +14,20 @@ func NewDirectory(path string) *Directory {
 	return &Directory{path: path}
 }
 
-func (d *Directory) AllFiles() ([]File, error) {
+func (d *Directory) AllFiles() Files {
 	return d.files(nil)
 }
 
-func (d *Directory) files(filter func(fi fs.FileInfo) bool) ([]File, error) {
+func (d *Directory) files(filter func(fi fs.FileInfo) bool) Files {
 	packagesDict, err := parser.ParseDir(token.NewFileSet(), d.path, filter, 0)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	files := make([]File, 0)
+	files := make(Files, 0)
 	for packageName, astPackage := range packagesDict {
 		for fileName, fileSrc := range astPackage.Files {
 			files = append(files, *NewFile(packageName, fileName, fileSrc))
 		}
 	}
-	return files, nil
+	return files
 }

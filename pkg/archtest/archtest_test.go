@@ -5,7 +5,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/archtest"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // TODO: create jira issue in tests stabilization (+one-pager?)
@@ -23,9 +22,7 @@ func Test_Directory(t *testing.T) {
 		t.Run("list all files in the given directory", func(t *testing.T) {
 			dir := archtest.NewDirectory(tt.directory)
 
-			allFiles, err := dir.AllFiles()
-			require.NoError(t, err)
-
+			allFiles := dir.AllFiles()
 			assert.Len(t, allFiles, len(tt.expectedFileNames))
 
 			fileNames := make([]string, 0, len(allFiles))
