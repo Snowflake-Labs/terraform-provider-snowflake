@@ -96,3 +96,27 @@ func Test_Files(t *testing.T) {
 		})
 	}
 }
+
+func Test_Assertions(t *testing.T) {
+	tests := []struct {
+		filePath        string
+		expectedPackage string
+	}{
+		{filePath: "testdata/dir1/sample1.go", expectedPackage: "dir1"},
+		{filePath: "testdata/dir2/sample1.go", expectedPackage: "dir2"},
+		{filePath: "testdata/dir2/sample1_test.go", expectedPackage: "dir2_test"},
+	}
+	for _, tt := range tests {
+		t.Run("file package assertions", func(t *testing.T) {
+			file := architest.NewFileFromPath(tt.filePath)
+			tut1 := &testing.T{}
+			tut2 := &testing.T{}
+
+			file.AssertHasPackage(tut1, tt.expectedPackage)
+			file.AssertHasPackage(tut2, "some_other_package")
+
+			assert.Equal(t, false, tut1.Failed())
+			assert.Equal(t, true, tut2.Failed())
+		})
+	}
+}
