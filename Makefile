@@ -38,10 +38,10 @@ install: ## install the binary
 	go install -v ./...
 
 lint: # Run static code analysis, check formatting. See https://golangci-lint.run/
-	golangci-lint run ./... -v
+	./bin/golangci-lint run ./... -v
 
 lint-fix: ## Run static code analysis, check formatting and try to fix findings
-	golangci-lint run ./... -v --fix
+	./bin/golangci-lint run ./... -v --fix
 
 mod: ## add missing and remove unused modules
 	go mod tidy -compat=1.20
@@ -49,7 +49,7 @@ mod: ## add missing and remove unused modules
 mod-check: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum
 
-pre-push: fmt docs mod lint   ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+pre-push: fmt docs mod lint ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
 pre-push-check: fmt-check docs-check lint-check mod-check ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 

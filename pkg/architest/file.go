@@ -40,9 +40,8 @@ func (f *File) Name() string {
 func (f *File) ExportedMethods() Methods {
 	allExportedMethods := make(Methods, 0)
 	for _, d := range f.fileSrc.Decls {
-		switch d.(type) {
-		case *ast.FuncDecl:
-			name := d.(*ast.FuncDecl).Name.Name
+		if v, ok := d.(*ast.FuncDecl); ok {
+			name := v.Name.Name
 			if ast.IsExported(name) {
 				allExportedMethods = append(allExportedMethods, *NewMethod(name, f))
 			}
