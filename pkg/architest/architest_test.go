@@ -10,6 +10,18 @@ import (
 )
 
 func Test_Directory(t *testing.T) {
+	t.Run("fail to create directory", func(t *testing.T) {
+		assert.Panics(t, func() {
+			architest.NewDirectory("testdata/non_existing")
+		})
+	})
+
+	t.Run("create directory", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			architest.NewDirectory("testdata/dir1")
+		})
+	})
+
 	tests1 := []struct {
 		directory            string
 		expectedFileNames    []string
@@ -70,11 +82,33 @@ func Test_Directory(t *testing.T) {
 				fileNames = append(fileNames, f.Name())
 			}
 			assert.ElementsMatch(t, fileNames, tt.expectedFileNames)
+
+			// now exactly the same but indirectly
+			filteredFiles = dir.AllFiles().Filter(tt.filter)
+			assert.Len(t, filteredFiles, len(tt.expectedFileNames))
+
+			fileNames = make([]string, 0, len(filteredFiles))
+			for _, f := range filteredFiles {
+				fileNames = append(fileNames, f.Name())
+			}
+			assert.ElementsMatch(t, fileNames, tt.expectedFileNames)
 		})
 	}
 }
 
 func Test_Files(t *testing.T) {
+	t.Run("fail to create file", func(t *testing.T) {
+		assert.Panics(t, func() {
+			architest.NewFileFromPath("testdata/dir1/non_existing.go")
+		})
+	})
+
+	t.Run("create file", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			architest.NewFileFromPath("testdata/dir1/sample1.go")
+		})
+	})
+
 	tests1 := []struct {
 		filePath            string
 		expectedMethodNames []string
