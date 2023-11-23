@@ -54,7 +54,7 @@ func (f *File) FileName() string {
 	return f.fileName
 }
 
-func (f *File) AllExportedMethods() Methods {
+func (f *File) ExportedMethods() Methods {
 	allExportedMethods := make(Methods, 0)
 	for _, d := range f.fileSrc.Decls {
 		switch d.(type) {
