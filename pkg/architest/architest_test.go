@@ -314,3 +314,44 @@ func Test_Assertions(t *testing.T) {
 		})
 	}
 }
+
+func Test_SampleArchiTestUsage(t *testing.T) {
+	t.Run("acceptance tests", func(t *testing.T) {
+		acceptanceTestFiles := architest.NewDirectory("testdata/dir3/").
+			AllFiles().
+			Filter(architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex))
+
+		acceptanceTestFiles.All(func(file *architest.File) {
+			file.AssertHasPackage(t, "dir3_test")
+			file.ExportedMethods().All(func(method *architest.Method) {
+				method.AssertAcceptanceTestNamedCorrectly(t)
+			})
+		})
+	})
+
+	t.Run("integration tests", func(t *testing.T) {
+		integrationTestFiles := architest.NewDirectory("testdata/dir4/").
+			AllFiles().
+			Filter(architest.FileNameRegexFilterProvider(architest.IntegrationTestFileRegex))
+
+		integrationTestFiles.All(func(file *architest.File) {
+			file.AssertHasPackage(t, "dir4_test")
+			file.ExportedMethods().All(func(method *architest.Method) {
+				method.AssertIntegrationTestNamedCorrectly(t)
+			})
+		})
+	})
+
+	t.Run("tests", func(t *testing.T) {
+		testFiles := architest.NewDirectory("testdata/dir2/").
+			AllFiles().
+			Filter(architest.FileNameRegexFilterProvider(architest.TestNameRegex))
+
+		testFiles.All(func(file *architest.File) {
+			file.AssertHasPackage(t, "dir2_test")
+			file.ExportedMethods().All(func(method *architest.Method) {
+				method.AssertTestNamedCorrectly(t)
+			})
+		})
+	})
+}
