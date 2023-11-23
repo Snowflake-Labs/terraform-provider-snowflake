@@ -3,23 +3,15 @@ package architest
 import (
 	"go/parser"
 	"go/token"
-	"io/fs"
 )
 
 type Directory struct {
-	path string
+	path  string
+	files Files
 }
 
 func NewDirectory(path string) *Directory {
-	return &Directory{path: path}
-}
-
-func (d *Directory) AllFiles() Files {
-	return d.files(nil)
-}
-
-func (d *Directory) files(filter func(fi fs.FileInfo) bool) Files {
-	packagesDict, err := parser.ParseDir(token.NewFileSet(), d.path, filter, 0)
+	packagesDict, err := parser.ParseDir(token.NewFileSet(), path, nil, 0)
 	if err != nil {
 		panic(err)
 	}
@@ -29,5 +21,16 @@ func (d *Directory) files(filter func(fi fs.FileInfo) bool) Files {
 			files = append(files, *NewFile(packageName, fileName, fileSrc))
 		}
 	}
-	return files
+	return &Directory{
+		path:  path,
+		files: files,
+	}
+}
+
+func (d *Directory) AllFiles() Files {
+	return d.files
+}
+
+func (d *Directory) Files(filter FileFilter) Files {
+	return d.AllFiles().Filter(filter)
 }

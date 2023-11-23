@@ -1,8 +1,18 @@
 package architest
 
-import "regexp"
+import (
+	"fmt"
+	"regexp"
+)
 
-func FileNameFilterProvider(regex *regexp.Regexp) FileFilter {
+func FileNameFilterProvider(text string) FileFilter {
+	return func(f *File) bool {
+		regex := regexp.MustCompile(fmt.Sprintf(`^.*%s.*$`, text))
+		return regex.Match([]byte(f.fileName))
+	}
+}
+
+func FileNameRegexFilterProvider(regex *regexp.Regexp) FileFilter {
 	return func(f *File) bool {
 		return regex.Match([]byte(f.fileName))
 	}

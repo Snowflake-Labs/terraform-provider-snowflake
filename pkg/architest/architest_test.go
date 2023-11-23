@@ -1,24 +1,24 @@
 package architest_test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/architest"
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO: create jira issue in tests stabilization (+one-pager?)
 func Test_Directory(t *testing.T) {
-	tests := []struct {
+	tests1 := []struct {
 		directory            string
 		expectedFileNames    []string
 		expectedPackageNames []string
 	}{
-		{directory: "testdata/dir1", expectedFileNames: []string{"testdata/dir1/sample1.go", "testdata/dir1/sample2.go"}, expectedPackageNames: []string{"dir1"}},
+		{directory: "testdata/dir1", expectedFileNames: []string{"testdata/dir1/sample1.go", "testdata/dir1/sample2.go", "testdata/dir1/different1.go"}, expectedPackageNames: []string{"dir1"}},
 		{directory: "testdata/dir2", expectedFileNames: []string{"testdata/dir2/sample1.go", "testdata/dir2/sample1_test.go"}, expectedPackageNames: []string{"dir2", "dir2_test"}},
 		{directory: "testdata/dir3", expectedFileNames: []string{"testdata/dir3/sample1.go", "testdata/dir3/sample1_acceptance_test.go"}, expectedPackageNames: []string{"dir3", "dir3_test"}},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests1 {
 		t.Run("list all files in the given directory", func(t *testing.T) {
 			dir := architest.NewDirectory(tt.directory)
 
@@ -39,6 +39,36 @@ func Test_Directory(t *testing.T) {
 			for _, name := range tt.expectedPackageNames {
 				assert.Contains(t, packageNames, name)
 			}
+		})
+	}
+
+	tests2 := []struct {
+		directory         string
+		filter            architest.FileFilter
+		expectedFileNames []string
+	}{
+		{directory: "testdata/dir1", filter: architest.FileNameFilterProvider("sample"), expectedFileNames: []string{"testdata/dir1/sample1.go", "testdata/dir1/sample2.go"}},
+		{directory: "testdata/dir1", filter: architest.FileNameRegexFilterProvider(regexp.MustCompile("sample")), expectedFileNames: []string{"testdata/dir1/sample1.go", "testdata/dir1/sample2.go"}},
+		{directory: "testdata/dir1", filter: architest.FileNameFilterWithExclusionsProvider(regexp.MustCompile("sample"), regexp.MustCompile("sample1")), expectedFileNames: []string{"testdata/dir1/sample2.go"}},
+		{directory: "testdata/dir2", filter: architest.PackageFilterProvider("dir2"), expectedFileNames: []string{"testdata/dir2/sample1.go"}},
+		{directory: "testdata/dir2", filter: architest.PackageFilterProvider("dir2_test"), expectedFileNames: []string{"testdata/dir2/sample1_test.go"}},
+		{directory: "testdata/dir2", filter: architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex), expectedFileNames: []string{}},
+		{directory: "testdata/dir3", filter: architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex), expectedFileNames: []string{"testdata/dir3/sample1_acceptance_test.go"}},
+		{directory: "testdata/dir2", filter: architest.FileNameRegexFilterProvider(architest.TestFileRegex), expectedFileNames: []string{"testdata/dir2/sample1_test.go"}},
+		{directory: "testdata/dir3", filter: architest.FileNameRegexFilterProvider(architest.TestFileRegex), expectedFileNames: []string{"testdata/dir3/sample1_acceptance_test.go"}},
+	}
+	for _, tt := range tests2 {
+		t.Run("list only files matching filter in the given directory", func(t *testing.T) {
+			dir := architest.NewDirectory(tt.directory)
+
+			filteredFiles := dir.Files(tt.filter)
+			assert.Len(t, filteredFiles, len(tt.expectedFileNames))
+
+			fileNames := make([]string, 0, len(filteredFiles))
+			for _, f := range filteredFiles {
+				fileNames = append(fileNames, f.FileName())
+			}
+			assert.ElementsMatch(t, fileNames, tt.expectedFileNames)
 		})
 	}
 }

@@ -16,23 +16,10 @@ var (
 )
 
 func init() {
-	var err error
-	AcceptanceTestFileRegex, err = regexp.Compile("^.*_acceptance_test.go$")
-	if err != nil {
-		panic(err)
-	}
-	AcceptanceTestNameRegex, err = regexp.Compile("^TestAcc_.*$")
-	if err != nil {
-		panic(err)
-	}
-	TestFileRegex, err = regexp.Compile("^.*_test.go$")
-	if err != nil {
-		panic(err)
-	}
-	TestNameRegex, err = regexp.Compile("^Test.*$")
-	if err != nil {
-		panic(err)
-	}
+	AcceptanceTestFileRegex = regexp.MustCompile("^.*_acceptance_test.go$")
+	AcceptanceTestNameRegex = regexp.MustCompile("^TestAcc_.*$")
+	TestFileRegex = regexp.MustCompile("^.*_test.go$")
+	TestNameRegex = regexp.MustCompile("^Test.*$")
 }
 
 type File struct {

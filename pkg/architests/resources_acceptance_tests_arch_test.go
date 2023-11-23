@@ -11,7 +11,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 	resourcesFiles := resourcesDirectory.AllFiles()
 
 	t.Run("acceptance tests files have the right package", func(t *testing.T) {
-		acceptanceTestFiles := resourcesFiles.Filter(architest.FileNameFilterProvider(architest.AcceptanceTestFileRegex))
+		acceptanceTestFiles := resourcesFiles.Filter(architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex))
 
 		acceptanceTestFiles.All(func(file *architest.File) {
 			file.AssertHasPackage(t, "resources_test")
@@ -19,7 +19,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 	})
 
 	t.Run("acceptance tests are named correctly", func(t *testing.T) {
-		acceptanceTestFiles := resourcesFiles.Filter(architest.FileNameFilterProvider(architest.AcceptanceTestFileRegex))
+		acceptanceTestFiles := resourcesFiles.Filter(architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex))
 
 		acceptanceTestFiles.All(func(file *architest.File) {
 			file.ExportedMethods().All(func(method *architest.Method) {
