@@ -23,7 +23,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 
 		acceptanceTestFiles.All(func(file *architest.File) {
 			file.AllExportedMethods().All(func(method *architest.Method) {
-				method.AssertAcceptanceTestNamedCorrectly(t, file)
+				method.AssertAcceptanceTestNamedCorrectly(t)
 			})
 		})
 	})
@@ -33,8 +33,8 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 
 		otherTestFiles.All(func(file *architest.File) {
 			file.AllExportedMethods().All(func(method *architest.Method) {
-				method.AssertNameDoesNotMatch(t, file, architest.AcceptanceTestNameRegex)
-				method.AssertNameMatches(t, file, architest.TestNameRegex)
+				method.AssertNameDoesNotMatch(t, architest.AcceptanceTestNameRegex)
+				method.AssertNameMatches(t, architest.TestNameRegex)
 			})
 		})
 	})
@@ -45,7 +45,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 
 		packageFiles.All(func(file *architest.File) {
 			file.AllExportedMethods().All(func(method *architest.Method) {
-				method.AssertAcceptanceTestNamedCorrectly(t, file)
+				method.AssertAcceptanceTestNamedCorrectly(t)
 			})
 		})
 	})

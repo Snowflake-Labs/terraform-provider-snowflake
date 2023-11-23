@@ -61,7 +61,7 @@ func (f *File) AllExportedMethods() Methods {
 		case *ast.FuncDecl:
 			name := d.(*ast.FuncDecl).Name.Name
 			if ast.IsExported(name) {
-				allExportedMethods = append(allExportedMethods, *NewMethod(name))
+				allExportedMethods = append(allExportedMethods, *NewMethod(name, f))
 			}
 		}
 	}
