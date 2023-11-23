@@ -14,7 +14,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 		acceptanceTestFiles := resourcesFiles.Filter(architest.FileNameFilterProvider(architest.AcceptanceTestFileRegex))
 
 		acceptanceTestFiles.All(func(file *architest.File) {
-			architest.AssertPackage(t, file, "resources_test")
+			file.AssertHasPackage(t, "resources_test")
 		})
 	})
 
@@ -23,7 +23,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 
 		acceptanceTestFiles.All(func(file *architest.File) {
 			file.AllExportedMethods().All(func(method *architest.Method) {
-				architest.AssertAcceptanceTestNamedCorrectly(t, file, method)
+				method.AssertAcceptanceTestNamedCorrectly(t, file)
 			})
 		})
 	})
@@ -33,8 +33,8 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 
 		otherTestFiles.All(func(file *architest.File) {
 			file.AllExportedMethods().All(func(method *architest.Method) {
-				architest.AssertMethodNameDoesNotMatch(t, file, method, architest.AcceptanceTestNameRegex)
-				architest.AssertMethodNameMatches(t, file, method, architest.TestNameRegex)
+				method.AssertNameDoesNotMatch(t, file, architest.AcceptanceTestNameRegex)
+				method.AssertNameMatches(t, file, architest.TestNameRegex)
 			})
 		})
 	})
@@ -45,7 +45,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 
 		packageFiles.All(func(file *architest.File) {
 			file.AllExportedMethods().All(func(method *architest.Method) {
-				architest.AssertAcceptanceTestNamedCorrectly(t, file, method)
+				method.AssertAcceptanceTestNamedCorrectly(t, file)
 			})
 		})
 	})
