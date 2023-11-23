@@ -1,6 +1,7 @@
 package architest_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -98,7 +99,7 @@ func Test_Files(t *testing.T) {
 }
 
 func Test_Assertions(t *testing.T) {
-	tests := []struct {
+	tests1 := []struct {
 		filePath        string
 		expectedPackage string
 	}{
@@ -106,7 +107,7 @@ func Test_Assertions(t *testing.T) {
 		{filePath: "testdata/dir2/sample1.go", expectedPackage: "dir2"},
 		{filePath: "testdata/dir2/sample1_test.go", expectedPackage: "dir2_test"},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests1 {
 		t.Run("file package assertions", func(t *testing.T) {
 			file := architest.NewFileFromPath(tt.filePath)
 			tut1 := &testing.T{}
@@ -117,6 +118,75 @@ func Test_Assertions(t *testing.T) {
 
 			assert.Equal(t, false, tut1.Failed())
 			assert.Equal(t, true, tut2.Failed())
+		})
+	}
+
+	tests2 := []struct {
+		methodName string
+		correct    bool
+	}{
+		{methodName: "TestAcc_abc", correct: true},
+		{methodName: "TestAcc_TestAcc_Test", correct: true},
+		{methodName: "TestAcc_", correct: false},
+		{methodName: "ATestAcc_", correct: false},
+		{methodName: "TestAcc", correct: false},
+		{methodName: "Test_", correct: false},
+		{methodName: "TestAccc_", correct: false},
+	}
+	for _, tt := range tests2 {
+		t.Run(fmt.Sprintf("acceptance test name assertions for method %s", tt.methodName), func(t *testing.T) {
+			file := architest.NewFileFromPath("testdata/dir1/sample1.go")
+			method := architest.NewMethod(tt.methodName, file)
+			tut := &testing.T{}
+
+			method.AssertAcceptanceTestNamedCorrectly(tut)
+
+			assert.Equal(t, !tt.correct, tut.Failed())
+		})
+	}
+
+	tests3 := []struct {
+		methodName string
+		regexRaw   string
+		correct    bool
+	}{
+		{methodName: "sample1", regexRaw: "sample", correct: true},
+		{methodName: "Sample1", regexRaw: "sample", correct: false},
+		{methodName: "Sample1", regexRaw: "Sample", correct: true},
+	}
+	for _, tt := range tests3 {
+		t.Run(fmt.Sprintf("matching and not matching method name assertions for %s", tt.methodName), func(t *testing.T) {
+			file := architest.NewFileFromPath("testdata/dir1/sample1.go")
+			method := architest.NewMethod(tt.methodName, file)
+			tut1 := &testing.T{}
+			tut2 := &testing.T{}
+
+			method.AssertNameMatches(tut1, regexp.MustCompile(tt.regexRaw))
+			method.AssertNameDoesNotMatch(tut2, regexp.MustCompile(tt.regexRaw))
+
+			assert.Equal(t, !tt.correct, tut1.Failed())
+			assert.Equal(t, tt.correct, tut2.Failed())
+		})
+	}
+
+	tests4 := []struct {
+		methodName string
+		correct    bool
+	}{
+		{methodName: "Test", correct: true},
+		{methodName: "aTest", correct: false},
+		{methodName: "Test_", correct: true},
+		{methodName: "Test_adsfadf", correct: true},
+	}
+	for _, tt := range tests4 {
+		t.Run(fmt.Sprintf("test name assertions for method %s", tt.methodName), func(t *testing.T) {
+			file := architest.NewFileFromPath("testdata/dir1/sample1.go")
+			method := architest.NewMethod(tt.methodName, file)
+			tut := &testing.T{}
+
+			method.AssertTestNamedCorrectly(tut)
+
+			assert.Equal(t, !tt.correct, tut.Failed())
 		})
 	}
 }

@@ -15,6 +15,10 @@ func (method *Method) AssertAcceptanceTestNamedCorrectly(t *testing.T) {
 	method.AssertNameMatches(t, AcceptanceTestNameRegex)
 }
 
+func (method *Method) AssertTestNamedCorrectly(t *testing.T) {
+	method.AssertNameMatches(t, TestNameRegex)
+}
+
 func (method *Method) AssertNameMatches(t *testing.T, regex *regexp.Regexp) {
 	assert.Truef(t, regex.MatchString(method.Name()), "filename %s contains exported method %s which does not match %s", method.FileName(), method.Name(), regex.String())
 }
