@@ -34,7 +34,7 @@ func TestArchCheck_AcceptanceTests_DataSources(t *testing.T) {
 		otherTestFiles.All(func(file *architest.File) {
 			file.ExportedMethods().All(func(method *architest.Method) {
 				method.AssertNameDoesNotMatch(t, architest.AcceptanceTestNameRegex)
-				method.AssertNameMatches(t, architest.TestNameRegex)
+				method.AssertTestNamedCorrectly(t)
 			})
 		})
 	})

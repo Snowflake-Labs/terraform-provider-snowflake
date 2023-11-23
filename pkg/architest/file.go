@@ -48,7 +48,7 @@ func (f *File) PackageName() string {
 	return f.packageName
 }
 
-func (f *File) FileName() string {
+func (f *File) Name() string {
 	return f.fileName
 }
 

@@ -28,7 +28,7 @@ func Test_Directory(t *testing.T) {
 
 			fileNames := make([]string, 0, len(allFiles))
 			for _, f := range allFiles {
-				fileNames = append(fileNames, f.FileName())
+				fileNames = append(fileNames, f.Name())
 			}
 			assert.ElementsMatch(t, fileNames, tt.expectedFileNames)
 
@@ -67,7 +67,7 @@ func Test_Directory(t *testing.T) {
 
 			fileNames := make([]string, 0, len(filteredFiles))
 			for _, f := range filteredFiles {
-				fileNames = append(fileNames, f.FileName())
+				fileNames = append(fileNames, f.Name())
 			}
 			assert.ElementsMatch(t, fileNames, tt.expectedFileNames)
 		})
@@ -75,14 +75,14 @@ func Test_Directory(t *testing.T) {
 }
 
 func Test_Files(t *testing.T) {
-	tests := []struct {
+	tests1 := []struct {
 		filePath            string
 		expectedMethodNames []string
 	}{
 		{filePath: "testdata/dir1/sample1.go", expectedMethodNames: []string{}},
 		{filePath: "testdata/dir1/sample2.go", expectedMethodNames: []string{"A"}},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests1 {
 		t.Run("list all methods in file", func(t *testing.T) {
 			file := architest.NewFileFromPath(tt.filePath)
 
@@ -94,6 +94,60 @@ func Test_Files(t *testing.T) {
 				methodNames = append(methodNames, m.Name())
 			}
 			assert.ElementsMatch(t, methodNames, tt.expectedMethodNames)
+		})
+	}
+
+	tests2 := []struct {
+		fileNames []string
+	}{
+		{fileNames: []string{}},
+		{fileNames: []string{"a"}},
+		{fileNames: []string{"a", "A"}},
+		{fileNames: []string{"A", "a"}},
+		{fileNames: []string{"A", "B", "C"}},
+	}
+	for _, tt := range tests2 {
+		t.Run("receiver invoked for every file", func(t *testing.T) {
+			files := make(architest.Files, 0, len(tt.fileNames))
+			for _, f := range tt.fileNames {
+				files = append(files, *architest.NewFile("package", f, nil))
+			}
+			invokedFiles := make([]string, 0)
+			receiver := func(f *architest.File) {
+				invokedFiles = append(invokedFiles, f.Name())
+			}
+
+			files.All(receiver)
+
+			assert.ElementsMatch(t, tt.fileNames, invokedFiles)
+		})
+	}
+}
+
+func Test_Methods(t *testing.T) {
+	tests := []struct {
+		methodNames []string
+	}{
+		{methodNames: []string{}},
+		{methodNames: []string{"a"}},
+		{methodNames: []string{"a", "A"}},
+		{methodNames: []string{"A", "a"}},
+		{methodNames: []string{"A", "B", "C"}},
+	}
+	for _, tt := range tests {
+		t.Run("receiver invoked for every method", func(t *testing.T) {
+			methods := make(architest.Methods, 0, len(tt.methodNames))
+			for _, m := range tt.methodNames {
+				methods = append(methods, *architest.NewMethod(m, nil))
+			}
+			invokedMethods := make([]string, 0)
+			receiver := func(m *architest.Method) {
+				invokedMethods = append(invokedMethods, m.Name())
+			}
+
+			methods.All(receiver)
+
+			assert.ElementsMatch(t, tt.methodNames, invokedMethods)
 		})
 	}
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func (f *File) AssertHasPackage(t *testing.T, expectedPackage string) {
-	assert.Equalf(t, expectedPackage, f.packageName, "filename %s has package %s, expected package %s", f.FileName(), f.PackageName(), expectedPackage)
+	assert.Equalf(t, expectedPackage, f.packageName, "filename %s has package %s, expected package %s", f.Name(), f.PackageName(), expectedPackage)
 }
 
 func (method *Method) AssertAcceptanceTestNamedCorrectly(t *testing.T) {

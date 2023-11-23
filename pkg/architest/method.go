@@ -10,7 +10,7 @@ func (method *Method) Name() string {
 }
 
 func (method *Method) FileName() string {
-	return method.file.FileName()
+	return method.file.Name()
 }
 
 func NewMethod(name string, file *File) *Method {
