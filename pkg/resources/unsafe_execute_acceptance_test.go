@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"testing"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -12,16 +14,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
-func TestAcc_UnsafeMigration_basic(t *testing.T) {
+func TestAcc_UnsafeExecute_basic(t *testing.T) {
 	id := "unsafe_migration_test_database"
 	up := fmt.Sprintf("create database %s", id)
 	down := fmt.Sprintf("drop database %s", id)
 
-	resourceName := "snowflake_unsafe_migration.migration"
+	resourceName := "snowflake_unsafe_execute.migration"
 	createConfigVariables := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"up":   config.StringVariable(up),
@@ -60,14 +62,14 @@ func TestAcc_UnsafeMigration_basic(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeMigration_downChanged(t *testing.T) {
+func TestAcc_UnsafeExecute_downChanged(t *testing.T) {
 	id := "unsafe_migration_test_database"
 	up := fmt.Sprintf("create database %s", id)
 	down := fmt.Sprintf("drop database %s", id)
 	invalidDown := "select 1"
 	var savedId string
 
-	resourceName := "snowflake_unsafe_migration.migration"
+	resourceName := "snowflake_unsafe_execute.migration"
 	createConfigVariables := func(up string, down string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"up":   config.StringVariable(up),
@@ -130,7 +132,7 @@ func TestAcc_UnsafeMigration_downChanged(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeMigration_upChanged(t *testing.T) {
+func TestAcc_UnsafeExecute_upChanged(t *testing.T) {
 	id := "unsafe_migration_test_database"
 	up := fmt.Sprintf("create database %s", id)
 	down := fmt.Sprintf("drop database %s", id)
@@ -141,7 +143,7 @@ func TestAcc_UnsafeMigration_upChanged(t *testing.T) {
 
 	var savedId string
 
-	resourceName := "snowflake_unsafe_migration.migration"
+	resourceName := "snowflake_unsafe_execute.migration"
 	createConfigVariables := func(up string, down string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"up":   config.StringVariable(up),
@@ -190,7 +192,7 @@ func TestAcc_UnsafeMigration_upChanged(t *testing.T) {
 			},
 			{
 				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: createConfigVariables(up, down),
+				ConfigVariables: createConfigVariables(newUp, newDown),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
@@ -214,7 +216,8 @@ func TestAcc_UnsafeMigration_upChanged(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeMigration_grants(t *testing.T) {
+// TODO: make this test pass
+func TestAcc_UnsafeExecute_grants(t *testing.T) {
 	id := "unsafe_migration_test_database"
 	up := fmt.Sprintf("create database %s", id)
 	down := fmt.Sprintf("drop database %s", id)
@@ -226,7 +229,7 @@ func TestAcc_UnsafeMigration_grants(t *testing.T) {
 	// - up: grant ... to role xyz
 	// - down: revoke ... from role xyz
 
-	resourceName := "snowflake_unsafe_migration.migration"
+	resourceName := "snowflake_unsafe_execute.migration"
 	createConfigVariables := func(up string, down string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"up":   config.StringVariable(up),
@@ -295,7 +298,8 @@ func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) fu
 	}
 }
 
-func createResourcesForMigrationTestCaseForGrants(t *testing.T, databaseName string, roleName string) {
+// TODO: tweak this method
+func createResourcesForMigrationTestCaseForGrants(t *testing.T) {
 	t.Helper()
 
 	client, err := sdk.NewDefaultClient()
@@ -309,16 +313,30 @@ func createResourcesForMigrationTestCaseForGrants(t *testing.T, databaseName str
 	require.NoError(t, err)
 }
 
-func dropResourcesForMigrationTestCaseForGrants(t *testing.T, databaseName string, roleName string) error {
+// TODO: fix this method
+func dropResourcesForMigrationTestCaseForGrants(t *testing.T) error {
 	t.Helper()
 
+	databaseName := "TODO"
+	roleName := "TODO"
+
 	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	if err != nil {
+		return err
+	}
 	ctx := context.Background()
 
 	err = client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.DropDatabaseOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
+	if err != nil {
+		return err
+	}
 
 	err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(sdk.NewAccountObjectIdentifier(roleName)))
-	require.NoError(t, err)
+	assert.NoError(t, err)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

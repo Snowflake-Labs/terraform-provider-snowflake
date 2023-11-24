@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-var unsafeMigrationSchema = map[string]*schema.Schema{
+var unsafeExecuteSchema = map[string]*schema.Schema{
 	"up": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -23,14 +23,16 @@ var unsafeMigrationSchema = map[string]*schema.Schema{
 	},
 }
 
-func UnsafeMigration() *schema.Resource {
+func UnsafeExecute() *schema.Resource {
 	return &schema.Resource{
 		Create: ApplyUnsafeMigration,
 		Read:   schema.Noop,
 		Delete: RevertUnsafeMigration,
 		Update: schema.Noop,
 
-		Schema: unsafeMigrationSchema,
+		Schema: unsafeExecuteSchema,
+
+		DeprecationMessage: "Experimental resource. Will be deleted in the upcoming versions. Use on your own risk.",
 	}
 }
 
