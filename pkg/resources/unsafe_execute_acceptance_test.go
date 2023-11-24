@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"testing"
@@ -19,7 +18,9 @@ import (
 )
 
 func TestAcc_UnsafeExecute_basic(t *testing.T) {
-	id := "unsafe_migration_test_database"
+	// TODO: add uuid
+	// TODO: capitalized
+	id := "UNSAFE_MIGRATION_TEST_DATABASE"
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
@@ -54,8 +55,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 						}
 						return nil
 					}),
-					// TODO: check if exists after apply
-					// testAccCheckDatabaseExistence(t, id, true),
+					testAccCheckDatabaseExistence(t, id, true),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
-	id := "unsafe_migration_test_database"
+	id := "UNSAFE_MIGRATION_TEST_DATABASE"
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 	// TODO: this is not invalid but it does not match the execute
@@ -103,8 +103,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 						savedId = value
 						return nil
 					}),
-					// TODO: check if exists after apply
-					// testAccCheckDatabaseExistence(id, true),
+					testAccCheckDatabaseExistence(t, id, true),
 				),
 			},
 			{
@@ -125,8 +124,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 						}
 						return nil
 					}),
-					// TODO: check if exists after revert update
-					// testAccCheckDatabaseExistence(id, true),
+					testAccCheckDatabaseExistence(t, id, true),
 				),
 			},
 		},
@@ -134,11 +132,11 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
-	id := "unsafe_migration_test_database"
+	id := "UNSAFE_MIGRATION_TEST_DATABASE"
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
-	newId := "unsafe_migration_test_database_2"
+	newId := "UNSAFE_MIGRATION_TEST_DATABASE_2"
 	newExecute := fmt.Sprintf("create database %s", newId)
 	newRevert := fmt.Sprintf("drop database %s", newId)
 
@@ -187,8 +185,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 						savedId = value
 						return nil
 					}),
-					// TODO: check if exists after apply
-					// testAccCheckDatabaseExistence(id, true),
+					testAccCheckDatabaseExistence(t, id, true),
 				),
 			},
 			{
@@ -209,8 +206,8 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 						}
 						return nil
 					}),
-					// TODO: check if exists after execute update and check that old database doesn't exist (may be duplicate with check destroy)
-					// testAccCheckDatabaseExistence(id, true),
+					testAccCheckDatabaseExistence(t, id, false),
+					testAccCheckDatabaseExistence(t, newId, true),
 				),
 			},
 		},
@@ -276,23 +273,20 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		client := sdk.NewClientFromDB(db)
+		client, err := sdk.NewDefaultClient()
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx := context.Background()
 
-		for _, rs := range state.RootModule().Resources {
-			if rs.Type != "snowflake_unsafe_migration" {
-				continue
+		_, err = client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id))
+		if shouldExist {
+			if err != nil {
+				return fmt.Errorf("error while retrieving database %s, err = %w", id, err)
 			}
-			ctx := context.Background()
-			_, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id))
-			if shouldExist {
-				if err != nil {
-					return fmt.Errorf("error while retrieving database %s, err = %w", id, err)
-				}
-			} else {
-				if err == nil {
-					return fmt.Errorf("database %v still exists", id)
-				}
+		} else {
+			if err == nil {
+				return fmt.Errorf("database %v still exists", id)
 			}
 		}
 		return nil
