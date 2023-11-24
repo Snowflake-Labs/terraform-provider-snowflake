@@ -19,8 +19,7 @@ import (
 )
 
 func TestAcc_UnsafeExecute_basic(t *testing.T) {
-	// TODO: capitalized
-	id := fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
+	id := generateUnsafeExecuteTestDatabaseName()
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
@@ -58,8 +57,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
-	// TODO: capitalized
-	id := fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
+	id := generateUnsafeExecuteTestDatabaseName()
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 	notMatchingRevert := "select 1"
@@ -122,12 +120,10 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
-	// TODO: capitalized
-	id := fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
+	id := generateUnsafeExecuteTestDatabaseName()
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
-	// TODO: capitalized
 	newId := fmt.Sprintf("%s_2", id)
 	newExecute := fmt.Sprintf("create database %s", newId)
 	newRevert := fmt.Sprintf("drop database %s", newId)
@@ -169,6 +165,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", execute),
 					resource.TestCheckResourceAttr(resourceName, "revert", revert),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						savedId = value
 						return nil
@@ -185,6 +182,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", newExecute),
 					resource.TestCheckResourceAttr(resourceName, "revert", newRevert),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						if savedId == value {
 							return errors.New("same id after execute update")
@@ -201,7 +199,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 
 // TODO: make this test pass
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
-	id := "UNSAFE_EXECUTE_test_database"
+	id := generateUnsafeExecuteTestDatabaseName()
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 	// TODO: before test
@@ -240,18 +238,17 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", execute),
 					resource.TestCheckResourceAttr(resourceName, "revert", revert),
-					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
-						if value == "" {
-							return errors.New("empty id")
-						}
-						return nil
-					}),
-					// TODO: check if exists after apply
-					// testAccCheckDatabaseExistence(id, true),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 				),
 			},
 		},
 	})
+}
+
+// generateUnsafeExecuteTestDatabaseName returns capitalized name on purpose.
+// Using small caps without escaping creates problem with later using sdk client which uses identifier that is escaped by default.
+func generateUnsafeExecuteTestDatabaseName() string {
+	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
 }
 
 func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
