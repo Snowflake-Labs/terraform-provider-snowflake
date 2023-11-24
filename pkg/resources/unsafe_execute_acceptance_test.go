@@ -20,11 +20,11 @@ import (
 
 func TestAcc_UnsafeExecute_basic(t *testing.T) {
 	// TODO: capitalized
-	id := fmt.Sprintf("UNSAFE_MIGRATION_TEST_DATABASE_%d", rand.Intn(10000))
+	id := fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
-	resourceName := "snowflake_unsafe_execute.migration"
+	resourceName := "snowflake_unsafe_execute.test"
 	createConfigVariables := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"execute": config.StringVariable(execute),
@@ -59,18 +59,18 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 
 func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 	// TODO: capitalized
-	id := fmt.Sprintf("UNSAFE_MIGRATION_TEST_DATABASE_%d", rand.Intn(10000))
+	id := fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 	// TODO: this is not invalid but it does not match the execute
 	invalidRevert := "select 1"
 	var savedId string
 
-	resourceName := "snowflake_unsafe_execute.migration"
-	createConfigVariables := func(up string, down string) map[string]config.Variable {
+	resourceName := "snowflake_unsafe_execute.test"
+	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
 		return map[string]config.Variable{
-			"execute": config.StringVariable(up),
-			"revert":  config.StringVariable(down),
+			"execute": config.StringVariable(execute),
+			"revert":  config.StringVariable(revert),
 		}
 	}
 
@@ -131,7 +131,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 
 func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 	// TODO: capitalized
-	id := fmt.Sprintf("UNSAFE_MIGRATION_TEST_DATABASE_%d", rand.Intn(10000))
+	id := fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
@@ -142,11 +142,11 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 
 	var savedId string
 
-	resourceName := "snowflake_unsafe_execute.migration"
-	createConfigVariables := func(up string, down string) map[string]config.Variable {
+	resourceName := "snowflake_unsafe_execute.test"
+	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
 		return map[string]config.Variable{
-			"execute": config.StringVariable(up),
-			"revert":  config.StringVariable(down),
+			"execute": config.StringVariable(execute),
+			"revert":  config.StringVariable(revert),
 		}
 	}
 
@@ -216,7 +216,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 
 // TODO: make this test pass
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
-	id := "unsafe_migration_test_database"
+	id := "UNSAFE_EXECUTE_test_database"
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 	// TODO: before test
@@ -227,11 +227,11 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 	// - execute: grant ... to role xyz
 	// - revert: revoke ... from role xyz
 
-	resourceName := "snowflake_unsafe_execute.migration"
-	createConfigVariables := func(up string, down string) map[string]config.Variable {
+	resourceName := "snowflake_unsafe_execute.test"
+	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
 		return map[string]config.Variable{
-			"execute": config.StringVariable(up),
-			"revert":  config.StringVariable(down),
+			"execute": config.StringVariable(execute),
+			"revert":  config.StringVariable(revert),
 		}
 	}
 
@@ -242,11 +242,11 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: func(state *terraform.State) error {
-			return dropResourcesForMigrationTestCaseForGrants(t)
+			return dropResourcesForUnsafeExecuteTestCaseForGrants(t)
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createResourcesForMigrationTestCaseForGrants(t) },
+				PreConfig:       func() { createResourcesForExecuteUnsafeTestCaseForGrants(t) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -294,22 +294,22 @@ func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) fu
 }
 
 // TODO: tweak this method
-func createResourcesForMigrationTestCaseForGrants(t *testing.T) {
+func createResourcesForExecuteUnsafeTestCaseForGrants(t *testing.T) {
 	t.Helper()
 
 	client, err := sdk.NewDefaultClient()
 	require.NoError(t, err)
 	ctx := context.Background()
 
-	err = client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier("unsafe_migration_test_database"), &sdk.CreateDatabaseOptions{})
+	err = client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier("UNSAFE_EXECUTE_test_database"), &sdk.CreateDatabaseOptions{})
 	require.NoError(t, err)
 
-	err = client.Roles.Create(ctx, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier("unsafe_migration_test_role")))
+	err = client.Roles.Create(ctx, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier("UNSAFE_EXECUTE_test_role")))
 	require.NoError(t, err)
 }
 
 // TODO: fix this method
-func dropResourcesForMigrationTestCaseForGrants(t *testing.T) error {
+func dropResourcesForUnsafeExecuteTestCaseForGrants(t *testing.T) error {
 	t.Helper()
 
 	databaseName := "TODO"
