@@ -276,6 +276,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_tag_association":                         resources.TagAssociation(),
 		"snowflake_tag_masking_policy_association":          resources.TagMaskingPolicyAssociation(),
 		"snowflake_task":                                    resources.Task(),
+		"snowflake_unsafe_execute":                          resources.UnsafeExecute(),
 		"snowflake_user":                                    resources.User(),
 		"snowflake_user_ownership_grant":                    resources.UserOwnershipGrant(),
 		"snowflake_user_public_keys":                        resources.UserPublicKeys(),
