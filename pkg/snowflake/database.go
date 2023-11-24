@@ -261,6 +261,8 @@ type Database struct {
 	Comment       sql.NullString `db:"comment"`
 	Options       sql.NullString `db:"options"`
 	RetentionTime sql.NullString `db:"retention_time"`
+	Kind          sql.NullString `db:"kind"`
+	Budget        sql.NullString `db:"budget"`
 }
 
 func ScanDatabase(row *sqlx.Row) (*Database, error) {
@@ -304,13 +306,11 @@ func ListDatabase(sdb *sqlx.DB, databaseName string) (*Database, error) {
 		}
 		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
 	}
-	db := &Database{}
 	for _, d := range dbs {
 		d := d
 		if d.DBName.String == databaseName {
-			db = &d
-			break
+			return &d, nil
 		}
 	}
-	return db, nil
+	return nil, errors.New("database not found")
 }
