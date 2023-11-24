@@ -20,14 +20,14 @@ import (
 
 func TestAcc_UnsafeExecute_basic(t *testing.T) {
 	id := "unsafe_migration_test_database"
-	up := fmt.Sprintf("create database %s", id)
-	down := fmt.Sprintf("drop database %s", id)
+	execute := fmt.Sprintf("create database %s", id)
+	revert := fmt.Sprintf("drop database %s", id)
 
 	resourceName := "snowflake_unsafe_execute.migration"
 	createConfigVariables := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"up":   config.StringVariable(up),
-			"down": config.StringVariable(down),
+			"execute": config.StringVariable(execute),
+			"revert":  config.StringVariable(revert),
 		}
 	}
 
@@ -46,8 +46,8 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "up", up),
-					resource.TestCheckResourceAttr(resourceName, "down", down),
+					resource.TestCheckResourceAttr(resourceName, "execute", execute),
+					resource.TestCheckResourceAttr(resourceName, "revert", revert),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						if value == "" {
 							return errors.New("empty id")
@@ -62,18 +62,19 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_downChanged(t *testing.T) {
+func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 	id := "unsafe_migration_test_database"
-	up := fmt.Sprintf("create database %s", id)
-	down := fmt.Sprintf("drop database %s", id)
-	invalidDown := "select 1"
+	execute := fmt.Sprintf("create database %s", id)
+	revert := fmt.Sprintf("drop database %s", id)
+	// TODO: this is not invalid but it does not match the execute
+	invalidRevert := "select 1"
 	var savedId string
 
 	resourceName := "snowflake_unsafe_execute.migration"
 	createConfigVariables := func(up string, down string) map[string]config.Variable {
 		return map[string]config.Variable{
-			"up":   config.StringVariable(up),
-			"down": config.StringVariable(down),
+			"execute": config.StringVariable(up),
+			"revert":  config.StringVariable(down),
 		}
 	}
 
@@ -87,14 +88,14 @@ func TestAcc_UnsafeExecute_downChanged(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
-				ConfigVariables: createConfigVariables(up, invalidDown),
+				ConfigVariables: createConfigVariables(execute, invalidRevert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "up", up),
-					resource.TestCheckResourceAttr(resourceName, "down", invalidDown),
+					resource.TestCheckResourceAttr(resourceName, "execute", execute),
+					resource.TestCheckResourceAttr(resourceName, "revert", invalidRevert),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						if value == "" {
 							return errors.New("empty id")
@@ -108,23 +109,23 @@ func TestAcc_UnsafeExecute_downChanged(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
-				ConfigVariables: createConfigVariables(up, down),
+				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "up", up),
-					resource.TestCheckResourceAttr(resourceName, "down", down),
+					resource.TestCheckResourceAttr(resourceName, "execute", execute),
+					resource.TestCheckResourceAttr(resourceName, "revert", revert),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						if value == "" {
 							return errors.New("empty id")
 						}
 						if savedId != value {
-							return errors.New("different id after down update")
+							return errors.New("different id after revert update")
 						}
 						return nil
 					}),
-					// TODO: check if exists after down update
+					// TODO: check if exists after revert update
 					// testAccCheckDatabaseExistence(id, true),
 				),
 			},
@@ -132,22 +133,22 @@ func TestAcc_UnsafeExecute_downChanged(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_upChanged(t *testing.T) {
+func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 	id := "unsafe_migration_test_database"
-	up := fmt.Sprintf("create database %s", id)
-	down := fmt.Sprintf("drop database %s", id)
+	execute := fmt.Sprintf("create database %s", id)
+	revert := fmt.Sprintf("drop database %s", id)
 
 	newId := "unsafe_migration_test_database_2"
-	newUp := fmt.Sprintf("create database %s", newId)
-	newDown := fmt.Sprintf("drop database %s", newId)
+	newExecute := fmt.Sprintf("create database %s", newId)
+	newRevert := fmt.Sprintf("drop database %s", newId)
 
 	var savedId string
 
 	resourceName := "snowflake_unsafe_execute.migration"
 	createConfigVariables := func(up string, down string) map[string]config.Variable {
 		return map[string]config.Variable{
-			"up":   config.StringVariable(up),
-			"down": config.StringVariable(down),
+			"execute": config.StringVariable(up),
+			"revert":  config.StringVariable(down),
 		}
 	}
 
@@ -171,14 +172,14 @@ func TestAcc_UnsafeExecute_upChanged(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
-				ConfigVariables: createConfigVariables(up, down),
+				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "up", up),
-					resource.TestCheckResourceAttr(resourceName, "down", down),
+					resource.TestCheckResourceAttr(resourceName, "execute", execute),
+					resource.TestCheckResourceAttr(resourceName, "revert", revert),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						if value == "" {
 							return errors.New("empty id")
@@ -192,23 +193,23 @@ func TestAcc_UnsafeExecute_upChanged(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
-				ConfigVariables: createConfigVariables(newUp, newDown),
+				ConfigVariables: createConfigVariables(newExecute, newRevert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "up", newUp),
-					resource.TestCheckResourceAttr(resourceName, "down", newDown),
+					resource.TestCheckResourceAttr(resourceName, "execute", newExecute),
+					resource.TestCheckResourceAttr(resourceName, "revert", newRevert),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						if value == "" {
 							return errors.New("empty id")
 						}
 						if savedId == value {
-							return errors.New("same id after up update")
+							return errors.New("same id after execute update")
 						}
 						return nil
 					}),
-					// TODO: check if exists after up update and check that old database doesn't exist (may be duplicate with check destroy)
+					// TODO: check if exists after execute update and check that old database doesn't exist (may be duplicate with check destroy)
 					// testAccCheckDatabaseExistence(id, true),
 				),
 			},
@@ -219,21 +220,21 @@ func TestAcc_UnsafeExecute_upChanged(t *testing.T) {
 // TODO: make this test pass
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
 	id := "unsafe_migration_test_database"
-	up := fmt.Sprintf("create database %s", id)
-	down := fmt.Sprintf("drop database %s", id)
+	execute := fmt.Sprintf("create database %s", id)
+	revert := fmt.Sprintf("drop database %s", id)
 	// TODO: before test
 	// create role
 	// create database
 
 	// create migration
-	// - up: grant ... to role xyz
-	// - down: revoke ... from role xyz
+	// - execute: grant ... to role xyz
+	// - revert: revoke ... from role xyz
 
 	resourceName := "snowflake_unsafe_execute.migration"
 	createConfigVariables := func(up string, down string) map[string]config.Variable {
 		return map[string]config.Variable{
-			"up":   config.StringVariable(up),
-			"down": config.StringVariable(down),
+			"execute": config.StringVariable(up),
+			"revert":  config.StringVariable(down),
 		}
 	}
 
@@ -250,14 +251,14 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 			{
 				PreConfig:       func() { createResourcesForMigrationTestCaseForGrants(t) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
-				ConfigVariables: createConfigVariables(up, down),
+				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "up", up),
-					resource.TestCheckResourceAttr(resourceName, "down", down),
+					resource.TestCheckResourceAttr(resourceName, "execute", execute),
+					resource.TestCheckResourceAttr(resourceName, "revert", revert),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						if value == "" {
 							return errors.New("empty id")

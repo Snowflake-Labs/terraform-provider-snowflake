@@ -10,13 +10,13 @@ import (
 )
 
 var unsafeExecuteSchema = map[string]*schema.Schema{
-	"up": {
+	"execute": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
 		Description: "TODO",
 	},
-	"down": {
+	"revert": {
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "TODO",
@@ -46,14 +46,14 @@ func ApplyUnsafeMigration(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	upStatement := d.Get("up").(string)
-	_, err = client.ExecUnsafe(ctx, upStatement)
+	executeStatement := d.Get("execute").(string)
+	_, err = client.ExecUnsafe(ctx, executeStatement)
 	if err != nil {
 		return err
 	}
 
 	d.SetId(id)
-	log.Printf(`[DEBUG] SQL "%s" applied successfully\n`, upStatement)
+	log.Printf(`[DEBUG] SQL "%s" applied successfully\n`, executeStatement)
 
 	return nil
 }
@@ -63,14 +63,14 @@ func RevertUnsafeMigration(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
 
-	downStatement := d.Get("down").(string)
-	_, err := client.ExecUnsafe(ctx, downStatement)
+	revertStatement := d.Get("revert").(string)
+	_, err := client.ExecUnsafe(ctx, revertStatement)
 	if err != nil {
 		return err
 	}
 
 	d.SetId("")
-	log.Printf(`[DEBUG] SQL "%s" applied successfully\n`, downStatement)
+	log.Printf(`[DEBUG] SQL "%s" applied successfully\n`, revertStatement)
 
 	return nil
 }

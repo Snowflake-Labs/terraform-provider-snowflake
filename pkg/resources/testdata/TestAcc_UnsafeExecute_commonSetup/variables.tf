@@ -1,7 +1,7 @@
-variable "up" {
+variable "execute" {
   type = string
 }
 
-variable "down" {
+variable "revert" {
   type = string
 }
