@@ -62,8 +62,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 	id := fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
-	// TODO: this is not invalid but it does not match the execute
-	invalidRevert := "select 1"
+	notMatchingRevert := "select 1"
 	var savedId string
 
 	resourceName := "snowflake_unsafe_execute.test"
@@ -84,18 +83,15 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
-				ConfigVariables: createConfigVariables(execute, invalidRevert),
+				ConfigVariables: createConfigVariables(execute, notMatchingRevert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", execute),
-					resource.TestCheckResourceAttr(resourceName, "revert", invalidRevert),
+					resource.TestCheckResourceAttr(resourceName, "revert", notMatchingRevert),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
-						if value == "" {
-							return errors.New("empty id")
-						}
 						savedId = value
 						return nil
 					}),
@@ -113,9 +109,6 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "revert", revert),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
-						if value == "" {
-							return errors.New("empty id")
-						}
 						if savedId != value {
 							return errors.New("different id after revert update")
 						}
@@ -177,9 +170,6 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "execute", execute),
 					resource.TestCheckResourceAttr(resourceName, "revert", revert),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
-						if value == "" {
-							return errors.New("empty id")
-						}
 						savedId = value
 						return nil
 					}),
@@ -196,9 +186,6 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "execute", newExecute),
 					resource.TestCheckResourceAttr(resourceName, "revert", newRevert),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
-						if value == "" {
-							return errors.New("empty id")
-						}
 						if savedId == value {
 							return errors.New("same id after execute update")
 						}
