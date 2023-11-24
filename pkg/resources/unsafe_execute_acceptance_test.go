@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -18,9 +19,8 @@ import (
 )
 
 func TestAcc_UnsafeExecute_basic(t *testing.T) {
-	// TODO: add uuid
 	// TODO: capitalized
-	id := "UNSAFE_MIGRATION_TEST_DATABASE"
+	id := fmt.Sprintf("UNSAFE_MIGRATION_TEST_DATABASE_%d", rand.Intn(10000))
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
@@ -49,12 +49,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", execute),
 					resource.TestCheckResourceAttr(resourceName, "revert", revert),
-					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
-						if value == "" {
-							return errors.New("empty id")
-						}
-						return nil
-					}),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, id, true),
 				),
 			},
@@ -63,7 +58,8 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
-	id := "UNSAFE_MIGRATION_TEST_DATABASE"
+	// TODO: capitalized
+	id := fmt.Sprintf("UNSAFE_MIGRATION_TEST_DATABASE_%d", rand.Intn(10000))
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 	// TODO: this is not invalid but it does not match the execute
@@ -96,6 +92,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", execute),
 					resource.TestCheckResourceAttr(resourceName, "revert", invalidRevert),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						if value == "" {
 							return errors.New("empty id")
@@ -115,6 +112,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", execute),
 					resource.TestCheckResourceAttr(resourceName, "revert", revert),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
 						if value == "" {
 							return errors.New("empty id")
@@ -132,11 +130,13 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
-	id := "UNSAFE_MIGRATION_TEST_DATABASE"
+	// TODO: capitalized
+	id := fmt.Sprintf("UNSAFE_MIGRATION_TEST_DATABASE_%d", rand.Intn(10000))
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
-	newId := "UNSAFE_MIGRATION_TEST_DATABASE_2"
+	// TODO: capitalized
+	newId := fmt.Sprintf("%s_2", id)
 	newExecute := fmt.Sprintf("create database %s", newId)
 	newRevert := fmt.Sprintf("drop database %s", newId)
 
