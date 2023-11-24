@@ -209,6 +209,10 @@ const (
 	snowflakeAccountLocatorContextKey snowflakeAccountLocatorContext = "snowflake_account_locator"
 )
 
+func (c *Client) ExecUnsafe(ctx context.Context, sql string) (sql.Result, error) {
+	return c.exec(ctx, sql)
+}
+
 // Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 	if c.dryRun {
