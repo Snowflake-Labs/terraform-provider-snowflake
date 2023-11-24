@@ -335,17 +335,13 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		opts.Set.CreditQuota = sdk.Pointer(d.Get("credit_quota").(int))
 	}
 
-	if d.HasChange("frequency") {
+	if d.HasChange("frequency") || d.HasChange("start_timestamp") {
 		runSetStatement = true
 		frequency, err := sdk.FrequencyFromString(d.Get("frequency").(string))
 		if err != nil {
 			return err
 		}
 		opts.Set.Frequency = frequency
-	}
-
-	if d.HasChange("start_timestamp") {
-		runSetStatement = true
 		opts.Set.StartTimestamp = sdk.Pointer(d.Get("start_timestamp").(string))
 	}
 
@@ -355,11 +351,9 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// If ANY of the triggers changed, we collect all triggers and set them
-	if d.HasChange("suspend_trigger") ||
-		d.HasChange("suspend_triggers") ||
-		d.HasChange("suspend_immediate_trigger") ||
-		d.HasChange("suspend_immediate_triggers") ||
-		d.HasChange("notify_triggers") {
+	if d.HasChange("suspend_trigger")  && d.HasChange("suspend_triggers") ||
+	   d.HasChange("suspend_immediate_trigger") && d.HasChange("suspend_immediate_triggers") ||
+	   d.HasChange("notify_triggers") {
 		runSetStatement = true
 		triggers := collectResourceMonitorTriggers(d)
 		opts.Triggers = triggers

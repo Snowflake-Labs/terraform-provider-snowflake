@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -97,7 +98,13 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 		resourceMonitor.Frequency = *frequency
 	}
 	if row.StartTime.Valid {
-		resourceMonitor.StartTime = row.StartTime.String
+		const YYMMDDhhmm = "2006-01-02 15:04"
+		t, err := time.Parse(time.RFC3339, row.StartTime.String)
+		if err != nil {
+			return nil, err
+		}
+		localTime := t.Local()
+		resourceMonitor.StartTime = localTime.Format(YYMMDDhhmm)
 	}
 	if row.EndTime.Valid {
 		resourceMonitor.EndTime = row.EndTime.String
