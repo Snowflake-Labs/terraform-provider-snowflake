@@ -40,7 +40,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseExistence(t, id, false),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -86,7 +86,7 @@ func TestAcc_UnsafeExecute_downChanged(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseExistence(t, id, false),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(up, invalidDown),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -107,7 +107,7 @@ func TestAcc_UnsafeExecute_downChanged(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(up, down),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -170,7 +170,7 @@ func TestAcc_UnsafeExecute_upChanged(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(up, down),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -191,7 +191,7 @@ func TestAcc_UnsafeExecute_upChanged(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(newUp, newDown),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -249,7 +249,7 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createResourcesForMigrationTestCaseForGrants(t) },
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(up, down),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
