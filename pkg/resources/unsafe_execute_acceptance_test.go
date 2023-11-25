@@ -224,6 +224,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 	})
 }
 
+// TODO: add test with hcl for each
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
 	id := generateUnsafeExecuteTestDatabaseName()
 	roleId := generateUnsafeExecuteTestRoleName()
