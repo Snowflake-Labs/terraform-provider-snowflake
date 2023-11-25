@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -20,14 +21,16 @@ import (
 
 func TestAcc_UnsafeExecute_basic(t *testing.T) {
 	id := generateUnsafeExecuteTestDatabaseName()
-	execute := fmt.Sprintf("create database %s", id)
-	revert := fmt.Sprintf("drop database %s", id)
+	idLowerCase := strings.ToLower(generateUnsafeExecuteTestDatabaseName())
+	idLowerCaseEscaped := fmt.Sprintf(`"%s"`, idLowerCase)
+	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
+	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 
 	resourceName := "snowflake_unsafe_execute.test"
-	createConfigVariables := func() map[string]config.Variable {
+	createConfigVariables := func(id string) map[string]config.Variable {
 		return map[string]config.Variable{
-			"execute": config.StringVariable(execute),
-			"revert":  config.StringVariable(revert),
+			"execute": config.StringVariable(createDatabaseStatement(id)),
+			"revert":  config.StringVariable(dropDatabaseStatement(id)),
 		}
 	}
 
@@ -41,15 +44,39 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
-				ConfigVariables: createConfigVariables(),
+				ConfigVariables: createConfigVariables(id),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "execute", execute),
-					resource.TestCheckResourceAttr(resourceName, "revert", revert),
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(id)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, id, true),
+				),
+			},
+		},
+	})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDatabaseExistence(t, idLowerCase, false),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigVariables: createConfigVariables(idLowerCaseEscaped),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(idLowerCaseEscaped)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(idLowerCaseEscaped)),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					testAccCheckDatabaseExistence(t, idLowerCase, true),
 				),
 			},
 		},
