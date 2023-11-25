@@ -224,18 +224,12 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 	})
 }
 
-// TODO: make this test pass
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
 	id := generateUnsafeExecuteTestDatabaseName()
-	execute := fmt.Sprintf("create database %s", id)
-	revert := fmt.Sprintf("drop database %s", id)
-	// TODO: before test
-	// create role
-	// create database
-
-	// create migration
-	// - execute: grant ... to role xyz
-	// - revert: revoke ... from role xyz
+	roleId := generateUnsafeExecuteTestRoleName()
+	privilege := sdk.AccountObjectPrivilegeCreateSchema
+	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, id, roleId)
+	revert := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM ROLE %s", privilege, id, roleId)
 
 	resourceName := "snowflake_unsafe_execute.test"
 	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
@@ -252,11 +246,13 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: func(state *terraform.State) error {
-			return dropResourcesForUnsafeExecuteTestCaseForGrants(t)
+			err := verifyGrantExists(t, roleId, privilege, false)(state)
+			dropResourcesForUnsafeExecuteTestCaseForGrants(t, id, roleId)
+			return err
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createResourcesForExecuteUnsafeTestCaseForGrants(t) },
+				PreConfig:       func() { createResourcesForExecuteUnsafeTestCaseForGrants(t, id, roleId) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -266,6 +262,7 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "execute", execute),
 					resource.TestCheckResourceAttr(resourceName, "revert", revert),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					verifyGrantExists(t, roleId, privilege, true),
 				),
 			},
 		},
@@ -278,13 +275,17 @@ func generateUnsafeExecuteTestDatabaseName() string {
 	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
 }
 
+// generateUnsafeExecuteTestRoleName returns capitalized name on purpose.
+// Using small caps without escaping creates problem with later using sdk client which uses identifier that is escaped by default.
+func generateUnsafeExecuteTestRoleName() string {
+	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_ROLE_%d", rand.Intn(10000))
+}
+
 func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
 		client, err := sdk.NewDefaultClient()
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		ctx := context.Background()
 
 		_, err = client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id))
@@ -301,45 +302,59 @@ func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) fu
 	}
 }
 
-// TODO: tweak this method
-func createResourcesForExecuteUnsafeTestCaseForGrants(t *testing.T) {
+func createResourcesForExecuteUnsafeTestCaseForGrants(t *testing.T, dbId string, roleId string) {
 	t.Helper()
 
 	client, err := sdk.NewDefaultClient()
 	require.NoError(t, err)
 	ctx := context.Background()
 
-	err = client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier("UNSAFE_EXECUTE_test_database"), &sdk.CreateDatabaseOptions{})
+	err = client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(dbId), &sdk.CreateDatabaseOptions{})
 	require.NoError(t, err)
 
-	err = client.Roles.Create(ctx, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier("UNSAFE_EXECUTE_test_role")))
+	err = client.Roles.Create(ctx, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier(roleId)))
 	require.NoError(t, err)
 }
 
-// TODO: fix this method
-func dropResourcesForUnsafeExecuteTestCaseForGrants(t *testing.T) error {
+func dropResourcesForUnsafeExecuteTestCaseForGrants(t *testing.T, dbId string, roleId string) {
 	t.Helper()
 
-	databaseName := "TODO"
-	roleName := "TODO"
-
 	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		return err
-	}
+	require.NoError(t, err)
 	ctx := context.Background()
 
-	err = client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.DropDatabaseOptions{})
+	err = client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(dbId), &sdk.DropDatabaseOptions{})
 	assert.NoError(t, err)
-	if err != nil {
-		return err
-	}
 
-	err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(sdk.NewAccountObjectIdentifier(roleName)))
+	err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(sdk.NewAccountObjectIdentifier(roleId)))
 	assert.NoError(t, err)
-	if err != nil {
-		return err
-	}
+}
 
-	return nil
+func verifyGrantExists(t *testing.T, roleId string, privilege sdk.AccountObjectPrivilege, shouldExist bool) func(state *terraform.State) error {
+	t.Helper()
+	return func(state *terraform.State) error {
+		client, err := sdk.NewDefaultClient()
+		require.NoError(t, err)
+		ctx := context.Background()
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Role: sdk.NewAccountObjectIdentifier(roleId),
+			},
+		})
+		require.NoError(t, err)
+
+		if shouldExist {
+			require.Equal(t, 1, len(grants))
+			assert.Equal(t, privilege.String(), grants[0].Privilege)
+			assert.Equal(t, sdk.ObjectTypeDatabase, grants[0].GrantedOn)
+			assert.Equal(t, sdk.ObjectTypeRole, grants[0].GrantedTo)
+			assert.Equal(t, sdk.NewAccountObjectIdentifier(roleId).FullyQualifiedName(), grants[0].GranteeName.FullyQualifiedName())
+		} else {
+			require.Equal(t, 0, len(grants))
+		}
+
+		// it does not matter what we return, because we have assertions above
+		return nil
+	}
 }
