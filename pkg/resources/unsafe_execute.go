@@ -15,12 +15,12 @@ var unsafeExecuteSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "TODO",
+		Description: "SQL statement to execute.",
 	},
 	"revert": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "TODO",
+		Description: "SQL statement to revert the execute statement. Invoked when resource is deleted.",
 	},
 }
 
@@ -33,7 +33,8 @@ func UnsafeExecute() *schema.Resource {
 
 		Schema: unsafeExecuteSchema,
 
-		DeprecationMessage: "Experimental resource. Will be deleted in the upcoming versions. Use on your own risk.",
+		DeprecationMessage: "Experimental resource. Will be deleted in the upcoming versions. Use at your own risk.",
+		Description:        "Experimental resource used for testing purposes only. Allows to execute ANY SQL statement.",
 	}
 }
 

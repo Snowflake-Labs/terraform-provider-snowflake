@@ -3,12 +3,14 @@
 page_title: "snowflake_unsafe_execute Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Experimental resource used for testing purposes only. Allows to execute ANY SQL statement.
 ---
 
 # snowflake_unsafe_execute (Resource)
 
+!> **Warning** This is a dangerous resource that allows executing **ANY** SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Will be deleted in the upcoming versions. Use at your own risk.
 
+Experimental resource used for testing purposes only. Allows to execute ANY SQL statement.
 
 
 
@@ -17,8 +19,8 @@ description: |-
 
 ### Required
 
-- `execute` (String) TODO
-- `revert` (String) TODO
+- `execute` (String) SQL statement to execute.
+- `revert` (String) SQL statement to revert the execute statement. Invoked when resource is deleted.
 
 ### Read-Only
 
