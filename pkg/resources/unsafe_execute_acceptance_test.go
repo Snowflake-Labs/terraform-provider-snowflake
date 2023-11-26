@@ -2,9 +2,10 @@ package resources_test
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -20,8 +21,8 @@ import (
 )
 
 func TestAcc_UnsafeExecute_basic(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName()
-	idLowerCase := strings.ToLower(generateUnsafeExecuteTestDatabaseName())
+	id := generateUnsafeExecuteTestDatabaseName(t)
+	idLowerCase := strings.ToLower(generateUnsafeExecuteTestDatabaseName(t))
 	idLowerCaseEscaped := fmt.Sprintf(`"%s"`, idLowerCase)
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
@@ -84,7 +85,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName()
+	id := generateUnsafeExecuteTestDatabaseName(t)
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 	notMatchingRevert := "select 1"
@@ -147,7 +148,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName()
+	id := generateUnsafeExecuteTestDatabaseName(t)
 	execute := fmt.Sprintf("create database %s", id)
 	revert := fmt.Sprintf("drop database %s", id)
 
@@ -225,8 +226,8 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName()
-	roleId := generateUnsafeExecuteTestRoleName()
+	id := generateUnsafeExecuteTestDatabaseName(t)
+	roleId := generateUnsafeExecuteTestRoleName(t)
 	privilege := sdk.AccountObjectPrivilegeCreateSchema
 	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, id, roleId)
 	revert := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM ROLE %s", privilege, id, roleId)
@@ -283,16 +284,16 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 	t.Skip("Skipping TestAcc_UnsafeExecute_grantsComplex because of https://github.com/hashicorp/terraform-plugin-sdk/issues/536 issue")
 
-	dbId1 := generateUnsafeExecuteTestDatabaseName()
-	dbId2 := generateUnsafeExecuteTestDatabaseName()
-	roleId1 := generateUnsafeExecuteTestRoleName()
-	roleId2 := generateUnsafeExecuteTestRoleName()
+	dbId1 := generateUnsafeExecuteTestDatabaseName(t)
+	dbId2 := generateUnsafeExecuteTestDatabaseName(t)
+	roleId1 := generateUnsafeExecuteTestRoleName(t)
+	roleId2 := generateUnsafeExecuteTestRoleName(t)
 	privilege1 := sdk.AccountObjectPrivilegeCreateSchema
 	privilege2 := sdk.AccountObjectPrivilegeModify
 	privilege3 := sdk.AccountObjectPrivilegeUsage
 
-	//resourceName1 := "snowflake_unsafe_execute.test.0"
-	//resourceName2 := "snowflake_unsafe_execute.test.1"
+	// resourceName1 := "snowflake_unsafe_execute.test.0"
+	// resourceName2 := "snowflake_unsafe_execute.test.1"
 	createConfigVariables := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"database_grants": config.ListVariable(config.ObjectVariable(map[string]config.Variable{
@@ -354,8 +355,8 @@ func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					//resource.TestCheckResourceAttrSet(resourceName1, "id"),
-					//resource.TestCheckResourceAttrSet(resourceName2, "id"),
+					// resource.TestCheckResourceAttrSet(resourceName1, "id"),
+					// resource.TestCheckResourceAttrSet(resourceName2, "id"),
 					verifyGrantExists(t, roleId1, privilege1, true),
 					verifyGrantExists(t, roleId1, privilege2, true),
 					verifyGrantExists(t, roleId1, privilege3, false),
@@ -370,14 +371,24 @@ func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 
 // generateUnsafeExecuteTestDatabaseName returns capitalized name on purpose.
 // Using small caps without escaping creates problem with later using sdk client which uses identifier that is escaped by default.
-func generateUnsafeExecuteTestDatabaseName() string {
-	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", rand.Intn(10000))
+func generateUnsafeExecuteTestDatabaseName(t *testing.T) string {
+	t.Helper()
+	id, err := rand.Int(rand.Reader, big.NewInt(10000))
+	if err != nil {
+		t.Fatalf("Failed to generate database id: %v", err)
+	}
+	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_DATABASE_%d", id)
 }
 
 // generateUnsafeExecuteTestRoleName returns capitalized name on purpose.
 // Using small caps without escaping creates problem with later using sdk client which uses identifier that is escaped by default.
-func generateUnsafeExecuteTestRoleName() string {
-	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_ROLE_%d", rand.Intn(10000))
+func generateUnsafeExecuteTestRoleName(t *testing.T) string {
+	t.Helper()
+	id, err := rand.Int(rand.Reader, big.NewInt(10000))
+	if err != nil {
+		t.Fatalf("Failed to generate role id: %v", err)
+	}
+	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_ROLE_%d", id)
 }
 
 func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
