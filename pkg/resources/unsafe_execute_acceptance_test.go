@@ -224,7 +224,6 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 	})
 }
 
-// TODO: add test with hcl for each
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
 	id := generateUnsafeExecuteTestDatabaseName()
 	roleId := generateUnsafeExecuteTestRoleName()
@@ -264,6 +263,105 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "revert", revert),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					verifyGrantExists(t, roleId, privilege, true),
+				),
+			},
+		},
+	})
+}
+
+// TestAcc_UnsafeExecute_grantsComplex test fails with:
+//
+//	testing_new_config.go:156: unexpected index type (string) for "snowflake_unsafe_execute.test[\"0\"]", for_each is not supported
+//	testing_new.go:68: unexpected index type (string) for "snowflake_unsafe_execute.test[\"0\"]", for_each is not supported
+//
+// Quick search unveiled this issue: https://github.com/hashicorp/terraform-plugin-sdk/issues/536.
+//
+// It also seems that it is working correctly underneath; with TF_LOG set to DEBUG we have:
+//
+//	2023/11/26 17:16:03 [DEBUG] SQL "GRANT CREATE SCHEMA,MODIFY ON DATABASE UNSAFE_EXECUTE_TEST_DATABASE_4397 TO ROLE UNSAFE_EXECUTE_TEST_ROLE_1145" applied successfully
+//	2023/11/26 17:16:03 [DEBUG] SQL "GRANT MODIFY,USAGE ON DATABASE UNSAFE_EXECUTE_TEST_DATABASE_3740 TO ROLE UNSAFE_EXECUTE_TEST_ROLE_3008" applied successfully
+func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
+	t.Skip("Skipping TestAcc_UnsafeExecute_grantsComplex because of https://github.com/hashicorp/terraform-plugin-sdk/issues/536 issue")
+
+	dbId1 := generateUnsafeExecuteTestDatabaseName()
+	dbId2 := generateUnsafeExecuteTestDatabaseName()
+	roleId1 := generateUnsafeExecuteTestRoleName()
+	roleId2 := generateUnsafeExecuteTestRoleName()
+	privilege1 := sdk.AccountObjectPrivilegeCreateSchema
+	privilege2 := sdk.AccountObjectPrivilegeModify
+	privilege3 := sdk.AccountObjectPrivilegeUsage
+
+	//resourceName1 := "snowflake_unsafe_execute.test.0"
+	//resourceName2 := "snowflake_unsafe_execute.test.1"
+	createConfigVariables := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"database_grants": config.ListVariable(config.ObjectVariable(map[string]config.Variable{
+				"database_name": config.StringVariable(dbId1),
+				"role_id":       config.StringVariable(roleId1),
+				"privileges":    config.ListVariable(config.StringVariable(privilege1.String()), config.StringVariable(privilege2.String())),
+			}), config.ObjectVariable(map[string]config.Variable{
+				"database_name": config.StringVariable(dbId2),
+				"role_id":       config.StringVariable(roleId2),
+				"privileges":    config.ListVariable(config.StringVariable(privilege2.String()), config.StringVariable(privilege3.String())),
+			})),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: func(state *terraform.State) error {
+			err := verifyGrantExists(t, roleId1, privilege1, false)(state)
+			if err != nil {
+				return err
+			}
+			err = verifyGrantExists(t, roleId1, privilege2, false)(state)
+			if err != nil {
+				return err
+			}
+			err = verifyGrantExists(t, roleId1, privilege3, false)(state)
+			if err != nil {
+				return err
+			}
+			err = verifyGrantExists(t, roleId2, privilege1, false)(state)
+			if err != nil {
+				return err
+			}
+			err = verifyGrantExists(t, roleId2, privilege2, false)(state)
+			if err != nil {
+				return err
+			}
+			err = verifyGrantExists(t, roleId2, privilege3, false)(state)
+			if err != nil {
+				return err
+			}
+			dropResourcesForUnsafeExecuteTestCaseForGrants(t, dbId1, roleId1)
+			dropResourcesForUnsafeExecuteTestCaseForGrants(t, dbId2, roleId2)
+			return err
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					createResourcesForExecuteUnsafeTestCaseForGrants(t, dbId1, roleId1)
+					createResourcesForExecuteUnsafeTestCaseForGrants(t, dbId2, roleId2)
+				},
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: createConfigVariables(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					//resource.TestCheckResourceAttrSet(resourceName1, "id"),
+					//resource.TestCheckResourceAttrSet(resourceName2, "id"),
+					verifyGrantExists(t, roleId1, privilege1, true),
+					verifyGrantExists(t, roleId1, privilege2, true),
+					verifyGrantExists(t, roleId1, privilege3, false),
+					verifyGrantExists(t, roleId2, privilege1, false),
+					verifyGrantExists(t, roleId2, privilege2, true),
+					verifyGrantExists(t, roleId2, privilege3, true),
 				),
 			},
 		},
