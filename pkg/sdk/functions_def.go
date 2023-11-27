@@ -6,7 +6,8 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 var functionArgument = g.NewQueryStruct("FunctionArgument").
 	Text("ArgName", g.KeywordOptions().NoQuotes()).
-	Text("ArgDataType", g.KeywordOptions().NoQuotes())
+	Text("ArgDataType", g.KeywordOptions().NoQuotes()).
+	OptionalTextAssignment("Default", g.ParameterOptions().SingleQuotes())
 
 var functionArgumentType = g.NewQueryStruct("FunctionArgumentType").
 	Text("ArgDataType", g.KeywordOptions().NoQuotes())
@@ -21,7 +22,7 @@ var functionSecret = g.NewQueryStruct("FunctionSecret").
 
 var functionReturns = g.NewQueryStruct("FunctionReturns").
 	OptionalText("ResultDataType", g.KeywordOptions()).
-	OptionalQueryStructField(
+	QueryStructField(
 		"Table",
 		g.NewQueryStruct("FunctionReturnsTable").
 			ListQueryStructField(
@@ -73,7 +74,7 @@ var FunctionsDef = g.NewInterface(
 			functionArgument,
 			g.ParameterOptions().Parentheses().NoEquals()).
 		OptionalSQL("COPY GRANTS").
-		OptionalQueryStructField(
+		QueryStructField(
 			"Returns",
 			functionReturns,
 			g.KeywordOptions().SQL("RETURNS"),
@@ -94,7 +95,7 @@ var FunctionsDef = g.NewInterface(
 			functionVolatileOrNot,
 			g.KeywordOptions(),
 		).
-		OptionalTextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes()).
+		TextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		ListQueryStructField(
 			"Imports",
@@ -106,7 +107,7 @@ var FunctionsDef = g.NewInterface(
 			functionPackages,
 			g.ParameterOptions().Parentheses().SQL("PACKAGES"),
 		).
-		OptionalTextAssignment("HANDLER", g.ParameterOptions().SingleQuotes()).
+		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes()).
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
 		ListQueryStructField(
 			"Secrets",
@@ -114,7 +115,7 @@ var FunctionsDef = g.NewInterface(
 			g.ParameterOptions().Parentheses().SQL("SECRETS"),
 		).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
-		OptionalQueryStructField(
+		QueryStructField(
 			"FunctionDefinition",
 			functionDefinition,
 			g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS"),
@@ -136,7 +137,7 @@ var FunctionsDef = g.NewInterface(
 			functionArgument,
 			g.ParameterOptions().Parentheses().NoEquals()).
 		OptionalSQL("COPY GRANTS").
-		OptionalQueryStructField(
+		QueryStructField(
 			"Returns",
 			functionReturns,
 			g.KeywordOptions().SQL("RETURNS"),
@@ -158,7 +159,7 @@ var FunctionsDef = g.NewInterface(
 			g.KeywordOptions(),
 		).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-		OptionalQueryStructField(
+		QueryStructField(
 			"FunctionDefinition",
 			functionDefinition,
 			g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS"),
@@ -180,7 +181,7 @@ var FunctionsDef = g.NewInterface(
 			functionArgument,
 			g.ParameterOptions().Parentheses().NoEquals()).
 		OptionalSQL("COPY GRANTS").
-		OptionalQueryStructField(
+		QueryStructField(
 			"Returns",
 			functionReturns,
 			g.KeywordOptions().SQL("RETURNS"),
@@ -213,14 +214,14 @@ var FunctionsDef = g.NewInterface(
 			functionPackages,
 			g.ParameterOptions().Parentheses().SQL("PACKAGES"),
 		).
-		OptionalTextAssignment("HANDLER", g.ParameterOptions().SingleQuotes()).
+		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes()).
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
 		ListQueryStructField(
 			"Secrets",
 			functionSecret,
 			g.ParameterOptions().Parentheses().SQL("SECRETS"),
 		).
-		OptionalQueryStructField(
+		QueryStructField(
 			"FunctionDefinition",
 			functionDefinition,
 			g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS"),
@@ -242,7 +243,7 @@ var FunctionsDef = g.NewInterface(
 			functionArgument,
 			g.ParameterOptions().Parentheses().NoEquals()).
 		OptionalSQL("COPY GRANTS").
-		OptionalQueryStructField(
+		QueryStructField(
 			"Returns",
 			functionReturns,
 			g.KeywordOptions().SQL("RETURNS"),
@@ -275,9 +276,9 @@ var FunctionsDef = g.NewInterface(
 			functionPackages,
 			g.ParameterOptions().Parentheses().SQL("PACKAGES"),
 		).
-		OptionalTextAssignment("HANDLER", g.ParameterOptions().SingleQuotes()).
+		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
-		OptionalQueryStructField(
+		QueryStructField(
 			"FunctionDefinition",
 			functionDefinition,
 			g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS"),
@@ -299,7 +300,7 @@ var FunctionsDef = g.NewInterface(
 			functionArgument,
 			g.ParameterOptions().Parentheses().NoEquals()).
 		OptionalSQL("COPY GRANTS").
-		OptionalQueryStructField(
+		QueryStructField(
 			"Returns",
 			functionReturns,
 			g.KeywordOptions().SQL("RETURNS"),
@@ -316,7 +317,7 @@ var FunctionsDef = g.NewInterface(
 		).
 		OptionalSQL("MEMOIZABLE").
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-		OptionalQueryStructField(
+		QueryStructField(
 			"FunctionDefinition",
 			functionDefinition,
 			g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS"),
@@ -345,7 +346,8 @@ var FunctionsDef = g.NewInterface(
 		).
 		Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 		SetTags().UnsetTags().
-		WithValidation(g.ValidIdentifier, "name"),
+		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags", "RenameTo"),
 ).DropOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/drop-function",
 	g.NewQueryStruct("DropFunction").
@@ -359,15 +361,21 @@ var FunctionsDef = g.NewInterface(
 			g.ParameterOptions().Parentheses().NoEquals()).
 		WithValidation(g.ValidIdentifier, "name"),
 ).ShowOperation(
-	"https://docs.snowflake.com/en/sql-reference/sql/show-functions",
+	"https://docs.snowflake.com/en/sql-reference/sql/show-user-functions",
 	g.DbStruct("functionRow").
 		Field("created_on", "string").
 		Field("name", "string").
 		Field("schema_name", "string").
+		Field("is_builtin", "bool").
+		Field("is_aggregate", "bool").
+		Field("is_ansi", "bool").
 		Field("min_num_arguments", "int").
 		Field("max_num_arguments", "int").
 		Field("arguments", "string").
-		Field("is_table_function", "string").
+		Field("description", "string").
+		Field("catalog_name", "string").
+		Field("is_table_function", "bool").
+		Field("valid_for_clustering", "bool").
 		Field("is_secure", "string").
 		Field("is_external_function", "string").
 		Field("language", "string").
@@ -376,10 +384,14 @@ var FunctionsDef = g.NewInterface(
 		Field("CreatedOn", "string").
 		Field("Name", "string").
 		Field("SchemaName", "string").
+		Field("IsBuiltin", "bool").
+		Field("IsAggregate", "bool").
+		Field("IsAnsi", "bool").
 		Field("MinNumArguments", "int").
 		Field("MaxNumArguments", "int").
 		Field("Arguments", "string").
 		Field("IsTableFunction", "bool").
+		Field("ValidForClustering", "bool").
 		Field("IsSecure", "bool").
 		Field("IsExternalFunction", "bool").
 		Field("Language", "string").
@@ -391,7 +403,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalIn(),
 ).DescribeOperation(
 	g.DescriptionMappingKindSlice,
-	"https://docs.snowflake.com/en/sql-reference/sql/describe-function",
+	"https://docs.snowflake.com/en/sql-reference/sql/desc-function",
 	g.DbStruct("functionDetailRow").
 		Field("property", "string").
 		Field("value", "string"),

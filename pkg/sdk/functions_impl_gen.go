@@ -99,6 +99,7 @@ func (r *CreateFunctionForJavaFunctionRequest) toOpts() *CreateFunctionForJavaFu
 			s[i] = FunctionArgument{
 				ArgName:     v.ArgName,
 				ArgDataType: v.ArgDataType,
+				Default:     v.Default,
 			}
 		}
 		opts.Arguments = s
@@ -158,9 +159,7 @@ func (r *CreateFunctionForJavaFunctionRequest) toOpts() *CreateFunctionForJavaFu
 		}
 		opts.Secrets = s
 	}
-	if r.FunctionDefinition != nil {
-		opts.FunctionDefinition = r.FunctionDefinition
-	}
+	opts.FunctionDefinition = r.FunctionDefinition
 	return opts
 }
 
@@ -182,6 +181,7 @@ func (r *CreateFunctionForJavascriptFunctionRequest) toOpts() *CreateFunctionFor
 			s[i] = FunctionArgument{
 				ArgName:     v.ArgName,
 				ArgDataType: v.ArgDataType,
+				Default:     v.Default,
 			}
 		}
 		opts.Arguments = s
@@ -213,9 +213,8 @@ func (r *CreateFunctionForJavascriptFunctionRequest) toOpts() *CreateFunctionFor
 	if r.ReturnResultsBehavior != nil {
 		opts.ReturnResultsBehavior = r.ReturnResultsBehavior
 	}
-	if r.FunctionDefinition != nil {
-		opts.FunctionDefinition = r.FunctionDefinition
-	}
+
+	opts.FunctionDefinition = r.FunctionDefinition
 	return opts
 }
 
@@ -241,6 +240,7 @@ func (r *CreateFunctionForPythonFunctionRequest) toOpts() *CreateFunctionForPyth
 			s[i] = FunctionArgument{
 				ArgName:     v.ArgName,
 				ArgDataType: v.ArgDataType,
+				Default:     v.Default,
 			}
 		}
 		opts.Arguments = s
@@ -300,9 +300,7 @@ func (r *CreateFunctionForPythonFunctionRequest) toOpts() *CreateFunctionForPyth
 		}
 		opts.Secrets = s
 	}
-	if r.FunctionDefinition != nil {
-		opts.FunctionDefinition = r.FunctionDefinition
-	}
+	opts.FunctionDefinition = r.FunctionDefinition
 	return opts
 }
 
@@ -328,6 +326,7 @@ func (r *CreateFunctionForScalaFunctionRequest) toOpts() *CreateFunctionForScala
 			s[i] = FunctionArgument{
 				ArgName:     v.ArgName,
 				ArgDataType: v.ArgDataType,
+				Default:     v.Default,
 			}
 		}
 		opts.Arguments = s
@@ -377,9 +376,7 @@ func (r *CreateFunctionForScalaFunctionRequest) toOpts() *CreateFunctionForScala
 		}
 		opts.Packages = s
 	}
-	if r.FunctionDefinition != nil {
-		opts.FunctionDefinition = r.FunctionDefinition
-	}
+	opts.FunctionDefinition = r.FunctionDefinition
 	return opts
 }
 
@@ -402,6 +399,7 @@ func (r *CreateFunctionForSQLFunctionRequest) toOpts() *CreateFunctionForSQLFunc
 			s[i] = FunctionArgument{
 				ArgName:     v.ArgName,
 				ArgDataType: v.ArgDataType,
+				Default:     v.Default,
 			}
 		}
 		opts.Arguments = s
@@ -430,9 +428,7 @@ func (r *CreateFunctionForSQLFunctionRequest) toOpts() *CreateFunctionForSQLFunc
 	if r.ReturnResultsBehavior != nil {
 		opts.ReturnResultsBehavior = r.ReturnResultsBehavior
 	}
-	if r.FunctionDefinition != nil {
-		opts.FunctionDefinition = r.FunctionDefinition
-	}
+	opts.FunctionDefinition = r.FunctionDefinition
 	return opts
 }
 
@@ -503,10 +499,16 @@ func (r functionRow) convert() *Function {
 		CreatedOn:          r.CreatedOn,
 		Name:               r.Name,
 		SchemaName:         r.SchemaName,
+		IsBuiltIn:          r.IsBuiltIn == "Y",
+		IsAggregate:        r.IsAggregate == "Y",
+		IsAnsi:             r.IsAnsi == "Y",
 		MinNumArguments:    r.MinNumArguments,
 		MaxNumArguments:    r.MaxNumArguments,
 		Arguments:          r.Arguments,
+		Description:        r.Description,
+		CatalogName:        r.CatalogName,
 		IsTableFunction:    r.IsTableFunction == "Y",
+		ValidForClustering: r.ValidForClustering == "Y",
 		IsSecure:           r.IsSecure == "Y",
 		IsExternalFunction: r.IsExternalFunction == "Y",
 		Language:           r.Language,

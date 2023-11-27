@@ -30,16 +30,17 @@ type CreateFunctionForJavaFunctionRequest struct {
 	Comment                    *string
 	Imports                    []FunctionImportsRequest
 	Packages                   []FunctionPackagesRequest
-	Handler                    *string
+	Handler                    string
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []FunctionSecretRequest
 	TargetPath                 *string
-	FunctionDefinition         *string
+	FunctionDefinition         string
 }
 
 type FunctionArgumentRequest struct {
 	ArgName     string
 	ArgDataType DataType
+	Default     *string
 }
 
 type FunctionReturnsRequest struct {
@@ -82,7 +83,7 @@ type CreateFunctionForJavascriptFunctionRequest struct {
 	NullInputBehavior     *FunctionNullInputBehavior
 	ReturnResultsBehavior *FunctionReturnResultsBehavior
 	Comment               *string
-	FunctionDefinition    *string
+	FunctionDefinition    string
 }
 
 type CreateFunctionForPythonFunctionRequest struct {
@@ -97,14 +98,14 @@ type CreateFunctionForPythonFunctionRequest struct {
 	ReturnNullValues           *FunctionReturnNullValues
 	NullInputBehavior          *FunctionNullInputBehavior
 	ReturnResultsBehavior      *FunctionReturnResultsBehavior
-	RuntimeVersion             *string
+	RuntimeVersion             string
 	Comment                    *string
 	Imports                    []FunctionImportsRequest
 	Packages                   []FunctionPackagesRequest
-	Handler                    *string
+	Handler                    string
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []FunctionSecretRequest
-	FunctionDefinition         *string
+	FunctionDefinition         string
 }
 
 type CreateFunctionForScalaFunctionRequest struct {
@@ -123,9 +124,9 @@ type CreateFunctionForScalaFunctionRequest struct {
 	Comment               *string
 	Imports               []FunctionImportsRequest
 	Packages              []FunctionPackagesRequest
-	Handler               *string
+	Handler               string
 	TargetPath            *string
-	FunctionDefinition    *string
+	FunctionDefinition    string
 }
 
 type CreateFunctionForSQLFunctionRequest struct {
@@ -141,7 +142,7 @@ type CreateFunctionForSQLFunctionRequest struct {
 	ReturnResultsBehavior *FunctionReturnResultsBehavior
 	Memoizable            *bool
 	Comment               *string
-	FunctionDefinition    *string
+	FunctionDefinition    string
 }
 
 type AlterFunctionRequest struct {

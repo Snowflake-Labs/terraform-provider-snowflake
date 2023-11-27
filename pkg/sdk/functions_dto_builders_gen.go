@@ -6,9 +6,15 @@ import ()
 
 func NewCreateFunctionForJavaFunctionRequest(
 	name SchemaObjectIdentifier,
+	returns *FunctionReturnsRequest,
+	handler string,
+	functionDefinition string,
 ) *CreateFunctionForJavaFunctionRequest {
 	s := CreateFunctionForJavaFunctionRequest{}
 	s.name = name
+	s.Returns = returns
+	s.Handler = handler
+	s.FunctionDefinition = functionDefinition
 	return &s
 }
 
@@ -39,11 +45,6 @@ func (s *CreateFunctionForJavaFunctionRequest) WithArguments(Arguments []Functio
 
 func (s *CreateFunctionForJavaFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateFunctionForJavaFunctionRequest {
 	s.CopyGrants = CopyGrants
-	return s
-}
-
-func (s *CreateFunctionForJavaFunctionRequest) WithReturns(Returns *FunctionReturnsRequest) *CreateFunctionForJavaFunctionRequest {
-	s.Returns = Returns
 	return s
 }
 
@@ -82,11 +83,6 @@ func (s *CreateFunctionForJavaFunctionRequest) WithPackages(Packages []FunctionP
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithHandler(Handler *string) *CreateFunctionForJavaFunctionRequest {
-	s.Handler = Handler
-	return s
-}
-
 func (s *CreateFunctionForJavaFunctionRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *CreateFunctionForJavaFunctionRequest {
 	s.ExternalAccessIntegrations = ExternalAccessIntegrations
 	return s
@@ -102,11 +98,6 @@ func (s *CreateFunctionForJavaFunctionRequest) WithTargetPath(TargetPath *string
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateFunctionForJavaFunctionRequest {
-	s.FunctionDefinition = FunctionDefinition
-	return s
-}
-
 func NewFunctionArgumentRequest() *FunctionArgumentRequest {
 	return &FunctionArgumentRequest{}
 }
@@ -118,6 +109,11 @@ func (s *FunctionArgumentRequest) WithArgName(ArgName string) *FunctionArgumentR
 
 func (s *FunctionArgumentRequest) WithArgDataType(ArgDataType DataType) *FunctionArgumentRequest {
 	s.ArgDataType = ArgDataType
+	return s
+}
+
+func (s *FunctionArgumentRequest) WithDefault(Default *string) *FunctionArgumentRequest {
+	s.Default = Default
 	return s
 }
 
@@ -192,9 +188,12 @@ func (s *FunctionSecretRequest) WithSecretName(SecretName string) *FunctionSecre
 
 func NewCreateFunctionForJavascriptFunctionRequest(
 	name SchemaObjectIdentifier,
+	returns *FunctionReturnsRequest,
+	functionDefinition string,
 ) *CreateFunctionForJavascriptFunctionRequest {
 	s := CreateFunctionForJavascriptFunctionRequest{}
 	s.name = name
+	s.FunctionDefinition = functionDefinition
 	return &s
 }
 
@@ -228,11 +227,6 @@ func (s *CreateFunctionForJavascriptFunctionRequest) WithCopyGrants(CopyGrants *
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithReturns(Returns *FunctionReturnsRequest) *CreateFunctionForJavascriptFunctionRequest {
-	s.Returns = Returns
-	return s
-}
-
 func (s *CreateFunctionForJavascriptFunctionRequest) WithReturnNullValues(ReturnNullValues FunctionReturnNullValues) *CreateFunctionForJavascriptFunctionRequest {
 	s.ReturnNullValues = &ReturnNullValues
 	return s
@@ -253,16 +247,19 @@ func (s *CreateFunctionForJavascriptFunctionRequest) WithComment(Comment *string
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateFunctionForJavascriptFunctionRequest {
-	s.FunctionDefinition = FunctionDefinition
-	return s
-}
-
 func NewCreateFunctionForPythonFunctionRequest(
 	name SchemaObjectIdentifier,
+	returns *FunctionReturnsRequest,
+	runtimeVersion string,
+	handler string,
+	functionDefinition string,
 ) *CreateFunctionForPythonFunctionRequest {
 	s := CreateFunctionForPythonFunctionRequest{}
 	s.name = name
+	s.Returns = returns
+	s.RuntimeVersion = runtimeVersion
+	s.Handler = handler
+	s.FunctionDefinition = functionDefinition
 	return &s
 }
 
@@ -296,11 +293,6 @@ func (s *CreateFunctionForPythonFunctionRequest) WithCopyGrants(CopyGrants *bool
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithReturns(Returns *FunctionReturnsRequest) *CreateFunctionForPythonFunctionRequest {
-	s.Returns = Returns
-	return s
-}
-
 func (s *CreateFunctionForPythonFunctionRequest) WithReturnNullValues(ReturnNullValues FunctionReturnNullValues) *CreateFunctionForPythonFunctionRequest {
 	s.ReturnNullValues = &ReturnNullValues
 	return s
@@ -313,11 +305,6 @@ func (s *CreateFunctionForPythonFunctionRequest) WithNullInputBehavior(NullInput
 
 func (s *CreateFunctionForPythonFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior FunctionReturnResultsBehavior) *CreateFunctionForPythonFunctionRequest {
 	s.ReturnResultsBehavior = &ReturnResultsBehavior
-	return s
-}
-
-func (s *CreateFunctionForPythonFunctionRequest) WithRuntimeVersion(RuntimeVersion *string) *CreateFunctionForPythonFunctionRequest {
-	s.RuntimeVersion = RuntimeVersion
 	return s
 }
 
@@ -336,11 +323,6 @@ func (s *CreateFunctionForPythonFunctionRequest) WithPackages(Packages []Functio
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithHandler(Handler *string) *CreateFunctionForPythonFunctionRequest {
-	s.Handler = Handler
-	return s
-}
-
 func (s *CreateFunctionForPythonFunctionRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *CreateFunctionForPythonFunctionRequest {
 	s.ExternalAccessIntegrations = ExternalAccessIntegrations
 	return s
@@ -351,16 +333,17 @@ func (s *CreateFunctionForPythonFunctionRequest) WithSecrets(Secrets []FunctionS
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateFunctionForPythonFunctionRequest {
-	s.FunctionDefinition = FunctionDefinition
-	return s
-}
-
 func NewCreateFunctionForScalaFunctionRequest(
 	name SchemaObjectIdentifier,
+	returns *FunctionReturnsRequest,
+	handler string,
+	functionDefinition string,
 ) *CreateFunctionForScalaFunctionRequest {
 	s := CreateFunctionForScalaFunctionRequest{}
 	s.name = name
+	s.Returns = returns
+	s.Handler = handler
+	s.FunctionDefinition = functionDefinition
 	return &s
 }
 
@@ -391,11 +374,6 @@ func (s *CreateFunctionForScalaFunctionRequest) WithArguments(Arguments []Functi
 
 func (s *CreateFunctionForScalaFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateFunctionForScalaFunctionRequest {
 	s.CopyGrants = CopyGrants
-	return s
-}
-
-func (s *CreateFunctionForScalaFunctionRequest) WithReturns(Returns *FunctionReturnsRequest) *CreateFunctionForScalaFunctionRequest {
-	s.Returns = Returns
 	return s
 }
 
@@ -434,26 +412,20 @@ func (s *CreateFunctionForScalaFunctionRequest) WithPackages(Packages []Function
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithHandler(Handler *string) *CreateFunctionForScalaFunctionRequest {
-	s.Handler = Handler
-	return s
-}
-
 func (s *CreateFunctionForScalaFunctionRequest) WithTargetPath(TargetPath *string) *CreateFunctionForScalaFunctionRequest {
 	s.TargetPath = TargetPath
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateFunctionForScalaFunctionRequest {
-	s.FunctionDefinition = FunctionDefinition
-	return s
-}
-
 func NewCreateFunctionForSQLFunctionRequest(
 	name SchemaObjectIdentifier,
+	returns *FunctionReturnsRequest,
+	functionDefinition string,
 ) *CreateFunctionForSQLFunctionRequest {
 	s := CreateFunctionForSQLFunctionRequest{}
 	s.name = name
+	s.Returns = returns
+	s.FunctionDefinition = functionDefinition
 	return &s
 }
 
@@ -487,11 +459,6 @@ func (s *CreateFunctionForSQLFunctionRequest) WithCopyGrants(CopyGrants *bool) *
 	return s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithReturns(Returns *FunctionReturnsRequest) *CreateFunctionForSQLFunctionRequest {
-	s.Returns = Returns
-	return s
-}
-
 func (s *CreateFunctionForSQLFunctionRequest) WithReturnNullValues(ReturnNullValues FunctionReturnNullValues) *CreateFunctionForSQLFunctionRequest {
 	s.ReturnNullValues = &ReturnNullValues
 	return s
@@ -509,11 +476,6 @@ func (s *CreateFunctionForSQLFunctionRequest) WithMemoizable(Memoizable *bool) *
 
 func (s *CreateFunctionForSQLFunctionRequest) WithComment(Comment *string) *CreateFunctionForSQLFunctionRequest {
 	s.Comment = Comment
-	return s
-}
-
-func (s *CreateFunctionForSQLFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateFunctionForSQLFunctionRequest {
-	s.FunctionDefinition = FunctionDefinition
 	return s
 }
 

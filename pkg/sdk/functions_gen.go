@@ -17,7 +17,7 @@ type Functions interface {
 
 type FunctionNullInputBehavior string
 
-const (
+var (
 	FunctionNullInputBehaviorCalledOnNullInput FunctionNullInputBehavior = "CALLED ON NULL INPUT"
 	FunctionNullInputBehaviorReturnNullInput   FunctionNullInputBehavior = "RETURN NULL ON NULL INPUT"
 	FunctionNullInputBehaviorStrict            FunctionNullInputBehavior = "STRICT"
@@ -25,14 +25,14 @@ const (
 
 type FunctionReturnResultsBehavior string
 
-const (
+var (
 	FunctionReturnResultsBehaviorVolatile  FunctionReturnResultsBehavior = "VOLATILE"
 	FunctionReturnResultsBehaviorImmutable FunctionReturnResultsBehavior = "IMMUTABLE"
 )
 
 type FunctionReturnNullValues string
 
-const (
+var (
 	FunctionReturnNullValuesNull    FunctionReturnNullValues = "NULL"
 	FunctionReturnNullValuesNotNull FunctionReturnNullValues = "NOT NULL"
 )
@@ -57,16 +57,17 @@ type CreateFunctionForJavaFunctionOptions struct {
 	Comment                    *string                        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Imports                    []FunctionImports              `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Packages                   []FunctionPackages             `ddl:"parameter,parentheses" sql:"PACKAGES"`
-	Handler                    *string                        `ddl:"parameter,single_quotes" sql:"HANDLER"`
+	Handler                    string                        `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier      `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []FunctionSecret               `ddl:"parameter,parentheses" sql:"SECRETS"`
 	TargetPath                 *string                        `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	FunctionDefinition         *string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition         string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 type FunctionArgument struct {
 	ArgName     string   `ddl:"keyword,no_quotes"`
 	ArgDataType DataType `ddl:"keyword,no_quotes"`
+	Default     *string  `ddl:"parameter,no_quotes" sql:"DEFAULT"`
 }
 
 type FunctionReturns struct {
@@ -113,7 +114,7 @@ type CreateFunctionForJavascriptFunctionOptions struct {
 	NullInputBehavior     *FunctionNullInputBehavior     `ddl:"keyword"`
 	ReturnResultsBehavior *FunctionReturnResultsBehavior `ddl:"keyword"`
 	Comment               *string                        `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	FunctionDefinition    *string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition    string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 // CreateFunctionForPythonFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function.
@@ -132,14 +133,14 @@ type CreateFunctionForPythonFunctionOptions struct {
 	languagePython             bool                           `ddl:"static" sql:"LANGUAGE PYTHON"`
 	NullInputBehavior          *FunctionNullInputBehavior     `ddl:"keyword"`
 	ReturnResultsBehavior      *FunctionReturnResultsBehavior `ddl:"keyword"`
-	RuntimeVersion             *string                        `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
+	RuntimeVersion             string                        `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
 	Comment                    *string                        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Imports                    []FunctionImports              `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Packages                   []FunctionPackages             `ddl:"parameter,parentheses" sql:"PACKAGES"`
-	Handler                    *string                        `ddl:"parameter,single_quotes" sql:"HANDLER"`
+	Handler                    string                        `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier      `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []FunctionSecret               `ddl:"parameter,parentheses" sql:"SECRETS"`
-	FunctionDefinition         *string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition         string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 // CreateFunctionForScalaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function.
@@ -158,13 +159,13 @@ type CreateFunctionForScalaFunctionOptions struct {
 	languageScala         bool                           `ddl:"static" sql:"LANGUAGE SCALA"`
 	NullInputBehavior     *FunctionNullInputBehavior     `ddl:"keyword"`
 	ReturnResultsBehavior *FunctionReturnResultsBehavior `ddl:"keyword"`
-	RuntimeVersion        *string                        `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
+	RuntimeVersion       *string                        `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
 	Comment               *string                        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Imports               []FunctionImports              `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Packages              []FunctionPackages             `ddl:"parameter,parentheses" sql:"PACKAGES"`
-	Handler               *string                        `ddl:"parameter,single_quotes" sql:"HANDLER"`
+	Handler               string                        `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	TargetPath            *string                        `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	FunctionDefinition    *string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition    string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 // CreateFunctionForSQLFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function.
@@ -183,7 +184,7 @@ type CreateFunctionForSQLFunctionOptions struct {
 	ReturnResultsBehavior *FunctionReturnResultsBehavior `ddl:"keyword"`
 	Memoizable            *bool                          `ddl:"keyword" sql:"MEMOIZABLE"`
 	Comment               *string                        `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	FunctionDefinition    *string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition    string                        `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 
 // AlterFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-function.
@@ -227,7 +228,7 @@ type DropFunctionOptions struct {
 	ArgumentTypes []FunctionArgumentType `ddl:"parameter,parentheses,no_equals"`
 }
 
-// ShowFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-functions.
+// ShowFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-user-functions.
 type ShowFunctionOptions struct {
 	show          bool  `ddl:"static" sql:"SHOW"`
 	userFunctions bool  `ddl:"static" sql:"USER FUNCTIONS"`
@@ -239,10 +240,16 @@ type functionRow struct {
 	CreatedOn          string `db:"created_on"`
 	Name               string `db:"name"`
 	SchemaName         string `db:"schema_name"`
+	IsBuiltIn          string `db:"is_builtin"`
+	IsAggregate        string `db:"is_aggregate"`
+	IsAnsi             string `db:"is_ansi"`
 	MinNumArguments    int    `db:"min_num_arguments"`
 	MaxNumArguments    int    `db:"max_num_arguments"`
 	Arguments          string `db:"arguments"`
+	Description        string `db:"description"`
+	CatalogName        string `db:"catalog_name"`
 	IsTableFunction    string `db:"is_table_function"`
+	ValidForClustering string `db:"valid_for_clustering"`
 	IsSecure           string `db:"is_secure"`
 	IsExternalFunction string `db:"is_external_function"`
 	Language           string `db:"language"`
@@ -253,17 +260,23 @@ type Function struct {
 	CreatedOn          string
 	Name               string
 	SchemaName         string
+	IsBuiltIn          bool
+	IsAggregate        bool
+	IsAnsi             bool
 	MinNumArguments    int
 	MaxNumArguments    int
 	Arguments          string
+	Description        string
+	CatalogName        string
 	IsTableFunction    bool
+	ValidForClustering bool
 	IsSecure           bool
 	IsExternalFunction bool
 	Language           string
 	IsMemoizable       bool
 }
 
-// DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/describe-function.
+// DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.
 type DescribeFunctionOptions struct {
 	describe      bool                   `ddl:"static" sql:"DESCRIBE"`
 	function      bool                   `ddl:"static" sql:"FUNCTION"`

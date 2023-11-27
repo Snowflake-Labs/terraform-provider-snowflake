@@ -75,7 +75,7 @@ func TestFunctions_CreateFunctionForJava(t *testing.T) {
 				Package: "com.snowflake:snowpark:1.2.0",
 			},
 		}
-		opts.Handler = String("TestFunc.echoVarchar")
+		opts.Handler = "TestFunc.echoVarchar"
 		opts.ExternalAccessIntegrations = []AccountObjectIdentifier{
 			NewAccountObjectIdentifier("ext_integration"),
 		}
@@ -90,7 +90,7 @@ func TestFunctions_CreateFunctionForJava(t *testing.T) {
 			},
 		}
 		opts.TargetPath = String("@~/testfunc.jar")
-		opts.FunctionDefinition = String("return id + name;")
+		opts.FunctionDefinition = "return id + name;"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION IF NOT EXISTS %s (id NUMBER, name VARCHAR) COPY GRANTS RETURNS TABLE (country_code VARCHAR, country_name VARCHAR) NOT NULL LANGUAGE JAVA CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '2.0' COMMENT = 'comment' IMPORTS = ('@~/my_decrement_udf_package_dir/my_decrement_udf_jar.jar') PACKAGES = ('com.snowflake:snowpark:1.2.0') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) TARGET_PATH = '@~/testfunc.jar' AS 'return id + name;'`, id.FullyQualifiedName())
 	})
 }
@@ -138,7 +138,7 @@ func TestFunctions_CreateFunctionForJavascript(t *testing.T) {
 		returnResultsBehavior := FunctionReturnResultsBehaviorImmutable
 		opts.ReturnResultsBehavior = &returnResultsBehavior
 		opts.Comment = String("comment")
-		opts.FunctionDefinition = String("return 1;")
+		opts.FunctionDefinition = "return 1;"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s (d FLOAT) COPY GRANTS RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT CALLED ON NULL INPUT IMMUTABLE COMMENT = 'comment' AS 'return 1;'`, id.FullyQualifiedName())
 	})
 }
@@ -186,7 +186,7 @@ func TestFunctions_CreateFunctionForPython(t *testing.T) {
 		opts.NullInputBehavior = &nullInputBehavior
 		returnResultsBehavior := FunctionReturnResultsBehaviorImmutable
 		opts.ReturnResultsBehavior = &returnResultsBehavior
-		opts.RuntimeVersion = String("3.8")
+		opts.RuntimeVersion = "3.8"
 		opts.Comment = String("comment")
 		opts.Imports = []FunctionImports{
 			{
@@ -204,7 +204,7 @@ func TestFunctions_CreateFunctionForPython(t *testing.T) {
 				Package: "pandas",
 			},
 		}
-		opts.Handler = String("udf")
+		opts.Handler = "udf"
 		opts.ExternalAccessIntegrations = []AccountObjectIdentifier{
 			NewAccountObjectIdentifier("ext_integration"),
 		}
@@ -218,7 +218,7 @@ func TestFunctions_CreateFunctionForPython(t *testing.T) {
 				SecretName:         "name2",
 			},
 		}
-		opts.FunctionDefinition = String("import numpy as np")
+		opts.FunctionDefinition = "import numpy as np"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION IF NOT EXISTS %s (i NUMBER) COPY GRANTS RETURNS VARIANT NOT NULL LANGUAGE PYTHON CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '3.8' COMMENT = 'comment' IMPORTS = ('numpy', 'pandas') PACKAGES = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) AS 'import numpy as np'`, id.FullyQualifiedName())
 	})
 }
@@ -273,8 +273,8 @@ func TestFunctions_CreateFunctionForScala(t *testing.T) {
 				Import: "@udf_libs/echohandler.jar",
 			},
 		}
-		opts.Handler = String("Echo.echoVarchar")
-		opts.FunctionDefinition = String("return x")
+		opts.Handler ="Echo.echoVarchar"
+		opts.FunctionDefinition = "return x"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION IF NOT EXISTS %s (x VARCHAR) COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SCALA CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '2.0' COMMENT = 'comment' IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' AS 'return x'`, id.FullyQualifiedName())
 	})
 }
@@ -316,7 +316,7 @@ func TestFunctions_CreateFunctionForSQL(t *testing.T) {
 		opts.ReturnResultsBehavior = &returnResultsBehavior
 		opts.Memoizable = Bool(true)
 		opts.Comment = String("comment")
-		opts.FunctionDefinition = String("3.141592654::FLOAT")
+		opts.FunctionDefinition = "3.141592654::FLOAT"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION IF NOT EXISTS %s COPY GRANTS RETURNS FLOAT NOT NULL IMMUTABLE MEMOIZABLE COMMENT = 'comment' AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
 	})
 }

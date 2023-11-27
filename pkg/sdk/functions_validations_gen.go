@@ -101,6 +101,9 @@ func (opts *AlterFunctionOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags, opts.RenameTo) {
+		errs = append(errs, errExactlyOneOf("Set", "Unset", "SetTags", "UnsetTags", "RenameTo"))
+	}
 	return JoinErrors(errs...)
 }
 
