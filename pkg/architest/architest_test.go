@@ -12,13 +12,13 @@ import (
 func Test_Directory(t *testing.T) {
 	t.Run("fail to use non-existing directory", func(t *testing.T) {
 		assert.Panics(t, func() {
-			architest.NewDirectory("testdata/non_existing")
+			architest.Directory("testdata/non_existing")
 		})
 	})
 
 	t.Run("use directory", func(t *testing.T) {
 		assert.NotPanics(t, func() {
-			architest.NewDirectory("testdata/dir1")
+			architest.Directory("testdata/dir1")
 		})
 	})
 
@@ -34,7 +34,7 @@ func Test_Directory(t *testing.T) {
 	}
 	for _, tt := range tests1 {
 		t.Run("list all files in the given directory", func(t *testing.T) {
-			dir := architest.NewDirectory(tt.directory)
+			dir := architest.Directory(tt.directory)
 
 			allFiles := dir.AllFiles()
 			assert.Len(t, allFiles, len(tt.expectedFileNames))
@@ -78,7 +78,7 @@ func Test_Directory(t *testing.T) {
 	}
 	for _, tt := range tests2 {
 		t.Run("list only files matching filter in the given directory", func(t *testing.T) {
-			dir := architest.NewDirectory(tt.directory)
+			dir := architest.Directory(tt.directory)
 
 			filteredFiles := dir.Files(tt.filter)
 			assert.Len(t, filteredFiles, len(tt.expectedFileNames))
@@ -317,7 +317,7 @@ func Test_Assertions(t *testing.T) {
 
 func Test_SampleArchiTestUsage(t *testing.T) {
 	t.Run("acceptance tests", func(t *testing.T) {
-		acceptanceTestFiles := architest.NewDirectory("testdata/dir3/").
+		acceptanceTestFiles := architest.Directory("testdata/dir3/").
 			AllFiles().
 			Filter(architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex))
 
@@ -330,7 +330,7 @@ func Test_SampleArchiTestUsage(t *testing.T) {
 	})
 
 	t.Run("integration tests", func(t *testing.T) {
-		integrationTestFiles := architest.NewDirectory("testdata/dir4/").
+		integrationTestFiles := architest.Directory("testdata/dir4/").
 			AllFiles().
 			Filter(architest.FileNameRegexFilterProvider(architest.IntegrationTestFileRegex))
 
@@ -343,7 +343,7 @@ func Test_SampleArchiTestUsage(t *testing.T) {
 	})
 
 	t.Run("tests", func(t *testing.T) {
-		testFiles := architest.NewDirectory("testdata/dir2/").
+		testFiles := architest.Directory("testdata/dir2/").
 			AllFiles().
 			Filter(architest.FileNameRegexFilterProvider(architest.TestNameRegex))
 

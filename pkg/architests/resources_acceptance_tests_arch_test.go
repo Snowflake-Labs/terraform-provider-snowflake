@@ -7,8 +7,7 @@ import (
 )
 
 func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
-	resourcesDirectory := architest.NewDirectory("../resources/")
-	resourcesFiles := resourcesDirectory.AllFiles()
+	resourcesFiles := architest.Directory("../resources/").AllFiles()
 	acceptanceTestFiles := resourcesFiles.Filter(architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex))
 
 	t.Run("acceptance tests files have the right package", func(t *testing.T) {

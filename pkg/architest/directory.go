@@ -5,12 +5,17 @@ import (
 	"go/token"
 )
 
-type Directory struct {
+type directory struct {
 	path  string
 	files Files
 }
 
-func NewDirectory(path string) *Directory {
+type FilesProvider interface {
+	AllFiles() Files
+	Files(filter FileFilter) Files
+}
+
+func Directory(path string) FilesProvider {
 	packagesDict, err := parser.ParseDir(token.NewFileSet(), path, nil, 0)
 	if err != nil {
 		panic(err)
@@ -21,16 +26,16 @@ func NewDirectory(path string) *Directory {
 			files = append(files, *NewFile(packageName, fileName, fileSrc))
 		}
 	}
-	return &Directory{
+	return &directory{
 		path:  path,
 		files: files,
 	}
 }
 
-func (d *Directory) AllFiles() Files {
+func (d *directory) AllFiles() Files {
 	return d.files
 }
 
-func (d *Directory) Files(filter FileFilter) Files {
+func (d *directory) Files(filter FileFilter) Files {
 	return d.AllFiles().Filter(filter)
 }

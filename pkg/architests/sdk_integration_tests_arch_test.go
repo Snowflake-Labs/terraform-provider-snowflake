@@ -7,8 +7,7 @@ import (
 )
 
 func TestArchCheck_IntegrationTests_Sdk(t *testing.T) {
-	sdkIntegrationTestDirectory := architest.NewDirectory("../sdk/testint/")
-	sdkIntegrationTestFiles := sdkIntegrationTestDirectory.AllFiles()
+	sdkIntegrationTestFiles := architest.Directory("../sdk/testint/").AllFiles()
 	integrationTestFiles := sdkIntegrationTestFiles.Filter(architest.FileNameRegexFilterProvider(architest.IntegrationTestFileRegex))
 
 	t.Run("integration tests files have the right package", func(t *testing.T) {
