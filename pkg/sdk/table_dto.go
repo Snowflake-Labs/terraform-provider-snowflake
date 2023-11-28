@@ -221,6 +221,7 @@ func (s *ShowTableRequest) toOpts() *showTableOptions {
 		Like:       like,
 		StartsWith: s.StartsWith,
 		LimitFrom:  limitFrom,
+		In:         s.in,
 	}
 }
 
@@ -497,20 +498,11 @@ type TableExternalTableColumnDropActionRequest struct {
 	Columns []string
 }
 
-type ShowTableByIdRequest struct {
-	Terse      *bool
-	History    *bool
-	Id         SchemaObjectIdentifier // required
-	In         *ShowTableInRequest
-	StartsWith *string
-	LimitFrom  *LimitFrom
-}
-
 type ShowTableRequest struct {
 	Terse       *bool
 	History     *bool
 	LikePattern string
-	In          *ShowTableInRequest
+	in          *In
 	StartsWith  *string
 	LimitFrom   *LimitFrom
 }

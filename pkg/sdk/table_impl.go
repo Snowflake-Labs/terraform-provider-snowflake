@@ -60,13 +60,12 @@ func (v *tables) Show(ctx context.Context, request *ShowTableRequest) ([]Table, 
 }
 
 func (v *tables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Table, error) {
-	requestWithName := NewShowTableRequest().WithLikePattern(id.Name())
-	tables, err := v.Show(ctx, requestWithName)
+	request := NewShowTableRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLikePattern(id.Name())
+	returnedTables, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-
-	return collections.FindOne(tables, func(r Table) bool { return r.Name == id.Name() })
+	return collections.FindOne(returnedTables, func(r Table) bool { return r.Name == id.Name() })
 }
 
 func (s *AlterTableRequest) toOpts() *alterTableOptions {

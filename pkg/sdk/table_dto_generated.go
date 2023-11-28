@@ -1582,8 +1582,8 @@ func (s *ShowTableRequest) WithLikePattern(LikePattern string) *ShowTableRequest
 	return s
 }
 
-func (s *ShowTableRequest) WithIn(In *ShowTableInRequest) *ShowTableRequest {
-	s.In = In
+func (s *ShowTableRequest) WithIn(in *In) *ShowTableRequest {
+	s.in = in
 	return s
 }
 
@@ -1594,25 +1594,6 @@ func (s *ShowTableRequest) WithStartsWith(StartsWith *string) *ShowTableRequest 
 
 func (s *ShowTableRequest) WithLimitFrom(LimitFrom *LimitFrom) *ShowTableRequest {
 	s.LimitFrom = LimitFrom
-	return s
-}
-
-func NewShowTableInRequest() *ShowTableInRequest {
-	return &ShowTableInRequest{}
-}
-
-func (s *ShowTableInRequest) WithAccount(Account *bool) *ShowTableInRequest {
-	s.Account = Account
-	return s
-}
-
-func (s *ShowTableInRequest) WithDatabase(Database AccountObjectIdentifier) *ShowTableInRequest {
-	s.Database = Database
-	return s
-}
-
-func (s *ShowTableInRequest) WithSchema(Schema DatabaseObjectIdentifier) *ShowTableInRequest {
-	s.Schema = Schema
 	return s
 }
 
