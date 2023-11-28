@@ -8,6 +8,12 @@ import (
 
 var _ Tables = (*tables)(nil)
 
+var _ optionsProvider[TableColumnAction] = new(TableColumnActionRequest)
+var _ optionsProvider[TableConstraintAction] = new(TableConstraintActionRequest)
+var _ optionsProvider[TableExternalTableAction] = new(TableExternalTableActionRequest)
+var _ optionsProvider[TableSearchOptimizationAction] = new(TableSearchOptimizationActionRequest)
+var _ optionsProvider[TableSet] = new(TableSetRequest)
+
 type tables struct {
 	client *Client
 }
@@ -91,23 +97,23 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 	}
 	var columnAction *TableColumnAction
 	if s.ColumnAction != nil {
-		columnAction = convertTableColumnAction(*s.ColumnAction)
+		columnAction = s.ColumnAction.toOpts()
 	}
 	var constraintAction *TableConstraintAction
 	if s.ConstraintAction != nil {
-		constraintAction = convertTableConstraintAction(*s.ConstraintAction)
+		constraintAction = s.ConstraintAction.toOpts()
 	}
 	var externalTableAction *TableExternalTableAction
 	if s.ExternalTableAction != nil {
-		externalTableAction = convertTableExternalAction(*s.ExternalTableAction)
+		externalTableAction = s.ExternalTableAction.toOpts()
 	}
 	var searchOptimizationAction *TableSearchOptimizationAction
 	if s.SearchOptimizationAction != nil {
-		searchOptimizationAction = convertSearchOptimizationAction(*s.SearchOptimizationAction)
+		searchOptimizationAction = s.SearchOptimizationAction.toOpts()
 	}
 	var tableSet *TableSet
 	if s.Set != nil {
-		tableSet = convertAlterTableSet(*s.Set)
+		tableSet = s.Set.toOpts()
 	}
 
 	tagAssociations := make([]TagAssociation, 0, len(s.SetTags))
@@ -165,9 +171,9 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 	}
 }
 
-func convertAlterTableSet(request TableSetRequest) *TableSet {
-	stageFileFormats := make([]StageFileFormat, 0, len(request.StageFileFormat))
-	for _, stageFileFormat := range request.StageFileFormat {
+func (r *TableSetRequest) toOpts() *TableSet {
+	stageFileFormats := make([]StageFileFormat, 0, len(r.StageFileFormat))
+	for _, stageFileFormat := range r.StageFileFormat {
 		var options *FileFormatTypeOptions
 		if stageFileFormat.Options != nil {
 			options = stageFileFormat.Options.toOpts()
@@ -178,201 +184,201 @@ func convertAlterTableSet(request TableSetRequest) *TableSet {
 			Options:    options,
 		})
 	}
-	stageCopyOptions := make([]StageCopyOption, 0, len(request.StageCopyOptions))
-	for _, stageCopyOption := range request.StageCopyOptions {
+	stageCopyOptions := make([]StageCopyOption, 0, len(r.StageCopyOptions))
+	for _, stageCopyOption := range r.StageCopyOptions {
 		stageCopyOptions = append(stageCopyOptions, StageCopyOption{
 			InnerValue: *stageCopyOption.toOpts(),
 		})
 	}
 
 	return &TableSet{
-		EnableSchemaEvolution:      request.EnableSchemaEvolution,
+		EnableSchemaEvolution:      r.EnableSchemaEvolution,
 		StageFileFormat:            stageFileFormats,
 		StageCopyOptions:           stageCopyOptions,
-		DataRetentionTimeInDays:    request.DataRetentionTimeInDays,
-		MaxDataExtensionTimeInDays: request.MaxDataExtensionTimeInDays,
-		ChangeTracking:             request.ChangeTracking,
-		DefaultDDLCollation:        request.DefaultDDLCollation,
-		Comment:                    request.Comment,
+		DataRetentionTimeInDays:    r.DataRetentionTimeInDays,
+		MaxDataExtensionTimeInDays: r.MaxDataExtensionTimeInDays,
+		ChangeTracking:             r.ChangeTracking,
+		DefaultDDLCollation:        r.DefaultDDLCollation,
+		Comment:                    r.Comment,
 	}
 }
 
-func convertSearchOptimizationAction(request TableSearchOptimizationActionRequest) *TableSearchOptimizationAction {
-	if len(request.AddSearchOptimizationOn) > 0 {
+func (r *TableSearchOptimizationActionRequest) toOpts() *TableSearchOptimizationAction {
+	if len(r.AddSearchOptimizationOn) > 0 {
 		return &TableSearchOptimizationAction{
 			Add: &AddSearchOptimization{
-				On: request.AddSearchOptimizationOn,
+				On: r.AddSearchOptimizationOn,
 			},
 		}
 	}
-	if len(request.DropSearchOptimizationOn) > 0 {
+	if len(r.DropSearchOptimizationOn) > 0 {
 		return &TableSearchOptimizationAction{
 			Drop: &DropSearchOptimization{
-				On: request.DropSearchOptimizationOn,
+				On: r.DropSearchOptimizationOn,
 			},
 		}
 	}
 	return nil
 }
 
-func convertTableExternalAction(request TableExternalTableActionRequest) *TableExternalTableAction {
-	if request.Add != nil {
+func (r *TableExternalTableActionRequest) toOpts() *TableExternalTableAction {
+	if r.Add != nil {
 		return &TableExternalTableAction{
 			Add: &TableExternalTableColumnAddAction{
-				Name:       request.Add.Name,
-				Type:       request.Add.Type,
-				Expression: request.Add.Expression,
+				Name:       r.Add.Name,
+				Type:       r.Add.Type,
+				Expression: r.Add.Expression,
 			},
 		}
 	}
-	if request.Rename != nil {
+	if r.Rename != nil {
 		return &TableExternalTableAction{
 			Rename: &TableExternalTableColumnRenameAction{
-				OldName: request.Rename.OldName,
-				NewName: request.Rename.NewName,
+				OldName: r.Rename.OldName,
+				NewName: r.Rename.NewName,
 			},
 		}
 	}
-	if request.Drop != nil {
+	if r.Drop != nil {
 		return &TableExternalTableAction{
 			Drop: &TableExternalTableColumnDropAction{
-				Columns: request.Drop.Columns,
+				Columns: r.Drop.Columns,
 			},
 		}
 	}
 	return nil
 }
 
-func convertTableConstraintAction(request TableConstraintActionRequest) *TableConstraintAction {
-	if request.Add != nil {
+func (r *TableConstraintActionRequest) toOpts() *TableConstraintAction {
+	if r.Add != nil {
 		var foreignKey *OutOfLineForeignKey
-		if request.Add.ForeignKey != nil {
+		if r.Add.ForeignKey != nil {
 			var foreignKeyOnAction *ForeignKeyOnAction
-			if request.Add.ForeignKey.On != nil {
+			if r.Add.ForeignKey.On != nil {
 				foreignKeyOnAction = &ForeignKeyOnAction{
-					OnUpdate: request.Add.ForeignKey.On.OnUpdate,
-					OnDelete: request.Add.ForeignKey.On.OnDelete,
+					OnUpdate: r.Add.ForeignKey.On.OnUpdate,
+					OnDelete: r.Add.ForeignKey.On.OnDelete,
 				}
 			}
 			foreignKey = &OutOfLineForeignKey{
-				TableName:   request.Add.ForeignKey.TableName,
-				ColumnNames: request.Add.ForeignKey.ColumnNames,
-				Match:       request.Add.ForeignKey.Match,
+				TableName:   r.Add.ForeignKey.TableName,
+				ColumnNames: r.Add.ForeignKey.ColumnNames,
+				Match:       r.Add.ForeignKey.Match,
 				On:          foreignKeyOnAction,
 			}
 		}
 		outOfLineConstrait := AlterOutOfLineConstraint{
-			Name:               request.Add.Name,
-			Type:               request.Add.Type,
-			Columns:            request.Add.Columns,
+			Name:               r.Add.Name,
+			Type:               r.Add.Type,
+			Columns:            r.Add.Columns,
 			ForeignKey:         foreignKey,
-			Enforced:           request.Add.Enforced,
-			NotEnforced:        request.Add.NotEnforced,
-			Deferrable:         request.Add.Deferrable,
-			NotDeferrable:      request.Add.NotDeferrable,
-			InitiallyDeferred:  request.Add.InitiallyDeferred,
-			InitiallyImmediate: request.Add.InitiallyImmediate,
-			Enable:             request.Add.Enable,
-			Disable:            request.Add.Disable,
-			Validate:           request.Add.Validate,
-			NoValidate:         request.Add.NoValidate,
-			Rely:               request.Add.Rely,
-			NoRely:             request.Add.NoRely,
+			Enforced:           r.Add.Enforced,
+			NotEnforced:        r.Add.NotEnforced,
+			Deferrable:         r.Add.Deferrable,
+			NotDeferrable:      r.Add.NotDeferrable,
+			InitiallyDeferred:  r.Add.InitiallyDeferred,
+			InitiallyImmediate: r.Add.InitiallyImmediate,
+			Enable:             r.Add.Enable,
+			Disable:            r.Add.Disable,
+			Validate:           r.Add.Validate,
+			NoValidate:         r.Add.NoValidate,
+			Rely:               r.Add.Rely,
+			NoRely:             r.Add.NoRely,
 		}
 		return &TableConstraintAction{
 			Add: &outOfLineConstrait,
 		}
 	}
-	if request.Rename != nil {
+	if r.Rename != nil {
 		return &TableConstraintAction{
 			Rename: &TableConstraintRenameAction{
-				OldName: request.Rename.OldName,
-				NewName: request.Rename.NewName,
+				OldName: r.Rename.OldName,
+				NewName: r.Rename.NewName,
 			},
 		}
 	}
-	if request.Alter != nil {
+	if r.Alter != nil {
 		return &TableConstraintAction{
 			Alter: &TableConstraintAlterAction{
-				ConstraintName: request.Alter.ConstraintName,
-				PrimaryKey:     request.Alter.PrimaryKey,
-				Unique:         request.Alter.Unique,
-				ForeignKey:     request.Alter.ForeignKey,
-				Columns:        request.Alter.Columns,
-				Enforced:       request.Alter.Enforced,
-				NotEnforced:    request.Alter.NotEnforced,
-				Validate:       request.Alter.Valiate,
-				NoValidate:     request.Alter.NoValidate,
-				Rely:           request.Alter.Rely,
-				NoRely:         request.Alter.NoRely,
+				ConstraintName: r.Alter.ConstraintName,
+				PrimaryKey:     r.Alter.PrimaryKey,
+				Unique:         r.Alter.Unique,
+				ForeignKey:     r.Alter.ForeignKey,
+				Columns:        r.Alter.Columns,
+				Enforced:       r.Alter.Enforced,
+				NotEnforced:    r.Alter.NotEnforced,
+				Validate:       r.Alter.Valiate,
+				NoValidate:     r.Alter.NoValidate,
+				Rely:           r.Alter.Rely,
+				NoRely:         r.Alter.NoRely,
 			},
 		}
 	}
-	if request.Drop != nil {
+	if r.Drop != nil {
 		return &TableConstraintAction{
 			Drop: &TableConstraintDropAction{
-				ConstraintName: request.Drop.ConstraintName,
-				PrimaryKey:     request.Drop.PrimaryKey,
-				Unique:         request.Drop.Unique,
-				ForeignKey:     request.Drop.ForeignKey,
-				Columns:        request.Drop.Columns,
-				Cascade:        request.Drop.Cascade,
-				Restrict:       request.Drop.Restrict,
+				ConstraintName: r.Drop.ConstraintName,
+				PrimaryKey:     r.Drop.PrimaryKey,
+				Unique:         r.Drop.Unique,
+				ForeignKey:     r.Drop.ForeignKey,
+				Columns:        r.Drop.Columns,
+				Cascade:        r.Drop.Cascade,
+				Restrict:       r.Drop.Restrict,
 			},
 		}
 	}
 	return nil
 }
 
-func convertTableColumnAction(request TableColumnActionRequest) *TableColumnAction {
-	if request.Add != nil {
+func (r *TableColumnActionRequest) toOpts() *TableColumnAction {
+	if r.Add != nil {
 		var defaultValue *ColumnDefaultValue
-		if request.Add.DefaultValue != nil {
+		if r.Add.DefaultValue != nil {
 			defaultValue = &ColumnDefaultValue{
-				request.Add.DefaultValue.expression,
+				r.Add.DefaultValue.expression,
 				&ColumnIdentity{
-					Start:     request.Add.DefaultValue.identity.Start,
-					Increment: request.Add.DefaultValue.identity.Increment,
+					Start:     r.Add.DefaultValue.identity.Start,
+					Increment: r.Add.DefaultValue.identity.Increment,
 				},
 			}
 		}
 		var inlineConstraint *TableColumnAddInlineConstraint
-		if request.Add.InlineConstraint != nil {
+		if r.Add.InlineConstraint != nil {
 			var foreignKey *ColumnAddForeignKey
-			if request.Add.InlineConstraint.ForeignKey != nil {
+			if r.Add.InlineConstraint.ForeignKey != nil {
 				foreignKey = &ColumnAddForeignKey{
-					TableName:  request.Add.InlineConstraint.ForeignKey.TableName,
-					ColumnName: request.Add.InlineConstraint.ForeignKey.ColumnName,
+					TableName:  r.Add.InlineConstraint.ForeignKey.TableName,
+					ColumnName: r.Add.InlineConstraint.ForeignKey.ColumnName,
 				}
 			}
 			inlineConstraint = &TableColumnAddInlineConstraint{
-				NotNull:    request.Add.InlineConstraint.NotNull,
-				Name:       request.Add.InlineConstraint.Name,
-				Type:       request.Add.InlineConstraint.Type,
+				NotNull:    r.Add.InlineConstraint.NotNull,
+				Name:       r.Add.InlineConstraint.Name,
+				Type:       r.Add.InlineConstraint.Type,
 				ForeignKey: foreignKey,
 			}
 		}
 		return &TableColumnAction{
 			Add: &TableColumnAddAction{
-				Column:           request.Add.Column,
-				Name:             request.Add.Name,
-				Type:             request.Add.Type,
+				Column:           r.Add.Column,
+				Name:             r.Add.Name,
+				Type:             r.Add.Type,
 				DefaultValue:     defaultValue,
 				InlineConstraint: inlineConstraint,
 			},
 		}
 	}
-	if request.Rename != nil {
+	if r.Rename != nil {
 		return &TableColumnAction{
 			Rename: &TableColumnRenameAction{
-				OldName: request.Rename.OldName,
-				NewName: request.Rename.NewName,
+				OldName: r.Rename.OldName,
+				NewName: r.Rename.NewName,
 			},
 		}
 	}
-	if len(request.Alter) > 0 {
+	if len(r.Alter) > 0 {
 		var alterActions []TableColumnAlterAction
-		for _, alterAction := range request.Alter {
+		for _, alterAction := range r.Alter {
 			var notNullConstraint *TableColumnNotNullConstraint
 			if alterAction.NotNullConstraint != nil {
 				notNullConstraint = &TableColumnNotNullConstraint{
@@ -395,43 +401,43 @@ func convertTableColumnAction(request TableColumnActionRequest) *TableColumnActi
 			Alter: alterActions,
 		}
 	}
-	if request.SetMaskingPolicy != nil {
+	if r.SetMaskingPolicy != nil {
 		return &TableColumnAction{
 			SetMaskingPolicy: &TableColumnAlterSetMaskingPolicyAction{
-				ColumnName:        request.SetMaskingPolicy.ColumnName,
-				MaskingPolicyName: request.SetMaskingPolicy.MaskingPolicyName,
-				Using:             request.SetMaskingPolicy.Using,
-				Force:             request.SetMaskingPolicy.Force,
+				ColumnName:        r.SetMaskingPolicy.ColumnName,
+				MaskingPolicyName: r.SetMaskingPolicy.MaskingPolicyName,
+				Using:             r.SetMaskingPolicy.Using,
+				Force:             r.SetMaskingPolicy.Force,
 			},
 		}
 	}
-	if request.UnsetMaskingPolicy != nil {
+	if r.UnsetMaskingPolicy != nil {
 		return &TableColumnAction{
 			UnsetMaskingPolicy: &TableColumnAlterUnsetMaskingPolicyAction{
-				ColumnName: request.UnsetMaskingPolicy.ColumnName,
+				ColumnName: r.UnsetMaskingPolicy.ColumnName,
 			},
 		}
 	}
-	if request.SetTags != nil {
+	if r.SetTags != nil {
 		return &TableColumnAction{
 			SetTags: &TableColumnAlterSetTagsAction{
-				ColumnName: request.SetTags.ColumnName,
-				Tags:       request.SetTags.Tags,
+				ColumnName: r.SetTags.ColumnName,
+				Tags:       r.SetTags.Tags,
 			},
 		}
 	}
-	if request.UnsetTags != nil {
+	if r.UnsetTags != nil {
 		return &TableColumnAction{
 			UnsetTags: &TableColumnAlterUnsetTagsAction{
-				ColumnName: request.UnsetTags.ColumnName,
-				Tags:       request.UnsetTags.Tags,
+				ColumnName: r.UnsetTags.ColumnName,
+				Tags:       r.UnsetTags.Tags,
 			},
 		}
 	}
-	if len(request.DropColumns) > 0 {
+	if len(r.DropColumns) > 0 {
 		return &TableColumnAction{
 			DropColumns: &TableColumnAlterDropColumns{
-				Columns: request.DropColumns,
+				Columns: r.DropColumns,
 			},
 		}
 	}
