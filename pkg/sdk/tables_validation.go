@@ -22,7 +22,7 @@ func (opts *createTableOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if len(opts.Columns) == 0 {
-		errs = append(errs, errTableNeedsAtLeastOneColumn)
+		errs = append(errs, errNotSet("createTableOptions", "Columns"))
 	}
 	for _, column := range opts.Columns {
 		if column.DefaultValue != nil {
@@ -30,7 +30,7 @@ func (opts *createTableOptions) validate() error {
 				column.DefaultValue.Expression,
 				column.DefaultValue.Identity,
 			); !ok {
-				errs = append(errs, errColumnDefaultValueNeedsExactlyOneValue)
+				errs = append(errs, errExactlyOneOf("DefaultValue", "Expression", "Identity"))
 			}
 		}
 		if column.MaskingPolicy != nil {
@@ -56,7 +56,7 @@ func (opts *createTableOptions) validate() error {
 			stageFileFormat.FormatName,
 			stageFileFormat.Type,
 		); !ok {
-			errs = append(errs, errStageFileFormatValueNeedsExactlyOneValue)
+			errs = append(errs, errExactlyOneOf("StageFileFormat", "FormatName", "FormatType"))
 		}
 	}
 
@@ -78,7 +78,7 @@ func (opts *createTableAsSelectOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if len(opts.Columns) == 0 {
-		errs = append(errs, errTableNeedsAtLeastOneColumn)
+		errs = append(errs, errNotSet("createTableAsSelectOptions", "Columns"))
 	}
 	return errors.Join(errs...)
 }
@@ -147,7 +147,7 @@ func (opts *alterTableOptions) validate() error {
 		opts.DropAndAddRowAccessPolicy,
 		opts.DropAllAccessRowPolicies,
 	); !ok {
-		errs = append(errs, errAlterTableNeedsExactlyOneAction)
+		errs = append(errs, errExactlyOneOf("alterTableOptions", "NewName", "SwapWith", "ClusteringAction", "ColumnAction", "ConstraintAction", "ExternalTableAction", "SearchOptimizationAction", "Set", "SetTags", "UnsetTags", "Unset", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllAccessRowPolicies"))
 	}
 	if opts.NewName != nil {
 		if !ValidObjectIdentifier(*opts.NewName) {
@@ -166,7 +166,7 @@ func (opts *alterTableOptions) validate() error {
 			clusteringAction.ChangeReclusterState,
 			clusteringAction.DropClusteringKey,
 		); !ok {
-			errs = append(errs, errTableClusteringActionNeedsExactlyOneAction)
+			errs = append(errs, errExactlyOneOf("ClusteringAction", "ClusterBy", "Recluster", "ChangeReclusterState", "DropClusteringKey"))
 		}
 	}
 	if columnAction := opts.ColumnAction; valueSet(columnAction) {
@@ -180,7 +180,7 @@ func (opts *alterTableOptions) validate() error {
 			columnAction.UnsetTags,
 			columnAction.DropColumns,
 		); !ok {
-			errs = append(errs, errTableColumnActionNeedsExactlyOneAction)
+			errs = append(errs, errExactlyOneOf("ColumnAction", "Add", "Rename", "Alter", "SetMaskingPolicy", "UnsetMaskingPolicy", "SetTags", "UnsetTags", "DropColumns"))
 		}
 		for _, alterAction := range columnAction.Alter {
 			if ok := exactlyOneValueSet(
@@ -191,7 +191,7 @@ func (opts *alterTableOptions) validate() error {
 				alterAction.Comment,
 				alterAction.UnsetComment,
 			); !ok {
-				errs = append(errs, errTableColumnAlterActionNeedsExactlyOneAction)
+				errs = append(errs, errExactlyOneOf("TableColumnAlterAction", "DropDefault", "SetDefault", "NotNullConstraint", "Type", "Comment", "UnsetComment"))
 			}
 		}
 	}
@@ -203,7 +203,7 @@ func (opts *alterTableOptions) validate() error {
 				alterAction.Unique,
 				alterAction.ForeignKey,
 			); !ok {
-				errs = append(errs, errTableConstraintAlterActionNeedsExactlyOneAction)
+				errs = append(errs, errExactlyOneOf("TableConstraintAlterAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 			}
 		}
 		if dropAction := constraintAction.Drop; valueSet(dropAction) {
@@ -213,7 +213,7 @@ func (opts *alterTableOptions) validate() error {
 				dropAction.Unique,
 				dropAction.ForeignKey,
 			); !ok {
-				errs = append(errs, errTableConstraintDropActionNeedsExactlyOneAction)
+				errs = append(errs, errExactlyOneOf("TableConstraintDropAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 			}
 		}
 	}
@@ -223,7 +223,7 @@ func (opts *alterTableOptions) validate() error {
 			externalAction.Rename,
 			externalAction.Drop,
 		); !ok {
-			errs = append(errs, errTableExternalActionNeedsExactlyOneAction)
+			errs = append(errs, errExactlyOneOf("TableExternalTableAction", "Add", "Rename", "Drop"))
 		}
 	}
 	if searchOptimizationAction := opts.SearchOptimizationAction; valueSet(searchOptimizationAction) {
@@ -231,7 +231,7 @@ func (opts *alterTableOptions) validate() error {
 			searchOptimizationAction.Add,
 			searchOptimizationAction.Drop,
 		); !ok {
-			errs = append(errs, errTableSearchOptimizationActionNeedsExactlyOneAction)
+			errs = append(errs, errExactlyOneOf("TableSearchOptimizationAction", "Add", "Drop"))
 		}
 	}
 	return errors.Join(errs...)
@@ -258,17 +258,3 @@ func (opts *showTableOptions) validate() error {
 	}
 	return errors.Join(errs...)
 }
-
-var (
-	errTableNeedsAtLeastOneColumn                         = errors.New("table create statement needs at least one column")
-	errColumnDefaultValueNeedsExactlyOneValue             = errors.New("column default value needs exactly one of {Expression, Identity}")
-	errStageFileFormatValueNeedsExactlyOneValue           = errors.New("stage file format value needs exactly one of {FormatName, FormatType}")
-	errAlterTableNeedsExactlyOneAction                    = errExactlyOneOf("alterTableOptions", "NewName", "SwapWith", "ClusteringAction", "ColumnAction", "ConstraintAction", "ExternalTableAction", "SearchOptimizationAction", "Set", "SetTags", "UnsetTags", "Unset", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllAccessRowPolicies")
-	errTableClusteringActionNeedsExactlyOneAction         = errors.New("alter table clustering action needs exactly one of {ClusterBy, Recluster, ChangeReclusterState,DropClusteringKey}")
-	errTableColumnActionNeedsExactlyOneAction             = errors.New("alter table column action needs exactly one of {Add,Rename,Alter,SetMaskingPolicy,UnsetMaskingPolicy,SetTags,UnsetTags,DropColumns}")
-	errTableColumnAlterActionNeedsExactlyOneAction        = errors.New("alter table column alter action needs exactly one of {DropDefault,SetDefault,NotNullConstraint,Type,Comment,UnsetComment}")
-	errTableConstraintAlterActionNeedsExactlyOneAction    = errors.New("alter table constraint alter action needs exactly one of {ConstraintName,PrimaryKey,Unique,ForeignKey,Columns}")
-	errTableConstraintDropActionNeedsExactlyOneAction     = errors.New("alter table constraint drop action needs exactly one of {ConstraintName,PrimaryKey,Unique,ForeignKey,Columns}")
-	errTableExternalActionNeedsExactlyOneAction           = errors.New("alter table external action needs exactly one of {Add, Rename, Drop}")
-	errTableSearchOptimizationActionNeedsExactlyOneAction = errors.New("alter table search optimization action needs exactly one of {Add, Drop}")
-)

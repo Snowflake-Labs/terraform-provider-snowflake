@@ -34,7 +34,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: no columns", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errTableNeedsAtLeastOneColumn)
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("createTableOptions", "Columns"))
 	})
 
 	t.Run("validation: both expression and identity of a column are present ", func(t *testing.T) {
@@ -50,7 +50,7 @@ func TestTableCreate(t *testing.T) {
 				},
 			},
 		}}
-		assertOptsInvalidJoinedErrors(t, opts, errColumnDefaultValueNeedsExactlyOneValue)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DefaultValue", "Expression", "Identity"))
 	})
 
 	t.Run("validation: column masking policy incorrect identifier", func(t *testing.T) {
@@ -100,7 +100,7 @@ func TestTableCreate(t *testing.T) {
 				Type:       Pointer(FileFormatTypeCSV),
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errStageFileFormatValueNeedsExactlyOneValue)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("StageFileFormat", "FormatName", "FormatType"))
 	})
 
 	t.Run("validation: stageFileFormat's both format name and format type are present", func(t *testing.T) {
@@ -111,7 +111,7 @@ func TestTableCreate(t *testing.T) {
 				Type:       Pointer(FileFormatTypeCSV),
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errStageFileFormatValueNeedsExactlyOneValue)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("StageFileFormat", "FormatName", "FormatType"))
 	})
 
 	t.Run("validation: rowAccessPolicy's incorrect identifier", func(t *testing.T) {
@@ -301,7 +301,7 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 
 	t.Run("validation: no columns", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errTableNeedsAtLeastOneColumn)
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("createTableAsSelectOptions", "Columns"))
 	})
 
 	t.Run("empty options", func(t *testing.T) {
@@ -444,7 +444,7 @@ func TestTableAlter(t *testing.T) {
 		opts.NewName = Pointer(NewSchemaObjectIdentifier("test", "test", "test"))
 		opts.SwapWith = Pointer(NewSchemaObjectIdentifier("test", "test", "test"))
 
-		assertOptsInvalidJoinedErrors(t, opts, errAlterTableNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterTableOptions", "NewName", "SwapWith", "ClusteringAction", "ColumnAction", "ConstraintAction", "ExternalTableAction", "SearchOptimizationAction", "Set", "SetTags", "UnsetTags", "Unset", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllAccessRowPolicies"))
 	})
 
 	t.Run("validation: NewName's incorrect identifier", func(t *testing.T) {
@@ -470,7 +470,7 @@ func TestTableAlter(t *testing.T) {
 				Condition: String("true"),
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errTableClusteringActionNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ClusteringAction", "ClusterBy", "Recluster", "ChangeReclusterState", "DropClusteringKey"))
 	})
 
 	t.Run("validation: Column action's Add and Rename are present", func(t *testing.T) {
@@ -482,7 +482,7 @@ func TestTableAlter(t *testing.T) {
 				OldName: "old",
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errTableColumnActionNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ColumnAction", "Add", "Rename", "Alter", "SetMaskingPolicy", "UnsetMaskingPolicy", "SetTags", "UnsetTags", "DropColumns"))
 	})
 
 	t.Run("validation: Column alter action's DropDefault and SetDefault are present", func(t *testing.T) {
@@ -493,7 +493,7 @@ func TestTableAlter(t *testing.T) {
 				SetDefault:  Pointer(SequenceName("sequence")),
 			}},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errTableColumnAlterActionNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableColumnAlterAction", "DropDefault", "SetDefault", "NotNullConstraint", "Type", "Comment", "UnsetComment"))
 	})
 
 	t.Run("validation: Constraint alter action's ConstraintName and Unique are present", func(t *testing.T) {
@@ -504,7 +504,7 @@ func TestTableAlter(t *testing.T) {
 				Unique:         Bool(true),
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errTableConstraintAlterActionNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintAlterAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 	})
 
 	t.Run("validation: Constraint drop action's ConstraintName and Unique are present", func(t *testing.T) {
@@ -515,7 +515,7 @@ func TestTableAlter(t *testing.T) {
 				Unique:         Bool(true),
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errTableConstraintDropActionNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintDropAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 	})
 
 	t.Run("validation: External action's Add and Rename are present", func(t *testing.T) {
@@ -527,7 +527,7 @@ func TestTableAlter(t *testing.T) {
 				NewName: "new_name",
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errTableExternalActionNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableExternalTableAction", "Add", "Rename", "Drop"))
 	})
 
 	t.Run("validation: SearchOptimization action's Add and Drop are present", func(t *testing.T) {
@@ -536,7 +536,7 @@ func TestTableAlter(t *testing.T) {
 			Add:  &AddSearchOptimization{},
 			Drop: &DropSearchOptimization{},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errTableSearchOptimizationActionNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableSearchOptimizationAction", "Add", "Drop"))
 	})
 
 	t.Run("empty options", func(t *testing.T) {
