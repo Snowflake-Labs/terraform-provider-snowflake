@@ -17,11 +17,10 @@ import (
 
 func TestInt_Table(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
-	database, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	schema, _ := createSchema(t, client, database)
+	database := testDb(t)
+	schema := testSchema(t)
 
 	cleanupTableProvider := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
