@@ -202,7 +202,6 @@ func (opts *alterTableOptions) validate() error {
 				alterAction.PrimaryKey,
 				alterAction.Unique,
 				alterAction.ForeignKey,
-				alterAction.Columns,
 			); !ok {
 				errs = append(errs, errTableConstraintAlterActionNeedsExactlyOneAction)
 			}
@@ -213,7 +212,6 @@ func (opts *alterTableOptions) validate() error {
 				dropAction.PrimaryKey,
 				dropAction.Unique,
 				dropAction.ForeignKey,
-				dropAction.Columns,
 			); !ok {
 				errs = append(errs, errTableConstraintDropActionNeedsExactlyOneAction)
 			}
@@ -262,27 +260,10 @@ func (opts *showTableOptions) validate() error {
 }
 
 var (
-	errTableNeedsAtLeastOneColumn               = errors.New("table create statement needs at least one column")
-	errColumnDefaultValueNeedsExactlyOneValue   = errors.New("column default value needs exactly one of {Expression, Identity}")
-	errStageFileFormatValueNeedsExactlyOneValue = errors.New("stage file format value needs exactly one of {FormatName, FormatType}")
-	errAlterTableNeedsExactlyOneAction          = errors.New(`
-stage file format value needs exactly one of {
-     NewName,
-     SwapWith,
-     ClusteringAction,
-     ColumnAction,
-     ConstraintAction,
-     ExternalTableAction,
-     SearchOptimizationAction,
-     Set,
-     SetTags,
-     UnsetTags,
-     Unset,
-     AddRowAccessPolicy,
-     DropRowAccessPolicy,
-     DropAndAddRowAccessPolicy,
-     DropAllAccessRowPolicies,
-}`)
+	errTableNeedsAtLeastOneColumn                         = errors.New("table create statement needs at least one column")
+	errColumnDefaultValueNeedsExactlyOneValue             = errors.New("column default value needs exactly one of {Expression, Identity}")
+	errStageFileFormatValueNeedsExactlyOneValue           = errors.New("stage file format value needs exactly one of {FormatName, FormatType}")
+	errAlterTableNeedsExactlyOneAction                    = errExactlyOneOf("alterTableOptions", "NewName", "SwapWith", "ClusteringAction", "ColumnAction", "ConstraintAction", "ExternalTableAction", "SearchOptimizationAction", "Set", "SetTags", "UnsetTags", "Unset", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllAccessRowPolicies")
 	errTableClusteringActionNeedsExactlyOneAction         = errors.New("alter table clustering action needs exactly one of {ClusterBy, Recluster, ChangeReclusterState,DropClusteringKey}")
 	errTableColumnActionNeedsExactlyOneAction             = errors.New("alter table column action needs exactly one of {Add,Rename,Alter,SetMaskingPolicy,UnsetMaskingPolicy,SetTags,UnsetTags,DropColumns}")
 	errTableColumnAlterActionNeedsExactlyOneAction        = errors.New("alter table column alter action needs exactly one of {DropDefault,SetDefault,NotNullConstraint,Type,Comment,UnsetComment}")

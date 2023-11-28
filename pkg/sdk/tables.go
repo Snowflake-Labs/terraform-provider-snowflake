@@ -390,11 +390,12 @@ type TableConstraintRenameAction struct {
 
 type TableConstraintAlterAction struct {
 	// One of
-	ConstraintName *string  `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
-	PrimaryKey     *bool    `ddl:"keyword" sql:"PRIMARY KEY"`
-	Unique         *bool    `ddl:"keyword" sql:"UNIQUE"`
-	ForeignKey     *bool    `ddl:"keyword" sql:"FOREIGN KEY"`
-	Columns        []string `ddl:"keyword,parentheses"`
+	ConstraintName *string `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	PrimaryKey     *bool   `ddl:"keyword" sql:"PRIMARY KEY"`
+	Unique         *bool   `ddl:"keyword" sql:"UNIQUE"`
+	ForeignKey     *bool   `ddl:"keyword" sql:"FOREIGN KEY"`
+
+	Columns []string `ddl:"keyword,parentheses"`
 
 	// Optional
 	Enforced    *bool `ddl:"keyword" sql:"ENFORCED"`
@@ -407,11 +408,12 @@ type TableConstraintAlterAction struct {
 
 type TableConstraintDropAction struct {
 	// One of
-	ConstraintName *string  `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
-	PrimaryKey     *bool    `ddl:"keyword" sql:"PRIMARY KEY"`
-	Unique         *bool    `ddl:"keyword" sql:"UNIQUE"`
-	ForeignKey     *bool    `ddl:"keyword" sql:"FOREIGN KEY"`
-	Columns        []string `ddl:"keyword,parentheses"`
+	ConstraintName *string `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	PrimaryKey     *bool   `ddl:"keyword" sql:"PRIMARY KEY"`
+	Unique         *bool   `ddl:"keyword" sql:"UNIQUE"`
+	ForeignKey     *bool   `ddl:"keyword" sql:"FOREIGN KEY"`
+
+	Columns []string `ddl:"keyword,parentheses"`
 
 	// Optional
 	Cascade  *bool `ddl:"keyword" sql:"CASCADE"`
