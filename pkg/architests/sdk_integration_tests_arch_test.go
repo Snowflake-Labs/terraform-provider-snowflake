@@ -9,18 +9,15 @@ import (
 func TestArchCheck_IntegrationTests_Sdk(t *testing.T) {
 	sdkIntegrationTestDirectory := architest.NewDirectory("../sdk/testint/")
 	sdkIntegrationTestFiles := sdkIntegrationTestDirectory.AllFiles()
+	integrationTestFiles := sdkIntegrationTestFiles.Filter(architest.FileNameRegexFilterProvider(architest.IntegrationTestFileRegex))
 
 	t.Run("integration tests files have the right package", func(t *testing.T) {
-		integrationTestFiles := sdkIntegrationTestFiles.Filter(architest.FileNameRegexFilterProvider(architest.IntegrationTestFileRegex))
-
 		integrationTestFiles.All(func(file *architest.File) {
 			file.AssertHasPackage(t, "testint")
 		})
 	})
 
 	t.Run("integration tests are named correctly", func(t *testing.T) {
-		integrationTestFiles := sdkIntegrationTestFiles.Filter(architest.FileNameRegexFilterProvider(architest.IntegrationTestFileRegex))
-
 		integrationTestFiles.All(func(file *architest.File) {
 			file.ExportedMethods().All(func(method *architest.Method) {
 				method.AssertIntegrationTestNamedCorrectly(t)

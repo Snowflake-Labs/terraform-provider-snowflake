@@ -10,13 +10,13 @@ import (
 )
 
 func Test_Directory(t *testing.T) {
-	t.Run("fail to create directory", func(t *testing.T) {
+	t.Run("fail to use non-existing directory", func(t *testing.T) {
 		assert.Panics(t, func() {
 			architest.NewDirectory("testdata/non_existing")
 		})
 	})
 
-	t.Run("create directory", func(t *testing.T) {
+	t.Run("use directory", func(t *testing.T) {
 		assert.NotPanics(t, func() {
 			architest.NewDirectory("testdata/dir1")
 		})
@@ -103,13 +103,13 @@ func Test_Directory(t *testing.T) {
 }
 
 func Test_Files(t *testing.T) {
-	t.Run("fail to create file", func(t *testing.T) {
+	t.Run("fail to use non-existing file", func(t *testing.T) {
 		assert.Panics(t, func() {
 			architest.NewFileFromPath("testdata/dir1/non_existing.go")
 		})
 	})
 
-	t.Run("create file", func(t *testing.T) {
+	t.Run("use file", func(t *testing.T) {
 		assert.NotPanics(t, func() {
 			architest.NewFileFromPath("testdata/dir1/sample1.go")
 		})

@@ -9,18 +9,15 @@ import (
 func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 	resourcesDirectory := architest.NewDirectory("../resources/")
 	resourcesFiles := resourcesDirectory.AllFiles()
+	acceptanceTestFiles := resourcesFiles.Filter(architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex))
 
 	t.Run("acceptance tests files have the right package", func(t *testing.T) {
-		acceptanceTestFiles := resourcesFiles.Filter(architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex))
-
 		acceptanceTestFiles.All(func(file *architest.File) {
 			file.AssertHasPackage(t, "resources_test")
 		})
 	})
 
 	t.Run("acceptance tests are named correctly", func(t *testing.T) {
-		acceptanceTestFiles := resourcesFiles.Filter(architest.FileNameRegexFilterProvider(architest.AcceptanceTestFileRegex))
-
 		acceptanceTestFiles.All(func(file *architest.File) {
 			file.ExportedMethods().All(func(method *architest.Method) {
 				method.AssertAcceptanceTestNamedCorrectly(t)

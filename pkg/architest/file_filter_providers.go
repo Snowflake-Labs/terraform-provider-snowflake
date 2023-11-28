@@ -6,8 +6,8 @@ import (
 )
 
 func FileNameFilterProvider(text string) FileFilter {
+	regex := regexp.MustCompile(fmt.Sprintf(`^.*%s.*$`, text))
 	return func(f *File) bool {
-		regex := regexp.MustCompile(fmt.Sprintf(`^.*%s.*$`, text))
 		return regex.Match([]byte(f.fileName))
 	}
 }
