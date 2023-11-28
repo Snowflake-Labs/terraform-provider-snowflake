@@ -68,6 +68,9 @@ test: ## run unit and integration tests
 test-acceptance: ## run acceptance tests
 	TF_ACC=1 go test -run "^TestAcc_" -v -cover -timeout=30m ./...
 
+test-integration: ## run SDK integration tests
+	go test -run "^TestInt_" -v -cover -timeout=20m ./...
+
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .
 

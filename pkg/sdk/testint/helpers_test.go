@@ -171,16 +171,21 @@ func createUserWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjec
 func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
 	t.Helper()
 	name := random.StringRange(8, 28)
+	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE TABLE \"%s\".\"%s\".\"%s\" (id NUMBER)", database.Name, schema.Name, name))
+	columns := []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", "NUMBER"),
+	}
+	dbCreateRequest := sdk.NewCreateTableRequest(id, columns)
+	err := client.Tables.Create(ctx, dbCreateRequest)
 	require.NoError(t, err)
 	return &sdk.Table{
 			DatabaseName: database.Name,
 			SchemaName:   schema.Name,
 			Name:         name,
 		}, func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
-			require.NoError(t, err)
+			dropErr := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
+			require.NoError(t, dropErr)
 		}
 }
 
