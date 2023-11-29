@@ -91,6 +91,12 @@ func TestInt_EventTables(t *testing.T) {
 		assert.Equal(t, 1, len(tables))
 		assert.Contains(t, tables, *et1)
 		assert.NotContains(t, tables, *et2)
+		assert.Equal(t, et1.Name, tables[0].Name)
+		assert.Equal(t, et1.DatabaseName, tables[0].DatabaseName)
+		assert.Equal(t, et1.SchemaName, tables[0].SchemaName)
+		assert.Equal(t, et1.Owner, tables[0].Owner)
+		assert.Equal(t, et1.Comment, tables[0].Comment)
+		assert.Equal(t, et1.OwnerRoleType, tables[0].OwnerRoleType)
 	})
 
 	t.Run("show event table: no matches", func(t *testing.T) {
@@ -110,6 +116,8 @@ func TestInt_EventTables(t *testing.T) {
 		details, err := client.EventTables.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, "TIMESTAMP", details.Name)
+		assert.Equal(t, "EVENT TABLE", details.Kind)
+		assert.Equal(t, "", details.Comment)
 	})
 
 	t.Run("alter event table: set and unset comment", func(t *testing.T) {

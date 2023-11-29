@@ -103,7 +103,7 @@ var EventTablesDef = g.NewInterface(
 		OptionalLimit(),
 ).ShowByIdOperation().DescribeOperation(
 	g.DescriptionMappingKindSingleValue,
-	"https://docs.snowflake.com/en/sql-reference/sql/describe-event-table",
+	"https://docs.snowflake.com/en/sql-reference/sql/desc-event-table",
 	g.DbStruct("eventTableDetailsRow").
 		Field("name", "string").
 		Field("kind", "string").
