@@ -53,6 +53,8 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
 					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(id)),
+					resource.TestCheckNoResourceAttr(resourceName, "query"),
+					resource.TestCheckNoResourceAttr(resourceName, "query_results.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, id, true),
 				),
@@ -78,6 +80,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(idLowerCaseEscaped)),
 					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(idLowerCaseEscaped)),
 					resource.TestCheckNoResourceAttr(resourceName, "query"),
+					resource.TestCheckNoResourceAttr(resourceName, "query_results.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, idLowerCase, true),
 				),
@@ -124,6 +127,55 @@ func TestAcc_UnsafeExecute_withRead(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
 					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", id),
 					resource.TestCheckResourceAttrSet(resourceName, "query_results.0.created_on"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
+	id := generateUnsafeExecuteTestDatabaseName(t)
+	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
+	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
+	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
+	resourceName := "snowflake_unsafe_execute.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDatabaseExistence(t, id, false),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
+				ConfigVariables: map[string]config.Variable{
+					"execute": config.StringVariable(createDatabaseStatement(id)),
+					"revert":  config.StringVariable(dropDatabaseStatement(id)),
+					"query":   config.StringVariable(showDatabaseStatement(id)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "query", showDatabaseStatement(id)),
+					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
+				ConfigVariables: map[string]config.Variable{
+					"execute": config.StringVariable(createDatabaseStatement(id)),
+					"revert":  config.StringVariable(dropDatabaseStatement(id)),
+					"query":   config.StringVariable(""),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "query", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "query_results.#"),
 				),
 			},
 		},

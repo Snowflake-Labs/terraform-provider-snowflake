@@ -27,6 +27,7 @@ var unsafeExecuteSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Optional SQL statement to do a read.",
+		Deprecated:  "Use query with caution. May be removed in future releases.",
 	},
 	"query_results": {
 		Type:        schema.TypeList,
@@ -38,10 +39,10 @@ var unsafeExecuteSchema = map[string]*schema.Schema{
 
 func UnsafeExecute() *schema.Resource {
 	return &schema.Resource{
-		Create: UnsafeExecuteExecute,
-		Read:   UnsafeExecuteQuery,
-		Delete: UnsafeExecuteRevert,
-		Update: schema.Noop,
+		Create: CreateUnsafeExecute,
+		Read:   ReadUnsafeExecute,
+		Delete: DeleteUnsafeExecute,
+		Update: UpdateUnsafeExecute,
 
 		Schema: unsafeExecuteSchema,
 
@@ -50,7 +51,7 @@ func UnsafeExecute() *schema.Resource {
 	}
 }
 
-func UnsafeExecuteQuery(d *schema.ResourceData, meta interface{}) error {
+func ReadUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
@@ -133,7 +134,7 @@ func unsafeExecuteProcessRow(rows *sql.Rows, columnNames []string) (map[string]s
 	return row, nil
 }
 
-func UnsafeExecuteExecute(d *schema.ResourceData, meta interface{}) error {
+func CreateUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
@@ -152,10 +153,10 @@ func UnsafeExecuteExecute(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(id)
 	log.Printf(`[DEBUG] SQL "%s" applied successfully\n`, executeStatement)
 
-	return UnsafeExecuteQuery(d, meta)
+	return ReadUnsafeExecute(d, meta)
 }
 
-func UnsafeExecuteRevert(d *schema.ResourceData, meta interface{}) error {
+func DeleteUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
@@ -169,5 +170,12 @@ func UnsafeExecuteRevert(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 	log.Printf(`[DEBUG] SQL "%s" applied successfully\n`, revertStatement)
 
+	return nil
+}
+
+func UpdateUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
+	if d.HasChange("query") {
+		return ReadUnsafeExecute(d, meta)
+	}
 	return nil
 }
