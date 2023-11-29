@@ -28,21 +28,28 @@ func (v *eventTables) Show(ctx context.Context, request *ShowEventTableRequest) 
 }
 
 func (v *eventTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*EventTable, error) {
-	request := NewShowEventTableRequest().WithLike(id.Name())
-	functions, err := v.Show(ctx, request)
+	request := NewShowEventTableRequest().WithIn(&In{Database: NewAccountObjectIdentifier(id.DatabaseName())}).WithLike(&Like{String(id.Name())})
+	eventTables, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(functions, func(r EventTable) bool { return r.Name == id.Name() })
+	return collections.FindOne(eventTables, func(r EventTable) bool { return r.Name == id.Name() })
 }
 
-func (v *eventTables) Describe(ctx context.Context, request *DescribeEventTableRequest) (*EventTableDetails, error) {
-	opts := request.toOpts()
+func (v *eventTables) Describe(ctx context.Context, id SchemaObjectIdentifier) (*EventTableDetails, error) {
+	opts := &DescribeEventTableOptions{
+		name: id,
+	}
 	result, err := validateAndQueryOne[eventTableDetailsRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
 	return result.convert(), nil
+}
+
+func (v *eventTables) Drop(ctx context.Context, request *DropEventTableRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *eventTables) Alter(ctx context.Context, request *AlterEventTableRequest) error {
@@ -74,22 +81,27 @@ func (r *ShowEventTableRequest) toOpts() *ShowEventTableOptions {
 		In:         r.In,
 		StartsWith: r.StartsWith,
 		Limit:      r.Limit,
-		From:       r.From,
 	}
 	return opts
 }
 
 func (r eventTableRow) convert() *EventTable {
-	return &EventTable{
-		CreatedOn:      r.CreatedOn,
-		Name:           r.Name,
-		DatabaseName:   r.DatabaseName,
-		SchemaName:     r.SchemaName,
-		Owner:          r.Owner,
-		Comment:        r.Comment,
-		OwnerRoleType:  r.OwnerRoleType,
-		ChangeTracking: r.ChangeTracking == "ON",
+	t := &EventTable{
+		CreatedOn:    r.CreatedOn,
+		Name:         r.Name,
+		DatabaseName: r.DatabaseName,
+		SchemaName:   r.SchemaName,
 	}
+	if r.Owner.Valid {
+		t.Owner = r.Owner.String
+	}
+	if r.Comment.Valid {
+		t.Comment = r.Comment.String
+	}
+	if r.OwnerRoleType.Valid {
+		t.OwnerRoleType = r.OwnerRoleType.String
+	}
+	return t
 }
 
 func (r *DescribeEventTableRequest) toOpts() *DescribeEventTableOptions {
@@ -107,12 +119,19 @@ func (r eventTableDetailsRow) convert() *EventTableDetails {
 	}
 }
 
+func (r *DropEventTableRequest) toOpts() *DropEventTableOptions {
+	opts := &DropEventTableOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+		Restrict: r.Restrict,
+	}
+	return opts
+}
+
 func (r *AlterEventTableRequest) toOpts() *AlterEventTableOptions {
 	opts := &AlterEventTableOptions{
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
-
-		AddRowAccessPolicy: r.AddRowAccessPolicy,
 
 		DropAllRowAccessPolicies: r.DropAllRowAccessPolicies,
 
@@ -136,9 +155,25 @@ func (r *AlterEventTableRequest) toOpts() *AlterEventTableOptions {
 			Comment:                    r.Unset.Comment,
 		}
 	}
+	if r.AddRowAccessPolicy != nil {
+		opts.AddRowAccessPolicy = &EventTableAddRowAccessPolicy{
+			RowAccessPolicy: r.AddRowAccessPolicy.RowAccessPolicy,
+			On:              r.AddRowAccessPolicy.On,
+		}
+	}
 	if r.DropRowAccessPolicy != nil {
 		opts.DropRowAccessPolicy = &EventTableDropRowAccessPolicy{
-			Name: r.DropRowAccessPolicy.Name,
+			RowAccessPolicy: r.DropRowAccessPolicy.RowAccessPolicy,
+		}
+	}
+	if r.DropAndAddRowAccessPolicy != nil {
+		opts.DropAndAddRowAccessPolicy = &EventTableDropAndAddRowAccessPolicy{}
+		opts.DropAndAddRowAccessPolicy.Drop = EventTableDropRowAccessPolicy{
+			RowAccessPolicy: r.DropAndAddRowAccessPolicy.Drop.RowAccessPolicy,
+		}
+		opts.DropAndAddRowAccessPolicy.Add = EventTableAddRowAccessPolicy{
+			RowAccessPolicy: r.DropAndAddRowAccessPolicy.Add.RowAccessPolicy,
+			On:              r.DropAndAddRowAccessPolicy.Add.On,
 		}
 	}
 	if r.ClusteringAction != nil {

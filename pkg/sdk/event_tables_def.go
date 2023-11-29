@@ -16,9 +16,20 @@ var eventTableUnset = g.NewQueryStruct("EventTableUnset").
 	OptionalSQL("CHANGE_TRACKING").
 	OptionalSQL("COMMENT")
 
+var eventTableAddRowAccessPolicy = g.NewQueryStruct("EventTableAddRowAccessPolicy").
+	SQL("ADD").
+	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
+	NamedListWithParens("ON", g.KindOfT[string](), g.KeywordOptions().Required()). // TODO: double quotes here?
+	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
+
 var eventTableDropRowAccessPolicy = g.NewQueryStruct("EventTableDropRowAccessPolicy").
-	SQL("ROW ACCESS POLICY").
-	Identifier("Name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions())
+	SQL("DROP").
+	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
+	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
+
+var eventTableDropAndAddRowAccessPolicy = g.NewQueryStruct("EventTableDropAndAddRowAccessPolicy").
+	QueryStructField("Drop", eventTableDropRowAccessPolicy, g.KeywordOptions().Required()).
+	QueryStructField("Add", eventTableAddRowAccessPolicy, g.KeywordOptions().Required())
 
 var eventTableClusteringAction = g.NewQueryStruct("EventTableClusteringAction").
 	PredefinedQueryStructField("ClusterBy", "*[]string", g.KeywordOptions().Parentheses().SQL("CLUSTER BY")).
@@ -54,7 +65,7 @@ var EventTablesDef = g.NewInterface(
 		SQL("EVENT TABLE").
 		IfNotExists().
 		Name().
-		PredefinedQueryStructField("ClusterBy", "[]string", g.KeywordOptions().Parentheses().SQL("CLUSTER BY")).
+		NamedListWithParens("CLUSTER BY", g.KindOfT[string](), g.KeywordOptions()).
 		OptionalNumberAssignment("DATA_RETENTION_TIME_IN_DAYS", g.ParameterOptions()).
 		OptionalNumberAssignment("MAX_DATA_EXTENSION_TIME_IN_DAYS", g.ParameterOptions()).
 		OptionalBooleanAssignment("CHANGE_TRACKING", g.ParameterOptions()).
@@ -62,36 +73,35 @@ var EventTablesDef = g.NewInterface(
 		OptionalSQL("COPY GRANTS").
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("RowAccessPolicy", "*RowAccessPolicy", g.KeywordOptions()).
-		OptionalTags().WithValidation(g.ValidIdentifier, "name"),
+		OptionalTags().
+		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 ).ShowOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/show-event-tables",
 	g.DbStruct("eventTableRow").
-		Field("created_on", "string").
+		Field("created_on", "time.Time").
 		Field("name", "string").
 		Field("database_name", "string").
 		Field("schema_name", "string").
-		Field("owner", "string").
-		Field("comment", "string").
-		Field("owner_role_type", "string").
-		Field("change_tracking", "string"),
+		Field("owner", "sql.NullString").
+		Field("comment", "sql.NullString").
+		Field("owner_role_type", "sql.NullString"),
 	g.PlainStruct("EventTable").
-		Field("CreatedOn", "string").
+		Field("CreatedOn", "time.Time").
 		Field("Name", "string").
 		Field("DatabaseName", "string").
 		Field("SchemaName", "string").
 		Field("Owner", "string").
 		Field("Comment", "string").
-		Field("OwnerRoleType", "string").
-		Field("ChangeTracking", "bool"),
-	g.NewQueryStruct("ShowFunctions").
+		Field("OwnerRoleType", "string"),
+	g.NewQueryStruct("ShowEventTables").
 		Show().
 		SQL("EVENT TABLES").
 		OptionalLike().
 		OptionalIn().
-		OptionalTextAssignment("STARTS WITH", g.ParameterOptions().SingleQuotes().NoEquals()).
-		OptionalNumberAssignment("LIMIT", g.ParameterOptions()).
-		OptionalTextAssignment("FROM", g.ParameterOptions().SingleQuotes().NoEquals()),
-).DescribeOperation(
+		OptionalStartsWith().
+		OptionalLimit(),
+).ShowByIdOperation().DescribeOperation(
 	g.DescriptionMappingKindSingleValue,
 	"https://docs.snowflake.com/en/sql-reference/sql/describe-event-table",
 	g.DbStruct("eventTableDetailsRow").
@@ -106,6 +116,15 @@ var EventTablesDef = g.NewInterface(
 		Describe().
 		SQL("EVENT TABLE").
 		Name().
+		WithValidation(g.ValidIdentifier, "name"),
+).DropOperation(
+	"https://docs.snowflake.com/en/sql-reference/sql/drop-event-table",
+	g.NewQueryStruct("DropEventTable").
+		Drop().
+		SQL("TABLE").
+		IfExists().
+		Name().
+		OptionalSQL("RESTRICT"). // CASCADE or RESTRICT, and CASCADE for Default
 		WithValidation(g.ValidIdentifier, "name"),
 ).AlterOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-event-table",
@@ -124,12 +143,9 @@ var EventTablesDef = g.NewInterface(
 			eventTableUnset,
 			g.KeywordOptions().SQL("UNSET"),
 		).
-		PredefinedQueryStructField("AddRowAccessPolicy", "*RowAccessPolicy", g.KeywordOptions().SQL("ADD")).
-		OptionalQueryStructField(
-			"DropRowAccessPolicy",
-			eventTableDropRowAccessPolicy,
-			g.KeywordOptions().SQL("DROP"),
-		).
+		OptionalQueryStructField("AddRowAccessPolicy", eventTableAddRowAccessPolicy, g.KeywordOptions()).
+		OptionalQueryStructField("DropRowAccessPolicy", eventTableDropRowAccessPolicy, g.KeywordOptions()).
+		OptionalQueryStructField("DropAndAddRowAccessPolicy", eventTableDropAndAddRowAccessPolicy, g.ListOptions().NoParentheses()).
 		OptionalSQL("DROP ALL ROW ACCESS POLICIES").
 		OptionalQueryStructField(
 			"ClusteringAction",
@@ -141,8 +157,9 @@ var EventTablesDef = g.NewInterface(
 			eventTableSearchOptimizationAction,
 			g.KeywordOptions(),
 		).
-		PredefinedQueryStructField("SetTags", "[]TagAssociation", g.KeywordOptions().SQL("SET TAG")).
-		PredefinedQueryStructField("UnsetTags", "[]ObjectIdentifier", g.KeywordOptions().SQL("UNSET TAG")).
+		OptionalSetTags().
+		OptionalUnsetTags().
 		Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
-		WithValidation(g.ValidIdentifier, "name"),
+		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set", "Unset", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "ClusteringAction", "SearchOptimizationAction"),
 )

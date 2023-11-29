@@ -1,12 +1,17 @@
 package sdk
 
-import "context"
+import (
+	"context"
+	"database/sql"
+	"time"
+)
 
 type EventTables interface {
 	Create(ctx context.Context, request *CreateEventTableRequest) error
 	Show(ctx context.Context, request *ShowEventTableRequest) ([]EventTable, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*EventTable, error)
-	Describe(ctx context.Context, request *DescribeEventTableRequest) (*EventTableDetails, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifier) (*EventTableDetails, error)
+	Drop(ctx context.Context, request *DropEventTableRequest) error
 	Alter(ctx context.Context, request *AlterEventTableRequest) error
 }
 
@@ -30,35 +35,32 @@ type CreateEventTableOptions struct {
 
 // ShowEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-event-tables.
 type ShowEventTableOptions struct {
-	show        bool    `ddl:"static" sql:"SHOW"`
-	eventTables bool    `ddl:"static" sql:"EVENT TABLES"`
-	Like        *Like   `ddl:"keyword" sql:"LIKE"`
-	In          *In     `ddl:"keyword" sql:"IN"`
-	StartsWith  *string `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
-	Limit       *int    `ddl:"parameter" sql:"LIMIT"`
-	From        *string `ddl:"parameter,single_quotes,no_equals" sql:"FROM"`
+	show        bool       `ddl:"static" sql:"SHOW"`
+	eventTables bool       `ddl:"static" sql:"EVENT TABLES"`
+	Like        *Like      `ddl:"keyword" sql:"LIKE"`
+	In          *In        `ddl:"keyword" sql:"IN"`
+	StartsWith  *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
+	Limit       *LimitFrom `ddl:"keyword" sql:"LIMIT"`
 }
 
 type eventTableRow struct {
-	CreatedOn      string `db:"created_on"`
-	Name           string `db:"name"`
-	DatabaseName   string `db:"database_name"`
-	SchemaName     string `db:"schema_name"`
-	Owner          string `db:"owner"`
-	Comment        string `db:"comment"`
-	OwnerRoleType  string `db:"owner_role_type"`
-	ChangeTracking string `db:"change_tracking"`
+	CreatedOn     time.Time      `db:"created_on"`
+	Name          string         `db:"name"`
+	DatabaseName  string         `db:"database_name"`
+	SchemaName    string         `db:"schema_name"`
+	Owner         sql.NullString `db:"owner"`
+	Comment       sql.NullString `db:"comment"`
+	OwnerRoleType sql.NullString `db:"owner_role_type"`
 }
 
 type EventTable struct {
-	CreatedOn      string
-	Name           string
-	DatabaseName   string
-	SchemaName     string
-	Owner          string
-	Comment        string
-	OwnerRoleType  string
-	ChangeTracking bool
+	CreatedOn     time.Time
+	Name          string
+	DatabaseName  string
+	SchemaName    string
+	Owner         string
+	Comment       string
+	OwnerRoleType string
 }
 
 // DescribeEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/describe-event-table.
@@ -80,22 +82,32 @@ type EventTableDetails struct {
 	Comment string
 }
 
+// DropEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-event-table.
+type DropEventTableOptions struct {
+	drop     bool                   `ddl:"static" sql:"DROP"`
+	table    bool                   `ddl:"static" sql:"TABLE"`
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
+	Restrict *bool                  `ddl:"keyword" sql:"RESTRICT"`
+}
+
 // AlterEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-event-table.
 type AlterEventTableOptions struct {
-	alter                    bool                                `ddl:"static" sql:"ALTER"`
-	eventTable               bool                                `ddl:"static" sql:"TABLE"`
-	IfNotExists              *bool                               `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                     SchemaObjectIdentifier              `ddl:"identifier"`
-	Set                      *EventTableSet                      `ddl:"keyword" sql:"SET"`
-	Unset                    *EventTableUnset                    `ddl:"keyword" sql:"UNSET"`
-	AddRowAccessPolicy       *RowAccessPolicy                    `ddl:"keyword" sql:"ADD"`
-	DropRowAccessPolicy      *EventTableDropRowAccessPolicy      `ddl:"keyword" sql:"DROP"`
-	DropAllRowAccessPolicies *bool                               `ddl:"keyword" sql:"DROP ALL ROW ACCESS POLICIES"`
-	ClusteringAction         *EventTableClusteringAction         `ddl:"keyword"`
-	SearchOptimizationAction *EventTableSearchOptimizationAction `ddl:"keyword"`
-	SetTags                  []TagAssociation                    `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags                []ObjectIdentifier                  `ddl:"keyword" sql:"UNSET TAG"`
-	RenameTo                 *SchemaObjectIdentifier             `ddl:"identifier" sql:"RENAME TO"`
+	alter                     bool                                 `ddl:"static" sql:"ALTER"`
+	table                     bool                                 `ddl:"static" sql:"TABLE"`
+	IfNotExists               *bool                                `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                      SchemaObjectIdentifier               `ddl:"identifier"`
+	Set                       *EventTableSet                       `ddl:"keyword" sql:"SET"`
+	Unset                     *EventTableUnset                     `ddl:"keyword" sql:"UNSET"`
+	AddRowAccessPolicy        *EventTableAddRowAccessPolicy        `ddl:"keyword"`
+	DropRowAccessPolicy       *EventTableDropRowAccessPolicy       `ddl:"keyword"`
+	DropAndAddRowAccessPolicy *EventTableDropAndAddRowAccessPolicy `ddl:"list,no_parentheses"`
+	DropAllRowAccessPolicies  *bool                                `ddl:"keyword" sql:"DROP ALL ROW ACCESS POLICIES"`
+	ClusteringAction          *EventTableClusteringAction          `ddl:"keyword"`
+	SearchOptimizationAction  *EventTableSearchOptimizationAction  `ddl:"keyword"`
+	SetTags                   []TagAssociation                     `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags                 []ObjectIdentifier                   `ddl:"keyword" sql:"UNSET TAG"`
+	RenameTo                  *SchemaObjectIdentifier              `ddl:"identifier" sql:"RENAME TO"`
 }
 
 type EventTableSet struct {
@@ -112,9 +124,20 @@ type EventTableUnset struct {
 	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
+type EventTableAddRowAccessPolicy struct {
+	add             bool                   `ddl:"static" sql:"ADD"`
+	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
+	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
+}
+
 type EventTableDropRowAccessPolicy struct {
-	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"`
-	Name            SchemaObjectIdentifier `ddl:"identifier"`
+	drop            bool                   `ddl:"static" sql:"DROP"`
+	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
+}
+
+type EventTableDropAndAddRowAccessPolicy struct {
+	Drop EventTableDropRowAccessPolicy `ddl:"keyword"`
+	Add  EventTableAddRowAccessPolicy  `ddl:"keyword"`
 }
 
 type EventTableClusteringAction struct {

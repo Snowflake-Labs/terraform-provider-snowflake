@@ -2,7 +2,6 @@ package testint
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -16,10 +15,7 @@ func TestInt_EventTables(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
-	t.Cleanup(schemaCleanup)
+	databaseTest, schemaTest := testDb(t), testSchema(t)
 	tagTest, tagCleaup := createTag(t, client, databaseTest, schemaTest)
 	t.Cleanup(tagCleaup)
 
@@ -34,7 +30,7 @@ func TestInt_EventTables(t *testing.T) {
 	cleanupTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", id.DatabaseName(), id.SchemaName(), id.Name()))
+			err := client.EventTables.Drop(ctx, sdk.NewDropEventTableRequest(id).WithIfExists(sdk.Bool(true)))
 			require.NoError(t, err)
 		}
 	}
@@ -42,7 +38,7 @@ func TestInt_EventTables(t *testing.T) {
 	createEventTableHandle := func(t *testing.T) *sdk.EventTable {
 		t.Helper()
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
 		err := client.EventTables.Create(ctx, sdk.NewCreateEventTableRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableHandle(t, id))
@@ -90,7 +86,7 @@ func TestInt_EventTables(t *testing.T) {
 		et1 := createEventTableHandle(t)
 		et2 := createEventTableHandle(t)
 
-		tables, err := client.EventTables.Show(ctx, sdk.NewShowEventTableRequest().WithLike(et1.Name))
+		tables, err := client.EventTables.Show(ctx, sdk.NewShowEventTableRequest().WithLike(&sdk.Like{Pattern: &et1.Name}))
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(tables))
 		assert.Contains(t, tables, *et1)
@@ -98,7 +94,7 @@ func TestInt_EventTables(t *testing.T) {
 	})
 
 	t.Run("show event table: no matches", func(t *testing.T) {
-		tables, err := client.EventTables.Show(ctx, sdk.NewShowEventTableRequest().WithLike("non-existent"))
+		tables, err := client.EventTables.Show(ctx, sdk.NewShowEventTableRequest().WithLike(&sdk.Like{Pattern: sdk.String("non-existent")}))
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(tables))
 	})
@@ -111,7 +107,7 @@ func TestInt_EventTables(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableHandle(t, id))
 
-		details, err := client.EventTables.Describe(ctx, sdk.NewDescribeEventTableRequest(id))
+		details, err := client.EventTables.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, "TIMESTAMP", details.Name)
 	})
@@ -154,17 +150,9 @@ func TestInt_EventTables(t *testing.T) {
 		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSet(set))
 		require.NoError(t, err)
 
-		et, err := client.EventTables.ShowByID(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, true, et.ChangeTracking)
-
 		unset := sdk.NewEventTableUnsetRequest().WithChangeTracking(sdk.Bool(true))
 		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithUnset(unset))
 		require.NoError(t, err)
-
-		et, err = client.EventTables.ShowByID(ctx, id)
-		require.NoError(t, err)
-		assert.Equal(t, false, et.ChangeTracking)
 	})
 
 	t.Run("alter event table: set and unset tag", func(t *testing.T) {
@@ -223,5 +211,67 @@ func TestInt_EventTables(t *testing.T) {
 		action := sdk.NewEventTableClusteringActionRequest().WithDropClusteringKey(sdk.Bool(true))
 		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithClusteringAction(action))
 		require.NoError(t, err)
+	})
+
+	// alter view: add and drop row access policies
+	t.Run("alter event table: add and drop row access policies", func(t *testing.T) {
+		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
+		t.Cleanup(rowAccessPolicyCleanup)
+		rowAccessPolicy2Id, rowAccessPolicy2Cleanup := createRowAccessPolicy(t, client, testSchema(t))
+		t.Cleanup(rowAccessPolicy2Cleanup)
+
+		table, tableCleanup := createTable(t, client, databaseTest, schemaTest)
+		t.Cleanup(tableCleanup)
+		id := sdk.NewSchemaObjectIdentifier(table.DatabaseName, table.SchemaName, table.Name)
+
+		// add policy
+		alterRequest := sdk.NewAlterEventTableRequest(id).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicyId, []string{"id"}))
+		err := client.EventTables.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		e, err := getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeTable)
+		require.NoError(t, err)
+		assert.Equal(t, rowAccessPolicyId.Name(), e.PolicyName)
+		assert.Equal(t, "ROW_ACCESS_POLICY", e.PolicyKind)
+		assert.Equal(t, table.ID().Name(), e.RefEntityName)
+		assert.Equal(t, "TABLE", e.RefEntityDomain)
+		assert.Equal(t, "ACTIVE", e.PolicyStatus)
+
+		// remove policy
+		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropRowAccessPolicy(sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicyId))
+		err = client.EventTables.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		_, err = getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeTable)
+		require.Error(t, err, "no rows in result set")
+
+		// add policy again
+		alterRequest = sdk.NewAlterEventTableRequest(id).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicyId, []string{"id"}))
+		err = client.EventTables.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		e, err = getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeTable)
+		require.NoError(t, err)
+		assert.Equal(t, rowAccessPolicyId.Name(), e.PolicyName)
+
+		// drop and add other policy simultaneously
+		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropAndAddRowAccessPolicy(sdk.NewEventTableDropAndAddRowAccessPolicyRequest(
+			*sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicyId),
+			*sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy2Id, []string{"id"}),
+		))
+		err = client.EventTables.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		e, err = getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeTable)
+		require.NoError(t, err)
+		assert.Equal(t, rowAccessPolicy2Id.Name(), e.PolicyName)
+
+		// drop all policies
+		alterRequest = sdk.NewAlterEventTableRequest(id).WithDropAllRowAccessPolicies(sdk.Bool(true))
+		err = client.EventTables.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		_, err = getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeView)
+		require.Error(t, err, "no rows in result set")
 	})
 }

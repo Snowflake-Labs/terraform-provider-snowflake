@@ -6,6 +6,7 @@ var (
 	_ optionsProvider[CreateEventTableOptions]   = new(CreateEventTableRequest)
 	_ optionsProvider[ShowEventTableOptions]     = new(ShowEventTableRequest)
 	_ optionsProvider[DescribeEventTableOptions] = new(DescribeEventTableRequest)
+	_ optionsProvider[DropEventTableOptions]     = new(DropEventTableRequest)
 	_ optionsProvider[AlterEventTableOptions]    = new(AlterEventTableRequest)
 )
 
@@ -28,27 +29,33 @@ type ShowEventTableRequest struct {
 	Like       *Like
 	In         *In
 	StartsWith *string
-	Limit      *int
-	From       *string
+	Limit      *LimitFrom
 }
 
 type DescribeEventTableRequest struct {
 	name SchemaObjectIdentifier // required
 }
 
+type DropEventTableRequest struct {
+	IfExists *bool
+	name     SchemaObjectIdentifier // required
+	Restrict *bool
+}
+
 type AlterEventTableRequest struct {
-	IfNotExists              *bool
-	name                     SchemaObjectIdentifier // required
-	Set                      *EventTableSetRequest
-	Unset                    *EventTableUnsetRequest
-	AddRowAccessPolicy       *RowAccessPolicy
-	DropRowAccessPolicy      *EventTableDropRowAccessPolicyRequest
-	DropAllRowAccessPolicies *bool
-	ClusteringAction         *EventTableClusteringActionRequest
-	SearchOptimizationAction *EventTableSearchOptimizationActionRequest
-	SetTags                  []TagAssociation
-	UnsetTags                []ObjectIdentifier
-	RenameTo                 *SchemaObjectIdentifier
+	IfNotExists               *bool
+	name                      SchemaObjectIdentifier // required
+	Set                       *EventTableSetRequest
+	Unset                     *EventTableUnsetRequest
+	AddRowAccessPolicy        *EventTableAddRowAccessPolicyRequest
+	DropRowAccessPolicy       *EventTableDropRowAccessPolicyRequest
+	DropAndAddRowAccessPolicy *EventTableDropAndAddRowAccessPolicyRequest
+	DropAllRowAccessPolicies  *bool
+	ClusteringAction          *EventTableClusteringActionRequest
+	SearchOptimizationAction  *EventTableSearchOptimizationActionRequest
+	SetTags                   []TagAssociation
+	UnsetTags                 []ObjectIdentifier
+	RenameTo                  *SchemaObjectIdentifier
 }
 
 type EventTableSetRequest struct {
@@ -65,8 +72,18 @@ type EventTableUnsetRequest struct {
 	Comment                    *bool
 }
 
+type EventTableAddRowAccessPolicyRequest struct {
+	RowAccessPolicy SchemaObjectIdentifier // required
+	On              []string               // required
+}
+
 type EventTableDropRowAccessPolicyRequest struct {
-	Name SchemaObjectIdentifier
+	RowAccessPolicy SchemaObjectIdentifier // required
+}
+
+type EventTableDropAndAddRowAccessPolicyRequest struct {
+	Drop EventTableDropRowAccessPolicyRequest // required
+	Add  EventTableAddRowAccessPolicyRequest  // required
 }
 
 type EventTableClusteringActionRequest struct {

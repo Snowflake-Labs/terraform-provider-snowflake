@@ -138,6 +138,20 @@ func TestEventTables_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: exactly one field should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterEventTableOptions", "RenameTo", "Set", "Unset", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "ClusteringAction", "SearchOptimizationAction"))
+	})
+
+	t.Run("validation: exactly one field should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.DropAllRowAccessPolicies = Bool(true)
+		opts.Set = &EventTableSet{
+			DataRetentionTimeInDays: Int(1),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterEventTableOptions", "RenameTo", "Set", "Unset", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "ClusteringAction", "SearchOptimizationAction"))
+	})
+
 	t.Run("alter: rename to", func(t *testing.T) {
 		opts := defaultOpts()
 		target := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), random.StringN(12))
@@ -263,20 +277,41 @@ func TestEventTables_Alter(t *testing.T) {
 	})
 
 	t.Run("alter: add row access policy", func(t *testing.T) {
+		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+
 		opts := defaultOpts()
-		opts.AddRowAccessPolicy = &RowAccessPolicy{
-			Name: NewSchemaObjectIdentifier(random.StringN(4), random.StringN(4), random.StringN(4)),
-			On:   []string{"c1", "c2"},
+		opts.AddRowAccessPolicy = &EventTableAddRowAccessPolicy{
+			RowAccessPolicy: rowAccessPolicyId,
+			On:              []string{"a", "b"},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE IF NOT EXISTS %s ADD ROW ACCESS POLICY %s ON (c1, c2)`, id.FullyQualifiedName(), opts.AddRowAccessPolicy.Name.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE IF NOT EXISTS %s ADD ROW ACCESS POLICY %s ON (a, b)", id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName())
 	})
 
 	t.Run("alter: drop row access policy", func(t *testing.T) {
+		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+
 		opts := defaultOpts()
 		opts.DropRowAccessPolicy = &EventTableDropRowAccessPolicy{
-			Name: NewSchemaObjectIdentifier(random.StringN(4), random.StringN(4), random.StringN(4)),
+			RowAccessPolicy: rowAccessPolicyId,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE IF NOT EXISTS %s DROP ROW ACCESS POLICY %s`, id.FullyQualifiedName(), opts.DropRowAccessPolicy.Name.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE IF NOT EXISTS %s DROP ROW ACCESS POLICY %s", id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName())
+	})
+
+	t.Run("alter: drop and add row access policy", func(t *testing.T) {
+		rowAccessPolicy1Id := RandomSchemaObjectIdentifier()
+		rowAccessPolicy2Id := RandomSchemaObjectIdentifier()
+
+		opts := defaultOpts()
+		opts.DropAndAddRowAccessPolicy = &EventTableDropAndAddRowAccessPolicy{
+			Drop: EventTableDropRowAccessPolicy{
+				RowAccessPolicy: rowAccessPolicy1Id,
+			},
+			Add: EventTableAddRowAccessPolicy{
+				RowAccessPolicy: rowAccessPolicy2Id,
+				On:              []string{"a", "b"},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE IF NOT EXISTS %s DROP ROW ACCESS POLICY %s, ADD ROW ACCESS POLICY %s ON (a, b)", id.FullyQualifiedName(), rowAccessPolicy1Id.FullyQualifiedName(), rowAccessPolicy2Id.FullyQualifiedName())
 	})
 
 	t.Run("alter: drop all row access policies", func(t *testing.T) {

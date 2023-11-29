@@ -71,10 +71,8 @@ func NewShowEventTableRequest() *ShowEventTableRequest {
 	return &ShowEventTableRequest{}
 }
 
-func (s *ShowEventTableRequest) WithLike(pattern string) *ShowEventTableRequest {
-	s.Like = &Like{
-		Pattern: &pattern,
-	}
+func (s *ShowEventTableRequest) WithLike(Like *Like) *ShowEventTableRequest {
+	s.Like = Like
 	return s
 }
 
@@ -88,13 +86,8 @@ func (s *ShowEventTableRequest) WithStartsWith(StartsWith *string) *ShowEventTab
 	return s
 }
 
-func (s *ShowEventTableRequest) WithLimit(Limit *int) *ShowEventTableRequest {
+func (s *ShowEventTableRequest) WithLimit(Limit *LimitFrom) *ShowEventTableRequest {
 	s.Limit = Limit
-	return s
-}
-
-func (s *ShowEventTableRequest) WithFrom(From *string) *ShowEventTableRequest {
-	s.From = From
 	return s
 }
 
@@ -104,6 +97,24 @@ func NewDescribeEventTableRequest(
 	s := DescribeEventTableRequest{}
 	s.name = name
 	return &s
+}
+
+func NewDropEventTableRequest(
+	name SchemaObjectIdentifier,
+) *DropEventTableRequest {
+	s := DropEventTableRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *DropEventTableRequest) WithIfExists(IfExists *bool) *DropEventTableRequest {
+	s.IfExists = IfExists
+	return s
+}
+
+func (s *DropEventTableRequest) WithRestrict(Restrict *bool) *DropEventTableRequest {
+	s.Restrict = Restrict
+	return s
 }
 
 func NewAlterEventTableRequest(
@@ -129,13 +140,18 @@ func (s *AlterEventTableRequest) WithUnset(Unset *EventTableUnsetRequest) *Alter
 	return s
 }
 
-func (s *AlterEventTableRequest) WithAddRowAccessPolicy(AddRowAccessPolicy *RowAccessPolicy) *AlterEventTableRequest {
+func (s *AlterEventTableRequest) WithAddRowAccessPolicy(AddRowAccessPolicy *EventTableAddRowAccessPolicyRequest) *AlterEventTableRequest {
 	s.AddRowAccessPolicy = AddRowAccessPolicy
 	return s
 }
 
 func (s *AlterEventTableRequest) WithDropRowAccessPolicy(DropRowAccessPolicy *EventTableDropRowAccessPolicyRequest) *AlterEventTableRequest {
 	s.DropRowAccessPolicy = DropRowAccessPolicy
+	return s
+}
+
+func (s *AlterEventTableRequest) WithDropAndAddRowAccessPolicy(DropAndAddRowAccessPolicy *EventTableDropAndAddRowAccessPolicyRequest) *AlterEventTableRequest {
+	s.DropAndAddRowAccessPolicy = DropAndAddRowAccessPolicy
 	return s
 }
 
@@ -217,13 +233,32 @@ func (s *EventTableUnsetRequest) WithComment(Comment *bool) *EventTableUnsetRequ
 	return s
 }
 
-func NewEventTableDropRowAccessPolicyRequest() *EventTableDropRowAccessPolicyRequest {
-	return &EventTableDropRowAccessPolicyRequest{}
+func NewEventTableAddRowAccessPolicyRequest(
+	RowAccessPolicy SchemaObjectIdentifier,
+	On []string,
+) *EventTableAddRowAccessPolicyRequest {
+	s := EventTableAddRowAccessPolicyRequest{}
+	s.RowAccessPolicy = RowAccessPolicy
+	s.On = On
+	return &s
 }
 
-func (s *EventTableDropRowAccessPolicyRequest) WithName(Name SchemaObjectIdentifier) *EventTableDropRowAccessPolicyRequest {
-	s.Name = Name
-	return s
+func NewEventTableDropRowAccessPolicyRequest(
+	RowAccessPolicy SchemaObjectIdentifier,
+) *EventTableDropRowAccessPolicyRequest {
+	s := EventTableDropRowAccessPolicyRequest{}
+	s.RowAccessPolicy = RowAccessPolicy
+	return &s
+}
+
+func NewEventTableDropAndAddRowAccessPolicyRequest(
+	Drop EventTableDropRowAccessPolicyRequest,
+	Add EventTableAddRowAccessPolicyRequest,
+) *EventTableDropAndAddRowAccessPolicyRequest {
+	s := EventTableDropAndAddRowAccessPolicyRequest{}
+	s.Drop = Drop
+	s.Add = Add
+	return &s
 }
 
 func NewEventTableClusteringActionRequest() *EventTableClusteringActionRequest {
