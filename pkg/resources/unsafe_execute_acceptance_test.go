@@ -77,6 +77,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(idLowerCaseEscaped)),
 					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(idLowerCaseEscaped)),
+					resource.TestCheckNoResourceAttr(resourceName, "query"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, idLowerCase, true),
 				),
@@ -96,7 +97,7 @@ func TestAcc_UnsafeExecute_withRead(t *testing.T) {
 		return map[string]config.Variable{
 			"execute": config.StringVariable(createDatabaseStatement(id)),
 			"revert":  config.StringVariable(dropDatabaseStatement(id)),
-			"read":    config.StringVariable(showDatabaseStatement(id)),
+			"query":   config.StringVariable(showDatabaseStatement(id)),
 		}
 	}
 
@@ -117,11 +118,12 @@ func TestAcc_UnsafeExecute_withRead(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
 					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "query", showDatabaseStatement(id)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, id, true),
-					resource.TestCheckResourceAttrSet(resourceName, "read_results.#"),
-					resource.TestCheckResourceAttr(resourceName, "read_results.0.name", id),
-					resource.TestCheckResourceAttrSet(resourceName, "read_results.0.created_on"),
+					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", id),
+					resource.TestCheckResourceAttrSet(resourceName, "query_results.0.created_on"),
 				),
 			},
 		},

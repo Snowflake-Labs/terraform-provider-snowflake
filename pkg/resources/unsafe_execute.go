@@ -23,12 +23,12 @@ var unsafeExecuteSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "SQL statement to revert the execute statement. Invoked when resource is deleted.",
 	},
-	"read": {
+	"query": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Optional SQL statement to do a read.",
 	},
-	"read_results": {
+	"query_results": {
 		Type:        schema.TypeList,
 		Computed:    true,
 		Description: "List of key-value maps retrieved after executing read query.",
@@ -38,9 +38,9 @@ var unsafeExecuteSchema = map[string]*schema.Schema{
 
 func UnsafeExecute() *schema.Resource {
 	return &schema.Resource{
-		Create: ApplyUnsafeMigration,
-		Read:   ReadUnsafeMigration,
-		Delete: RevertUnsafeMigration,
+		Create: UnsafeExecuteExecute,
+		Read:   UnsafeExecuteQuery,
+		Delete: UnsafeExecuteRevert,
 		Update: schema.Noop,
 
 		Schema: unsafeExecuteSchema,
@@ -50,12 +50,19 @@ func UnsafeExecute() *schema.Resource {
 	}
 }
 
-func ReadUnsafeMigration(d *schema.ResourceData, meta interface{}) error {
+func UnsafeExecuteQuery(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
 
-	if readStatement := d.Get("read").(string); readStatement != "" {
+	readStatement := d.Get("query").(string)
+
+	if readStatement == "" {
+		err := d.Set("query_results", nil)
+		if err != nil {
+			return err
+		}
+	} else {
 		rows, err := client.QueryUnsafe(ctx, readStatement)
 		if err != nil {
 			return err
@@ -64,8 +71,8 @@ func ReadUnsafeMigration(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		log.Printf(`[DEBUG] SQL "%s" queried successfully, returned rows count: %d`, readStatement, len(allRows))
-		err = d.Set("read_results", allRows)
+		log.Printf(`[DEBUG] SQL query "%s" executed successfully, returned rows count: %d`, readStatement, len(allRows))
+		err = d.Set("query_results", allRows)
 		if err != nil {
 			return err
 		}
@@ -126,7 +133,7 @@ func unsafeExecuteProcessRow(rows *sql.Rows, columnNames []string) (map[string]s
 	return row, nil
 }
 
-func ApplyUnsafeMigration(d *schema.ResourceData, meta interface{}) error {
+func UnsafeExecuteExecute(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
@@ -145,10 +152,10 @@ func ApplyUnsafeMigration(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(id)
 	log.Printf(`[DEBUG] SQL "%s" applied successfully\n`, executeStatement)
 
-	return ReadUnsafeMigration(d, meta)
+	return UnsafeExecuteQuery(d, meta)
 }
 
-func RevertUnsafeMigration(d *schema.ResourceData, meta interface{}) error {
+func UnsafeExecuteRevert(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)

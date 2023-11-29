@@ -6,6 +6,6 @@ variable "revert" {
   type = string
 }
 
-variable "read" {
+variable "query" {
   type = string
 }
