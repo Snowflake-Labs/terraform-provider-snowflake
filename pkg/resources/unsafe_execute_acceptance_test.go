@@ -85,6 +85,49 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 	})
 }
 
+func TestAcc_UnsafeExecute_withRead(t *testing.T) {
+	id := generateUnsafeExecuteTestDatabaseName(t)
+	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
+	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
+	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
+
+	resourceName := "snowflake_unsafe_execute.test"
+	createConfigVariables := func(id string) map[string]config.Variable {
+		return map[string]config.Variable{
+			"execute": config.StringVariable(createDatabaseStatement(id)),
+			"revert":  config.StringVariable(dropDatabaseStatement(id)),
+			"read":    config.StringVariable(showDatabaseStatement(id)),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDatabaseExistence(t, id, false),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
+				ConfigVariables: createConfigVariables(id),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(id)),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					testAccCheckDatabaseExistence(t, id, true),
+					resource.TestCheckResourceAttrSet(resourceName, "read_results.#"),
+					resource.TestCheckResourceAttr(resourceName, "read_results.0.name", id),
+					resource.TestCheckResourceAttrSet(resourceName, "read_results.0.created_on"),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_UnsafeExecute_invalidExecuteStatement(t *testing.T) {
 	invalidCreateStatement := "create database"
 	invalidDropStatement := "drop database"

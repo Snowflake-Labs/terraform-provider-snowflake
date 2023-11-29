@@ -213,6 +213,14 @@ func (c *Client) ExecUnsafe(ctx context.Context, sql string) (sql.Result, error)
 	return c.exec(ctx, sql)
 }
 
+func (c *Client) QueryUnsafe(ctx context.Context, sql string) (*sql.Rows, error) {
+	rows, err := c.db.QueryContext(ctx, sql)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %s, %w", sql, err)
+	}
+	return rows, nil
+}
+
 // Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 	if c.dryRun {
