@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -78,6 +79,128 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(idLowerCaseEscaped)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					testAccCheckDatabaseExistence(t, idLowerCase, true),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_UnsafeExecute_invalidExecuteStatement(t *testing.T) {
+	invalidCreateStatement := "create database"
+	invalidDropStatement := "drop database"
+
+	createConfigVariables := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"execute": config.StringVariable(invalidCreateStatement),
+			"revert":  config.StringVariable(invalidDropStatement),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigVariables: createConfigVariables(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				ExpectError: regexp.MustCompile("SQL compilation error"),
+			},
+		},
+	})
+}
+
+func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
+	id := generateUnsafeExecuteTestDatabaseName(t)
+	updatedId := generateUnsafeExecuteTestDatabaseName(t)
+	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
+	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
+	invalidDropStatement := "drop database"
+
+	resourceName := "snowflake_unsafe_execute.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: func(state *terraform.State) error {
+			err := testAccCheckDatabaseExistence(t, id, false)(state)
+			if err != nil {
+				return err
+			}
+			err = testAccCheckDatabaseExistence(t, updatedId, false)(state)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigVariables: map[string]config.Variable{
+					"execute": config.StringVariable(createDatabaseStatement(id)),
+					"revert":  config.StringVariable(invalidDropStatement),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "revert", invalidDropStatement),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					testAccCheckDatabaseExistence(t, id, true),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigVariables: map[string]config.Variable{
+					"execute": config.StringVariable(createDatabaseStatement(updatedId)),
+					"revert":  config.StringVariable(invalidDropStatement),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				ExpectError: regexp.MustCompile("SQL compilation error"),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigVariables: map[string]config.Variable{
+					"execute": config.StringVariable(createDatabaseStatement(id)),
+					"revert":  config.StringVariable(dropDatabaseStatement(id)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(id)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(id)),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					testAccCheckDatabaseExistence(t, id, true),
+					testAccCheckDatabaseExistence(t, updatedId, false),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigVariables: map[string]config.Variable{
+					"execute": config.StringVariable(createDatabaseStatement(updatedId)),
+					"revert":  config.StringVariable(dropDatabaseStatement(updatedId)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "execute", createDatabaseStatement(updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "revert", dropDatabaseStatement(updatedId)),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					testAccCheckDatabaseExistence(t, id, false),
+					testAccCheckDatabaseExistence(t, updatedId, true),
 				),
 			},
 		},
