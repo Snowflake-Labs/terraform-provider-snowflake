@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.77.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.76.0...v0.77.0) (2023-11-30)
+
+
+### 🎉 **What's new:**
+
+* Add unsafe_execute resource ([#2225](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2225)) ([196134c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/196134cbf91996eabc50bdc586a657fe7ac71900))
+* Introduce simple arch tests ([#2210](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2210)) ([c60db80](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c60db80f44d949258f0a692baafdc22b886c3010))
+
+
+### 🐛 **Bug fixes:**
+
+* cleanup workflows and makefile ([#2150](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2150)) ([64335e7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/64335e72e480393437dff9f88122a256a2ac0814))
+* documentation for role ownership grant ([#2203](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2203)) ([e3d405c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e3d405c91b494413d432e1aef9ff1da1f9ede4a7))
+* Fix workflows ([#2206](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2206)) ([6d7f833](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6d7f8336897dee17c102d69a517e2525c1bb4d91))
+
 ## [0.76.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.75.0...v0.76.0) (2023-11-15)
 
 
