@@ -16,22 +16,22 @@ var unsafeExecuteSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "SQL statement to execute.",
+		Description: "SQL statement to execute. Forces recreation of resource on change.",
 	},
 	"revert": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "SQL statement to revert the execute statement. Invoked when resource is deleted.",
+		Description: "SQL statement to revert the execute statement. Invoked when resource is being destroyed.",
 	},
 	"query": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Optional SQL statement to do a read.",
+		Description: "Optional SQL statement to do a read. Invoked after creation and every time it is changed.",
 	},
 	"query_results": {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "List of key-value maps (text to text) retrieved after executing read query.",
+		Description: "List of key-value maps (text to text) retrieved after executing read query. Will be empty if the query results in an error.",
 		Elem: &schema.Schema{
 			Type: schema.TypeMap,
 			Elem: &schema.Schema{
@@ -63,13 +63,23 @@ func ReadUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 
 	readStatement := d.Get("query").(string)
 
-	if readStatement == "" {
+	setNilResults := func() error {
+		log.Printf(`[DEBUG] Clearing query_results`)
 		err := d.Set("query_results", nil)
 		if err != nil {
 			return err
 		}
+		return nil
+	}
+
+	if readStatement == "" {
+		return setNilResults()
 	} else {
 		rows, err := client.QueryUnsafe(ctx, readStatement)
+		if err != nil {
+			log.Printf(`[DEBUG] SQL query "%s" failed with err %v`, readStatement, err)
+			return setNilResults()
+		}
 		log.Printf(`[DEBUG] SQL query "%s" executed successfully, returned rows count: %d`, readStatement, len(rows))
 		rowsTransformed := make([]map[string]any, len(rows))
 		for i, row := range rows {

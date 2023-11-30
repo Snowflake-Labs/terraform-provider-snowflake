@@ -9,7 +9,7 @@ func (c *Client) ExecUnsafe(ctx context.Context, sql string) (sql.Result, error)
 	return c.exec(ctx, sql)
 }
 
-// QueryUnsafe for now only supports single query. For more queries we will have to adjust the behaviour. From the gosnowflake driver docs:
+// QueryUnsafe for now only supports single query. For more queries we will have to adjust the behavior. From the gosnowflake driver docs:
 //
 //	 (...) while using the multi-statement feature, pass a Context that specifies the number of statements in the string.
 //		When multiple queries are executed by a single call to QueryContext(), multiple result sets are returned. After you process the first result set, get the next result set (for the next SQL statement) by calling NextResultSet().
@@ -48,7 +48,7 @@ func unsafeExecuteProcessRows(rows *sql.Rows) ([]map[string]*any, error) {
 
 func unsafeExecuteProcessRow(rows *sql.Rows, columnNames []string) (map[string]*any, error) {
 	values := make([]any, len(columnNames))
-	for i, _ := range values {
+	for i := range values {
 		values[i] = new(any)
 	}
 
