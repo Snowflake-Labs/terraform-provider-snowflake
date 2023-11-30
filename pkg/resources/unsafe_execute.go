@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -30,8 +31,14 @@ var unsafeExecuteSchema = map[string]*schema.Schema{
 	"query_results": {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "List of key-value maps retrieved after executing read query.",
-		Elem:        &schema.Schema{Type: schema.TypeMap},
+		Description: "List of key-value maps (text to text) retrieved after executing read query.",
+		Elem: &schema.Schema{
+			Type: schema.TypeMap,
+			Elem: &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		},
 	},
 }
 
@@ -64,7 +71,26 @@ func ReadUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		rows, err := client.QueryUnsafe(ctx, readStatement)
 		log.Printf(`[DEBUG] SQL query "%s" executed successfully, returned rows count: %d`, readStatement, len(rows))
-		err = d.Set("query_results", rows)
+		rowsTransformed := make([]map[string]any, len(rows))
+		for i, row := range rows {
+			t := make(map[string]any)
+			for k, v := range row {
+				if *v == nil {
+					t[k] = nil
+				} else {
+					switch (*v).(type) {
+					case fmt.Stringer:
+						t[k] = fmt.Sprintf("%v", *v)
+					case string:
+						t[k] = *v
+					default:
+						return fmt.Errorf("currently only objects convertible to String are supported by query; got %v", *v)
+					}
+				}
+			}
+			rowsTransformed[i] = t
+		}
+		err = d.Set("query_results", rowsTransformed)
 		if err != nil {
 			return err
 		}
