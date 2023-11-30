@@ -77,10 +77,10 @@ func ReadUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		rows, err := client.QueryUnsafe(ctx, readStatement)
 		if err != nil {
-			log.Printf(`[DEBUG] SQL query "%s" failed with err %v`, readStatement, err)
+			log.Printf(`[WARN] SQL query "%s" failed with err %v`, readStatement, err)
 			return setNilResults()
 		}
-		log.Printf(`[DEBUG] SQL query "%s" executed successfully, returned rows count: %d`, readStatement, len(rows))
+		log.Printf(`[INFO] SQL query "%s" executed successfully, returned rows count: %d`, readStatement, len(rows))
 		rowsTransformed := make([]map[string]any, len(rows))
 		for i, row := range rows {
 			t := make(map[string]any)
@@ -126,7 +126,7 @@ func CreateUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(id)
-	log.Printf(`[DEBUG] SQL "%s" applied successfully\n`, executeStatement)
+	log.Printf(`[INFO] SQL "%s" applied successfully\n`, executeStatement)
 
 	return ReadUnsafeExecute(d, meta)
 }
@@ -143,7 +143,7 @@ func DeleteUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
-	log.Printf(`[DEBUG] SQL "%s" applied successfully\n`, revertStatement)
+	log.Printf(`[INFO] SQL "%s" applied successfully\n`, revertStatement)
 
 	return nil
 }
