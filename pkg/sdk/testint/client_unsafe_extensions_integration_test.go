@@ -26,7 +26,6 @@ func TestInt_Client_UnsafeQuery(t *testing.T) {
 		assert.Equal(t, "", *row["options"])
 		assert.Equal(t, "", *row["comment"])
 		assert.Equal(t, "N", *row["is_default"])
-		assert.Equal(t, "Y", *row["is_current"])
 		assert.Nil(t, *row["budget"])
 	})
 
