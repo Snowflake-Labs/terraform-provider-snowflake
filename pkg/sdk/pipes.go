@@ -56,6 +56,7 @@ type PipeSet struct {
 }
 
 type PipeUnset struct {
+	ErrorIntegration    *bool `ddl:"keyword" sql:"ERROR_INTEGRATION"`
 	PipeExecutionPaused *bool `ddl:"keyword" sql:"PIPE_EXECUTION_PAUSED"`
 	Comment             *bool `ddl:"keyword" sql:"COMMENT"`
 }

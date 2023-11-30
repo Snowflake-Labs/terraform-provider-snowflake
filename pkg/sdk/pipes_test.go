@@ -93,7 +93,7 @@ func TestPipesAlter(t *testing.T) {
 	t.Run("validation: no property to unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &PipeUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterPipeOptions.Unset", "PipeExecutionPaused", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterPipeOptions.Unset", "ErrorIntegration", "PipeExecutionPaused", "Comment"))
 	})
 
 	t.Run("set tag: single", func(t *testing.T) {
@@ -154,10 +154,11 @@ func TestPipesAlter(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		opts.Unset = &PipeUnset{
+			ErrorIntegration:    Bool(true),
 			PipeExecutionPaused: Bool(true),
 			Comment:             Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PIPE IF EXISTS %s UNSET PIPE_EXECUTION_PAUSED, COMMENT`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PIPE IF EXISTS %s UNSET ERROR_INTEGRATION, PIPE_EXECUTION_PAUSED, COMMENT`, id.FullyQualifiedName())
 	})
 
 	t.Run("refresh", func(t *testing.T) {
