@@ -714,6 +714,7 @@ func (v *FileFormatTypeOptionsRequest) toOpts() *FileFormatTypeOptions {
 func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 	columns := make([]TableColumn, 0, len(columnRequests))
 	for _, columnRequest := range columnRequests {
+		columnRequest := columnRequest
 		var defaultValue *ColumnDefaultValue
 		if columnRequest.defaultValue != nil {
 			var columnIdentity *ColumnIdentity
