@@ -60,7 +60,7 @@ type StageCopyOptionsRequest struct {
 
 type StageCopyOnErrorOptionsRequest struct {
 	Continue       *bool
-	SkipFile       *bool
+	SkipFile       *string
 	AbortStatement *bool
 }
 

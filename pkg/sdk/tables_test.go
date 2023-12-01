@@ -126,7 +126,6 @@ func TestTableCreate(t *testing.T) {
 		columnComment := random.String()
 		tableComment := random.String()
 		collation := "de"
-		id := RandomSchemaObjectIdentifier()
 		columnName := "FIRST_COLUMN"
 		columnType, err := ToDataType("VARCHAR")
 		maskingPolicy := ColumnMaskingPolicy{
@@ -182,7 +181,7 @@ func TestTableCreate(t *testing.T) {
 		stageCopyOptions := []StageCopyOption{
 			{
 				StageCopyOptionsInnerValue{
-					OnError: &StageCopyOnErrorOptions{SkipFile: Bool(true)},
+					OnError: &StageCopyOnErrorOptions{SkipFile: String("SKIP_FILE")},
 				},
 			},
 		}
@@ -234,6 +233,25 @@ func TestTableCreate(t *testing.T) {
 			tableComment,
 		)
 	})
+
+	t.Run("with skip file x", func(t *testing.T) {
+		columns := []TableColumnRequest{
+			{name: "FIRST_COLUMN", type_: DataTypeVARCHAR},
+		}
+		request := NewCreateTableRequest(id, columns).
+			WithStageCopyOptions([]StageCopyOptionsRequest{*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileX(5))})
+		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s ( FIRST_COLUMN VARCHAR ) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_5)`, id.FullyQualifiedName())
+	})
+
+	t.Run("with skip file x %", func(t *testing.T) {
+		columns := []TableColumnRequest{
+			{name: "FIRST_COLUMN", type_: DataTypeVARCHAR},
+		}
+		request := NewCreateTableRequest(id, columns).
+			WithStageCopyOptions([]StageCopyOptionsRequest{*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileXPercent(10))})
+		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s ( FIRST_COLUMN VARCHAR ) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_10%%)`, id.FullyQualifiedName())
+	})
+
 }
 
 func TestTableCreateAsSelect(t *testing.T) {
@@ -936,7 +954,7 @@ func TestTableAlter(t *testing.T) {
 				StageCopyOptions: []StageCopyOption{
 					{
 						InnerValue: StageCopyOptionsInnerValue{
-							OnError: &StageCopyOnErrorOptions{SkipFile: Bool(true)},
+							OnError: &StageCopyOnErrorOptions{SkipFile: String("SKIP_FILE")},
 						},
 					},
 				},
