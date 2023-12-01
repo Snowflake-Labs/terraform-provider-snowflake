@@ -634,6 +634,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	// TODO: check added constraints
+	// Add method similar to getTableColumnsFor based on https://docs.snowflake.com/en/sql-reference/info-schema/table_constraints.
 	t.Run("alter constraint: add", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -815,7 +816,7 @@ func TestInt_Table(t *testing.T) {
 		assertColumns(t, expectedColumns, currentColumns)
 	})
 
-	// TODO: check search optimization
+	// TODO: check search optimization - after adding https://docs.snowflake.com/en/sql-reference/sql/desc-search-optimization
 	t.Run("add search optimization", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -835,7 +836,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// TODO: add checks for all sets
+	// TODO: try to check more sets (ddl collation, max data extension time in days, etc.)
 	t.Run("set: with complete options", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
