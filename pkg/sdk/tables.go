@@ -502,10 +502,10 @@ type DropAndAddRowAccessPolicy struct {
 
 // dropTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-table
 type dropTableOptions struct {
-	drop         bool                   `ddl:"static" sql:"DROP"`
-	databaseRole bool                   `ddl:"static" sql:"TABLE"`
-	IfExists     *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name         SchemaObjectIdentifier `ddl:"identifier"`
+	drop     bool                   `ddl:"static" sql:"DROP"`
+	table    bool                   `ddl:"static" sql:"TABLE"`
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
 
 	// One of
 	Cascade  *bool `ddl:"keyword" sql:"CASCADE"`
@@ -531,9 +531,9 @@ type tableDBRow struct {
 	Kind                       string         `db:"kind"`
 	Comment                    sql.NullString `db:"comment"`
 	ClusterBy                  sql.NullString `db:"cluster_by"`
-	Rows                       int            `db:"rows"`
+	Rows                       sql.NullInt64  `db:"rows"`
 	Owner                      string         `db:"owner"`
-	RetentionTime              int            `db:"retention_time"`
+	RetentionTime              sql.NullInt64  `db:"retention_time"`
 	AutomaticClustering        sql.NullString `db:"automatic_clustering"`
 	ChangeTracking             sql.NullString `db:"change_tracking"`
 	SearchOptimization         sql.NullString `db:"search_optimization"`
@@ -566,47 +566,51 @@ type Table struct {
 }
 
 func (row tableDBRow) convert() *Table {
-	databaseRole := Table{
-		CreatedOn:     row.CreatedOn,
-		Name:          row.Name,
-		SchemaName:    row.SchemaName,
-		DatabaseName:  row.DatabaseName,
-		Rows:          row.Rows,
-		Owner:         row.Owner,
-		Kind:          row.Kind,
-		RetentionTime: row.RetentionTime,
+	table := Table{
+		CreatedOn:    row.CreatedOn,
+		Name:         row.Name,
+		SchemaName:   row.SchemaName,
+		DatabaseName: row.DatabaseName,
+		Owner:        row.Owner,
+		Kind:         row.Kind,
+	}
+	if row.Rows.Valid {
+		table.Rows = int(row.Rows.Int64)
+	}
+	if row.RetentionTime.Valid {
+		table.RetentionTime = int(row.RetentionTime.Int64)
 	}
 	if row.AutomaticClustering.Valid {
-		databaseRole.AutomaticClustering = row.AutomaticClustering.String == "ON"
+		table.AutomaticClustering = row.AutomaticClustering.String == "ON"
 	}
 	if row.ChangeTracking.Valid {
-		databaseRole.ChangeTracking = row.ChangeTracking.String == "ON"
+		table.ChangeTracking = row.ChangeTracking.String == "ON"
 	}
 	if row.SearchOptimization.Valid {
-		databaseRole.SearchOptimization = row.SearchOptimization.String == "ON"
+		table.SearchOptimization = row.SearchOptimization.String == "ON"
 	}
 	if row.SearchOptimizationProgress.Valid {
-		databaseRole.SearchOptimizationProgress = row.SearchOptimizationProgress.String
+		table.SearchOptimizationProgress = row.SearchOptimizationProgress.String
 	}
 	if row.IsExternal.Valid {
-		databaseRole.IsExternal = row.IsExternal.String == "Y"
+		table.IsExternal = row.IsExternal.String == "Y"
 	}
 	if row.IsEvent.Valid {
-		databaseRole.IsEvent = row.IsEvent.String == "Y"
+		table.IsEvent = row.IsEvent.String == "Y"
 	}
 	if row.EnableSchemaEvolution.Valid {
-		databaseRole.EnableSchemaEvolution = row.EnableSchemaEvolution.String == "Y"
+		table.EnableSchemaEvolution = row.EnableSchemaEvolution.String == "Y"
 	}
 	if row.Comment.Valid {
-		databaseRole.Comment = row.Comment.String
+		table.Comment = row.Comment.String
 	}
 	if row.ClusterBy.Valid {
-		databaseRole.ClusterBy = row.ClusterBy.String
+		table.ClusterBy = row.ClusterBy.String
 	}
 	if row.OwnerRoleType.Valid {
-		databaseRole.OwnerRoleType = row.OwnerRoleType.String
+		table.OwnerRoleType = row.OwnerRoleType.String
 	}
-	return &databaseRole
+	return &table
 }
 
 func (v *Table) ID() SchemaObjectIdentifier {
