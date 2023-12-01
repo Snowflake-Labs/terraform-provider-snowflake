@@ -55,9 +55,9 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: column masking policy incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = RandomSchemaObjectIdentifier()
 		opts.Columns = []TableColumn{{
-			Name: "",
+			Name: "a",
 			MaskingPolicy: &ColumnMaskingPolicy{
 				Name: NewSchemaObjectIdentifier("", "", ""),
 			},
@@ -67,10 +67,10 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: column tag association's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = NewSchemaObjectIdentifier("", "", "")
+		opts.name = RandomSchemaObjectIdentifier()
 		opts.Columns = []TableColumn{
 			{
-				Name: "",
+				Name: "a",
 				Tags: []TagAssociation{
 					{
 						Name:  NewSchemaObjectIdentifier("", "", ""),
@@ -249,15 +249,36 @@ func TestTableCreate(t *testing.T) {
 		}
 		request := NewCreateTableRequest(id, columns).
 			WithStageCopyOptions([]StageCopyOptionsRequest{*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileXPercent(10))})
-		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s ( FIRST_COLUMN VARCHAR ) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_10%%)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s ( FIRST_COLUMN VARCHAR ) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%')`, id.FullyQualifiedName())
 	})
 
 }
 
 func TestTableCreateAsSelect(t *testing.T) {
+	id := RandomSchemaObjectIdentifier()
+
+	defaultOpts := func() *createTableAsSelectOptions {
+		return &createTableAsSelectOptions{
+			name:    id,
+			Columns: []TableAsSelectColumn{{Name: "a"}},
+		}
+	}
+
 	t.Run("empty options", func(t *testing.T) {
 		opts := &createTableAsSelectOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: no columns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Columns = []TableAsSelectColumn{}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("createTableAsSelectOptions", "Columns"))
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -300,30 +321,20 @@ func TestTableCreateAsSelect(t *testing.T) {
 func TestTableCreateUsingTemplate(t *testing.T) {
 	id := RandomSchemaObjectIdentifier()
 
-	defaultOpts := func() *createTableAsSelectOptions {
-		return &createTableAsSelectOptions{
+	defaultOpts := func() *createTableUsingTemplateOptions {
+		return &createTableUsingTemplateOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *createTableAsSelectOptions = nil
+		var opts *createTableUsingTemplateOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("validation: no columns", func(t *testing.T) {
-		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("createTableAsSelectOptions", "Columns"))
-	})
-
-	t.Run("empty options", func(t *testing.T) {
-		opts := &createTableUsingTemplateOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -344,7 +355,8 @@ func TestTableCreateLike(t *testing.T) {
 
 	defaultOpts := func() *createTableLikeOptions {
 		return &createTableLikeOptions{
-			name: id,
+			name:        id,
+			SourceTable: id,
 		}
 	}
 
@@ -389,7 +401,8 @@ func TestTableCreateClone(t *testing.T) {
 
 	defaultOpts := func() *createTableCloneOptions {
 		return &createTableCloneOptions{
-			name: id,
+			name:        id,
+			SourceTable: id,
 		}
 	}
 
@@ -401,6 +414,12 @@ func TestTableCreateClone(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: source table's incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SourceTable = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -444,16 +463,13 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("validation: no action", func(t *testing.T) {
-		opts := &alterTableOptions{
-			name: id,
-		}
+		opts := defaultOpts()
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterTableOptions", "NewName", "SwapWith", "ClusteringAction", "ColumnAction", "ConstraintAction", "ExternalTableAction", "SearchOptimizationAction", "Set", "SetTags", "UnsetTags", "Unset", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllAccessRowPolicies"))
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		opts.NewName = Pointer(NewSchemaObjectIdentifier("test", "test", "test"))
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -468,18 +484,22 @@ func TestTableAlter(t *testing.T) {
 	t.Run("validation: NewName's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.NewName = Pointer(NewSchemaObjectIdentifier("", "", ""))
-		opts.SwapWith = Pointer(NewSchemaObjectIdentifier("test", "test", "test"))
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: SwapWith incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SwapWith = Pointer(NewSchemaObjectIdentifier("", "", ""))
-		opts.NewName = Pointer(NewSchemaObjectIdentifier("test", "test", "test"))
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: Clustering action's ClusterBy and Recluster are present", func(t *testing.T) {
+	t.Run("validation: clustering action - no option present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ClusteringAction = &TableClusteringAction{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ClusteringAction", "ClusterBy", "Recluster", "ChangeReclusterState", "DropClusteringKey"))
+	})
+
+	t.Run("validation: clustering action - two options present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ClusteringAction = &TableClusteringAction{
 			ClusterBy: []string{"date"},
@@ -491,7 +511,13 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ClusteringAction", "ClusterBy", "Recluster", "ChangeReclusterState", "DropClusteringKey"))
 	})
 
-	t.Run("validation: Column action's Add and Rename are present", func(t *testing.T) {
+	t.Run("validation: column action - no option present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ColumnAction = &TableColumnAction{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ColumnAction", "Add", "Rename", "Alter", "SetMaskingPolicy", "UnsetMaskingPolicy", "SetTags", "UnsetTags", "DropColumns"))
+	})
+
+	t.Run("validation: column action - two options present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ColumnAction = &TableColumnAction{
 			Add: &TableColumnAddAction{},
@@ -503,7 +529,15 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ColumnAction", "Add", "Rename", "Alter", "SetMaskingPolicy", "UnsetMaskingPolicy", "SetTags", "UnsetTags", "DropColumns"))
 	})
 
-	t.Run("validation: Column alter action's DropDefault and SetDefault are present", func(t *testing.T) {
+	t.Run("validation: column action alter - no option present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ColumnAction = &TableColumnAction{
+			Alter: []TableColumnAlterAction{{}},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableColumnAlterAction", "DropDefault", "SetDefault", "NotNullConstraint", "Type", "Comment", "UnsetComment"))
+	})
+
+	t.Run("validation: column action alter - two options present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ColumnAction = &TableColumnAction{
 			Alter: []TableColumnAlterAction{{
@@ -514,7 +548,15 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableColumnAlterAction", "DropDefault", "SetDefault", "NotNullConstraint", "Type", "Comment", "UnsetComment"))
 	})
 
-	t.Run("validation: Constraint alter action's ConstraintName and Unique are present", func(t *testing.T) {
+	t.Run("validation: constraint alter action - no option present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ConstraintAction = &TableConstraintAction{
+			Alter: &TableConstraintAlterAction{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintAlterAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
+	})
+
+	t.Run("validation: constraint alter action - two options present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ConstraintAction = &TableConstraintAction{
 			Alter: &TableConstraintAlterAction{
@@ -525,7 +567,15 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintAlterAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 	})
 
-	t.Run("validation: Constraint drop action's ConstraintName and Unique are present", func(t *testing.T) {
+	t.Run("validation: constraint drop action - no option present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ConstraintAction = &TableConstraintAction{
+			Drop: &TableConstraintDropAction{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintDropAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
+	})
+
+	t.Run("validation: constraint drop action - two options present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ConstraintAction = &TableConstraintAction{
 			Drop: &TableConstraintDropAction{
@@ -536,7 +586,13 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintDropAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 	})
 
-	t.Run("validation: External action's Add and Rename are present", func(t *testing.T) {
+	t.Run("validation: external action - no option present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ExternalTableAction = &TableExternalTableAction{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableExternalTableAction", "Add", "Rename", "Drop"))
+	})
+
+	t.Run("validation: external action - two options present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ExternalTableAction = &TableExternalTableAction{
 			Add: &TableExternalTableColumnAddAction{},
@@ -548,7 +604,13 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableExternalTableAction", "Add", "Rename", "Drop"))
 	})
 
-	t.Run("validation: SearchOptimization action's Add and Drop are present", func(t *testing.T) {
+	t.Run("validation: search optimization - no option present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SearchOptimizationAction = &TableSearchOptimizationAction{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableSearchOptimizationAction", "Add", "Drop"))
+	})
+
+	t.Run("validation: search optimization - two options present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SearchOptimizationAction = &TableSearchOptimizationAction{
 			Add:  &AddSearchOptimization{},

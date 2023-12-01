@@ -7,6 +7,7 @@ type RowAccessPolicy struct {
 	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
 }
 
+// ColumnInlineConstraint is based on https://docs.snowflake.com/en/sql-reference/sql/create-table-constraint#inline-unique-primary-foreign-key.
 type ColumnInlineConstraint struct {
 	NotNull    *bool                 `ddl:"keyword" sql:"NOT NULL"`
 	Name       *string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`

@@ -164,7 +164,7 @@ func (s *StageCopyOnErrorOptionsRequest) WithSkipFileX(x int) *StageCopyOnErrorO
 }
 
 func (s *StageCopyOnErrorOptionsRequest) WithSkipFileXPercent(x int) *StageCopyOnErrorOptionsRequest {
-	s.SkipFile = String(fmt.Sprintf("SKIP_FILE_%d%%", x))
+	s.SkipFile = String(fmt.Sprintf("'SKIP_FILE_%d%%'", x))
 	return s
 }
 
