@@ -32,9 +32,10 @@ func (opts *CreateExternalTableOptions) validate() error {
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateExternalTableOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat) {
-		errs = append(errs, errNotSet("CreateExternalTableOptions", "FileFormat"))
-	} else {
+	if !exactlyOneValueSet(opts.RawFileFormat, opts.FileFormat) {
+		errs = append(errs, errExactlyOneOf("CreateExternalTableOptions", "RawFileFormat", "FileFormat"))
+	}
+	if valueSet(opts.FileFormat) {
 		for i, ff := range opts.FileFormat {
 			if !valueSet(ff.Name) && !valueSet(ff.Type) {
 				errs = append(errs, errNotSet(fmt.Sprintf("CreateExternalTableOptions.FileFormat[%d]", i), "Name or Type"))
@@ -61,9 +62,10 @@ func (opts *CreateWithManualPartitioningExternalTableOptions) validate() error {
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateWithManualPartitioningExternalTableOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat) {
-		errs = append(errs, errNotSet("CreateWithManualPartitioningExternalTableOptions", "FileFormat"))
-	} else {
+	if !exactlyOneValueSet(opts.RawFileFormat, opts.FileFormat) {
+		errs = append(errs, errExactlyOneOf("CreateWithManualPartitioningExternalTableOptions", "RawFileFormat", "FileFormat"))
+	}
+	if valueSet(opts.FileFormat) {
 		for i, ff := range opts.FileFormat {
 			if !valueSet(ff.Name) && !valueSet(ff.Type) {
 				errs = append(errs, errNotSet(fmt.Sprintf("CreateWithManualPartitioningExternalTableOptions.FileFormat[%d]", i), "Name or Type"))
@@ -90,9 +92,10 @@ func (opts *CreateDeltaLakeExternalTableOptions) validate() error {
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat) {
-		errs = append(errs, errNotSet("CreateDeltaLakeExternalTableOptions", "FileFormat"))
-	} else {
+	if !exactlyOneValueSet(opts.RawFileFormat, opts.FileFormat) {
+		errs = append(errs, errExactlyOneOf("CreateDeltaLakeExternalTableOptions", "RawFileFormat", "FileFormat"))
+	}
+	if valueSet(opts.FileFormat) {
 		for i, ff := range opts.FileFormat {
 			if !valueSet(ff.Name) && !valueSet(ff.Type) {
 				errs = append(errs, errNotSet(fmt.Sprintf("CreateDeltaLakeExternalTableOptions.FileFormat[%d]", i), "Name or Type"))
@@ -119,9 +122,10 @@ func (opts *CreateExternalTableUsingTemplateOptions) validate() error {
 	if !valueSet(opts.Location) {
 		errs = append(errs, errNotSet("CreateExternalTableUsingTemplateOptions", "Location"))
 	}
-	if !valueSet(opts.FileFormat) {
-		errs = append(errs, errNotSet("CreateExternalTableUsingTemplateOptions", "FileFormat"))
-	} else {
+	if !exactlyOneValueSet(opts.RawFileFormat, opts.FileFormat) {
+		errs = append(errs, errExactlyOneOf("CreateExternalTableUsingTemplateOptions", "RawFileFormat", "FileFormat"))
+	}
+	if valueSet(opts.FileFormat) {
 		for i, ff := range opts.FileFormat {
 			if !valueSet(ff.Name) && !valueSet(ff.Type) {
 				errs = append(errs, errNotSet(fmt.Sprintf("CreateExternalTableUsingTemplateOptions.FileFormat[%d]", i), "Name or Type"))

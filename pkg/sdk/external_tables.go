@@ -57,6 +57,10 @@ func (v *ExternalTable) ObjectType() ObjectType {
 	return ObjectTypeExternalTable
 }
 
+type RawFileFormat struct {
+	Format string `ddl:"keyword"`
+}
+
 // CreateExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table
 type CreateExternalTableOptions struct {
 	create              bool                   `ddl:"static" sql:"CREATE"`
@@ -72,6 +76,7 @@ type CreateExternalTableOptions struct {
 	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
 	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	RawFileFormat       *RawFileFormat            `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
 	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
 	CopyGrants          *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -205,6 +210,7 @@ type CreateWithManualPartitioningExternalTableOptions struct {
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
 	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
 	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	RawFileFormat              *RawFileFormat            `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	RowAccessPolicy            *TableRowAccessPolicy     `ddl:"keyword"`
@@ -226,6 +232,7 @@ type CreateDeltaLakeExternalTableOptions struct {
 	AutoRefresh                *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
 	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	RawFileFormat              *RawFileFormat            `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
 	DeltaTableFormat           *bool                     `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -248,6 +255,7 @@ type CreateExternalTableUsingTemplateOptions struct {
 	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
 	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	RawFileFormat       *RawFileFormat            `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
 	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
 	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	RowAccessPolicy     *TableRowAccessPolicy     `ddl:"keyword"`

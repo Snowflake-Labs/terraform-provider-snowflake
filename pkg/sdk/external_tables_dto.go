@@ -26,7 +26,8 @@ type CreateExternalTableRequest struct {
 	refreshOnCreate     *bool
 	autoRefresh         *bool
 	pattern             *string
-	fileFormat          *ExternalTableFileFormatRequest // required
+	rawFileFormat       *string
+	fileFormat          *ExternalTableFileFormatRequest
 	awsSnsTopic         *string
 	copyGrants          *bool
 	comment             *string
@@ -237,6 +238,13 @@ func (s *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
 		fileFormat = []ExternalTableFileFormat{s.fileFormat.toOpts()}
 	}
 
+	var rawFileFormat *RawFileFormat
+	if s.rawFileFormat != nil {
+		rawFileFormat = &RawFileFormat{
+			Format: *s.rawFileFormat,
+		}
+	}
+
 	var cloudProviderParams *CloudProviderParams
 	if s.cloudProviderParams != nil {
 		cloudProviderParams = s.cloudProviderParams.toOpts()
@@ -264,6 +272,7 @@ func (s *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
 		RefreshOnCreate:     s.refreshOnCreate,
 		AutoRefresh:         s.autoRefresh,
 		Pattern:             s.pattern,
+		RawFileFormat:       rawFileFormat,
 		FileFormat:          fileFormat,
 		AwsSnsTopic:         s.awsSnsTopic,
 		CopyGrants:          s.copyGrants,
@@ -282,7 +291,8 @@ type CreateWithManualPartitioningExternalTableRequest struct {
 	partitionBy                []string
 	location                   string // required
 	userSpecifiedPartitionType *bool
-	fileFormat                 *ExternalTableFileFormatRequest // required
+	rawFileFormat              *string
+	fileFormat                 *ExternalTableFileFormatRequest
 	copyGrants                 *bool
 	comment                    *string
 	rowAccessPolicy            *RowAccessPolicyRequest
@@ -307,6 +317,13 @@ func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithM
 		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
+	var rawFileFormat *RawFileFormat
+	if v.rawFileFormat != nil {
+		rawFileFormat = &RawFileFormat{
+			Format: *v.rawFileFormat,
+		}
+	}
+
 	var rowAccessPolicy *TableRowAccessPolicy
 	if v.rowAccessPolicy != nil {
 		rowAccessPolicy = v.rowAccessPolicy.toOpts()
@@ -328,6 +345,7 @@ func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithM
 		PartitionBy:                v.partitionBy,
 		Location:                   v.location,
 		UserSpecifiedPartitionType: v.userSpecifiedPartitionType,
+		RawFileFormat:              rawFileFormat,
 		FileFormat:                 fileFormat,
 		CopyGrants:                 v.copyGrants,
 		Comment:                    v.comment,
@@ -347,7 +365,8 @@ type CreateDeltaLakeExternalTableRequest struct {
 	userSpecifiedPartitionType *bool
 	refreshOnCreate            *bool
 	autoRefresh                *bool
-	fileFormat                 *ExternalTableFileFormatRequest // required
+	rawFileFormat              *string
+	fileFormat                 *ExternalTableFileFormatRequest
 	deltaTableFormat           *bool
 	copyGrants                 *bool
 	comment                    *string
@@ -373,6 +392,13 @@ func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalT
 		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
+	var rawFileFormat *RawFileFormat
+	if v.rawFileFormat != nil {
+		rawFileFormat = &RawFileFormat{
+			Format: *v.rawFileFormat,
+		}
+	}
+
 	var rowAccessPolicy *TableRowAccessPolicy
 	if v.rowAccessPolicy != nil {
 		rowAccessPolicy = v.rowAccessPolicy.toOpts()
@@ -396,6 +422,7 @@ func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalT
 		UserSpecifiedPartitionType: v.userSpecifiedPartitionType,
 		RefreshOnCreate:            v.refreshOnCreate,
 		AutoRefresh:                v.autoRefresh,
+		RawFileFormat:              rawFileFormat,
 		FileFormat:                 fileFormat,
 		DeltaTableFormat:           v.deltaTableFormat,
 		CopyGrants:                 v.copyGrants,
@@ -416,7 +443,8 @@ type CreateExternalTableUsingTemplateRequest struct {
 	refreshOnCreate     *bool
 	autoRefresh         *bool
 	pattern             *string
-	fileFormat          *ExternalTableFileFormatRequest // required
+	rawFileFormat       *string
+	fileFormat          *ExternalTableFileFormatRequest
 	awsSnsTopic         *string
 	comment             *string
 	rowAccessPolicy     *RowAccessPolicyRequest
@@ -432,6 +460,13 @@ func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableU
 	var fileFormat []ExternalTableFileFormat
 	if v.fileFormat != nil {
 		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
+	}
+
+	var rawFileFormat *RawFileFormat
+	if v.rawFileFormat != nil {
+		rawFileFormat = &RawFileFormat{
+			Format: *v.rawFileFormat,
+		}
 	}
 
 	var rowAccessPolicy *TableRowAccessPolicy
@@ -457,6 +492,7 @@ func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableU
 		RefreshOnCreate:     v.refreshOnCreate,
 		AutoRefresh:         v.autoRefresh,
 		Pattern:             v.pattern,
+		RawFileFormat:       rawFileFormat,
 		FileFormat:          fileFormat,
 		AwsSnsTopic:         v.awsSnsTopic,
 		Comment:             v.comment,

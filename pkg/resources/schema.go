@@ -229,38 +229,20 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("tag") {
-		o, n := d.GetChange("tag")
-		removed, added, changed := getTags(o).diffs(getTags(n))
+		unsetTags, setTags := getTagsDiff(d, "tag")
 
-		unsetTags := make([]sdk.ObjectIdentifier, len(removed))
-		for i, t := range removed {
-			unsetTags[i] = sdk.NewDatabaseObjectIdentifier(t.database, t.name)
-		}
 		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
 			UnsetTag: unsetTags,
 		})
 		if err != nil {
-			return fmt.Errorf("error dropping tags on %v", d.Id())
+			return fmt.Errorf("error occurred when dropping tags on %v, err = %w", d.Id(), err)
 		}
 
-		setTags := make([]sdk.TagAssociation, len(added)+len(changed))
-		for i, t := range added {
-			setTags[i] = sdk.TagAssociation{
-				Name:  sdk.NewSchemaObjectIdentifier(t.database, t.schema, t.name),
-				Value: t.value,
-			}
-		}
-		for i, t := range changed {
-			setTags[i] = sdk.TagAssociation{
-				Name:  sdk.NewSchemaObjectIdentifier(t.database, t.schema, t.name),
-				Value: t.value,
-			}
-		}
 		err = client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
 			SetTag: setTags,
 		})
 		if err != nil {
-			return fmt.Errorf("error setting tags on %v", d.Id())
+			return fmt.Errorf("error occurred when setting tags on %v, err = %w", d.Id(), err)
 		}
 	}
 
