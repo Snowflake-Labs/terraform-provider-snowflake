@@ -251,7 +251,6 @@ func TestTableCreate(t *testing.T) {
 			WithStageCopyOptions([]StageCopyOptionsRequest{*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileXPercent(10))})
 		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s ( FIRST_COLUMN VARCHAR ) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%')`, id.FullyQualifiedName())
 	})
-
 }
 
 func TestTableCreateAsSelect(t *testing.T) {

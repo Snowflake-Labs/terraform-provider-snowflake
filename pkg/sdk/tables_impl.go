@@ -8,11 +8,13 @@ import (
 
 var _ Tables = (*tables)(nil)
 
-var _ optionsProvider[TableColumnAction] = new(TableColumnActionRequest)
-var _ optionsProvider[TableConstraintAction] = new(TableConstraintActionRequest)
-var _ optionsProvider[TableExternalTableAction] = new(TableExternalTableActionRequest)
-var _ optionsProvider[TableSearchOptimizationAction] = new(TableSearchOptimizationActionRequest)
-var _ optionsProvider[TableSet] = new(TableSetRequest)
+var (
+	_ optionsProvider[TableColumnAction]             = new(TableColumnActionRequest)
+	_ optionsProvider[TableConstraintAction]         = new(TableConstraintActionRequest)
+	_ optionsProvider[TableExternalTableAction]      = new(TableExternalTableActionRequest)
+	_ optionsProvider[TableSearchOptimizationAction] = new(TableSearchOptimizationActionRequest)
+	_ optionsProvider[TableSet]                      = new(TableSetRequest)
+)
 
 type tables struct {
 	client *Client
