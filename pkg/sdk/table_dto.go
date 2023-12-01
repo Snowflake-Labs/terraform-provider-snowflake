@@ -4,6 +4,11 @@ import "time"
 
 //go:generate go run ./dto-builder-generator/main.go
 
+type NameAndDataTypeProvider interface {
+	GetName() string
+	GetDataType() *DataType
+}
+
 type CreateTableAsSelectRequest struct {
 	orReplace *bool
 	name      SchemaObjectIdentifier       // required
@@ -17,6 +22,14 @@ type TableAsSelectColumnRequest struct {
 	maskingPolicyName *SchemaObjectIdentifier
 	clusterBy         []string
 	copyGrants        *bool
+}
+
+func (r *TableAsSelectColumnRequest) GetName() string {
+	return r.name
+}
+
+func (r *TableAsSelectColumnRequest) GetDataType() *DataType {
+	return r.type_
 }
 
 type CreateTableUsingTemplateRequest struct {
@@ -91,6 +104,14 @@ type TableColumnRequest struct {
 	with             *bool
 	tags             []TagAssociation
 	inlineConstraint *ColumnInlineConstraintRequest
+}
+
+func (r *TableColumnRequest) GetName() string {
+	return r.name
+}
+
+func (r *TableColumnRequest) GetDataType() *DataType {
+	return &r.type_
 }
 
 type ColumnDefaultValueRequest struct {

@@ -168,6 +168,25 @@ func createUserWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjec
 	}
 }
 
+// TODO: merge with method below
+func createTableWithColumns(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
+	t.Helper()
+	name := random.StringRange(8, 28)
+	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+	ctx := context.Background()
+	dbCreateRequest := sdk.NewCreateTableRequest(id, columns)
+	err := client.Tables.Create(ctx, dbCreateRequest)
+	require.NoError(t, err)
+	return &sdk.Table{
+			DatabaseName: database.Name,
+			SchemaName:   schema.Name,
+			Name:         name,
+		}, func() {
+			dropErr := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
+			require.NoError(t, dropErr)
+		}
+}
+
 func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
 	t.Helper()
 	name := random.StringRange(8, 28)
