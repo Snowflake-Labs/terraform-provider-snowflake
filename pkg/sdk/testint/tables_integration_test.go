@@ -2,7 +2,6 @@ package testint
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -115,7 +114,7 @@ func TestInt_Table(t *testing.T) {
 		param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterMaxDataExtensionTimeInDays, sdk.Object{ObjectType: sdk.ObjectTypeTable, Name: table.ID()})
 		assert.NoError(t, err)
 		assert.Equal(t, "30", param.Value)
-		tableColumns := tableColumns(t, ctx, client, schema.Name, table.Name)
+		tableColumns := getTableColumnsFor(t, client, id)
 		assert.Equal(t, 3, len(tableColumns))
 	})
 
@@ -148,8 +147,9 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		tableColumns := tableColumns(t, ctx, client, schema.Name, table.Name)
+		tableColumns := getTableColumnsFor(t, client, table.ID())
 		assert.Equal(t, 3, len(tableColumns))
+		// todo
 		t.Cleanup(cleanupTableProvider(id))
 	})
 
@@ -182,8 +182,9 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		returnedTableColumns := tableColumns(t, ctx, client, schema.Name, table.Name)
+		returnedTableColumns := getTableColumnsFor(t, client, table.ID())
 		assert.Equal(t, 3, len(returnedTableColumns))
+		// TODO
 		t.Cleanup(cleanupTableProvider(id))
 	})
 
@@ -195,13 +196,13 @@ func TestInt_Table(t *testing.T) {
 		err := client.Tables.CreateLike(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
-		sourceTableColumns := tableColumns(t, ctx, client, schema.Name, sourceTable.Name)
+		sourceTableColumns := getTableColumnsFor(t, client, sourceTable.ID())
 		likeTable, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		likeTableColumns := tableColumns(t, ctx, client, schema.Name, likeTable.Name)
+		likeTableColumns := getTableColumnsFor(t, client, likeTable.ID())
 		assert.Equal(t, len(sourceTableColumns), len(likeTableColumns))
 		for i := range sourceTableColumns {
-			assert.True(t, sourceTableColumns[i] == likeTableColumns[i])
+			assert.True(t, sourceTableColumns[i].ColumnName == likeTableColumns[i].ColumnName)
 		}
 	})
 
@@ -216,13 +217,13 @@ func TestInt_Table(t *testing.T) {
 		err := client.Tables.CreateClone(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
-		sourceTableColumns := tableColumns(t, ctx, client, schema.Name, sourceTable.Name)
+		sourceTableColumns := getTableColumnsFor(t, client, sourceTable.ID())
 		cloneTable, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		cloneTableColumns := tableColumns(t, ctx, client, schema.Name, cloneTable.Name)
+		cloneTableColumns := getTableColumnsFor(t, client, cloneTable.ID())
 		assert.Equal(t, len(sourceTableColumns), len(cloneTableColumns))
 		for i := range sourceTableColumns {
-			assert.True(t, sourceTableColumns[i] == cloneTableColumns[i])
+			assert.True(t, sourceTableColumns[i].ColumnName == cloneTableColumns[i].ColumnName)
 		}
 	})
 
@@ -359,7 +360,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		currentColumns := tableColumns(t, ctx, client, schema.Name, table.Name)
+		currentColumns := getTableColumnsFor(t, client, table.ID())
 
 		assert.Equal(t, table.Comment, "")
 		assert.Equal(t, len(currentColumns), 3)
@@ -381,16 +382,16 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		currentColumns := tableColumns(t, ctx, client, schema.Name, table.Name)
+		currentColumns := getTableColumnsFor(t, client, table.ID())
 
 		assert.Equal(t, table.Comment, "")
 		assert.Equal(t, len(currentColumns), 2)
 		containsNewColumn := false
 		containsOldColumn := false
 		for _, column := range currentColumns {
-			if column == "COLUMN_3" {
+			if column.ColumnName == "COLUMN_3" {
 				containsNewColumn = true
-			} else if column == "COLUMN_1" {
+			} else if column.ColumnName == "COLUMN_1" {
 				containsOldColumn = true
 			}
 		}
@@ -494,11 +495,11 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		currentColumns := tableColumns(t, ctx, client, schema.Name, table.Name)
+		currentColumns := getTableColumnsFor(t, client, table.ID())
 		assert.Equal(t, len(currentColumns), 1)
 		containsOldColumn := false
 		for _, column := range currentColumns {
-			if column == "COLUMN_1" {
+			if column.ColumnName == "COLUMN_1" {
 				containsOldColumn = true
 			}
 		}
@@ -603,11 +604,11 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		currentColumns := tableColumns(t, ctx, client, schema.Name, table.Name)
+		currentColumns := getTableColumnsFor(t, client, table.ID())
 		assert.Equal(t, len(currentColumns), 3)
 		newColumnExists := false
 		for _, column := range currentColumns {
-			if column == "COLUMN_3" {
+			if column.ColumnName == "COLUMN_3" {
 				newColumnExists = true
 			}
 		}
@@ -634,14 +635,14 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, table.Comment, "")
-		currentColumns := tableColumns(t, ctx, client, schema.Name, table.Name)
+		currentColumns := getTableColumnsFor(t, client, table.ID())
 		assert.Equal(t, len(currentColumns), 2)
 		oldColumnExists := false
 		newColumnExists := false
 		for _, column := range currentColumns {
-			if column == "COLUMN_1" {
+			if column.ColumnName == "COLUMN_1" {
 				oldColumnExists = true
-			} else if column == "COLUMN_3" {
+			} else if column.ColumnName == "COLUMN_3" {
 				newColumnExists = true
 			}
 		}
@@ -667,7 +668,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		currentColumns := tableColumns(t, ctx, client, schema.Name, table.Name)
+		currentColumns := getTableColumnsFor(t, client, table.ID())
 
 		assert.Equal(t, len(currentColumns), 1)
 	})
@@ -848,17 +849,4 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(tables))
 	})
-}
-
-func tableColumns(t *testing.T, ctx context.Context, client *sdk.Client, schemaName, tableName string) []string {
-	t.Helper()
-	warehouse, warehouseCleanup := createWarehouse(t, client)
-	t.Cleanup(warehouseCleanup)
-	err := client.Sessions.UseWarehouse(ctx, warehouse.ID())
-	require.NoError(t, err)
-	query := fmt.Sprintf("SELECT column_name\nFROM information_schema.columns\nWHERE table_schema = '%s'\n  AND table_name = '%s'\nORDER BY ordinal_position", schemaName, tableName)
-	var columnNames []string
-	err = client.QueryForTests(ctx, &columnNames, query)
-	require.NoError(t, err)
-	return columnNames
 }
