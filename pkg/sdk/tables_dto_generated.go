@@ -1610,3 +1610,19 @@ func (s *LimitFromRequest) WithFrom(from *string) *LimitFromRequest {
 	s.from = from
 	return s
 }
+
+func NewDescribeTableColumnsRequest(
+	id SchemaObjectIdentifier,
+) *DescribeTableColumnsRequest {
+	s := DescribeTableColumnsRequest{}
+	s.id = id
+	return &s
+}
+
+func NewDescribeTableStageRequest(
+	id SchemaObjectIdentifier,
+) *DescribeTableStageRequest {
+	s := DescribeTableStageRequest{}
+	s.id = id
+	return &s
+}

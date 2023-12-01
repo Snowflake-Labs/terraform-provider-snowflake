@@ -517,3 +517,11 @@ type LimitFromRequest struct {
 	rows *int
 	from *string
 }
+
+type DescribeTableColumnsRequest struct {
+	id SchemaObjectIdentifier // required
+}
+
+type DescribeTableStageRequest struct {
+	id SchemaObjectIdentifier // required
+}

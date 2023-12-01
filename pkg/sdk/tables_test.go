@@ -1178,3 +1178,53 @@ func TestTableShow(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `SHOW TABLES LIKE '%s'`, id.Name())
 	})
 }
+
+func TestTableDescribeColumns(t *testing.T) {
+	id := RandomSchemaObjectIdentifier()
+	defaultOpts := func() *describeTableColumnsOptions {
+		return &describeTableColumnsOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *describeTableColumnsOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("describe", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE TABLE %s TYPE = COLUMNS`, id.FullyQualifiedName())
+	})
+}
+
+func TestTableDescribeStage(t *testing.T) {
+	id := RandomSchemaObjectIdentifier()
+	defaultOpts := func() *describeTableStageOptions {
+		return &describeTableStageOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *describeTableStageOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("describe", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE TABLE %s TYPE = STAGE`, id.FullyQualifiedName())
+	})
+}

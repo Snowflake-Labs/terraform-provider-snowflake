@@ -18,6 +18,8 @@ type Tables interface {
 	Drop(ctx context.Context, req *DropTableRequest) error
 	Show(ctx context.Context, req *ShowTableRequest) ([]Table, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Table, error)
+	DescribeColumns(ctx context.Context, req *DescribeTableColumnsRequest) ([]TableColumnDetails, error)
+	DescribeStage(ctx context.Context, req *DescribeTableStageRequest) ([]TableStageDetails, error)
 }
 
 type createTableAsSelectOptions struct {
@@ -613,4 +615,99 @@ func (v *Table) ID() SchemaObjectIdentifier {
 
 func (v *Table) ObjectType() ObjectType {
 	return ObjectTypeTable
+}
+
+// describeExternalTableColumnsOptions based on https://docs.snowflake.com/en/sql-reference/sql/desc-table
+type describeTableColumnsOptions struct {
+	describeTable bool                   `ddl:"static" sql:"DESCRIBE TABLE"`
+	name          SchemaObjectIdentifier `ddl:"identifier"`
+	columnsType   bool                   `ddl:"static" sql:"TYPE = COLUMNS"`
+}
+
+type TableColumnDetails struct {
+	Name       string
+	Type       DataType
+	Kind       string
+	IsNullable bool
+	Default    *string
+	IsPrimary  bool
+	IsUnique   bool
+	Check      *bool
+	Expression *string
+	Comment    *string
+	PolicyName *string
+}
+
+// tableColumnDetailsRow based on https://docs.snowflake.com/en/sql-reference/sql/desc-table
+type tableColumnDetailsRow struct {
+	Name       string         `db:"name"`
+	Type       DataType       `db:"type"`
+	Kind       string         `db:"kind"`
+	IsNullable string         `db:"null?"`
+	Default    sql.NullString `db:"default"`
+	IsPrimary  string         `db:"primary key"`
+	IsUnique   string         `db:"unique key"`
+	Check      sql.NullString `db:"check"`
+	Expression sql.NullString `db:"expression"`
+	Comment    sql.NullString `db:"comment"`
+	PolicyName sql.NullString `db:"policy name"`
+}
+
+func (r tableColumnDetailsRow) convert() *TableColumnDetails {
+	details := &TableColumnDetails{
+		Name:       r.Name,
+		Type:       r.Type,
+		Kind:       r.Kind,
+		IsNullable: r.IsNullable == "Y",
+		IsPrimary:  r.IsPrimary == "Y",
+		IsUnique:   r.IsUnique == "Y",
+	}
+	if r.Default.Valid {
+		details.Default = String(r.Default.String)
+	}
+	if r.Check.Valid {
+		details.Check = Bool(r.Check.String == "Y")
+	}
+	if r.Expression.Valid {
+		details.Expression = String(r.Expression.String)
+	}
+	if r.Comment.Valid {
+		details.Comment = String(r.Comment.String)
+	}
+	if r.PolicyName.Valid {
+		details.PolicyName = String(r.PolicyName.String)
+	}
+	return details
+}
+
+type describeTableStageOptions struct {
+	describeTable bool                   `ddl:"static" sql:"DESCRIBE TABLE"`
+	name          SchemaObjectIdentifier `ddl:"identifier"`
+	stageType     bool                   `ddl:"static" sql:"TYPE = STAGE"`
+}
+
+type TableStageDetails struct {
+	ParentProperty  string
+	Property        string
+	PropertyType    string
+	PropertyValue   string
+	PropertyDefault string
+}
+
+type tableStageDetailsRow struct {
+	ParentProperty  string `db:"parent_property"`
+	Property        string `db:"property"`
+	PropertyType    string `db:"property_type"`
+	PropertyValue   string `db:"property_value"`
+	PropertyDefault string `db:"property_default"`
+}
+
+func (r tableStageDetailsRow) convert() *TableStageDetails {
+	return &TableStageDetails{
+		ParentProperty:  r.ParentProperty,
+		Property:        r.Property,
+		PropertyType:    r.PropertyType,
+		PropertyValue:   r.PropertyValue,
+		PropertyDefault: r.PropertyDefault,
+	}
 }

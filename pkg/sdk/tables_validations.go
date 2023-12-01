@@ -11,6 +11,8 @@ var (
 	_ validatable = new(alterTableOptions)
 	_ validatable = new(dropTableOptions)
 	_ validatable = new(showTableOptions)
+	_ validatable = new(describeTableColumnsOptions)
+	_ validatable = new(describeTableStageOptions)
 )
 
 func (opts *createTableOptions) validate() error {
@@ -257,4 +259,24 @@ func (opts *showTableOptions) validate() error {
 		errs = append(errs, ErrPatternRequiredForLikeKeyword)
 	}
 	return errors.Join(errs...)
+}
+
+func (opts *describeTableColumnsOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
+	}
+	return nil
+}
+
+func (opts *describeTableStageOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
+	}
+	return nil
 }

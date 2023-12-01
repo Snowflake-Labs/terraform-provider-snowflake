@@ -47,6 +47,18 @@ func TestInt_Table(t *testing.T) {
 		}
 	}
 
+	assertTable := func(t *testing.T, table *sdk.Table, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+		assert.Equal(t, id, table.ID())
+		assert.NotEmpty(t, table.CreatedOn)
+		assert.Equal(t, id.Name(), table.Name)
+		assert.Equal(t, testDb(t).Name, table.DatabaseName)
+		assert.Equal(t, testSchema(t).Name, table.SchemaName)
+		assert.Equal(t, "TABLE", table.Kind)
+		assert.Equal(t, 0, table.Rows)
+		assert.Equal(t, "ACCOUNTADMIN", table.Owner)
+	}
+
 	t.Run("create table: no optionals", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -54,6 +66,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("FIRST_COLUMN", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
 			*sdk.NewTableColumnRequest("SECOND_COLUMN", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
 		}
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
@@ -61,7 +74,7 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, table.Name, name)
+		assertTable(t, table, id)
 	})
 
 	t.Run("create table: complete optionals", func(t *testing.T) {
@@ -125,9 +138,10 @@ func TestInt_Table(t *testing.T) {
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, table.Name, name)
+		assertTable(t, table, id)
 		assert.Equal(t, table.Comment, comment)
 		assert.Equal(t, 30, table.RetentionTime)
+
 		param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterMaxDataExtensionTimeInDays, sdk.Object{ObjectType: sdk.ObjectTypeTable, Name: table.ID()})
 		assert.NoError(t, err)
 		assert.Equal(t, "30", param.Value)
@@ -166,8 +180,11 @@ func TestInt_Table(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		request := sdk.NewCreateTableAsSelectRequest(id, columns)
+
 		err := client.Tables.CreateAsSelect(ctx, request)
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
@@ -178,15 +195,15 @@ func TestInt_Table(t *testing.T) {
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
 		}
 		assertColumns(t, expectedColumns, tableColumns)
-		// todo
-		t.Cleanup(cleanupTableProvider(id))
 	})
 
 	// TODO: fix this test, it should create two integer column but is creating 3 text ones instead
 	t.Run("create table using template", func(t *testing.T) {
-		fileFormat, _ := createFileFormat(t, client, schema.ID())
+		fileFormat, fileFormatCleanup := createFileFormat(t, client, schema.ID())
+		t.Cleanup(fileFormatCleanup)
 		stage, stageCleanup := createStageWithName(t, client, "new_stage")
 		t.Cleanup(stageCleanup)
+
 		f, err := os.CreateTemp("/tmp", "data.csv")
 		require.NoError(t, err)
 		w := bufio.NewWriter(f)
@@ -204,8 +221,11 @@ func TestInt_Table(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '@%s', FILE_FORMAT=>'%s', ignore_case => true))`, *stage, fileFormat.ID().FullyQualifiedName())
 		request := sdk.NewCreateTableUsingTemplateRequest(id, query)
+
 		err = client.Tables.CreateUsingTemplate(ctx, request)
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
@@ -216,8 +236,6 @@ func TestInt_Table(t *testing.T) {
 			{"C3", sdk.DataTypeVARCHAR},
 		}
 		assertColumns(t, expectedColumns, returnedTableColumns)
-		// TODO
-		t.Cleanup(cleanupTableProvider(id))
 	})
 
 	t.Run("create table like", func(t *testing.T) {
@@ -292,11 +310,14 @@ func TestInt_Table(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		newName := random.String()
 		newId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, newName)
+
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_3", sdk.DataTypeVARCHAR),
 		}
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
+
 		alterRequest := sdk.NewAlterTableRequest(id).WithNewName(&newId)
 		err = client.Tables.Alter(ctx, alterRequest)
 		if err != nil {
@@ -305,12 +326,13 @@ func TestInt_Table(t *testing.T) {
 			t.Cleanup(cleanupTableProvider(newId))
 		}
 		require.NoError(t, err)
+
 		_, err = client.Tables.ShowByID(ctx, id)
 		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 
 		table, err := client.Tables.ShowByID(ctx, newId)
 		require.NoError(t, err)
-		assert.Equal(t, table.Name, newName)
+		assertTable(t, table, newId)
 	})
 
 	t.Run("alter table: swap with", func(t *testing.T) {
@@ -319,29 +341,34 @@ func TestInt_Table(t *testing.T) {
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 		}
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
-		require.NoError(t, err)
+
 		secondTableName := random.String()
 		secondTableId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, secondTableName)
 		secondTableColumns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		err = client.Tables.Create(ctx, sdk.NewCreateTableRequest(secondTableId, secondTableColumns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(secondTableId))
+
 		alterRequest := sdk.NewAlterTableRequest(id).WithSwapWith(&secondTableId)
 		err = client.Tables.Alter(ctx, alterRequest)
-		if err != nil {
-			t.Cleanup(cleanupTableProvider(id))
-		} else {
-			t.Cleanup(cleanupTableProvider(secondTableId))
-		}
 		require.NoError(t, err)
+
 		table, err := client.Tables.ShowByID(ctx, secondTableId)
 		require.NoError(t, err)
-		assert.Equal(t, table.Name, secondTableName)
+
+		assertTable(t, table, secondTableId)
+
 		secondTable, err := client.Tables.ShowByID(ctx, id)
-		assert.Equal(t, secondTable.Name, name)
 		require.NoError(t, err)
+
+		assertTable(t, secondTable, id)
 	})
 
 	t.Run("alter table: cluster by", func(t *testing.T) {
@@ -351,19 +378,24 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
-		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		clusterByColumns := []string{"COLUMN_1", "COLUMN_2"}
 		alterRequest := sdk.NewAlterTableRequest(id).WithClusteringAction(sdk.NewTableClusteringActionRequest().WithClusterBy(clusterByColumns))
+
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
+
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, table.Comment, "")
+		assertTable(t, table, id)
+		assert.Equal(t, "", table.Comment)
 		clusterByString := "LINEAR(" + strings.Join(clusterByColumns, ", ") + ")"
-		assert.Equal(t, table.ClusterBy, clusterByString)
+		assert.Equal(t, clusterByString, table.ClusterBy)
 	})
 
 	t.Run("alter table: resume recluster", func(t *testing.T) {
@@ -374,14 +406,22 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 		clusterBy := []string{"COLUMN_1", "COLUMN_2"}
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithClusterBy(clusterBy))
 		require.NoError(t, err)
-		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithClusteringAction(sdk.NewTableClusteringActionRequest().
 				WithChangeReclusterState(sdk.Pointer(sdk.ReclusterStateSuspend)))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
+
+		table, err := client.Tables.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		clusterByString := "LINEAR(" + strings.Join(clusterBy, ", ") + ")"
+		assert.Equal(t, clusterByString, table.ClusterBy)
 	})
 
 	t.Run("alter table: drop clustering key", func(t *testing.T) {
@@ -392,14 +432,21 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 		clusterBy := []string{"COLUMN_1", "COLUMN_2"}
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithClusterBy(clusterBy))
 		require.NoError(t, err)
-		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithClusteringAction(sdk.NewTableClusteringActionRequest().
 				WithDropClusteringKey(sdk.Bool(true)))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
+
+		table, err := client.Tables.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "", table.ClusterBy)
 	})
 
 	t.Run("alter table: add a column", func(t *testing.T) {
@@ -410,16 +457,20 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 		clusterBy := []string{"COLUMN_1", "COLUMN_2"}
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithClusterBy(clusterBy))
 		require.NoError(t, err)
-		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithColumnAction(sdk.NewTableColumnActionRequest().
 				WithAdd(sdk.NewTableColumnAddActionRequest("COLUMN_3", sdk.DataTypeVARCHAR)))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
+
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
+
 		currentColumns := getTableColumnsFor(t, client, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
@@ -428,7 +479,7 @@ func TestInt_Table(t *testing.T) {
 		}
 		assertColumns(t, expectedColumns, currentColumns)
 
-		assert.Equal(t, table.Comment, "")
+		assert.Equal(t, "", table.Comment)
 	})
 
 	t.Run("alter table: rename column", func(t *testing.T) {
@@ -438,16 +489,20 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
-		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithColumnAction(sdk.NewTableColumnActionRequest().
 				WithRename(sdk.NewTableColumnRenameActionRequest("COLUMN_1", "COLUMN_3")))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
+
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
+
 		currentColumns := getTableColumnsFor(t, client, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_3", sdk.DataTypeVARCHAR},
@@ -455,42 +510,59 @@ func TestInt_Table(t *testing.T) {
 		}
 		assertColumns(t, expectedColumns, currentColumns)
 
-		assert.Equal(t, table.Comment, "")
+		assert.Equal(t, "", table.Comment)
 	})
 
 	t.Run("alter table: unset masking policy", func(t *testing.T) {
-		maskingPolicy, _ := createMaskingPolicyWithOptions(t, client, database, schema, []sdk.TableColumnSignature{
+		maskingPolicy, maskingPolicyCleanup := createMaskingPolicyWithOptions(t, client, database, schema, []sdk.TableColumnSignature{
 			{
 				Name: "col1",
 				Type: sdk.DataTypeVARCHAR,
 			},
 		}, sdk.DataTypeVARCHAR, "REPLACE('X', 1)", nil)
+		t.Cleanup(maskingPolicyCleanup)
+
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR).WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(maskingPolicy.ID())),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
-		err := client.Tables.
-			Create(ctx, sdk.NewCreateTableRequest(id, columns))
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
+		tableDetails, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
 		require.NoError(t, err)
+
+		require.Equal(t, 2, len(tableDetails))
+		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), *tableDetails[0].PolicyName)
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithColumnAction(sdk.NewTableColumnActionRequest().WithUnsetMaskingPolicy(sdk.NewTableColumnAlterUnsetMaskingPolicyActionRequest("COLUMN_1")))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
+
+		tableDetails, err = client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
+		require.NoError(t, err)
+
+		require.Equal(t, 2, len(tableDetails))
+		assert.Empty(t, tableDetails[0].PolicyName)
 	})
 
-	t.Run("alter table: set tags", func(t *testing.T) {
+	t.Run("alter table: set and unset tags", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
-		clusterBy := []string{"COLUMN_1", "COLUMN_2"}
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithClusterBy(clusterBy))
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		columnTags := []sdk.TagAssociationRequest{
 			{
 				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag1.Name),
@@ -505,38 +577,31 @@ func TestInt_Table(t *testing.T) {
 		alterRequest := sdk.NewAlterTableRequest(id).WithSetTags(columnTags)
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
-	})
 
-	t.Run("alter table: unset tags", func(t *testing.T) {
-		columnTags := []sdk.TagAssociationRequest{
-			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag1.Name),
-				Value: "v1",
-			},
-			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag2.Name),
-				Value: "v2",
-			},
-		}
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		columns := []sdk.TableColumnRequest{
-			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
-			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
-		}
-		clusterBy := []string{"COLUMN_1", "COLUMN_2"}
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).
-			WithClusterBy(clusterBy).
-			WithTags(columnTags))
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag1.ID(), id, sdk.ObjectTypeTable)
 		require.NoError(t, err)
-		columnNames := []sdk.ObjectIdentifier{
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag1.Name),
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag2.Name),
-		}
 
-		alterRequest := sdk.NewAlterTableRequest(id).WithUnsetTags(columnNames)
-		err = client.Tables.Alter(ctx, alterRequest)
+		assert.Equal(t, "v1", returnedTagValue)
+
+		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag2.ID(), id, sdk.ObjectTypeTable)
 		require.NoError(t, err)
+
+		assert.Equal(t, "v2", returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag1.ID(),
+			tag2.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterTableRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.Tables.Alter(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag1.ID(), id, sdk.ObjectTypeTable)
+		require.Error(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag2.ID(), id, sdk.ObjectTypeTable)
+		require.Error(t, err)
 	})
 
 	t.Run("alter table: drop columns", func(t *testing.T) {
@@ -546,14 +611,19 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithColumnAction(sdk.NewTableColumnActionRequest().WithDropColumns([]string{"COLUMN_1"}))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
+
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
+
 		currentColumns := getTableColumnsFor(t, client, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_2", sdk.DataTypeVARCHAR},
@@ -563,21 +633,28 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, table.Comment, "")
 	})
 
+	// TODO: check added constraints
 	t.Run("alter constraint: add", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 		}
+
 		secondTableName := random.String()
 		secondTableId := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, secondTableName)
 		secondTableColumns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_3", sdk.DataTypeVARCHAR).WithInlineConstraint(sdk.NewColumnInlineConstraintRequest("pkey", sdk.ColumnConstraintTypePrimaryKey)),
 		}
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(secondTableId, secondTableColumns))
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
-		err = client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
+		t.Cleanup(cleanupTableProvider(id))
+
+		err = client.Tables.Create(ctx, sdk.NewCreateTableRequest(secondTableId, secondTableColumns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(secondTableId))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithConstraintAction(sdk.NewTableConstraintActionRequest().
 				WithAdd(sdk.NewOutOfLineConstraintRequest("OUT_OF_LINE_CONSTRAINT", sdk.ColumnConstraintTypeForeignKey).WithColumns([]string{"COLUMN_1"}).
@@ -586,6 +663,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	// TODO: check renamed constraint
 	t.Run("alter constraint: rename", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -595,8 +673,11 @@ func TestInt_Table(t *testing.T) {
 		}
 		oldConstraintName := "OUT_OF_LINE_CONSTRAINT"
 		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(oldConstraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		newConstraintName := "NEW_OUT_OF_LINE_CONSTRAINT_NAME"
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithConstraintAction(sdk.NewTableConstraintActionRequest().
@@ -607,6 +688,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	// TODO: check altered constraint
 	t.Run("alter constraint: alter", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -616,14 +698,18 @@ func TestInt_Table(t *testing.T) {
 		}
 		constraintName := "OUT_OF_LINE_CONSTRAINT"
 		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithConstraintAction(sdk.NewTableConstraintActionRequest().WithAlter(sdk.NewTableConstraintAlterActionRequest().WithConstraintName(sdk.String(constraintName)).WithEnforced(sdk.Bool(true))))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 	})
 
+	// TODO: check dropped constraint
 	t.Run("alter constraint: drop", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -633,8 +719,11 @@ func TestInt_Table(t *testing.T) {
 		}
 		constraintName := "OUT_OF_LINE_CONSTRAINT"
 		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
+
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithConstraintAction(sdk.NewTableConstraintActionRequest().WithDrop(sdk.NewTableConstraintDropActionRequest().WithConstraintName(sdk.String(constraintName))))
 		err = client.Tables.Alter(ctx, alterRequest)
@@ -648,10 +737,11 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
-		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithExternalTableAction(sdk.NewTableExternalTableActionRequest().WithAdd(sdk.NewTableExternalTableColumnAddActionRequest().WithName("COLUMN_3").WithType(sdk.DataTypeNumber).WithExpression([]string{"1 + 1"})))
 
@@ -676,10 +766,11 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
-		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithExternalTableAction(sdk.NewTableExternalTableActionRequest().WithRename(sdk.NewTableExternalTableColumnRenameActionRequest().WithOldName("COLUMN_1").WithNewName("COLUMN_3")))
 
@@ -704,10 +795,11 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
-		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithExternalTableAction(sdk.NewTableExternalTableActionRequest().WithDrop(sdk.NewTableExternalTableColumnDropActionRequest().WithColumns([]string{"COLUMN_2"})))
 
@@ -715,6 +807,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		table, err := client.Tables.ShowByID(ctx, id)
 		require.NoError(t, err)
+
 		currentColumns := getTableColumnsFor(t, client, table.ID())
 		expectedColumns := []expectedColumn{
 			{"COLUMN_1", sdk.DataTypeVARCHAR},
@@ -722,6 +815,7 @@ func TestInt_Table(t *testing.T) {
 		assertColumns(t, expectedColumns, currentColumns)
 	})
 
+	// TODO: check search optimization
 	t.Run("add search optimization", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -729,10 +823,11 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
-		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithSearchOptimizationAction(sdk.NewTableSearchOptimizationActionRequest().WithAddSearchOptimizationOn([]string{"SUBSTRING(*)", "GEO(*)"}))
 
@@ -740,6 +835,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	// TODO: add checks for all sets
 	t.Run("set: with complete options", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -748,10 +844,11 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
-		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
 		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
 		stageFileFormats := []sdk.StageFileFormatRequest{
 			{
 				Type: sdk.Pointer(sdk.FileFormatTypeCSV),
@@ -784,81 +881,27 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, table.EnableSchemaEvolution, true)
 	})
 
-	t.Run("set tags", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		columns := []sdk.TableColumnRequest{
-			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
-			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
-		}
-		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
-		setTags := []sdk.TagAssociationRequest{
-			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag1.Name),
-				Value: "v1",
-			},
-			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag2.Name),
-				Value: "v2",
-			},
-		}
-		require.NoError(t, err)
-		alterRequest := sdk.NewAlterTableRequest(id).
-			WithSetTags(setTags)
-
-		err = client.Tables.Alter(ctx, alterRequest)
-		require.NoError(t, err)
-	})
-
-	t.Run("alter: unset tags", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		columnTags := []sdk.TagAssociation{
-			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag1.Name),
-				Value: "v1",
-			},
-			{
-				Name:  sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag2.Name),
-				Value: "v2",
-			},
-		}
-		columns := []sdk.TableColumnRequest{
-			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR).WithTags(columnTags),
-			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
-		}
-		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
-		unsetTags := []sdk.ObjectIdentifier{
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag1.Name),
-			sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, tag2.Name),
-		}
-		require.NoError(t, err)
-		alterRequest := sdk.NewAlterTableRequest(id).
-			WithUnsetTags(unsetTags)
-
-		err = client.Tables.Alter(ctx, alterRequest)
-		require.NoError(t, err)
-	})
-
 	t.Run("drop table", func(t *testing.T) {
-		table, _ := createTable(t, client, database, schema)
+		table, tableCleanup := createTable(t, client, database, schema)
 		err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(table.ID()).WithIfExists(sdk.Bool(true)))
+		if err != nil {
+			t.Cleanup(tableCleanup)
+		}
 		require.NoError(t, err)
+
 		_, err = client.Tables.ShowByID(ctx, table.ID())
 		require.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
 	t.Run("show tables", func(t *testing.T) {
 		table, tableCleanup := createTable(t, client, database, schema)
-		table2, table2Cleanup := createTable(t, client, database, schema)
 		t.Cleanup(tableCleanup)
+		table2, table2Cleanup := createTable(t, client, database, schema)
 		t.Cleanup(table2Cleanup)
+
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest())
 		require.NoError(t, err)
+
 		tableIds := make([]sdk.SchemaObjectIdentifier, len(tables))
 		for i, table := range tables {
 			tableIds[i] = table.ID()
@@ -872,8 +915,10 @@ func TestInt_Table(t *testing.T) {
 	t.Run("with terse", func(t *testing.T) {
 		table, tableCleanup := createTable(t, client, database, schema)
 		t.Cleanup(tableCleanup)
+
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithTerse(sdk.Bool(true)).WithLikePattern(table.ID().Name()))
 		assert.Equal(t, 1, len(tables))
+
 		table2 := tables[0]
 		assert.Equal(t, table2.Name, table.Name)
 		assert.NotEmpty(t, table2.CreatedOn)
@@ -884,8 +929,10 @@ func TestInt_Table(t *testing.T) {
 	t.Run("with starts with", func(t *testing.T) {
 		table, tableCleanup := createTable(t, client, database, schema)
 		t.Cleanup(tableCleanup)
+
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithStartsWith(sdk.String(table.Name)))
 		assert.Equal(t, 1, len(tables))
+
 		table2 := tables[0]
 		assert.Equal(t, table2.Name, table.Name)
 		assert.NotEmpty(t, table2.CreatedOn)

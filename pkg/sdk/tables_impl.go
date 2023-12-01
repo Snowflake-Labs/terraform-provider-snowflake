@@ -74,6 +74,22 @@ func (v *tables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tabl
 	return collections.FindOne(returnedTables, func(r Table) bool { return r.Name == id.Name() })
 }
 
+func (v *tables) DescribeColumns(ctx context.Context, req *DescribeTableColumnsRequest) ([]TableColumnDetails, error) {
+	rows, err := validateAndQuery[tableColumnDetailsRow](v.client, ctx, req.toOpts())
+	if err != nil {
+		return nil, err
+	}
+	return convertRows[tableColumnDetailsRow, TableColumnDetails](rows), nil
+}
+
+func (v *tables) DescribeStage(ctx context.Context, req *DescribeTableStageRequest) ([]TableStageDetails, error) {
+	rows, err := validateAndQuery[tableStageDetailsRow](v.client, ctx, req.toOpts())
+	if err != nil {
+		return nil, err
+	}
+	return convertRows[tableStageDetailsRow, TableStageDetails](rows), nil
+}
+
 func (s *AlterTableRequest) toOpts() *alterTableOptions {
 	var clusteringAction *TableClusteringAction
 	if s.ClusteringAction != nil {
@@ -769,4 +785,16 @@ func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 		})
 	}
 	return columns
+}
+
+func (v *DescribeTableColumnsRequest) toOpts() *describeTableColumnsOptions {
+	return &describeTableColumnsOptions{
+		name: v.id,
+	}
+}
+
+func (v *DescribeTableStageRequest) toOpts() *describeTableStageOptions {
+	return &describeTableStageOptions{
+		name: v.id,
+	}
 }
