@@ -1,25 +1,20 @@
 package sdk
 
+import "errors"
+
 var (
-	_ validatable = new(CreateProcedureForJavaProcedureOptions)
-	_ validatable = new(CreateProcedureForJavaScriptProcedureOptions)
-	_ validatable = new(CreateProcedureForPythonProcedureOptions)
-	_ validatable = new(CreateProcedureForScalaProcedureOptions)
-	_ validatable = new(CreateProcedureForSQLProcedureOptions)
+	_ validatable = new(CreateForJavaProcedureOptions)
+	_ validatable = new(CreateForJavaScriptProcedureOptions)
+	_ validatable = new(CreateForPythonProcedureOptions)
+	_ validatable = new(CreateForScalaProcedureOptions)
+	_ validatable = new(CreateForSQLProcedureOptions)
+	_ validatable = new(AlterProcedureOptions)
+	_ validatable = new(DropProcedureOptions)
+	_ validatable = new(ShowProcedureOptions)
+	_ validatable = new(DescribeProcedureOptions)
 )
 
-func (v *ProcedureReturns) validate() error {
-	if v == nil {
-		return ErrNilOptions
-	}
-	var errs []error
-	if ok := exactlyOneValueSet(v.ResultDataType, v.Table); !ok {
-		errs = append(errs, errOneOf("Returns.ResultDataType", "Returns.Table"))
-	}
-	return JoinErrors(errs...)
-}
-
-func (opts *CreateProcedureForJavaProcedureOptions) validate() error {
+func (opts *CreateForJavaProcedureOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -27,13 +22,13 @@ func (opts *CreateProcedureForJavaProcedureOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if err := opts.Returns.validate(); err != nil {
-		errs = append(errs, err)
+	if opts.ProcedureDefinition == nil && opts.TargetPath != nil {
+		errs = append(errs, errors.New("TARGET_PATH must be nil when AS is nil"))
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *CreateProcedureForJavaScriptProcedureOptions) validate() error {
+func (opts *CreateForJavaScriptProcedureOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -44,7 +39,7 @@ func (opts *CreateProcedureForJavaScriptProcedureOptions) validate() error {
 	return JoinErrors(errs...)
 }
 
-func (opts *CreateProcedureForPythonProcedureOptions) validate() error {
+func (opts *CreateForPythonProcedureOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -52,13 +47,10 @@ func (opts *CreateProcedureForPythonProcedureOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if err := opts.Returns.validate(); err != nil {
-		errs = append(errs, err)
-	}
 	return JoinErrors(errs...)
 }
 
-func (opts *CreateProcedureForScalaProcedureOptions) validate() error {
+func (opts *CreateForScalaProcedureOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -66,13 +58,13 @@ func (opts *CreateProcedureForScalaProcedureOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if err := opts.Returns.validate(); err != nil {
-		errs = append(errs, err)
+	if opts.ProcedureDefinition == nil && opts.TargetPath != nil {
+		errs = append(errs, errors.New("TARGET_PATH must be nil when AS is nil"))
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *CreateProcedureForSQLProcedureOptions) validate() error {
+func (opts *CreateForSQLProcedureOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -91,21 +83,16 @@ func (opts *AlterProcedureOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	return JoinErrors(errs...)
-}
-
-func (opts *ShowProcedureOptions) validate() error {
-	if opts == nil {
-		return ErrNilOptions
+	if opts.RenameTo != nil && !ValidObjectIdentifier(opts.RenameTo) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	var errs []error
-	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
-		errs = append(errs, ErrPatternRequiredForLikeKeyword)
+	if !exactlyOneValueSet(opts.RenameTo, opts.SetComment, opts.SetLogLevel, opts.SetTraceLevel, opts.UnsetComment, opts.SetTags, opts.UnsetTags, opts.ExecuteAs) {
+		errs = append(errs, errExactlyOneOf("AlterProcedureOptions", "RenameTo", "SetComment", "SetLogLevel", "SetTraceLevel", "UnsetComment", "SetTags", "UnsetTags", "ExecuteAs"))
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *DescribeProcedureOptions) validate() error {
+func (opts *DropProcedureOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -116,7 +103,15 @@ func (opts *DescribeProcedureOptions) validate() error {
 	return JoinErrors(errs...)
 }
 
-func (opts *DropProcedureOptions) validate() error {
+func (opts *ShowProcedureOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	return JoinErrors(errs...)
+}
+
+func (opts *DescribeProcedureOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}

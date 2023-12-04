@@ -1,7 +1,6 @@
 package testint
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -14,22 +13,13 @@ import (
 
 func TestInt_CreateProcedures(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
-	_, warehouseCleanup := createWarehouse(t, client)
-	t.Cleanup(warehouseCleanup)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
-	t.Cleanup(schemaCleanup)
+	databaseTest, schemaTest := testDb(t), testSchema(t)
 
-	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifier, argumentTypes []sdk.DataType) func() {
+	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifier, ats []sdk.DataType) func() {
 		return func() {
-			es := []sdk.ProcedureArgumentTypeRequest{}
-			for _, item := range argumentTypes {
-				es = append(es, *sdk.NewProcedureArgumentTypeRequest().WithArgDataType(item))
-			}
-			err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id).WithArgumentTypes(es))
+			err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id, ats))
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return
 			}
@@ -38,34 +28,32 @@ func TestInt_CreateProcedures(t *testing.T) {
 	}
 
 	t.Run("create procedure for Java: returns result data type", func(t *testing.T) {
+		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#reading-a-dynamically-specified-file-with-inputstream
 		name := "file_reader_java_proc_snowflakefile"
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		as := `
-	import java.io.InputStream;
-	import java.io.IOException;
-	import java.nio.charset.StandardCharsets;
-	import com.snowflake.snowpark_java.types.SnowflakeFile;
-	import com.snowflake.snowpark_java.Session;
-	class FileReader {
-		public String execute(Session session, String fileName) throws IOException {
-			InputStream input = SnowflakeFile.newInstance(fileName).getInputStream();
-			return new String(input.readAllBytes(), StandardCharsets.UTF_8);
-		}
-	}`
-		resultDataType := sdk.NewProcedureReturnsResultDataTypeRequest().WithResultDataType(sdk.DataTypeVARCHAR)
-		procedureReturns := sdk.NewProcedureReturnsRequest().WithResultDataType(resultDataType)
-		procedureArgument := sdk.NewProcedureArgumentRequest().WithArgName("input").WithArgDataType(sdk.DataTypeVARCHAR)
-		procedurePackage := sdk.NewProcedurePackageRequest().WithPackage("com.snowflake:snowpark:latest")
-		request := sdk.NewCreateProcedureForJavaProcedureRequest(id).
+		definition := `
+		import java.io.InputStream;
+		import java.io.IOException;
+		import java.nio.charset.StandardCharsets;
+		import com.snowflake.snowpark_java.types.SnowflakeFile;
+		import com.snowflake.snowpark_java.Session;
+		class FileReader {
+			public String execute(Session session, String fileName) throws IOException {
+				InputStream input = SnowflakeFile.newInstance(fileName).getInputStream();
+				return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+			}
+		}`
+
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
+		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(dt)
+		argument := sdk.NewProcedureArgumentRequest("input", sdk.DataTypeVARCHAR)
+		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:latest")}
+		request := sdk.NewCreateForJavaProcedureRequest(id, *returns, "11", packages, "FileReader.execute").
 			WithOrReplace(sdk.Bool(true)).
-			WithRuntimeVersion(sdk.String("11")).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument}).
-			WithReturns(procedureReturns).
-			WithHandler("FileReader.execute").
-			WithPackages([]sdk.ProcedurePackageRequest{*procedurePackage}).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForJava(ctx, request)
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithProcedureDefinition(sdk.String(definition))
+		err := client.Procedures.CreateForJava(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
 
@@ -75,35 +63,32 @@ func TestInt_CreateProcedures(t *testing.T) {
 	})
 
 	t.Run("create procedure for Java: returns table", func(t *testing.T) {
+		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#specifying-return-column-names-and-types
 		name := "filter_by_role"
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		as := `
-	import com.snowflake.snowpark_java.*;
-	public class Filter {
-		public DataFrame filterByRole(Session session, String tableName, String role) {
-			DataFrame table = session.table(tableName);
-			DataFrame filteredRows = table.filter(Functions.col("role").equal_to(Functions.lit(role)));
-			return filteredRows;
-		}
-	}`
-		column1 := sdk.NewProcedureColumnRequest().WithColumnName("id").WithColumnDataType(sdk.DataTypeNumber)
-		column2 := sdk.NewProcedureColumnRequest().WithColumnName("name").WithColumnDataType(sdk.DataTypeVARCHAR)
-		column3 := sdk.NewProcedureColumnRequest().WithColumnName("role").WithColumnDataType(sdk.DataTypeVARCHAR)
-		procedureReturnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2, *column3})
-		procedureReturns := sdk.NewProcedureReturnsRequest().WithTable(procedureReturnsTable)
-		procedureArgument1 := sdk.NewProcedureArgumentRequest().WithArgName("table_name").WithArgDataType(sdk.DataTypeVARCHAR)
-		procedureArgument2 := sdk.NewProcedureArgumentRequest().WithArgName("role").WithArgDataType(sdk.DataTypeVARCHAR)
-		procedurePackage := sdk.NewProcedurePackageRequest().WithPackage("com.snowflake:snowpark:latest")
-		request := sdk.NewCreateProcedureForJavaProcedureRequest(id).
+		definition := `
+		import com.snowflake.snowpark_java.*;
+		public class Filter {
+			public DataFrame filterByRole(Session session, String tableName, String role) {
+				DataFrame table = session.table(tableName);
+				DataFrame filteredRows = table.filter(Functions.col("role").equal_to(Functions.lit(role)));
+				return filteredRows;
+			}
+		}`
+		column1 := sdk.NewProcedureColumnRequest("id", sdk.DataTypeNumber)
+		column2 := sdk.NewProcedureColumnRequest("name", sdk.DataTypeVARCHAR)
+		column3 := sdk.NewProcedureColumnRequest("role", sdk.DataTypeVARCHAR)
+		returnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2, *column3})
+		returns := sdk.NewProcedureReturnsRequest().WithTable(returnsTable)
+		arg1 := sdk.NewProcedureArgumentRequest("table_name", sdk.DataTypeVARCHAR)
+		arg2 := sdk.NewProcedureArgumentRequest("role", sdk.DataTypeVARCHAR)
+		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:latest")}
+		request := sdk.NewCreateForJavaProcedureRequest(id, *returns, "11", packages, "Filter.filterByRole").
 			WithOrReplace(sdk.Bool(true)).
-			WithRuntimeVersion(sdk.String("11")).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument1, *procedureArgument2}).
-			WithReturns(procedureReturns).
-			WithHandler("Filter.filterByRole").
-			WithPackages([]sdk.ProcedurePackageRequest{*procedurePackage}).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForJava(ctx, request)
+			WithArguments([]sdk.ProcedureArgumentRequest{*arg1, *arg2}).
+			WithProcedureDefinition(sdk.String(definition))
+		err := client.Procedures.CreateForJava(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR}))
 
@@ -113,32 +98,29 @@ func TestInt_CreateProcedures(t *testing.T) {
 	})
 
 	t.Run("create procedure for Javascript", func(t *testing.T) {
+		// https://docs.snowflake.com/en/sql-reference/sql/create-procedure#examples
 		name := "stproc1"
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		as := `
-	var sql_command = "INSERT INTO stproc_test_table1 (num_col1) VALUES (" + FLOAT_PARAM1 + ")";
-	try {
-		snowflake.execute (
-			{sqlText: sql_command}
-		);
-		return "Succeeded."; // Return a success/error indicator.
-	}
-	catch (err)  {
-		return "Failed: " + err; // Return a success/error indicator.
-	}`
-		procedureReturns := sdk.NewProcedureReturns2Request().WithResultDataType("STRING")
-		procedureArgument := sdk.NewProcedureArgumentRequest().WithArgName("FLOAT_PARAM1").WithArgDataType("FLOAT")
-		request := sdk.NewCreateProcedureForJavaScriptProcedureRequest(id).
-			WithOrReplace(sdk.Bool(true)).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument}).
-			WithReturns(procedureReturns).
-			WithNullInputBehavior(sdk.ProcedureNullInputBehaviorStrict).
-			WithExecuteAs(sdk.ProcedureExecuteAsCaller).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForJavaScript(ctx, request)
+		definition := `
+		var sql_command = "INSERT INTO stproc_test_table1 (num_col1) VALUES (" + FLOAT_PARAM1 + ")";
+		try {
+			snowflake.execute (
+				{sqlText: sql_command}
+			);
+			return "Succeeded."; // Return a success/error indicator.
+		}
+		catch (err)  {
+			return "Failed: " + err; // Return a success/error indicator.
+		}`
+		argument := sdk.NewProcedureArgumentRequest("FLOAT_PARAM1", sdk.DataTypeFloat)
+		request := sdk.NewCreateForJavaScriptProcedureRequest(id, sdk.DataTypeString, definition).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorStrict)).
+			WithExecuteAs(sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
+		err := client.Procedures.CreateForJavaScript(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{"FLOAT"}))
+		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -146,33 +128,30 @@ func TestInt_CreateProcedures(t *testing.T) {
 	})
 
 	t.Run("create procedure for Scala: returns result data type", func(t *testing.T) {
+		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-scala#reading-a-dynamically-specified-file-with-snowflakefile
 		name := "file_reader_scala_proc_snowflakefile"
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		as := `
-	import java.io.InputStream
-	import java.nio.charset.StandardCharsets
-	import com.snowflake.snowpark_java.types.SnowflakeFile
-	import com.snowflake.snowpark_java.Session
-	object FileReader {
-		def execute(session: Session, fileName: String): String = {
-			var input: InputStream = SnowflakeFile.newInstance(fileName).getInputStream()
-			return new String(input.readAllBytes(), StandardCharsets.UTF_8)
-		}
-	}`
-		resultDataType := sdk.NewProcedureReturnsResultDataTypeRequest().WithResultDataType(sdk.DataTypeVARCHAR)
-		procedureReturns := sdk.NewProcedureReturnsRequest().WithResultDataType(resultDataType)
-		procedureArgument := sdk.NewProcedureArgumentRequest().WithArgName("input").WithArgDataType(sdk.DataTypeVARCHAR)
-		procedurePackage := sdk.NewProcedurePackageRequest().WithPackage("com.snowflake:snowpark:latest")
-		request := sdk.NewCreateProcedureForScalaProcedureRequest(id).
+		definition := `
+		import java.io.InputStream
+		import java.nio.charset.StandardCharsets
+		import com.snowflake.snowpark_java.types.SnowflakeFile
+		import com.snowflake.snowpark_java.Session
+		object FileReader {
+			def execute(session: Session, fileName: String): String = {
+				var input: InputStream = SnowflakeFile.newInstance(fileName).getInputStream()
+				return new String(input.readAllBytes(), StandardCharsets.UTF_8)
+			}
+		}`
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
+		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(dt)
+		argument := sdk.NewProcedureArgumentRequest("input", sdk.DataTypeVARCHAR)
+		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:latest")}
+		request := sdk.NewCreateForScalaProcedureRequest(id, *returns, "2.12", packages, "FileReader.execute").
 			WithOrReplace(sdk.Bool(true)).
-			WithRuntimeVersion(sdk.String("2.12")).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument}).
-			WithReturns(procedureReturns).
-			WithHandler("FileReader.execute").
-			WithPackages([]sdk.ProcedurePackageRequest{*procedurePackage}).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForScala(ctx, request)
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithProcedureDefinition(sdk.String(definition))
+		err := client.Procedures.CreateForScala(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
 
@@ -182,36 +161,33 @@ func TestInt_CreateProcedures(t *testing.T) {
 	})
 
 	t.Run("create procedure for Scala: returns table", func(t *testing.T) {
+		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-scala#specifying-return-column-names-and-types
 		name := "filter_by_role"
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		as := `
-	import com.snowflake.snowpark.functions._
-	import com.snowflake.snowpark._
-	object Filter {
-		def filterByRole(session: Session, tableName: String, role: String): DataFrame = {
-			val table = session.table(tableName)
-			val filteredRows = table.filter(col("role") === role)
-			return filteredRows
-		}
-	}`
-		column1 := sdk.NewProcedureColumnRequest().WithColumnName("id").WithColumnDataType(sdk.DataTypeNumber)
-		column2 := sdk.NewProcedureColumnRequest().WithColumnName("name").WithColumnDataType(sdk.DataTypeVARCHAR)
-		column3 := sdk.NewProcedureColumnRequest().WithColumnName("role").WithColumnDataType(sdk.DataTypeVARCHAR)
-		procedureReturnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2, *column3})
-		procedureReturns := sdk.NewProcedureReturnsRequest().WithTable(procedureReturnsTable)
-		procedureArgument1 := sdk.NewProcedureArgumentRequest().WithArgName("table_name").WithArgDataType(sdk.DataTypeVARCHAR)
-		procedureArgument2 := sdk.NewProcedureArgumentRequest().WithArgName("role").WithArgDataType(sdk.DataTypeVARCHAR)
-		procedurePackage := sdk.NewProcedurePackageRequest().WithPackage("com.snowflake:snowpark:latest")
-		request := sdk.NewCreateProcedureForScalaProcedureRequest(id).
+		definition := `
+		import com.snowflake.snowpark.functions._
+		import com.snowflake.snowpark._
+		object Filter {
+			def filterByRole(session: Session, tableName: String, role: String): DataFrame = {
+				val table = session.table(tableName)
+				val filteredRows = table.filter(col("role") === role)
+				return filteredRows
+			}
+		}`
+		column1 := sdk.NewProcedureColumnRequest("id", sdk.DataTypeNumber)
+		column2 := sdk.NewProcedureColumnRequest("name", sdk.DataTypeVARCHAR)
+		column3 := sdk.NewProcedureColumnRequest("role", sdk.DataTypeVARCHAR)
+		returnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2, *column3})
+		returns := sdk.NewProcedureReturnsRequest().WithTable(returnsTable)
+		arg1 := sdk.NewProcedureArgumentRequest("table_name", sdk.DataTypeVARCHAR)
+		arg2 := sdk.NewProcedureArgumentRequest("role", sdk.DataTypeVARCHAR)
+		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:latest")}
+		request := sdk.NewCreateForScalaProcedureRequest(id, *returns, "2.12", packages, "Filter.filterByRole").
 			WithOrReplace(sdk.Bool(true)).
-			WithRuntimeVersion(sdk.String("2.12")).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument1, *procedureArgument2}).
-			WithReturns(procedureReturns).
-			WithHandler("Filter.filterByRole").
-			WithPackages([]sdk.ProcedurePackageRequest{*procedurePackage}).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForScala(ctx, request)
+			WithArguments([]sdk.ProcedureArgumentRequest{*arg1, *arg2}).
+			WithProcedureDefinition(sdk.String(definition))
+		err := client.Procedures.CreateForScala(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR}))
 
@@ -221,30 +197,29 @@ func TestInt_CreateProcedures(t *testing.T) {
 	})
 
 	t.Run("create procedure for Python: returns result data type", func(t *testing.T) {
+		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-python#running-concurrent-tasks-with-worker-processes
 		name := "joblib_multiprocessing_proc"
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		as := `
+		definition := `
 import joblib
 from math import sqrt
 def joblib_multiprocessing(session, i):
 	result = joblib.Parallel(n_jobs=-1)(joblib.delayed(sqrt)(i ** 2) for i in range(10))
 	return str(result)`
 
-		resultDataType := sdk.NewProcedureReturnsResultDataTypeRequest().WithResultDataType("STRING")
-		procedureReturns := sdk.NewProcedureReturnsRequest().WithResultDataType(resultDataType)
-		procedureArgument := sdk.NewProcedureArgumentRequest().WithArgName("i").WithArgDataType("INT")
-		procedurePackage1 := sdk.NewProcedurePackageRequest().WithPackage("snowflake-snowpark-python")
-		procedurePackage2 := sdk.NewProcedurePackageRequest().WithPackage("joblib")
-		request := sdk.NewCreateProcedureForPythonProcedureRequest(id).
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeString)
+		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(dt)
+		argument := sdk.NewProcedureArgumentRequest("i", "INT")
+		packages := []sdk.ProcedurePackageRequest{
+			*sdk.NewProcedurePackageRequest("snowflake-snowpark-python"),
+			*sdk.NewProcedurePackageRequest("joblib"),
+		}
+		request := sdk.NewCreateForPythonProcedureRequest(id, *returns, "3.8", packages, "joblib_multiprocessing").
 			WithOrReplace(sdk.Bool(true)).
-			WithRuntimeVersion(sdk.String("3.8")).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument}).
-			WithReturns(procedureReturns).
-			WithHandler("joblib_multiprocessing").
-			WithPackages([]sdk.ProcedurePackageRequest{*procedurePackage1, *procedurePackage2}).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForPython(ctx, request)
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithProcedureDefinition(sdk.String(definition))
+		err := client.Procedures.CreateForPython(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{"string"}))
 
@@ -254,31 +229,28 @@ def joblib_multiprocessing(session, i):
 	})
 
 	t.Run("create procedure for Python: returns table", func(t *testing.T) {
+		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-python#specifying-return-column-names-and-types
 		name := "filterByRole"
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		as := `
+		definition := `
 from snowflake.snowpark.functions import col
 def filter_by_role(session, table_name, role):
 	df = session.table(table_name)
 	return df.filter(col("role") == role)`
-		column1 := sdk.NewProcedureColumnRequest().WithColumnName("id").WithColumnDataType(sdk.DataTypeNumber)
-		column2 := sdk.NewProcedureColumnRequest().WithColumnName("name").WithColumnDataType(sdk.DataTypeVARCHAR)
-		column3 := sdk.NewProcedureColumnRequest().WithColumnName("role").WithColumnDataType(sdk.DataTypeVARCHAR)
-		procedureReturnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2, *column3})
-		procedureReturns := sdk.NewProcedureReturnsRequest().WithTable(procedureReturnsTable)
-		procedureArgument1 := sdk.NewProcedureArgumentRequest().WithArgName("table_name").WithArgDataType(sdk.DataTypeVARCHAR)
-		procedureArgument2 := sdk.NewProcedureArgumentRequest().WithArgName("role").WithArgDataType(sdk.DataTypeVARCHAR)
-		procedurePackage := sdk.NewProcedurePackageRequest().WithPackage("snowflake-snowpark-python")
-		request := sdk.NewCreateProcedureForPythonProcedureRequest(id).
+		column1 := sdk.NewProcedureColumnRequest("id", sdk.DataTypeNumber)
+		column2 := sdk.NewProcedureColumnRequest("name", sdk.DataTypeVARCHAR)
+		column3 := sdk.NewProcedureColumnRequest("role", sdk.DataTypeVARCHAR)
+		eeturnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2, *column3})
+		returns := sdk.NewProcedureReturnsRequest().WithTable(eeturnsTable)
+		arg1 := sdk.NewProcedureArgumentRequest("table_name", sdk.DataTypeVARCHAR)
+		arg2 := sdk.NewProcedureArgumentRequest("role", sdk.DataTypeVARCHAR)
+		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("snowflake-snowpark-python")}
+		request := sdk.NewCreateForPythonProcedureRequest(id, *returns, "3.8", packages, "filter_by_role").
 			WithOrReplace(sdk.Bool(true)).
-			WithRuntimeVersion(sdk.String("3.8")).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument1, *procedureArgument2}).
-			WithReturns(procedureReturns).
-			WithHandler("filter_by_role").
-			WithPackages([]sdk.ProcedurePackageRequest{*procedurePackage}).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForPython(ctx, request)
+			WithArguments([]sdk.ProcedureArgumentRequest{*arg1, *arg2}).
+			WithProcedureDefinition(sdk.String(definition))
+		err := client.Procedures.CreateForPython(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR}))
 
@@ -288,23 +260,22 @@ def filter_by_role(session, table_name, role):
 	})
 
 	t.Run("create procedure for SQL: returns result data type", func(t *testing.T) {
+		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-snowflake-scripting
 		name := "output_message"
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		as := `
-	BEGIN
-		RETURN message;
-	END;`
+		definition := `
+		BEGIN
+			RETURN message;
+		END;`
 
-		resultDataType := sdk.NewProcedureReturnsResultDataTypeRequest().WithResultDataType(sdk.DataTypeVARCHAR)
-		procedureReturns := sdk.NewProcedureReturns3Request().WithResultDataType(resultDataType).WithNotNull(sdk.Bool(true))
-		procedureArgument := sdk.NewProcedureArgumentRequest().WithArgName("message").WithArgDataType(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateProcedureForSQLProcedureRequest(id).
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
+		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(dt).WithNotNull(sdk.Bool(true))
+		argument := sdk.NewProcedureArgumentRequest("message", sdk.DataTypeVARCHAR)
+		request := sdk.NewCreateForSQLProcedureRequest(id, *returns, definition).
 			WithOrReplace(sdk.Bool(true)).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument}).
-			WithReturns(procedureReturns).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForSQL(ctx, request)
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
+		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
 
@@ -317,23 +288,21 @@ def filter_by_role(session, table_name, role):
 		name := "find_invoice_by_id"
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
-		as := `
-	DECLARE
-		res RESULTSET DEFAULT (SELECT * FROM invoices WHERE id = :id);
-	BEGIN
-		RETURN TABLE(res);
-	END;`
-		column1 := sdk.NewProcedureColumnRequest().WithColumnName("id").WithColumnDataType("INTEGER")
-		column2 := sdk.NewProcedureColumnRequest().WithColumnName("price").WithColumnDataType("NUMBER(12,2)")
-		procedureReturnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2})
-		procedureReturns := sdk.NewProcedureReturns3Request().WithTable(procedureReturnsTable)
-		procedureArgument := sdk.NewProcedureArgumentRequest().WithArgName("id").WithArgDataType(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateProcedureForSQLProcedureRequest(id).
+		definition := `
+		DECLARE
+			res RESULTSET DEFAULT (SELECT * FROM invoices WHERE id = :id);
+		BEGIN
+			RETURN TABLE(res);
+		END;`
+		column1 := sdk.NewProcedureColumnRequest("id", "INTEGER")
+		column2 := sdk.NewProcedureColumnRequest("price", "NUMBER(12,2)")
+		returnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2})
+		returns := sdk.NewProcedureSQLReturnsRequest().WithTable(returnsTable)
+		argument := sdk.NewProcedureArgumentRequest("id", sdk.DataTypeVARCHAR)
+		request := sdk.NewCreateForSQLProcedureRequest(id, *returns, definition).
 			WithOrReplace(sdk.Bool(true)).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument}).
-			WithReturns(procedureReturns).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForSQL(ctx, request)
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
+		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
 
@@ -343,26 +312,38 @@ def filter_by_role(session, table_name, role):
 	})
 }
 
-func TestInt_AlterAndShowProcedures(t *testing.T) {
+func TestInt_OtherProcedureFunctions(t *testing.T) {
 	client := testClient(t)
-	ctx := context.Background()
+	ctx := testContext(t)
 
-	_, warehouseCleanup := createWarehouse(t, client)
-	t.Cleanup(warehouseCleanup)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
-	t.Cleanup(schemaCleanup)
+	databaseTest, schemaTest := testDb(t), testSchema(t)
 	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
 	t.Cleanup(tagCleanup)
 
-	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifier, argumentTypes []sdk.DataType) func() {
+	assertProcedure := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool) {
+		t.Helper()
+
+		procedure, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.NotEmpty(t, procedure.CreatedOn)
+		assert.Equal(t, id.Name(), procedure.Name)
+		assert.Equal(t, false, procedure.IsBuiltin)
+		assert.Equal(t, false, procedure.IsAggregate)
+		assert.Equal(t, false, procedure.IsAnsi)
+		assert.Equal(t, 1, procedure.MinNumArguments)
+		assert.Equal(t, 1, procedure.MaxNumArguments)
+		assert.NotEmpty(t, procedure.Arguments)
+		assert.NotEmpty(t, procedure.Description)
+		assert.NotEmpty(t, procedure.CatalogName)
+		assert.Equal(t, false, procedure.IsTableFunction)
+		assert.Equal(t, false, procedure.ValidForClustering)
+		assert.Equal(t, secure, procedure.IsSecure)
+	}
+
+	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifier, ats []sdk.DataType) func() {
 		return func() {
-			es := []sdk.ProcedureArgumentTypeRequest{}
-			for _, item := range argumentTypes {
-				es = append(es, *sdk.NewProcedureArgumentTypeRequest().WithArgDataType(item))
-			}
-			err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id).WithArgumentTypes(es))
+			err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id, ats))
 			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 				return
 			}
@@ -373,21 +354,20 @@ func TestInt_AlterAndShowProcedures(t *testing.T) {
 	createProcedureForSQLHandle := func(t *testing.T, cleanup bool) *sdk.Procedure {
 		t.Helper()
 
-		as := `
+		definition := `
 	BEGIN
 		RETURN message;
 	END;`
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
-		resultDataType := sdk.NewProcedureReturnsResultDataTypeRequest().WithResultDataType(sdk.DataTypeVARCHAR)
-		procedureReturns := sdk.NewProcedureReturns3Request().WithResultDataType(resultDataType).WithNotNull(sdk.Bool(true))
-		procedureArgument := sdk.NewProcedureArgumentRequest().WithArgName("message").WithArgDataType(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateProcedureForSQLProcedureRequest(id).
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
+		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(dt).WithNotNull(sdk.Bool(true))
+		argument := sdk.NewProcedureArgumentRequest("message", sdk.DataTypeVARCHAR)
+		request := sdk.NewCreateForSQLProcedureRequest(id, *returns, definition).
+			WithSecure(sdk.Bool(true)).
 			WithOrReplace(sdk.Bool(true)).
-			WithArguments([]sdk.ProcedureArgumentRequest{*procedureArgument}).
-			WithReturns(procedureReturns).
-			WithExecuteAs(sdk.ProcedureExecuteAsCaller).
-			WithProcedureDefinition(sdk.String(as))
-		err := client.Procedures.CreateProcedureForSQL(ctx, request)
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithExecuteAs(sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
+		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
 		if cleanup {
 			t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
@@ -397,8 +377,8 @@ func TestInt_AlterAndShowProcedures(t *testing.T) {
 		return procedure
 	}
 
-	defaultArgumentTypes := []sdk.ProcedureArgumentTypeRequest{
-		*sdk.NewProcedureArgumentTypeRequest().WithArgDataType(sdk.DataTypeVARCHAR),
+	defaultAlterRequest := func(id sdk.SchemaObjectIdentifier) *sdk.AlterProcedureRequest {
+		return sdk.NewAlterProcedureRequest(id, []sdk.DataType{sdk.DataTypeVARCHAR})
 	}
 
 	t.Run("alter procedure: rename", func(t *testing.T) {
@@ -406,8 +386,7 @@ func TestInt_AlterAndShowProcedures(t *testing.T) {
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		nid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
-		request := sdk.NewAlterProcedureRequest(id).WithRenameTo(&nid).WithArgumentTypes(defaultArgumentTypes)
-		err := client.Procedures.Alter(ctx, request)
+		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithRenameTo(&nid))
 		if err != nil {
 			t.Cleanup(cleanupProcedureHandle(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
 		} else {
@@ -427,49 +406,45 @@ func TestInt_AlterAndShowProcedures(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
-		set := sdk.NewProcedureSetRequest().WithLogLevel(sdk.String("DEBUG"))
-		request := sdk.NewAlterProcedureRequest(id).WithArgumentTypes(defaultArgumentTypes).WithSet(set)
-		err := client.Procedures.Alter(ctx, request)
+		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetLogLevel(sdk.String("DEBUG")))
 		require.NoError(t, err)
+		assertProcedure(t, id, true)
 	})
 
 	t.Run("alter procedure: set trace level", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
-		set := sdk.NewProcedureSetRequest().WithTraceLevel(sdk.String("ALWAYS"))
-		request := sdk.NewAlterProcedureRequest(id).WithArgumentTypes(defaultArgumentTypes).WithSet(set)
-		err := client.Procedures.Alter(ctx, request)
+		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetTraceLevel(sdk.String("ALWAYS")))
 		require.NoError(t, err)
+		assertProcedure(t, id, true)
 	})
 
 	t.Run("alter procedure: set comment", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
-		set := sdk.NewProcedureSetRequest().WithComment(sdk.String("comment"))
-		request := sdk.NewAlterProcedureRequest(id).WithArgumentTypes(defaultArgumentTypes).WithSet(set)
-		err := client.Procedures.Alter(ctx, request)
+		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetComment(sdk.String("comment")))
 		require.NoError(t, err)
+		assertProcedure(t, id, true)
 	})
 
 	t.Run("alter procedure: unset comment", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
-		unset := sdk.NewProcedureUnsetRequest().WithComment(sdk.Bool(true))
-		request := sdk.NewAlterProcedureRequest(id).WithArgumentTypes(defaultArgumentTypes).WithUnset(unset)
-		err := client.Procedures.Alter(ctx, request)
+		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithUnsetComment(sdk.Bool(true)))
 		require.NoError(t, err)
+		assertProcedure(t, id, true)
 	})
 
 	t.Run("alter procedure: set execute as", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
-		request := sdk.NewAlterProcedureRequest(id).WithArgumentTypes(defaultArgumentTypes).WithExecuteAs(sdk.ProcedureExecuteAsOwner)
-		err := client.Procedures.Alter(ctx, request)
+		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithExecuteAs(sdk.ExecuteAsPointer(sdk.ExecuteAsOwner)))
 		require.NoError(t, err)
+		assertProcedure(t, id, true)
 	})
 
 	t.Run("alter procedure: set and unset tags", func(t *testing.T) {
@@ -479,19 +454,19 @@ func TestInt_AlterAndShowProcedures(t *testing.T) {
 		setTags := []sdk.TagAssociation{
 			{
 				Name:  tagTest.ID(),
-				Value: "abc",
+				Value: "v1",
 			},
 		}
-		request := sdk.NewAlterProcedureRequest(id).WithArgumentTypes(defaultArgumentTypes).WithSetTags(setTags)
-		err := client.Procedures.Alter(ctx, request)
+		err := client.Procedures.Alter(ctx, defaultAlterRequest(id).WithSetTags(setTags))
 		require.NoError(t, err)
+		assertProcedure(t, id, true)
 
 		unsetTags := []sdk.ObjectIdentifier{
 			tagTest.ID(),
 		}
-		request = sdk.NewAlterProcedureRequest(id).WithArgumentTypes(defaultArgumentTypes).WithUnsetTags(unsetTags)
-		err = client.Procedures.Alter(ctx, request)
+		err = client.Procedures.Alter(ctx, defaultAlterRequest(id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
+		assertProcedure(t, id, true)
 	})
 
 	t.Run("show procedure for SQL: without like", func(t *testing.T) {
@@ -510,7 +485,7 @@ func TestInt_AlterAndShowProcedures(t *testing.T) {
 		f1 := createProcedureForSQLHandle(t, true)
 		f2 := createProcedureForSQLHandle(t, true)
 
-		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest().WithLike(f1.Name))
+		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest().WithLike(&sdk.Like{Pattern: &f1.Name}))
 		require.NoError(t, err)
 
 		require.Equal(t, 1, len(procedures))
@@ -519,7 +494,7 @@ func TestInt_AlterAndShowProcedures(t *testing.T) {
 	})
 
 	t.Run("show procedure for SQL: no matches", func(t *testing.T) {
-		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest().WithLike(random.String()))
+		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest().WithLike(&sdk.Like{Pattern: sdk.String(random.String())}))
 		require.NoError(t, err)
 		require.Equal(t, 0, len(procedures))
 	})
@@ -528,9 +503,36 @@ func TestInt_AlterAndShowProcedures(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 
-		request := sdk.NewDescribeProcedureRequest(id).WithArgumentTypes(defaultArgumentTypes)
+		request := sdk.NewDescribeProcedureRequest(id, []sdk.DataType{sdk.DataTypeString})
 		details, err := client.Procedures.Describe(ctx, request)
 		require.NoError(t, err)
-		require.Greater(t, len(details), 0)
+		pairs := make(map[string]string)
+		for _, detail := range details {
+			pairs[detail.Property] = detail.Value
+		}
+		require.Equal(t, "SQL", pairs["language"])
+		require.Equal(t, "CALLER", pairs["execute as"])
+		require.Equal(t, "(MESSAGE VARCHAR)", pairs["signature"])
+		require.Equal(t, "\n\tBEGIN\n\t\tRETURN message;\n\tEND;", pairs["body"])
+	})
+
+	t.Run("drop procedure for SQL", func(t *testing.T) {
+		definition := `
+		BEGIN
+			RETURN message;
+		END;`
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.String())
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
+		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(dt).WithNotNull(sdk.Bool(true))
+		argument := sdk.NewProcedureArgumentRequest("message", sdk.DataTypeVARCHAR)
+		request := sdk.NewCreateForSQLProcedureRequest(id, *returns, definition).
+			WithOrReplace(sdk.Bool(true)).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithExecuteAs(sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
+		err := client.Procedures.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+
+		err = client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
+		require.NoError(t, err)
 	})
 }

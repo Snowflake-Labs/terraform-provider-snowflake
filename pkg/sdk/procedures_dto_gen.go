@@ -3,40 +3,41 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateProcedureForJavaProcedureOptions]       = new(CreateProcedureForJavaProcedureRequest)
-	_ optionsProvider[CreateProcedureForJavaScriptProcedureOptions] = new(CreateProcedureForJavaScriptProcedureRequest)
-	_ optionsProvider[CreateProcedureForPythonProcedureOptions]     = new(CreateProcedureForPythonProcedureRequest)
-	_ optionsProvider[CreateProcedureForScalaProcedureOptions]      = new(CreateProcedureForScalaProcedureRequest)
-	_ optionsProvider[CreateProcedureForSQLProcedureOptions]        = new(CreateProcedureForSQLProcedureRequest)
-	_ optionsProvider[AlterProcedureOptions]                        = new(AlterProcedureRequest)
-	_ optionsProvider[DropProcedureOptions]                         = new(DropProcedureRequest)
-	_ optionsProvider[ShowProcedureOptions]                         = new(ShowProcedureRequest)
-	_ optionsProvider[DescribeProcedureOptions]                     = new(DescribeProcedureRequest)
+	_ optionsProvider[CreateForJavaProcedureOptions]       = new(CreateForJavaProcedureRequest)
+	_ optionsProvider[CreateForJavaScriptProcedureOptions] = new(CreateForJavaScriptProcedureRequest)
+	_ optionsProvider[CreateForPythonProcedureOptions]     = new(CreateForPythonProcedureRequest)
+	_ optionsProvider[CreateForScalaProcedureOptions]      = new(CreateForScalaProcedureRequest)
+	_ optionsProvider[CreateForSQLProcedureOptions]        = new(CreateForSQLProcedureRequest)
+	_ optionsProvider[AlterProcedureOptions]               = new(AlterProcedureRequest)
+	_ optionsProvider[DropProcedureOptions]                = new(DropProcedureRequest)
+	_ optionsProvider[ShowProcedureOptions]                = new(ShowProcedureRequest)
+	_ optionsProvider[DescribeProcedureOptions]            = new(DescribeProcedureRequest)
 )
 
-type CreateProcedureForJavaProcedureRequest struct {
+type CreateForJavaProcedureRequest struct {
 	OrReplace                  *bool
 	Secure                     *bool
 	name                       SchemaObjectIdentifier // required
 	Arguments                  []ProcedureArgumentRequest
 	CopyGrants                 *bool
-	Returns                    *ProcedureReturnsRequest
-	RuntimeVersion             *string
-	Packages                   []ProcedurePackageRequest
+	Returns                    ProcedureReturnsRequest   // required
+	RuntimeVersion             string                    // required
+	Packages                   []ProcedurePackageRequest // required
 	Imports                    []ProcedureImportRequest
-	Handler                    string
+	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
-	Secrets                    []ProcedureSecretRequest
+	Secrets                    []Secret
 	TargetPath                 *string
-	NullInputBehavior          *ProcedureNullInputBehavior
+	NullInputBehavior          *NullInputBehavior
 	Comment                    *string
-	ExecuteAs                  *ProcedureExecuteAs
+	ExecuteAs                  *ExecuteAs
 	ProcedureDefinition        *string
 }
 
 type ProcedureArgumentRequest struct {
-	ArgName     string
-	ArgDataType DataType
+	ArgName      string   // required
+	ArgDataType  DataType // required
+	DefaultValue *string
 }
 
 type ProcedureReturnsRequest struct {
@@ -45,7 +46,7 @@ type ProcedureReturnsRequest struct {
 }
 
 type ProcedureReturnsResultDataTypeRequest struct {
-	ResultDataType DataType
+	ResultDataType DataType // required
 	Null           *bool
 	NotNull        *bool
 }
@@ -55,127 +56,106 @@ type ProcedureReturnsTableRequest struct {
 }
 
 type ProcedureColumnRequest struct {
-	ColumnName     string
-	ColumnDataType DataType
+	ColumnName     string   // required
+	ColumnDataType DataType // required
 }
 
 type ProcedurePackageRequest struct {
-	Package string
+	Package string // required
 }
 
 type ProcedureImportRequest struct {
-	Import string
+	Import string // required
 }
 
-type ProcedureSecretRequest struct {
-	SecretVariableName string
-	SecretName         string
-}
-
-type CreateProcedureForJavaScriptProcedureRequest struct {
+type CreateForJavaScriptProcedureRequest struct {
 	OrReplace           *bool
 	Secure              *bool
 	name                SchemaObjectIdentifier // required
 	Arguments           []ProcedureArgumentRequest
 	CopyGrants          *bool
-	Returns             *ProcedureReturns2Request
-	NullInputBehavior   *ProcedureNullInputBehavior
+	ResultDataType      DataType // required
+	NotNull             *bool
+	NullInputBehavior   *NullInputBehavior
 	Comment             *string
-	ExecuteAs           *ProcedureExecuteAs
-	ProcedureDefinition *string
+	ExecuteAs           *ExecuteAs
+	ProcedureDefinition string // required
 }
 
-type ProcedureReturns2Request struct {
-	ResultDataType DataType
-	NotNull        *bool
-}
-
-type CreateProcedureForPythonProcedureRequest struct {
+type CreateForPythonProcedureRequest struct {
 	OrReplace                  *bool
 	Secure                     *bool
 	name                       SchemaObjectIdentifier // required
 	Arguments                  []ProcedureArgumentRequest
 	CopyGrants                 *bool
-	Returns                    *ProcedureReturnsRequest
-	RuntimeVersion             *string
-	Packages                   []ProcedurePackageRequest
+	Returns                    ProcedureReturnsRequest   // required
+	RuntimeVersion             string                    // required
+	Packages                   []ProcedurePackageRequest // required
 	Imports                    []ProcedureImportRequest
-	Handler                    string
+	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
-	Secrets                    []ProcedureSecretRequest
-	NullInputBehavior          *ProcedureNullInputBehavior
+	Secrets                    []Secret
+	NullInputBehavior          *NullInputBehavior
 	Comment                    *string
-	ExecuteAs                  *ProcedureExecuteAs
+	ExecuteAs                  *ExecuteAs
 	ProcedureDefinition        *string
 }
 
-type CreateProcedureForScalaProcedureRequest struct {
+type CreateForScalaProcedureRequest struct {
 	OrReplace           *bool
 	Secure              *bool
 	name                SchemaObjectIdentifier // required
 	Arguments           []ProcedureArgumentRequest
 	CopyGrants          *bool
-	Returns             *ProcedureReturnsRequest
-	RuntimeVersion      *string
-	Packages            []ProcedurePackageRequest
+	Returns             ProcedureReturnsRequest   // required
+	RuntimeVersion      string                    // required
+	Packages            []ProcedurePackageRequest // required
 	Imports             []ProcedureImportRequest
-	Handler             string
+	Handler             string // required
 	TargetPath          *string
-	NullInputBehavior   *ProcedureNullInputBehavior
+	NullInputBehavior   *NullInputBehavior
 	Comment             *string
-	ExecuteAs           *ProcedureExecuteAs
+	ExecuteAs           *ExecuteAs
 	ProcedureDefinition *string
 }
 
-type CreateProcedureForSQLProcedureRequest struct {
+type CreateForSQLProcedureRequest struct {
 	OrReplace           *bool
 	Secure              *bool
 	name                SchemaObjectIdentifier // required
 	Arguments           []ProcedureArgumentRequest
 	CopyGrants          *bool
-	Returns             *ProcedureReturns3Request
-	NullInputBehavior   *ProcedureNullInputBehavior
+	Returns             ProcedureSQLReturnsRequest // required
+	NullInputBehavior   *NullInputBehavior
 	Comment             *string
-	ExecuteAs           *ProcedureExecuteAs
-	ProcedureDefinition *string
+	ExecuteAs           *ExecuteAs
+	ProcedureDefinition string // required
 }
 
-type ProcedureReturns3Request struct {
+type ProcedureSQLReturnsRequest struct {
 	ResultDataType *ProcedureReturnsResultDataTypeRequest
 	Table          *ProcedureReturnsTableRequest
 	NotNull        *bool
 }
 
 type AlterProcedureRequest struct {
-	IfExists      *bool
-	name          SchemaObjectIdentifier // required
-	ArgumentTypes []ProcedureArgumentTypeRequest
-	Set           *ProcedureSetRequest
-	Unset         *ProcedureUnsetRequest
-	ExecuteAs     *ProcedureExecuteAs
-	RenameTo      *SchemaObjectIdentifier
-	SetTags       []TagAssociation
-	UnsetTags     []ObjectIdentifier
-}
-
-type ProcedureArgumentTypeRequest struct {
-	ArgDataType DataType
-}
-
-type ProcedureSetRequest struct {
-	LogLevel   *string
-	TraceLevel *string
-	Comment    *string
-}
-
-type ProcedureUnsetRequest struct {
-	Comment *bool
+	IfExists          *bool
+	name              SchemaObjectIdentifier // required
+	ArgumentDataTypes []DataType             // required
+	RenameTo          *SchemaObjectIdentifier
+	SetComment        *string
+	SetLogLevel       *string
+	SetTraceLevel     *string
+	UnsetComment      *bool
+	SetTags           []TagAssociation
+	UnsetTags         []ObjectIdentifier
+	ExecuteAs         *ExecuteAs
 }
 
 type DropProcedureRequest struct {
-	IfExists      *bool
-	name          SchemaObjectIdentifier // required
-	ArgumentTypes []ProcedureArgumentTypeRequest
+	IfExists          *bool
+	name              SchemaObjectIdentifier // required
+	ArgumentDataTypes []DataType             // required
 }
 
 type ShowProcedureRequest struct {
@@ -184,6 +164,6 @@ type ShowProcedureRequest struct {
 }
 
 type DescribeProcedureRequest struct {
-	name          SchemaObjectIdentifier // required
-	ArgumentTypes []ProcedureArgumentTypeRequest
+	name              SchemaObjectIdentifier // required
+	ArgumentDataTypes []DataType             // required
 }
