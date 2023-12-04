@@ -13,7 +13,7 @@ import (
 
 func TestAcc_ApiIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_API_INTEGRATION_TESTS"); ok {
-		t.Skip("Skipping TestAccApiIntegration")
+		t.Skip("Skipping TestAcc_ApiIntegration")
 	}
 
 	apiIntNameAWS := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

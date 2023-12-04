@@ -13,7 +13,7 @@ import (
 
 func TestAcc_ScimIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SCIM_INTEGRATION_TESTS"); ok {
-		t.Skip("Skipping TestAccScimIntegration")
+		t.Skip("Skipping TestAcc_ScimIntegration")
 	}
 
 	scimIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

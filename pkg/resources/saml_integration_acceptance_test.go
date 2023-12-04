@@ -13,7 +13,7 @@ import (
 
 func TestAcc_SamlIntegration(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SAML_INTEGRATION_TESTS"); ok {
-		t.Skip("Skipping TestAccSamlIntegration")
+		t.Skip("Skipping TestAcc_SamlIntegration")
 	}
 
 	samlIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
