@@ -33,16 +33,12 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_length", "50"),
 				),
 			},
-			/*
-					todo [SNOW-928909]: fix once comments are working again for password policies
-					query CREATE PASSWORD POLICY IF NOT EXISTS "T_Kn1bY6?2kx"."}k*3DrsXP:w9TRK#4wtS"."9ec016f6-ce74-0c94-2bd5-dc46547dbeff" PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 5 COMMENT = 'test comment' err 001420 (22023): SQL compilation error: invalid property 'COMMENT' for 'PASSWORD_POLICY'
-				{
-					Config: passwordPolicyConfig(accName, 20, 50, ""),
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", ""),
-					),
-				},
-			*/
+			{
+				Config: passwordPolicyConfig(accName, 20, 50, "", acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", ""),
+				),
+			},
 			{
 				ResourceName:      "snowflake_password_policy.pa",
 				ImportState:       true,
