@@ -71,22 +71,29 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Creation sets zero properly
 			{
-				Config: passwordPolicyDefaultMaxageDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 0),
+				Config: passwordPolicyDefaultMaxAgeDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
 				),
 			},
 			{
-				Config: passwordPolicyDefaultMaxageDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 10),
+				Config: passwordPolicyDefaultMaxAgeDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "10"),
 				),
 			},
 			// Update sets zero properly
 			{
-				Config: passwordPolicyDefaultMaxageDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 0),
+				Config: passwordPolicyDefaultMaxAgeDaysConfig(accName, acc.TestDatabaseName, acc.TestSchemaName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
+				),
+			},
+			// Unsets properly
+			{
+				Config: passwordPolicyDefaultConfigWithoutMaxAgeDays(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "90"),
 				),
 			},
 			{
@@ -98,7 +105,7 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 	})
 }
 
-func passwordPolicyDefaultMaxageDaysConfig(s string, databaseName string, schemaName string, maxAgeDays int) string {
+func passwordPolicyDefaultMaxAgeDaysConfig(s string, databaseName string, schemaName string, maxAgeDays int) string {
 	return fmt.Sprintf(`
 	resource "snowflake_password_policy" "pa" {
 		name         = "%v"
@@ -107,4 +114,14 @@ func passwordPolicyDefaultMaxageDaysConfig(s string, databaseName string, schema
 		max_age_days = %d
 	}
 	`, s, databaseName, schemaName, maxAgeDays)
+}
+
+func passwordPolicyDefaultConfigWithoutMaxAgeDays(s string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+	resource "snowflake_password_policy" "pa" {
+		name         = "%v"
+		database   = "%s"
+		schema     = "%s"
+	}
+	`, s, databaseName, schemaName)
 }
