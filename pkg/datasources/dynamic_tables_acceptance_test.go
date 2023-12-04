@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -81,6 +82,34 @@ func TestAcc_DynamicTables_complete(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_DynamicTables_badCombination(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      dynamicTablesDatasourceConfigDbAndSchema(),
+				ExpectError: regexp.MustCompile("Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
+func dynamicTablesDatasourceConfigDbAndSchema() string {
+	return fmt.Sprintf(`
+data "snowflake_dynamic_tables" "dts" {
+  in {
+    database = "%s"
+    schema   = "%s"
+  }
+}
+`, acc.TestDatabaseName, acc.TestSchemaName)
 }
 
 func testAccCheckDynamicTableDestroy(s *terraform.State) error {
