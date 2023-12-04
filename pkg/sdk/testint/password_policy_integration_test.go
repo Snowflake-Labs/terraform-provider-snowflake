@@ -93,9 +93,11 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 			PasswordMinLowerCaseChars: sdk.Int(1),
 			PasswordMinNumericChars:   sdk.Int(1),
 			PasswordMinSpecialChars:   sdk.Int(1),
+			PasswordMinAgeDays:        sdk.Int(25),
 			PasswordMaxAgeDays:        sdk.Int(30),
 			PasswordMaxRetries:        sdk.Int(5),
 			PasswordLockoutTimeMins:   sdk.Int(30),
+			PasswordHistory:           sdk.Int(15),
 			// todo [SNOW-928909]: uncomment this once comments are working again
 			// Comment:                   String("test comment"),
 		})
@@ -111,9 +113,11 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinLowerCaseChars.Value)
 		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinNumericChars.Value)
 		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinSpecialChars.Value)
+		assert.Equal(t, 25, *passwordPolicyDetails.PasswordMinAgeDays.Value)
 		assert.Equal(t, 30, *passwordPolicyDetails.PasswordMaxAgeDays.Value)
 		assert.Equal(t, 5, *passwordPolicyDetails.PasswordMaxRetries.Value)
 		assert.Equal(t, 30, *passwordPolicyDetails.PasswordLockoutTimeMins.Value)
+		assert.Equal(t, 15, *passwordPolicyDetails.PasswordHistory.Value)
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
@@ -279,7 +283,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, id, alterOptions)
-		require.Error(t, err)
+		require.NoError(t, err)
 	})
 }
 
