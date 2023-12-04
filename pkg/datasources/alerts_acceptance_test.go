@@ -11,8 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-// TODO: test empty database/schema combinations
-// TODO: test with pattern
 func TestAcc_Alerts(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
@@ -25,7 +23,33 @@ func TestAcc_Alerts(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: alertsConfig(name),
+				Config: alertsResourceConfig(name) + alertsDatasourceConfigNoOptionals(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+				),
+			},
+			{
+				Config: alertsResourceConfig(name) + alertsDatasourceConfigDbOnly(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+				),
+			},
+			{
+				Config: alertsResourceConfig(name) + alertsDatasourceConfigDbAndSchema(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.0.name", name),
+				),
+			},
+			{
+				Config: alertsResourceConfig(name) + alertsDatasourceConfigAllOptionals(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.0.name", name),
+				),
+			},
+			{
+				Config: alertsResourceConfig(name) + alertsDatasourceConfigSchemaOnly(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
 				),
@@ -34,7 +58,7 @@ func TestAcc_Alerts(t *testing.T) {
 	})
 }
 
-func alertsConfig(name string) string {
+func alertsResourceConfig(name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_alert" "test_resource_alert" {
 	name     	      = "%s"
@@ -49,8 +73,46 @@ resource "snowflake_alert" "test_resource_alert" {
 		interval = "60"
 	}
 }
-
-data "snowflake_alerts" "test_datasource_alert" {
-}
 `, name, acc.TestDatabaseName, acc.TestSchemaName, acc.TestWarehouseName)
+}
+
+func alertsDatasourceConfigNoOptionals() string {
+	return `
+data "snowflake_alerts" "test_datasource_alert" {}
+`
+}
+
+func alertsDatasourceConfigDbOnly() string {
+	return fmt.Sprintf(`
+data "snowflake_alerts" "test_datasource_alert" {
+	database  	      = "%s"
+}
+`, acc.TestDatabaseName)
+}
+
+func alertsDatasourceConfigDbAndSchema() string {
+	return fmt.Sprintf(`
+data "snowflake_alerts" "test_datasource_alert" {
+	database  	      = "%s"
+	schema  	      = "%s"
+}
+`, acc.TestDatabaseName, acc.TestSchemaName)
+}
+
+func alertsDatasourceConfigAllOptionals(name string) string {
+	return fmt.Sprintf(`
+data "snowflake_alerts" "test_datasource_alert" {
+	database  	      = "%s"
+	schema  	      = "%s"
+	pattern  	      = "%s"
+}
+`, acc.TestDatabaseName, acc.TestSchemaName, name)
+}
+
+func alertsDatasourceConfigSchemaOnly() string {
+	return fmt.Sprintf(`
+data "snowflake_alerts" "test_datasource_alert" {
+	schema  	      = "%s"
+}
+`, acc.TestSchemaName)
 }
