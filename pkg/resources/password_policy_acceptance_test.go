@@ -33,7 +33,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_basic"),
+				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: m(10, 30, "this is a test resource"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", accName),
@@ -42,7 +42,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_basic"),
+				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: m(20, 50, "this is a test resource"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "20"),
@@ -50,14 +50,14 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_basic"),
+				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: m(20, 50, ""),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", ""),
 				),
 			},
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_PasswordPolicy_basic"),
+				ConfigDirectory:   config.TestNameDirectory(),
 				ConfigVariables:   m(20, 50, ""),
 				ResourceName:      "snowflake_password_policy.pa",
 				ImportState:       true,
