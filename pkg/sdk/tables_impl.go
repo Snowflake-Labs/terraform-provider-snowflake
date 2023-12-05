@@ -378,7 +378,6 @@ func (r *TableColumnActionRequest) toOpts() *TableColumnAction {
 		}
 		return &TableColumnAction{
 			Add: &TableColumnAddAction{
-				Column:           r.Add.Column,
 				Name:             r.Add.Name,
 				Type:             r.Add.Type,
 				DefaultValue:     defaultValue,
@@ -405,7 +404,6 @@ func (r *TableColumnActionRequest) toOpts() *TableColumnAction {
 				}
 			}
 			alterActions = append(alterActions, TableColumnAlterAction{
-				Column:            Bool(alterAction.Column),
 				Name:              alterAction.Name,
 				DropDefault:       alterAction.DropDefault,
 				SetDefault:        alterAction.SetDefault,

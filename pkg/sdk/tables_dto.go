@@ -350,7 +350,6 @@ type TableColumnActionRequest struct {
 }
 
 type TableColumnAddActionRequest struct {
-	Column           *bool
 	Name             string   // required
 	Type             DataType // required
 	DefaultValue     *ColumnDefaultValueRequest

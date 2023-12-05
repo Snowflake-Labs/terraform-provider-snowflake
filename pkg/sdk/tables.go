@@ -33,7 +33,8 @@ type createTableAsSelectOptions struct {
 	ClusterBy       []string               `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
 	CopyGrants      *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	RowAccessPolicy *RowAccessPolicy       `ddl:"keyword"`
-	Query           *string                `ddl:"parameter,no_equals" sql:"AS SELECT"`
+	// TODO [SNOW-934647]: Query is not added anywhere?
+	Query *string `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 type TableAsSelectColumn struct {
@@ -43,7 +44,6 @@ type TableAsSelectColumn struct {
 }
 
 type TableAsSelectColumnMaskingPolicy struct {
-	With          *bool                  `ddl:"keyword" sql:"WITH"`
 	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
 	Name          SchemaObjectIdentifier `ddl:"identifier"`
 }
@@ -290,13 +290,12 @@ type TableColumnAction struct {
 }
 
 type TableColumnAddAction struct {
-	Column           *bool                           `ddl:"keyword" sql:"COLUMN"`
+	column           bool                            `ddl:"static" sql:"COLUMN"`
 	Name             string                          `ddl:"keyword"`
 	Type             DataType                        `ddl:"keyword"`
 	DefaultValue     *ColumnDefaultValue             `ddl:"keyword"`
 	InlineConstraint *TableColumnAddInlineConstraint `ddl:"keyword"`
 	MaskingPolicy    *ColumnMaskingPolicy            `ddl:"keyword"`
-	With             *bool                           `ddl:"keyword" sql:"WITH"`
 	Tags             []TagAssociation                `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
@@ -318,7 +317,7 @@ type TableColumnRenameAction struct {
 }
 
 type TableColumnAlterAction struct {
-	Column *bool  `ddl:"keyword" sql:"COLUMN"`
+	column bool   `ddl:"static" sql:"COLUMN"`
 	Name   string `ddl:"keyword"`
 
 	// One of

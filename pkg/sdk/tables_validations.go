@@ -21,7 +21,7 @@ func (opts *createTableOptions) validate() error {
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("createTableOptions", "name"))
 	}
 	if len(opts.Columns) == 0 {
 		errs = append(errs, errNotSet("createTableOptions", "Columns"))
@@ -37,19 +37,19 @@ func (opts *createTableOptions) validate() error {
 		}
 		if column.MaskingPolicy != nil {
 			if !ValidObjectIdentifier(column.MaskingPolicy.Name) {
-				errs = append(errs, ErrInvalidObjectIdentifier)
+				errs = append(errs, errInvalidIdentifier("ColumnMaskingPolicy", "Name"))
 			}
 		}
 		for _, tag := range column.Tags {
 			if !ValidObjectIdentifier(tag.Name) {
-				errs = append(errs, ErrInvalidObjectIdentifier)
+				errs = append(errs, errInvalidIdentifier("TagAssociation", "Name"))
 			}
 		}
 	}
 	if outOfLineConstraint := opts.OutOfLineConstraint; valueSet(outOfLineConstraint) {
 		if foreignKey := outOfLineConstraint.ForeignKey; valueSet(foreignKey) {
 			if !ValidObjectIdentifier(foreignKey.TableName) {
-				errs = append(errs, ErrInvalidObjectIdentifier)
+				errs = append(errs, errInvalidIdentifier("OutOfLineForeignKey", "TableName"))
 			}
 		}
 	}
@@ -64,7 +64,7 @@ func (opts *createTableOptions) validate() error {
 
 	if opts.RowAccessPolicy != nil {
 		if !ValidObjectIdentifier(opts.RowAccessPolicy.Name) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
+			errs = append(errs, errInvalidIdentifier("RowAccessPolicy", "Name"))
 		}
 	}
 
@@ -77,7 +77,7 @@ func (opts *createTableAsSelectOptions) validate() error {
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("createTableAsSelectOptions", "name"))
 	}
 	if len(opts.Columns) == 0 {
 		errs = append(errs, errNotSet("createTableAsSelectOptions", "Columns"))
@@ -91,10 +91,10 @@ func (opts *createTableLikeOptions) validate() error {
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("createTableLikeOptions", "name"))
 	}
 	if !ValidObjectIdentifier(opts.SourceTable) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("createTableLikeOptions", "SourceTable"))
 	}
 	return errors.Join(errs...)
 }
@@ -105,7 +105,7 @@ func (opts *createTableUsingTemplateOptions) validate() error {
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("createTableUsingTemplateOptions", "name"))
 	}
 	return errors.Join(errs...)
 }
@@ -116,10 +116,10 @@ func (opts *createTableCloneOptions) validate() error {
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("createTableCloneOptions", "name"))
 	}
 	if !ValidObjectIdentifier(opts.SourceTable) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("createTableCloneOptions", "SourceTable"))
 	}
 	return errors.Join(errs...)
 }
@@ -130,7 +130,7 @@ func (opts *alterTableOptions) validate() error {
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("alterTableOptions", "name"))
 	}
 	if ok := exactlyOneValueSet(
 		opts.NewName,
@@ -153,12 +153,12 @@ func (opts *alterTableOptions) validate() error {
 	}
 	if opts.NewName != nil {
 		if !ValidObjectIdentifier(*opts.NewName) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
+			errs = append(errs, errInvalidIdentifier("alterTableOptions", "NewName"))
 		}
 	}
 	if opts.SwapWith != nil {
 		if !ValidObjectIdentifier(*opts.SwapWith) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
+			errs = append(errs, errInvalidIdentifier("alterTableOptions", "SwapWith"))
 		}
 	}
 	if clusteringAction := opts.ClusteringAction; valueSet(clusteringAction) {
@@ -245,7 +245,7 @@ func (opts *dropTableOptions) validate() error {
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("dropTableOptions", "name"))
 	}
 	return errors.Join(errs...)
 }
@@ -265,18 +265,20 @@ func (opts *describeTableColumnsOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)
 	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return errors.Join(ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("describeTableColumnsOptions", "name"))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (opts *describeTableStageOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)
 	}
+	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
-		return errors.Join(ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("describeTableStageOptions", "name"))
 	}
-	return nil
+	return errors.Join(errs...)
 }

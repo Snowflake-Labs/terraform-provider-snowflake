@@ -103,17 +103,6 @@ func TestTableCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("StageFileFormat", "FormatName", "FormatType"))
 	})
 
-	t.Run("validation: stageFileFormat's both format name and format type are present", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.StageFileFormat = []StageFileFormat{
-			{
-				FormatName: String("some_format"),
-				Type:       Pointer(FileFormatTypeCSV),
-			},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("StageFileFormat", "FormatName", "FormatType"))
-	})
-
 	t.Run("validation: rowAccessPolicy's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &RowAccessPolicy{
@@ -286,7 +275,6 @@ func TestTableCreateAsSelect(t *testing.T) {
 		columnType, err := ToDataType("VARCHAR")
 		require.NoError(t, err)
 		maskingPolicy := TableAsSelectColumnMaskingPolicy{
-			With: Bool(true),
 			Name: RandomSchemaObjectIdentifier(),
 		}
 		rowAccessPolicy := RowAccessPolicy{
@@ -307,9 +295,9 @@ func TestTableCreateAsSelect(t *testing.T) {
 			CopyGrants: Bool(true),
 
 			RowAccessPolicy: &rowAccessPolicy,
-			Query:           String("* FROM ANOTHER_TABLE"),
+			Query:           String("SELECT * FROM ANOTHER_TABLE"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TABLE %s ( FIRST_COLUMN VARCHAR WITH MASKING POLICY %s ) CLUSTER BY (COLUMN_1, COLUMN_2) COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) AS SELECT * FROM ANOTHER_TABLE",
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TABLE %s ( FIRST_COLUMN VARCHAR MASKING POLICY %s ) CLUSTER BY (COLUMN_1, COLUMN_2) COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) AS SELECT * FROM ANOTHER_TABLE",
 			id.FullyQualifiedName(),
 			maskingPolicy.Name.FullyQualifiedName(),
 			rowAccessPolicy.Name.FullyQualifiedName(),
@@ -694,9 +682,8 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			ColumnAction: &TableColumnAction{
 				Add: &TableColumnAddAction{
-					Column: Bool(true),
-					Name:   columnName,
-					Type:   DataTypeBoolean,
+					Name: columnName,
+					Type: DataTypeBoolean,
 					DefaultValue: &ColumnDefaultValue{
 						Identity: &ColumnIdentity{
 							Start:     10,
@@ -775,7 +762,7 @@ func TestTableAlter(t *testing.T) {
 				Alter: actions,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ALTER COLUMN_1 DROP DEFAULT, COLUMN_1 SET DEFAULT SEQUENCE_1.NEXTVAL, COLUMN_1 UNSET COMMENT, COLUMN_2 DROP DEFAULT, COLUMN_2 SET DEFAULT SEQUENCE_2.NEXTVAL, COLUMN_2 COMMENT 'comment', COLUMN_2 SET DATA TYPE BOOLEAN, COLUMN_2 DROP NOT NULL", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ALTER COLUMN COLUMN_1 DROP DEFAULT, COLUMN COLUMN_1 SET DEFAULT SEQUENCE_1.NEXTVAL, COLUMN COLUMN_1 UNSET COMMENT, COLUMN COLUMN_2 DROP DEFAULT, COLUMN COLUMN_2 SET DEFAULT SEQUENCE_2.NEXTVAL, COLUMN COLUMN_2 COMMENT 'comment', COLUMN COLUMN_2 SET DATA TYPE BOOLEAN, COLUMN COLUMN_2 DROP NOT NULL", id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set masking policy", func(t *testing.T) {

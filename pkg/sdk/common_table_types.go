@@ -1,7 +1,6 @@
 package sdk
 
 type RowAccessPolicy struct {
-	With            *bool                  `ddl:"keyword" sql:"WITH"`
 	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"`
 	Name            SchemaObjectIdentifier `ddl:"identifier"`
 	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
@@ -29,6 +28,11 @@ type ColumnInlineConstraint struct {
 	NoRely             *bool `ddl:"keyword" sql:"NORELY"`
 }
 
+// TODO [SNOW-934647]: validate
+func (v *ColumnInlineConstraint) validate() error {
+	return nil
+}
+
 type ColumnConstraintType string
 
 const (
@@ -44,6 +48,7 @@ type InlineForeignKey struct {
 	On         *ForeignKeyOnAction `ddl:"keyword" sql:"ON"`
 }
 
+// TODO [SNOW-934647]: check if needed
 func (v *InlineForeignKey) validate() error {
 	return nil
 }
