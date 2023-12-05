@@ -207,3 +207,42 @@ func (row *propertyRow) toBoolProperty() *BoolProperty {
 		Description:  row.Description,
 	}
 }
+
+type NullInputBehavior string
+
+func NullInputBehaviorPointer(v NullInputBehavior) *NullInputBehavior {
+	return &v
+}
+
+const (
+	NullInputBehaviorCalledOnNullInput NullInputBehavior = "CALLED ON NULL INPUT"
+	NullInputBehaviorReturnNullInput   NullInputBehavior = "RETURN NULL ON NULL INPUT"
+	NullInputBehaviorStrict            NullInputBehavior = "STRICT"
+)
+
+type ReturnResultsBehavior string
+
+var (
+	ReturnResultsBehaviorVolatile  ReturnResultsBehavior = "VOLATILE"
+	ReturnResultsBehaviorImmutable ReturnResultsBehavior = "IMMUTABLE"
+)
+
+func ReturnResultsBehaviorPointer(v ReturnResultsBehavior) *ReturnResultsBehavior {
+	return &v
+}
+
+type ReturnNullValues string
+
+var (
+	ReturnNullValuesNull    ReturnNullValues = "NULL"
+	ReturnNullValuesNotNull ReturnNullValues = "NOT NULL"
+)
+
+func ReturnNullValuesPointer(v ReturnNullValues) *ReturnNullValues {
+	return &v
+}
+
+type Secret struct {
+	VariableName string `ddl:"keyword,single_quotes"`
+	Name         string `ddl:"parameter,no_quotes"`
+}

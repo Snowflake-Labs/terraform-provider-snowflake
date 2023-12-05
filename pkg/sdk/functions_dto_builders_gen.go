@@ -4,116 +4,115 @@ package sdk
 
 import ()
 
-func NewCreateFunctionForJavaFunctionRequest(
+func NewCreateForJavaFunctionRequest(
 	name SchemaObjectIdentifier,
-	returns *FunctionReturnsRequest,
-	handler string,
-	functionDefinition string,
-) *CreateFunctionForJavaFunctionRequest {
-	s := CreateFunctionForJavaFunctionRequest{}
+	Returns FunctionReturnsRequest,
+	Handler string,
+) *CreateForJavaFunctionRequest {
+	s := CreateForJavaFunctionRequest{}
 	s.name = name
-	s.Returns = returns
-	s.Handler = handler
-	s.FunctionDefinition = functionDefinition
+	s.Returns = Returns
+	s.Handler = Handler
 	return &s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithOrReplace(OrReplace *bool) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForJavaFunctionRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithTemporary(Temporary *bool) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithTemporary(Temporary *bool) *CreateForJavaFunctionRequest {
 	s.Temporary = Temporary
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithSecure(Secure *bool) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithSecure(Secure *bool) *CreateForJavaFunctionRequest {
 	s.Secure = Secure
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateForJavaFunctionRequest {
 	s.IfNotExists = IfNotExists
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateForJavaFunctionRequest {
 	s.Arguments = Arguments
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForJavaFunctionRequest {
 	s.CopyGrants = CopyGrants
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithReturnNullValues(ReturnNullValues FunctionReturnNullValues) *CreateFunctionForJavaFunctionRequest {
-	s.ReturnNullValues = &ReturnNullValues
+func (s *CreateForJavaFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForJavaFunctionRequest {
+	s.ReturnNullValues = ReturnNullValues
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithNullInputBehavior(NullInputBehavior FunctionNullInputBehavior) *CreateFunctionForJavaFunctionRequest {
-	s.NullInputBehavior = &NullInputBehavior
+func (s *CreateForJavaFunctionRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForJavaFunctionRequest {
+	s.NullInputBehavior = NullInputBehavior
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior FunctionReturnResultsBehavior) *CreateFunctionForJavaFunctionRequest {
-	s.ReturnResultsBehavior = &ReturnResultsBehavior
+func (s *CreateForJavaFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForJavaFunctionRequest {
+	s.ReturnResultsBehavior = ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithRuntimeVersion(RuntimeVersion *string) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithRuntimeVersion(RuntimeVersion *string) *CreateForJavaFunctionRequest {
 	s.RuntimeVersion = RuntimeVersion
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithComment(Comment *string) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithComment(Comment *string) *CreateForJavaFunctionRequest {
 	s.Comment = Comment
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithImports(Imports []FunctionImportsRequest) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithImports(Imports []FunctionImportsRequest) *CreateForJavaFunctionRequest {
 	s.Imports = Imports
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithPackages(Packages []FunctionPackagesRequest) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithPackages(Packages []FunctionPackagesRequest) *CreateForJavaFunctionRequest {
 	s.Packages = Packages
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *CreateForJavaFunctionRequest {
 	s.ExternalAccessIntegrations = ExternalAccessIntegrations
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithSecrets(Secrets []FunctionSecretRequest) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithSecrets(Secrets []Secret) *CreateForJavaFunctionRequest {
 	s.Secrets = Secrets
 	return s
 }
 
-func (s *CreateFunctionForJavaFunctionRequest) WithTargetPath(TargetPath *string) *CreateFunctionForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithTargetPath(TargetPath *string) *CreateForJavaFunctionRequest {
 	s.TargetPath = TargetPath
 	return s
 }
 
-func NewFunctionArgumentRequest() *FunctionArgumentRequest {
-	return &FunctionArgumentRequest{}
+func (s *CreateForJavaFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateForJavaFunctionRequest {
+	s.FunctionDefinition = FunctionDefinition
+	return s
 }
 
-func (s *FunctionArgumentRequest) WithArgName(ArgName string) *FunctionArgumentRequest {
+func NewFunctionArgumentRequest(
+	ArgName string,
+	ArgDataType DataType,
+) *FunctionArgumentRequest {
+	s := FunctionArgumentRequest{}
 	s.ArgName = ArgName
-	return s
-}
-
-func (s *FunctionArgumentRequest) WithArgDataType(ArgDataType DataType) *FunctionArgumentRequest {
 	s.ArgDataType = ArgDataType
-	return s
+	return &s
 }
 
-func (s *FunctionArgumentRequest) WithDefault(Default *string) *FunctionArgumentRequest {
-	s.Default = Default
+func (s *FunctionArgumentRequest) WithDefaultValue(DefaultValue *string) *FunctionArgumentRequest {
+	s.DefaultValue = DefaultValue
 	return s
 }
 
@@ -121,14 +120,22 @@ func NewFunctionReturnsRequest() *FunctionReturnsRequest {
 	return &FunctionReturnsRequest{}
 }
 
-func (s *FunctionReturnsRequest) WithResultDataType(ResultDataType DataType) *FunctionReturnsRequest {
-	s.ResultDataType = &ResultDataType
+func (s *FunctionReturnsRequest) WithResultDataType(ResultDataType *FunctionReturnsResultDataTypeRequest) *FunctionReturnsRequest {
+	s.ResultDataType = ResultDataType
 	return s
 }
 
 func (s *FunctionReturnsRequest) WithTable(Table *FunctionReturnsTableRequest) *FunctionReturnsRequest {
 	s.Table = Table
 	return s
+}
+
+func NewFunctionReturnsResultDataTypeRequest(
+	ResultDataType DataType,
+) *FunctionReturnsResultDataTypeRequest {
+	s := FunctionReturnsResultDataTypeRequest{}
+	s.ResultDataType = ResultDataType
+	return &s
 }
 
 func NewFunctionReturnsTableRequest() *FunctionReturnsTableRequest {
@@ -140,18 +147,14 @@ func (s *FunctionReturnsTableRequest) WithColumns(Columns []FunctionColumnReques
 	return s
 }
 
-func NewFunctionColumnRequest() *FunctionColumnRequest {
-	return &FunctionColumnRequest{}
-}
-
-func (s *FunctionColumnRequest) WithColumnName(ColumnName string) *FunctionColumnRequest {
+func NewFunctionColumnRequest(
+	ColumnName string,
+	ColumnDataType DataType,
+) *FunctionColumnRequest {
+	s := FunctionColumnRequest{}
 	s.ColumnName = ColumnName
-	return s
-}
-
-func (s *FunctionColumnRequest) WithColumnDataType(ColumnDataType DataType) *FunctionColumnRequest {
 	s.ColumnDataType = ColumnDataType
-	return s
+	return &s
 }
 
 func NewFunctionImportsRequest() *FunctionImportsRequest {
@@ -172,318 +175,303 @@ func (s *FunctionPackagesRequest) WithPackage(Package string) *FunctionPackagesR
 	return s
 }
 
-func NewFunctionSecretRequest() *FunctionSecretRequest {
-	return &FunctionSecretRequest{}
-}
-
-func (s *FunctionSecretRequest) WithSecretVariableName(SecretVariableName string) *FunctionSecretRequest {
-	s.SecretVariableName = SecretVariableName
-	return s
-}
-
-func (s *FunctionSecretRequest) WithSecretName(SecretName string) *FunctionSecretRequest {
-	s.SecretName = SecretName
-	return s
-}
-
-func NewCreateFunctionForJavascriptFunctionRequest(
+func NewCreateForJavascriptFunctionRequest(
 	name SchemaObjectIdentifier,
-	returns *FunctionReturnsRequest,
-	functionDefinition string,
-) *CreateFunctionForJavascriptFunctionRequest {
-	s := CreateFunctionForJavascriptFunctionRequest{}
+	Returns FunctionReturnsRequest,
+	FunctionDefinition *string,
+) *CreateForJavascriptFunctionRequest {
+	s := CreateForJavascriptFunctionRequest{}
 	s.name = name
-	s.FunctionDefinition = functionDefinition
+	s.Returns = Returns
+	s.FunctionDefinition = FunctionDefinition
 	return &s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithOrReplace(OrReplace *bool) *CreateFunctionForJavascriptFunctionRequest {
+func (s *CreateForJavascriptFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForJavascriptFunctionRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithTemporary(Temporary *bool) *CreateFunctionForJavascriptFunctionRequest {
+func (s *CreateForJavascriptFunctionRequest) WithTemporary(Temporary *bool) *CreateForJavascriptFunctionRequest {
 	s.Temporary = Temporary
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithSecure(Secure *bool) *CreateFunctionForJavascriptFunctionRequest {
+func (s *CreateForJavascriptFunctionRequest) WithSecure(Secure *bool) *CreateForJavascriptFunctionRequest {
 	s.Secure = Secure
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateFunctionForJavascriptFunctionRequest {
-	s.IfNotExists = IfNotExists
-	return s
-}
-
-func (s *CreateFunctionForJavascriptFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateFunctionForJavascriptFunctionRequest {
+func (s *CreateForJavascriptFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateForJavascriptFunctionRequest {
 	s.Arguments = Arguments
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateFunctionForJavascriptFunctionRequest {
+func (s *CreateForJavascriptFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForJavascriptFunctionRequest {
 	s.CopyGrants = CopyGrants
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithReturnNullValues(ReturnNullValues FunctionReturnNullValues) *CreateFunctionForJavascriptFunctionRequest {
-	s.ReturnNullValues = &ReturnNullValues
+func (s *CreateForJavascriptFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForJavascriptFunctionRequest {
+	s.ReturnNullValues = ReturnNullValues
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithNullInputBehavior(NullInputBehavior FunctionNullInputBehavior) *CreateFunctionForJavascriptFunctionRequest {
-	s.NullInputBehavior = &NullInputBehavior
+func (s *CreateForJavascriptFunctionRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForJavascriptFunctionRequest {
+	s.NullInputBehavior = NullInputBehavior
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior FunctionReturnResultsBehavior) *CreateFunctionForJavascriptFunctionRequest {
-	s.ReturnResultsBehavior = &ReturnResultsBehavior
+func (s *CreateForJavascriptFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForJavascriptFunctionRequest {
+	s.ReturnResultsBehavior = ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateFunctionForJavascriptFunctionRequest) WithComment(Comment *string) *CreateFunctionForJavascriptFunctionRequest {
+func (s *CreateForJavascriptFunctionRequest) WithComment(Comment *string) *CreateForJavascriptFunctionRequest {
 	s.Comment = Comment
 	return s
 }
 
-func NewCreateFunctionForPythonFunctionRequest(
+func NewCreateForPythonFunctionRequest(
 	name SchemaObjectIdentifier,
-	returns *FunctionReturnsRequest,
-	runtimeVersion string,
-	handler string,
-	functionDefinition string,
-) *CreateFunctionForPythonFunctionRequest {
-	s := CreateFunctionForPythonFunctionRequest{}
+	Returns FunctionReturnsRequest,
+	RuntimeVersion string,
+	Handler string,
+) *CreateForPythonFunctionRequest {
+	s := CreateForPythonFunctionRequest{}
 	s.name = name
-	s.Returns = returns
-	s.RuntimeVersion = runtimeVersion
-	s.Handler = handler
-	s.FunctionDefinition = functionDefinition
+	s.Returns = Returns
+	s.RuntimeVersion = RuntimeVersion
+	s.Handler = Handler
 	return &s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithOrReplace(OrReplace *bool) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForPythonFunctionRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithTemporary(Temporary *bool) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithTemporary(Temporary *bool) *CreateForPythonFunctionRequest {
 	s.Temporary = Temporary
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithSecure(Secure *bool) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithSecure(Secure *bool) *CreateForPythonFunctionRequest {
 	s.Secure = Secure
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateForPythonFunctionRequest {
 	s.IfNotExists = IfNotExists
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateForPythonFunctionRequest {
 	s.Arguments = Arguments
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForPythonFunctionRequest {
 	s.CopyGrants = CopyGrants
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithReturnNullValues(ReturnNullValues FunctionReturnNullValues) *CreateFunctionForPythonFunctionRequest {
-	s.ReturnNullValues = &ReturnNullValues
+func (s *CreateForPythonFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForPythonFunctionRequest {
+	s.ReturnNullValues = ReturnNullValues
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithNullInputBehavior(NullInputBehavior FunctionNullInputBehavior) *CreateFunctionForPythonFunctionRequest {
-	s.NullInputBehavior = &NullInputBehavior
+func (s *CreateForPythonFunctionRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForPythonFunctionRequest {
+	s.NullInputBehavior = NullInputBehavior
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior FunctionReturnResultsBehavior) *CreateFunctionForPythonFunctionRequest {
-	s.ReturnResultsBehavior = &ReturnResultsBehavior
+func (s *CreateForPythonFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForPythonFunctionRequest {
+	s.ReturnResultsBehavior = ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithComment(Comment *string) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithComment(Comment *string) *CreateForPythonFunctionRequest {
 	s.Comment = Comment
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithImports(Imports []FunctionImportsRequest) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithImports(Imports []FunctionImportsRequest) *CreateForPythonFunctionRequest {
 	s.Imports = Imports
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithPackages(Packages []FunctionPackagesRequest) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithPackages(Packages []FunctionPackagesRequest) *CreateForPythonFunctionRequest {
 	s.Packages = Packages
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *CreateForPythonFunctionRequest {
 	s.ExternalAccessIntegrations = ExternalAccessIntegrations
 	return s
 }
 
-func (s *CreateFunctionForPythonFunctionRequest) WithSecrets(Secrets []FunctionSecretRequest) *CreateFunctionForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithSecrets(Secrets []Secret) *CreateForPythonFunctionRequest {
 	s.Secrets = Secrets
 	return s
 }
 
-func NewCreateFunctionForScalaFunctionRequest(
+func (s *CreateForPythonFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateForPythonFunctionRequest {
+	s.FunctionDefinition = FunctionDefinition
+	return s
+}
+
+func NewCreateForScalaFunctionRequest(
 	name SchemaObjectIdentifier,
-	returns *FunctionReturnsRequest,
-	handler string,
-	functionDefinition string,
-) *CreateFunctionForScalaFunctionRequest {
-	s := CreateFunctionForScalaFunctionRequest{}
+	ResultDataType DataType,
+	Handler string,
+) *CreateForScalaFunctionRequest {
+	s := CreateForScalaFunctionRequest{}
 	s.name = name
-	s.Returns = returns
-	s.Handler = handler
-	s.FunctionDefinition = functionDefinition
+	s.ResultDataType = ResultDataType
+	s.Handler = Handler
 	return &s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithOrReplace(OrReplace *bool) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForScalaFunctionRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithTemporary(Temporary *bool) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithTemporary(Temporary *bool) *CreateForScalaFunctionRequest {
 	s.Temporary = Temporary
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithSecure(Secure *bool) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithSecure(Secure *bool) *CreateForScalaFunctionRequest {
 	s.Secure = Secure
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateForScalaFunctionRequest {
 	s.IfNotExists = IfNotExists
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateForScalaFunctionRequest {
 	s.Arguments = Arguments
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForScalaFunctionRequest {
 	s.CopyGrants = CopyGrants
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithReturnNullValues(ReturnNullValues FunctionReturnNullValues) *CreateFunctionForScalaFunctionRequest {
-	s.ReturnNullValues = &ReturnNullValues
+func (s *CreateForScalaFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForScalaFunctionRequest {
+	s.ReturnNullValues = ReturnNullValues
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithNullInputBehavior(NullInputBehavior FunctionNullInputBehavior) *CreateFunctionForScalaFunctionRequest {
-	s.NullInputBehavior = &NullInputBehavior
+func (s *CreateForScalaFunctionRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForScalaFunctionRequest {
+	s.NullInputBehavior = NullInputBehavior
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior FunctionReturnResultsBehavior) *CreateFunctionForScalaFunctionRequest {
-	s.ReturnResultsBehavior = &ReturnResultsBehavior
+func (s *CreateForScalaFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForScalaFunctionRequest {
+	s.ReturnResultsBehavior = ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithRuntimeVersion(RuntimeVersion *string) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithRuntimeVersion(RuntimeVersion *string) *CreateForScalaFunctionRequest {
 	s.RuntimeVersion = RuntimeVersion
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithComment(Comment *string) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithComment(Comment *string) *CreateForScalaFunctionRequest {
 	s.Comment = Comment
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithImports(Imports []FunctionImportsRequest) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithImports(Imports []FunctionImportsRequest) *CreateForScalaFunctionRequest {
 	s.Imports = Imports
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithPackages(Packages []FunctionPackagesRequest) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithPackages(Packages []FunctionPackagesRequest) *CreateForScalaFunctionRequest {
 	s.Packages = Packages
 	return s
 }
 
-func (s *CreateFunctionForScalaFunctionRequest) WithTargetPath(TargetPath *string) *CreateFunctionForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithTargetPath(TargetPath *string) *CreateForScalaFunctionRequest {
 	s.TargetPath = TargetPath
 	return s
 }
 
-func NewCreateFunctionForSQLFunctionRequest(
+func (s *CreateForScalaFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateForScalaFunctionRequest {
+	s.FunctionDefinition = FunctionDefinition
+	return s
+}
+
+func NewCreateForSQLFunctionRequest(
 	name SchemaObjectIdentifier,
-	returns *FunctionReturnsRequest,
-	functionDefinition string,
-) *CreateFunctionForSQLFunctionRequest {
-	s := CreateFunctionForSQLFunctionRequest{}
+	Returns FunctionReturnsRequest,
+	FunctionDefinition *string,
+) *CreateForSQLFunctionRequest {
+	s := CreateForSQLFunctionRequest{}
 	s.name = name
-	s.Returns = returns
-	s.FunctionDefinition = functionDefinition
+	s.Returns = Returns
+	s.FunctionDefinition = FunctionDefinition
 	return &s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithOrReplace(OrReplace *bool) *CreateFunctionForSQLFunctionRequest {
+func (s *CreateForSQLFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForSQLFunctionRequest {
 	s.OrReplace = OrReplace
 	return s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithTemporary(Temporary *bool) *CreateFunctionForSQLFunctionRequest {
+func (s *CreateForSQLFunctionRequest) WithTemporary(Temporary *bool) *CreateForSQLFunctionRequest {
 	s.Temporary = Temporary
 	return s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithSecure(Secure *bool) *CreateFunctionForSQLFunctionRequest {
+func (s *CreateForSQLFunctionRequest) WithSecure(Secure *bool) *CreateForSQLFunctionRequest {
 	s.Secure = Secure
 	return s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateFunctionForSQLFunctionRequest {
-	s.IfNotExists = IfNotExists
-	return s
-}
-
-func (s *CreateFunctionForSQLFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateFunctionForSQLFunctionRequest {
+func (s *CreateForSQLFunctionRequest) WithArguments(Arguments []FunctionArgumentRequest) *CreateForSQLFunctionRequest {
 	s.Arguments = Arguments
 	return s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateFunctionForSQLFunctionRequest {
+func (s *CreateForSQLFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForSQLFunctionRequest {
 	s.CopyGrants = CopyGrants
 	return s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithReturnNullValues(ReturnNullValues FunctionReturnNullValues) *CreateFunctionForSQLFunctionRequest {
-	s.ReturnNullValues = &ReturnNullValues
+func (s *CreateForSQLFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForSQLFunctionRequest {
+	s.ReturnNullValues = ReturnNullValues
 	return s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior FunctionReturnResultsBehavior) *CreateFunctionForSQLFunctionRequest {
-	s.ReturnResultsBehavior = &ReturnResultsBehavior
+func (s *CreateForSQLFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForSQLFunctionRequest {
+	s.ReturnResultsBehavior = ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithMemoizable(Memoizable *bool) *CreateFunctionForSQLFunctionRequest {
+func (s *CreateForSQLFunctionRequest) WithMemoizable(Memoizable *bool) *CreateForSQLFunctionRequest {
 	s.Memoizable = Memoizable
 	return s
 }
 
-func (s *CreateFunctionForSQLFunctionRequest) WithComment(Comment *string) *CreateFunctionForSQLFunctionRequest {
+func (s *CreateForSQLFunctionRequest) WithComment(Comment *string) *CreateForSQLFunctionRequest {
 	s.Comment = Comment
 	return s
 }
 
 func NewAlterFunctionRequest(
 	name SchemaObjectIdentifier,
+	ArgumentDataTypes []DataType,
 ) *AlterFunctionRequest {
 	s := AlterFunctionRequest{}
 	s.name = name
+	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }
 
@@ -492,23 +480,48 @@ func (s *AlterFunctionRequest) WithIfExists(IfExists *bool) *AlterFunctionReques
 	return s
 }
 
-func (s *AlterFunctionRequest) WithArgumentTypes(ArgumentTypes []FunctionArgumentTypeRequest) *AlterFunctionRequest {
-	s.ArgumentTypes = ArgumentTypes
-	return s
-}
-
-func (s *AlterFunctionRequest) WithSet(Set *FunctionSetRequest) *AlterFunctionRequest {
-	s.Set = Set
-	return s
-}
-
-func (s *AlterFunctionRequest) WithUnset(Unset *FunctionUnsetRequest) *AlterFunctionRequest {
-	s.Unset = Unset
-	return s
-}
-
 func (s *AlterFunctionRequest) WithRenameTo(RenameTo *SchemaObjectIdentifier) *AlterFunctionRequest {
 	s.RenameTo = RenameTo
+	return s
+}
+
+func (s *AlterFunctionRequest) WithSetComment(SetComment *string) *AlterFunctionRequest {
+	s.SetComment = SetComment
+	return s
+}
+
+func (s *AlterFunctionRequest) WithSetLogLevel(SetLogLevel *string) *AlterFunctionRequest {
+	s.SetLogLevel = SetLogLevel
+	return s
+}
+
+func (s *AlterFunctionRequest) WithSetTraceLevel(SetTraceLevel *string) *AlterFunctionRequest {
+	s.SetTraceLevel = SetTraceLevel
+	return s
+}
+
+func (s *AlterFunctionRequest) WithSetSecure(SetSecure *bool) *AlterFunctionRequest {
+	s.SetSecure = SetSecure
+	return s
+}
+
+func (s *AlterFunctionRequest) WithUnsetSecure(UnsetSecure *bool) *AlterFunctionRequest {
+	s.UnsetSecure = UnsetSecure
+	return s
+}
+
+func (s *AlterFunctionRequest) WithUnsetLogLevel(UnsetLogLevel *bool) *AlterFunctionRequest {
+	s.UnsetLogLevel = UnsetLogLevel
+	return s
+}
+
+func (s *AlterFunctionRequest) WithUnsetTraceLevel(UnsetTraceLevel *bool) *AlterFunctionRequest {
+	s.UnsetTraceLevel = UnsetTraceLevel
+	return s
+}
+
+func (s *AlterFunctionRequest) WithUnsetComment(UnsetComment *bool) *AlterFunctionRequest {
+	s.UnsetComment = UnsetComment
 	return s
 }
 
@@ -522,68 +535,13 @@ func (s *AlterFunctionRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *Alte
 	return s
 }
 
-func NewFunctionArgumentTypeRequest() *FunctionArgumentTypeRequest {
-	return &FunctionArgumentTypeRequest{}
-}
-
-func (s *FunctionArgumentTypeRequest) WithArgDataType(ArgDataType DataType) *FunctionArgumentTypeRequest {
-	s.ArgDataType = ArgDataType
-	return s
-}
-
-func NewFunctionSetRequest() *FunctionSetRequest {
-	return &FunctionSetRequest{}
-}
-
-func (s *FunctionSetRequest) WithLogLevel(LogLevel *string) *FunctionSetRequest {
-	s.LogLevel = LogLevel
-	return s
-}
-
-func (s *FunctionSetRequest) WithTraceLevel(TraceLevel *string) *FunctionSetRequest {
-	s.TraceLevel = TraceLevel
-	return s
-}
-
-func (s *FunctionSetRequest) WithComment(Comment *string) *FunctionSetRequest {
-	s.Comment = Comment
-	return s
-}
-
-func (s *FunctionSetRequest) WithSecure(Secure *bool) *FunctionSetRequest {
-	s.Secure = Secure
-	return s
-}
-
-func NewFunctionUnsetRequest() *FunctionUnsetRequest {
-	return &FunctionUnsetRequest{}
-}
-
-func (s *FunctionUnsetRequest) WithSecure(Secure *bool) *FunctionUnsetRequest {
-	s.Secure = Secure
-	return s
-}
-
-func (s *FunctionUnsetRequest) WithComment(Comment *bool) *FunctionUnsetRequest {
-	s.Comment = Comment
-	return s
-}
-
-func (s *FunctionUnsetRequest) WithLogLevel(LogLevel *bool) *FunctionUnsetRequest {
-	s.LogLevel = LogLevel
-	return s
-}
-
-func (s *FunctionUnsetRequest) WithTraceLevel(TraceLevel *bool) *FunctionUnsetRequest {
-	s.TraceLevel = TraceLevel
-	return s
-}
-
 func NewDropFunctionRequest(
 	name SchemaObjectIdentifier,
+	ArgumentDataTypes []DataType,
 ) *DropFunctionRequest {
 	s := DropFunctionRequest{}
 	s.name = name
+	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }
 
@@ -592,17 +550,12 @@ func (s *DropFunctionRequest) WithIfExists(IfExists *bool) *DropFunctionRequest 
 	return s
 }
 
-func (s *DropFunctionRequest) WithArgumentTypes(ArgumentTypes []FunctionArgumentTypeRequest) *DropFunctionRequest {
-	s.ArgumentTypes = ArgumentTypes
-	return s
-}
-
 func NewShowFunctionRequest() *ShowFunctionRequest {
 	return &ShowFunctionRequest{}
 }
 
-func (s *ShowFunctionRequest) WithLike(pattern string) *ShowFunctionRequest {
-	s.Like = &Like{Pattern: String(pattern)}
+func (s *ShowFunctionRequest) WithLike(Like *Like) *ShowFunctionRequest {
+	s.Like = Like
 	return s
 }
 
@@ -613,13 +566,10 @@ func (s *ShowFunctionRequest) WithIn(In *In) *ShowFunctionRequest {
 
 func NewDescribeFunctionRequest(
 	name SchemaObjectIdentifier,
+	ArgumentDataTypes []DataType,
 ) *DescribeFunctionRequest {
 	s := DescribeFunctionRequest{}
 	s.name = name
+	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
-}
-
-func (s *DescribeFunctionRequest) WithArgumentTypes(ArgumentTypes []FunctionArgumentTypeRequest) *DescribeFunctionRequest {
-	s.ArgumentTypes = ArgumentTypes
-	return s
 }
