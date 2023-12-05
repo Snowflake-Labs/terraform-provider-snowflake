@@ -166,6 +166,8 @@ type ColumnMaskingPolicy struct {
 	Using         []string               `ddl:"keyword,parentheses" sql:"USING"`
 }
 
+// TODO [SNOW-934647]: add more validations
+// TODO [SNOW-934647]: check if config is good here (e.g. Columns, ordering, etc.)
 // OutOfLineConstraint is based on https://docs.snowflake.com/en/sql-reference/sql/create-table-constraint#out-of-line-unique-primary-foreign-key.
 type OutOfLineConstraint struct {
 	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`

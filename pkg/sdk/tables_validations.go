@@ -27,6 +27,11 @@ func (opts *createTableOptions) validate() error {
 		errs = append(errs, errNotSet("createTableOptions", "Columns"))
 	}
 	for _, column := range opts.ColumnsAndConstraints.Columns {
+		if column.InlineConstraint != nil {
+			if err := column.InlineConstraint.validate(); err != nil {
+				errs = append(errs, err)
+			}
+		}
 		if column.DefaultValue != nil {
 			if ok := exactlyOneValueSet(
 				column.DefaultValue.Expression,

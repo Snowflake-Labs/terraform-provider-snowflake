@@ -9,10 +9,24 @@ import (
 
 func TestTableCreate(t *testing.T) {
 	id := RandomSchemaObjectIdentifier()
+	sampleColumnName := "FIRST_COLUMN"
+	sampleColumnType := DataTypeVARCHAR
 
 	defaultOpts := func() *createTableOptions {
 		return &createTableOptions{
 			name: id,
+		}
+	}
+
+	defaultOptsWithColumnInlineConstraint := func(inlineConstraint *ColumnInlineConstraint) *createTableOptions {
+		columns := []TableColumn{{
+			Name:             sampleColumnName,
+			Type:             sampleColumnType,
+			InlineConstraint: inlineConstraint,
+		}}
+		return &createTableOptions{
+			name:                  id,
+			ColumnsAndConstraints: CreateTableColumnsAndConstraints{Columns: columns},
 		}
 	}
 
@@ -126,12 +140,93 @@ func TestTableCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("StageFileFormat", "FormatName", "FormatType"))
 	})
 
+	// TODO [SNOW-934647]: get rid of ErrInvalidObjectIdentifier in this file
 	t.Run("validation: rowAccessPolicy's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &RowAccessPolicy{
 			Name: NewSchemaObjectIdentifier("", "", ""),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: inline constraint - foreign key present for foreign key constraint", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type:       Pointer(ColumnConstraintTypeForeignKey),
+			ForeignKey: nil,
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("ColumnInlineConstraint", "ForeignKey"))
+	})
+
+	t.Run("validation: inline constraint - foreign key absent for constraint other than foreign key", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type: Pointer(ColumnConstraintTypeUnique),
+			ForeignKey: &InlineForeignKey{
+				TableName: "table",
+			},
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errSet("ColumnInlineConstraint", "ForeignKey"))
+	})
+
+	t.Run("validation: inline constraint - enforced and not enforced both present", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type:        Pointer(ColumnConstraintTypeUnique),
+			Enforced:    Bool(true),
+			NotEnforced: Bool(true),
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("ColumnInlineConstraint", "Enforced", "NotEnforced"))
+	})
+
+	t.Run("validation: inline constraint - deferrable and not deferrable both present", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type:          Pointer(ColumnConstraintTypeUnique),
+			Deferrable:    Bool(true),
+			NotDeferrable: Bool(true),
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("ColumnInlineConstraint", "Deferrable", "NotDeferrable"))
+	})
+
+	t.Run("validation: inline constraint - initially deferred and initially immediate both present", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type:               Pointer(ColumnConstraintTypeUnique),
+			InitiallyDeferred:  Bool(true),
+			InitiallyImmediate: Bool(true),
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("ColumnInlineConstraint", "InitiallyDeferred", "InitiallyImmediate"))
+	})
+
+	t.Run("validation: inline constraint - enable and disable both present", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type:    Pointer(ColumnConstraintTypeUnique),
+			Enable:  Bool(true),
+			Disable: Bool(true),
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("ColumnInlineConstraint", "Enable", "Disable"))
+	})
+
+	t.Run("validation: inline constraint - validate and novalidate both present", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type:       Pointer(ColumnConstraintTypeUnique),
+			Validate:   Bool(true),
+			NoValidate: Bool(true),
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("ColumnInlineConstraint", "Validate", "Novalidate"))
+	})
+
+	t.Run("validation: inline constraint - rely and norely both present", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type:   Pointer(ColumnConstraintTypeUnique),
+			Rely:   Bool(true),
+			NoRely: Bool(true),
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("ColumnInlineConstraint", "Rely", "Norely"))
 	})
 
 	t.Run("with complete options", func(t *testing.T) {

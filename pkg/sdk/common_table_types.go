@@ -1,5 +1,7 @@
 package sdk
 
+import "errors"
+
 type RowAccessPolicy struct {
 	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"`
 	Name            SchemaObjectIdentifier `ddl:"identifier"`
@@ -28,9 +30,37 @@ type ColumnInlineConstraint struct {
 	NoRely             *bool `ddl:"keyword" sql:"NORELY"`
 }
 
-// TODO [SNOW-934647]: validate
 func (v *ColumnInlineConstraint) validate() error {
-	return nil
+	// TODO[SNOW-934647]: type required
+	var errs []error
+	if *v.Type == ColumnConstraintTypeForeignKey {
+		if !valueSet(v.ForeignKey) {
+			errs = append(errs, errNotSet("ColumnInlineConstraint", "ForeignKey"))
+		}
+	} else {
+		if valueSet(v.ForeignKey) {
+			errs = append(errs, errSet("ColumnInlineConstraint", "ForeignKey"))
+		}
+	}
+	if moreThanOneValueSet(v.Enforced, v.NotEnforced) {
+		errs = append(errs, errMoreThanOneOf("ColumnInlineConstraint", "Enforced", "NotEnforced"))
+	}
+	if moreThanOneValueSet(v.Deferrable, v.NotDeferrable) {
+		errs = append(errs, errMoreThanOneOf("ColumnInlineConstraint", "Deferrable", "NotDeferrable"))
+	}
+	if moreThanOneValueSet(v.InitiallyDeferred, v.InitiallyImmediate) {
+		errs = append(errs, errMoreThanOneOf("ColumnInlineConstraint", "InitiallyDeferred", "InitiallyImmediate"))
+	}
+	if moreThanOneValueSet(v.Enable, v.Disable) {
+		errs = append(errs, errMoreThanOneOf("ColumnInlineConstraint", "Enable", "Disable"))
+	}
+	if moreThanOneValueSet(v.Validate, v.NoValidate) {
+		errs = append(errs, errMoreThanOneOf("ColumnInlineConstraint", "Validate", "Novalidate"))
+	}
+	if moreThanOneValueSet(v.Rely, v.NoRely) {
+		errs = append(errs, errMoreThanOneOf("ColumnInlineConstraint", "Rely", "Norely"))
+	}
+	return errors.Join(errs...)
 }
 
 type ColumnConstraintType string
@@ -48,8 +78,14 @@ type InlineForeignKey struct {
 	On         *ForeignKeyOnAction `ddl:"keyword" sql:"ON"`
 }
 
-// TODO [SNOW-934647]: check if needed
+// REFERENCES <ref_table_name> [ ( <ref_col_name> ) ]
+// [ MATCH { FULL | SIMPLE | PARTIAL } ]
+// [ ON [ UPDATE { CASCADE | SET NULL | SET DEFAULT | RESTRICT | NO ACTION } ]
+// [ DELETE { CASCADE | SET NULL | SET DEFAULT | RESTRICT | NO ACTION } ] ]
+// TODO [SNOW-934647]: validate
 func (v *InlineForeignKey) validate() error {
+	// table name required (not empty)
+	// at least one column
 	return nil
 }
 

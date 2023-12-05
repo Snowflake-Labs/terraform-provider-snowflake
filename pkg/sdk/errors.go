@@ -52,6 +52,10 @@ func errNotSet(structName string, fieldNames ...string) error {
 	return newError(fmt.Sprintf("%v fields: %v should be set", structName, fieldNames), 2)
 }
 
+func errSet(structName string, fieldNames ...string) error {
+	return newError(fmt.Sprintf("%v fields: %v should not be set", structName, fieldNames), 2)
+}
+
 func errExactlyOneOf(structName string, fieldNames ...string) error {
 	return newError(fmt.Sprintf("exactly one of %s fields %v must be set", structName, fieldNames), 2)
 }
