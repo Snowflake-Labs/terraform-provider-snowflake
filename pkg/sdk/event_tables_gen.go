@@ -83,7 +83,7 @@ type EventTableDetails struct {
 	Comment string
 }
 
-// DropEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-event-table.
+// DropEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-table.
 type DropEventTableOptions struct {
 	drop     bool                   `ddl:"static" sql:"DROP"`
 	table    bool                   `ddl:"static" sql:"TABLE"`

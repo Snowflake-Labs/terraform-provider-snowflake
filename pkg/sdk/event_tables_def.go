@@ -119,7 +119,7 @@ var EventTablesDef = g.NewInterface(
 		Name().
 		WithValidation(g.ValidIdentifier, "name"),
 ).DropOperation(
-	"https://docs.snowflake.com/en/sql-reference/sql/drop-event-table",
+	"https://docs.snowflake.com/en/sql-reference/sql/drop-table",
 	g.NewQueryStruct("DropEventTable").
 		Drop().
 		SQL("TABLE").
