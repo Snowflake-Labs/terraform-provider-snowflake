@@ -200,13 +200,13 @@ func (s *CreateTableRequest) WithEnableSchemaEvolution(enableSchemaEvolution *bo
 	return s
 }
 
-func (s *CreateTableRequest) WithStageFileFormat(stageFileFormat []StageFileFormatRequest) *CreateTableRequest {
-	s.stageFileFormat = stageFileFormat
+func (s *CreateTableRequest) WithStageFileFormat(stageFileFormat StageFileFormatRequest) *CreateTableRequest {
+	s.stageFileFormat = &stageFileFormat
 	return s
 }
 
-func (s *CreateTableRequest) WithStageCopyOptions(stageCopyOptions []StageCopyOptionsRequest) *CreateTableRequest {
-	s.stageCopyOptions = stageCopyOptions
+func (s *CreateTableRequest) WithStageCopyOptions(stageCopyOptions StageCopyOptionsRequest) *CreateTableRequest {
+	s.stageCopyOptions = &stageCopyOptions
 	return s
 }
 
@@ -873,7 +873,7 @@ func (s *FileFormatTypeOptionsRequest) WithJSONTrimSpace(JSONTrimSpace *bool) *F
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONNullIf(JSONNullIf *[]NullString) *FileFormatTypeOptionsRequest {
+func (s *FileFormatTypeOptionsRequest) WithJSONNullIf(JSONNullIf []NullString) *FileFormatTypeOptionsRequest {
 	s.JSONNullIf = JSONNullIf
 	return s
 }
@@ -1114,6 +1114,11 @@ func (s *TableColumnActionRequest) WithUnsetTags(UnsetTags *TableColumnAlterUnse
 	return s
 }
 
+func (s *TableColumnActionRequest) WithDropColumnsIfExists() *TableColumnActionRequest {
+	s.DropColumnsIfExists = Bool(true)
+	return s
+}
+
 func (s *TableColumnActionRequest) WithDropColumns(DropColumns []string) *TableColumnActionRequest {
 	s.DropColumns = DropColumns
 	return s
@@ -1127,6 +1132,11 @@ func NewTableColumnAddActionRequest(
 	s.Name = Name
 	s.Type = Type
 	return &s
+}
+
+func (s *TableColumnAddActionRequest) WithIfNotExists() *TableColumnAddActionRequest {
+	s.IfNotExists = Bool(true)
+	return s
 }
 
 func (s *TableColumnAddActionRequest) WithDefaultValue(DefaultValue *ColumnDefaultValueRequest) *TableColumnAddActionRequest {
@@ -1479,13 +1489,13 @@ func (s *TableSetRequest) WithEnableSchemaEvolution(EnableSchemaEvolution *bool)
 	return s
 }
 
-func (s *TableSetRequest) WithStageFileFormat(StageFileFormat []StageFileFormatRequest) *TableSetRequest {
-	s.StageFileFormat = StageFileFormat
+func (s *TableSetRequest) WithStageFileFormat(StageFileFormat StageFileFormatRequest) *TableSetRequest {
+	s.StageFileFormat = &StageFileFormat
 	return s
 }
 
-func (s *TableSetRequest) WithStageCopyOptions(StageCopyOptions []StageCopyOptionsRequest) *TableSetRequest {
-	s.StageCopyOptions = StageCopyOptions
+func (s *TableSetRequest) WithStageCopyOptions(StageCopyOptions StageCopyOptionsRequest) *TableSetRequest {
+	s.StageCopyOptions = &StageCopyOptions
 	return s
 }
 
@@ -1518,6 +1528,11 @@ func NewTableExternalTableColumnAddActionRequest() *TableExternalTableColumnAddA
 	return &TableExternalTableColumnAddActionRequest{}
 }
 
+func (s *TableExternalTableColumnAddActionRequest) WithIfNotExists() *TableExternalTableColumnAddActionRequest {
+	s.IfNotExists = Bool(true)
+	return s
+}
+
 func (s *TableExternalTableColumnAddActionRequest) WithName(Name string) *TableExternalTableColumnAddActionRequest {
 	s.Name = Name
 	return s
@@ -1528,7 +1543,7 @@ func (s *TableExternalTableColumnAddActionRequest) WithType(Type DataType) *Tabl
 	return s
 }
 
-func (s *TableExternalTableColumnAddActionRequest) WithExpression(Expression []string) *TableExternalTableColumnAddActionRequest {
+func (s *TableExternalTableColumnAddActionRequest) WithExpression(Expression string) *TableExternalTableColumnAddActionRequest {
 	s.Expression = Expression
 	return s
 }
@@ -1556,22 +1571,27 @@ func (s *TableExternalTableColumnDropActionRequest) WithColumns(Columns []string
 	return s
 }
 
+func (s *TableExternalTableColumnDropActionRequest) WithIfExists() *TableExternalTableColumnDropActionRequest {
+	s.IfExists = Bool(true)
+	return s
+}
+
 func NewShowTableRequest() *ShowTableRequest {
 	return &ShowTableRequest{}
 }
 
 func (s *ShowTableRequest) WithTerse(Terse *bool) *ShowTableRequest {
-	s.Terse = Terse
+	s.terse = Terse
 	return s
 }
 
 func (s *ShowTableRequest) WithHistory(History *bool) *ShowTableRequest {
-	s.History = History
+	s.history = History
 	return s
 }
 
 func (s *ShowTableRequest) WithLikePattern(LikePattern string) *ShowTableRequest {
-	s.LikePattern = LikePattern
+	s.likePattern = LikePattern
 	return s
 }
 
@@ -1581,12 +1601,12 @@ func (s *ShowTableRequest) WithIn(in *In) *ShowTableRequest {
 }
 
 func (s *ShowTableRequest) WithStartsWith(StartsWith *string) *ShowTableRequest {
-	s.StartsWith = StartsWith
+	s.startsWith = StartsWith
 	return s
 }
 
 func (s *ShowTableRequest) WithLimitFrom(LimitFrom *LimitFrom) *ShowTableRequest {
-	s.LimitFrom = LimitFrom
+	s.limitFrom = LimitFrom
 	return s
 }
 

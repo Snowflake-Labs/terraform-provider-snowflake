@@ -60,6 +60,10 @@ func errAtLeastOneOf(structName string, fieldNames ...string) error {
 	return newError(fmt.Sprintf("at least one of %s fields %v must be set", structName, fieldNames), 2)
 }
 
+func errMoreThanOneOf(structName string, fieldNames ...string) error {
+	return newError(fmt.Sprintf("more than one field (%v) of %s cannot be set", fieldNames, structName), 2)
+}
+
 func decodeDriverError(err error) error {
 	if err == nil {
 		return nil

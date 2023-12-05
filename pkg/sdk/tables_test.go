@@ -94,11 +94,9 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: stageFileFormat's both format name and format type are present", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.StageFileFormat = []StageFileFormat{
-			{
-				FormatName: String("some_format"),
-				Type:       Pointer(FileFormatTypeCSV),
-			},
+		opts.StageFileFormat = &StageFileFormat{
+			FormatName: String("some_format"),
+			Type:       Pointer(FileFormatTypeCSV),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("StageFileFormat", "FormatName", "FormatType"))
 	})
@@ -161,18 +159,14 @@ func TestTableCreate(t *testing.T) {
 				},
 			},
 		}
-		stageFileFormat := []StageFileFormat{{
+		stageFileFormat := StageFileFormat{
 			Type: Pointer(FileFormatTypeCSV),
 			Options: &FileFormatTypeOptions{
 				CSVCompression: Pointer(CSVCompressionAuto),
 			},
-		}}
-		stageCopyOptions := []StageCopyOption{
-			{
-				StageCopyOptionsInnerValue{
-					OnError: &StageCopyOnErrorOptions{SkipFile: String("SKIP_FILE")},
-				},
-			},
+		}
+		stageCopyOptions := StageCopyOptions{
+			OnError: &StageCopyOnErrorOptions{SkipFile: String("SKIP_FILE")},
 		}
 		rowAccessPolicy := RowAccessPolicy{
 			Name: RandomSchemaObjectIdentifier(),
@@ -199,8 +193,8 @@ func TestTableCreate(t *testing.T) {
 			OutOfLineConstraint:        &outOfLineConstraint,
 			ClusterBy:                  []string{"COLUMN_1", "COLUMN_2"},
 			EnableSchemaEvolution:      Bool(true),
-			StageFileFormat:            stageFileFormat,
-			StageCopyOptions:           stageCopyOptions,
+			StageFileFormat:            &stageFileFormat,
+			StageCopyOptions:           &stageCopyOptions,
 			DataRetentionTimeInDays:    Int(10),
 			MaxDataExtensionTimeInDays: Int(100),
 			ChangeTracking:             Bool(true),
@@ -228,7 +222,7 @@ func TestTableCreate(t *testing.T) {
 			{name: "FIRST_COLUMN", type_: DataTypeVARCHAR},
 		}
 		request := NewCreateTableRequest(id, columns).
-			WithStageCopyOptions([]StageCopyOptionsRequest{*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileX(5))})
+			WithStageCopyOptions(*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileX(5)))
 		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s ( FIRST_COLUMN VARCHAR ) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_5)`, id.FullyQualifiedName())
 	})
 
@@ -237,7 +231,7 @@ func TestTableCreate(t *testing.T) {
 			{name: "FIRST_COLUMN", type_: DataTypeVARCHAR},
 		}
 		request := NewCreateTableRequest(id, columns).
-			WithStageCopyOptions([]StageCopyOptionsRequest{*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileXPercent(10))})
+			WithStageCopyOptions(*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileXPercent(10)))
 		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s ( FIRST_COLUMN VARCHAR ) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%')`, id.FullyQualifiedName())
 	})
 }
@@ -682,8 +676,9 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			ColumnAction: &TableColumnAction{
 				Add: &TableColumnAddAction{
-					Name: columnName,
-					Type: DataTypeBoolean,
+					IfNotExists: Bool(true),
+					Name:        columnName,
+					Type:        DataTypeBoolean,
 					DefaultValue: &ColumnDefaultValue{
 						Identity: &ColumnIdentity{
 							Start:     10,
@@ -693,7 +688,7 @@ func TestTableAlter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ADD COLUMN NEXT_COLUMN BOOLEAN IDENTITY START 10 INCREMENT 1", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ADD COLUMN IF NOT EXISTS NEXT_COLUMN BOOLEAN IDENTITY START 10 INCREMENT 1", id.FullyQualifiedName())
 	})
 
 	t.Run("rename column", func(t *testing.T) {
@@ -839,11 +834,12 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			ColumnAction: &TableColumnAction{
 				DropColumns: &TableColumnAlterDropColumns{
-					Columns: columns,
+					IfExists: Bool(true),
+					Columns:  columns,
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s DROP COLUMN COLUMN_1, COLUMN_2", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s DROP COLUMN IF EXISTS COLUMN_1, COLUMN_2", id.FullyQualifiedName())
 	})
 
 	t.Run("alter constraint: add", func(t *testing.T) {
@@ -918,13 +914,14 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			ExternalTableAction: &TableExternalTableAction{
 				Add: &TableExternalTableColumnAddAction{
-					Name:       "COLUMN_1",
-					Type:       DataTypeBoolean,
-					Expression: []string{"SELECT 1"},
+					IfNotExists: Bool(true),
+					Name:        "COLUMN_1",
+					Type:        DataTypeBoolean,
+					Expression:  []string{"SELECT 1"},
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ADD COLUMN COLUMN_1 BOOLEAN AS (SELECT 1)", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ADD COLUMN IF NOT EXISTS COLUMN_1 BOOLEAN AS (SELECT 1)", id.FullyQualifiedName())
 	})
 
 	t.Run("external table: rename", func(t *testing.T) {
@@ -945,11 +942,12 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			ExternalTableAction: &TableExternalTableAction{
 				Drop: &TableExternalTableColumnDropAction{
-					Columns: []string{"COLUMN_3", "COLUMN_4"},
+					IfExists: Bool(true),
+					Names:    []string{"COLUMN_3", "COLUMN_4"},
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s DROP COLUMN COLUMN_3, COLUMN_4", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s DROP COLUMN IF EXISTS COLUMN_3, COLUMN_4", id.FullyQualifiedName())
 	})
 
 	t.Run("add search optimization", func(t *testing.T) {
@@ -994,17 +992,11 @@ func TestTableAlter(t *testing.T) {
 			name: id,
 			Set: &TableSet{
 				EnableSchemaEvolution: Bool(true),
-				StageFileFormat: []StageFileFormat{
-					{
-						Type: Pointer(FileFormatTypeCSV),
-					},
+				StageFileFormat: &StageFileFormat{
+					Type: Pointer(FileFormatTypeCSV),
 				},
-				StageCopyOptions: []StageCopyOption{
-					{
-						InnerValue: StageCopyOptionsInnerValue{
-							OnError: &StageCopyOnErrorOptions{SkipFile: String("SKIP_FILE")},
-						},
-					},
+				StageCopyOptions: &StageCopyOptions{
+					OnError: &StageCopyOnErrorOptions{SkipFile: String("SKIP_FILE")},
 				},
 				DataRetentionTimeInDays:    Int(30),
 				MaxDataExtensionTimeInDays: Int(90),
@@ -1130,6 +1122,13 @@ func TestTableDrop(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		assertOptsValidAndSQLEquals(t, opts, `DROP TABLE IF EXISTS %s`, id.FullyQualifiedName())
+	})
+
+	t.Run("validation: both cascade and restrict present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Cascade = Bool(true)
+		opts.Restrict = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("dropTableOptions", "Cascade", "Restrict"))
 	})
 }
 

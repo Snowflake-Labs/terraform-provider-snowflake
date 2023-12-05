@@ -17,6 +17,7 @@ type ExternalTables interface {
 	CreateWithManualPartitioning(ctx context.Context, req *CreateWithManualPartitioningExternalTableRequest) error
 	CreateDeltaLake(ctx context.Context, req *CreateDeltaLakeExternalTableRequest) error
 	CreateUsingTemplate(ctx context.Context, req *CreateExternalTableUsingTemplateRequest) error
+	// TODO: Add alter options from https://docs.snowflake.com/en/sql-reference/sql/alter-table#external-table-column-actions-exttablecolumnaction (for better UX)
 	Alter(ctx context.Context, req *AlterExternalTableRequest) error
 	AlterPartitions(ctx context.Context, req *AlterExternalTablePartitionRequest) error
 	Drop(ctx context.Context, req *DropExternalTableRequest) error

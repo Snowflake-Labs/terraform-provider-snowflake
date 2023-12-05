@@ -105,8 +105,8 @@ type createTableOptions struct {
 	rightParen                 bool                       `ddl:"static" sql:")"`
 	ClusterBy                  []string                   `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
 	EnableSchemaEvolution      *bool                      `ddl:"parameter" sql:"ENABLE_SCHEMA_EVOLUTION"`
-	StageFileFormat            []StageFileFormat          `ddl:"parameter,equals,parentheses" sql:"STAGE_FILE_FORMAT"`
-	StageCopyOptions           []StageCopyOption          `ddl:"parameter,equals,parentheses" sql:"STAGE_COPY_OPTIONS"`
+	StageFileFormat            *StageFileFormat           `ddl:"list,parentheses,no_comma" sql:"STAGE_FILE_FORMAT ="`
+	StageCopyOptions           *StageCopyOptions          `ddl:"list,parentheses,no_comma" sql:"STAGE_COPY_OPTIONS ="`
 	DataRetentionTimeInDays    *int                       `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	MaxDataExtensionTimeInDays *int                       `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
 	ChangeTracking             *bool                      `ddl:"parameter" sql:"CHANGE_TRACKING"`
@@ -213,21 +213,6 @@ type OutOfLineForeignKey struct {
 	On          *ForeignKeyOnAction    `ddl:"keyword"`
 }
 
-type StageCopyOption struct {
-	InnerValue StageCopyOptionsInnerValue `ddl:"keyword"`
-}
-
-type StageCopyOptionsInnerValue struct {
-	OnError           *StageCopyOnErrorOptions  `ddl:"parameter" sql:"ON_ERROR"`
-	SizeLimit         *int                      `ddl:"parameter" sql:"SIZE_LIMIT"`
-	Purge             *bool                     `ddl:"parameter" sql:"PURGE"`
-	ReturnFailedOnly  *bool                     `ddl:"parameter" sql:"RETURN_FAILED_ONLY"`
-	MatchByColumnName *StageCopyColumnMapOption `ddl:"parameter" sql:"MATCH_BY_COLUMN_NAME"`
-	EnforceLength     *bool                     `ddl:"parameter" sql:"ENFORCE_LENGTH"`
-	TruncateColumns   *bool                     `ddl:"parameter" sql:"TRUNCATECOLUMNS"`
-	Force             *bool                     `ddl:"parameter" sql:"FORCE"`
-}
-
 type alterTableOptions struct {
 	alter    bool                   `ddl:"static" sql:"ALTER"`
 	table    bool                   `ddl:"static" sql:"TABLE"`
@@ -291,6 +276,7 @@ type TableColumnAction struct {
 
 type TableColumnAddAction struct {
 	column           bool                            `ddl:"static" sql:"COLUMN"`
+	IfNotExists      *bool                           `ddl:"keyword" sql:"IF NOT EXISTS"`
 	Name             string                          `ddl:"keyword"`
 	Type             DataType                        `ddl:"keyword"`
 	DefaultValue     *ColumnDefaultValue             `ddl:"keyword"`
@@ -360,6 +346,7 @@ type TableColumnAlterUnsetTagsAction struct {
 
 type TableColumnAlterDropColumns struct {
 	dropColumn bool     `ddl:"static" sql:"DROP COLUMN"`
+	IfExists   *bool    `ddl:"keyword" sql:"IF EXISTS"`
 	Columns    []string `ddl:"keyword"`
 }
 
@@ -434,10 +421,11 @@ type TableExternalTableAction struct {
 }
 
 type TableExternalTableColumnAddAction struct {
-	addColumn  bool     `ddl:"static" sql:"ADD COLUMN"`
-	Name       string   `ddl:"keyword"`
-	Type       DataType `ddl:"keyword"`
-	Expression []string `ddl:"parameter,no_equals,parentheses" sql:"AS"`
+	addColumn   bool     `ddl:"static" sql:"ADD COLUMN"`
+	IfNotExists *bool    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	Name        string   `ddl:"keyword"`
+	Type        DataType `ddl:"keyword"`
+	Expression  []string `ddl:"parameter,no_equals,parentheses" sql:"AS"`
 }
 
 type TableExternalTableColumnRenameAction struct {
@@ -446,7 +434,9 @@ type TableExternalTableColumnRenameAction struct {
 }
 
 type TableExternalTableColumnDropAction struct {
-	Columns []string `ddl:"keyword" sql:"DROP COLUMN"`
+	columns  bool     `ddl:"static" sql:"DROP COLUMN"`
+	IfExists *bool    `ddl:"keyword" sql:"IF EXISTS"`
+	Names    []string `ddl:"keyword"`
 }
 
 type TableSearchOptimizationAction struct {
@@ -470,8 +460,8 @@ type DropSearchOptimization struct {
 type TableSet struct {
 	// Optional
 	EnableSchemaEvolution      *bool             `ddl:"parameter" sql:"ENABLE_SCHEMA_EVOLUTION"`
-	StageFileFormat            []StageFileFormat `ddl:"parameter,equals,parentheses" sql:"STAGE_FILE_FORMAT"`
-	StageCopyOptions           []StageCopyOption `ddl:"parameter,equals,parentheses" sql:"STAGE_COPY_OPTIONS"`
+	StageFileFormat            *StageFileFormat  `ddl:"list,parentheses" sql:"STAGE_FILE_FORMAT ="`
+	StageCopyOptions           *StageCopyOptions `ddl:"list,parentheses" sql:"STAGE_COPY_OPTIONS ="`
 	DataRetentionTimeInDays    *int              `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	MaxDataExtensionTimeInDays *int              `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
 	ChangeTracking             *bool             `ddl:"parameter" sql:"CHANGE_TRACKING"`
@@ -531,16 +521,20 @@ type tableDBRow struct {
 	Comment                    sql.NullString `db:"comment"`
 	ClusterBy                  sql.NullString `db:"cluster_by"`
 	Rows                       sql.NullInt64  `db:"rows"`
+	Bytes                      sql.NullInt64  `db:"bytes"`
 	Owner                      string         `db:"owner"`
 	RetentionTime              sql.NullInt64  `db:"retention_time"`
+	DroppedOn                  sql.NullString `db:"dropped_on"`
 	AutomaticClustering        sql.NullString `db:"automatic_clustering"`
 	ChangeTracking             sql.NullString `db:"change_tracking"`
 	SearchOptimization         sql.NullString `db:"search_optimization"`
 	SearchOptimizationProgress sql.NullString `db:"search_optimization_progress"`
+	SearchOptimizationBytes    sql.NullInt64  `db:"search_optimization_bytes"`
 	IsExternal                 sql.NullString `db:"is_external"`
 	EnableSchemaEvolution      sql.NullString `db:"enable_schema_evolution"`
 	OwnerRoleType              sql.NullString `db:"owner_role_type"`
 	IsEvent                    sql.NullString `db:"is_event"`
+	Budget                     sql.NullString `db:"budget"`
 }
 
 type Table struct {
@@ -552,16 +546,20 @@ type Table struct {
 	Comment                    string
 	ClusterBy                  string
 	Rows                       int
+	Bytes                      *int
 	Owner                      string
 	RetentionTime              int
+	DroppedOn                  *string
 	AutomaticClustering        bool
 	ChangeTracking             bool
 	SearchOptimization         bool
 	SearchOptimizationProgress string
+	SearchOptimizationBytes    *int
 	IsExternal                 bool
 	EnableSchemaEvolution      bool
 	OwnerRoleType              string
 	IsEvent                    bool
+	Budget                     *string
 }
 
 func (row tableDBRow) convert() *Table {
@@ -576,8 +574,14 @@ func (row tableDBRow) convert() *Table {
 	if row.Rows.Valid {
 		table.Rows = int(row.Rows.Int64)
 	}
+	if row.Bytes.Valid {
+		table.Bytes = Int(int(row.Bytes.Int64))
+	}
 	if row.RetentionTime.Valid {
 		table.RetentionTime = int(row.RetentionTime.Int64)
+	}
+	if row.DroppedOn.Valid {
+		table.DroppedOn = String(row.DroppedOn.String)
 	}
 	if row.AutomaticClustering.Valid {
 		table.AutomaticClustering = row.AutomaticClustering.String == "ON"
@@ -590,6 +594,9 @@ func (row tableDBRow) convert() *Table {
 	}
 	if row.SearchOptimizationProgress.Valid {
 		table.SearchOptimizationProgress = row.SearchOptimizationProgress.String
+	}
+	if row.SearchOptimizationBytes.Valid {
+		table.SearchOptimizationBytes = Int(int(row.SearchOptimizationBytes.Int64))
 	}
 	if row.IsExternal.Valid {
 		table.IsExternal = row.IsExternal.String == "Y"
@@ -608,6 +615,9 @@ func (row tableDBRow) convert() *Table {
 	}
 	if row.OwnerRoleType.Valid {
 		table.OwnerRoleType = row.OwnerRoleType.String
+	}
+	if row.Budget.Valid {
+		table.Budget = String(row.Budget.String)
 	}
 	return &table
 }

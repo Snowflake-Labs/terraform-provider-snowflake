@@ -9,11 +9,21 @@ import (
 var _ Tables = (*tables)(nil)
 
 var (
-	_ optionsProvider[TableColumnAction]             = new(TableColumnActionRequest)
-	_ optionsProvider[TableConstraintAction]         = new(TableConstraintActionRequest)
-	_ optionsProvider[TableExternalTableAction]      = new(TableExternalTableActionRequest)
-	_ optionsProvider[TableSearchOptimizationAction] = new(TableSearchOptimizationActionRequest)
-	_ optionsProvider[TableSet]                      = new(TableSetRequest)
+	_ optionsProvider[createTableOptions]              = new(CreateTableRequest)
+	_ optionsProvider[createTableAsSelectOptions]      = new(CreateTableAsSelectRequest)
+	_ optionsProvider[createTableUsingTemplateOptions] = new(CreateTableUsingTemplateRequest)
+	_ optionsProvider[createTableLikeOptions]          = new(CreateTableLikeRequest)
+	_ optionsProvider[createTableCloneOptions]         = new(CreateTableCloneRequest)
+	_ optionsProvider[alterTableOptions]               = new(AlterTableRequest)
+	_ optionsProvider[dropTableOptions]                = new(DropTableRequest)
+	_ optionsProvider[showTableOptions]                = new(ShowTableRequest)
+	_ optionsProvider[describeTableColumnsOptions]     = new(DescribeTableColumnsRequest)
+	_ optionsProvider[describeTableStageOptions]       = new(DescribeTableStageRequest)
+	_ optionsProvider[TableColumnAction]               = new(TableColumnActionRequest)
+	_ optionsProvider[TableConstraintAction]           = new(TableConstraintActionRequest)
+	_ optionsProvider[TableExternalTableAction]        = new(TableExternalTableActionRequest)
+	_ optionsProvider[TableSearchOptimizationAction]   = new(TableSearchOptimizationActionRequest)
+	_ optionsProvider[TableSet]                        = new(TableSetRequest)
 )
 
 type tables struct {
@@ -189,50 +199,38 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 	}
 }
 
-func (r *TableSetRequest) toOpts() *TableSet {
-	stageFileFormats := make([]StageFileFormat, 0, len(r.StageFileFormat))
-	for _, stageFileFormat := range r.StageFileFormat {
-		var options *FileFormatTypeOptions
-		if stageFileFormat.Options != nil {
-			options = stageFileFormat.Options.toOpts()
-		}
-		stageFileFormats = append(stageFileFormats, StageFileFormat{
-			FormatName: stageFileFormat.FormatName,
-			Type:       stageFileFormat.Type,
-			Options:    options,
-		})
-	}
-	stageCopyOptions := make([]StageCopyOption, 0, len(r.StageCopyOptions))
-	for _, stageCopyOption := range r.StageCopyOptions {
-		stageCopyOptions = append(stageCopyOptions, StageCopyOption{
-			InnerValue: *stageCopyOption.toOpts(),
-		})
+func (s *TableSetRequest) toOpts() *TableSet {
+	set := &TableSet{
+		EnableSchemaEvolution:      s.EnableSchemaEvolution,
+		DataRetentionTimeInDays:    s.DataRetentionTimeInDays,
+		MaxDataExtensionTimeInDays: s.MaxDataExtensionTimeInDays,
+		ChangeTracking:             s.ChangeTracking,
+		DefaultDDLCollation:        s.DefaultDDLCollation,
+		Comment:                    s.Comment,
 	}
 
-	return &TableSet{
-		EnableSchemaEvolution:      r.EnableSchemaEvolution,
-		StageFileFormat:            stageFileFormats,
-		StageCopyOptions:           stageCopyOptions,
-		DataRetentionTimeInDays:    r.DataRetentionTimeInDays,
-		MaxDataExtensionTimeInDays: r.MaxDataExtensionTimeInDays,
-		ChangeTracking:             r.ChangeTracking,
-		DefaultDDLCollation:        r.DefaultDDLCollation,
-		Comment:                    r.Comment,
+	if s.StageCopyOptions != nil {
+		set.StageCopyOptions = s.StageCopyOptions.toOpts()
 	}
+	if s.StageFileFormat != nil {
+		set.StageFileFormat = s.StageFileFormat.toOpts()
+	}
+
+	return set
 }
 
-func (r *TableSearchOptimizationActionRequest) toOpts() *TableSearchOptimizationAction {
-	if len(r.AddSearchOptimizationOn) > 0 {
+func (s *TableSearchOptimizationActionRequest) toOpts() *TableSearchOptimizationAction {
+	if len(s.AddSearchOptimizationOn) > 0 {
 		return &TableSearchOptimizationAction{
 			Add: &AddSearchOptimization{
-				On: r.AddSearchOptimizationOn,
+				On: s.AddSearchOptimizationOn,
 			},
 		}
 	}
-	if len(r.DropSearchOptimizationOn) > 0 {
+	if len(s.DropSearchOptimizationOn) > 0 {
 		return &TableSearchOptimizationAction{
 			Drop: &DropSearchOptimization{
-				On: r.DropSearchOptimizationOn,
+				On: s.DropSearchOptimizationOn,
 			},
 		}
 	}
@@ -243,9 +241,10 @@ func (r *TableExternalTableActionRequest) toOpts() *TableExternalTableAction {
 	if r.Add != nil {
 		return &TableExternalTableAction{
 			Add: &TableExternalTableColumnAddAction{
-				Name:       r.Add.Name,
-				Type:       r.Add.Type,
-				Expression: r.Add.Expression,
+				IfNotExists: r.Add.IfNotExists,
+				Name:        r.Add.Name,
+				Type:        r.Add.Type,
+				Expression:  []string{r.Add.Expression},
 			},
 		}
 	}
@@ -260,7 +259,8 @@ func (r *TableExternalTableActionRequest) toOpts() *TableExternalTableAction {
 	if r.Drop != nil {
 		return &TableExternalTableAction{
 			Drop: &TableExternalTableColumnDropAction{
-				Columns: r.Drop.Columns,
+				Names:    r.Drop.Columns,
+				IfExists: r.Drop.IfExists,
 			},
 		}
 	}
@@ -378,6 +378,7 @@ func (r *TableColumnActionRequest) toOpts() *TableColumnAction {
 		}
 		return &TableColumnAction{
 			Add: &TableColumnAddAction{
+				IfNotExists:      r.Add.IfNotExists,
 				Name:             r.Add.Name,
 				Type:             r.Add.Type,
 				DefaultValue:     defaultValue,
@@ -453,7 +454,8 @@ func (r *TableColumnActionRequest) toOpts() *TableColumnAction {
 	if len(r.DropColumns) > 0 {
 		return &TableColumnAction{
 			DropColumns: &TableColumnAlterDropColumns{
-				Columns: r.DropColumns,
+				IfExists: r.DropColumnsIfExists,
+				Columns:  r.DropColumns,
 			},
 		}
 	}
@@ -510,7 +512,7 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 		}
 	}
 
-	return &createTableOptions{
+	opts := &createTableOptions{
 		OrReplace:                  s.orReplace,
 		IfNotExists:                s.ifNotExists,
 		Scope:                      s.scope,
@@ -520,8 +522,6 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 		ClusterBy:                  s.clusterBy,
 		OutOfLineConstraint:        outOfLineConstrait,
 		EnableSchemaEvolution:      s.enableSchemaEvolution,
-		StageCopyOptions:           convertStageCopyOptions(s.stageCopyOptions),
-		StageFileFormat:            convertStageFileFormatOptions(s.stageFileFormat),
 		DataRetentionTimeInDays:    s.DataRetentionTimeInDays,
 		MaxDataExtensionTimeInDays: s.MaxDataExtensionTimeInDays,
 		ChangeTracking:             s.ChangeTracking,
@@ -531,6 +531,15 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 		Comment:                    s.Comment,
 		RowAccessPolicy:            rowAccessPolicy,
 	}
+
+	if s.stageCopyOptions != nil {
+		opts.StageCopyOptions = s.stageCopyOptions.toOpts()
+	}
+	if s.stageFileFormat != nil {
+		opts.StageFileFormat = s.stageFileFormat.toOpts()
+	}
+
+	return opts
 }
 
 func (s *CreateTableAsSelectRequest) toOpts() *createTableAsSelectOptions {
@@ -595,26 +604,23 @@ func (s *CreateTableCloneRequest) toOpts() *createTableCloneOptions {
 	}
 }
 
-func convertStageCopyOptions(copyOptionRequests []StageCopyOptionsRequest) []StageCopyOption {
-	copyOptions := make([]StageCopyOption, 0, len(copyOptionRequests))
-	for _, request := range copyOptionRequests {
-		innerValue := request.toOpts()
-		copyOptions = append(copyOptions, StageCopyOption{
-			InnerValue: *innerValue,
-		})
+func (v *StageFileFormatRequest) toOpts() *StageFileFormat {
+	return &StageFileFormat{
+		FormatName: v.FormatName,
+		Type:       v.Type,
+		Options:    v.Options.toOpts(),
 	}
-	return copyOptions
 }
 
-func (v *StageCopyOptionsRequest) toOpts() *StageCopyOptionsInnerValue {
-	return &StageCopyOptionsInnerValue{
+func (v *StageCopyOptionsRequest) toOpts() *StageCopyOptions {
+	return &StageCopyOptions{
 		OnError:           v.OnError.toOpts(),
 		SizeLimit:         v.SizeLimit,
 		Purge:             v.Purge,
 		ReturnFailedOnly:  v.ReturnFailedOnly,
 		MatchByColumnName: v.MatchByColumnName,
 		EnforceLength:     v.EnforceLength,
-		TruncateColumns:   v.Truncatecolumns,
+		Truncatecolumns:   v.Truncatecolumns,
 		Force:             v.Force,
 	}
 }

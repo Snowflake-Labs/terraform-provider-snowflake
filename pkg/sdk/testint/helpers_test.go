@@ -171,7 +171,7 @@ func createUserWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjec
 func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
 	t.Helper()
 	columns := []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", "NUMBER"),
+		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
 	}
 	return createTableWithColumns(t, client, database, schema, columns)
 }

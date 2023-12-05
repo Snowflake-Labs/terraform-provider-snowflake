@@ -129,11 +129,7 @@ func (r *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {
 		}
 	}
 	if r.FileFormat != nil {
-		opts.FileFormat = &StageFileFormat{
-			FormatName: r.FileFormat.FormatName,
-			Type:       r.FileFormat.Type,
-			Options:    r.FileFormat.Options.toOpts(),
-		}
+		opts.FileFormat = r.FileFormat.toOpts()
 	}
 	if r.CopyOptions != nil {
 		opts.CopyOptions = &StageCopyOptions{

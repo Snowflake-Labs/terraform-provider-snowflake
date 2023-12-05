@@ -59,6 +59,18 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, "ACCOUNTADMIN", table.Owner)
 	}
 
+	assertTableTerse := func(t *testing.T, table *sdk.Table, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+		assert.Equal(t, id, table.ID())
+		assert.NotEmpty(t, table.CreatedOn)
+		assert.Equal(t, id.Name(), table.Name)
+		assert.Equal(t, testDb(t).Name, table.DatabaseName)
+		assert.Equal(t, testSchema(t).Name, table.SchemaName)
+		assert.Equal(t, "TABLE", table.Kind)
+		assert.Empty(t, table.Rows)
+		assert.Empty(t, table.Owner)
+	}
+
 	t.Run("create table: no optionals", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -125,8 +137,8 @@ func TestInt_Table(t *testing.T) {
 		stageCopyOptions := sdk.NewStageCopyOptionsRequest().WithOnError(sdk.NewStageCopyOnErrorOptionsRequest().WithSkipFile())
 		request := sdk.NewCreateTableRequest(id, columns).
 			WithOutOfLineConstraint(outOfLineConstraint).
-			WithStageFileFormat([]sdk.StageFileFormatRequest{*stageFileFormat}).
-			WithStageCopyOptions([]sdk.StageCopyOptionsRequest{*stageCopyOptions}).
+			WithStageFileFormat(*stageFileFormat).
+			WithStageCopyOptions(*stageCopyOptions).
 			WithComment(&comment).
 			WithDataRetentionTimeInDays(sdk.Int(30)).
 			WithMaxDataExtensionTimeInDays(sdk.Int(30))
@@ -744,7 +756,7 @@ func TestInt_Table(t *testing.T) {
 		t.Cleanup(cleanupTableProvider(id))
 
 		alterRequest := sdk.NewAlterTableRequest(id).
-			WithExternalTableAction(sdk.NewTableExternalTableActionRequest().WithAdd(sdk.NewTableExternalTableColumnAddActionRequest().WithName("COLUMN_3").WithType(sdk.DataTypeNumber).WithExpression([]string{"1 + 1"})))
+			WithExternalTableAction(sdk.NewTableExternalTableActionRequest().WithAdd(sdk.NewTableExternalTableColumnAddActionRequest().WithName("COLUMN_3").WithType(sdk.DataTypeNumber).WithExpression("1 + 1")))
 
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -850,15 +862,11 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 
-		stageFileFormats := []sdk.StageFileFormatRequest{
-			{
-				Type: sdk.Pointer(sdk.FileFormatTypeCSV),
-			},
+		stageFileFormats := sdk.StageFileFormatRequest{
+			Type: sdk.Pointer(sdk.FileFormatTypeCSV),
 		}
-		stageCopyOptions := []sdk.StageCopyOptionsRequest{
-			{
-				OnError: sdk.NewStageCopyOnErrorOptionsRequest().WithSkipFile(),
-			},
+		stageCopyOptions := sdk.StageCopyOptionsRequest{
+			OnError: sdk.NewStageCopyOnErrorOptionsRequest().WithSkipFile(),
 		}
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithSet(sdk.NewTableSetRequest().
@@ -903,14 +911,13 @@ func TestInt_Table(t *testing.T) {
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest())
 		require.NoError(t, err)
 
-		tableIds := make([]sdk.SchemaObjectIdentifier, len(tables))
-		for i, table := range tables {
-			tableIds[i] = table.ID()
-		}
-		assert.Contains(t, tableIds, table.ID())
-		assert.Contains(t, tableIds, table2.ID())
-
+		t1, err := collections.FindOne(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table.ID().FullyQualifiedName() })
 		require.NoError(t, err)
+		t2, err := collections.FindOne(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table2.ID().FullyQualifiedName() })
+		require.NoError(t, err)
+
+		assertTable(t, t1, table.ID())
+		assertTable(t, t2, table2.ID())
 	})
 
 	t.Run("with terse", func(t *testing.T) {
@@ -918,13 +925,10 @@ func TestInt_Table(t *testing.T) {
 		t.Cleanup(tableCleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithTerse(sdk.Bool(true)).WithLikePattern(table.ID().Name()))
+		require.NoError(t, err)
 		assert.Equal(t, 1, len(tables))
 
-		table2 := tables[0]
-		assert.Equal(t, table2.Name, table.Name)
-		assert.NotEmpty(t, table2.CreatedOn)
-		assert.Empty(t, table2.Owner)
-		require.NoError(t, err)
+		assertTableTerse(t, &tables[0], table.ID())
 	})
 
 	t.Run("with starts with", func(t *testing.T) {
@@ -932,13 +936,10 @@ func TestInt_Table(t *testing.T) {
 		t.Cleanup(tableCleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithStartsWith(sdk.String(table.Name)))
+		require.NoError(t, err)
 		assert.Equal(t, 1, len(tables))
 
-		table2 := tables[0]
-		assert.Equal(t, table2.Name, table.Name)
-		assert.NotEmpty(t, table2.CreatedOn)
-		assert.NotEmpty(t, table2.Owner)
-		require.NoError(t, err)
+		assertTable(t, &tables[0], table.ID())
 	})
 
 	t.Run("when searching a non-existent table", func(t *testing.T) {

@@ -53,7 +53,7 @@ func (opts *createTableOptions) validate() error {
 			}
 		}
 	}
-	for _, stageFileFormat := range opts.StageFileFormat {
+	if stageFileFormat := opts.StageFileFormat; valueSet(stageFileFormat) {
 		if ok := exactlyOneValueSet(
 			stageFileFormat.FormatName,
 			stageFileFormat.Type,
@@ -246,6 +246,9 @@ func (opts *dropTableOptions) validate() error {
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, errInvalidIdentifier("dropTableOptions", "name"))
+	}
+	if moreThanOneValueSet(opts.Cascade, opts.Restrict) {
+		errs = append(errs, errMoreThanOneOf("dropTableOptions", "Cascade", "Restrict"))
 	}
 	return errors.Join(errs...)
 }

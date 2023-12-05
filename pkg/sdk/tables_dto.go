@@ -63,8 +63,8 @@ type CreateTableRequest struct {
 	OutOfLineConstraint        *OutOfLineConstraintRequest
 	clusterBy                  []string
 	enableSchemaEvolution      *bool
-	stageFileFormat            []StageFileFormatRequest
-	stageCopyOptions           []StageCopyOptionsRequest
+	stageFileFormat            *StageFileFormatRequest
+	stageCopyOptions           *StageCopyOptionsRequest
 	DataRetentionTimeInDays    *int
 	MaxDataExtensionTimeInDays *int
 	ChangeTracking             *bool
@@ -203,23 +203,23 @@ func (s *DropTableRequest) toOpts() *dropTableOptions {
 
 func (s *ShowTableRequest) toOpts() *showTableOptions {
 	var like *Like
-	if s.LikePattern != "" {
+	if s.likePattern != "" {
 		like = &Like{
-			Pattern: &s.LikePattern,
+			Pattern: &s.likePattern,
 		}
 	}
 	var limitFrom *LimitFrom
-	if s.LimitFrom != nil {
+	if s.limitFrom != nil {
 		limitFrom = &LimitFrom{
-			Rows: s.LimitFrom.Rows,
-			From: s.LimitFrom.From,
+			Rows: s.limitFrom.Rows,
+			From: s.limitFrom.From,
 		}
 	}
 	return &showTableOptions{
-		Terse:      s.Terse,
-		History:    s.History,
+		Terse:      s.terse,
+		History:    s.history,
 		Like:       like,
-		StartsWith: s.StartsWith,
+		StartsWith: s.startsWith,
 		LimitFrom:  limitFrom,
 		In:         s.in,
 	}
@@ -279,7 +279,7 @@ type FileFormatTypeOptionsRequest struct {
 	JSONTimestampFormat          *string
 	JSONBinaryFormat             *BinaryFormat
 	JSONTrimSpace                *bool
-	JSONNullIf                   *[]NullString
+	JSONNullIf                   []NullString
 	JSONFileExtension            *string
 	JSONEnableOctal              *bool
 	JSONAllowDuplicate           *bool
@@ -339,17 +339,19 @@ type TableReclusterChangeStateRequest struct {
 }
 
 type TableColumnActionRequest struct {
-	Add                *TableColumnAddActionRequest
-	Rename             *TableColumnRenameActionRequest
-	Alter              []TableColumnAlterActionRequest
-	SetMaskingPolicy   *TableColumnAlterSetMaskingPolicyActionRequest
-	UnsetMaskingPolicy *TableColumnAlterUnsetMaskingPolicyActionRequest
-	SetTags            *TableColumnAlterSetTagsActionRequest
-	UnsetTags          *TableColumnAlterUnsetTagsActionRequest
-	DropColumns        []string
+	Add                 *TableColumnAddActionRequest
+	Rename              *TableColumnRenameActionRequest
+	Alter               []TableColumnAlterActionRequest
+	SetMaskingPolicy    *TableColumnAlterSetMaskingPolicyActionRequest
+	UnsetMaskingPolicy  *TableColumnAlterUnsetMaskingPolicyActionRequest
+	SetTags             *TableColumnAlterSetTagsActionRequest
+	UnsetTags           *TableColumnAlterUnsetTagsActionRequest
+	DropColumnsIfExists *bool
+	DropColumns         []string
 }
 
 type TableColumnAddActionRequest struct {
+	IfNotExists      *bool
 	Name             string   // required
 	Type             DataType // required
 	DefaultValue     *ColumnDefaultValueRequest
@@ -473,8 +475,8 @@ type TableSearchOptimizationActionRequest struct {
 
 type TableSetRequest struct {
 	EnableSchemaEvolution      *bool
-	StageFileFormat            []StageFileFormatRequest
-	StageCopyOptions           []StageCopyOptionsRequest
+	StageFileFormat            *StageFileFormatRequest
+	StageCopyOptions           *StageCopyOptionsRequest
 	DataRetentionTimeInDays    *int
 	MaxDataExtensionTimeInDays *int
 	ChangeTracking             *bool
@@ -483,9 +485,10 @@ type TableSetRequest struct {
 }
 
 type TableExternalTableColumnAddActionRequest struct {
-	Name       string
-	Type       DataType
-	Expression []string
+	IfNotExists *bool
+	Name        string
+	Type        DataType
+	Expression  string
 }
 
 type TableExternalTableColumnRenameActionRequest struct {
@@ -494,16 +497,17 @@ type TableExternalTableColumnRenameActionRequest struct {
 }
 
 type TableExternalTableColumnDropActionRequest struct {
-	Columns []string
+	Columns  []string
+	IfExists *bool
 }
 
 type ShowTableRequest struct {
-	Terse       *bool
-	History     *bool
-	LikePattern string
+	terse       *bool
+	history     *bool
+	likePattern string
 	in          *In
-	StartsWith  *string
-	LimitFrom   *LimitFrom
+	startsWith  *string
+	limitFrom   *LimitFrom
 }
 
 type ShowTableInRequest struct {
