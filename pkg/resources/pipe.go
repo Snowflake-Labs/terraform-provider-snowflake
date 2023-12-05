@@ -200,8 +200,9 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if strings.Contains(pipe.NotificationChannel, "arn:aws:sns:") {
-		err = d.Set("aws_sns_topic_arn", pipe.NotificationChannel)
-		return err
+		if err := d.Set("aws_sns_topic_arn", pipe.NotificationChannel); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("error_integration", pipe.ErrorIntegration); err != nil {
@@ -236,10 +237,10 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("error_integration") {
 		if errorIntegration, ok := d.GetOk("error_integration"); ok {
 			runSetStatement = true
-			pipeSet.Comment = sdk.String(errorIntegration.(string))
+			pipeSet.ErrorIntegration = sdk.String(errorIntegration.(string))
 		} else {
 			runUnsetStatement = true
-			pipeUnset.Comment = sdk.Bool(true)
+			pipeUnset.ErrorIntegration = sdk.Bool(true)
 		}
 	}
 
