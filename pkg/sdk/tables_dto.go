@@ -102,6 +102,8 @@ type ColumnDefaultValueRequest struct {
 type ColumnIdentityRequest struct {
 	Start     int // required
 	Increment int // required
+	Order     *bool
+	Noorder   *bool
 }
 
 type ColumnMaskingPolicyRequest struct {

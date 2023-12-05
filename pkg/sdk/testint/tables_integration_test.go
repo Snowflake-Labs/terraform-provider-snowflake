@@ -119,7 +119,6 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_3", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR).
 				WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithExpression(sdk.String("'default'"))).
-				WithWith(sdk.Bool(true)).
 				WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, maskingPolicy.Name)).WithUsing([]string{"COLUMN_1", "COLUMN_3"})).
 				WithTags(columnTags).
 				WithNotNull(sdk.Bool(true)),

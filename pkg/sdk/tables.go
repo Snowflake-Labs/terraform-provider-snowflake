@@ -22,6 +22,7 @@ type Tables interface {
 	DescribeStage(ctx context.Context, req *DescribeTableStageRequest) ([]TableStageDetails, error)
 }
 
+// TODO: check if [...] in the docs (like in https://docs.snowflake.com/en/sql-reference/sql/create-table#create-table-using-template) mean that we can reuse all parameters from "normal" createTableOptions
 type createTableAsSelectOptions struct {
 	create          bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace       *bool                  `ddl:"keyword" sql:"OR REPLACE"`
@@ -92,29 +93,31 @@ const (
 )
 
 type createTableOptions struct {
-	create                     bool                       `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                      `ddl:"keyword" sql:"OR REPLACE"`
-	Scope                      *TableScope                `ddl:"keyword"`
-	Kind                       *TableKind                 `ddl:"keyword"`
-	table                      bool                       `ddl:"static" sql:"TABLE"`
-	IfNotExists                *bool                      `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       SchemaObjectIdentifier     `ddl:"identifier"`
-	leftParen                  bool                       `ddl:"static" sql:"("`
-	Columns                    []TableColumn              `ddl:"keyword"`
-	OutOfLineConstraint        *CreateOutOfLineConstraint `ddl:"keyword"`
-	rightParen                 bool                       `ddl:"static" sql:")"`
-	ClusterBy                  []string                   `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
-	EnableSchemaEvolution      *bool                      `ddl:"parameter" sql:"ENABLE_SCHEMA_EVOLUTION"`
-	StageFileFormat            *StageFileFormat           `ddl:"list,parentheses,no_comma" sql:"STAGE_FILE_FORMAT ="`
-	StageCopyOptions           *StageCopyOptions          `ddl:"list,parentheses,no_comma" sql:"STAGE_COPY_OPTIONS ="`
-	DataRetentionTimeInDays    *int                       `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int                       `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	ChangeTracking             *bool                      `ddl:"parameter" sql:"CHANGE_TRACKING"`
-	DefaultDDLCollation        *string                    `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	CopyGrants                 *bool                      `ddl:"keyword" sql:"COPY GRANTS"`
-	RowAccessPolicy            *RowAccessPolicy           `ddl:"keyword"`
-	Tags                       []TagAssociation           `ddl:"keyword,parentheses" sql:"TAG"`
-	Comment                    *string                    `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                     bool                             `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                            `ddl:"keyword" sql:"OR REPLACE"`
+	Scope                      *TableScope                      `ddl:"keyword"`
+	Kind                       *TableKind                       `ddl:"keyword"`
+	table                      bool                             `ddl:"static" sql:"TABLE"`
+	IfNotExists                *bool                            `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       SchemaObjectIdentifier           `ddl:"identifier"`
+	ColumnsAndConstraints      CreateTableColumnsAndConstraints `ddl:"list,parentheses"`
+	ClusterBy                  []string                         `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
+	EnableSchemaEvolution      *bool                            `ddl:"parameter" sql:"ENABLE_SCHEMA_EVOLUTION"`
+	StageFileFormat            *StageFileFormat                 `ddl:"list,parentheses,no_comma" sql:"STAGE_FILE_FORMAT ="`
+	StageCopyOptions           *StageCopyOptions                `ddl:"list,parentheses,no_comma" sql:"STAGE_COPY_OPTIONS ="`
+	DataRetentionTimeInDays    *int                             `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *int                             `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ChangeTracking             *bool                            `ddl:"parameter" sql:"CHANGE_TRACKING"`
+	DefaultDDLCollation        *string                          `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	CopyGrants                 *bool                            `ddl:"keyword" sql:"COPY GRANTS"`
+	RowAccessPolicy            *RowAccessPolicy                 `ddl:"keyword"`
+	Tags                       []TagAssociation                 `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment                    *string                          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type CreateTableColumnsAndConstraints struct {
+	Columns             []TableColumn        `ddl:"keyword"`
+	OutOfLineConstraint *OutOfLineConstraint `ddl:"keyword"`
 }
 
 type TableScope string
@@ -135,14 +138,13 @@ const (
 type TableColumn struct {
 	Name             string                  `ddl:"keyword"`
 	Type             DataType                `ddl:"keyword"`
-	Collate          *string                 `ddl:"parameter,no_equals,single_quotes" sql:"COLLATE"`
-	Comment          *string                 `ddl:"parameter,no_equals,single_quotes" sql:"COMMENT"`
-	DefaultValue     *ColumnDefaultValue     `ddl:"keyword"`
-	NotNull          *bool                   `ddl:"keyword" sql:"NOT NULL"`
-	MaskingPolicy    *ColumnMaskingPolicy    `ddl:"keyword"`
-	With             *bool                   `ddl:"keyword" sql:"WITH"`
-	Tags             []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
 	InlineConstraint *ColumnInlineConstraint `ddl:"keyword"`
+	NotNull          *bool                   `ddl:"keyword" sql:"NOT NULL"`
+	Collate          *string                 `ddl:"parameter,no_equals,single_quotes" sql:"COLLATE"`
+	DefaultValue     *ColumnDefaultValue     `ddl:"keyword"`
+	MaskingPolicy    *ColumnMaskingPolicy    `ddl:"keyword"`
+	Tags             []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment          *string                 `ddl:"parameter,no_equals,single_quotes" sql:"COMMENT"`
 }
 
 type ColumnDefaultValue struct {
@@ -151,8 +153,10 @@ type ColumnDefaultValue struct {
 	Identity   *ColumnIdentity `ddl:"keyword" sql:"IDENTITY"`
 }
 type ColumnIdentity struct {
-	Start     int `ddl:"parameter,no_quotes,no_equals" sql:"START"`
-	Increment int `ddl:"parameter,no_quotes,no_equals" sql:"INCREMENT"`
+	Start     int   `ddl:"parameter,no_quotes,no_equals" sql:"START"`
+	Increment int   `ddl:"parameter,no_quotes,no_equals" sql:"INCREMENT"`
+	Order     *bool `ddl:"keyword" sql:"ORDER"`
+	Noorder   *bool `ddl:"keyword" sql:"NOORDER"`
 }
 
 type ColumnMaskingPolicy struct {
@@ -162,29 +166,8 @@ type ColumnMaskingPolicy struct {
 	Using         []string               `ddl:"keyword,parentheses" sql:"USING"`
 }
 
-// CreateOutOfLineConstraint is based on https://docs.snowflake.com/en/sql-reference/sql/create-table-constraint#out-of-line-unique-primary-foreign-key.
-type CreateOutOfLineConstraint struct {
-	Name       string               `ddl:"parameter,no_equals" sql:", CONSTRAINT"`
-	Type       ColumnConstraintType `ddl:"keyword"`
-	Columns    []string             `ddl:"keyword,parentheses"`
-	ForeignKey *OutOfLineForeignKey `ddl:"keyword"`
-
-	// optional
-	Enforced           *bool `ddl:"keyword" sql:"ENFORCED"`
-	NotEnforced        *bool `ddl:"keyword" sql:"NOT ENFORCED"`
-	Deferrable         *bool `ddl:"keyword" sql:"DEFERRABLE"`
-	NotDeferrable      *bool `ddl:"keyword" sql:"NOT DEFERRABLE"`
-	InitiallyDeferred  *bool `ddl:"keyword" sql:"INITIALLY DEFERRED"`
-	InitiallyImmediate *bool `ddl:"keyword" sql:"INITIALLY IMMEDIATE"`
-	Enable             *bool `ddl:"keyword" sql:"ENABLE"`
-	Disable            *bool `ddl:"keyword" sql:"DISABLE"`
-	Validate           *bool `ddl:"keyword" sql:"VALIDATE"`
-	NoValidate         *bool `ddl:"keyword" sql:"NOVALIDATE"`
-	Rely               *bool `ddl:"keyword" sql:"RELY"`
-	NoRely             *bool `ddl:"keyword" sql:"NORELY"`
-}
-
-type AlterOutOfLineConstraint struct {
+// OutOfLineConstraint is based on https://docs.snowflake.com/en/sql-reference/sql/create-table-constraint#out-of-line-unique-primary-foreign-key.
+type OutOfLineConstraint struct {
 	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
 	Type       ColumnConstraintType `ddl:"keyword"`
 	Columns    []string             `ddl:"keyword,parentheses"`
@@ -366,7 +349,7 @@ type TableColumnNotNullConstraint struct {
 }
 
 type TableConstraintAction struct {
-	Add    *AlterOutOfLineConstraint    `ddl:"keyword" sql:"ADD"`
+	Add    *OutOfLineConstraint         `ddl:"keyword" sql:"ADD"`
 	Rename *TableConstraintRenameAction `ddl:"keyword" sql:"RENAME CONSTRAINT"`
 	Alter  *TableConstraintAlterAction  `ddl:"keyword" sql:"ALTER"`
 	Drop   *TableConstraintDropAction   `ddl:"keyword" sql:"DROP"`

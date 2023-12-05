@@ -37,39 +37,62 @@ func TestTableCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("createTableOptions", "Columns"))
 	})
 
-	t.Run("validation: both expression and identity of a column are present ", func(t *testing.T) {
+	t.Run("validation: both expression and identity of a column are present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = RandomSchemaObjectIdentifier()
-		opts.Columns = []TableColumn{{
-			Name: "a",
-			DefaultValue: &ColumnDefaultValue{
-				Expression: String("expr"),
-				Identity: &ColumnIdentity{
-					Start:     10,
-					Increment: 1,
+		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
+			Columns: []TableColumn{{
+				Name: "a",
+				DefaultValue: &ColumnDefaultValue{
+					Expression: String("expr"),
+					Identity: &ColumnIdentity{
+						Start:     10,
+						Increment: 1,
+					},
 				},
-			},
-		}}
+			}},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DefaultValue", "Expression", "Identity"))
+	})
+
+	t.Run("validation: both order and noorder are present for identity", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = RandomSchemaObjectIdentifier()
+		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
+			Columns: []TableColumn{{
+				Name: "a",
+				DefaultValue: &ColumnDefaultValue{
+					Identity: &ColumnIdentity{
+						Start:     10,
+						Increment: 1,
+						Order:     Bool(true),
+						Noorder:   Bool(true),
+					},
+				},
+			}},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("Identity", "Order", "Noorder"))
 	})
 
 	t.Run("validation: column masking policy incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = RandomSchemaObjectIdentifier()
-		opts.Columns = []TableColumn{{
-			Name: "a",
-			MaskingPolicy: &ColumnMaskingPolicy{
-				Name: NewSchemaObjectIdentifier("", "", ""),
-			},
-		}}
+		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
+			Columns: []TableColumn{{
+				Name: "a",
+				MaskingPolicy: &ColumnMaskingPolicy{
+					Name: NewSchemaObjectIdentifier("", "", ""),
+				},
+			}},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: column tag association's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = RandomSchemaObjectIdentifier()
-		opts.Columns = []TableColumn{
-			{
+		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
+			Columns: []TableColumn{{
 				Name: "a",
 				Tags: []TagAssociation{
 					{
@@ -77,16 +100,18 @@ func TestTableCreate(t *testing.T) {
 						Value: "v1",
 					},
 				},
-			},
+			}},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: outOfLineConstraint's foreign key incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.OutOfLineConstraint = &CreateOutOfLineConstraint{
-			ForeignKey: &OutOfLineForeignKey{
-				TableName: NewSchemaObjectIdentifier("", "", ""),
+		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
+			OutOfLineConstraint: &OutOfLineConstraint{
+				ForeignKey: &OutOfLineForeignKey{
+					TableName: NewSchemaObjectIdentifier("", "", ""),
+				},
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -145,7 +170,7 @@ func TestTableCreate(t *testing.T) {
 			Type: Pointer(ColumnConstraintTypePrimaryKey),
 		}
 		require.NoError(t, err)
-		outOfLineConstraint := CreateOutOfLineConstraint{
+		outOfLineConstraint := OutOfLineConstraint{
 			Name:    "OUT_OF_LINE_CONSTRAINT",
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},
@@ -172,25 +197,26 @@ func TestTableCreate(t *testing.T) {
 			Name: RandomSchemaObjectIdentifier(),
 			On:   []string{"COLUMN_1", "COLUMN_2"},
 		}
-		opts := &createTableOptions{
-			name: id,
-			Columns: []TableColumn{{
-				Name:    columnName,
-				Type:    columnType,
-				Collate: &collation,
-				Comment: &columnComment,
-				DefaultValue: &ColumnDefaultValue{
-					Identity: &ColumnIdentity{
-						Start:     10,
-						Increment: 1,
-					},
+		columns := []TableColumn{{
+			Name:    columnName,
+			Type:    columnType,
+			Collate: &collation,
+			Comment: &columnComment,
+			DefaultValue: &ColumnDefaultValue{
+				Identity: &ColumnIdentity{
+					Start:     10,
+					Increment: 1,
+					Order:     Bool(true),
 				},
-				NotNull:          Bool(true),
-				MaskingPolicy:    &maskingPolicy,
-				Tags:             columnTags,
-				InlineConstraint: &inlineConstraint,
-			}},
-			OutOfLineConstraint:        &outOfLineConstraint,
+			},
+			NotNull:          Bool(true),
+			MaskingPolicy:    &maskingPolicy,
+			Tags:             columnTags,
+			InlineConstraint: &inlineConstraint,
+		}}
+		opts := &createTableOptions{
+			name:                       id,
+			ColumnsAndConstraints:      CreateTableColumnsAndConstraints{columns, &outOfLineConstraint},
 			ClusterBy:                  []string{"COLUMN_1", "COLUMN_2"},
 			EnableSchemaEvolution:      Bool(true),
 			StageFileFormat:            &stageFileFormat,
@@ -205,12 +231,12 @@ func TestTableCreate(t *testing.T) {
 			Comment:                    &tableComment,
 		}
 		assertOptsValidAndSQLEquals(t, opts,
-			`CREATE TABLE %s ( %s %s COLLATE 'de' COMMENT '%s' IDENTITY START 10 INCREMENT 1 NOT NULL MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY , CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT ) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
+			`CREATE TABLE %s (%s %s CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY NOT NULL COLLATE 'de' IDENTITY START 10 INCREMENT 1 ORDER MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') COMMENT '%s', CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
 			id.FullyQualifiedName(),
 			columnName,
 			columnType,
-			columnComment,
 			maskingPolicy.Name.FullyQualifiedName(),
+			columnComment,
 			outOfLineConstraint.ForeignKey.TableName.FullyQualifiedName(),
 			rowAccessPolicy.Name.FullyQualifiedName(),
 			tableComment,
@@ -223,7 +249,7 @@ func TestTableCreate(t *testing.T) {
 		}
 		request := NewCreateTableRequest(id, columns).
 			WithStageCopyOptions(*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileX(5)))
-		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s ( FIRST_COLUMN VARCHAR ) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_5)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s (FIRST_COLUMN VARCHAR) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_5)`, id.FullyQualifiedName())
 	})
 
 	t.Run("with skip file x %", func(t *testing.T) {
@@ -232,7 +258,7 @@ func TestTableCreate(t *testing.T) {
 		}
 		request := NewCreateTableRequest(id, columns).
 			WithStageCopyOptions(*NewStageCopyOptionsRequest().WithOnError(NewStageCopyOnErrorOptionsRequest().WithSkipFileXPercent(10)))
-		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s ( FIRST_COLUMN VARCHAR ) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%')`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, request.toOpts(), `CREATE TABLE %s (FIRST_COLUMN VARCHAR) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%')`, id.FullyQualifiedName())
 	})
 }
 
@@ -843,7 +869,7 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("alter constraint: add", func(t *testing.T) {
-		outOfLineConstraint := AlterOutOfLineConstraint{
+		outOfLineConstraint := OutOfLineConstraint{
 			Name:    "OUT_OF_LINE_CONSTRAINT",
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},

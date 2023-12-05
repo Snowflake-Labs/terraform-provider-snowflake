@@ -23,16 +23,21 @@ func (opts *createTableOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, errInvalidIdentifier("createTableOptions", "name"))
 	}
-	if len(opts.Columns) == 0 {
+	if len(opts.ColumnsAndConstraints.Columns) == 0 {
 		errs = append(errs, errNotSet("createTableOptions", "Columns"))
 	}
-	for _, column := range opts.Columns {
+	for _, column := range opts.ColumnsAndConstraints.Columns {
 		if column.DefaultValue != nil {
 			if ok := exactlyOneValueSet(
 				column.DefaultValue.Expression,
 				column.DefaultValue.Identity,
 			); !ok {
 				errs = append(errs, errExactlyOneOf("DefaultValue", "Expression", "Identity"))
+			}
+			if identity := column.DefaultValue.Identity; valueSet(identity) {
+				if moreThanOneValueSet(identity.Order, identity.Noorder) {
+					errs = append(errs, errMoreThanOneOf("Identity", "Order", "Noorder"))
+				}
 			}
 		}
 		if column.MaskingPolicy != nil {
@@ -46,7 +51,7 @@ func (opts *createTableOptions) validate() error {
 			}
 		}
 	}
-	if outOfLineConstraint := opts.OutOfLineConstraint; valueSet(outOfLineConstraint) {
+	if outOfLineConstraint := opts.ColumnsAndConstraints.OutOfLineConstraint; valueSet(outOfLineConstraint) {
 		if foreignKey := outOfLineConstraint.ForeignKey; valueSet(foreignKey) {
 			if !ValidObjectIdentifier(foreignKey.TableName) {
 				errs = append(errs, errInvalidIdentifier("OutOfLineForeignKey", "TableName"))

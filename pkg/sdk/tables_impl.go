@@ -285,7 +285,7 @@ func (r *TableConstraintActionRequest) toOpts() *TableConstraintAction {
 				On:          foreignKeyOnAction,
 			}
 		}
-		outOfLineConstrait := AlterOutOfLineConstraint{
+		outOfLineConstraint := OutOfLineConstraint{
 			Name:               r.Add.Name,
 			Type:               r.Add.Type,
 			Columns:            r.Add.Columns,
@@ -304,7 +304,7 @@ func (r *TableConstraintActionRequest) toOpts() *TableConstraintAction {
 			NoRely:             r.Add.NoRely,
 		}
 		return &TableConstraintAction{
-			Add: &outOfLineConstrait,
+			Add: &outOfLineConstraint,
 		}
 	}
 	if r.Rename != nil {
@@ -474,7 +474,7 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 			On:   s.RowAccessPolicy.On,
 		}
 	}
-	var outOfLineConstrait *CreateOutOfLineConstraint
+	var outOfLineConstrait *OutOfLineConstraint
 	if s.OutOfLineConstraint != nil {
 		var foreignKey *OutOfLineForeignKey
 		if s.OutOfLineConstraint.ForeignKey != nil {
@@ -492,7 +492,7 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 				On:          foreignKeyOnAction,
 			}
 		}
-		outOfLineConstrait = &CreateOutOfLineConstraint{
+		outOfLineConstrait = &OutOfLineConstraint{
 			Name:               s.OutOfLineConstraint.Name,
 			Type:               s.OutOfLineConstraint.Type,
 			Columns:            s.OutOfLineConstraint.Columns,
@@ -518,9 +518,8 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 		Scope:                      s.scope,
 		Kind:                       s.kind,
 		name:                       s.name,
-		Columns:                    convertColumns(s.columns),
+		ColumnsAndConstraints:      CreateTableColumnsAndConstraints{convertColumns(s.columns), outOfLineConstrait},
 		ClusterBy:                  s.clusterBy,
-		OutOfLineConstraint:        outOfLineConstrait,
 		EnableSchemaEvolution:      s.enableSchemaEvolution,
 		DataRetentionTimeInDays:    s.DataRetentionTimeInDays,
 		MaxDataExtensionTimeInDays: s.MaxDataExtensionTimeInDays,
@@ -726,6 +725,8 @@ func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 				columnIdentity = &ColumnIdentity{
 					Start:     columnRequest.defaultValue.identity.Start,
 					Increment: columnRequest.defaultValue.identity.Increment,
+					Order:     columnRequest.defaultValue.identity.Order,
+					Noorder:   columnRequest.defaultValue.identity.Noorder,
 				}
 			}
 			defaultValue = &ColumnDefaultValue{
@@ -786,7 +787,6 @@ func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 			DefaultValue:     defaultValue,
 			MaskingPolicy:    maskingPolicy,
 			NotNull:          columnRequest.notNull,
-			With:             columnRequest.with,
 			Tags:             columnRequest.tags,
 			InlineConstraint: inlineConstraint,
 		})

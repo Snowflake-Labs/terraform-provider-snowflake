@@ -285,11 +285,6 @@ func (s *TableColumnRequest) WithMaskingPolicy(maskingPolicy *ColumnMaskingPolic
 	return s
 }
 
-func (s *TableColumnRequest) WithWith(with *bool) *TableColumnRequest {
-	s.with = with
-	return s
-}
-
 func (s *TableColumnRequest) WithTags(tags []TagAssociation) *TableColumnRequest {
 	s.tags = tags
 	return s
@@ -322,6 +317,16 @@ func NewColumnIdentityRequest(
 	s.Start = Start
 	s.Increment = Increment
 	return &s
+}
+
+func (s *ColumnIdentityRequest) WithOrder() *ColumnIdentityRequest {
+	s.Order = Bool(true)
+	return s
+}
+
+func (s *ColumnIdentityRequest) WithNoorder() *ColumnIdentityRequest {
+	s.Noorder = Bool(true)
+	return s
 }
 
 func NewColumnMaskingPolicyRequest(
