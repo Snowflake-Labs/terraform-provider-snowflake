@@ -13,7 +13,7 @@ import (
 
 func TestAcc_DatabaseWithUnderscore(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_DATABASE_TESTS"); ok {
-		t.Skip("Skipping TestAccDatabase")
+		t.Skip("Skipping TestAcc_DatabaseWithUnderscore")
 	}
 
 	prefix := "_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -36,7 +36,7 @@ func TestAcc_DatabaseWithUnderscore(t *testing.T) {
 
 func TestAcc_Database(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_DATABASE_TESTS"); ok {
-		t.Skip("Skipping TestAccDatabase")
+		t.Skip("Skipping TestAcc_Database")
 	}
 
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

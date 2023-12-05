@@ -16,7 +16,7 @@ func testRolesAndShares(t *testing.T, path string, roles []string) func(*terrafo
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
 
-		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(t, c) != int64(len(roles)) {
+		if c, ok := is.Attributes["roles.#"]; !ok || mustParseInt(t, c) != int64(len(roles)) {
 			return fmt.Errorf("expected roles.# to equal %d but got %s", len(roles), c)
 		}
 		r, err := extractList(is.Attributes, "roles")

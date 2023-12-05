@@ -17,7 +17,7 @@ const (
 
 func TestAcc_ManagedAccount(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_MANAGED_ACCOUNT_TEST"); ok {
-		t.Skip("Skipping TestAccManagedAccount")
+		t.Skip("Skipping TestAcc_ManagedAccount")
 	}
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
