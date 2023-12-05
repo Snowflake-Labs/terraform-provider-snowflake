@@ -77,6 +77,7 @@ func (r *CreateEventTableRequest) toOpts() *CreateEventTableOptions {
 
 func (r *ShowEventTableRequest) toOpts() *ShowEventTableOptions {
 	opts := &ShowEventTableOptions{
+		Terse:      r.Terse,
 		Like:       r.Like,
 		In:         r.In,
 		StartsWith: r.StartsWith,
@@ -188,7 +189,7 @@ func (r *AlterEventTableRequest) toOpts() *AlterEventTableOptions {
 		opts.SearchOptimizationAction = &EventTableSearchOptimizationAction{}
 		if r.SearchOptimizationAction.Add != nil {
 			opts.SearchOptimizationAction.Add = &SearchOptimization{
-				On: r.SearchOptimizationAction.Drop.On,
+				On: r.SearchOptimizationAction.Add.On,
 			}
 		}
 		if r.SearchOptimizationAction.Drop != nil {

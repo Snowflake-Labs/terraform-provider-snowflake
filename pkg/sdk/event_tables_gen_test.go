@@ -81,13 +81,14 @@ func TestEventTables_Show(t *testing.T) {
 
 	t.Run("show with like and in", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.Terse = Bool(true)
 		opts.Like = &Like{
 			Pattern: String(id.Name()),
 		}
 		opts.In = &In{
 			Database: NewAccountObjectIdentifier("database"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW EVENT TABLES LIKE '%s' IN DATABASE "database"`, id.Name())
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE EVENT TABLES LIKE '%s' IN DATABASE "database"`, id.Name())
 	})
 }
 

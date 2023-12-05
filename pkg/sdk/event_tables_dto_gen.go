@@ -26,6 +26,7 @@ type CreateEventTableRequest struct {
 }
 
 type ShowEventTableRequest struct {
+	Terse      *bool
 	Like       *Like
 	In         *In
 	StartsWith *string

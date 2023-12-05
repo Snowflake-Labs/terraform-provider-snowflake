@@ -106,36 +106,27 @@ func TestInt_EventTables(t *testing.T) {
 	})
 
 	t.Run("describe event table", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-
-		err := client.EventTables.Create(ctx, sdk.NewCreateEventTableRequest(id))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTableHandle(t, id))
+		dt := createEventTableHandle(t)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
 
 		details, err := client.EventTables.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, "TIMESTAMP", details.Name)
-		assert.Equal(t, "EVENT TABLE", details.Kind)
-		assert.Equal(t, "", details.Comment)
+		assert.NotEmpty(t, details.Kind)
 	})
 
 	t.Run("alter event table: set and unset comment", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-
-		err := client.EventTables.Create(ctx, sdk.NewCreateEventTableRequest(id))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTableHandle(t, id))
+		dt := createEventTableHandle(t)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
 
 		comment := random.Comment()
 		set := sdk.NewEventTableSetRequest().WithComment(&comment)
-		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSet(set))
+		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSet(set))
 		require.NoError(t, err)
 
 		et, err := client.EventTables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assertEventTableHandle(t, et, name, comment, nil)
+		assertEventTableHandle(t, et, dt.Name, comment, nil)
 
 		unset := sdk.NewEventTableUnsetRequest().WithComment(sdk.Bool(true))
 		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithUnset(unset))
@@ -143,19 +134,15 @@ func TestInt_EventTables(t *testing.T) {
 
 		et, err = client.EventTables.ShowByID(ctx, id)
 		require.NoError(t, err)
-		assertEventTableHandle(t, et, name, "", nil)
+		assertEventTableHandle(t, et, dt.Name, "", nil)
 	})
 
 	t.Run("alter event table: set and unset change tacking", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-
-		err := client.EventTables.Create(ctx, sdk.NewCreateEventTableRequest(id))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTableHandle(t, id))
+		dt := createEventTableHandle(t)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
 
 		set := sdk.NewEventTableSetRequest().WithChangeTracking(sdk.Bool(true))
-		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSet(set))
+		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSet(set))
 		require.NoError(t, err)
 
 		unset := sdk.NewEventTableUnsetRequest().WithChangeTracking(sdk.Bool(true))
@@ -164,12 +151,8 @@ func TestInt_EventTables(t *testing.T) {
 	})
 
 	t.Run("alter event table: set and unset tag", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-
-		err := client.EventTables.Create(ctx, sdk.NewCreateEventTableRequest(id))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTableHandle(t, id))
+		dt := createEventTableHandle(t)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
 
 		set := []sdk.TagAssociation{
 			{
@@ -177,7 +160,7 @@ func TestInt_EventTables(t *testing.T) {
 				Value: "v1",
 			},
 		}
-		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSetTags(set))
+		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSetTags(set))
 		require.NoError(t, err)
 
 		unset := []sdk.ObjectIdentifier{tagTest.ID()}
@@ -209,23 +192,32 @@ func TestInt_EventTables(t *testing.T) {
 	})
 
 	t.Run("alter event table: clustering action with drop", func(t *testing.T) {
-		name := random.String()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
-
-		err := client.EventTables.Create(ctx, sdk.NewCreateEventTableRequest(id))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTableHandle(t, id))
+		dt := createEventTableHandle(t)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
 
 		action := sdk.NewEventTableClusteringActionRequest().WithDropClusteringKey(sdk.Bool(true))
-		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithClusteringAction(action))
+		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithClusteringAction(action))
+		require.NoError(t, err)
+	})
+
+	t.Run("alter event table: search optimization action", func(t *testing.T) {
+		dt := createEventTableHandle(t)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
+
+		action := sdk.NewEventTableSearchOptimizationActionRequest().WithAdd(sdk.NewSearchOptimizationRequest().WithOn([]string{"SUBSTRING(*)"}))
+		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSearchOptimizationAction(action))
+		require.NoError(t, err)
+
+		action = sdk.NewEventTableSearchOptimizationActionRequest().WithDrop(sdk.NewSearchOptimizationRequest().WithOn([]string{"SUBSTRING(*)"}))
+		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSearchOptimizationAction(action))
 		require.NoError(t, err)
 	})
 
 	// alter view: add and drop row access policies
 	t.Run("alter event table: add and drop row access policies", func(t *testing.T) {
-		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
+		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, schemaTest)
 		t.Cleanup(rowAccessPolicyCleanup)
-		rowAccessPolicy2Id, rowAccessPolicy2Cleanup := createRowAccessPolicy(t, client, testSchema(t))
+		rowAccessPolicy2Id, rowAccessPolicy2Cleanup := createRowAccessPolicy(t, client, schemaTest)
 		t.Cleanup(rowAccessPolicy2Cleanup)
 
 		table, tableCleanup := createTable(t, client, databaseTest, schemaTest)

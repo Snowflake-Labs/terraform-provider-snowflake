@@ -96,6 +96,7 @@ var EventTablesDef = g.NewInterface(
 		Field("OwnerRoleType", "string"),
 	g.NewQueryStruct("ShowEventTables").
 		Show().
+		Terse().
 		SQL("EVENT TABLES").
 		OptionalLike().
 		OptionalIn().
@@ -127,7 +128,7 @@ var EventTablesDef = g.NewInterface(
 		OptionalSQL("RESTRICT"). // CASCADE or RESTRICT, and CASCADE for Default
 		WithValidation(g.ValidIdentifier, "name"),
 ).AlterOperation(
-	"https://docs.snowflake.com/en/sql-reference/sql/alter-event-table",
+	"https://docs.snowflake.com/en/sql-reference/sql/alter-table-event-table",
 	g.NewQueryStruct("AlterEventTable").
 		Alter().
 		SQL("TABLE").

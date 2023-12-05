@@ -36,6 +36,7 @@ type CreateEventTableOptions struct {
 // ShowEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-event-tables.
 type ShowEventTableOptions struct {
 	show        bool       `ddl:"static" sql:"SHOW"`
+	Terse       *bool      `ddl:"keyword" sql:"TERSE"`
 	eventTables bool       `ddl:"static" sql:"EVENT TABLES"`
 	Like        *Like      `ddl:"keyword" sql:"LIKE"`
 	In          *In        `ddl:"keyword" sql:"IN"`
@@ -63,7 +64,7 @@ type EventTable struct {
 	OwnerRoleType string
 }
 
-// DescribeEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/describe-event-table.
+// DescribeEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-event-table.
 type DescribeEventTableOptions struct {
 	describe   bool                   `ddl:"static" sql:"DESCRIBE"`
 	eventTable bool                   `ddl:"static" sql:"EVENT TABLE"`
@@ -91,7 +92,7 @@ type DropEventTableOptions struct {
 	Restrict *bool                  `ddl:"keyword" sql:"RESTRICT"`
 }
 
-// AlterEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-event-table.
+// AlterEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-table-event-table.
 type AlterEventTableOptions struct {
 	alter                     bool                                 `ddl:"static" sql:"ALTER"`
 	table                     bool                                 `ddl:"static" sql:"TABLE"`

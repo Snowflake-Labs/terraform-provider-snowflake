@@ -71,6 +71,11 @@ func NewShowEventTableRequest() *ShowEventTableRequest {
 	return &ShowEventTableRequest{}
 }
 
+func (s *ShowEventTableRequest) WithTerse(Terse *bool) *ShowEventTableRequest {
+	s.Terse = Terse
+	return s
+}
+
 func (s *ShowEventTableRequest) WithLike(Like *Like) *ShowEventTableRequest {
 	s.Like = Like
 	return s
