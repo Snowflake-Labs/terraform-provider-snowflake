@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -737,9 +739,20 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 			config = sdk.MergeConfig(config, profileConfig)
 		}
 	}
-	client, err := sdk.NewClient(config)
-	if err != nil {
-		return nil, err
+
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+		once.Do(func() {
+			configuredClient, configureClientErr = sdk.NewClient(config)
+		})
+	} else {
+		configuredClient, configureClientErr = sdk.NewClient(config)
 	}
-	return client.GetConn().DB, nil
+	if configureClientErr != nil {
+		return nil, configureClientErr
+	}
+	return configuredClient.GetConn().DB, nil
 }
+
+var once sync.Once
+var configuredClient *sdk.Client
+var configureClientErr error
