@@ -63,7 +63,7 @@ func (v *ColumnInlineConstraintRequest) toOpts() *ColumnInlineConstraint {
 	return &ColumnInlineConstraint{
 		NotNull:            v.notNull,
 		Name:               &v.Name,
-		Type:               &v.type_,
+		Type:               v.type_,
 		ForeignKey:         v.foreignKey.toOpts(),
 		Enforced:           v.enforced,
 		NotEnforced:        v.notEnforced,

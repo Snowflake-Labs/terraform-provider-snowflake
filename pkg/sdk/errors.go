@@ -68,6 +68,10 @@ func errMoreThanOneOf(structName string, fieldNames ...string) error {
 	return newError(fmt.Sprintf("more than one field (%v) of %s cannot be set", fieldNames, structName), 2)
 }
 
+func errInvalidValue(structName string, fieldName string, invalidValue string) error {
+	return newError(fmt.Sprintf("invalid value %s of struct %s field: %s", invalidValue, structName, fieldName), 2)
+}
+
 func decodeDriverError(err error) error {
 	if err == nil {
 		return nil

@@ -10,10 +10,10 @@ type RowAccessPolicy struct {
 
 // ColumnInlineConstraint is based on https://docs.snowflake.com/en/sql-reference/sql/create-table-constraint#inline-unique-primary-foreign-key.
 type ColumnInlineConstraint struct {
-	NotNull    *bool                 `ddl:"keyword" sql:"NOT NULL"`
-	Name       *string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
-	Type       *ColumnConstraintType `ddl:"keyword"`
-	ForeignKey *InlineForeignKey     `ddl:"keyword" sql:"FOREIGN KEY"`
+	NotNull    *bool                `ddl:"keyword" sql:"NOT NULL"`
+	Name       *string              `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	Type       ColumnConstraintType `ddl:"keyword"`
+	ForeignKey *InlineForeignKey    `ddl:"keyword" sql:"FOREIGN KEY"`
 
 	// optional
 	Enforced           *bool `ddl:"keyword" sql:"ENFORCED"`
@@ -31,16 +31,17 @@ type ColumnInlineConstraint struct {
 }
 
 func (v *ColumnInlineConstraint) validate() error {
-	// TODO[SNOW-934647]: type required
 	var errs []error
-	if *v.Type == ColumnConstraintTypeForeignKey {
+	if v.Type == ColumnConstraintTypeForeignKey {
 		if !valueSet(v.ForeignKey) {
 			errs = append(errs, errNotSet("ColumnInlineConstraint", "ForeignKey"))
 		}
-	} else {
+	} else if v.Type == ColumnConstraintTypePrimaryKey || v.Type == ColumnConstraintTypeUnique {
 		if valueSet(v.ForeignKey) {
 			errs = append(errs, errSet("ColumnInlineConstraint", "ForeignKey"))
 		}
+	} else {
+		errs = append(errs, errInvalidValue("ColumnInlineConstraint", "Type", string(v.Type)))
 	}
 	if moreThanOneValueSet(v.Enforced, v.NotEnforced) {
 		errs = append(errs, errMoreThanOneOf("ColumnInlineConstraint", "Enforced", "NotEnforced"))

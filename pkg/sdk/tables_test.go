@@ -149,9 +149,25 @@ func TestTableCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: inline constraint - constraint name empty", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type: "",
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidValue("ColumnInlineConstraint", "Type", ""))
+	})
+
+	t.Run("validation: inline constraint - constraint ", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type: "not existing type",
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidValue("ColumnInlineConstraint", "Type", "not existing type"))
+	})
+
 	t.Run("validation: inline constraint - foreign key present for foreign key constraint", func(t *testing.T) {
 		inlineConstraint := ColumnInlineConstraint{
-			Type:       Pointer(ColumnConstraintTypeForeignKey),
+			Type:       ColumnConstraintTypeForeignKey,
 			ForeignKey: nil,
 		}
 		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
@@ -160,7 +176,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: inline constraint - foreign key absent for constraint other than foreign key", func(t *testing.T) {
 		inlineConstraint := ColumnInlineConstraint{
-			Type: Pointer(ColumnConstraintTypeUnique),
+			Type: ColumnConstraintTypeUnique,
 			ForeignKey: &InlineForeignKey{
 				TableName: "table",
 			},
@@ -171,7 +187,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: inline constraint - enforced and not enforced both present", func(t *testing.T) {
 		inlineConstraint := ColumnInlineConstraint{
-			Type:        Pointer(ColumnConstraintTypeUnique),
+			Type:        ColumnConstraintTypeUnique,
 			Enforced:    Bool(true),
 			NotEnforced: Bool(true),
 		}
@@ -181,7 +197,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: inline constraint - deferrable and not deferrable both present", func(t *testing.T) {
 		inlineConstraint := ColumnInlineConstraint{
-			Type:          Pointer(ColumnConstraintTypeUnique),
+			Type:          ColumnConstraintTypeUnique,
 			Deferrable:    Bool(true),
 			NotDeferrable: Bool(true),
 		}
@@ -191,7 +207,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: inline constraint - initially deferred and initially immediate both present", func(t *testing.T) {
 		inlineConstraint := ColumnInlineConstraint{
-			Type:               Pointer(ColumnConstraintTypeUnique),
+			Type:               ColumnConstraintTypeUnique,
 			InitiallyDeferred:  Bool(true),
 			InitiallyImmediate: Bool(true),
 		}
@@ -201,7 +217,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: inline constraint - enable and disable both present", func(t *testing.T) {
 		inlineConstraint := ColumnInlineConstraint{
-			Type:    Pointer(ColumnConstraintTypeUnique),
+			Type:    ColumnConstraintTypeUnique,
 			Enable:  Bool(true),
 			Disable: Bool(true),
 		}
@@ -211,7 +227,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: inline constraint - validate and novalidate both present", func(t *testing.T) {
 		inlineConstraint := ColumnInlineConstraint{
-			Type:       Pointer(ColumnConstraintTypeUnique),
+			Type:       ColumnConstraintTypeUnique,
 			Validate:   Bool(true),
 			NoValidate: Bool(true),
 		}
@@ -221,7 +237,7 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: inline constraint - rely and norely both present", func(t *testing.T) {
 		inlineConstraint := ColumnInlineConstraint{
-			Type:   Pointer(ColumnConstraintTypeUnique),
+			Type:   ColumnConstraintTypeUnique,
 			Rely:   Bool(true),
 			NoRely: Bool(true),
 		}
@@ -262,7 +278,7 @@ func TestTableCreate(t *testing.T) {
 		}
 		inlineConstraint := ColumnInlineConstraint{
 			Name: String("INLINE_CONSTRAINT"),
-			Type: Pointer(ColumnConstraintTypePrimaryKey),
+			Type: ColumnConstraintTypePrimaryKey,
 		}
 		require.NoError(t, err)
 		outOfLineConstraint := OutOfLineConstraint{

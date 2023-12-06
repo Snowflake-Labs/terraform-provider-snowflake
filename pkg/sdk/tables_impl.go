@@ -755,7 +755,7 @@ func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 			inlineConstraint = &ColumnInlineConstraint{
 				NotNull:            columnRequest.notNull,
 				Name:               &columnRequest.inlineConstraint.Name,
-				Type:               &columnRequest.inlineConstraint.type_,
+				Type:               columnRequest.inlineConstraint.type_,
 				ForeignKey:         foreignKey,
 				Enforced:           columnRequest.inlineConstraint.enforced,
 				NotEnforced:        columnRequest.inlineConstraint.notEnforced,

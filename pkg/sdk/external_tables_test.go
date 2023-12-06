@@ -17,7 +17,7 @@ func TestExternalTablesCreate(t *testing.T) {
 					InlineConstraint: &ColumnInlineConstraint{
 						Name:    String("my_constraint"),
 						NotNull: Bool(true),
-						Type:    Pointer(ColumnConstraintTypeUnique),
+						Type:    ColumnConstraintTypeUnique,
 					},
 				},
 			},
@@ -46,7 +46,7 @@ func TestExternalTablesCreate(t *testing.T) {
 					InlineConstraint: &ColumnInlineConstraint{
 						Name:    String("my_constraint"),
 						NotNull: Bool(true),
-						Type:    Pointer(ColumnConstraintTypeUnique),
+						Type:    ColumnConstraintTypeUnique,
 					},
 				},
 			},
@@ -109,7 +109,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 					InlineConstraint: &ColumnInlineConstraint{
 						Name:    String("my_constraint"),
 						NotNull: Bool(true),
-						Type:    Pointer(ColumnConstraintTypeUnique),
+						Type:    ColumnConstraintTypeUnique,
 					},
 				},
 			},
