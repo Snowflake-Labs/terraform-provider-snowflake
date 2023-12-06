@@ -39,6 +39,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "10"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_length", "30"),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", "this is a test resource"),
 				),
 			},
 			{
@@ -47,6 +48,7 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "20"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_length", "50"),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", "this is a test resource"),
 				),
 			},
 			{
