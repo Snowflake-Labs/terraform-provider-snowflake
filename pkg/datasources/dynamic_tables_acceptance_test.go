@@ -80,6 +80,13 @@ func TestAcc_DynamicTables_complete(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "records.0.data_timestamp"),
 				),
 			},
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: variableSet1,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "records.#", "1"),
+				),
+			},
 		},
 	})
 }
