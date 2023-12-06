@@ -561,6 +561,7 @@ func (s *CreateTableAsSelectRequest) toOpts() *createTableAsSelectOptions {
 		OrReplace: s.orReplace,
 		name:      s.name,
 		Columns:   columns,
+		Query:     s.query,
 	}
 }
 

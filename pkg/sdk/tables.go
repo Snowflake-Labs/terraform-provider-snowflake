@@ -28,14 +28,11 @@ type createTableAsSelectOptions struct {
 	OrReplace       *bool                  `ddl:"keyword" sql:"OR REPLACE"`
 	table           bool                   `ddl:"static" sql:"TABLE"`
 	name            SchemaObjectIdentifier `ddl:"identifier"`
-	leftParen       bool                   `ddl:"static" sql:"("`
-	Columns         []TableAsSelectColumn  `ddl:"keyword"`
-	rightParen      bool                   `ddl:"static" sql:")"`
+	Columns         []TableAsSelectColumn  `ddl:"list,parentheses"`
 	ClusterBy       []string               `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
 	CopyGrants      *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	RowAccessPolicy *RowAccessPolicy       `ddl:"keyword"`
-	// TODO [SNOW-934647]: Query is not added anywhere?
-	Query *string `ddl:"parameter,no_equals" sql:"AS"`
+	Query           string                 `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 type TableAsSelectColumn struct {

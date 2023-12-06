@@ -8,6 +8,7 @@ type CreateTableAsSelectRequest struct {
 	orReplace *bool
 	name      SchemaObjectIdentifier       // required
 	columns   []TableAsSelectColumnRequest // required
+	query     string                       // required
 }
 
 type TableAsSelectColumnRequest struct {

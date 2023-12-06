@@ -533,6 +533,12 @@ func TestTableCreateAsSelect(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("createTableAsSelectOptions", "Columns"))
 	})
 
+	t.Run("validation: no query", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Query = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("createTableAsSelectOptions", "Query"))
+	})
+
 	t.Run("with complete options", func(t *testing.T) {
 		id := RandomSchemaObjectIdentifier()
 		columnName := "FIRST_COLUMN"
@@ -559,9 +565,9 @@ func TestTableCreateAsSelect(t *testing.T) {
 			CopyGrants: Bool(true),
 
 			RowAccessPolicy: &rowAccessPolicy,
-			Query:           String("SELECT * FROM ANOTHER_TABLE"),
+			Query:           "SELECT * FROM ANOTHER_TABLE",
 		}
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TABLE %s ( FIRST_COLUMN VARCHAR MASKING POLICY %s ) CLUSTER BY (COLUMN_1, COLUMN_2) COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) AS SELECT * FROM ANOTHER_TABLE",
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TABLE %s (FIRST_COLUMN VARCHAR MASKING POLICY %s) CLUSTER BY (COLUMN_1, COLUMN_2) COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) AS SELECT * FROM ANOTHER_TABLE",
 			id.FullyQualifiedName(),
 			maskingPolicy.Name.FullyQualifiedName(),
 			rowAccessPolicy.Name.FullyQualifiedName(),

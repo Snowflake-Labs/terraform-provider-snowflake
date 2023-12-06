@@ -7,10 +7,12 @@ import (
 func NewCreateTableAsSelectRequest(
 	name SchemaObjectIdentifier,
 	columns []TableAsSelectColumnRequest,
+	query string,
 ) *CreateTableAsSelectRequest {
 	s := CreateTableAsSelectRequest{}
 	s.name = name
 	s.columns = columns
+	s.query = query
 	return &s
 }
 

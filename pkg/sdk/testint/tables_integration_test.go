@@ -190,7 +190,8 @@ func TestInt_Table(t *testing.T) {
 
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		request := sdk.NewCreateTableAsSelectRequest(id, columns)
+		query := "SELECT 1, 2, 3"
+		request := sdk.NewCreateTableAsSelectRequest(id, columns, query)
 
 		err := client.Tables.CreateAsSelect(ctx, request)
 		require.NoError(t, err)

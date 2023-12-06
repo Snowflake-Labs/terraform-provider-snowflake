@@ -90,6 +90,9 @@ func (opts *createTableAsSelectOptions) validate() error {
 	if len(opts.Columns) == 0 {
 		errs = append(errs, errNotSet("createTableAsSelectOptions", "Columns"))
 	}
+	if !valueSet(opts.Query) {
+		errs = append(errs, errNotSet("createTableAsSelectOptions", "Query"))
+	}
 	return errors.Join(errs...)
 }
 
