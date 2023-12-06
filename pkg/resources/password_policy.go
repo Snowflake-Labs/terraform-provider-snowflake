@@ -90,6 +90,13 @@ var passwordPolicySchema = map[string]*schema.Schema{
 		Description:  "Specifies the minimum number of special characters the password must contain. Supported range: 0 to 256, inclusive. Default: 1",
 		ValidateFunc: validation.IntBetween(0, 256),
 	},
+	"min_age_days": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      0,
+		Description:  "Specifies the number of days the user must wait before a recently changed password can be changed again. Supported range: 0 to 999, inclusive. Default: 0",
+		ValidateFunc: validation.IntBetween(0, 999),
+	},
 	"max_age_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
@@ -110,6 +117,13 @@ var passwordPolicySchema = map[string]*schema.Schema{
 		Default:      15,
 		Description:  "Specifies the number of minutes the user account will be locked after exhausting the designated number of password retries (i.e. PASSWORD_MAX_RETRIES). Supported range: 1 to 999, inclusive. Default: 15",
 		ValidateFunc: validation.IntBetween(1, 999),
+	},
+	"history": {
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      0,
+		Description:  "Specifies the number of the most recent passwords that Snowflake stores. These stored passwords cannot be repeated when a user updates their password value. The current password value does not count towards the history. When you increase the history value, Snowflake saves the previous values. When you decrease the value, Snowflake saves the stored values up to that value that is set. For example, if the history value is 8 and you change the history value to 3, Snowflake stores the most recent 3 passwords and deletes the 5 older password values from the history. Default: 0 Max: 24",
+		ValidateFunc: validation.IntBetween(0, 24),
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -157,9 +171,11 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		PasswordMinLowerCaseChars: sdk.Int(d.Get("min_lower_case_chars").(int)),
 		PasswordMinNumericChars:   sdk.Int(d.Get("min_numeric_chars").(int)),
 		PasswordMinSpecialChars:   sdk.Int(d.Get("min_special_chars").(int)),
+		PasswordMinAgeDays:        sdk.Int(d.Get("min_age_days").(int)),
 		PasswordMaxAgeDays:        sdk.Int(d.Get("max_age_days").(int)),
 		PasswordMaxRetries:        sdk.Int(d.Get("max_retries").(int)),
 		PasswordLockoutTimeMins:   sdk.Int(d.Get("lockout_time_mins").(int)),
+		PasswordHistory:           sdk.Int(d.Get("history").(int)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -225,6 +241,9 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 	if err := setIntProperty(d, "min_special_chars", passwordPolicyDetails.PasswordMinSpecialChars); err != nil {
 		return err
 	}
+	if err := setIntProperty(d, "min_age_days", passwordPolicyDetails.PasswordMinAgeDays); err != nil {
+		return err
+	}
 	if err := setIntProperty(d, "max_age_days", passwordPolicyDetails.PasswordMaxAgeDays); err != nil {
 		return err
 	}
@@ -232,6 +251,9 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if err := setIntProperty(d, "lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins); err != nil {
+		return err
+	}
+	if err := setIntProperty(d, "history", passwordPolicyDetails.PasswordHistory); err != nil {
 		return err
 	}
 
@@ -315,6 +337,18 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("min_age_days") {
+		alterOptions := &sdk.AlterPasswordPolicyOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordMinAgeDays: sdk.Int(d.Get("min_age_days").(int)),
+			},
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange("max_age_days") {
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
 			Set: &sdk.PasswordPolicySet{
@@ -338,10 +372,23 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+
 	if d.HasChange("lockout_time_mins") {
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
 			Set: &sdk.PasswordPolicySet{
 				PasswordLockoutTimeMins: sdk.Int(d.Get("lockout_time_mins").(int)),
+			},
+		}
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("history") {
+		alterOptions := &sdk.AlterPasswordPolicyOptions{
+			Set: &sdk.PasswordPolicySet{
+				PasswordHistory: sdk.Int(d.Get("history").(int)),
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
@@ -357,13 +404,9 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 				Comment: sdk.String(v.(string)),
 			}
 		} else {
-			alterOptions.Set = &sdk.PasswordPolicySet{
-				Comment: sdk.String(""),
-			}
-			/* todo [SNOW-928909]: uncomment this once comments are working again
 			alterOptions.Unset = &sdk.PasswordPolicyUnset{
 				Comment: sdk.Bool(true),
-			}*/
+			}
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
