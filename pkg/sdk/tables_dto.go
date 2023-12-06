@@ -60,7 +60,7 @@ type CreateTableRequest struct {
 	kind                       *TableKind
 	name                       SchemaObjectIdentifier // required
 	columns                    []TableColumnRequest   // required
-	OutOfLineConstraint        *OutOfLineConstraintRequest
+	OutOfLineConstraints       []OutOfLineConstraintRequest
 	clusterBy                  []string
 	enableSchemaEvolution      *bool
 	stageFileFormat            *StageFileFormatRequest

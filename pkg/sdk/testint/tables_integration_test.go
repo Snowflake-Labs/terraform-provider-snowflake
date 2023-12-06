@@ -135,7 +135,7 @@ func TestInt_Table(t *testing.T) {
 			WithOptions(sdk.NewFileFormatTypeOptionsRequest().WithCSVCompression(sdk.Pointer(sdk.CSVCompressionAuto)))
 		stageCopyOptions := sdk.NewStageCopyOptionsRequest().WithOnError(sdk.NewStageCopyOnErrorOptionsRequest().WithSkipFile())
 		request := sdk.NewCreateTableRequest(id, columns).
-			WithOutOfLineConstraint(outOfLineConstraint).
+			WithOutOfLineConstraint(*outOfLineConstraint).
 			WithStageFileFormat(*stageFileFormat).
 			WithStageCopyOptions(*stageCopyOptions).
 			WithComment(&comment).
@@ -686,7 +686,7 @@ func TestInt_Table(t *testing.T) {
 		oldConstraintName := "OUT_OF_LINE_CONSTRAINT"
 		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(oldConstraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
 
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(*outOfLineConstraint))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 
@@ -711,7 +711,7 @@ func TestInt_Table(t *testing.T) {
 		constraintName := "OUT_OF_LINE_CONSTRAINT"
 		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
 
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(*outOfLineConstraint))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 
@@ -732,7 +732,7 @@ func TestInt_Table(t *testing.T) {
 		constraintName := "OUT_OF_LINE_CONSTRAINT"
 		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
 
-		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(outOfLineConstraint))
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(*outOfLineConstraint))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 

@@ -474,42 +474,43 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 			On:   s.RowAccessPolicy.On,
 		}
 	}
-	var outOfLineConstrait *OutOfLineConstraint
-	if s.OutOfLineConstraint != nil {
+	outOfLineConstraints := make([]OutOfLineConstraint, 0)
+	for _, outOfLineConstraintRequest := range s.OutOfLineConstraints {
 		var foreignKey *OutOfLineForeignKey
-		if s.OutOfLineConstraint.ForeignKey != nil {
+		if outOfLineConstraintRequest.ForeignKey != nil {
 			var foreignKeyOnAction *ForeignKeyOnAction
-			if s.OutOfLineConstraint.ForeignKey.On != nil {
+			if outOfLineConstraintRequest.ForeignKey.On != nil {
 				foreignKeyOnAction = &ForeignKeyOnAction{
-					OnUpdate: s.OutOfLineConstraint.ForeignKey.On.OnUpdate,
-					OnDelete: s.OutOfLineConstraint.ForeignKey.On.OnDelete,
+					OnUpdate: outOfLineConstraintRequest.ForeignKey.On.OnUpdate,
+					OnDelete: outOfLineConstraintRequest.ForeignKey.On.OnDelete,
 				}
 			}
 			foreignKey = &OutOfLineForeignKey{
-				TableName:   s.OutOfLineConstraint.ForeignKey.TableName,
-				ColumnNames: s.OutOfLineConstraint.ForeignKey.ColumnNames,
-				Match:       s.OutOfLineConstraint.ForeignKey.Match,
+				TableName:   outOfLineConstraintRequest.ForeignKey.TableName,
+				ColumnNames: outOfLineConstraintRequest.ForeignKey.ColumnNames,
+				Match:       outOfLineConstraintRequest.ForeignKey.Match,
 				On:          foreignKeyOnAction,
 			}
 		}
-		outOfLineConstrait = &OutOfLineConstraint{
-			Name:               s.OutOfLineConstraint.Name,
-			Type:               s.OutOfLineConstraint.Type,
-			Columns:            s.OutOfLineConstraint.Columns,
+		outOfLineConstraint := OutOfLineConstraint{
+			Name:               outOfLineConstraintRequest.Name,
+			Type:               outOfLineConstraintRequest.Type,
+			Columns:            outOfLineConstraintRequest.Columns,
 			ForeignKey:         foreignKey,
-			Enforced:           s.OutOfLineConstraint.Enforced,
-			NotEnforced:        s.OutOfLineConstraint.NotEnforced,
-			Deferrable:         s.OutOfLineConstraint.Deferrable,
-			NotDeferrable:      s.OutOfLineConstraint.NotDeferrable,
-			InitiallyDeferred:  s.OutOfLineConstraint.InitiallyDeferred,
-			InitiallyImmediate: s.OutOfLineConstraint.InitiallyImmediate,
-			Enable:             s.OutOfLineConstraint.Enable,
-			Disable:            s.OutOfLineConstraint.Disable,
-			Validate:           s.OutOfLineConstraint.Validate,
-			NoValidate:         s.OutOfLineConstraint.NoValidate,
-			Rely:               s.OutOfLineConstraint.Rely,
-			NoRely:             s.OutOfLineConstraint.NoRely,
+			Enforced:           outOfLineConstraintRequest.Enforced,
+			NotEnforced:        outOfLineConstraintRequest.NotEnforced,
+			Deferrable:         outOfLineConstraintRequest.Deferrable,
+			NotDeferrable:      outOfLineConstraintRequest.NotDeferrable,
+			InitiallyDeferred:  outOfLineConstraintRequest.InitiallyDeferred,
+			InitiallyImmediate: outOfLineConstraintRequest.InitiallyImmediate,
+			Enable:             outOfLineConstraintRequest.Enable,
+			Disable:            outOfLineConstraintRequest.Disable,
+			Validate:           outOfLineConstraintRequest.Validate,
+			NoValidate:         outOfLineConstraintRequest.NoValidate,
+			Rely:               outOfLineConstraintRequest.Rely,
+			NoRely:             outOfLineConstraintRequest.NoRely,
 		}
+		outOfLineConstraints = append(outOfLineConstraints, outOfLineConstraint)
 	}
 
 	opts := &createTableOptions{
@@ -518,7 +519,7 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 		Scope:                      s.scope,
 		Kind:                       s.kind,
 		name:                       s.name,
-		ColumnsAndConstraints:      CreateTableColumnsAndConstraints{convertColumns(s.columns), outOfLineConstrait},
+		ColumnsAndConstraints:      CreateTableColumnsAndConstraints{convertColumns(s.columns), outOfLineConstraints},
 		ClusterBy:                  s.clusterBy,
 		EnableSchemaEvolution:      s.enableSchemaEvolution,
 		DataRetentionTimeInDays:    s.DataRetentionTimeInDays,

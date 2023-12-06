@@ -56,7 +56,7 @@ func (opts *createTableOptions) validate() error {
 			}
 		}
 	}
-	if outOfLineConstraint := opts.ColumnsAndConstraints.OutOfLineConstraint; valueSet(outOfLineConstraint) {
+	for _, outOfLineConstraint := range opts.ColumnsAndConstraints.OutOfLineConstraint {
 		if err := outOfLineConstraint.validate(); err != nil {
 			errs = append(errs, err)
 		}

@@ -185,8 +185,8 @@ func (s *CreateTableRequest) WithKind(kind *TableKind) *CreateTableRequest {
 	return s
 }
 
-func (s *CreateTableRequest) WithOutOfLineConstraint(OutOfLineConstraint *OutOfLineConstraintRequest) *CreateTableRequest {
-	s.OutOfLineConstraint = OutOfLineConstraint
+func (s *CreateTableRequest) WithOutOfLineConstraint(OutOfLineConstraint OutOfLineConstraintRequest) *CreateTableRequest {
+	s.OutOfLineConstraints = append(s.OutOfLineConstraints, OutOfLineConstraint)
 	return s
 }
 
