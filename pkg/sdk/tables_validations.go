@@ -57,10 +57,8 @@ func (opts *createTableOptions) validate() error {
 		}
 	}
 	if outOfLineConstraint := opts.ColumnsAndConstraints.OutOfLineConstraint; valueSet(outOfLineConstraint) {
-		if foreignKey := outOfLineConstraint.ForeignKey; valueSet(foreignKey) {
-			if !ValidObjectIdentifier(foreignKey.TableName) {
-				errs = append(errs, errInvalidIdentifier("OutOfLineForeignKey", "TableName"))
-			}
+		if err := outOfLineConstraint.validate(); err != nil {
+			errs = append(errs, err)
 		}
 	}
 	if stageFileFormat := opts.StageFileFormat; valueSet(stageFileFormat) {
@@ -292,6 +290,56 @@ func (opts *describeTableStageOptions) validate() error {
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, errInvalidIdentifier("describeTableStageOptions", "name"))
+	}
+	return errors.Join(errs...)
+}
+
+func (v *OutOfLineConstraint) validate() error {
+	var errs []error
+	switch v.Type {
+	case ColumnConstraintTypeForeignKey:
+		if !valueSet(v.ForeignKey) {
+			errs = append(errs, errNotSet("OutOfLineConstraint", "ForeignKey"))
+		} else {
+			if err := v.ForeignKey.validate(); err != nil {
+				errs = append(errs, err)
+			}
+		}
+	case ColumnConstraintTypeUnique, ColumnConstraintTypePrimaryKey:
+		if valueSet(v.ForeignKey) {
+			errs = append(errs, errSet("OutOfLineConstraint", "ForeignKey"))
+		}
+	default:
+		errs = append(errs, errInvalidValue("OutOfLineConstraint", "Type", string(v.Type)))
+	}
+	if len(v.Columns) == 0 {
+		errs = append(errs, errNotSet("OutOfLineConstraint", "Columns"))
+	}
+	if moreThanOneValueSet(v.Enforced, v.NotEnforced) {
+		errs = append(errs, errMoreThanOneOf("OutOfLineConstraint", "Enforced", "NotEnforced"))
+	}
+	if moreThanOneValueSet(v.Deferrable, v.NotDeferrable) {
+		errs = append(errs, errMoreThanOneOf("OutOfLineConstraint", "Deferrable", "NotDeferrable"))
+	}
+	if moreThanOneValueSet(v.InitiallyDeferred, v.InitiallyImmediate) {
+		errs = append(errs, errMoreThanOneOf("OutOfLineConstraint", "InitiallyDeferred", "InitiallyImmediate"))
+	}
+	if moreThanOneValueSet(v.Enable, v.Disable) {
+		errs = append(errs, errMoreThanOneOf("OutOfLineConstraint", "Enable", "Disable"))
+	}
+	if moreThanOneValueSet(v.Validate, v.NoValidate) {
+		errs = append(errs, errMoreThanOneOf("OutOfLineConstraint", "Validate", "Novalidate"))
+	}
+	if moreThanOneValueSet(v.Rely, v.NoRely) {
+		errs = append(errs, errMoreThanOneOf("OutOfLineConstraint", "Rely", "Norely"))
+	}
+	return errors.Join(errs...)
+}
+
+func (v *OutOfLineForeignKey) validate() error {
+	var errs []error
+	if !valueSet(v.TableName) {
+		errs = append(errs, errNotSet("OutOfLineForeignKey", "TableName"))
 	}
 	return errors.Join(errs...)
 }

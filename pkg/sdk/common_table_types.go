@@ -32,15 +32,20 @@ type ColumnInlineConstraint struct {
 
 func (v *ColumnInlineConstraint) validate() error {
 	var errs []error
-	if v.Type == ColumnConstraintTypeForeignKey {
+	switch v.Type {
+	case ColumnConstraintTypeForeignKey:
 		if !valueSet(v.ForeignKey) {
 			errs = append(errs, errNotSet("ColumnInlineConstraint", "ForeignKey"))
+		} else {
+			if err := v.ForeignKey.validate(); err != nil {
+				errs = append(errs, err)
+			}
 		}
-	} else if v.Type == ColumnConstraintTypePrimaryKey || v.Type == ColumnConstraintTypeUnique {
+	case ColumnConstraintTypeUnique, ColumnConstraintTypePrimaryKey:
 		if valueSet(v.ForeignKey) {
 			errs = append(errs, errSet("ColumnInlineConstraint", "ForeignKey"))
 		}
-	} else {
+	default:
 		errs = append(errs, errInvalidValue("ColumnInlineConstraint", "Type", string(v.Type)))
 	}
 	if moreThanOneValueSet(v.Enforced, v.NotEnforced) {
@@ -79,15 +84,12 @@ type InlineForeignKey struct {
 	On         *ForeignKeyOnAction `ddl:"keyword" sql:"ON"`
 }
 
-// REFERENCES <ref_table_name> [ ( <ref_col_name> ) ]
-// [ MATCH { FULL | SIMPLE | PARTIAL } ]
-// [ ON [ UPDATE { CASCADE | SET NULL | SET DEFAULT | RESTRICT | NO ACTION } ]
-// [ DELETE { CASCADE | SET NULL | SET DEFAULT | RESTRICT | NO ACTION } ] ]
-// TODO [SNOW-934647]: validate
 func (v *InlineForeignKey) validate() error {
-	// table name required (not empty)
-	// at least one column
-	return nil
+	var errs []error
+	if !valueSet(v.TableName) {
+		errs = append(errs, errNotSet("InlineForeignKey", "TableName"))
+	}
+	return errors.Join(errs...)
 }
 
 type MatchType string

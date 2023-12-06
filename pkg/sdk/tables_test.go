@@ -30,9 +30,20 @@ func TestTableCreate(t *testing.T) {
 		}
 	}
 
+	defaultOptsWithColumnOutOfLineConstraint := func(outOfLineConstraint *OutOfLineConstraint) *createTableOptions {
+		columns := []TableColumn{{
+			Name: sampleColumnName,
+			Type: sampleColumnType,
+		}}
+		return &createTableOptions{
+			name:                  id,
+			ColumnsAndConstraints: CreateTableColumnsAndConstraints{Columns: columns, OutOfLineConstraint: outOfLineConstraint},
+		}
+	}
+
 	t.Run("empty options", func(t *testing.T) {
 		opts := &createTableOptions{}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableOptions", "name"))
 	})
 
 	t.Run("validation: nil options", func(t *testing.T) {
@@ -43,7 +54,7 @@ func TestTableCreate(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableOptions", "name"))
 	})
 
 	t.Run("validation: no columns", func(t *testing.T) {
@@ -99,7 +110,7 @@ func TestTableCreate(t *testing.T) {
 				},
 			}},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("ColumnMaskingPolicy", "Name"))
 	})
 
 	t.Run("validation: column tag association's incorrect identifier", func(t *testing.T) {
@@ -116,19 +127,7 @@ func TestTableCreate(t *testing.T) {
 				},
 			}},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("validation: outOfLineConstraint's foreign key incorrect identifier", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.ColumnsAndConstraints = CreateTableColumnsAndConstraints{
-			OutOfLineConstraint: &OutOfLineConstraint{
-				ForeignKey: &OutOfLineForeignKey{
-					TableName: NewSchemaObjectIdentifier("", "", ""),
-				},
-			},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("TagAssociation", "Name"))
 	})
 
 	t.Run("validation: stageFileFormat's both format name and format type are present", func(t *testing.T) {
@@ -140,13 +139,12 @@ func TestTableCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("StageFileFormat", "FormatName", "FormatType"))
 	})
 
-	// TODO [SNOW-934647]: get rid of ErrInvalidObjectIdentifier in this file
 	t.Run("validation: rowAccessPolicy's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &RowAccessPolicy{
 			Name: NewSchemaObjectIdentifier("", "", ""),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("RowAccessPolicy", "Name"))
 	})
 
 	t.Run("validation: inline constraint - constraint name empty", func(t *testing.T) {
@@ -172,6 +170,17 @@ func TestTableCreate(t *testing.T) {
 		}
 		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("ColumnInlineConstraint", "ForeignKey"))
+	})
+
+	t.Run("validation: inline constraint - foreign key validation", func(t *testing.T) {
+		inlineConstraint := ColumnInlineConstraint{
+			Type: ColumnConstraintTypeForeignKey,
+			ForeignKey: &InlineForeignKey{
+				TableName: "",
+			},
+		}
+		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("InlineForeignKey", "TableName"))
 	})
 
 	t.Run("validation: inline constraint - foreign key absent for constraint other than foreign key", func(t *testing.T) {
@@ -243,6 +252,121 @@ func TestTableCreate(t *testing.T) {
 		}
 		opts := defaultOptsWithColumnInlineConstraint(&inlineConstraint)
 		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("ColumnInlineConstraint", "Rely", "Norely"))
+	})
+
+	t.Run("validation: out of line constraint - no columns", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type: ColumnConstraintTypeUnique,
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("OutOfLineConstraint", "Columns"))
+	})
+
+	t.Run("validation: out of line constraint - constraint name empty", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type: "",
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidValue("OutOfLineConstraint", "Type", ""))
+	})
+
+	t.Run("validation: out of line constraint - constraint ", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type: "not existing type",
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidValue("OutOfLineConstraint", "Type", "not existing type"))
+	})
+
+	t.Run("validation: out of line constraint - foreign key present for foreign key constraint", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type:       ColumnConstraintTypeForeignKey,
+			ForeignKey: nil,
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("OutOfLineConstraint", "ForeignKey"))
+	})
+
+	t.Run("validation: out of line constraint - foreign key validation", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type: ColumnConstraintTypeForeignKey,
+			ForeignKey: &OutOfLineForeignKey{
+				TableName: NewSchemaObjectIdentifier("", "", ""),
+			},
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("OutOfLineForeignKey", "TableName"))
+	})
+
+	t.Run("validation: out of line constraint - foreign key absent for constraint other than foreign key", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type: ColumnConstraintTypeUnique,
+			ForeignKey: &OutOfLineForeignKey{
+				TableName: RandomSchemaObjectIdentifier(),
+			},
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errSet("OutOfLineConstraint", "ForeignKey"))
+	})
+
+	t.Run("validation: out of line constraint - enforced and not enforced both present", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type:        ColumnConstraintTypeUnique,
+			Enforced:    Bool(true),
+			NotEnforced: Bool(true),
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("OutOfLineConstraint", "Enforced", "NotEnforced"))
+	})
+
+	t.Run("validation: out of line constraint - deferrable and not deferrable both present", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type:          ColumnConstraintTypeUnique,
+			Deferrable:    Bool(true),
+			NotDeferrable: Bool(true),
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("OutOfLineConstraint", "Deferrable", "NotDeferrable"))
+	})
+
+	t.Run("validation: out of line constraint - initially deferred and initially immediate both present", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type:               ColumnConstraintTypeUnique,
+			InitiallyDeferred:  Bool(true),
+			InitiallyImmediate: Bool(true),
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("OutOfLineConstraint", "InitiallyDeferred", "InitiallyImmediate"))
+	})
+
+	t.Run("validation: out of line constraint - enable and disable both present", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type:    ColumnConstraintTypeUnique,
+			Enable:  Bool(true),
+			Disable: Bool(true),
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("OutOfLineConstraint", "Enable", "Disable"))
+	})
+
+	t.Run("validation: out of line constraint - validate and novalidate both present", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type:       ColumnConstraintTypeUnique,
+			Validate:   Bool(true),
+			NoValidate: Bool(true),
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("OutOfLineConstraint", "Validate", "Novalidate"))
+	})
+
+	t.Run("validation: out of line constraint - rely and norely both present", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type:   ColumnConstraintTypeUnique,
+			Rely:   Bool(true),
+			NoRely: Bool(true),
+		}
+		opts := defaultOptsWithColumnOutOfLineConstraint(&outOfLineConstraint)
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("OutOfLineConstraint", "Rely", "Norely"))
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -385,13 +509,13 @@ func TestTableCreateAsSelect(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &createTableAsSelectOptions{}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableAsSelectOptions", "name"))
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableAsSelectOptions", "name"))
 	})
 
 	t.Run("validation: no columns", func(t *testing.T) {
@@ -453,7 +577,7 @@ func TestTableCreateUsingTemplate(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableUsingTemplateOptions", "name"))
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -486,18 +610,18 @@ func TestTableCreateLike(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableLikeOptions", "name"))
 	})
 
 	t.Run("validation: source table's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SourceTable = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableLikeOptions", "SourceTable"))
 	})
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &createTableLikeOptions{}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableLikeOptions", "name"))
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -532,18 +656,18 @@ func TestTableCreateClone(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableCloneOptions", "name"))
 	})
 
 	t.Run("validation: source table's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SourceTable = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableCloneOptions", "SourceTable"))
 	})
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &createTableCloneOptions{}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("createTableCloneOptions", "name"))
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -588,7 +712,7 @@ func TestTableAlter(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("alterTableOptions", "name"))
 	})
 
 	t.Run("validation: both NewName and SwapWith are present ", func(t *testing.T) {
@@ -602,13 +726,13 @@ func TestTableAlter(t *testing.T) {
 	t.Run("validation: NewName's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.NewName = Pointer(NewSchemaObjectIdentifier("", "", ""))
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("alterTableOptions", "NewName"))
 	})
 
 	t.Run("validation: SwapWith incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SwapWith = Pointer(NewSchemaObjectIdentifier("", "", ""))
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("alterTableOptions", "SwapWith"))
 	})
 
 	t.Run("validation: clustering action - no option present", func(t *testing.T) {
@@ -739,7 +863,7 @@ func TestTableAlter(t *testing.T) {
 
 	t.Run("empty options", func(t *testing.T) {
 		opts := &alterTableOptions{}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("alterTableOptions", "name"))
 	})
 
 	t.Run("rename", func(t *testing.T) {
@@ -1247,7 +1371,7 @@ func TestTableDrop(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("dropTableOptions", "name"))
 	})
 
 	t.Run("empty options", func(t *testing.T) {
@@ -1317,7 +1441,7 @@ func TestTableDescribeColumns(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("describeTableColumnsOptions", "name"))
 	})
 
 	t.Run("describe", func(t *testing.T) {
@@ -1342,7 +1466,7 @@ func TestTableDescribeStage(t *testing.T) {
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("describeTableStageOptions", "name"))
 	})
 
 	t.Run("describe", func(t *testing.T) {
