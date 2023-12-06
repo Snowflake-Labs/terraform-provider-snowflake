@@ -257,7 +257,6 @@ type TableColumnAction struct {
 	DropColumns        *TableColumnAlterDropColumns              `ddl:"keyword"`
 }
 
-// TODO: outofline column constraint
 type TableColumnAddAction struct {
 	column           bool                            `ddl:"static" sql:"COLUMN"`
 	IfNotExists      *bool                           `ddl:"keyword" sql:"IF NOT EXISTS"`

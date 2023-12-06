@@ -206,6 +206,14 @@ func (opts *alterTableOptions) validate() error {
 		}
 	}
 	if constraintAction := opts.ConstraintAction; valueSet(constraintAction) {
+		if ok := exactlyOneValueSet(
+			constraintAction.Add,
+			constraintAction.Rename,
+			constraintAction.Alter,
+			constraintAction.Drop,
+		); !ok {
+			errs = append(errs, errExactlyOneOf("ConstraintAction", "Add", "Rename", "Alter", "Drop"))
+		}
 		if alterAction := constraintAction.Alter; valueSet(alterAction) {
 			if ok := exactlyOneValueSet(
 				alterAction.ConstraintName,
@@ -224,6 +232,11 @@ func (opts *alterTableOptions) validate() error {
 				dropAction.ForeignKey,
 			); !ok {
 				errs = append(errs, errExactlyOneOf("TableConstraintDropAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
+			}
+		}
+		if addAction := constraintAction.Add; valueSet(addAction) {
+			if err := addAction.validate(); err != nil {
+				errs = append(errs, err)
 			}
 		}
 	}

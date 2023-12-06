@@ -1112,6 +1112,45 @@ func TestTableAlter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s DROP COLUMN IF EXISTS COLUMN_1, COLUMN_2", id.FullyQualifiedName())
 	})
 
+	t.Run("validation: alter constraint: no option", func(t *testing.T) {
+		opts := &alterTableOptions{
+			name:             id,
+			ConstraintAction: &TableConstraintAction{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ConstraintAction", "Add", "Rename", "Alter", "Drop"))
+	})
+
+	t.Run("validation: alter constraint: more than one option", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type:    ColumnConstraintTypeUnique,
+			Columns: []string{"COLUMN_1"},
+		}
+		opts := &alterTableOptions{
+			name: id,
+			ConstraintAction: &TableConstraintAction{
+				Add: &outOfLineConstraint,
+				Rename: &TableConstraintRenameAction{
+					OldName: "OLD_NAME_CONSTRAINT",
+					NewName: "NEW_NAME_CONSTRAINT",
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("ConstraintAction", "Add", "Rename", "Alter", "Drop"))
+	})
+
+	t.Run("validation: alter constraint: validation", func(t *testing.T) {
+		outOfLineConstraint := OutOfLineConstraint{
+			Type: ColumnConstraintTypeUnique,
+		}
+		opts := &alterTableOptions{
+			name: id,
+			ConstraintAction: &TableConstraintAction{
+				Add: &outOfLineConstraint,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("OutOfLineConstraint", "Columns"))
+	})
+
 	t.Run("alter constraint: add", func(t *testing.T) {
 		outOfLineConstraint := OutOfLineConstraint{
 			Name:    "OUT_OF_LINE_CONSTRAINT",
