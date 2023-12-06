@@ -443,7 +443,7 @@ type TableConstraintAlterActionRequest struct {
 	// Optional
 	Enforced    *bool
 	NotEnforced *bool
-	Valiate     *bool
+	Validate    *bool
 	NoValidate  *bool
 	Rely        *bool
 	NoRely      *bool

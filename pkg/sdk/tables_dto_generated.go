@@ -56,11 +56,11 @@ func (s *TableAsSelectColumnRequest) WithCopyGrants(copyGrants *bool) *TableAsSe
 
 func NewCreateTableUsingTemplateRequest(
 	name SchemaObjectIdentifier,
-	Query string,
+	query string,
 ) *CreateTableUsingTemplateRequest {
 	s := CreateTableUsingTemplateRequest{}
 	s.name = name
-	s.Query = Query
+	s.Query = query
 	return &s
 }
 
@@ -119,8 +119,8 @@ func (s *CreateTableCloneRequest) WithCopyGrants(copyGrants *bool) *CreateTableC
 	return s
 }
 
-func (s *CreateTableCloneRequest) WithClonePoint(ClonePoint *ClonePointRequest) *CreateTableCloneRequest {
-	s.ClonePoint = ClonePoint
+func (s *CreateTableCloneRequest) WithClonePoint(clonePoint *ClonePointRequest) *CreateTableCloneRequest {
+	s.ClonePoint = clonePoint
 	return s
 }
 
@@ -128,13 +128,13 @@ func NewClonePointRequest() *ClonePointRequest {
 	return &ClonePointRequest{}
 }
 
-func (s *ClonePointRequest) WithMoment(Moment CloneMoment) *ClonePointRequest {
-	s.Moment = Moment
+func (s *ClonePointRequest) WithMoment(moment CloneMoment) *ClonePointRequest {
+	s.Moment = moment
 	return s
 }
 
-func (s *ClonePointRequest) WithAt(At TimeTravelRequest) *ClonePointRequest {
-	s.At = At
+func (s *ClonePointRequest) WithAt(at TimeTravelRequest) *ClonePointRequest {
+	s.At = at
 	return s
 }
 
@@ -142,18 +142,18 @@ func NewTimeTravelRequest() *TimeTravelRequest {
 	return &TimeTravelRequest{}
 }
 
-func (s *TimeTravelRequest) WithTimestamp(Timestamp *time.Time) *TimeTravelRequest {
-	s.Timestamp = Timestamp
+func (s *TimeTravelRequest) WithTimestamp(timestamp *time.Time) *TimeTravelRequest {
+	s.Timestamp = timestamp
 	return s
 }
 
-func (s *TimeTravelRequest) WithOffset(Offset *int) *TimeTravelRequest {
-	s.Offset = Offset
+func (s *TimeTravelRequest) WithOffset(offset *int) *TimeTravelRequest {
+	s.Offset = offset
 	return s
 }
 
-func (s *TimeTravelRequest) WithStatement(Statement *string) *TimeTravelRequest {
-	s.Statement = Statement
+func (s *TimeTravelRequest) WithStatement(statement *string) *TimeTravelRequest {
+	s.Statement = statement
 	return s
 }
 
@@ -187,8 +187,8 @@ func (s *CreateTableRequest) WithKind(kind *TableKind) *CreateTableRequest {
 	return s
 }
 
-func (s *CreateTableRequest) WithOutOfLineConstraint(OutOfLineConstraint OutOfLineConstraintRequest) *CreateTableRequest {
-	s.OutOfLineConstraints = append(s.OutOfLineConstraints, OutOfLineConstraint)
+func (s *CreateTableRequest) WithOutOfLineConstraint(outOfLineConstraint OutOfLineConstraintRequest) *CreateTableRequest {
+	s.OutOfLineConstraints = append(s.OutOfLineConstraints, outOfLineConstraint)
 	return s
 }
 
@@ -212,43 +212,43 @@ func (s *CreateTableRequest) WithStageCopyOptions(stageCopyOptions StageCopyOpti
 	return s
 }
 
-func (s *CreateTableRequest) WithDataRetentionTimeInDays(DataRetentionTimeInDays *int) *CreateTableRequest {
-	s.DataRetentionTimeInDays = DataRetentionTimeInDays
+func (s *CreateTableRequest) WithDataRetentionTimeInDays(dataRetentionTimeInDays *int) *CreateTableRequest {
+	s.DataRetentionTimeInDays = dataRetentionTimeInDays
 	return s
 }
 
-func (s *CreateTableRequest) WithMaxDataExtensionTimeInDays(MaxDataExtensionTimeInDays *int) *CreateTableRequest {
-	s.MaxDataExtensionTimeInDays = MaxDataExtensionTimeInDays
+func (s *CreateTableRequest) WithMaxDataExtensionTimeInDays(maxDataExtensionTimeInDays *int) *CreateTableRequest {
+	s.MaxDataExtensionTimeInDays = maxDataExtensionTimeInDays
 	return s
 }
 
-func (s *CreateTableRequest) WithChangeTracking(ChangeTracking *bool) *CreateTableRequest {
-	s.ChangeTracking = ChangeTracking
+func (s *CreateTableRequest) WithChangeTracking(changeTracking *bool) *CreateTableRequest {
+	s.ChangeTracking = changeTracking
 	return s
 }
 
-func (s *CreateTableRequest) WithDefaultDDLCollation(DefaultDDLCollation *string) *CreateTableRequest {
-	s.DefaultDDLCollation = DefaultDDLCollation
+func (s *CreateTableRequest) WithDefaultDDLCollation(defaultDDLCollation *string) *CreateTableRequest {
+	s.DefaultDDLCollation = defaultDDLCollation
 	return s
 }
 
-func (s *CreateTableRequest) WithCopyGrants(CopyGrants *bool) *CreateTableRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateTableRequest) WithCopyGrants(copyGrants *bool) *CreateTableRequest {
+	s.CopyGrants = copyGrants
 	return s
 }
 
-func (s *CreateTableRequest) WithRowAccessPolicy(RowAccessPolicy *RowAccessPolicyRequest) *CreateTableRequest {
-	s.RowAccessPolicy = RowAccessPolicy
+func (s *CreateTableRequest) WithRowAccessPolicy(rowAccessPolicy *RowAccessPolicyRequest) *CreateTableRequest {
+	s.RowAccessPolicy = rowAccessPolicy
 	return s
 }
 
-func (s *CreateTableRequest) WithTags(Tags []TagAssociationRequest) *CreateTableRequest {
-	s.Tags = Tags
+func (s *CreateTableRequest) WithTags(tags []TagAssociationRequest) *CreateTableRequest {
+	s.Tags = tags
 	return s
 }
 
-func (s *CreateTableRequest) WithComment(Comment *string) *CreateTableRequest {
-	s.Comment = Comment
+func (s *CreateTableRequest) WithComment(comment *string) *CreateTableRequest {
+	s.Comment = comment
 	return s
 }
 
@@ -312,12 +312,12 @@ func (s *ColumnDefaultValueRequest) WithIdentity(identity *ColumnIdentityRequest
 }
 
 func NewColumnIdentityRequest(
-	Start int,
-	Increment int,
+	start int,
+	increment int,
 ) *ColumnIdentityRequest {
 	s := ColumnIdentityRequest{}
-	s.Start = Start
-	s.Increment = Increment
+	s.Start = start
+	s.Increment = increment
 	return &s
 }
 
@@ -350,11 +350,11 @@ func (s *ColumnMaskingPolicyRequest) WithUsing(using []string) *ColumnMaskingPol
 }
 
 func NewColumnInlineConstraintRequest(
-	Name string,
+	name string,
 	type_ ColumnConstraintType,
 ) *ColumnInlineConstraintRequest {
 	s := ColumnInlineConstraintRequest{}
-	s.Name = Name
+	s.Name = name
 	s.type_ = type_
 	return &s
 }
@@ -430,125 +430,125 @@ func (s *ColumnInlineConstraintRequest) WithNoRely(noRely *bool) *ColumnInlineCo
 }
 
 func NewOutOfLineConstraintRequest(
-	Name string,
-	Type ColumnConstraintType,
+	name string,
+	constraintType ColumnConstraintType,
 ) *OutOfLineConstraintRequest {
 	s := OutOfLineConstraintRequest{}
-	s.Name = Name
-	s.Type = Type
+	s.Name = name
+	s.Type = constraintType
 	return &s
 }
 
-func (s *OutOfLineConstraintRequest) WithColumns(Columns []string) *OutOfLineConstraintRequest {
-	s.Columns = Columns
+func (s *OutOfLineConstraintRequest) WithColumns(columns []string) *OutOfLineConstraintRequest {
+	s.Columns = columns
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithForeignKey(ForeignKey *OutOfLineForeignKeyRequest) *OutOfLineConstraintRequest {
-	s.ForeignKey = ForeignKey
+func (s *OutOfLineConstraintRequest) WithForeignKey(foreignKey *OutOfLineForeignKeyRequest) *OutOfLineConstraintRequest {
+	s.ForeignKey = foreignKey
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithEnforced(Enforced *bool) *OutOfLineConstraintRequest {
-	s.Enforced = Enforced
+func (s *OutOfLineConstraintRequest) WithEnforced(enforced *bool) *OutOfLineConstraintRequest {
+	s.Enforced = enforced
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithNotEnforced(NotEnforced *bool) *OutOfLineConstraintRequest {
-	s.NotEnforced = NotEnforced
+func (s *OutOfLineConstraintRequest) WithNotEnforced(notEnforced *bool) *OutOfLineConstraintRequest {
+	s.NotEnforced = notEnforced
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithDeferrable(Deferrable *bool) *OutOfLineConstraintRequest {
-	s.Deferrable = Deferrable
+func (s *OutOfLineConstraintRequest) WithDeferrable(deferrable *bool) *OutOfLineConstraintRequest {
+	s.Deferrable = deferrable
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithNotDeferrable(NotDeferrable *bool) *OutOfLineConstraintRequest {
-	s.NotDeferrable = NotDeferrable
+func (s *OutOfLineConstraintRequest) WithNotDeferrable(notDeferrable *bool) *OutOfLineConstraintRequest {
+	s.NotDeferrable = notDeferrable
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithInitiallyDeferred(InitiallyDeferred *bool) *OutOfLineConstraintRequest {
-	s.InitiallyDeferred = InitiallyDeferred
+func (s *OutOfLineConstraintRequest) WithInitiallyDeferred(initiallyDeferred *bool) *OutOfLineConstraintRequest {
+	s.InitiallyDeferred = initiallyDeferred
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithInitiallyImmediate(InitiallyImmediate *bool) *OutOfLineConstraintRequest {
-	s.InitiallyImmediate = InitiallyImmediate
+func (s *OutOfLineConstraintRequest) WithInitiallyImmediate(initiallyImmediate *bool) *OutOfLineConstraintRequest {
+	s.InitiallyImmediate = initiallyImmediate
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithEnable(Enable *bool) *OutOfLineConstraintRequest {
-	s.Enable = Enable
+func (s *OutOfLineConstraintRequest) WithEnable(enable *bool) *OutOfLineConstraintRequest {
+	s.Enable = enable
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithDisable(Disable *bool) *OutOfLineConstraintRequest {
-	s.Disable = Disable
+func (s *OutOfLineConstraintRequest) WithDisable(disable *bool) *OutOfLineConstraintRequest {
+	s.Disable = disable
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithValidate(Validate *bool) *OutOfLineConstraintRequest {
-	s.Validate = Validate
+func (s *OutOfLineConstraintRequest) WithValidate(validate *bool) *OutOfLineConstraintRequest {
+	s.Validate = validate
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithNoValidate(NoValidate *bool) *OutOfLineConstraintRequest {
-	s.NoValidate = NoValidate
+func (s *OutOfLineConstraintRequest) WithNoValidate(noValidate *bool) *OutOfLineConstraintRequest {
+	s.NoValidate = noValidate
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithRely(Rely *bool) *OutOfLineConstraintRequest {
-	s.Rely = Rely
+func (s *OutOfLineConstraintRequest) WithRely(rely *bool) *OutOfLineConstraintRequest {
+	s.Rely = rely
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithNoRely(NoRely *bool) *OutOfLineConstraintRequest {
-	s.NoRely = NoRely
+func (s *OutOfLineConstraintRequest) WithNoRely(noRely *bool) *OutOfLineConstraintRequest {
+	s.NoRely = noRely
 	return s
 }
 
 func NewInlineForeignKeyRequest(
-	TableName string,
+	tableName string,
 ) *InlineForeignKeyRequest {
 	s := InlineForeignKeyRequest{}
-	s.TableName = TableName
+	s.TableName = tableName
 	return &s
 }
 
-func (s *InlineForeignKeyRequest) WithColumnName(ColumnName []string) *InlineForeignKeyRequest {
-	s.ColumnName = ColumnName
+func (s *InlineForeignKeyRequest) WithColumnName(columnName []string) *InlineForeignKeyRequest {
+	s.ColumnName = columnName
 	return s
 }
 
-func (s *InlineForeignKeyRequest) WithMatch(Match *MatchType) *InlineForeignKeyRequest {
-	s.Match = Match
+func (s *InlineForeignKeyRequest) WithMatch(match *MatchType) *InlineForeignKeyRequest {
+	s.Match = match
 	return s
 }
 
-func (s *InlineForeignKeyRequest) WithOn(On *ForeignKeyOnAction) *InlineForeignKeyRequest {
-	s.On = On
+func (s *InlineForeignKeyRequest) WithOn(on *ForeignKeyOnAction) *InlineForeignKeyRequest {
+	s.On = on
 	return s
 }
 
 func NewOutOfLineForeignKeyRequest(
-	TableName SchemaObjectIdentifier,
-	ColumnNames []string,
+	tableName SchemaObjectIdentifier,
+	columnNames []string,
 ) *OutOfLineForeignKeyRequest {
 	s := OutOfLineForeignKeyRequest{}
-	s.TableName = TableName
-	s.ColumnNames = ColumnNames
+	s.TableName = tableName
+	s.ColumnNames = columnNames
 	return &s
 }
 
-func (s *OutOfLineForeignKeyRequest) WithMatch(Match *MatchType) *OutOfLineForeignKeyRequest {
-	s.Match = Match
+func (s *OutOfLineForeignKeyRequest) WithMatch(match *MatchType) *OutOfLineForeignKeyRequest {
+	s.Match = match
 	return s
 }
 
-func (s *OutOfLineForeignKeyRequest) WithOn(On *ForeignKeyOnAction) *OutOfLineForeignKeyRequest {
-	s.On = On
+func (s *OutOfLineForeignKeyRequest) WithOn(on *ForeignKeyOnAction) *OutOfLineForeignKeyRequest {
+	s.On = on
 	return s
 }
 
@@ -556,13 +556,13 @@ func NewForeignKeyOnAction() *ForeignKeyOnAction {
 	return &ForeignKeyOnAction{}
 }
 
-func (s *ForeignKeyOnAction) WithOnUpdate(OnUpdate *ForeignKeyAction) *ForeignKeyOnAction {
-	s.OnUpdate = OnUpdate
+func (s *ForeignKeyOnAction) WithOnUpdate(onUpdate *ForeignKeyAction) *ForeignKeyOnAction {
+	s.OnUpdate = onUpdate
 	return s
 }
 
-func (s *ForeignKeyOnAction) WithOnDelete(OnDelete *ForeignKeyAction) *ForeignKeyOnAction {
-	s.OnDelete = OnDelete
+func (s *ForeignKeyOnAction) WithOnDelete(onDelete *ForeignKeyAction) *ForeignKeyOnAction {
+	s.OnDelete = onDelete
 	return s
 }
 
@@ -574,116 +574,116 @@ func NewAlterTableRequest(
 	return &s
 }
 
-func (s *AlterTableRequest) WithIfExists(IfExists *bool) *AlterTableRequest {
-	s.IfExists = IfExists
+func (s *AlterTableRequest) WithIfExists(ifExists *bool) *AlterTableRequest {
+	s.IfExists = ifExists
 	return s
 }
 
-func (s *AlterTableRequest) WithNewName(NewName *SchemaObjectIdentifier) *AlterTableRequest {
-	s.NewName = NewName
+func (s *AlterTableRequest) WithNewName(newName *SchemaObjectIdentifier) *AlterTableRequest {
+	s.NewName = newName
 	return s
 }
 
-func (s *AlterTableRequest) WithSwapWith(SwapWith *SchemaObjectIdentifier) *AlterTableRequest {
-	s.SwapWith = SwapWith
+func (s *AlterTableRequest) WithSwapWith(swapWith *SchemaObjectIdentifier) *AlterTableRequest {
+	s.SwapWith = swapWith
 	return s
 }
 
-func (s *AlterTableRequest) WithClusteringAction(ClusteringAction *TableClusteringActionRequest) *AlterTableRequest {
-	s.ClusteringAction = ClusteringAction
+func (s *AlterTableRequest) WithClusteringAction(clusteringAction *TableClusteringActionRequest) *AlterTableRequest {
+	s.ClusteringAction = clusteringAction
 	return s
 }
 
-func (s *AlterTableRequest) WithColumnAction(ColumnAction *TableColumnActionRequest) *AlterTableRequest {
-	s.ColumnAction = ColumnAction
+func (s *AlterTableRequest) WithColumnAction(columnAction *TableColumnActionRequest) *AlterTableRequest {
+	s.ColumnAction = columnAction
 	return s
 }
 
-func (s *AlterTableRequest) WithConstraintAction(ConstraintAction *TableConstraintActionRequest) *AlterTableRequest {
-	s.ConstraintAction = ConstraintAction
+func (s *AlterTableRequest) WithConstraintAction(constraintAction *TableConstraintActionRequest) *AlterTableRequest {
+	s.ConstraintAction = constraintAction
 	return s
 }
 
-func (s *AlterTableRequest) WithExternalTableAction(ExternalTableAction *TableExternalTableActionRequest) *AlterTableRequest {
-	s.ExternalTableAction = ExternalTableAction
+func (s *AlterTableRequest) WithExternalTableAction(externalTableAction *TableExternalTableActionRequest) *AlterTableRequest {
+	s.ExternalTableAction = externalTableAction
 	return s
 }
 
-func (s *AlterTableRequest) WithSearchOptimizationAction(SearchOptimizationAction *TableSearchOptimizationActionRequest) *AlterTableRequest {
-	s.SearchOptimizationAction = SearchOptimizationAction
+func (s *AlterTableRequest) WithSearchOptimizationAction(searchOptimizationAction *TableSearchOptimizationActionRequest) *AlterTableRequest {
+	s.SearchOptimizationAction = searchOptimizationAction
 	return s
 }
 
-func (s *AlterTableRequest) WithSet(Set *TableSetRequest) *AlterTableRequest {
-	s.Set = Set
+func (s *AlterTableRequest) WithSet(set *TableSetRequest) *AlterTableRequest {
+	s.Set = set
 	return s
 }
 
-func (s *AlterTableRequest) WithSetTags(SetTags []TagAssociationRequest) *AlterTableRequest {
-	s.SetTags = SetTags
+func (s *AlterTableRequest) WithSetTags(setTags []TagAssociationRequest) *AlterTableRequest {
+	s.SetTags = setTags
 	return s
 }
 
-func (s *AlterTableRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterTableRequest {
-	s.UnsetTags = UnsetTags
+func (s *AlterTableRequest) WithUnsetTags(unsetTags []ObjectIdentifier) *AlterTableRequest {
+	s.UnsetTags = unsetTags
 	return s
 }
 
-func (s *AlterTableRequest) WithUnset(Unset *TableUnsetRequest) *AlterTableRequest {
-	s.Unset = Unset
+func (s *AlterTableRequest) WithUnset(unset *TableUnsetRequest) *AlterTableRequest {
+	s.Unset = unset
 	return s
 }
 
-func (s *AlterTableRequest) WithAddRowAccessPolicy(AddRowAccessPolicy *AddRowAccessPolicyRequest) *AlterTableRequest {
-	s.AddRowAccessPolicy = AddRowAccessPolicy
+func (s *AlterTableRequest) WithAddRowAccessPolicy(addRowAccessPolicy *AddRowAccessPolicyRequest) *AlterTableRequest {
+	s.AddRowAccessPolicy = addRowAccessPolicy
 	return s
 }
 
-func (s *AlterTableRequest) WithDropRowAccessPolicy(DropRowAccessPolicy *string) *AlterTableRequest {
-	s.DropRowAccessPolicy = DropRowAccessPolicy
+func (s *AlterTableRequest) WithDropRowAccessPolicy(dropRowAccessPolicy *string) *AlterTableRequest {
+	s.DropRowAccessPolicy = dropRowAccessPolicy
 	return s
 }
 
-func (s *AlterTableRequest) WithDropAndAddRowAccessPolicy(DropAndAddRowAccessPolicy *DropAndAddRowAccessPolicyRequest) *AlterTableRequest {
-	s.DropAndAddRowAccessPolicy = DropAndAddRowAccessPolicy
+func (s *AlterTableRequest) WithDropAndAddRowAccessPolicy(dropAndAddRowAccessPolicy *DropAndAddRowAccessPolicyRequest) *AlterTableRequest {
+	s.DropAndAddRowAccessPolicy = dropAndAddRowAccessPolicy
 	return s
 }
 
-func (s *AlterTableRequest) WithDropAllAccessRowPolicies(DropAllAccessRowPolicies *bool) *AlterTableRequest {
-	s.DropAllAccessRowPolicies = DropAllAccessRowPolicies
+func (s *AlterTableRequest) WithDropAllAccessRowPolicies(dropAllAccessRowPolicies *bool) *AlterTableRequest {
+	s.DropAllAccessRowPolicies = dropAllAccessRowPolicies
 	return s
 }
 
 func NewDropTableRequest(
-	Name SchemaObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DropTableRequest {
 	s := DropTableRequest{}
-	s.Name = Name
+	s.Name = name
 	return &s
 }
 
-func (s *DropTableRequest) WithIfExists(IfExists *bool) *DropTableRequest {
-	s.IfExists = IfExists
+func (s *DropTableRequest) WithIfExists(ifExists *bool) *DropTableRequest {
+	s.IfExists = ifExists
 	return s
 }
 
-func (s *DropTableRequest) WithCascade(Cascade *bool) *DropTableRequest {
-	s.Cascade = Cascade
+func (s *DropTableRequest) WithCascade(cascade *bool) *DropTableRequest {
+	s.Cascade = cascade
 	return s
 }
 
-func (s *DropTableRequest) WithRestrict(Restrict *bool) *DropTableRequest {
-	s.Restrict = Restrict
+func (s *DropTableRequest) WithRestrict(restrict *bool) *DropTableRequest {
+	s.Restrict = restrict
 	return s
 }
 
 func NewDropAndAddRowAccessPolicyRequest(
-	DroppedPolicyName string,
-	AddedPolicy AddRowAccessPolicyRequest,
+	droppedPolicyName string,
+	addedPolicy AddRowAccessPolicyRequest,
 ) *DropAndAddRowAccessPolicyRequest {
 	s := DropAndAddRowAccessPolicyRequest{}
-	s.DroppedPolicyName = DroppedPolicyName
-	s.AddedPolicy = AddedPolicy
+	s.DroppedPolicyName = droppedPolicyName
+	s.AddedPolicy = addedPolicy
 	return &s
 }
 
@@ -691,53 +691,53 @@ func NewTableUnsetRequest() *TableUnsetRequest {
 	return &TableUnsetRequest{}
 }
 
-func (s *TableUnsetRequest) WithDataRetentionTimeInDays(DataRetentionTimeInDays bool) *TableUnsetRequest {
-	s.DataRetentionTimeInDays = DataRetentionTimeInDays
+func (s *TableUnsetRequest) WithDataRetentionTimeInDays(dataRetentionTimeInDays bool) *TableUnsetRequest {
+	s.DataRetentionTimeInDays = dataRetentionTimeInDays
 	return s
 }
 
-func (s *TableUnsetRequest) WithMaxDataExtensionTimeInDays(MaxDataExtensionTimeInDays bool) *TableUnsetRequest {
-	s.MaxDataExtensionTimeInDays = MaxDataExtensionTimeInDays
+func (s *TableUnsetRequest) WithMaxDataExtensionTimeInDays(maxDataExtensionTimeInDays bool) *TableUnsetRequest {
+	s.MaxDataExtensionTimeInDays = maxDataExtensionTimeInDays
 	return s
 }
 
-func (s *TableUnsetRequest) WithChangeTracking(ChangeTracking bool) *TableUnsetRequest {
-	s.ChangeTracking = ChangeTracking
+func (s *TableUnsetRequest) WithChangeTracking(changeTracking bool) *TableUnsetRequest {
+	s.ChangeTracking = changeTracking
 	return s
 }
 
-func (s *TableUnsetRequest) WithDefaultDDLCollation(DefaultDDLCollation bool) *TableUnsetRequest {
-	s.DefaultDDLCollation = DefaultDDLCollation
+func (s *TableUnsetRequest) WithDefaultDDLCollation(defaultDDLCollation bool) *TableUnsetRequest {
+	s.DefaultDDLCollation = defaultDDLCollation
 	return s
 }
 
-func (s *TableUnsetRequest) WithEnableSchemaEvolution(EnableSchemaEvolution bool) *TableUnsetRequest {
-	s.EnableSchemaEvolution = EnableSchemaEvolution
+func (s *TableUnsetRequest) WithEnableSchemaEvolution(enableSchemaEvolution bool) *TableUnsetRequest {
+	s.EnableSchemaEvolution = enableSchemaEvolution
 	return s
 }
 
-func (s *TableUnsetRequest) WithComment(Comment bool) *TableUnsetRequest {
-	s.Comment = Comment
+func (s *TableUnsetRequest) WithComment(comment bool) *TableUnsetRequest {
+	s.Comment = comment
 	return s
 }
 
 func NewAddRowAccessPolicyRequest(
-	PolicyName string,
-	ColumnName []string,
+	policyName string,
+	columnName []string,
 ) *AddRowAccessPolicyRequest {
 	s := AddRowAccessPolicyRequest{}
-	s.PolicyName = PolicyName
-	s.ColumnName = ColumnName
+	s.PolicyName = policyName
+	s.ColumnName = columnName
 	return &s
 }
 
 func NewTagAssociationRequest(
-	Name ObjectIdentifier,
-	Value string,
+	name ObjectIdentifier,
+	value string,
 ) *TagAssociationRequest {
 	s := TagAssociationRequest{}
-	s.Name = Name
-	s.Value = Value
+	s.Name = name
+	s.Value = value
 	return &s
 }
 
@@ -745,293 +745,293 @@ func NewFileFormatTypeOptionsRequest() *FileFormatTypeOptionsRequest {
 	return &FileFormatTypeOptionsRequest{}
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVCompression(CSVCompression *CSVCompression) *FileFormatTypeOptionsRequest {
-	s.CSVCompression = CSVCompression
+func (s *FileFormatTypeOptionsRequest) WithCSVCompression(csvCompression *CSVCompression) *FileFormatTypeOptionsRequest {
+	s.CSVCompression = csvCompression
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVRecordDelimiter(CSVRecordDelimiter *string) *FileFormatTypeOptionsRequest {
-	s.CSVRecordDelimiter = CSVRecordDelimiter
+func (s *FileFormatTypeOptionsRequest) WithCSVRecordDelimiter(csvRecordDelimiter *string) *FileFormatTypeOptionsRequest {
+	s.CSVRecordDelimiter = csvRecordDelimiter
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVFieldDelimiter(CSVFieldDelimiter *string) *FileFormatTypeOptionsRequest {
-	s.CSVFieldDelimiter = CSVFieldDelimiter
+func (s *FileFormatTypeOptionsRequest) WithCSVFieldDelimiter(csvFieldDelimiter *string) *FileFormatTypeOptionsRequest {
+	s.CSVFieldDelimiter = csvFieldDelimiter
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVFileExtension(CSVFileExtension *string) *FileFormatTypeOptionsRequest {
-	s.CSVFileExtension = CSVFileExtension
+func (s *FileFormatTypeOptionsRequest) WithCSVFileExtension(csvFileExtension *string) *FileFormatTypeOptionsRequest {
+	s.CSVFileExtension = csvFileExtension
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVParseHeader(CSVParseHeader *bool) *FileFormatTypeOptionsRequest {
-	s.CSVParseHeader = CSVParseHeader
+func (s *FileFormatTypeOptionsRequest) WithCSVParseHeader(csvParseHeader *bool) *FileFormatTypeOptionsRequest {
+	s.CSVParseHeader = csvParseHeader
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVSkipHeader(CSVSkipHeader *int) *FileFormatTypeOptionsRequest {
-	s.CSVSkipHeader = CSVSkipHeader
+func (s *FileFormatTypeOptionsRequest) WithCSVSkipHeader(csvSkipHeader *int) *FileFormatTypeOptionsRequest {
+	s.CSVSkipHeader = csvSkipHeader
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVSkipBlankLines(CSVSkipBlankLines *bool) *FileFormatTypeOptionsRequest {
-	s.CSVSkipBlankLines = CSVSkipBlankLines
+func (s *FileFormatTypeOptionsRequest) WithCSVSkipBlankLines(csvSkipBlankLines *bool) *FileFormatTypeOptionsRequest {
+	s.CSVSkipBlankLines = csvSkipBlankLines
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVDateFormat(CSVDateFormat *string) *FileFormatTypeOptionsRequest {
-	s.CSVDateFormat = CSVDateFormat
+func (s *FileFormatTypeOptionsRequest) WithCSVDateFormat(csvDateFormat *string) *FileFormatTypeOptionsRequest {
+	s.CSVDateFormat = csvDateFormat
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVTimeFormat(CSVTimeFormat *string) *FileFormatTypeOptionsRequest {
-	s.CSVTimeFormat = CSVTimeFormat
+func (s *FileFormatTypeOptionsRequest) WithCSVTimeFormat(csvTimeFormat *string) *FileFormatTypeOptionsRequest {
+	s.CSVTimeFormat = csvTimeFormat
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVTimestampFormat(CSVTimestampFormat *string) *FileFormatTypeOptionsRequest {
-	s.CSVTimestampFormat = CSVTimestampFormat
+func (s *FileFormatTypeOptionsRequest) WithCSVTimestampFormat(csvTimestampFormat *string) *FileFormatTypeOptionsRequest {
+	s.CSVTimestampFormat = csvTimestampFormat
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVBinaryFormat(CSVBinaryFormat *BinaryFormat) *FileFormatTypeOptionsRequest {
-	s.CSVBinaryFormat = CSVBinaryFormat
+func (s *FileFormatTypeOptionsRequest) WithCSVBinaryFormat(csvBinaryFormat *BinaryFormat) *FileFormatTypeOptionsRequest {
+	s.CSVBinaryFormat = csvBinaryFormat
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVEscape(CSVEscape *string) *FileFormatTypeOptionsRequest {
-	s.CSVEscape = CSVEscape
+func (s *FileFormatTypeOptionsRequest) WithCSVEscape(csvEscape *string) *FileFormatTypeOptionsRequest {
+	s.CSVEscape = csvEscape
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVEscapeUnenclosedField(CSVEscapeUnenclosedField *string) *FileFormatTypeOptionsRequest {
-	s.CSVEscapeUnenclosedField = CSVEscapeUnenclosedField
+func (s *FileFormatTypeOptionsRequest) WithCSVEscapeUnenclosedField(csvEscapeUnenclosedField *string) *FileFormatTypeOptionsRequest {
+	s.CSVEscapeUnenclosedField = csvEscapeUnenclosedField
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVTrimSpace(CSVTrimSpace *bool) *FileFormatTypeOptionsRequest {
-	s.CSVTrimSpace = CSVTrimSpace
+func (s *FileFormatTypeOptionsRequest) WithCSVTrimSpace(csvTrimSpace *bool) *FileFormatTypeOptionsRequest {
+	s.CSVTrimSpace = csvTrimSpace
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVFieldOptionallyEnclosedBy(CSVFieldOptionallyEnclosedBy *string) *FileFormatTypeOptionsRequest {
-	s.CSVFieldOptionallyEnclosedBy = CSVFieldOptionallyEnclosedBy
+func (s *FileFormatTypeOptionsRequest) WithCSVFieldOptionallyEnclosedBy(csvFieldOptionallyEnclosedBy *string) *FileFormatTypeOptionsRequest {
+	s.CSVFieldOptionallyEnclosedBy = csvFieldOptionallyEnclosedBy
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVNullIf(CSVNullIf *[]NullString) *FileFormatTypeOptionsRequest {
-	s.CSVNullIf = CSVNullIf
+func (s *FileFormatTypeOptionsRequest) WithCSVNullIf(csvNullIf *[]NullString) *FileFormatTypeOptionsRequest {
+	s.CSVNullIf = csvNullIf
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVErrorOnColumnCountMismatch(CSVErrorOnColumnCountMismatch *bool) *FileFormatTypeOptionsRequest {
-	s.CSVErrorOnColumnCountMismatch = CSVErrorOnColumnCountMismatch
+func (s *FileFormatTypeOptionsRequest) WithCSVErrorOnColumnCountMismatch(csvErrorOnColumnCountMismatch *bool) *FileFormatTypeOptionsRequest {
+	s.CSVErrorOnColumnCountMismatch = csvErrorOnColumnCountMismatch
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVReplaceInvalidCharacters(CSVReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
-	s.CSVReplaceInvalidCharacters = CSVReplaceInvalidCharacters
+func (s *FileFormatTypeOptionsRequest) WithCSVReplaceInvalidCharacters(csvReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
+	s.CSVReplaceInvalidCharacters = csvReplaceInvalidCharacters
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVEmptyFieldAsNull(CSVEmptyFieldAsNull *bool) *FileFormatTypeOptionsRequest {
-	s.CSVEmptyFieldAsNull = CSVEmptyFieldAsNull
+func (s *FileFormatTypeOptionsRequest) WithCSVEmptyFieldAsNull(csvEmptyFieldAsNull *bool) *FileFormatTypeOptionsRequest {
+	s.CSVEmptyFieldAsNull = csvEmptyFieldAsNull
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVSkipByteOrderMark(CSVSkipByteOrderMark *bool) *FileFormatTypeOptionsRequest {
-	s.CSVSkipByteOrderMark = CSVSkipByteOrderMark
+func (s *FileFormatTypeOptionsRequest) WithCSVSkipByteOrderMark(csvSkipByteOrderMark *bool) *FileFormatTypeOptionsRequest {
+	s.CSVSkipByteOrderMark = csvSkipByteOrderMark
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithCSVEncoding(CSVEncoding *CSVEncoding) *FileFormatTypeOptionsRequest {
-	s.CSVEncoding = CSVEncoding
+func (s *FileFormatTypeOptionsRequest) WithCSVEncoding(csvEncoding *CSVEncoding) *FileFormatTypeOptionsRequest {
+	s.CSVEncoding = csvEncoding
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONCompression(JSONCompression *JSONCompression) *FileFormatTypeOptionsRequest {
-	s.JSONCompression = JSONCompression
+func (s *FileFormatTypeOptionsRequest) WithJSONCompression(jsonCompression *JSONCompression) *FileFormatTypeOptionsRequest {
+	s.JSONCompression = jsonCompression
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONDateFormat(JSONDateFormat *string) *FileFormatTypeOptionsRequest {
-	s.JSONDateFormat = JSONDateFormat
+func (s *FileFormatTypeOptionsRequest) WithJSONDateFormat(jsonDateFormat *string) *FileFormatTypeOptionsRequest {
+	s.JSONDateFormat = jsonDateFormat
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONTimeFormat(JSONTimeFormat *string) *FileFormatTypeOptionsRequest {
-	s.JSONTimeFormat = JSONTimeFormat
+func (s *FileFormatTypeOptionsRequest) WithJSONTimeFormat(jsonTimeFormat *string) *FileFormatTypeOptionsRequest {
+	s.JSONTimeFormat = jsonTimeFormat
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONTimestampFormat(JSONTimestampFormat *string) *FileFormatTypeOptionsRequest {
-	s.JSONTimestampFormat = JSONTimestampFormat
+func (s *FileFormatTypeOptionsRequest) WithJSONTimestampFormat(jsonTimestampFormat *string) *FileFormatTypeOptionsRequest {
+	s.JSONTimestampFormat = jsonTimestampFormat
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONBinaryFormat(JSONBinaryFormat *BinaryFormat) *FileFormatTypeOptionsRequest {
-	s.JSONBinaryFormat = JSONBinaryFormat
+func (s *FileFormatTypeOptionsRequest) WithJSONBinaryFormat(jsonBinaryFormat *BinaryFormat) *FileFormatTypeOptionsRequest {
+	s.JSONBinaryFormat = jsonBinaryFormat
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONTrimSpace(JSONTrimSpace *bool) *FileFormatTypeOptionsRequest {
-	s.JSONTrimSpace = JSONTrimSpace
+func (s *FileFormatTypeOptionsRequest) WithJSONTrimSpace(jsonTrimSpace *bool) *FileFormatTypeOptionsRequest {
+	s.JSONTrimSpace = jsonTrimSpace
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONNullIf(JSONNullIf []NullString) *FileFormatTypeOptionsRequest {
-	s.JSONNullIf = JSONNullIf
+func (s *FileFormatTypeOptionsRequest) WithJSONNullIf(jsonNullIf []NullString) *FileFormatTypeOptionsRequest {
+	s.JSONNullIf = jsonNullIf
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONFileExtension(JSONFileExtension *string) *FileFormatTypeOptionsRequest {
-	s.JSONFileExtension = JSONFileExtension
+func (s *FileFormatTypeOptionsRequest) WithJSONFileExtension(jsonFileExtension *string) *FileFormatTypeOptionsRequest {
+	s.JSONFileExtension = jsonFileExtension
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONEnableOctal(JSONEnableOctal *bool) *FileFormatTypeOptionsRequest {
-	s.JSONEnableOctal = JSONEnableOctal
+func (s *FileFormatTypeOptionsRequest) WithJSONEnableOctal(jsonEnableOctal *bool) *FileFormatTypeOptionsRequest {
+	s.JSONEnableOctal = jsonEnableOctal
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONAllowDuplicate(JSONAllowDuplicate *bool) *FileFormatTypeOptionsRequest {
-	s.JSONAllowDuplicate = JSONAllowDuplicate
+func (s *FileFormatTypeOptionsRequest) WithJSONAllowDuplicate(jsonAllowDuplicate *bool) *FileFormatTypeOptionsRequest {
+	s.JSONAllowDuplicate = jsonAllowDuplicate
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONStripOuterArray(JSONStripOuterArray *bool) *FileFormatTypeOptionsRequest {
-	s.JSONStripOuterArray = JSONStripOuterArray
+func (s *FileFormatTypeOptionsRequest) WithJSONStripOuterArray(jsonStripOuterArray *bool) *FileFormatTypeOptionsRequest {
+	s.JSONStripOuterArray = jsonStripOuterArray
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONStripNullValues(JSONStripNullValues *bool) *FileFormatTypeOptionsRequest {
-	s.JSONStripNullValues = JSONStripNullValues
+func (s *FileFormatTypeOptionsRequest) WithJSONStripNullValues(jsonStripNullValues *bool) *FileFormatTypeOptionsRequest {
+	s.JSONStripNullValues = jsonStripNullValues
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONReplaceInvalidCharacters(JSONReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
-	s.JSONReplaceInvalidCharacters = JSONReplaceInvalidCharacters
+func (s *FileFormatTypeOptionsRequest) WithJSONReplaceInvalidCharacters(jsonReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
+	s.JSONReplaceInvalidCharacters = jsonReplaceInvalidCharacters
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONIgnoreUTF8Errors(JSONIgnoreUTF8Errors *bool) *FileFormatTypeOptionsRequest {
-	s.JSONIgnoreUTF8Errors = JSONIgnoreUTF8Errors
+func (s *FileFormatTypeOptionsRequest) WithJSONIgnoreUTF8Errors(jsonIgnoreUTF8Errors *bool) *FileFormatTypeOptionsRequest {
+	s.JSONIgnoreUTF8Errors = jsonIgnoreUTF8Errors
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithJSONSkipByteOrderMark(JSONSkipByteOrderMark *bool) *FileFormatTypeOptionsRequest {
-	s.JSONSkipByteOrderMark = JSONSkipByteOrderMark
+func (s *FileFormatTypeOptionsRequest) WithJSONSkipByteOrderMark(jsonSkipByteOrderMark *bool) *FileFormatTypeOptionsRequest {
+	s.JSONSkipByteOrderMark = jsonSkipByteOrderMark
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithAvroCompression(AvroCompression *AvroCompression) *FileFormatTypeOptionsRequest {
-	s.AvroCompression = AvroCompression
+func (s *FileFormatTypeOptionsRequest) WithAvroCompression(avroCompression *AvroCompression) *FileFormatTypeOptionsRequest {
+	s.AvroCompression = avroCompression
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithAvroTrimSpace(AvroTrimSpace *bool) *FileFormatTypeOptionsRequest {
-	s.AvroTrimSpace = AvroTrimSpace
+func (s *FileFormatTypeOptionsRequest) WithAvroTrimSpace(avroTrimSpace *bool) *FileFormatTypeOptionsRequest {
+	s.AvroTrimSpace = avroTrimSpace
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithAvroReplaceInvalidCharacters(AvroReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
-	s.AvroReplaceInvalidCharacters = AvroReplaceInvalidCharacters
+func (s *FileFormatTypeOptionsRequest) WithAvroReplaceInvalidCharacters(avroReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
+	s.AvroReplaceInvalidCharacters = avroReplaceInvalidCharacters
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithAvroNullIf(AvroNullIf *[]NullString) *FileFormatTypeOptionsRequest {
-	s.AvroNullIf = AvroNullIf
+func (s *FileFormatTypeOptionsRequest) WithAvroNullIf(avroNullIf *[]NullString) *FileFormatTypeOptionsRequest {
+	s.AvroNullIf = avroNullIf
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithORCTrimSpace(ORCTrimSpace *bool) *FileFormatTypeOptionsRequest {
-	s.ORCTrimSpace = ORCTrimSpace
+func (s *FileFormatTypeOptionsRequest) WithORCTrimSpace(orcTrimSpace *bool) *FileFormatTypeOptionsRequest {
+	s.ORCTrimSpace = orcTrimSpace
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithORCReplaceInvalidCharacters(ORCReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
-	s.ORCReplaceInvalidCharacters = ORCReplaceInvalidCharacters
+func (s *FileFormatTypeOptionsRequest) WithORCReplaceInvalidCharacters(orcReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
+	s.ORCReplaceInvalidCharacters = orcReplaceInvalidCharacters
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithORCNullIf(ORCNullIf *[]NullString) *FileFormatTypeOptionsRequest {
-	s.ORCNullIf = ORCNullIf
+func (s *FileFormatTypeOptionsRequest) WithORCNullIf(orcNullIf *[]NullString) *FileFormatTypeOptionsRequest {
+	s.ORCNullIf = orcNullIf
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithParquetCompression(ParquetCompression *ParquetCompression) *FileFormatTypeOptionsRequest {
-	s.ParquetCompression = ParquetCompression
+func (s *FileFormatTypeOptionsRequest) WithParquetCompression(parquetCompression *ParquetCompression) *FileFormatTypeOptionsRequest {
+	s.ParquetCompression = parquetCompression
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithParquetSnappyCompression(ParquetSnappyCompression *bool) *FileFormatTypeOptionsRequest {
-	s.ParquetSnappyCompression = ParquetSnappyCompression
+func (s *FileFormatTypeOptionsRequest) WithParquetSnappyCompression(parquetSnappyCompression *bool) *FileFormatTypeOptionsRequest {
+	s.ParquetSnappyCompression = parquetSnappyCompression
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithParquetBinaryAsText(ParquetBinaryAsText *bool) *FileFormatTypeOptionsRequest {
-	s.ParquetBinaryAsText = ParquetBinaryAsText
+func (s *FileFormatTypeOptionsRequest) WithParquetBinaryAsText(parquetBinaryAsText *bool) *FileFormatTypeOptionsRequest {
+	s.ParquetBinaryAsText = parquetBinaryAsText
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithParquetTrimSpace(ParquetTrimSpace *bool) *FileFormatTypeOptionsRequest {
-	s.ParquetTrimSpace = ParquetTrimSpace
+func (s *FileFormatTypeOptionsRequest) WithParquetTrimSpace(parquetTrimSpace *bool) *FileFormatTypeOptionsRequest {
+	s.ParquetTrimSpace = parquetTrimSpace
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithParquetReplaceInvalidCharacters(ParquetReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
-	s.ParquetReplaceInvalidCharacters = ParquetReplaceInvalidCharacters
+func (s *FileFormatTypeOptionsRequest) WithParquetReplaceInvalidCharacters(parquetReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
+	s.ParquetReplaceInvalidCharacters = parquetReplaceInvalidCharacters
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithParquetNullIf(ParquetNullIf *[]NullString) *FileFormatTypeOptionsRequest {
-	s.ParquetNullIf = ParquetNullIf
+func (s *FileFormatTypeOptionsRequest) WithParquetNullIf(parquetNullIf *[]NullString) *FileFormatTypeOptionsRequest {
+	s.ParquetNullIf = parquetNullIf
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithXMLCompression(XMLCompression *XMLCompression) *FileFormatTypeOptionsRequest {
-	s.XMLCompression = XMLCompression
+func (s *FileFormatTypeOptionsRequest) WithXMLCompression(xmlCompression *XMLCompression) *FileFormatTypeOptionsRequest {
+	s.XMLCompression = xmlCompression
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithXMLIgnoreUTF8Errors(XMLIgnoreUTF8Errors *bool) *FileFormatTypeOptionsRequest {
-	s.XMLIgnoreUTF8Errors = XMLIgnoreUTF8Errors
+func (s *FileFormatTypeOptionsRequest) WithXMLIgnoreUTF8Errors(xmlIgnoreUTF8Errors *bool) *FileFormatTypeOptionsRequest {
+	s.XMLIgnoreUTF8Errors = xmlIgnoreUTF8Errors
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithXMLPreserveSpace(XMLPreserveSpace *bool) *FileFormatTypeOptionsRequest {
-	s.XMLPreserveSpace = XMLPreserveSpace
+func (s *FileFormatTypeOptionsRequest) WithXMLPreserveSpace(xmlPreserveSpace *bool) *FileFormatTypeOptionsRequest {
+	s.XMLPreserveSpace = xmlPreserveSpace
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithXMLStripOuterElement(XMLStripOuterElement *bool) *FileFormatTypeOptionsRequest {
-	s.XMLStripOuterElement = XMLStripOuterElement
+func (s *FileFormatTypeOptionsRequest) WithXMLStripOuterElement(xmlStripOuterElement *bool) *FileFormatTypeOptionsRequest {
+	s.XMLStripOuterElement = xmlStripOuterElement
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithXMLDisableSnowflakeData(XMLDisableSnowflakeData *bool) *FileFormatTypeOptionsRequest {
-	s.XMLDisableSnowflakeData = XMLDisableSnowflakeData
+func (s *FileFormatTypeOptionsRequest) WithXMLDisableSnowflakeData(xmlDisableSnowflakeData *bool) *FileFormatTypeOptionsRequest {
+	s.XMLDisableSnowflakeData = xmlDisableSnowflakeData
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithXMLDisableAutoConvert(XMLDisableAutoConvert *bool) *FileFormatTypeOptionsRequest {
-	s.XMLDisableAutoConvert = XMLDisableAutoConvert
+func (s *FileFormatTypeOptionsRequest) WithXMLDisableAutoConvert(xmlDisableAutoConvert *bool) *FileFormatTypeOptionsRequest {
+	s.XMLDisableAutoConvert = xmlDisableAutoConvert
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithXMLReplaceInvalidCharacters(XMLReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
-	s.XMLReplaceInvalidCharacters = XMLReplaceInvalidCharacters
+func (s *FileFormatTypeOptionsRequest) WithXMLReplaceInvalidCharacters(xmlReplaceInvalidCharacters *bool) *FileFormatTypeOptionsRequest {
+	s.XMLReplaceInvalidCharacters = xmlReplaceInvalidCharacters
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithXMLSkipByteOrderMark(XMLSkipByteOrderMark *bool) *FileFormatTypeOptionsRequest {
-	s.XMLSkipByteOrderMark = XMLSkipByteOrderMark
+func (s *FileFormatTypeOptionsRequest) WithXMLSkipByteOrderMark(xmlSkipByteOrderMark *bool) *FileFormatTypeOptionsRequest {
+	s.XMLSkipByteOrderMark = xmlSkipByteOrderMark
 	return s
 }
 
-func (s *FileFormatTypeOptionsRequest) WithComment(Comment *string) *FileFormatTypeOptionsRequest {
-	s.Comment = Comment
+func (s *FileFormatTypeOptionsRequest) WithComment(comment *string) *FileFormatTypeOptionsRequest {
+	s.Comment = comment
 	return s
 }
 
@@ -1039,23 +1039,23 @@ func NewTableClusteringActionRequest() *TableClusteringActionRequest {
 	return &TableClusteringActionRequest{}
 }
 
-func (s *TableClusteringActionRequest) WithClusterBy(ClusterBy []string) *TableClusteringActionRequest {
-	s.ClusterBy = ClusterBy
+func (s *TableClusteringActionRequest) WithClusterBy(clusterBy []string) *TableClusteringActionRequest {
+	s.ClusterBy = clusterBy
 	return s
 }
 
-func (s *TableClusteringActionRequest) WithRecluster(Recluster *TableReclusterActionRequest) *TableClusteringActionRequest {
-	s.Recluster = Recluster
+func (s *TableClusteringActionRequest) WithRecluster(recluster *TableReclusterActionRequest) *TableClusteringActionRequest {
+	s.Recluster = recluster
 	return s
 }
 
-func (s *TableClusteringActionRequest) WithChangeReclusterState(ChangeReclusterState *ReclusterState) *TableClusteringActionRequest {
-	s.ChangeReclusterState = ChangeReclusterState
+func (s *TableClusteringActionRequest) WithChangeReclusterState(changeReclusterState *ReclusterState) *TableClusteringActionRequest {
+	s.ChangeReclusterState = changeReclusterState
 	return s
 }
 
-func (s *TableClusteringActionRequest) WithDropClusteringKey(DropClusteringKey *bool) *TableClusteringActionRequest {
-	s.DropClusteringKey = DropClusteringKey
+func (s *TableClusteringActionRequest) WithDropClusteringKey(dropClusteringKey *bool) *TableClusteringActionRequest {
+	s.DropClusteringKey = dropClusteringKey
 	return s
 }
 
@@ -1063,13 +1063,13 @@ func NewTableReclusterActionRequest() *TableReclusterActionRequest {
 	return &TableReclusterActionRequest{}
 }
 
-func (s *TableReclusterActionRequest) WithMaxSize(MaxSize *int) *TableReclusterActionRequest {
-	s.MaxSize = MaxSize
+func (s *TableReclusterActionRequest) WithMaxSize(maxSize *int) *TableReclusterActionRequest {
+	s.MaxSize = maxSize
 	return s
 }
 
-func (s *TableReclusterActionRequest) WithCondition(Condition *string) *TableReclusterActionRequest {
-	s.Condition = Condition
+func (s *TableReclusterActionRequest) WithCondition(condition *string) *TableReclusterActionRequest {
+	s.Condition = condition
 	return s
 }
 
@@ -1077,8 +1077,8 @@ func NewTableReclusterChangeStateRequest() *TableReclusterChangeStateRequest {
 	return &TableReclusterChangeStateRequest{}
 }
 
-func (s *TableReclusterChangeStateRequest) WithState(State ReclusterState) *TableReclusterChangeStateRequest {
-	s.State = State
+func (s *TableReclusterChangeStateRequest) WithState(state ReclusterState) *TableReclusterChangeStateRequest {
+	s.State = state
 	return s
 }
 
@@ -1086,38 +1086,38 @@ func NewTableColumnActionRequest() *TableColumnActionRequest {
 	return &TableColumnActionRequest{}
 }
 
-func (s *TableColumnActionRequest) WithAdd(Add *TableColumnAddActionRequest) *TableColumnActionRequest {
-	s.Add = Add
+func (s *TableColumnActionRequest) WithAdd(add *TableColumnAddActionRequest) *TableColumnActionRequest {
+	s.Add = add
 	return s
 }
 
-func (s *TableColumnActionRequest) WithRename(Rename *TableColumnRenameActionRequest) *TableColumnActionRequest {
-	s.Rename = Rename
+func (s *TableColumnActionRequest) WithRename(rename *TableColumnRenameActionRequest) *TableColumnActionRequest {
+	s.Rename = rename
 	return s
 }
 
-func (s *TableColumnActionRequest) WithAlter(Alter []TableColumnAlterActionRequest) *TableColumnActionRequest {
-	s.Alter = Alter
+func (s *TableColumnActionRequest) WithAlter(alter []TableColumnAlterActionRequest) *TableColumnActionRequest {
+	s.Alter = alter
 	return s
 }
 
-func (s *TableColumnActionRequest) WithSetMaskingPolicy(SetMaskingPolicy *TableColumnAlterSetMaskingPolicyActionRequest) *TableColumnActionRequest {
-	s.SetMaskingPolicy = SetMaskingPolicy
+func (s *TableColumnActionRequest) WithSetMaskingPolicy(setMaskingPolicy *TableColumnAlterSetMaskingPolicyActionRequest) *TableColumnActionRequest {
+	s.SetMaskingPolicy = setMaskingPolicy
 	return s
 }
 
-func (s *TableColumnActionRequest) WithUnsetMaskingPolicy(UnsetMaskingPolicy *TableColumnAlterUnsetMaskingPolicyActionRequest) *TableColumnActionRequest {
-	s.UnsetMaskingPolicy = UnsetMaskingPolicy
+func (s *TableColumnActionRequest) WithUnsetMaskingPolicy(unsetMaskingPolicy *TableColumnAlterUnsetMaskingPolicyActionRequest) *TableColumnActionRequest {
+	s.UnsetMaskingPolicy = unsetMaskingPolicy
 	return s
 }
 
-func (s *TableColumnActionRequest) WithSetTags(SetTags *TableColumnAlterSetTagsActionRequest) *TableColumnActionRequest {
-	s.SetTags = SetTags
+func (s *TableColumnActionRequest) WithSetTags(setTags *TableColumnAlterSetTagsActionRequest) *TableColumnActionRequest {
+	s.SetTags = setTags
 	return s
 }
 
-func (s *TableColumnActionRequest) WithUnsetTags(UnsetTags *TableColumnAlterUnsetTagsActionRequest) *TableColumnActionRequest {
-	s.UnsetTags = UnsetTags
+func (s *TableColumnActionRequest) WithUnsetTags(unsetTags *TableColumnAlterUnsetTagsActionRequest) *TableColumnActionRequest {
+	s.UnsetTags = unsetTags
 	return s
 }
 
@@ -1126,18 +1126,18 @@ func (s *TableColumnActionRequest) WithDropColumnsIfExists() *TableColumnActionR
 	return s
 }
 
-func (s *TableColumnActionRequest) WithDropColumns(DropColumns []string) *TableColumnActionRequest {
-	s.DropColumns = DropColumns
+func (s *TableColumnActionRequest) WithDropColumns(dropColumns []string) *TableColumnActionRequest {
+	s.DropColumns = dropColumns
 	return s
 }
 
 func NewTableColumnAddActionRequest(
-	Name string,
-	Type DataType,
+	name string,
+	dataType DataType,
 ) *TableColumnAddActionRequest {
 	s := TableColumnAddActionRequest{}
-	s.Name = Name
-	s.Type = Type
+	s.Name = name
+	s.Type = dataType
 	return &s
 }
 
@@ -1146,28 +1146,28 @@ func (s *TableColumnAddActionRequest) WithIfNotExists() *TableColumnAddActionReq
 	return s
 }
 
-func (s *TableColumnAddActionRequest) WithDefaultValue(DefaultValue *ColumnDefaultValueRequest) *TableColumnAddActionRequest {
-	s.DefaultValue = DefaultValue
+func (s *TableColumnAddActionRequest) WithDefaultValue(defaultValue *ColumnDefaultValueRequest) *TableColumnAddActionRequest {
+	s.DefaultValue = defaultValue
 	return s
 }
 
-func (s *TableColumnAddActionRequest) WithInlineConstraint(InlineConstraint *TableColumnAddInlineConstraintRequest) *TableColumnAddActionRequest {
-	s.InlineConstraint = InlineConstraint
+func (s *TableColumnAddActionRequest) WithInlineConstraint(inlineConstraint *TableColumnAddInlineConstraintRequest) *TableColumnAddActionRequest {
+	s.InlineConstraint = inlineConstraint
 	return s
 }
 
-func (s *TableColumnAddActionRequest) WithMaskingPolicy(MaskingPolicy *ColumnMaskingPolicyRequest) *TableColumnAddActionRequest {
-	s.MaskingPolicy = MaskingPolicy
+func (s *TableColumnAddActionRequest) WithMaskingPolicy(maskingPolicy *ColumnMaskingPolicyRequest) *TableColumnAddActionRequest {
+	s.MaskingPolicy = maskingPolicy
 	return s
 }
 
-func (s *TableColumnAddActionRequest) WithWith(With *bool) *TableColumnAddActionRequest {
-	s.With = With
+func (s *TableColumnAddActionRequest) WithWith(with *bool) *TableColumnAddActionRequest {
+	s.With = with
 	return s
 }
 
-func (s *TableColumnAddActionRequest) WithTags(Tags []TagAssociation) *TableColumnAddActionRequest {
-	s.Tags = Tags
+func (s *TableColumnAddActionRequest) WithTags(tags []TagAssociation) *TableColumnAddActionRequest {
+	s.Tags = tags
 	return s
 }
 
@@ -1175,23 +1175,23 @@ func NewTableColumnAddInlineConstraintRequest() *TableColumnAddInlineConstraintR
 	return &TableColumnAddInlineConstraintRequest{}
 }
 
-func (s *TableColumnAddInlineConstraintRequest) WithNotNull(NotNull *bool) *TableColumnAddInlineConstraintRequest {
-	s.NotNull = NotNull
+func (s *TableColumnAddInlineConstraintRequest) WithNotNull(notNull *bool) *TableColumnAddInlineConstraintRequest {
+	s.NotNull = notNull
 	return s
 }
 
-func (s *TableColumnAddInlineConstraintRequest) WithName(Name string) *TableColumnAddInlineConstraintRequest {
-	s.Name = Name
+func (s *TableColumnAddInlineConstraintRequest) WithName(name string) *TableColumnAddInlineConstraintRequest {
+	s.Name = name
 	return s
 }
 
-func (s *TableColumnAddInlineConstraintRequest) WithType(Type ColumnConstraintType) *TableColumnAddInlineConstraintRequest {
-	s.Type = Type
+func (s *TableColumnAddInlineConstraintRequest) WithType(constraintType ColumnConstraintType) *TableColumnAddInlineConstraintRequest {
+	s.Type = constraintType
 	return s
 }
 
-func (s *TableColumnAddInlineConstraintRequest) WithForeignKey(ForeignKey *ColumnAddForeignKey) *TableColumnAddInlineConstraintRequest {
-	s.ForeignKey = ForeignKey
+func (s *TableColumnAddInlineConstraintRequest) WithForeignKey(foreignKey *ColumnAddForeignKey) *TableColumnAddInlineConstraintRequest {
+	s.ForeignKey = foreignKey
 	return s
 }
 
@@ -1199,108 +1199,108 @@ func NewColumnAddForeignKeyRequest() *ColumnAddForeignKeyRequest {
 	return &ColumnAddForeignKeyRequest{}
 }
 
-func (s *ColumnAddForeignKeyRequest) WithTableName(TableName string) *ColumnAddForeignKeyRequest {
-	s.TableName = TableName
+func (s *ColumnAddForeignKeyRequest) WithTableName(tableName string) *ColumnAddForeignKeyRequest {
+	s.TableName = tableName
 	return s
 }
 
-func (s *ColumnAddForeignKeyRequest) WithColumnName(ColumnName string) *ColumnAddForeignKeyRequest {
-	s.ColumnName = ColumnName
+func (s *ColumnAddForeignKeyRequest) WithColumnName(columnName string) *ColumnAddForeignKeyRequest {
+	s.ColumnName = columnName
 	return s
 }
 
 func NewTableColumnRenameActionRequest(
-	OldName string,
-	NewName string,
+	oldName string,
+	newName string,
 ) *TableColumnRenameActionRequest {
 	s := TableColumnRenameActionRequest{}
-	s.OldName = OldName
-	s.NewName = NewName
+	s.OldName = oldName
+	s.NewName = newName
 	return &s
 }
 
 func NewTableColumnAlterActionRequest(
-	Column bool,
-	Name string,
+	column bool,
+	name string,
 ) *TableColumnAlterActionRequest {
 	s := TableColumnAlterActionRequest{}
-	s.Column = Column
-	s.Name = Name
+	s.Column = column
+	s.Name = name
 	return &s
 }
 
-func (s *TableColumnAlterActionRequest) WithDropDefault(DropDefault *bool) *TableColumnAlterActionRequest {
-	s.DropDefault = DropDefault
+func (s *TableColumnAlterActionRequest) WithDropDefault(dropDefault *bool) *TableColumnAlterActionRequest {
+	s.DropDefault = dropDefault
 	return s
 }
 
-func (s *TableColumnAlterActionRequest) WithSetDefault(SetDefault *SequenceName) *TableColumnAlterActionRequest {
-	s.SetDefault = SetDefault
+func (s *TableColumnAlterActionRequest) WithSetDefault(setDefault *SequenceName) *TableColumnAlterActionRequest {
+	s.SetDefault = setDefault
 	return s
 }
 
-func (s *TableColumnAlterActionRequest) WithNotNullConstraint(NotNullConstraint *TableColumnNotNullConstraintRequest) *TableColumnAlterActionRequest {
-	s.NotNullConstraint = NotNullConstraint
+func (s *TableColumnAlterActionRequest) WithNotNullConstraint(notNullConstraint *TableColumnNotNullConstraintRequest) *TableColumnAlterActionRequest {
+	s.NotNullConstraint = notNullConstraint
 	return s
 }
 
-func (s *TableColumnAlterActionRequest) WithType(Type *DataType) *TableColumnAlterActionRequest {
-	s.Type = Type
+func (s *TableColumnAlterActionRequest) WithType(dataType *DataType) *TableColumnAlterActionRequest {
+	s.Type = dataType
 	return s
 }
 
-func (s *TableColumnAlterActionRequest) WithComment(Comment *string) *TableColumnAlterActionRequest {
-	s.Comment = Comment
+func (s *TableColumnAlterActionRequest) WithComment(comment *string) *TableColumnAlterActionRequest {
+	s.Comment = comment
 	return s
 }
 
-func (s *TableColumnAlterActionRequest) WithUnsetComment(UnsetComment *bool) *TableColumnAlterActionRequest {
-	s.UnsetComment = UnsetComment
+func (s *TableColumnAlterActionRequest) WithUnsetComment(unsetComment *bool) *TableColumnAlterActionRequest {
+	s.UnsetComment = unsetComment
 	return s
 }
 
 func NewTableColumnAlterSetMaskingPolicyActionRequest(
-	ColumnName string,
-	MaskingPolicyName SchemaObjectIdentifier,
-	Using []string,
+	columnName string,
+	maskingPolicyName SchemaObjectIdentifier,
+	using []string,
 ) *TableColumnAlterSetMaskingPolicyActionRequest {
 	s := TableColumnAlterSetMaskingPolicyActionRequest{}
-	s.ColumnName = ColumnName
-	s.MaskingPolicyName = MaskingPolicyName
-	s.Using = Using
+	s.ColumnName = columnName
+	s.MaskingPolicyName = maskingPolicyName
+	s.Using = using
 	return &s
 }
 
-func (s *TableColumnAlterSetMaskingPolicyActionRequest) WithForce(Force *bool) *TableColumnAlterSetMaskingPolicyActionRequest {
-	s.Force = Force
+func (s *TableColumnAlterSetMaskingPolicyActionRequest) WithForce(force *bool) *TableColumnAlterSetMaskingPolicyActionRequest {
+	s.Force = force
 	return s
 }
 
 func NewTableColumnAlterUnsetMaskingPolicyActionRequest(
-	ColumnName string,
+	columnName string,
 ) *TableColumnAlterUnsetMaskingPolicyActionRequest {
 	s := TableColumnAlterUnsetMaskingPolicyActionRequest{}
-	s.ColumnName = ColumnName
+	s.ColumnName = columnName
 	return &s
 }
 
 func NewTableColumnAlterSetTagsActionRequest(
-	ColumnName string,
-	Tags []TagAssociation,
+	columnName string,
+	tags []TagAssociation,
 ) *TableColumnAlterSetTagsActionRequest {
 	s := TableColumnAlterSetTagsActionRequest{}
-	s.ColumnName = ColumnName
-	s.Tags = Tags
+	s.ColumnName = columnName
+	s.Tags = tags
 	return &s
 }
 
 func NewTableColumnAlterUnsetTagsActionRequest(
-	ColumnName string,
-	Tags []ObjectIdentifier,
+	columnName string,
+	tags []ObjectIdentifier,
 ) *TableColumnAlterUnsetTagsActionRequest {
 	s := TableColumnAlterUnsetTagsActionRequest{}
-	s.ColumnName = ColumnName
-	s.Tags = Tags
+	s.ColumnName = columnName
+	s.Tags = tags
 	return &s
 }
 
@@ -1308,13 +1308,13 @@ func NewTableColumnNotNullConstraintRequest() *TableColumnNotNullConstraintReque
 	return &TableColumnNotNullConstraintRequest{}
 }
 
-func (s *TableColumnNotNullConstraintRequest) WithSet(Set *bool) *TableColumnNotNullConstraintRequest {
-	s.Set = Set
+func (s *TableColumnNotNullConstraintRequest) WithSet(set *bool) *TableColumnNotNullConstraintRequest {
+	s.Set = set
 	return s
 }
 
-func (s *TableColumnNotNullConstraintRequest) WithDrop(Drop *bool) *TableColumnNotNullConstraintRequest {
-	s.Drop = Drop
+func (s *TableColumnNotNullConstraintRequest) WithDrop(drop *bool) *TableColumnNotNullConstraintRequest {
+	s.Drop = drop
 	return s
 }
 
@@ -1322,23 +1322,23 @@ func NewTableConstraintActionRequest() *TableConstraintActionRequest {
 	return &TableConstraintActionRequest{}
 }
 
-func (s *TableConstraintActionRequest) WithAdd(Add *OutOfLineConstraintRequest) *TableConstraintActionRequest {
-	s.Add = Add
+func (s *TableConstraintActionRequest) WithAdd(add *OutOfLineConstraintRequest) *TableConstraintActionRequest {
+	s.Add = add
 	return s
 }
 
-func (s *TableConstraintActionRequest) WithRename(Rename *TableConstraintRenameActionRequest) *TableConstraintActionRequest {
-	s.Rename = Rename
+func (s *TableConstraintActionRequest) WithRename(rename *TableConstraintRenameActionRequest) *TableConstraintActionRequest {
+	s.Rename = rename
 	return s
 }
 
-func (s *TableConstraintActionRequest) WithAlter(Alter *TableConstraintAlterActionRequest) *TableConstraintActionRequest {
-	s.Alter = Alter
+func (s *TableConstraintActionRequest) WithAlter(alter *TableConstraintAlterActionRequest) *TableConstraintActionRequest {
+	s.Alter = alter
 	return s
 }
 
-func (s *TableConstraintActionRequest) WithDrop(Drop *TableConstraintDropActionRequest) *TableConstraintActionRequest {
-	s.Drop = Drop
+func (s *TableConstraintActionRequest) WithDrop(drop *TableConstraintDropActionRequest) *TableConstraintActionRequest {
+	s.Drop = drop
 	return s
 }
 
@@ -1346,13 +1346,13 @@ func NewTableConstraintRenameActionRequest() *TableConstraintRenameActionRequest
 	return &TableConstraintRenameActionRequest{}
 }
 
-func (s *TableConstraintRenameActionRequest) WithOldName(OldName string) *TableConstraintRenameActionRequest {
-	s.OldName = OldName
+func (s *TableConstraintRenameActionRequest) WithOldName(oldName string) *TableConstraintRenameActionRequest {
+	s.OldName = oldName
 	return s
 }
 
-func (s *TableConstraintRenameActionRequest) WithNewName(NewName string) *TableConstraintRenameActionRequest {
-	s.NewName = NewName
+func (s *TableConstraintRenameActionRequest) WithNewName(newName string) *TableConstraintRenameActionRequest {
+	s.NewName = newName
 	return s
 }
 
@@ -1360,58 +1360,58 @@ func NewTableConstraintAlterActionRequest() *TableConstraintAlterActionRequest {
 	return &TableConstraintAlterActionRequest{}
 }
 
-func (s *TableConstraintAlterActionRequest) WithConstraintName(ConstraintName *string) *TableConstraintAlterActionRequest {
-	s.ConstraintName = ConstraintName
+func (s *TableConstraintAlterActionRequest) WithConstraintName(constraintName *string) *TableConstraintAlterActionRequest {
+	s.ConstraintName = constraintName
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithPrimaryKey(PrimaryKey *bool) *TableConstraintAlterActionRequest {
-	s.PrimaryKey = PrimaryKey
+func (s *TableConstraintAlterActionRequest) WithPrimaryKey(primaryKey *bool) *TableConstraintAlterActionRequest {
+	s.PrimaryKey = primaryKey
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithUnique(Unique *bool) *TableConstraintAlterActionRequest {
-	s.Unique = Unique
+func (s *TableConstraintAlterActionRequest) WithUnique(unique *bool) *TableConstraintAlterActionRequest {
+	s.Unique = unique
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithForeignKey(ForeignKey *bool) *TableConstraintAlterActionRequest {
-	s.ForeignKey = ForeignKey
+func (s *TableConstraintAlterActionRequest) WithForeignKey(foreignKey *bool) *TableConstraintAlterActionRequest {
+	s.ForeignKey = foreignKey
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithColumns(Columns []string) *TableConstraintAlterActionRequest {
-	s.Columns = Columns
+func (s *TableConstraintAlterActionRequest) WithColumns(columns []string) *TableConstraintAlterActionRequest {
+	s.Columns = columns
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithEnforced(Enforced *bool) *TableConstraintAlterActionRequest {
-	s.Enforced = Enforced
+func (s *TableConstraintAlterActionRequest) WithEnforced(enforced *bool) *TableConstraintAlterActionRequest {
+	s.Enforced = enforced
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithNotEnforced(NotEnforced *bool) *TableConstraintAlterActionRequest {
-	s.NotEnforced = NotEnforced
+func (s *TableConstraintAlterActionRequest) WithNotEnforced(notEnforced *bool) *TableConstraintAlterActionRequest {
+	s.NotEnforced = notEnforced
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithValiate(Valiate *bool) *TableConstraintAlterActionRequest {
-	s.Valiate = Valiate
+func (s *TableConstraintAlterActionRequest) WithValidate(validate *bool) *TableConstraintAlterActionRequest {
+	s.Validate = validate
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithNoValidate(NoValidate *bool) *TableConstraintAlterActionRequest {
-	s.NoValidate = NoValidate
+func (s *TableConstraintAlterActionRequest) WithNoValidate(noValidate *bool) *TableConstraintAlterActionRequest {
+	s.NoValidate = noValidate
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithRely(Rely *bool) *TableConstraintAlterActionRequest {
-	s.Rely = Rely
+func (s *TableConstraintAlterActionRequest) WithRely(rely *bool) *TableConstraintAlterActionRequest {
+	s.Rely = rely
 	return s
 }
 
-func (s *TableConstraintAlterActionRequest) WithNoRely(NoRely *bool) *TableConstraintAlterActionRequest {
-	s.NoRely = NoRely
+func (s *TableConstraintAlterActionRequest) WithNoRely(noRely *bool) *TableConstraintAlterActionRequest {
+	s.NoRely = noRely
 	return s
 }
 
@@ -1419,38 +1419,38 @@ func NewTableConstraintDropActionRequest() *TableConstraintDropActionRequest {
 	return &TableConstraintDropActionRequest{}
 }
 
-func (s *TableConstraintDropActionRequest) WithConstraintName(ConstraintName *string) *TableConstraintDropActionRequest {
-	s.ConstraintName = ConstraintName
+func (s *TableConstraintDropActionRequest) WithConstraintName(constraintName *string) *TableConstraintDropActionRequest {
+	s.ConstraintName = constraintName
 	return s
 }
 
-func (s *TableConstraintDropActionRequest) WithPrimaryKey(PrimaryKey *bool) *TableConstraintDropActionRequest {
-	s.PrimaryKey = PrimaryKey
+func (s *TableConstraintDropActionRequest) WithPrimaryKey(primaryKey *bool) *TableConstraintDropActionRequest {
+	s.PrimaryKey = primaryKey
 	return s
 }
 
-func (s *TableConstraintDropActionRequest) WithUnique(Unique *bool) *TableConstraintDropActionRequest {
-	s.Unique = Unique
+func (s *TableConstraintDropActionRequest) WithUnique(unique *bool) *TableConstraintDropActionRequest {
+	s.Unique = unique
 	return s
 }
 
-func (s *TableConstraintDropActionRequest) WithForeignKey(ForeignKey *bool) *TableConstraintDropActionRequest {
-	s.ForeignKey = ForeignKey
+func (s *TableConstraintDropActionRequest) WithForeignKey(foreignKey *bool) *TableConstraintDropActionRequest {
+	s.ForeignKey = foreignKey
 	return s
 }
 
-func (s *TableConstraintDropActionRequest) WithColumns(Columns []string) *TableConstraintDropActionRequest {
-	s.Columns = Columns
+func (s *TableConstraintDropActionRequest) WithColumns(columns []string) *TableConstraintDropActionRequest {
+	s.Columns = columns
 	return s
 }
 
-func (s *TableConstraintDropActionRequest) WithCascade(Cascade *bool) *TableConstraintDropActionRequest {
-	s.Cascade = Cascade
+func (s *TableConstraintDropActionRequest) WithCascade(cascade *bool) *TableConstraintDropActionRequest {
+	s.Cascade = cascade
 	return s
 }
 
-func (s *TableConstraintDropActionRequest) WithRestrict(Restrict *bool) *TableConstraintDropActionRequest {
-	s.Restrict = Restrict
+func (s *TableConstraintDropActionRequest) WithRestrict(restrict *bool) *TableConstraintDropActionRequest {
+	s.Restrict = restrict
 	return s
 }
 
@@ -1458,18 +1458,18 @@ func NewTableExternalTableActionRequest() *TableExternalTableActionRequest {
 	return &TableExternalTableActionRequest{}
 }
 
-func (s *TableExternalTableActionRequest) WithAdd(Add *TableExternalTableColumnAddActionRequest) *TableExternalTableActionRequest {
-	s.Add = Add
+func (s *TableExternalTableActionRequest) WithAdd(add *TableExternalTableColumnAddActionRequest) *TableExternalTableActionRequest {
+	s.Add = add
 	return s
 }
 
-func (s *TableExternalTableActionRequest) WithRename(Rename *TableExternalTableColumnRenameActionRequest) *TableExternalTableActionRequest {
-	s.Rename = Rename
+func (s *TableExternalTableActionRequest) WithRename(rename *TableExternalTableColumnRenameActionRequest) *TableExternalTableActionRequest {
+	s.Rename = rename
 	return s
 }
 
-func (s *TableExternalTableActionRequest) WithDrop(Drop *TableExternalTableColumnDropActionRequest) *TableExternalTableActionRequest {
-	s.Drop = Drop
+func (s *TableExternalTableActionRequest) WithDrop(drop *TableExternalTableColumnDropActionRequest) *TableExternalTableActionRequest {
+	s.Drop = drop
 	return s
 }
 
@@ -1477,13 +1477,13 @@ func NewTableSearchOptimizationActionRequest() *TableSearchOptimizationActionReq
 	return &TableSearchOptimizationActionRequest{}
 }
 
-func (s *TableSearchOptimizationActionRequest) WithAddSearchOptimizationOn(AddSearchOptimizationOn []string) *TableSearchOptimizationActionRequest {
-	s.AddSearchOptimizationOn = AddSearchOptimizationOn
+func (s *TableSearchOptimizationActionRequest) WithAddSearchOptimizationOn(addSearchOptimizationOn []string) *TableSearchOptimizationActionRequest {
+	s.AddSearchOptimizationOn = addSearchOptimizationOn
 	return s
 }
 
-func (s *TableSearchOptimizationActionRequest) WithDropSearchOptimizationOn(DropSearchOptimizationOn []string) *TableSearchOptimizationActionRequest {
-	s.DropSearchOptimizationOn = DropSearchOptimizationOn
+func (s *TableSearchOptimizationActionRequest) WithDropSearchOptimizationOn(dropSearchOptimizationOn []string) *TableSearchOptimizationActionRequest {
+	s.DropSearchOptimizationOn = dropSearchOptimizationOn
 	return s
 }
 
@@ -1491,43 +1491,43 @@ func NewTableSetRequest() *TableSetRequest {
 	return &TableSetRequest{}
 }
 
-func (s *TableSetRequest) WithEnableSchemaEvolution(EnableSchemaEvolution *bool) *TableSetRequest {
-	s.EnableSchemaEvolution = EnableSchemaEvolution
+func (s *TableSetRequest) WithEnableSchemaEvolution(enableSchemaEvolution *bool) *TableSetRequest {
+	s.EnableSchemaEvolution = enableSchemaEvolution
 	return s
 }
 
-func (s *TableSetRequest) WithStageFileFormat(StageFileFormat StageFileFormatRequest) *TableSetRequest {
-	s.StageFileFormat = &StageFileFormat
+func (s *TableSetRequest) WithStageFileFormat(stageFileFormat StageFileFormatRequest) *TableSetRequest {
+	s.StageFileFormat = &stageFileFormat
 	return s
 }
 
-func (s *TableSetRequest) WithStageCopyOptions(StageCopyOptions StageCopyOptionsRequest) *TableSetRequest {
-	s.StageCopyOptions = &StageCopyOptions
+func (s *TableSetRequest) WithStageCopyOptions(stageCopyOptions StageCopyOptionsRequest) *TableSetRequest {
+	s.StageCopyOptions = &stageCopyOptions
 	return s
 }
 
-func (s *TableSetRequest) WithDataRetentionTimeInDays(DataRetentionTimeInDays *int) *TableSetRequest {
-	s.DataRetentionTimeInDays = DataRetentionTimeInDays
+func (s *TableSetRequest) WithDataRetentionTimeInDays(dataRetentionTimeInDays *int) *TableSetRequest {
+	s.DataRetentionTimeInDays = dataRetentionTimeInDays
 	return s
 }
 
-func (s *TableSetRequest) WithMaxDataExtensionTimeInDays(MaxDataExtensionTimeInDays *int) *TableSetRequest {
-	s.MaxDataExtensionTimeInDays = MaxDataExtensionTimeInDays
+func (s *TableSetRequest) WithMaxDataExtensionTimeInDays(maxDataExtensionTimeInDays *int) *TableSetRequest {
+	s.MaxDataExtensionTimeInDays = maxDataExtensionTimeInDays
 	return s
 }
 
-func (s *TableSetRequest) WithChangeTracking(ChangeTracking *bool) *TableSetRequest {
-	s.ChangeTracking = ChangeTracking
+func (s *TableSetRequest) WithChangeTracking(changeTracking *bool) *TableSetRequest {
+	s.ChangeTracking = changeTracking
 	return s
 }
 
-func (s *TableSetRequest) WithDefaultDDLCollation(DefaultDDLCollation *string) *TableSetRequest {
-	s.DefaultDDLCollation = DefaultDDLCollation
+func (s *TableSetRequest) WithDefaultDDLCollation(defaultDDLCollation *string) *TableSetRequest {
+	s.DefaultDDLCollation = defaultDDLCollation
 	return s
 }
 
-func (s *TableSetRequest) WithComment(Comment *string) *TableSetRequest {
-	s.Comment = Comment
+func (s *TableSetRequest) WithComment(comment *string) *TableSetRequest {
+	s.Comment = comment
 	return s
 }
 
@@ -1540,18 +1540,18 @@ func (s *TableExternalTableColumnAddActionRequest) WithIfNotExists() *TableExter
 	return s
 }
 
-func (s *TableExternalTableColumnAddActionRequest) WithName(Name string) *TableExternalTableColumnAddActionRequest {
-	s.Name = Name
+func (s *TableExternalTableColumnAddActionRequest) WithName(name string) *TableExternalTableColumnAddActionRequest {
+	s.Name = name
 	return s
 }
 
-func (s *TableExternalTableColumnAddActionRequest) WithType(Type DataType) *TableExternalTableColumnAddActionRequest {
-	s.Type = Type
+func (s *TableExternalTableColumnAddActionRequest) WithType(dataType DataType) *TableExternalTableColumnAddActionRequest {
+	s.Type = dataType
 	return s
 }
 
-func (s *TableExternalTableColumnAddActionRequest) WithExpression(Expression string) *TableExternalTableColumnAddActionRequest {
-	s.Expression = Expression
+func (s *TableExternalTableColumnAddActionRequest) WithExpression(expression string) *TableExternalTableColumnAddActionRequest {
+	s.Expression = expression
 	return s
 }
 
@@ -1559,13 +1559,13 @@ func NewTableExternalTableColumnRenameActionRequest() *TableExternalTableColumnR
 	return &TableExternalTableColumnRenameActionRequest{}
 }
 
-func (s *TableExternalTableColumnRenameActionRequest) WithOldName(OldName string) *TableExternalTableColumnRenameActionRequest {
-	s.OldName = OldName
+func (s *TableExternalTableColumnRenameActionRequest) WithOldName(oldName string) *TableExternalTableColumnRenameActionRequest {
+	s.OldName = oldName
 	return s
 }
 
-func (s *TableExternalTableColumnRenameActionRequest) WithNewName(NewName string) *TableExternalTableColumnRenameActionRequest {
-	s.NewName = NewName
+func (s *TableExternalTableColumnRenameActionRequest) WithNewName(newName string) *TableExternalTableColumnRenameActionRequest {
+	s.NewName = newName
 	return s
 }
 
@@ -1573,8 +1573,8 @@ func NewTableExternalTableColumnDropActionRequest() *TableExternalTableColumnDro
 	return &TableExternalTableColumnDropActionRequest{}
 }
 
-func (s *TableExternalTableColumnDropActionRequest) WithColumns(Columns []string) *TableExternalTableColumnDropActionRequest {
-	s.Columns = Columns
+func (s *TableExternalTableColumnDropActionRequest) WithColumns(columns []string) *TableExternalTableColumnDropActionRequest {
+	s.Columns = columns
 	return s
 }
 
@@ -1587,18 +1587,18 @@ func NewShowTableRequest() *ShowTableRequest {
 	return &ShowTableRequest{}
 }
 
-func (s *ShowTableRequest) WithTerse(Terse *bool) *ShowTableRequest {
-	s.terse = Terse
+func (s *ShowTableRequest) WithTerse(terse *bool) *ShowTableRequest {
+	s.terse = terse
 	return s
 }
 
-func (s *ShowTableRequest) WithHistory(History *bool) *ShowTableRequest {
-	s.history = History
+func (s *ShowTableRequest) WithHistory(history *bool) *ShowTableRequest {
+	s.history = history
 	return s
 }
 
-func (s *ShowTableRequest) WithLikePattern(LikePattern string) *ShowTableRequest {
-	s.likePattern = LikePattern
+func (s *ShowTableRequest) WithLikePattern(likePattern string) *ShowTableRequest {
+	s.likePattern = likePattern
 	return s
 }
 
@@ -1607,13 +1607,13 @@ func (s *ShowTableRequest) WithIn(in *In) *ShowTableRequest {
 	return s
 }
 
-func (s *ShowTableRequest) WithStartsWith(StartsWith *string) *ShowTableRequest {
-	s.startsWith = StartsWith
+func (s *ShowTableRequest) WithStartsWith(startsWith *string) *ShowTableRequest {
+	s.startsWith = startsWith
 	return s
 }
 
-func (s *ShowTableRequest) WithLimitFrom(LimitFrom *LimitFrom) *ShowTableRequest {
-	s.limitFrom = LimitFrom
+func (s *ShowTableRequest) WithLimitFrom(limitFrom *LimitFrom) *ShowTableRequest {
+	s.limitFrom = limitFrom
 	return s
 }
 

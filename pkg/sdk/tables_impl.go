@@ -325,7 +325,7 @@ func (r *TableConstraintActionRequest) toOpts() *TableConstraintAction {
 				Columns:        r.Alter.Columns,
 				Enforced:       r.Alter.Enforced,
 				NotEnforced:    r.Alter.NotEnforced,
-				Validate:       r.Alter.Valiate,
+				Validate:       r.Alter.Validate,
 				NoValidate:     r.Alter.NoValidate,
 				Rely:           r.Alter.Rely,
 				NoRely:         r.Alter.NoRely,
