@@ -13,7 +13,7 @@ import (
 func TestAcc_FunctionGrant_onFuture(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,

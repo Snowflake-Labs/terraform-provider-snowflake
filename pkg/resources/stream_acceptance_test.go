@@ -15,7 +15,7 @@ import (
 func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
@@ -30,7 +30,7 @@ func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
 
 func TestAcc_StreamCreateOnStage(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
@@ -66,7 +66,7 @@ func TestAcc_Stream(t *testing.T) {
 	if roleName == "" {
 		t.Skip("Skipping TestAcc_ExternalTable")
 	}
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,

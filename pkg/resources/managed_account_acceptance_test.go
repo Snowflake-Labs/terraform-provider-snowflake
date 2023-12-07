@@ -24,7 +24,7 @@ func TestAcc_ManagedAccount(t *testing.T) {
 	adminName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	adminPass := fmt.Sprintf("A1%v", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,

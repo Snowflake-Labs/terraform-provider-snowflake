@@ -20,7 +20,7 @@ func TestAcc_ScimIntegration(t *testing.T) {
 	scimProvisionerRole := "AAD_PROVISIONER"
 	scimNetworkPolicy := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,

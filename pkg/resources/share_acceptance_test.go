@@ -22,7 +22,7 @@ func TestAcc_Share(t *testing.T) {
 	if account3 == "" {
 		t.Skip("SNOWFLAKE_ACCOUNT_THIRD must be set for Share acceptance tests")
 	}
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,

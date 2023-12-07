@@ -15,7 +15,7 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 	oauthClient := "CUSTOM"
 	clientType := "PUBLIC"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
@@ -61,7 +61,7 @@ func TestAcc_OAuthIntegrationTableau(t *testing.T) {
 	oauthClient := "TABLEAU_DESKTOP"
 	clientType := "PUBLIC" // not used, but left to fail the test
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,

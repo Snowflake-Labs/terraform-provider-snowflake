@@ -21,7 +21,7 @@ func TestAcc_UserPublicKeys(t *testing.T) {
 	sshkey2, err := testhelpers.Fixture("userkey2")
 	r.NoError(err)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
