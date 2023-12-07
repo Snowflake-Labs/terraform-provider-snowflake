@@ -93,27 +93,29 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 			PasswordMinLowerCaseChars: sdk.Int(1),
 			PasswordMinNumericChars:   sdk.Int(1),
 			PasswordMinSpecialChars:   sdk.Int(1),
+			PasswordMinAgeDays:        sdk.Int(25),
 			PasswordMaxAgeDays:        sdk.Int(30),
 			PasswordMaxRetries:        sdk.Int(5),
 			PasswordLockoutTimeMins:   sdk.Int(30),
-			// todo [SNOW-928909]: uncomment this once comments are working again
-			// Comment:                   String("test comment"),
+			PasswordHistory:           sdk.Int(15),
+			Comment:                   sdk.String("test comment"),
 		})
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
-		// todo [SNOW-928909]: uncomment this once comments are working again
-		// assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
 		assert.Equal(t, 10, *passwordPolicyDetails.PasswordMinLength.Value)
 		assert.Equal(t, 20, *passwordPolicyDetails.PasswordMaxLength.Value)
 		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinUpperCaseChars.Value)
 		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinLowerCaseChars.Value)
 		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinNumericChars.Value)
 		assert.Equal(t, 1, *passwordPolicyDetails.PasswordMinSpecialChars.Value)
+		assert.Equal(t, 25, *passwordPolicyDetails.PasswordMinAgeDays.Value)
 		assert.Equal(t, 30, *passwordPolicyDetails.PasswordMaxAgeDays.Value)
 		assert.Equal(t, 5, *passwordPolicyDetails.PasswordMaxRetries.Value)
 		assert.Equal(t, 30, *passwordPolicyDetails.PasswordLockoutTimeMins.Value)
+		assert.Equal(t, 15, *passwordPolicyDetails.PasswordHistory.Value)
+		assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
@@ -125,15 +127,13 @@ func TestInt_PasswordPolicyCreate(t *testing.T) {
 			PasswordMinLength:         sdk.Int(10),
 			PasswordMaxLength:         sdk.Int(20),
 			PasswordMinUpperCaseChars: sdk.Int(5),
-			// todo [SNOW-928909]: uncomment this once comments are working again
-			// Comment:                   String("test comment"),
+			Comment:                   sdk.String("test comment"),
 		})
 		require.NoError(t, err)
 		passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, name, passwordPolicyDetails.Name.Value)
-		// todo [SNOW-928909]: uncomment this once comments are working again
-		// assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
+		assert.Equal(t, "test comment", passwordPolicyDetails.Comment.Value)
 		assert.Equal(t, 10, *passwordPolicyDetails.PasswordMinLength.Value)
 		assert.Equal(t, 20, *passwordPolicyDetails.PasswordMaxLength.Value)
 		assert.Equal(t, 5, *passwordPolicyDetails.PasswordMinUpperCaseChars.Value)
@@ -231,8 +231,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		createOptions := &sdk.CreatePasswordPolicyOptions{
 			PasswordMaxAgeDays: sdk.Int(20),
 			PasswordMaxRetries: sdk.Int(10),
-			// todo [SNOW-928909]: uncomment this once comments are working again
-			// Comment: String("test comment")
+			Comment:            sdk.String("test comment"),
 		}
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, testDb(t), testSchema(t), createOptions)
 		id := passwordPolicy.ID()
@@ -247,8 +246,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		alterOptions = &sdk.AlterPasswordPolicyOptions{
 			Unset: &sdk.PasswordPolicyUnset{
 				PasswordMaxAgeDays: sdk.Bool(true),
-				// todo [SNOW-928909]: uncomment this once comments are working again
-				// Comment: Bool("true")
+				Comment:            sdk.Bool(true),
 			},
 		}
 		err = client.PasswordPolicies.Alter(ctx, id, alterOptions)
@@ -264,8 +262,7 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 		createOptions := &sdk.CreatePasswordPolicyOptions{
 			PasswordMaxAgeDays: sdk.Int(20),
 			PasswordMaxRetries: sdk.Int(10),
-			// todo [SNOW-928909]: uncomment this once comments are working again
-			// Comment: String("test comment")
+			Comment:            sdk.String("test comment"),
 		}
 		passwordPolicy, passwordPolicyCleanup := createPasswordPolicyWithOptions(t, client, testDb(t), testSchema(t), createOptions)
 		id := passwordPolicy.ID()
@@ -274,12 +271,11 @@ func TestInt_PasswordPolicyAlter(t *testing.T) {
 			Unset: &sdk.PasswordPolicyUnset{
 				PasswordMaxAgeDays: sdk.Bool(true),
 				PasswordMaxRetries: sdk.Bool(true),
-				// todo [SNOW-928909]: uncomment this once comments are working again
-				// Comment: Bool("true")
+				Comment:            sdk.Bool(true),
 			},
 		}
 		err := client.PasswordPolicies.Alter(ctx, id, alterOptions)
-		require.Error(t, err)
+		require.NoError(t, err)
 	})
 }
 
