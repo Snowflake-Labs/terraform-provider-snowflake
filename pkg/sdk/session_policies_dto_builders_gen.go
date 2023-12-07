@@ -2,8 +2,6 @@
 
 package sdk
 
-import ()
-
 func NewCreateSessionPolicyRequest(
 	name SchemaObjectIdentifier,
 ) *CreateSessionPolicyRequest {

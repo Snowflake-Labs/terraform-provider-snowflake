@@ -1,22 +1,17 @@
 # Run secret-dependent integration tests only after /ok-to-test approval
 on:
-  pull_request:
   repository_dispatch:
     types: [ok-to-test-command]
-
-name: Integration tests
+  pull_request:
+name: tests
 
 jobs:
-  integration-trusted:
+  all-tests:
+    name: all-tests
     runs-on: ubuntu-latest
     if: (github.event_name == 'repository_dispatch') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     steps:
-      - id: debug-outputs
-        run: |
-          echo ${{ github.event_name }}
-          echo ${{ github.event.client_payload }}
-
-      - id: verify-sha-input
+      - id: verify_sha_input
         if: github.event_name == 'repository_dispatch'
         run: |
           echo \"${{ github.event.client_payload.pull_request.head.sha }}\"
@@ -32,44 +27,28 @@ jobs:
           else echo "shas are equal"
           fi
 
-      - name: pull_request actions/checkout
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: pull_request actions/checkout
-        if: github.event_name == 'repository_dispatch'
-        uses: actions/checkout@v3
-        with:
-          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
-
-      - name: setup-go
-        uses: actions/setup-go@v4
+      - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
+          cache: false
 
       - name: Install dependencies
         run: make dev-setup
 
-      - name: make test-acceptance integration
-        if: always()
-        env:
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_ACCOUNT_SECOND: ${{ secrets.SNOWFLAKE_ACCOUNT_SECOND }}
-          SNOWFLAKE_ACCOUNT_THIRD: ${{ secrets.SNOWFLAKE_ACCOUNT_THIRD }}
-        run: make test-acceptance
+      - name: Create and populate .snowflake/config file
+        id: create_config
+        run: mkdir $HOME/.snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > $HOME/.snowflake/config
+
+      - run: make test
+        if: steps.create_config.conclusion == 'success'
+
+      - run: make test-acceptance
+        if: steps.create_config.conclusion == 'success'
 
       - name: sweepers cleanup
-        if: always()
-        env:
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+        if: ${{ always() }}
         run: echo y | make sweep
 
       - name: find comment
@@ -82,7 +61,7 @@ jobs:
           body-includes: Integration tests ran for
 
       - name: create or update comment
-        if: (${{ always() }})
+        if: ${{ always() }}
         uses: peter-evans/create-or-update-comment@v2
         with:
           issue-number: ${{ github.event.pull_request.number || github.event.client_payload.pull_request.number }}
@@ -93,7 +72,7 @@ jobs:
       - name: set fork job status
         uses: actions/github-script@v6
         if: ${{ always() }}
-        id: update-check-run
+        id: update_check_run
         env:
           number: ${{ github.event.client_payload.pull_request.number }}
           job: ${{ github.job }}
@@ -108,22 +87,17 @@ jobs:
               console.log("Not repository_dispatch... nothing to do!");
               return process.env.event_name;
             }
-
             const ref = process.env.sha;
-
             const { data: checks } = await github.rest.checks.listForRef({
               ...context.repo,
               ref
             });
-
             const check = checks.check_runs.filter(c => c.name === process.env.job);
             console.log(check);
-
             const { data: result } = await github.rest.checks.update({
               ...context.repo,
               check_run_id: check[0].id,
               status: 'completed',
               conclusion: process.env.conclusion
             });
-
             return result;

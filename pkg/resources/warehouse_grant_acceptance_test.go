@@ -13,7 +13,7 @@ import (
 
 func TestAcc_WarehouseGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_WAREHOUSE_GRANT_TESTS"); ok {
-		t.Skip("Skipping TestAccWarehouseGrant")
+		t.Skip("Skipping TestAcc_WarehouseGrant")
 	}
 	wName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

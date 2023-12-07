@@ -109,6 +109,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 }
 
 func TestInt_CreateShared(t *testing.T) {
+	t.Skipf("Snowflake secondary account is not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
 	client := testClient(t)
 	ctx := testContext(t)
 	databaseTest, databaseCleanup := createDatabase(t, client)

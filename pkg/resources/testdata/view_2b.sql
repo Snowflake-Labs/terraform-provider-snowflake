@@ -1,4 +1,5 @@
- SELECT
+
+SELECT
              value:configRuleName::VARCHAR AS CONFIG_RULE_NAME,
              VALUE:complianceType::VARCHAR AS COMPLIANCE_TYPE,
              *

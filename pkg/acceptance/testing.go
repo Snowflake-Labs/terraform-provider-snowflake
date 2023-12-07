@@ -83,3 +83,11 @@ func ConfigurationSameAsStepN(step int) func(config.TestStepConfigRequest) strin
 		return filepath.Join("testdata", req.TestName, strconv.Itoa(step))
 	}
 }
+
+// ConfigurationDirectory should be used to obtain configuration if the same can be shared between multiple tests to avoid duplication of configuration and var files.
+// Based on config.TestNameDirectory. Similar to config.StaticDirectory but prefixed provided directory with `testdata`.
+func ConfigurationDirectory(directory string) func(config.TestStepConfigRequest) string {
+	return func(req config.TestStepConfigRequest) string {
+		return filepath.Join("testdata", directory)
+	}
+}

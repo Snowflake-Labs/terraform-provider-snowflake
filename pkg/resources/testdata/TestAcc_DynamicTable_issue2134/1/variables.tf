@@ -1,27 +1,27 @@
 variable "name" {
-    type = string
+  type = string
 }
 
 variable "database" {
-    type = string
+  type = string
 }
 
 variable "schema" {
-    type = string
+  type = string
 }
 
 variable "warehouse" {
-    type = string
+  type = string
 }
 
 variable "query" {
-    type = string
+  type = string
 }
 
 variable "comment" {
-    type = string
+  type = string
 }
 
 variable "table_name" {
-    type = string
+  type = string
 }

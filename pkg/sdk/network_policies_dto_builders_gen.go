@@ -2,8 +2,6 @@
 
 package sdk
 
-import ()
-
 func NewCreateNetworkPolicyRequest(
 	name AccountObjectIdentifier,
 ) *CreateNetworkPolicyRequest {
