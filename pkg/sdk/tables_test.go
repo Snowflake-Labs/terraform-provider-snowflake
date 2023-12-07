@@ -813,6 +813,17 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintAlterAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 	})
 
+	t.Run("validation: constraint alter action - no columns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ConstraintAction = &TableConstraintAction{
+			Alter: &TableConstraintAlterAction{
+				ConstraintName: String("constraint"),
+				Columns:        []string{},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("TableConstraintAlterAction", "Columns"))
+	})
+
 	t.Run("validation: constraint alter action - two options present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ConstraintAction = &TableConstraintAction{
@@ -830,6 +841,17 @@ func TestTableAlter(t *testing.T) {
 			Drop: &TableConstraintDropAction{},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintDropAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
+	})
+
+	t.Run("validation: constraint drop action - no columns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ConstraintAction = &TableConstraintAction{
+			Drop: &TableConstraintDropAction{
+				ConstraintName: String("constraint"),
+				Columns:        []string{},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("TableConstraintDropAction", "Columns"))
 	})
 
 	t.Run("validation: constraint drop action - two options present", func(t *testing.T) {
@@ -859,6 +881,16 @@ func TestTableAlter(t *testing.T) {
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableExternalTableAction", "Add", "Rename", "Drop"))
+	})
+
+	t.Run("validation: external action - drop with no columns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ExternalTableAction = &TableExternalTableAction{
+			Drop: &TableExternalTableColumnDropAction{
+				Names: []string{},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("TableExternalTableColumnDropAction", "Names"))
 	})
 
 	t.Run("validation: search optimization - no option present", func(t *testing.T) {
@@ -1367,36 +1399,47 @@ func TestTableAlter(t *testing.T) {
 	})
 
 	t.Run("add row access policy", func(t *testing.T) {
+		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+
 		opts := &alterTableOptions{
 			name: id,
-			AddRowAccessPolicy: &AddRowAccessPolicy{
-				PolicyName:  "ROW_ACCESS_POLICY_1",
-				ColumnNames: []string{"FIRST_COLUMN"},
+			AddRowAccessPolicy: &TableAddRowAccessPolicy{
+				RowAccessPolicy: rowAccessPolicyId,
+				On:              []string{"FIRST_COLUMN"},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s ADD ROW ACCESS POLICY ROW_ACCESS_POLICY_1 ON (FIRST_COLUMN)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s ADD ROW ACCESS POLICY %s ON (FIRST_COLUMN)`, id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName())
 	})
 
 	t.Run("drop row access policy", func(t *testing.T) {
+		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+
 		opts := &alterTableOptions{
-			name:                id,
-			DropRowAccessPolicy: String("ROW_ACCESS_POLICY_1"),
+			name: id,
+			DropRowAccessPolicy: &TableDropRowAccessPolicy{
+				RowAccessPolicy: rowAccessPolicyId,
+			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s DROP ROW ACCESS POLICY ROW_ACCESS_POLICY_1`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s DROP ROW ACCESS POLICY %s`, id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName())
 	})
 
 	t.Run("drop and add row access policy", func(t *testing.T) {
+		rowAccessPolicyId1 := RandomSchemaObjectIdentifier()
+		rowAccessPolicyId2 := RandomSchemaObjectIdentifier()
+
 		opts := &alterTableOptions{
 			name: id,
-			DropAndAddRowAccessPolicy: &DropAndAddRowAccessPolicy{
-				DroppedPolicyName: "ROW_ACCESS_POLICY_1",
-				AddedPolicy: &AddRowAccessPolicy{
-					PolicyName:  "ROW_ACCESS_POLICY_2",
-					ColumnNames: []string{"FIRST_COLUMN"},
+			DropAndAddRowAccessPolicy: &TableDropAndAddRowAccessPolicy{
+				Drop: TableDropRowAccessPolicy{
+					RowAccessPolicy: rowAccessPolicyId1,
+				},
+				Add: TableAddRowAccessPolicy{
+					RowAccessPolicy: rowAccessPolicyId2,
+					On:              []string{"FIRST_COLUMN"},
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s DROP ROW ACCESS POLICY ROW_ACCESS_POLICY_1 , ADD ROW ACCESS POLICY ROW_ACCESS_POLICY_2 ON (FIRST_COLUMN)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s DROP ROW ACCESS POLICY %s, ADD ROW ACCESS POLICY %s ON (FIRST_COLUMN)`, id.FullyQualifiedName(), rowAccessPolicyId1.FullyQualifiedName(), rowAccessPolicyId2.FullyQualifiedName())
 	})
 
 	t.Run("drop all row access policies", func(t *testing.T) {

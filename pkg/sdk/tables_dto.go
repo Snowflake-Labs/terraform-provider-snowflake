@@ -180,9 +180,9 @@ type AlterTableRequest struct {
 	SetTags                   []TagAssociationRequest
 	UnsetTags                 []ObjectIdentifier
 	Unset                     *TableUnsetRequest
-	AddRowAccessPolicy        *AddRowAccessPolicyRequest
-	DropRowAccessPolicy       *string
-	DropAndAddRowAccessPolicy *DropAndAddRowAccessPolicyRequest
+	AddRowAccessPolicy        *TableAddRowAccessPolicyRequest
+	DropRowAccessPolicy       *TableDropRowAccessPolicyRequest
+	DropAndAddRowAccessPolicy *TableDropAndAddRowAccessPolicy
 	DropAllAccessRowPolicies  *bool
 }
 
@@ -227,9 +227,18 @@ func (s *ShowTableRequest) toOpts() *showTableOptions {
 	}
 }
 
-type DropAndAddRowAccessPolicyRequest struct {
-	DroppedPolicyName string                    // required
-	AddedPolicy       AddRowAccessPolicyRequest // required
+type TableAddRowAccessPolicyRequest struct {
+	RowAccessPolicy SchemaObjectIdentifier // required
+	On              []string               // required
+}
+
+type TableDropRowAccessPolicyRequest struct {
+	RowAccessPolicy SchemaObjectIdentifier // required
+}
+
+type TableDropAndAddRowAccessPolicyRequest struct {
+	Drop TableDropRowAccessPolicyRequest // required
+	Add  TableAddRowAccessPolicyRequest  // required
 }
 
 type TableUnsetRequest struct {
@@ -438,7 +447,7 @@ type TableConstraintAlterActionRequest struct {
 	Unique         *bool
 	ForeignKey     *bool
 
-	Columns []string
+	Columns []string // required
 	// Optional
 	Enforced    *bool
 	NotEnforced *bool
@@ -455,7 +464,7 @@ type TableConstraintDropActionRequest struct {
 	Unique         *bool
 	ForeignKey     *bool
 
-	Columns []string
+	Columns []string // required
 
 	// Optional
 	Cascade  *bool
@@ -499,7 +508,7 @@ type TableExternalTableColumnRenameActionRequest struct {
 }
 
 type TableExternalTableColumnDropActionRequest struct {
-	Columns  []string
+	Columns  []string //required
 	IfExists *bool
 }
 

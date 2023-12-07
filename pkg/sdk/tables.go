@@ -200,21 +200,21 @@ type alterTableOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 
 	// One of
-	NewName                   *SchemaObjectIdentifier        `ddl:"identifier" sql:"RENAME TO"`
-	SwapWith                  *SchemaObjectIdentifier        `ddl:"identifier" sql:"SWAP WITH"`
-	ClusteringAction          *TableClusteringAction         `ddl:"keyword"`
-	ColumnAction              *TableColumnAction             `ddl:"keyword"`
-	ConstraintAction          *TableConstraintAction         `ddl:"keyword"`
-	ExternalTableAction       *TableExternalTableAction      `ddl:"keyword"`
-	SearchOptimizationAction  *TableSearchOptimizationAction `ddl:"keyword"`
-	Set                       *TableSet                      `ddl:"keyword" sql:"SET"`
-	SetTags                   []TagAssociation               `ddl:"parameter,no_equals" sql:"SET TAG"`
-	UnsetTags                 []ObjectIdentifier             `ddl:"keyword" sql:"UNSET TAG"`
-	Unset                     *TableUnset                    `ddl:"keyword" sql:"UNSET"`
-	AddRowAccessPolicy        *AddRowAccessPolicy            `ddl:"keyword"`
-	DropRowAccessPolicy       *string                        `ddl:"parameter,no_equals" sql:"DROP ROW ACCESS POLICY"`
-	DropAndAddRowAccessPolicy *DropAndAddRowAccessPolicy     `ddl:"keyword"`
-	DropAllAccessRowPolicies  *bool                          `ddl:"keyword" sql:"DROP ALL ROW ACCESS POLICIES"`
+	NewName                   *SchemaObjectIdentifier         `ddl:"identifier" sql:"RENAME TO"`
+	SwapWith                  *SchemaObjectIdentifier         `ddl:"identifier" sql:"SWAP WITH"`
+	ClusteringAction          *TableClusteringAction          `ddl:"keyword"`
+	ColumnAction              *TableColumnAction              `ddl:"keyword"`
+	ConstraintAction          *TableConstraintAction          `ddl:"keyword"`
+	ExternalTableAction       *TableExternalTableAction       `ddl:"keyword"`
+	SearchOptimizationAction  *TableSearchOptimizationAction  `ddl:"keyword"`
+	Set                       *TableSet                       `ddl:"keyword" sql:"SET"`
+	SetTags                   []TagAssociation                `ddl:"parameter,no_equals" sql:"SET TAG"`
+	UnsetTags                 []ObjectIdentifier              `ddl:"keyword" sql:"UNSET TAG"`
+	Unset                     *TableUnset                     `ddl:"keyword" sql:"UNSET"`
+	AddRowAccessPolicy        *TableAddRowAccessPolicy        `ddl:"keyword"`
+	DropRowAccessPolicy       *TableDropRowAccessPolicy       `ddl:"keyword"`
+	DropAndAddRowAccessPolicy *TableDropAndAddRowAccessPolicy `ddl:"list,no_parentheses"`
+	DropAllAccessRowPolicies  *bool                           `ddl:"keyword" sql:"DROP ALL ROW ACCESS POLICIES"`
 }
 
 type TableClusteringAction struct {
@@ -458,15 +458,20 @@ type TableUnset struct {
 	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
-type AddRowAccessPolicy struct {
-	PolicyName  string   `ddl:"parameter,no_equals" sql:"ADD ROW ACCESS POLICY"`
-	ColumnNames []string `ddl:"parameter,no_equals,parentheses" sql:"ON"`
+type TableAddRowAccessPolicy struct {
+	add             bool                   `ddl:"static" sql:"ADD"`
+	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
+	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
 }
 
-type DropAndAddRowAccessPolicy struct {
-	DroppedPolicyName string              `ddl:"parameter,no_equals" sql:"DROP ROW ACCESS POLICY"`
-	comma             bool                `ddl:"static" sql:","`
-	AddedPolicy       *AddRowAccessPolicy `ddl:"keyword"`
+type TableDropRowAccessPolicy struct {
+	drop            bool                   `ddl:"static" sql:"DROP"`
+	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
+}
+
+type TableDropAndAddRowAccessPolicy struct {
+	Drop TableDropRowAccessPolicy `ddl:"keyword"`
+	Add  TableAddRowAccessPolicy  `ddl:"keyword"`
 }
 
 // dropTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-table

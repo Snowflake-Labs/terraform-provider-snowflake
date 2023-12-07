@@ -159,22 +159,31 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 			Comment:                    Bool(s.Unset.Comment),
 		}
 	}
-	var addRowAccessPolicy *AddRowAccessPolicy
+	var addRowAccessPolicy *TableAddRowAccessPolicy
 	if s.AddRowAccessPolicy != nil {
-		addRowAccessPolicy = &AddRowAccessPolicy{
-			PolicyName:  s.AddRowAccessPolicy.PolicyName,
-			ColumnNames: s.AddRowAccessPolicy.ColumnName,
+		addRowAccessPolicy = &TableAddRowAccessPolicy{
+			RowAccessPolicy: s.AddRowAccessPolicy.RowAccessPolicy,
+			On:              s.AddRowAccessPolicy.On,
 		}
 	}
-	var dropAndAddRowAccessPolicy *DropAndAddRowAccessPolicy
-	if s.DropAndAddRowAccessPolicy != nil {
-		addRowAccessPolicy := &AddRowAccessPolicy{
-			PolicyName:  s.DropAndAddRowAccessPolicy.AddedPolicy.PolicyName,
-			ColumnNames: s.DropAndAddRowAccessPolicy.AddedPolicy.ColumnName,
+	var dropRowAccessPolicy *TableDropRowAccessPolicy
+	if s.DropRowAccessPolicy != nil {
+		dropRowAccessPolicy = &TableDropRowAccessPolicy{
+			RowAccessPolicy: s.DropRowAccessPolicy.RowAccessPolicy,
 		}
-		dropAndAddRowAccessPolicy = &DropAndAddRowAccessPolicy{
-			DroppedPolicyName: s.DropAndAddRowAccessPolicy.DroppedPolicyName,
-			AddedPolicy:       addRowAccessPolicy,
+	}
+	var dropAndAddRowAccessPolicy *TableDropAndAddRowAccessPolicy
+	if s.DropAndAddRowAccessPolicy != nil {
+		add := TableAddRowAccessPolicy{
+			RowAccessPolicy: s.DropAndAddRowAccessPolicy.Add.RowAccessPolicy,
+			On:              s.DropAndAddRowAccessPolicy.Add.On,
+		}
+		drop := TableDropRowAccessPolicy{
+			RowAccessPolicy: s.DropAndAddRowAccessPolicy.Drop.RowAccessPolicy,
+		}
+		dropAndAddRowAccessPolicy = &TableDropAndAddRowAccessPolicy{
+			Drop: drop,
+			Add:  add,
 		}
 	}
 
@@ -193,7 +202,7 @@ func (s *AlterTableRequest) toOpts() *alterTableOptions {
 		UnsetTags:                 s.UnsetTags,
 		Unset:                     tableUnset,
 		AddRowAccessPolicy:        addRowAccessPolicy,
-		DropRowAccessPolicy:       s.DropRowAccessPolicy,
+		DropRowAccessPolicy:       dropRowAccessPolicy,
 		DropAndAddRowAccessPolicy: dropAndAddRowAccessPolicy,
 		DropAllAccessRowPolicies:  s.DropAllAccessRowPolicies,
 	}

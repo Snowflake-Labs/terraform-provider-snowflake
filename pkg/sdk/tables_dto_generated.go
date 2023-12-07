@@ -629,17 +629,17 @@ func (s *AlterTableRequest) WithUnset(unset *TableUnsetRequest) *AlterTableReque
 	return s
 }
 
-func (s *AlterTableRequest) WithAddRowAccessPolicy(addRowAccessPolicy *AddRowAccessPolicyRequest) *AlterTableRequest {
+func (s *AlterTableRequest) WithAddRowAccessPolicy(addRowAccessPolicy *TableAddRowAccessPolicyRequest) *AlterTableRequest {
 	s.AddRowAccessPolicy = addRowAccessPolicy
 	return s
 }
 
-func (s *AlterTableRequest) WithDropRowAccessPolicy(dropRowAccessPolicy *string) *AlterTableRequest {
+func (s *AlterTableRequest) WithDropRowAccessPolicy(dropRowAccessPolicy *TableDropRowAccessPolicyRequest) *AlterTableRequest {
 	s.DropRowAccessPolicy = dropRowAccessPolicy
 	return s
 }
 
-func (s *AlterTableRequest) WithDropAndAddRowAccessPolicy(dropAndAddRowAccessPolicy *DropAndAddRowAccessPolicyRequest) *AlterTableRequest {
+func (s *AlterTableRequest) WithDropAndAddRowAccessPolicy(dropAndAddRowAccessPolicy *TableDropAndAddRowAccessPolicy) *AlterTableRequest {
 	s.DropAndAddRowAccessPolicy = dropAndAddRowAccessPolicy
 	return s
 }
@@ -672,13 +672,31 @@ func (s *DropTableRequest) WithRestrict(restrict *bool) *DropTableRequest {
 	return s
 }
 
-func NewDropAndAddRowAccessPolicyRequest(
-	droppedPolicyName string,
-	addedPolicy AddRowAccessPolicyRequest,
-) *DropAndAddRowAccessPolicyRequest {
-	s := DropAndAddRowAccessPolicyRequest{}
-	s.DroppedPolicyName = droppedPolicyName
-	s.AddedPolicy = addedPolicy
+func NewTableAddRowAccessPolicyRequest(
+	RowAccessPolicy SchemaObjectIdentifier,
+	On []string,
+) *TableAddRowAccessPolicyRequest {
+	s := TableAddRowAccessPolicyRequest{}
+	s.RowAccessPolicy = RowAccessPolicy
+	s.On = On
+	return &s
+}
+
+func NewTableDropRowAccessPolicyRequest(
+	RowAccessPolicy SchemaObjectIdentifier,
+) *TableDropRowAccessPolicyRequest {
+	s := TableDropRowAccessPolicyRequest{}
+	s.RowAccessPolicy = RowAccessPolicy
+	return &s
+}
+
+func NewTableDropAndAddRowAccessPolicyRequest(
+	drop TableDropRowAccessPolicyRequest,
+	add TableAddRowAccessPolicyRequest,
+) *TableDropAndAddRowAccessPolicyRequest {
+	s := TableDropAndAddRowAccessPolicyRequest{}
+	s.Drop = drop
+	s.Add = add
 	return &s
 }
 
@@ -1351,8 +1369,10 @@ func (s *TableConstraintRenameActionRequest) WithNewName(newName string) *TableC
 	return s
 }
 
-func NewTableConstraintAlterActionRequest() *TableConstraintAlterActionRequest {
-	return &TableConstraintAlterActionRequest{}
+func NewTableConstraintAlterActionRequest(columns []string) *TableConstraintAlterActionRequest {
+	return &TableConstraintAlterActionRequest{
+		Columns: columns,
+	}
 }
 
 func (s *TableConstraintAlterActionRequest) WithConstraintName(constraintName *string) *TableConstraintAlterActionRequest {
@@ -1372,11 +1392,6 @@ func (s *TableConstraintAlterActionRequest) WithUnique(unique *bool) *TableConst
 
 func (s *TableConstraintAlterActionRequest) WithForeignKey(foreignKey *bool) *TableConstraintAlterActionRequest {
 	s.ForeignKey = foreignKey
-	return s
-}
-
-func (s *TableConstraintAlterActionRequest) WithColumns(columns []string) *TableConstraintAlterActionRequest {
-	s.Columns = columns
 	return s
 }
 
@@ -1410,8 +1425,10 @@ func (s *TableConstraintAlterActionRequest) WithNoRely(noRely *bool) *TableConst
 	return s
 }
 
-func NewTableConstraintDropActionRequest() *TableConstraintDropActionRequest {
-	return &TableConstraintDropActionRequest{}
+func NewTableConstraintDropActionRequest(columns []string) *TableConstraintDropActionRequest {
+	return &TableConstraintDropActionRequest{
+		Columns: columns,
+	}
 }
 
 func (s *TableConstraintDropActionRequest) WithConstraintName(constraintName *string) *TableConstraintDropActionRequest {
@@ -1431,11 +1448,6 @@ func (s *TableConstraintDropActionRequest) WithUnique(unique *bool) *TableConstr
 
 func (s *TableConstraintDropActionRequest) WithForeignKey(foreignKey *bool) *TableConstraintDropActionRequest {
 	s.ForeignKey = foreignKey
-	return s
-}
-
-func (s *TableConstraintDropActionRequest) WithColumns(columns []string) *TableConstraintDropActionRequest {
-	s.Columns = columns
 	return s
 }
 
@@ -1564,13 +1576,10 @@ func (s *TableExternalTableColumnRenameActionRequest) WithNewName(newName string
 	return s
 }
 
-func NewTableExternalTableColumnDropActionRequest() *TableExternalTableColumnDropActionRequest {
-	return &TableExternalTableColumnDropActionRequest{}
-}
-
-func (s *TableExternalTableColumnDropActionRequest) WithColumns(columns []string) *TableExternalTableColumnDropActionRequest {
-	s.Columns = columns
-	return s
+func NewTableExternalTableColumnDropActionRequest(columns []string) *TableExternalTableColumnDropActionRequest {
+	return &TableExternalTableColumnDropActionRequest{
+		Columns: columns,
+	}
 }
 
 func (s *TableExternalTableColumnDropActionRequest) WithIfExists() *TableExternalTableColumnDropActionRequest {
