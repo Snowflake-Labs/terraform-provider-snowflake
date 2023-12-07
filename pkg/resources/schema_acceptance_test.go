@@ -47,43 +47,57 @@ func TestAcc_Schema(t *testing.T) {
 	})
 }
 
-//func TestAcc_SchemaRename(t *testing.T) {
-//	oldSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-//	newSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-//
-//	resource.ParallelTest(t, resource.TestCase{
-//		Providers:    acc.TestAccProviders(),
-//		PreCheck:     func() { acc.TestAccPreCheck(t) },
-//		CheckDestroy: nil,
-//		Steps: []resource.TestStep{
-//,			{
-//				Config: schemaConfig(oldSchemaName, acc.TestDatabaseName),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_schema.test", "name", oldSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
-//					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
-//					checkBool("snowflake_schema.test", "is_managed", false),
-//				),
-//			},
-//			{
-//				Config: schemaConfig(newSchemaName, acc.TestDatabaseName),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
-//					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
-//					checkBool("snowflake_schema.test", "is_managed", false),
-//				),
-//			},
-//		},
-//	})
-//}
+func TestAcc_Schema_Rename(t *testing.T) {
+	oldSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	comment := "Terraform acceptance test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"name":     config.StringVariable(oldSchemaName),
+					"database": config.StringVariable(acc.TestDatabaseName),
+					"comment":  config.StringVariable(comment),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", oldSchemaName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", comment),
+					checkBool("snowflake_schema.test", "is_transient", false),
+					checkBool("snowflake_schema.test", "is_managed", false),
+				),
+			},
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"name":     config.StringVariable(newSchemaName),
+					"database": config.StringVariable(acc.TestDatabaseName),
+					"comment":  config.StringVariable(comment),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newSchemaName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", comment),
+					checkBool("snowflake_schema.test", "is_transient", false),
+					checkBool("snowflake_schema.test", "is_managed", false),
+				),
+			},
+		},
+	})
+}
 
 // TestAcc_Schema_TwoSchemasWithTheSameNameOnDifferentDatabases proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2209 issue.
 func TestAcc_Schema_TwoSchemasWithTheSameNameOnDifferentDatabases(t *testing.T) {
 	name := "test_schema"
-	newDatabaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newDatabaseName := "SELDQBXEKC"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
