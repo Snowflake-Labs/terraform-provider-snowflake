@@ -235,6 +235,15 @@ func TestTasks_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
+	t.Run("alter set: multiple", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &TaskSet{
+			UserTaskTimeoutMs: Int(2000),
+			Comment:           String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET USER_TASK_TIMEOUT_MS = 2000, COMMENT = 'some comment'", id.FullyQualifiedName())
+	})
+
 	t.Run("alter set warehouse", func(t *testing.T) {
 		warehouseId := RandomAccountObjectIdentifier()
 		opts := defaultOpts()
@@ -260,6 +269,15 @@ func TestTasks_Alter(t *testing.T) {
 			Comment: Bool(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s UNSET COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("alter unset: multiple", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &TaskUnset{
+			UserTaskTimeoutMs: Bool(true),
+			Comment:           Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s UNSET USER_TASK_TIMEOUT_MS, COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("alter set tags", func(t *testing.T) {
