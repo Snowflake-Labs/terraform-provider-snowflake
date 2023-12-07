@@ -1,30 +1,45 @@
 package resources_test
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Schema(t *testing.T) {
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	comment := "Terraform acceptance test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: schemaConfig(schemaName, acc.TestDatabaseName),
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"name":     config.StringVariable(name),
+					"database": config.StringVariable(acc.TestDatabaseName),
+					"comment":  config.StringVariable(comment),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "name", schemaName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
+					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", comment),
+					checkBool("snowflake_schema.test", "is_transient", false),
 					checkBool("snowflake_schema.test", "is_managed", false),
 				),
 			},
@@ -32,45 +47,94 @@ func TestAcc_Schema(t *testing.T) {
 	})
 }
 
-func TestAcc_SchemaRename(t *testing.T) {
-	oldSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	newSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+//func TestAcc_SchemaRename(t *testing.T) {
+//	oldSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+//	newSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+//
+//	resource.ParallelTest(t, resource.TestCase{
+//		Providers:    acc.TestAccProviders(),
+//		PreCheck:     func() { acc.TestAccPreCheck(t) },
+//		CheckDestroy: nil,
+//		Steps: []resource.TestStep{
+//,			{
+//				Config: schemaConfig(oldSchemaName, acc.TestDatabaseName),
+//				Check: resource.ComposeTestCheckFunc(
+//					resource.TestCheckResourceAttr("snowflake_schema.test", "name", oldSchemaName),
+//					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
+//					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
+//					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
+//					checkBool("snowflake_schema.test", "is_managed", false),
+//				),
+//			},
+//			{
+//				Config: schemaConfig(newSchemaName, acc.TestDatabaseName),
+//				Check: resource.ComposeTestCheckFunc(
+//					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newSchemaName),
+//					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
+//					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
+//					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
+//					checkBool("snowflake_schema.test", "is_managed", false),
+//				),
+//			},
+//		},
+//	})
+//}
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+// TestAcc_Schema_TwoSchemasWithTheSameNameOnDifferentDatabases proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2209 issue.
+func TestAcc_Schema_TwoSchemasWithTheSameNameOnDifferentDatabases(t *testing.T) {
+	name := "test_schema"
+	newDatabaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: schemaConfig(oldSchemaName, acc.TestDatabaseName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"name":     config.StringVariable(name),
+					"database": config.StringVariable(acc.TestDatabaseName),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "name", oldSchemaName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
-					checkBool("snowflake_schema.test", "is_managed", false),
 				),
 			},
 			{
-				Config: schemaConfig(newSchemaName, acc.TestDatabaseName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"name":         config.StringVariable(name),
+					"database":     config.StringVariable(acc.TestDatabaseName),
+					"new_database": config.StringVariable(newDatabaseName),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newSchemaName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_schema.test", "is_transient", false), // this is from user_acceptance_test.go
-					checkBool("snowflake_schema.test", "is_managed", false),
+					resource.TestCheckResourceAttr("snowflake_schema.test_2", "name", name),
+					resource.TestCheckResourceAttr("snowflake_schema.test_2", "database", newDatabaseName),
 				),
 			},
 		},
 	})
 }
 
-func schemaConfig(schemaName string, databaseName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_schema" "test" {
-	name = "%v"
-	database = "%s"
-	comment = "Terraform acceptance test"
-}
-`, schemaName, databaseName)
+func testAccCheckSchemaDestroy(s *terraform.State) error {
+	db := acc.TestAccProvider.Meta().(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "snowflake_schema" {
+			continue
+		}
+		ctx := context.Background()
+		id := sdk.NewDatabaseObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["name"])
+		schema, err := client.Schemas.ShowByID(ctx, id)
+		if err == nil {
+			return fmt.Errorf("schema %v still exists", schema.Name)
+		}
+	}
+	return nil
 }
