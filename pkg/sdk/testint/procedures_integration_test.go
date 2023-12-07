@@ -11,6 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// todo: add tests for:
+//  - creating procedure with different languages from stages
+
 func TestInt_CreateProcedures(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
