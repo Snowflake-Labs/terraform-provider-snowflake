@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func MustParseInt(t *testing.T, input string) int64 {
+func mustParseInt(t *testing.T, input string) int64 {
 	t.Helper()
 	i, err := strconv.ParseInt(input, 10, 64)
 	if err != nil {
@@ -61,7 +61,7 @@ func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) fu
 	t.Helper()
 	return func(state *terraform.State) error {
 		is := state.RootModule().Resources[path].Primary
-		if c, ok := is.Attributes["roles.#"]; !ok || MustParseInt(t, c) != int64(len(roles)) {
+		if c, ok := is.Attributes["roles.#"]; !ok || mustParseInt(t, c) != int64(len(roles)) {
 			return fmt.Errorf("expected roles.# to equal %d but got %s", len(roles), c)
 		}
 		r, err := extractList(is.Attributes, "roles")
@@ -74,7 +74,7 @@ func testCheckRolesAndUsers(t *testing.T, path string, roles, users []string) fu
 			return fmt.Errorf("expected roles %#v but got %#v", roles, r)
 		}
 
-		if c, ok := is.Attributes["users.#"]; !ok || MustParseInt(t, c) != int64(len(users)) {
+		if c, ok := is.Attributes["users.#"]; !ok || mustParseInt(t, c) != int64(len(users)) {
 			return fmt.Errorf("expected users.# to equal %d but got %s", len(users), c)
 		}
 		u, err := extractList(is.Attributes, "users")

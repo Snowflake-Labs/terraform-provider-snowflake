@@ -13,7 +13,7 @@ import (
 
 func TestAcc_Warehouse(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_WAREHOUSE_TESTS"); ok {
-		t.Skip("Skipping TestAccWarehouse")
+		t.Skip("Skipping TestAcc_Warehouse")
 	}
 
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -73,7 +73,7 @@ func TestAcc_Warehouse(t *testing.T) {
 
 func TestAcc_WarehousePattern(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_WAREHOUSE_TESTS"); ok {
-		t.Skip("Skipping TestAccWarehouse")
+		t.Skip("Skipping TestAcc_WarehousePattern")
 	}
 
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

@@ -13,7 +13,7 @@ import (
 
 func TestAcc_ExternalFunction(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_EXTERNAL_FUNCTION_TESTS"); ok {
-		t.Skip("Skipping TestAccExternalFunction")
+		t.Skip("Skipping TestAcc_ExternalFunction")
 	}
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

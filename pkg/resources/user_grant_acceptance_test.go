@@ -13,7 +13,7 @@ import (
 
 func TestAcc_UserGrant(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_USER_GRANT_TESTS"); ok {
-		t.Skip("Skipping TestAccUserGrant")
+		t.Skip("Skipping TestAcc_UserGrant")
 	}
 	wName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
