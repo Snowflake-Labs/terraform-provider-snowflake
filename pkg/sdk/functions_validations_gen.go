@@ -1,7 +1,5 @@
 package sdk
 
-import "errors"
-
 var (
 	_ validatable = new(CreateForJavaFunctionOptions)
 	_ validatable = new(CreateForJavascriptFunctionOptions)
@@ -32,13 +30,13 @@ func (opts *CreateForJavaFunctionOptions) validate() error {
 	}
 	if opts.FunctionDefinition == nil {
 		if opts.TargetPath != nil {
-			errs = append(errs, errors.New("TARGET_PATH must be nil when AS is nil"))
+			errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
 		}
 		if len(opts.Packages) > 0 {
-			errs = append(errs, errors.New("PACKAGES must be empty when AS is nil"))
+			errs = append(errs, NewError("PACKAGES must be empty when AS is nil"))
 		}
 		if len(opts.Imports) == 0 {
-			errs = append(errs, errors.New("IMPORTS must not be empty when AS is nil"))
+			errs = append(errs, NewError("IMPORTS must not be empty when AS is nil"))
 		}
 	}
 	return JoinErrors(errs...)
@@ -78,7 +76,7 @@ func (opts *CreateForPythonFunctionOptions) validate() error {
 	}
 	if opts.FunctionDefinition == nil {
 		if len(opts.Imports) == 0 {
-			errs = append(errs, errors.New("IMPORTS must not be empty when AS is nil"))
+			errs = append(errs, NewError("IMPORTS must not be empty when AS is nil"))
 		}
 	}
 	return JoinErrors(errs...)
@@ -97,13 +95,13 @@ func (opts *CreateForScalaFunctionOptions) validate() error {
 	}
 	if opts.FunctionDefinition == nil {
 		if opts.TargetPath != nil {
-			errs = append(errs, errors.New("TARGET_PATH must be nil when AS is nil"))
+			errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
 		}
 		if len(opts.Packages) > 0 {
-			errs = append(errs, errors.New("PACKAGES must be empty when AS is nil"))
+			errs = append(errs, NewError("PACKAGES must be empty when AS is nil"))
 		}
 		if len(opts.Imports) == 0 {
-			errs = append(errs, errors.New("IMPORTS must not be empty when AS is nil"))
+			errs = append(errs, NewError("IMPORTS must not be empty when AS is nil"))
 		}
 	}
 	return JoinErrors(errs...)
@@ -134,7 +132,7 @@ func (opts *AlterFunctionOptions) validate() error {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if opts.RenameTo != nil && !ValidObjectIdentifier(opts.RenameTo) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
+		errs = append(errs, errInvalidIdentifier("AlterFunctionOptions", "RenameTo"))
 	}
 	if !exactlyOneValueSet(opts.RenameTo, opts.SetComment, opts.SetLogLevel, opts.SetTraceLevel, opts.SetSecure, opts.UnsetLogLevel, opts.UnsetTraceLevel, opts.UnsetSecure, opts.UnsetComment, opts.SetTags, opts.UnsetTags) {
 		errs = append(errs, errExactlyOneOf("AlterFunctionOptions", "RenameTo", "SetComment", "SetLogLevel", "SetTraceLevel", "SetSecure", "UnsetLogLevel", "UnsetTraceLevel", "UnsetSecure", "UnsetComment", "SetTags", "UnsetTags"))

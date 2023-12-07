@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -35,9 +34,9 @@ func TestFunctions_CreateForJava(t *testing.T) {
 				Package: "com.snowflake:snowpark:1.2.0",
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("TARGET_PATH must be nil when AS is nil"))
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("PACKAGES must be empty when AS is nil"))
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("IMPORTS must not be empty when AS is nil"))
+		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
+		assertOptsInvalidJoinedErrors(t, opts, NewError("PACKAGES must be empty when AS is nil"))
+		assertOptsInvalidJoinedErrors(t, opts, NewError("IMPORTS must not be empty when AS is nil"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -180,7 +179,7 @@ func TestFunctions_CreateForPython(t *testing.T) {
 				Package: "com.snowflake:snowpark:1.2.0",
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("IMPORTS must not be empty when AS is nil"))
+		assertOptsInvalidJoinedErrors(t, opts, NewError("IMPORTS must not be empty when AS is nil"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -269,9 +268,9 @@ func TestFunctions_CreateForScala(t *testing.T) {
 				Package: "com.snowflake:snowpark:1.2.0",
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("TARGET_PATH must be nil when AS is nil"))
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("PACKAGES must be empty when AS is nil"))
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("IMPORTS must not be empty when AS is nil"))
+		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
+		assertOptsInvalidJoinedErrors(t, opts, NewError("PACKAGES must be empty when AS is nil"))
+		assertOptsInvalidJoinedErrors(t, opts, NewError("IMPORTS must not be empty when AS is nil"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
