@@ -114,7 +114,6 @@ type ColumnMaskingPolicyRequest struct {
 }
 
 type ColumnInlineConstraintRequest struct {
-	notNull            *bool
 	Name               string               // required
 	type_              ColumnConstraintType // required
 	foreignKey         *InlineForeignKeyRequest

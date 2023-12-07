@@ -359,11 +359,6 @@ func NewColumnInlineConstraintRequest(
 	return &s
 }
 
-func (s *ColumnInlineConstraintRequest) WithNotNull(notNull *bool) *ColumnInlineConstraintRequest {
-	s.notNull = notNull
-	return s
-}
-
 func (s *ColumnInlineConstraintRequest) WithForeignKey(foreignKey *InlineForeignKeyRequest) *ColumnInlineConstraintRequest {
 	s.foreignKey = foreignKey
 	return s

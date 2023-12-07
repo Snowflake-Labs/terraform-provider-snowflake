@@ -42,6 +42,7 @@ type ExternalTableColumnRequest struct {
 	name             string   // required
 	dataType         DataType // required
 	asExpression     string   // required
+	notNull          *bool
 	inlineConstraint *ColumnInlineConstraintRequest
 }
 
@@ -55,13 +56,13 @@ func (v ExternalTableColumnRequest) toOpts() ExternalTableColumn {
 		Name:             v.name,
 		Type:             v.dataType,
 		AsExpression:     []string{v.asExpression},
+		NotNull:          v.notNull,
 		InlineConstraint: inlineConstraint,
 	}
 }
 
 func (v *ColumnInlineConstraintRequest) toOpts() *ColumnInlineConstraint {
 	return &ColumnInlineConstraint{
-		NotNull:            v.notNull,
 		Name:               &v.Name,
 		Type:               v.type_,
 		ForeignKey:         v.foreignKey.toOpts(),
@@ -212,8 +213,11 @@ func (v NullStringRequest) toOpts() NullString {
 	}
 }
 
-func (v *RowAccessPolicyRequest) toOpts() *RowAccessPolicy {
-	return nil
+func (v *RowAccessPolicyRequest) toOpts() *TableRowAccessPolicy {
+	return &TableRowAccessPolicy{
+		Name: v.Name,
+		On:   v.On,
+	}
 }
 
 func (v TagAssociationRequest) toOpts() TagAssociation {
@@ -238,7 +242,7 @@ func (s *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
 		cloudProviderParams = s.cloudProviderParams.toOpts()
 	}
 
-	var rowAccessPolicy *RowAccessPolicy
+	var rowAccessPolicy *TableRowAccessPolicy
 	if s.rowAccessPolicy != nil {
 		rowAccessPolicy = s.rowAccessPolicy.toOpts()
 	}
@@ -303,7 +307,7 @@ func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithM
 		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
-	var rowAccessPolicy *RowAccessPolicy
+	var rowAccessPolicy *TableRowAccessPolicy
 	if v.rowAccessPolicy != nil {
 		rowAccessPolicy = v.rowAccessPolicy.toOpts()
 	}
@@ -369,7 +373,7 @@ func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalT
 		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
-	var rowAccessPolicy *RowAccessPolicy
+	var rowAccessPolicy *TableRowAccessPolicy
 	if v.rowAccessPolicy != nil {
 		rowAccessPolicy = v.rowAccessPolicy.toOpts()
 	}
@@ -430,7 +434,7 @@ func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableU
 		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
-	var rowAccessPolicy *RowAccessPolicy
+	var rowAccessPolicy *TableRowAccessPolicy
 	if v.rowAccessPolicy != nil {
 		rowAccessPolicy = v.rowAccessPolicy.toOpts()
 	}

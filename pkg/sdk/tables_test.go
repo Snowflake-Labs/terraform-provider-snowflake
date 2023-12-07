@@ -141,10 +141,10 @@ func TestTableCreate(t *testing.T) {
 
 	t.Run("validation: rowAccessPolicy's incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.RowAccessPolicy = &RowAccessPolicy{
+		opts.RowAccessPolicy = &TableRowAccessPolicy{
 			Name: NewSchemaObjectIdentifier("", "", ""),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("RowAccessPolicy", "Name"))
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("TableRowAccessPolicy", "Name"))
 	})
 
 	t.Run("validation: inline constraint - constraint name empty", func(t *testing.T) {
@@ -437,7 +437,7 @@ func TestTableCreate(t *testing.T) {
 		stageCopyOptions := StageCopyOptions{
 			OnError: &StageCopyOnErrorOptions{SkipFile: String("SKIP_FILE")},
 		}
-		rowAccessPolicy := RowAccessPolicy{
+		rowAccessPolicy := TableRowAccessPolicy{
 			Name: RandomSchemaObjectIdentifier(),
 			On:   []string{"COLUMN_1", "COLUMN_2"},
 		}
@@ -547,7 +547,7 @@ func TestTableCreateAsSelect(t *testing.T) {
 		maskingPolicy := TableAsSelectColumnMaskingPolicy{
 			Name: RandomSchemaObjectIdentifier(),
 		}
-		rowAccessPolicy := RowAccessPolicy{
+		rowAccessPolicy := TableRowAccessPolicy{
 			Name: RandomSchemaObjectIdentifier(),
 			On:   []string{"COLUMN_1", "COLUMN_2"},
 		}

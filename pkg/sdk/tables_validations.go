@@ -72,7 +72,7 @@ func (opts *createTableOptions) validate() error {
 
 	if opts.RowAccessPolicy != nil {
 		if !ValidObjectIdentifier(opts.RowAccessPolicy.Name) {
-			errs = append(errs, errInvalidIdentifier("RowAccessPolicy", "Name"))
+			errs = append(errs, errInvalidIdentifier("TableRowAccessPolicy", "Name"))
 		}
 	}
 

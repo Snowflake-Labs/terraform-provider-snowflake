@@ -91,6 +91,11 @@ func NewExternalTableColumnRequest(
 	return &s
 }
 
+func (s *ExternalTableColumnRequest) WithNotNull() *ExternalTableColumnRequest {
+	s.notNull = Bool(true)
+	return s
+}
+
 func (s *ExternalTableColumnRequest) WithInlineConstraint(inlineConstraint *ColumnInlineConstraintRequest) *ExternalTableColumnRequest {
 	s.inlineConstraint = inlineConstraint
 	return s

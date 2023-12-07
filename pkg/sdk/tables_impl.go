@@ -467,9 +467,9 @@ func (s *CreateTableRequest) toOpts() *createTableOptions {
 	for _, tagRequest := range s.Tags {
 		tagAssociations = append(tagAssociations, TagAssociation(tagRequest))
 	}
-	var rowAccessPolicy *RowAccessPolicy
+	var rowAccessPolicy *TableRowAccessPolicy
 	if s.RowAccessPolicy != nil {
-		rowAccessPolicy = &RowAccessPolicy{
+		rowAccessPolicy = &TableRowAccessPolicy{
 			Name: s.RowAccessPolicy.Name,
 			On:   s.RowAccessPolicy.On,
 		}
@@ -755,7 +755,6 @@ func convertColumns(columnRequests []TableColumnRequest) []TableColumn {
 				}
 			}
 			inlineConstraint = &ColumnInlineConstraint{
-				NotNull:            columnRequest.notNull,
 				Name:               &columnRequest.inlineConstraint.Name,
 				Type:               columnRequest.inlineConstraint.type_,
 				ForeignKey:         foreignKey,

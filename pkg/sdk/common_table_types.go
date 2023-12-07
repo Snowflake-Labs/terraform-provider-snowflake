@@ -2,7 +2,7 @@ package sdk
 
 import "errors"
 
-type RowAccessPolicy struct {
+type TableRowAccessPolicy struct {
 	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"`
 	Name            SchemaObjectIdentifier `ddl:"identifier"`
 	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
@@ -10,7 +10,6 @@ type RowAccessPolicy struct {
 
 // ColumnInlineConstraint is based on https://docs.snowflake.com/en/sql-reference/sql/create-table-constraint#inline-unique-primary-foreign-key.
 type ColumnInlineConstraint struct {
-	NotNull    *bool                `ddl:"keyword" sql:"NOT NULL"`
 	Name       *string              `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
 	Type       ColumnConstraintType `ddl:"keyword"`
 	ForeignKey *InlineForeignKey    `ddl:"keyword" sql:"FOREIGN KEY"`
