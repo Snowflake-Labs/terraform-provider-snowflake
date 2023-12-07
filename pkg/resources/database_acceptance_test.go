@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
@@ -163,4 +164,25 @@ func dropDatabaseOutsideTerraform(t *testing.T, id string) {
 
 	err = client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(id), &sdk.DropDatabaseOptions{})
 	require.NoError(t, err)
+}
+
+func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
+	t.Helper()
+	return func(state *terraform.State) error {
+		client, err := sdk.NewDefaultClient()
+		require.NoError(t, err)
+		ctx := context.Background()
+
+		_, err = client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id))
+		if shouldExist {
+			if err != nil {
+				return fmt.Errorf("error while retrieving database %s, err = %w", id, err)
+			}
+		} else {
+			if err == nil {
+				return fmt.Errorf("database %v still exists", id)
+			}
+		}
+		return nil
+	}
 }
