@@ -45,9 +45,11 @@ type CreatePasswordPolicyOptions struct {
 	PasswordMinLowerCaseChars *int `ddl:"parameter" sql:"PASSWORD_MIN_LOWER_CASE_CHARS"`
 	PasswordMinNumericChars   *int `ddl:"parameter" sql:"PASSWORD_MIN_NUMERIC_CHARS"`
 	PasswordMinSpecialChars   *int `ddl:"parameter" sql:"PASSWORD_MIN_SPECIAL_CHARS"`
+	PasswordMinAgeDays        *int `ddl:"parameter" sql:"PASSWORD_MIN_AGE_DAYS"`
 	PasswordMaxAgeDays        *int `ddl:"parameter" sql:"PASSWORD_MAX_AGE_DAYS"`
 	PasswordMaxRetries        *int `ddl:"parameter" sql:"PASSWORD_MAX_RETRIES"`
 	PasswordLockoutTimeMins   *int `ddl:"parameter" sql:"PASSWORD_LOCKOUT_TIME_MINS"`
+	PasswordHistory           *int `ddl:"parameter" sql:"PASSWORD_HISTORY"`
 
 	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
@@ -85,8 +87,8 @@ type AlterPasswordPolicyOptions struct {
 	IfExists       *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name           SchemaObjectIdentifier  `ddl:"identifier"`
 	NewName        *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set            *PasswordPolicySet      `ddl:"keyword" sql:"SET"`
-	Unset          *PasswordPolicyUnset    `ddl:"keyword" sql:"UNSET"`
+	Set            *PasswordPolicySet      `ddl:"list,no_parentheses" sql:"SET"`
+	Unset          *PasswordPolicyUnset    `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 func (opts *AlterPasswordPolicyOptions) validate() error {
@@ -120,9 +122,11 @@ type PasswordPolicySet struct {
 	PasswordMinLowerCaseChars *int    `ddl:"parameter" sql:"PASSWORD_MIN_LOWER_CASE_CHARS"`
 	PasswordMinNumericChars   *int    `ddl:"parameter" sql:"PASSWORD_MIN_NUMERIC_CHARS"`
 	PasswordMinSpecialChars   *int    `ddl:"parameter" sql:"PASSWORD_MIN_SPECIAL_CHARS"`
+	PasswordMinAgeDays        *int    `ddl:"parameter" sql:"PASSWORD_MIN_AGE_DAYS"`
 	PasswordMaxAgeDays        *int    `ddl:"parameter" sql:"PASSWORD_MAX_AGE_DAYS"`
 	PasswordMaxRetries        *int    `ddl:"parameter" sql:"PASSWORD_MAX_RETRIES"`
 	PasswordLockoutTimeMins   *int    `ddl:"parameter" sql:"PASSWORD_LOCKOUT_TIME_MINS"`
+	PasswordHistory           *int    `ddl:"parameter" sql:"PASSWORD_HISTORY"`
 	Comment                   *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -134,11 +138,13 @@ func (v *PasswordPolicySet) validate() error {
 		v.PasswordMinLowerCaseChars,
 		v.PasswordMinNumericChars,
 		v.PasswordMinSpecialChars,
+		v.PasswordMinAgeDays,
 		v.PasswordMaxAgeDays,
 		v.PasswordMaxRetries,
 		v.PasswordLockoutTimeMins,
+		v.PasswordHistory,
 		v.Comment) {
-		return errors.New("must set at least one parameter")
+		return errAtLeastOneOf("PasswordPolicySet", "PasswordMinLength", "PasswordMaxLength", "PasswordMinUpperCaseChars", "PasswordMinLowerCaseChars", "PasswordMinNumericChars", "PasswordMinSpecialChars", "PasswordMinAgeDays", "PasswordMaxAgeDays", "PasswordMaxRetries", "PasswordLockoutTimeMins", "PasswordHistory", "Comment")
 	}
 	return nil
 }
@@ -150,9 +156,11 @@ type PasswordPolicyUnset struct {
 	PasswordMinLowerCaseChars *bool `ddl:"keyword" sql:"PASSWORD_MIN_LOWER_CASE_CHARS"`
 	PasswordMinNumericChars   *bool `ddl:"keyword" sql:"PASSWORD_MIN_NUMERIC_CHARS"`
 	PasswordMinSpecialChars   *bool `ddl:"keyword" sql:"PASSWORD_MIN_SPECIAL_CHARS"`
+	PasswordMinAgeDays        *bool `ddl:"keyword" sql:"PASSWORD_MIN_AGE_DAYS"`
 	PasswordMaxAgeDays        *bool `ddl:"keyword" sql:"PASSWORD_MAX_AGE_DAYS"`
 	PasswordMaxRetries        *bool `ddl:"keyword" sql:"PASSWORD_MAX_RETRIES"`
 	PasswordLockoutTimeMins   *bool `ddl:"keyword" sql:"PASSWORD_LOCKOUT_TIME_MINS"`
+	PasswordHistory           *bool `ddl:"keyword" sql:"PASSWORD_HISTORY"`
 	Comment                   *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
@@ -164,24 +172,13 @@ func (v *PasswordPolicyUnset) validate() error {
 		v.PasswordMinLowerCaseChars,
 		v.PasswordMinNumericChars,
 		v.PasswordMinSpecialChars,
+		v.PasswordMinAgeDays,
 		v.PasswordMaxAgeDays,
 		v.PasswordMaxRetries,
 		v.PasswordLockoutTimeMins,
+		v.PasswordHistory,
 		v.Comment) {
-		return errors.New("must unset at least one parameter")
-	}
-	if !exactlyOneValueSet(
-		v.PasswordMinLength,
-		v.PasswordMaxLength,
-		v.PasswordMinUpperCaseChars,
-		v.PasswordMinLowerCaseChars,
-		v.PasswordMinNumericChars,
-		v.PasswordMinSpecialChars,
-		v.PasswordMaxAgeDays,
-		v.PasswordMaxRetries,
-		v.PasswordLockoutTimeMins,
-		v.Comment) {
-		return errors.New("cannot unset more than one parameter in the same ALTER statement")
+		return errAtLeastOneOf("PasswordPolicyUnset", "PasswordMinLength", "PasswordMaxLength", "PasswordMinUpperCaseChars", "PasswordMinLowerCaseChars", "PasswordMinNumericChars", "PasswordMinSpecialChars", "PasswordMinAgeDays", "PasswordMaxAgeDays", "PasswordMaxRetries", "PasswordLockoutTimeMins", "PasswordHistory", "Comment")
 	}
 	return nil
 }
@@ -367,9 +364,11 @@ type PasswordPolicyDetails struct {
 	PasswordMinLowerCaseChars *IntProperty
 	PasswordMinNumericChars   *IntProperty
 	PasswordMinSpecialChars   *IntProperty
+	PasswordMinAgeDays        *IntProperty
 	PasswordMaxAgeDays        *IntProperty
 	PasswordMaxRetries        *IntProperty
 	PasswordLockoutTimeMins   *IntProperty
+	PasswordHistory           *IntProperty
 }
 
 func passwordPolicyDetailsFromRows(rows []propertyRow) *PasswordPolicyDetails {
@@ -394,12 +393,16 @@ func passwordPolicyDetailsFromRows(rows []propertyRow) *PasswordPolicyDetails {
 			v.PasswordMinNumericChars = row.toIntProperty()
 		case "PASSWORD_MIN_SPECIAL_CHARS":
 			v.PasswordMinSpecialChars = row.toIntProperty()
+		case "PASSWORD_MIN_AGE_DAYS":
+			v.PasswordMinAgeDays = row.toIntProperty()
 		case "PASSWORD_MAX_AGE_DAYS":
 			v.PasswordMaxAgeDays = row.toIntProperty()
 		case "PASSWORD_MAX_RETRIES":
 			v.PasswordMaxRetries = row.toIntProperty()
 		case "PASSWORD_LOCKOUT_TIME_MINS":
 			v.PasswordLockoutTimeMins = row.toIntProperty()
+		case "PASSWORD_HISTORY":
+			v.PasswordHistory = row.toIntProperty()
 		}
 	}
 	return v
