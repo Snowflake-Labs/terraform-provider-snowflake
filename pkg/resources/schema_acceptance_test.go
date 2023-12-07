@@ -97,6 +97,7 @@ func TestAcc_Schema_Rename(t *testing.T) {
 // TestAcc_Schema_TwoSchemasWithTheSameNameOnDifferentDatabases proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2209 issue.
 func TestAcc_Schema_TwoSchemasWithTheSameNameOnDifferentDatabases(t *testing.T) {
 	name := "test_schema"
+	// It seems like Snowflake orders the output of SHOW command based on names, so they do matter
 	newDatabaseName := "SELDQBXEKC"
 
 	resource.Test(t, resource.TestCase{
