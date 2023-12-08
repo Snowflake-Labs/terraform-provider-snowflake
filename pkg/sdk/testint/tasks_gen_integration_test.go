@@ -389,7 +389,7 @@ func TestInt_Tasks(t *testing.T) {
 		task := createTask(t)
 		id := task.ID()
 
-		alterRequest := sdk.NewAlterTaskRequest(id).WithSet(sdk.NewTaskSetRequest().WithComment(sdk.String("new comment")))
+		alterRequest := sdk.NewAlterTaskRequest(id).WithSet(sdk.NewTaskSetRequest().WithComment(sdk.String("new comment")).WithUserTaskTimeoutMs(sdk.Int(1000)))
 		err := client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -398,7 +398,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		assert.Equal(t, "new comment", alteredTask.Comment)
 
-		alterRequest = sdk.NewAlterTaskRequest(id).WithUnset(sdk.NewTaskUnsetRequest().WithComment(sdk.Bool(true)))
+		alterRequest = sdk.NewAlterTaskRequest(id).WithUnset(sdk.NewTaskUnsetRequest().WithComment(sdk.Bool(true)).WithUserTaskTimeoutMs(sdk.Bool(true)))
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
