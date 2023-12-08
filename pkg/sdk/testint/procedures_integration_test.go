@@ -11,8 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// todo: add tests for:
-//  - creating procedure with different languages from stages
+/*
+todo: add tests for:
+  - creating proc with different languages (java, javascript, python, scala, sql) from stages  using [ TARGET_PATH = '<stage_path_and_file_name_to_write>' ]
+  - call and call-with for scripting https://docs.snowflake.com/en/sql-reference/sql/call
+*/
 
 func TestInt_CreateProcedures(t *testing.T) {
 	client := testClient(t)

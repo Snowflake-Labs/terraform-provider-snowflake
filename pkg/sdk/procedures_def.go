@@ -4,6 +4,11 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+/*
+todo: add custom operation for:
+  - call and call-with for scripting https://docs.snowflake.com/en/sql-reference/sql/call
+*/
+
 var procedureArgument = g.NewQueryStruct("ProcedureArgument").
 	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
 	PredefinedQueryStructField("ArgDataType", "DataType", g.KeywordOptions().NoQuotes().Required()).
