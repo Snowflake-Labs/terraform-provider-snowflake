@@ -148,3 +148,31 @@ func (row *propertyRow) toBoolProperty() *BoolProperty {
 		Description:  row.Description,
 	}
 }
+
+type ExecuteAs string
+
+func ExecuteAsPointer(v ExecuteAs) *ExecuteAs {
+	return &v
+}
+
+const (
+	ExecuteAsCaller ExecuteAs = "EXECUTE AS CALLER"
+	ExecuteAsOwner  ExecuteAs = "EXECUTE AS OWNER"
+)
+
+type NullInputBehavior string
+
+func NullInputBehaviorPointer(v NullInputBehavior) *NullInputBehavior {
+	return &v
+}
+
+const (
+	NullInputBehaviorCalledOnNullInput NullInputBehavior = "CALLED ON NULL INPUT"
+	NullInputBehaviorReturnNullInput   NullInputBehavior = "RETURN NULL ON NULL INPUT"
+	NullInputBehaviorStrict            NullInputBehavior = "STRICT"
+)
+
+type Secret struct {
+	VariableName string `ddl:"keyword,single_quotes"`
+	Name         string `ddl:"parameter,no_quotes"`
+}

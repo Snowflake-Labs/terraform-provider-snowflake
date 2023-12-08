@@ -22,6 +22,7 @@ const (
 	ExactlyOneValueSet
 	AtLeastOneValueSet
 	ValidateValue
+	ValidateValueSet
 )
 
 type Validation struct {
@@ -64,6 +65,8 @@ func (v *Validation) Condition(field *Field) string {
 		return fmt.Sprintf("!exactlyOneValueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case AtLeastOneValueSet:
 		return fmt.Sprintf("!anyValueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
+	case ValidateValueSet:
+		return fmt.Sprintf("!valueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ValidateValue:
 		return fmt.Sprintf("err := %s.validate(); err != nil", strings.Join(v.fieldsWithPath(field.Parent), ","))
 	}
@@ -82,6 +85,8 @@ func (v *Validation) ReturnedError(field *Field) string {
 		return fmt.Sprintf(`errExactlyOneOf("%s", %s)`, field.PathWithRoot(), strings.Join(v.paramsQuoted(), ","))
 	case AtLeastOneValueSet:
 		return fmt.Sprintf(`errAtLeastOneOf("%s", %s)`, field.PathWithRoot(), strings.Join(v.paramsQuoted(), ","))
+	case ValidateValueSet:
+		return fmt.Sprintf(`errNotSet("%s", %s)`, field.PathWithRoot(), strings.Join(v.paramsQuoted(), ","))
 	case ValidateValue:
 		return "err"
 	}
@@ -100,6 +105,8 @@ func (v *Validation) TodoComment(field *Field) string {
 		return fmt.Sprintf("validation: exactly one field from %v should be present", v.fieldsWithPath(field))
 	case AtLeastOneValueSet:
 		return fmt.Sprintf("validation: at least one of the fields %v should be set", v.fieldsWithPath(field))
+	case ValidateValueSet:
+		return fmt.Sprintf("validation: %v should be set", v.fieldsWithPath(field))
 	case ValidateValue:
 		return fmt.Sprintf("validation: %v should be valid", v.fieldsWithPath(field)[0])
 	}
