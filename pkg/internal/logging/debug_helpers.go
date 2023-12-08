@@ -14,5 +14,7 @@ func init() {
 	}
 }
 
-var additionalDebugLoggingEnabled bool
-var DebugLogger *log.Logger
+var (
+	additionalDebugLoggingEnabled bool
+	DebugLogger                   *log.Logger
+)
