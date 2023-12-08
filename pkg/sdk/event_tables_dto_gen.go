@@ -21,7 +21,7 @@ type CreateEventTableRequest struct {
 	DefaultDdlCollation        *string
 	CopyGrants                 *bool
 	Comment                    *string
-	RowAccessPolicy            *RowAccessPolicy
+	RowAccessPolicy            *TableRowAccessPolicy
 	Tag                        []TagAssociation
 }
 
