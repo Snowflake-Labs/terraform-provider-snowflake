@@ -14,10 +14,10 @@ func TestExternalTablesCreate(t *testing.T) {
 					Name:         "column",
 					Type:         "varchar",
 					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
 					InlineConstraint: &ColumnInlineConstraint{
-						Name:    String("my_constraint"),
-						NotNull: Bool(true),
-						Type:    &ColumnConstraintTypeUnique,
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
 					},
 				},
 			},
@@ -43,10 +43,10 @@ func TestExternalTablesCreate(t *testing.T) {
 					Name:         "column",
 					Type:         "varchar",
 					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
 					InlineConstraint: &ColumnInlineConstraint{
-						Name:    String("my_constraint"),
-						NotNull: Bool(true),
-						Type:    &ColumnConstraintTypeUnique,
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
 					},
 				},
 			},
@@ -61,7 +61,7 @@ func TestExternalTablesCreate(t *testing.T) {
 			},
 			AwsSnsTopic: String("aws_sns_topic"),
 			CopyGrants:  Bool(true),
-			RowAccessPolicy: &RowAccessPolicy{
+			RowAccessPolicy: &TableRowAccessPolicy{
 				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
 			},
@@ -106,10 +106,10 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 					Name:         "column",
 					Type:         "varchar",
 					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
 					InlineConstraint: &ColumnInlineConstraint{
-						Name:    String("my_constraint"),
-						NotNull: Bool(true),
-						Type:    &ColumnConstraintTypeUnique,
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
 					},
 				},
 			},
@@ -123,7 +123,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 				},
 			},
 			CopyGrants: Bool(true),
-			RowAccessPolicy: &RowAccessPolicy{
+			RowAccessPolicy: &TableRowAccessPolicy{
 				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
 			},
@@ -183,7 +183,7 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 			},
 			DeltaTableFormat: Bool(true),
 			CopyGrants:       Bool(true),
-			RowAccessPolicy: &RowAccessPolicy{
+			RowAccessPolicy: &TableRowAccessPolicy{
 				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
 			},
@@ -236,7 +236,7 @@ func TestExternalTableUsingTemplateOpts(t *testing.T) {
 				},
 			},
 			Comment: String("some_comment"),
-			RowAccessPolicy: &RowAccessPolicy{
+			RowAccessPolicy: &TableRowAccessPolicy{
 				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
 			},

@@ -161,7 +161,7 @@ func (row FileFormatRow) convert() *FileFormat {
 		ff.Options.JSONTimestampFormat = &inputOptions.TimestampFormat
 		ff.Options.JSONBinaryFormat = (*BinaryFormat)(&inputOptions.BinaryFormat)
 		ff.Options.JSONTrimSpace = &inputOptions.TrimSpace
-		ff.Options.JSONNullIf = &newNullIf
+		ff.Options.JSONNullIf = newNullIf
 		ff.Options.JSONFileExtension = &inputOptions.FileExtension
 		ff.Options.JSONEnableOctal = &inputOptions.EnableOctal
 		ff.Options.JSONAllowDuplicate = &inputOptions.AllowDuplicate
@@ -429,7 +429,7 @@ type FileFormatTypeOptions struct {
 	JSONTimestampFormat          *string          `ddl:"parameter,single_quotes" sql:"TIMESTAMP_FORMAT"`
 	JSONBinaryFormat             *BinaryFormat    `ddl:"parameter" sql:"BINARY_FORMAT"`
 	JSONTrimSpace                *bool            `ddl:"parameter" sql:"TRIM_SPACE"`
-	JSONNullIf                   *[]NullString    `ddl:"parameter,parentheses" sql:"NULL_IF"`
+	JSONNullIf                   []NullString     `ddl:"parameter,parentheses" sql:"NULL_IF"`
 	JSONFileExtension            *string          `ddl:"parameter,single_quotes" sql:"FILE_EXTENSION"`
 	JSONEnableOctal              *bool            `ddl:"parameter" sql:"ENABLE_OCTAL"`
 	JSONAllowDuplicate           *bool            `ddl:"parameter" sql:"ALLOW_DUPLICATE"`
@@ -835,7 +835,7 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 				for _, s := range strings.Split(strings.Trim(v, "[]"), ", ") {
 					newNullIf = append(newNullIf, NullString{s})
 				}
-				details.Options.JSONNullIf = &newNullIf
+				details.Options.JSONNullIf = newNullIf
 			case "COMPRESSION":
 				comp := JSONCompression(v)
 				details.Options.JSONCompression = &comp
