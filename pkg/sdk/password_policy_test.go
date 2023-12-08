@@ -32,12 +32,14 @@ func TestPasswordPolicyCreate(t *testing.T) {
 			PasswordMinLowerCaseChars: Int(1),
 			PasswordMinNumericChars:   Int(1),
 			PasswordMinSpecialChars:   Int(1),
+			PasswordMinAgeDays:        Int(30),
 			PasswordMaxAgeDays:        Int(30),
 			PasswordMaxRetries:        Int(5),
 			PasswordLockoutTimeMins:   Int(30),
+			PasswordHistory:           Int(15),
 			Comment:                   String("test comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE PASSWORD POLICY IF NOT EXISTS %s PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1 PASSWORD_MIN_LOWER_CASE_CHARS = 1 PASSWORD_MIN_NUMERIC_CHARS = 1 PASSWORD_MIN_SPECIAL_CHARS = 1 PASSWORD_MAX_AGE_DAYS = 30 PASSWORD_MAX_RETRIES = 5 PASSWORD_LOCKOUT_TIME_MINS = 30 COMMENT = 'test comment'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE PASSWORD POLICY IF NOT EXISTS %s PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1 PASSWORD_MIN_LOWER_CASE_CHARS = 1 PASSWORD_MIN_NUMERIC_CHARS = 1 PASSWORD_MIN_SPECIAL_CHARS = 1 PASSWORD_MIN_AGE_DAYS = 30 PASSWORD_MAX_AGE_DAYS = 30 PASSWORD_MAX_RETRIES = 5 PASSWORD_LOCKOUT_TIME_MINS = 30 PASSWORD_HISTORY = 15 COMMENT = 'test comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -56,6 +58,22 @@ func TestPasswordPolicyAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Set", "Unset", "NewName"))
 	})
 
+	t.Run("validation: no set", func(t *testing.T) {
+		opts := &AlterPasswordPolicyOptions{
+			name: id,
+			Set:  &PasswordPolicySet{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("PasswordPolicySet", "PasswordMinLength", "PasswordMaxLength", "PasswordMinUpperCaseChars", "PasswordMinLowerCaseChars", "PasswordMinNumericChars", "PasswordMinSpecialChars", "PasswordMinAgeDays", "PasswordMaxAgeDays", "PasswordMaxRetries", "PasswordLockoutTimeMins", "PasswordHistory", "Comment"))
+	})
+
+	t.Run("validation: no unset", func(t *testing.T) {
+		opts := &AlterPasswordPolicyOptions{
+			name:  id,
+			Unset: &PasswordPolicyUnset{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("PasswordPolicyUnset", "PasswordMinLength", "PasswordMaxLength", "PasswordMinUpperCaseChars", "PasswordMinLowerCaseChars", "PasswordMinNumericChars", "PasswordMinSpecialChars", "PasswordMinAgeDays", "PasswordMaxAgeDays", "PasswordMaxRetries", "PasswordLockoutTimeMins", "PasswordHistory", "Comment"))
+	})
+
 	t.Run("with set", func(t *testing.T) {
 		opts := &AlterPasswordPolicyOptions{
 			name: id,
@@ -65,7 +83,7 @@ func TestPasswordPolicyAlter(t *testing.T) {
 				PasswordMinUpperCaseChars: Int(1),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER PASSWORD POLICY %s SET PASSWORD_MIN_LENGTH = 10 PASSWORD_MAX_LENGTH = 20 PASSWORD_MIN_UPPER_CASE_CHARS = 1", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER PASSWORD POLICY %s SET PASSWORD_MIN_LENGTH = 10, PASSWORD_MAX_LENGTH = 20, PASSWORD_MIN_UPPER_CASE_CHARS = 1", id.FullyQualifiedName())
 	})
 
 	t.Run("with unset", func(t *testing.T) {
@@ -76,6 +94,17 @@ func TestPasswordPolicyAlter(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER PASSWORD POLICY %s UNSET PASSWORD_MIN_LENGTH", id.FullyQualifiedName())
+	})
+
+	t.Run("with multiple unset", func(t *testing.T) {
+		opts := &AlterPasswordPolicyOptions{
+			name: id,
+			Unset: &PasswordPolicyUnset{
+				PasswordMinLength:  Bool(true),
+				PasswordMinAgeDays: Bool(true),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER PASSWORD POLICY %s UNSET PASSWORD_MIN_LENGTH, PASSWORD_MIN_AGE_DAYS", id.FullyQualifiedName())
 	})
 
 	t.Run("rename", func(t *testing.T) {
