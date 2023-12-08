@@ -44,7 +44,7 @@ type InternalDirectoryTableOptionsRequest struct {
 type StageFileFormatRequest struct {
 	FormatName *string
 	Type       *FileFormatType
-	Options    *FileFormatTypeOptions
+	Options    *FileFormatTypeOptionsRequest
 }
 
 type StageCopyOptionsRequest struct {
@@ -60,7 +60,7 @@ type StageCopyOptionsRequest struct {
 
 type StageCopyOnErrorOptionsRequest struct {
 	Continue       *bool
-	SkipFile       *bool
+	SkipFile       *string
 	AbortStatement *bool
 }
 

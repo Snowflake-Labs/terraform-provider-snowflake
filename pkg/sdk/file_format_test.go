@@ -65,7 +65,7 @@ func TestFileFormatsCreate(t *testing.T) {
 				JSONTimestampFormat: String("aze"),
 				JSONBinaryFormat:    &BinaryFormatHex,
 				JSONTrimSpace:       Bool(true),
-				JSONNullIf: &[]NullString{
+				JSONNullIf: []NullString{
 					{"c1"},
 					{"c2"},
 				},
