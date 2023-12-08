@@ -1,7 +1,5 @@
 package sdk
 
-import "errors"
-
 var (
 	_ validatable = new(CreateForJavaProcedureOptions)
 	_ validatable = new(CreateForJavaScriptProcedureOptions)
@@ -19,11 +17,25 @@ func (opts *CreateForJavaProcedureOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !valueSet(opts.RuntimeVersion) {
+		errs = append(errs, errNotSet("CreateForJavaProcedureOptions", "RuntimeVersion"))
+	}
+	if !valueSet(opts.Handler) {
+		errs = append(errs, errNotSet("CreateForJavaProcedureOptions", "Handler"))
+	}
+	if !valueSet(opts.Packages) {
+		errs = append(errs, errNotSet("CreateForJavaProcedureOptions", "Packages"))
+	}
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if valueSet(opts.Returns) {
+		if !exactlyOneValueSet(opts.Returns.ResultDataType, opts.Returns.Table) {
+			errs = append(errs, errExactlyOneOf("CreateForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
+		}
+	}
 	if opts.ProcedureDefinition == nil && opts.TargetPath != nil {
-		errs = append(errs, errors.New("TARGET_PATH must be nil when AS is nil"))
+		errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
 	}
 	return JoinErrors(errs...)
 }
@@ -33,6 +45,9 @@ func (opts *CreateForJavaScriptProcedureOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !valueSet(opts.ProcedureDefinition) {
+		errs = append(errs, errNotSet("CreateForJavaScriptProcedureOptions", "ProcedureDefinition"))
+	}
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
@@ -44,8 +59,22 @@ func (opts *CreateForPythonProcedureOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !valueSet(opts.RuntimeVersion) {
+		errs = append(errs, errNotSet("CreateForPythonProcedureOptions", "RuntimeVersion"))
+	}
+	if !valueSet(opts.Handler) {
+		errs = append(errs, errNotSet("CreateForPythonProcedureOptions", "Handler"))
+	}
+	if !valueSet(opts.Packages) {
+		errs = append(errs, errNotSet("CreateForPythonProcedureOptions", "Packages"))
+	}
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if valueSet(opts.Returns) {
+		if !exactlyOneValueSet(opts.Returns.ResultDataType, opts.Returns.Table) {
+			errs = append(errs, errExactlyOneOf("CreateForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
+		}
 	}
 	return JoinErrors(errs...)
 }
@@ -55,11 +84,25 @@ func (opts *CreateForScalaProcedureOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !valueSet(opts.RuntimeVersion) {
+		errs = append(errs, errNotSet("CreateForScalaProcedureOptions", "RuntimeVersion"))
+	}
+	if !valueSet(opts.Handler) {
+		errs = append(errs, errNotSet("CreateForScalaProcedureOptions", "Handler"))
+	}
+	if !valueSet(opts.Packages) {
+		errs = append(errs, errNotSet("CreateForScalaProcedureOptions", "Packages"))
+	}
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if valueSet(opts.Returns) {
+		if !exactlyOneValueSet(opts.Returns.ResultDataType, opts.Returns.Table) {
+			errs = append(errs, errExactlyOneOf("CreateForScalaProcedureOptions.Returns", "ResultDataType", "Table"))
+		}
+	}
 	if opts.ProcedureDefinition == nil && opts.TargetPath != nil {
-		errs = append(errs, errors.New("TARGET_PATH must be nil when AS is nil"))
+		errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
 	}
 	return JoinErrors(errs...)
 }
@@ -69,8 +112,16 @@ func (opts *CreateForSQLProcedureOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if !valueSet(opts.ProcedureDefinition) {
+		errs = append(errs, errNotSet("CreateForSQLProcedureOptions", "ProcedureDefinition"))
+	}
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if valueSet(opts.Returns) {
+		if !exactlyOneValueSet(opts.Returns.ResultDataType, opts.Returns.Table) {
+			errs = append(errs, errExactlyOneOf("CreateForSQLProcedureOptions.Returns", "ResultDataType", "Table"))
+		}
 	}
 	return JoinErrors(errs...)
 }

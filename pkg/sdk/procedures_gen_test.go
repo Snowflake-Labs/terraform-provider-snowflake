@@ -26,6 +26,35 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: returns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: function definition", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.TargetPath = String("@~/testfunc.jar")
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "com.snowflake:snowpark:1.2.0",
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
+	})
+
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: DataTypeVARCHAR,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "Handler"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "RuntimeVersion"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "Packages"))
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -106,6 +135,11 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaScriptProcedureOptions", "ProcedureDefinition"))
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -146,6 +180,24 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: returns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: DataTypeVARCHAR,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "Handler"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "RuntimeVersion"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "Packages"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -225,6 +277,35 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: returns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaProcedureOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: function definition", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.TargetPath = String("@~/testfunc.jar")
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "com.snowflake:snowpark:1.2.0",
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
+	})
+
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: DataTypeVARCHAR,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "Handler"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "RuntimeVersion"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "Packages"))
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -282,6 +363,22 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForSQLProcedureOptions", "ProcedureDefinition"))
+	})
+
+	t.Run("create with no arguments", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureSQLReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: DataTypeFloat,
+			},
+		}
+		opts.ProcedureDefinition = "3.141592654::FLOAT"
+		assertOptsValidAndSQLEquals(t, opts, `CREATE PROCEDURE %s () RETURNS FLOAT LANGUAGE SQL AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {

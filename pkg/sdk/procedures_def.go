@@ -4,11 +4,6 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
-/*
-todo: add custom operation for:
-  - call and call-with for scripting https://docs.snowflake.com/en/sql-reference/sql/call
-*/
-
 var procedureArgument = g.NewQueryStruct("ProcedureArgument").
 	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
 	PredefinedQueryStructField("ArgDataType", "DataType", g.KeywordOptions().NoQuotes().Required()).
@@ -32,10 +27,10 @@ var procedureReturns = g.NewQueryStruct("ProcedureReturns").
 			ListQueryStructField(
 				"Columns",
 				procedureColumn,
-				g.ParameterOptions().Parentheses().NoEquals(),
+				g.ListOptions().MustParentheses(),
 			),
 		g.KeywordOptions().SQL("TABLE"),
-	)
+	).WithValidation(g.ExactlyOneValueSet, "ResultDataType", "Table")
 
 var procedureSQLReturns = g.NewQueryStruct("ProcedureSQLReturns").
 	OptionalQueryStructField(
@@ -50,11 +45,12 @@ var procedureSQLReturns = g.NewQueryStruct("ProcedureSQLReturns").
 			ListQueryStructField(
 				"Columns",
 				procedureColumn,
-				g.ParameterOptions().Parentheses().NoEquals(),
+				g.ListOptions().MustParentheses(),
 			),
 		g.KeywordOptions().SQL("TABLE"),
 	).
-	OptionalSQL("NOT NULL")
+	OptionalSQL("NOT NULL").
+	WithValidation(g.ExactlyOneValueSet, "ResultDataType", "Table")
 
 var (
 	procedureImport  = g.NewQueryStruct("ProcedureImport").Text("Import", g.KeywordOptions().SingleQuotes().Required())
@@ -77,7 +73,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
-			g.ParameterOptions().Parentheses().NoEquals(),
+			g.ListOptions().MustParentheses(),
 		).
 		OptionalSQL("COPY GRANTS").
 		QueryStructField(
@@ -105,6 +101,9 @@ var ProceduresDef = g.NewInterface(
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Handler").
+		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
 	"CreateForJavaScript",
@@ -118,7 +117,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
-			g.ParameterOptions().Parentheses().NoEquals(),
+			g.ListOptions().MustParentheses(),
 		).
 		OptionalSQL("COPY GRANTS").
 		PredefinedQueryStructField("ResultDataType", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
@@ -128,6 +127,7 @@ var ProceduresDef = g.NewInterface(
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		WithValidation(g.ValidateValueSet, "ProcedureDefinition").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
 	"CreateForPython",
@@ -141,7 +141,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
-			g.ParameterOptions().Parentheses().NoEquals(),
+			g.ListOptions().MustParentheses(),
 		).
 		OptionalSQL("COPY GRANTS").
 		QueryStructField(
@@ -168,6 +168,9 @@ var ProceduresDef = g.NewInterface(
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Handler").
+		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
 	"CreateForScala",
@@ -181,7 +184,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
-			g.ParameterOptions().Parentheses().NoEquals(),
+			g.ListOptions().MustParentheses(),
 		).
 		OptionalSQL("COPY GRANTS").
 		QueryStructField(
@@ -207,6 +210,9 @@ var ProceduresDef = g.NewInterface(
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Handler").
+		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
 	"CreateForSQL",
@@ -220,7 +226,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			procedureArgument,
-			g.ParameterOptions().Parentheses().NoEquals(),
+			g.ListOptions().MustParentheses(),
 		).
 		OptionalSQL("COPY GRANTS").
 		QueryStructField(
@@ -233,6 +239,7 @@ var ProceduresDef = g.NewInterface(
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		WithValidation(g.ValidateValueSet, "ProcedureDefinition").
 		WithValidation(g.ValidIdentifier, "name"),
 ).AlterOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-procedure",

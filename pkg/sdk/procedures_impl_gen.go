@@ -105,6 +105,7 @@ func (r *CreateForJavaProcedureRequest) toOpts() *CreateForJavaProcedureOptions 
 		}
 		opts.Arguments = s
 	}
+	opts.Returns = ProcedureReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataType: r.Returns.ResultDataType.ResultDataType,
@@ -203,6 +204,7 @@ func (r *CreateForPythonProcedureRequest) toOpts() *CreateForPythonProcedureOpti
 		}
 		opts.Arguments = s
 	}
+	opts.Returns = ProcedureReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataType: r.Returns.ResultDataType.ResultDataType,
@@ -272,6 +274,7 @@ func (r *CreateForScalaProcedureRequest) toOpts() *CreateForScalaProcedureOption
 		}
 		opts.Arguments = s
 	}
+	opts.Returns = ProcedureReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataType: r.Returns.ResultDataType.ResultDataType,
@@ -337,7 +340,9 @@ func (r *CreateForSQLProcedureRequest) toOpts() *CreateForSQLProcedureOptions {
 		}
 		opts.Arguments = s
 	}
-	opts.Returns.NotNull = r.Returns.NotNull
+	opts.Returns = ProcedureSQLReturns{
+		NotNull: r.Returns.NotNull,
+	}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataType: r.Returns.ResultDataType.ResultDataType,
@@ -393,14 +398,6 @@ func (r *ShowProcedureRequest) toOpts() *ShowProcedureOptions {
 	return opts
 }
 
-func (r *DescribeProcedureRequest) toOpts() *DescribeProcedureOptions {
-	opts := &DescribeProcedureOptions{
-		name:              r.name,
-		ArgumentDataTypes: r.ArgumentDataTypes,
-	}
-	return opts
-}
-
 func (r procedureRow) convert() *Procedure {
 	e := &Procedure{
 		CreatedOn:          r.CreatedOn,
@@ -421,6 +418,14 @@ func (r procedureRow) convert() *Procedure {
 		e.IsSecure = r.IsSecure.String == "Y"
 	}
 	return e
+}
+
+func (r *DescribeProcedureRequest) toOpts() *DescribeProcedureOptions {
+	opts := &DescribeProcedureOptions{
+		name:              r.name,
+		ArgumentDataTypes: r.ArgumentDataTypes,
+	}
+	return opts
 }
 
 func (r procedureDetailRow) convert() *ProcedureDetail {

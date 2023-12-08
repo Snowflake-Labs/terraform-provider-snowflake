@@ -25,7 +25,7 @@ type CreateForJavaProcedureOptions struct {
 	Secure                     *bool                     `ddl:"keyword" sql:"SECURE"`
 	procedure                  bool                      `ddl:"static" sql:"PROCEDURE"`
 	name                       SchemaObjectIdentifier    `ddl:"identifier"`
-	Arguments                  []ProcedureArgument       `ddl:"parameter,parentheses,no_equals"`
+	Arguments                  []ProcedureArgument       `ddl:"list,must_parentheses"`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Returns                    ProcedureReturns          `ddl:"keyword" sql:"RETURNS"`
 	languageJava               bool                      `ddl:"static" sql:"LANGUAGE JAVA"`
@@ -60,7 +60,7 @@ type ProcedureReturnsResultDataType struct {
 }
 
 type ProcedureReturnsTable struct {
-	Columns []ProcedureColumn `ddl:"parameter,parentheses,no_equals"`
+	Columns []ProcedureColumn `ddl:"list,must_parentheses"`
 }
 
 type ProcedureColumn struct {
@@ -83,7 +83,7 @@ type CreateForJavaScriptProcedureOptions struct {
 	Secure              *bool                  `ddl:"keyword" sql:"SECURE"`
 	procedure           bool                   `ddl:"static" sql:"PROCEDURE"`
 	name                SchemaObjectIdentifier `ddl:"identifier"`
-	Arguments           []ProcedureArgument    `ddl:"parameter,parentheses,no_equals"`
+	Arguments           []ProcedureArgument    `ddl:"list,must_parentheses"`
 	CopyGrants          *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	ResultDataType      DataType               `ddl:"parameter,no_equals" sql:"RETURNS"`
 	NotNull             *bool                  `ddl:"keyword" sql:"NOT NULL"`
@@ -101,7 +101,7 @@ type CreateForPythonProcedureOptions struct {
 	Secure                     *bool                     `ddl:"keyword" sql:"SECURE"`
 	procedure                  bool                      `ddl:"static" sql:"PROCEDURE"`
 	name                       SchemaObjectIdentifier    `ddl:"identifier"`
-	Arguments                  []ProcedureArgument       `ddl:"parameter,parentheses,no_equals"`
+	Arguments                  []ProcedureArgument       `ddl:"list,must_parentheses"`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Returns                    ProcedureReturns          `ddl:"keyword" sql:"RETURNS"`
 	languagePython             bool                      `ddl:"static" sql:"LANGUAGE PYTHON"`
@@ -124,7 +124,7 @@ type CreateForScalaProcedureOptions struct {
 	Secure              *bool                  `ddl:"keyword" sql:"SECURE"`
 	procedure           bool                   `ddl:"static" sql:"PROCEDURE"`
 	name                SchemaObjectIdentifier `ddl:"identifier"`
-	Arguments           []ProcedureArgument    `ddl:"parameter,parentheses,no_equals"`
+	Arguments           []ProcedureArgument    `ddl:"list,must_parentheses"`
 	CopyGrants          *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	Returns             ProcedureReturns       `ddl:"keyword" sql:"RETURNS"`
 	languageScala       bool                   `ddl:"static" sql:"LANGUAGE SCALA"`
@@ -146,7 +146,7 @@ type CreateForSQLProcedureOptions struct {
 	Secure              *bool                  `ddl:"keyword" sql:"SECURE"`
 	procedure           bool                   `ddl:"static" sql:"PROCEDURE"`
 	name                SchemaObjectIdentifier `ddl:"identifier"`
-	Arguments           []ProcedureArgument    `ddl:"parameter,parentheses,no_equals"`
+	Arguments           []ProcedureArgument    `ddl:"list,must_parentheses"`
 	CopyGrants          *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	Returns             ProcedureSQLReturns    `ddl:"keyword" sql:"RETURNS"`
 	languageSql         bool                   `ddl:"static" sql:"LANGUAGE SQL"`
@@ -185,7 +185,7 @@ type DropProcedureOptions struct {
 	procedure         bool                   `ddl:"static" sql:"PROCEDURE"`
 	IfExists          *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name              SchemaObjectIdentifier `ddl:"identifier"`
-	ArgumentDataTypes []DataType             `ddl:"keyword,parentheses"`
+	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
 }
 
 // ShowProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-procedures.
