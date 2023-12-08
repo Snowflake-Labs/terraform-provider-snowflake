@@ -190,8 +190,10 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
-		return err
+		d.SetId("")
+		return nil
 	}
+
 	if err := d.Set("name", database.Name); err != nil {
 		return err
 	}

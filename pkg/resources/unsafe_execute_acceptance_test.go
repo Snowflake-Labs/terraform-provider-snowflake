@@ -667,27 +667,6 @@ func generateUnsafeExecuteTestRoleName(t *testing.T) string {
 	return fmt.Sprintf("UNSAFE_EXECUTE_TEST_ROLE_%d", id)
 }
 
-func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
-	t.Helper()
-	return func(state *terraform.State) error {
-		client, err := sdk.NewDefaultClient()
-		require.NoError(t, err)
-		ctx := context.Background()
-
-		_, err = client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id))
-		if shouldExist {
-			if err != nil {
-				return fmt.Errorf("error while retrieving database %s, err = %w", id, err)
-			}
-		} else {
-			if err == nil {
-				return fmt.Errorf("database %v still exists", id)
-			}
-		}
-		return nil
-	}
-}
-
 func createResourcesForExecuteUnsafeTestCaseForGrants(t *testing.T, dbId string, roleId string) {
 	t.Helper()
 

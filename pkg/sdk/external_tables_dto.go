@@ -42,6 +42,7 @@ type ExternalTableColumnRequest struct {
 	name             string   // required
 	dataType         DataType // required
 	asExpression     string   // required
+	notNull          *bool
 	inlineConstraint *ColumnInlineConstraintRequest
 }
 
@@ -55,16 +56,16 @@ func (v ExternalTableColumnRequest) toOpts() ExternalTableColumn {
 		Name:             v.name,
 		Type:             v.dataType,
 		AsExpression:     []string{v.asExpression},
+		NotNull:          v.notNull,
 		InlineConstraint: inlineConstraint,
 	}
 }
 
 func (v *ColumnInlineConstraintRequest) toOpts() *ColumnInlineConstraint {
 	return &ColumnInlineConstraint{
-		NotNull:            v.notNull,
-		Name:               &v.name,
-		Type:               &v.constraintType,
-		ForeignKey:         v.foreignKey,
+		Name:               &v.Name,
+		Type:               v.type_,
+		ForeignKey:         v.foreignKey.toOpts(),
 		Enforced:           v.enforced,
 		NotEnforced:        v.notEnforced,
 		Deferrable:         v.deferrable,
@@ -80,37 +81,16 @@ func (v *ColumnInlineConstraintRequest) toOpts() *ColumnInlineConstraint {
 	}
 }
 
-type ColumnInlineConstraintRequest struct {
-	notNull        *bool
-	name           string               // required
-	constraintType ColumnConstraintType // required
-	foreignKey     *InlineForeignKey
-
-	// optional
-	enforced           *bool
-	notEnforced        *bool
-	deferrable         *bool
-	notDeferrable      *bool
-	initiallyDeferred  *bool
-	initiallyImmediate *bool
-	enable             *bool
-	disable            *bool
-	validate           *bool
-	noValidate         *bool
-	rely               *bool
-	noRely             *bool
-}
-
-type InlineForeignKeyRequest struct {
-	tableName  string // required
-	columnName []string
-	match      *MatchType
-	on         *ForeignKeyOnActionRequest
-}
-
-type ForeignKeyOnActionRequest struct {
-	onUpdate *bool
-	onDelete *bool
+func (v *InlineForeignKeyRequest) toOpts() *InlineForeignKey {
+	if v == nil {
+		return nil
+	}
+	return &InlineForeignKey{
+		TableName:  v.TableName,
+		ColumnName: v.ColumnName,
+		Match:      v.Match,
+		On:         v.On,
+	}
 }
 
 type CloudProviderParamsRequest struct {
@@ -233,25 +213,15 @@ func (v NullStringRequest) toOpts() NullString {
 	}
 }
 
-type RowAccessPolicyRequest struct {
-	name SchemaObjectIdentifier // required
-	on   []string               // required
-}
-
-func (v *RowAccessPolicyRequest) toOpts() *RowAccessPolicy {
-	return nil
-}
-
-type TagAssociationRequest struct {
-	name  ObjectIdentifier // required
-	value string           // required
+func (v *RowAccessPolicyRequest) toOpts() *TableRowAccessPolicy {
+	return &TableRowAccessPolicy{
+		Name: v.Name,
+		On:   v.On,
+	}
 }
 
 func (v TagAssociationRequest) toOpts() TagAssociation {
-	return TagAssociation{
-		Name:  v.name,
-		Value: v.value,
-	}
+	return TagAssociation(v)
 }
 
 func (s *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
@@ -272,7 +242,7 @@ func (s *CreateExternalTableRequest) toOpts() *CreateExternalTableOptions {
 		cloudProviderParams = s.cloudProviderParams.toOpts()
 	}
 
-	var rowAccessPolicy *RowAccessPolicy
+	var rowAccessPolicy *TableRowAccessPolicy
 	if s.rowAccessPolicy != nil {
 		rowAccessPolicy = s.rowAccessPolicy.toOpts()
 	}
@@ -337,7 +307,7 @@ func (v *CreateWithManualPartitioningExternalTableRequest) toOpts() *CreateWithM
 		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
-	var rowAccessPolicy *RowAccessPolicy
+	var rowAccessPolicy *TableRowAccessPolicy
 	if v.rowAccessPolicy != nil {
 		rowAccessPolicy = v.rowAccessPolicy.toOpts()
 	}
@@ -403,7 +373,7 @@ func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalT
 		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
-	var rowAccessPolicy *RowAccessPolicy
+	var rowAccessPolicy *TableRowAccessPolicy
 	if v.rowAccessPolicy != nil {
 		rowAccessPolicy = v.rowAccessPolicy.toOpts()
 	}
@@ -464,7 +434,7 @@ func (v *CreateExternalTableUsingTemplateRequest) toOpts() *CreateExternalTableU
 		fileFormat = []ExternalTableFileFormat{v.fileFormat.toOpts()}
 	}
 
-	var rowAccessPolicy *RowAccessPolicy
+	var rowAccessPolicy *TableRowAccessPolicy
 	if v.rowAccessPolicy != nil {
 		rowAccessPolicy = v.rowAccessPolicy.toOpts()
 	}
@@ -643,11 +613,6 @@ func (v *ShowExternalTableInRequest) toOpts() *In {
 		Database: v.database,
 		Schema:   v.schema,
 	}
-}
-
-type LimitFromRequest struct {
-	rows *int
-	from *string
 }
 
 func (v *LimitFromRequest) toOpts() *LimitFrom {

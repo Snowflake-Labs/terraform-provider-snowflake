@@ -37,7 +37,7 @@ func TestEventTables_Create(t *testing.T) {
 		opts.CopyGrants = Bool(true)
 		opts.Comment = String("test")
 		pn := NewSchemaObjectIdentifier(random.StringN(4), random.StringN(4), random.StringN(4))
-		opts.RowAccessPolicy = &RowAccessPolicy{
+		opts.RowAccessPolicy = &TableRowAccessPolicy{
 			Name: pn,
 			On:   []string{"c1", "c2"},
 		}

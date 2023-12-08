@@ -29,7 +29,7 @@ type CreateEventTableOptions struct {
 	DefaultDdlCollation        *string                `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
 	CopyGrants                 *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment                    *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy            *RowAccessPolicy       `ddl:"keyword"`
+	RowAccessPolicy            *TableRowAccessPolicy  `ddl:"keyword"`
 	Tag                        []TagAssociation       `ddl:"keyword,parentheses" sql:"TAG"`
 }
 

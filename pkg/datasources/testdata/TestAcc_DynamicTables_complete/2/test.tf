@@ -27,7 +27,7 @@ data "snowflake_dynamic_tables" "dts" {
     pattern = snowflake_dynamic_table.dt.name
   }
   in {
-    database = snowflake_dynamic_table.dt.database
+    schema = "\"${snowflake_dynamic_table.dt.database}\".\"${snowflake_dynamic_table.dt.schema}\""
   }
   starts_with = snowflake_dynamic_table.dt.name
   limit {

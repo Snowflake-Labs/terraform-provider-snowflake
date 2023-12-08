@@ -2,8 +2,6 @@
 
 package sdk
 
-import ()
-
 func NewCreateEventTableRequest(
 	name SchemaObjectIdentifier,
 ) *CreateEventTableRequest {
@@ -57,7 +55,7 @@ func (s *CreateEventTableRequest) WithComment(Comment *string) *CreateEventTable
 	return s
 }
 
-func (s *CreateEventTableRequest) WithRowAccessPolicy(RowAccessPolicy *RowAccessPolicy) *CreateEventTableRequest {
+func (s *CreateEventTableRequest) WithRowAccessPolicy(RowAccessPolicy *TableRowAccessPolicy) *CreateEventTableRequest {
 	s.RowAccessPolicy = RowAccessPolicy
 	return s
 }

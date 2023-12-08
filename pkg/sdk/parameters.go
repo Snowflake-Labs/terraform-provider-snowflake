@@ -266,12 +266,12 @@ func (parameters *parameters) SetObjectParameterOnAccount(ctx context.Context, p
 }
 
 type setParameterOnObject struct {
-	alter            bool             `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
+	alter            bool             `ddl:"static" sql:"ALTER"`
 	objectType       ObjectType       `ddl:"keyword"`
 	objectIdentifier ObjectIdentifier `ddl:"identifier"`
-	set              bool             `ddl:"static" sql:"SET"` //lint:ignore U1000 This is used in the ddl tag
+	set              bool             `ddl:"static" sql:"SET"`
 	parameterKey     ObjectParameter  `ddl:"keyword"`
-	equals           bool             `ddl:"static" sql:"="` //lint:ignore U1000 This is used in the ddl tag
+	equals           bool             `ddl:"static" sql:"="`
 	parameterValue   string           `ddl:"keyword"`
 }
 
@@ -829,8 +829,8 @@ type UserParametersUnset struct {
 
 // ShowParametersOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-parameters.
 type ShowParametersOptions struct {
-	show       bool          `ddl:"static" sql:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
-	parameters bool          `ddl:"static" sql:"PARAMETERS"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool          `ddl:"static" sql:"SHOW"`
+	parameters bool          `ddl:"static" sql:"PARAMETERS"`
 	Like       *Like         `ddl:"keyword" sql:"LIKE"`
 	In         *ParametersIn `ddl:"keyword" sql:"IN"`
 }
