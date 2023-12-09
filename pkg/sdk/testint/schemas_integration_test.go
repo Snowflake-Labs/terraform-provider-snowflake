@@ -146,7 +146,8 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 		table, _ := createTable(t, client, testDb(t), schema)
 		t.Cleanup(func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", testDb(t).Name, swapSchema.Name, table.Name))
+			newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, swapSchema.Name, table.Name)
+			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(newId))
 			require.NoError(t, err)
 		})
 

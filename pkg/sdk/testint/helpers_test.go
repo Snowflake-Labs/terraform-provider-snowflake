@@ -170,18 +170,29 @@ func createUserWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjec
 
 func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
 	t.Helper()
+	columns := []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+	}
+	return createTableWithColumns(t, client, database, schema, columns)
+}
+
+func createTableWithColumns(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
+	t.Helper()
 	name := random.StringRange(8, 28)
+	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE TABLE \"%s\".\"%s\".\"%s\" (id NUMBER)", database.Name, schema.Name, name))
+
+	dbCreateRequest := sdk.NewCreateTableRequest(id, columns)
+	err := client.Tables.Create(ctx, dbCreateRequest)
 	require.NoError(t, err)
-	return &sdk.Table{
-			DatabaseName: database.Name,
-			SchemaName:   schema.Name,
-			Name:         name,
-		}, func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP TABLE \"%s\".\"%s\".\"%s\"", database.Name, schema.Name, name))
-			require.NoError(t, err)
-		}
+
+	table, err := client.Tables.ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return table, func() {
+		dropErr := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
+		require.NoError(t, dropErr)
+	}
 }
 
 func createDynamicTable(t *testing.T, client *sdk.Client) (*sdk.DynamicTable, func()) {
@@ -265,6 +276,21 @@ func createStageWithDirectory(t *testing.T, client *sdk.Client, database *sdk.Da
 			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name))
 			require.NoError(t, err)
 		}
+}
+
+func createStageWithName(t *testing.T, client *sdk.Client, name string) (*string, func()) {
+	t.Helper()
+	ctx := context.Background()
+	stageCleanup := func() {
+		_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP STAGE %s", name))
+		require.NoError(t, err)
+	}
+	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE STAGE %s", name))
+	if err != nil {
+		return nil, stageCleanup
+	}
+	require.NoError(t, err)
+	return &name, stageCleanup
 }
 
 func createStage(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
@@ -770,4 +796,64 @@ type policyReference struct {
 	TagSchema         sql.NullString `db:"TAG_SCHEMA"`
 	TagName           sql.NullString `db:"TAG_NAME"`
 	PolicyStatus      string         `db:"POLICY_STATUS"`
+}
+
+// TODO: extract getting table columns as resource (like getting tag in system functions)
+// getTableColumnsFor is based on https://docs.snowflake.com/en/sql-reference/info-schema/columns.
+func getTableColumnsFor(t *testing.T, client *sdk.Client, tableId sdk.SchemaObjectIdentifier) []informationSchemaColumns {
+	t.Helper()
+	ctx := context.Background()
+
+	var columns []informationSchemaColumns
+	query := fmt.Sprintf("SELECT * FROM information_schema.columns WHERE table_schema = '%s'  AND table_name = '%s' ORDER BY ordinal_position", tableId.SchemaName(), tableId.Name())
+	err := client.QueryForTests(ctx, &columns, query)
+	require.NoError(t, err)
+
+	return columns
+}
+
+type informationSchemaColumns struct {
+	TableCatalog           string         `db:"TABLE_CATALOG"`
+	TableSchema            string         `db:"TABLE_SCHEMA"`
+	TableName              string         `db:"TABLE_NAME"`
+	ColumnName             string         `db:"COLUMN_NAME"`
+	OrdinalPosition        string         `db:"ORDINAL_POSITION"`
+	ColumnDefault          sql.NullString `db:"COLUMN_DEFAULT"`
+	IsNullable             string         `db:"IS_NULLABLE"`
+	DataType               string         `db:"DATA_TYPE"`
+	CharacterMaximumLength sql.NullString `db:"CHARACTER_MAXIMUM_LENGTH"`
+	CharacterOctetLength   sql.NullString `db:"CHARACTER_OCTET_LENGTH"`
+	NumericPrecision       sql.NullString `db:"NUMERIC_PRECISION"`
+	NumericPrecisionRadix  sql.NullString `db:"NUMERIC_PRECISION_RADIX"`
+	NumericScale           sql.NullString `db:"NUMERIC_SCALE"`
+	DatetimePrecision      sql.NullString `db:"DATETIME_PRECISION"`
+	IntervalType           sql.NullString `db:"INTERVAL_TYPE"`
+	IntervalPrecision      sql.NullString `db:"INTERVAL_PRECISION"`
+	CharacterSetCatalog    sql.NullString `db:"CHARACTER_SET_CATALOG"`
+	CharacterSetSchema     sql.NullString `db:"CHARACTER_SET_SCHEMA"`
+	CharacterSetName       sql.NullString `db:"CHARACTER_SET_NAME"`
+	CollationCatalog       sql.NullString `db:"COLLATION_CATALOG"`
+	CollationSchema        sql.NullString `db:"COLLATION_SCHEMA"`
+	CollationName          sql.NullString `db:"COLLATION_NAME"`
+	DomainCatalog          sql.NullString `db:"DOMAIN_CATALOG"`
+	DomainSchema           sql.NullString `db:"DOMAIN_SCHEMA"`
+	DomainName             sql.NullString `db:"DOMAIN_NAME"`
+	UdtCatalog             sql.NullString `db:"UDT_CATALOG"`
+	UdtSchema              sql.NullString `db:"UDT_SCHEMA"`
+	UdtName                sql.NullString `db:"UDT_NAME"`
+	ScopeCatalog           sql.NullString `db:"SCOPE_CATALOG"`
+	ScopeSchema            sql.NullString `db:"SCOPE_SCHEMA"`
+	ScopeName              sql.NullString `db:"SCOPE_NAME"`
+	MaximumCardinality     sql.NullString `db:"MAXIMUM_CARDINALITY"`
+	DtdIdentifier          sql.NullString `db:"DTD_IDENTIFIER"`
+	IsSelfReferencing      string         `db:"IS_SELF_REFERENCING"`
+	IsIdentity             string         `db:"IS_IDENTITY"`
+	IdentityGeneration     sql.NullString `db:"IDENTITY_GENERATION"`
+	IdentityStart          sql.NullString `db:"IDENTITY_START"`
+	IdentityIncrement      sql.NullString `db:"IDENTITY_INCREMENT"`
+	IdentityMaximum        sql.NullString `db:"IDENTITY_MAXIMUM"`
+	IdentityMinimum        sql.NullString `db:"IDENTITY_MINIMUM"`
+	IdentityCycle          sql.NullString `db:"IDENTITY_CYCLE"`
+	IdentityOrdered        sql.NullString `db:"IDENTITY_ORDERED"`
+	Comment                sql.NullString `db:"COMMENT"`
 }

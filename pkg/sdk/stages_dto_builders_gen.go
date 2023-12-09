@@ -2,7 +2,9 @@
 
 package sdk
 
-import ()
+import (
+	"fmt"
+)
 
 func NewCreateInternalStageRequest(
 	name SchemaObjectIdentifier,
@@ -93,7 +95,7 @@ func (s *StageFileFormatRequest) WithType(Type *FileFormatType) *StageFileFormat
 	return s
 }
 
-func (s *StageFileFormatRequest) WithOptions(Options *FileFormatTypeOptions) *StageFileFormatRequest {
+func (s *StageFileFormatRequest) WithOptions(Options *FileFormatTypeOptionsRequest) *StageFileFormatRequest {
 	s.Options = Options
 	return s
 }
@@ -151,8 +153,18 @@ func (s *StageCopyOnErrorOptionsRequest) WithContinue(Continue *bool) *StageCopy
 	return s
 }
 
-func (s *StageCopyOnErrorOptionsRequest) WithSkipFile(SkipFile *bool) *StageCopyOnErrorOptionsRequest {
-	s.SkipFile = SkipFile
+func (s *StageCopyOnErrorOptionsRequest) WithSkipFile() *StageCopyOnErrorOptionsRequest {
+	s.SkipFile = String("SKIP_FILE")
+	return s
+}
+
+func (s *StageCopyOnErrorOptionsRequest) WithSkipFileX(x int) *StageCopyOnErrorOptionsRequest {
+	s.SkipFile = String(fmt.Sprintf("SKIP_FILE_%d", x))
+	return s
+}
+
+func (s *StageCopyOnErrorOptionsRequest) WithSkipFileXPercent(x int) *StageCopyOnErrorOptionsRequest {
+	s.SkipFile = String(fmt.Sprintf("'SKIP_FILE_%d%%'", x))
 	return s
 }
 

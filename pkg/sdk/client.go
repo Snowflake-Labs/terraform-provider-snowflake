@@ -46,6 +46,7 @@ type Client struct {
 	Parameters       Parameters
 	PasswordPolicies PasswordPolicies
 	Pipes            Pipes
+	Procedures       Procedures
 	ResourceMonitors ResourceMonitors
 	Roles            Roles
 	Schemas          Schemas
@@ -54,6 +55,7 @@ type Client struct {
 	Shares           Shares
 	Stages           Stages
 	Streams          Streams
+	Tables           Tables
 	Tags             Tags
 	Tasks            Tasks
 	Users            Users
@@ -175,6 +177,7 @@ func (c *Client) initialize() {
 	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
 	c.Pipes = &pipes{client: c}
+	c.Procedures = &procedures{client: c}
 	c.ReplicationFunctions = &replicationFunctions{client: c}
 	c.ResourceMonitors = &resourceMonitors{client: c}
 	c.Roles = &roles{client: c}
@@ -185,6 +188,7 @@ func (c *Client) initialize() {
 	c.Stages = &stages{client: c}
 	c.Streams = &streams{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
+	c.Tables = &tables{client: c}
 	c.Tags = &tags{client: c}
 	c.Tasks = &tasks{client: c}
 	c.Users = &users{client: c}
