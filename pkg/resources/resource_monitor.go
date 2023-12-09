@@ -351,9 +351,9 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// If ANY of the triggers changed, we collect all triggers and set them
-	if d.HasChange("suspend_trigger")  && d.HasChange("suspend_triggers") ||
-	   d.HasChange("suspend_immediate_trigger") && d.HasChange("suspend_immediate_triggers") ||
-	   d.HasChange("notify_triggers") {
+	if d.HasChange("suspend_trigger") || d.HasChange("suspend_triggers") ||
+		d.HasChange("suspend_immediate_trigger") || d.HasChange("suspend_immediate_triggers") ||
+		d.HasChange("notify_triggers") {
 		runSetStatement = true
 		triggers := collectResourceMonitorTriggers(d)
 		opts.Triggers = triggers
