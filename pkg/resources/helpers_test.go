@@ -470,3 +470,59 @@ func tagGrant(t *testing.T, id string, params map[string]interface{}) *schema.Re
 	d.SetId(id)
 	return d
 }
+
+func TestGetTagsDiff(t *testing.T) {
+	d := resources.ExternalTable().TestResourceData()
+	d.SetId("foo")
+	d.Set("tag", map[string]any{
+		"": "",
+	})
+
+	// TODO: produce diff
+
+	unset, set := resources.GetTagsDiff(d, "tag")
+	_ = unset
+	_ = set
+}
+
+func TestIsDataType(t *testing.T) {
+	isDataType := resources.IsDataType()
+	key := "tag"
+
+	testCases := []struct {
+		Name  string
+		Value any
+		Error string
+	}{
+		{
+			Name:  "validation: correct DataType value",
+			Value: "NUMBER",
+		},
+		{
+			Name:  "validation: correct DataType value in lowercase",
+			Value: "number",
+		},
+		{
+			Name:  "validation: incorrect DataType value",
+			Value: "invalid data type",
+			Error: "expected tag to be one of",
+		},
+		{
+			Name:  "validation: incorrect value type",
+			Value: 123,
+			Error: "expected type of tag to be string",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.Name, func(t *testing.T) {
+			_, errors := isDataType(tt.Value, key)
+			if tt.Error != "" {
+				assert.Len(t, errors, 1)
+				assert.ErrorContains(t, errors[0], tt.Error)
+			} else {
+				assert.Len(t, errors, 0)
+			}
+		})
+	}
+}

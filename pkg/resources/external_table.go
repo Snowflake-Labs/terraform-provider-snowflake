@@ -224,6 +224,10 @@ func ReadExternalTable(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
+	if err := d.Set("name", externalTable.Name); err != nil {
+		return err
+	}
+
 	if err := d.Set("owner", externalTable.Owner); err != nil {
 		return err
 	}
@@ -239,7 +243,7 @@ func UpdateExternalTable(d *schema.ResourceData, meta any) error {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("tag") {
-		unsetTags, setTags := getTagsDiff(d, "tag")
+		unsetTags, setTags := GetTagsDiff(d, "tag")
 
 		err := client.ExternalTables.Alter(ctx, sdk.NewAlterExternalTableRequest(id).WithUnsetTag(unsetTags))
 		if err != nil {

@@ -88,7 +88,7 @@ func getPropertyTags(d *schema.ResourceData, key string) []sdk.TagAssociation {
 	return nil
 }
 
-func getTagsDiff(d *schema.ResourceData, key string) (unsetTags []sdk.ObjectIdentifier, setTags []sdk.TagAssociation) {
+func GetTagsDiff(d *schema.ResourceData, key string) (unsetTags []sdk.ObjectIdentifier, setTags []sdk.TagAssociation) {
 	o, n := d.GetChange(key)
 	removed, added, changed := getTags(o).diffs(getTags(n))
 

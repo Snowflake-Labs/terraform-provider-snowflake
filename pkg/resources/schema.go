@@ -229,7 +229,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("tag") {
-		unsetTags, setTags := getTagsDiff(d, "tag")
+		unsetTags, setTags := GetTagsDiff(d, "tag")
 
 		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
 			UnsetTag: unsetTags,
