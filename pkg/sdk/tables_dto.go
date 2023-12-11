@@ -508,7 +508,7 @@ type TableExternalTableColumnRenameActionRequest struct {
 }
 
 type TableExternalTableColumnDropActionRequest struct {
-	Columns  []string //required
+	Columns  []string // required
 	IfExists *bool
 }
 

@@ -673,20 +673,20 @@ func (s *DropTableRequest) WithRestrict(restrict *bool) *DropTableRequest {
 }
 
 func NewTableAddRowAccessPolicyRequest(
-	RowAccessPolicy SchemaObjectIdentifier,
-	On []string,
+	rowAccessPolicy SchemaObjectIdentifier,
+	on []string,
 ) *TableAddRowAccessPolicyRequest {
 	s := TableAddRowAccessPolicyRequest{}
-	s.RowAccessPolicy = RowAccessPolicy
-	s.On = On
+	s.RowAccessPolicy = rowAccessPolicy
+	s.On = on
 	return &s
 }
 
 func NewTableDropRowAccessPolicyRequest(
-	RowAccessPolicy SchemaObjectIdentifier,
+	rowAccessPolicy SchemaObjectIdentifier,
 ) *TableDropRowAccessPolicyRequest {
 	s := TableDropRowAccessPolicyRequest{}
-	s.RowAccessPolicy = RowAccessPolicy
+	s.RowAccessPolicy = rowAccessPolicy
 	return &s
 }
 

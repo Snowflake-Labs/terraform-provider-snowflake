@@ -132,6 +132,12 @@ Some links that might help you:
 - **If you are an enterprise customer**, reach out to your account team. This helps us prioritize issues.
 - The [issues section](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues) might already have an issue addressing your question.
 
+## Additional debug logs for `snowflake_grant_privileges_to_role` resource
+Set environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` to a non-empty value. Additional logs will be visible with `sf-tf-additional-debug` prefix, e.g.:
+```text
+2023/12/08 12:58:22.497078 sf-tf-additional-debug [DEBUG] Creating new client from db
+```
+
 ## Contributing
 
 Cf. [Contributing](./CONTRIBUTING.md).
