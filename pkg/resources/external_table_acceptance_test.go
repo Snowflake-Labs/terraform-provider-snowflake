@@ -33,14 +33,12 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 	}
 	resourceName := "snowflake_external_table.test_table"
 
-	configVariables := func() config.Variables {
-		return map[string]config.Variable{
-			"name":     config.StringVariable(name),
-			"location": config.StringVariable(bucketURL),
-			"aws_arn":  config.StringVariable(roleName),
-			"database": config.StringVariable(acc.TestDatabaseName),
-			"schema":   config.StringVariable(acc.TestSchemaName),
-		}
+	configVariables := map[string]config.Variable{
+		"name":     config.StringVariable(name),
+		"location": config.StringVariable(bucketURL),
+		"aws_arn":  config.StringVariable(roleName),
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"schema":   config.StringVariable(acc.TestSchemaName),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -53,7 +51,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(),
+				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
@@ -77,6 +75,29 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 // TODO Update tags
 
 func TestAcc_ExternalTable_TagsUpdate(t *testing.T) {
+	env := os.Getenv("SKIP_EXTERNAL_TABLE_TEST")
+	if env != "" {
+		t.Skip("Skipping TestAcc_ExternalTable")
+	}
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	bucketURL := os.Getenv("AWS_EXTERNAL_BUCKET_URL")
+	if bucketURL == "" {
+		t.Skip("Skipping TestAcc_ExternalTable")
+	}
+	roleName := os.Getenv("AWS_EXTERNAL_ROLE_NAME")
+	if roleName == "" {
+		t.Skip("Skipping TestAcc_ExternalTable")
+	}
+	resourceName := "snowflake_external_table.test_table"
+
+	configVariables := map[string]config.Variable{
+		"name":     config.StringVariable(name),
+		"location": config.StringVariable(bucketURL),
+		"aws_arn":  config.StringVariable(roleName),
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"schema":   config.StringVariable(acc.TestSchemaName),
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -86,10 +107,10 @@ func TestAcc_ExternalTable_TagsUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckExternalTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_external_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
 				),
 			},
 		},
