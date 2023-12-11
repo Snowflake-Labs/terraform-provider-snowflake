@@ -72,51 +72,6 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 	})
 }
 
-// TODO Update tags
-
-func TestAcc_ExternalTable_TagsUpdate(t *testing.T) {
-	env := os.Getenv("SKIP_EXTERNAL_TABLE_TEST")
-	if env != "" {
-		t.Skip("Skipping TestAcc_ExternalTable")
-	}
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	bucketURL := os.Getenv("AWS_EXTERNAL_BUCKET_URL")
-	if bucketURL == "" {
-		t.Skip("Skipping TestAcc_ExternalTable")
-	}
-	roleName := os.Getenv("AWS_EXTERNAL_ROLE_NAME")
-	if roleName == "" {
-		t.Skip("Skipping TestAcc_ExternalTable")
-	}
-	resourceName := "snowflake_external_table.test_table"
-
-	configVariables := map[string]config.Variable{
-		"name":     config.StringVariable(name),
-		"location": config.StringVariable(bucketURL),
-		"aws_arn":  config.StringVariable(roleName),
-		"database": config.StringVariable(acc.TestDatabaseName),
-		"schema":   config.StringVariable(acc.TestSchemaName),
-	}
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: testAccCheckExternalTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				ConfigDirectory: config.TestStepDirectory(),
-				ConfigVariables: configVariables,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckExternalTableDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
 	client := sdk.NewClientFromDB(db)

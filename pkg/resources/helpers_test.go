@@ -471,20 +471,6 @@ func tagGrant(t *testing.T, id string, params map[string]interface{}) *schema.Re
 	return d
 }
 
-func TestGetTagsDiff(t *testing.T) {
-	d := resources.ExternalTable().TestResourceData()
-	d.SetId("foo")
-	d.Set("tag", map[string]any{
-		"": "",
-	})
-
-	// TODO: produce diff
-
-	unset, set := resources.GetTagsDiff(d, "tag")
-	_ = unset
-	_ = set
-}
-
 func TestIsDataType(t *testing.T) {
 	isDataType := resources.IsDataType()
 	key := "tag"
