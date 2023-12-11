@@ -72,8 +72,8 @@ func (v *AccountRoleGrantOn) validate() error {
 }
 
 func (v *GrantOnAccountObject) validate() error {
-	if !exactlyOneValueSet(v.User, v.ResourceMonitor, v.Warehouse, v.Database, v.Integration, v.FailoverGroup, v.ReplicationGroup) {
-		return errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "Database", "Integration", "FailoverGroup", "ReplicationGroup")
+	if !exactlyOneValueSet(v.User, v.ResourceMonitor, v.Warehouse, v.Database, v.Integration, v.FailoverGroup, v.ReplicationGroup, v.ExternalVolume) {
+		return errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "Database", "Integration", "FailoverGroup", "ReplicationGroup", "ExternalVolume")
 	}
 	return nil
 }

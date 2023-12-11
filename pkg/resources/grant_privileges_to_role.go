@@ -56,7 +56,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 				"object_type": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "The object type of the account object on which privileges will be granted. Valid values are: USER | RESOURCE MONITOR | WAREHOUSE | DATABASE | INTEGRATION | FAILOVER GROUP | REPLICATION GROUP",
+					Description: "The object type of the account object on which privileges will be granted. Valid values are: USER | RESOURCE MONITOR | WAREHOUSE | DATABASE | INTEGRATION | FAILOVER GROUP | REPLICATION GROUP | EXTERNAL VOLUME",
 					ValidateFunc: validation.StringInSlice([]string{
 						"USER",
 						"RESOURCE MONITOR",
@@ -65,6 +65,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 						"INTEGRATION",
 						"FAILOVER GROUP",
 						"REPLICATION GROUP",
+						"EXTERNAL VOLUME",
 					}, true),
 				},
 				"object_name": {
@@ -120,7 +121,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 				"object_type": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					Description:   "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW",
+					Description:   "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | ICEBERG TABLE | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW",
 					RequiredWith:  []string{"on_schema_object.0.object_name"},
 					ConflictsWith: []string{"on_schema_object.0.all", "on_schema_object.0.future"},
 					ForceNew:      true,
@@ -130,6 +131,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 						"EVENT TABLE",
 						"FILE FORMAT",
 						"FUNCTION",
+						"ICEBERG TABLE",
 						"PROCEDURE",
 						"SECRET",
 						"SEQUENCE",
@@ -167,7 +169,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 							"object_type_plural": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
+								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:    true,
 								ValidateFunc: validation.StringInSlice([]string{
 									"ALERTS",
@@ -175,6 +177,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 									"EVENT TABLES",
 									"FILE FORMATS",
 									"FUNCTIONS",
+									"ICEBERG TABLES",
 									"PROCEDURES",
 									"SECRETS",
 									"SEQUENCES",
@@ -221,7 +224,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 							"object_type_plural": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
+								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:    true,
 								ValidateFunc: validation.StringInSlice([]string{
 									"ALERTS",
@@ -229,6 +232,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 									"EVENT TABLES",
 									"FILE FORMATS",
 									"FUNCTIONS",
+									"ICEBERG TABLES",
 									"PROCEDURES",
 									"SECRETS",
 									"SEQUENCES",
@@ -730,6 +734,8 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			on.AccountObject.User = &objectID
 		case sdk.ObjectTypeWarehouse:
 			on.AccountObject.Warehouse = &objectID
+		case sdk.ObjectTypeExternalVolume:
+			on.AccountObject.ExternalVolume = &objectID
 		default:
 			return nil, nil, fmt.Errorf("invalid object type %s", objectType)
 		}
