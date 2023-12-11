@@ -65,6 +65,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 						"INTEGRATION",
 						"FAILOVER GROUP",
 						"REPLICATION GROUP",
+						"EXTERNAL VOLUME",
 					}, true),
 				},
 				"object_name": {
@@ -191,6 +192,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 									"TASKS",
 									"VIEWS",
 									"MATERIALIZED VIEWS",
+									"ICEBERG TABLES",
 								}, true),
 							},
 							"in_database": {
@@ -245,6 +247,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 									"TASKS",
 									"VIEWS",
 									"MATERIALIZED VIEWS",
+									"ICEBERG TABLES",
 								}, true),
 							},
 							"in_database": {
@@ -730,6 +733,8 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			on.AccountObject.User = &objectID
 		case sdk.ObjectTypeWarehouse:
 			on.AccountObject.Warehouse = &objectID
+		case sdk.ObjectTypeExternalVolume:
+			on.AccountObject.ExternalVolume = &objectID
 		default:
 			return nil, nil, fmt.Errorf("invalid object type %s", objectType)
 		}
