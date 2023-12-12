@@ -162,3 +162,26 @@ resource "snowflake_user" "w" {
 	log.Printf("[DEBUG] s2 %s", s)
 	return fmt.Sprintf(s, prefix, prefix)
 }
+
+func TestAcc_User_withDotInID(t *testing.T) {
+	r := require.New(t)
+	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)) + "user.123"
+	sshkey1, err := testhelpers.Fixture("userkey1")
+	r.NoError(err)
+	sshkey2, err := testhelpers.Fixture("userkey2")
+	r.NoError(err)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: uConfig(prefix, sshkey1, sshkey2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
+				),
+			},
+		},
+	})
+}
