@@ -11,20 +11,22 @@ default: help
 
 dev-setup: ## setup development dependencies
 	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.3
-	cd tools && go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	cd tools && go install mvdan.cc/gofumpt
+	cd tools && mkdir -p bin/
+	cd tools && env GOBIN=$$PWD/bin go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	cd tools && env GOBIN=$$PWD/bin go install mvdan.cc/gofumpt
 
 dev-cleanup: ## cleanup development dependencies
 	rm -rf bin/*
+	rm -rf tools/bin/*
 
 docs: ## generate docs
-	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
+	tools/bin/tfplugindocs generate
 
 docs-check: docs ## check that docs have been generated
 	git diff --exit-code -- docs
 
 fmt: terraform-fmt ## Run terraform fmt and gofumpt
-	gofumpt -l -w .
+	tools/bin/gofumpt -l -w .
 
 terraform-fmt: ## Run terraform fmt
 	terraform fmt -recursive ./examples/
