@@ -163,7 +163,10 @@ resource "snowflake_user" "w" {
 	return fmt.Sprintf(s, prefix, prefix)
 }
 
-func TestAcc_User_withDotInID(t *testing.T) {
+// TestAcc_User_issue2058 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2058 issue.
+// The problem was with a dot in user identifier.
+// Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
+func TestAcc_User_issue2058(t *testing.T) {
 	r := require.New(t)
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)) + "user.123"
 	sshkey1, err := testhelpers.Fixture("userkey1")
