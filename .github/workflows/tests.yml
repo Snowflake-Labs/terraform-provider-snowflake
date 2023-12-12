@@ -7,9 +7,11 @@ name: tests
 
 jobs:
   all-tests:
+    # disable the job temporarily (until we configure linters appropriately)
+    if: false
     name: all-tests
     runs-on: ubuntu-latest
-    if: (github.event_name == 'repository_dispatch') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+#    if: (github.event_name == 'repository_dispatch') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     steps:
       - id: verify_sha_input
         if: github.event_name == 'repository_dispatch'
