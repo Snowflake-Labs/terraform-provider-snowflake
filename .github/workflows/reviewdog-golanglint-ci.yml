@@ -16,11 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
         with:
-          go-version-file: ./go.mod
-          cache: false
+          fetch-depth: 0
       - name: Install dependencies
         run: make dev-setup
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
+        with:
+          golangci_lint_flags: "--config=.reviewdog.yml"
