@@ -80,40 +80,40 @@ func TestEncodeSnowflakeID(t *testing.T) {
 		expectedEncodedID string
 	}{
 		"encodes account object identifier": {
-			identifier:        sdk.NewAccountObjectIdentifier("account"),
-			expectedEncodedID: `account`,
+			identifier:        sdk.NewAccountObjectIdentifier("database"),
+			expectedEncodedID: `database`,
 		},
 		"encodes quoted account object identifier": {
-			identifier:        sdk.NewAccountObjectIdentifier("\"account\""),
-			expectedEncodedID: `account`,
+			identifier:        sdk.NewAccountObjectIdentifier("\"database\""),
+			expectedEncodedID: `database`,
 		},
 		"encodes account object identifier with a dot": {
-			identifier:        sdk.NewAccountObjectIdentifier("acc.ount"),
-			expectedEncodedID: `acc.ount`,
+			identifier:        sdk.NewAccountObjectIdentifier("data.base"),
+			expectedEncodedID: `data.base`,
 		},
 		"encodes database object identifier": {
-			identifier:        sdk.NewDatabaseObjectIdentifier("account", "database"),
-			expectedEncodedID: `account|database`,
+			identifier:        sdk.NewDatabaseObjectIdentifier("database", "schema"),
+			expectedEncodedID: `database|schema`,
 		},
 		"encodes quoted database object identifier": {
-			identifier:        sdk.NewDatabaseObjectIdentifier("\"account\"", "\"database\""),
-			expectedEncodedID: `account|database`,
+			identifier:        sdk.NewDatabaseObjectIdentifier("\"database\"", "\"schema\""),
+			expectedEncodedID: `database|schema`,
 		},
 		"encodes database object identifier with dots": {
-			identifier:        sdk.NewDatabaseObjectIdentifier("acc.ount", "data.base"),
-			expectedEncodedID: `acc.ount|data.base`,
+			identifier:        sdk.NewDatabaseObjectIdentifier("data.base", "sche.ma"),
+			expectedEncodedID: `data.base|sche.ma`,
 		},
 		"encodes schema object identifier": {
-			identifier:        sdk.NewSchemaObjectIdentifier("account", "database", "schema"),
-			expectedEncodedID: `account|database|schema`,
+			identifier:        sdk.NewSchemaObjectIdentifier("database", "schema", "table"),
+			expectedEncodedID: `database|schema|table`,
 		},
 		"encodes quoted schema object identifier": {
-			identifier:        sdk.NewSchemaObjectIdentifier("\"account\"", "\"database\"", "\"schema\""),
-			expectedEncodedID: `account|database|schema`,
+			identifier:        sdk.NewSchemaObjectIdentifier("\"database\"", "\"schema\"", "\"table\""),
+			expectedEncodedID: `database|schema|table`,
 		},
 		"encodes schema object identifier with dots": {
-			identifier:        sdk.NewSchemaObjectIdentifier("acc.ount", "data.base", "sche.ma"),
-			expectedEncodedID: `acc.ount|data.base|sche.ma`,
+			identifier:        sdk.NewSchemaObjectIdentifier("data.base", "sche.ma", "tab.le"),
+			expectedEncodedID: `data.base|sche.ma|tab.le`,
 		},
 		"encodes table column identifier": {
 			identifier:        sdk.NewTableColumnIdentifier("database", "schema", "table", "column"),
@@ -135,4 +135,20 @@ func TestEncodeSnowflakeID(t *testing.T) {
 			require.Equal(t, tc.expectedEncodedID, encodedID)
 		})
 	}
+
+	t.Run("panics for unsupported object identifier", func(t *testing.T) {
+		require.Panics(t, func() {
+			EncodeSnowflakeID(unsupportedObjectIdentifier{})
+		})
+	})
+}
+
+type unsupportedObjectIdentifier struct{}
+
+func (i unsupportedObjectIdentifier) Name() string {
+	return "name"
+}
+
+func (i unsupportedObjectIdentifier) FullyQualifiedName() string {
+	return "fully qualified name"
 }

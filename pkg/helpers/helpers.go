@@ -65,10 +65,18 @@ func EncodeSnowflakeID(attributes ...interface{}) string {
 	// is attribute already an object identifier?
 	if len(attributes) == 1 {
 		if id, ok := attributes[0].(sdk.ObjectIdentifier); ok {
-			// remove quotes and replace dots with pipes
-			parts := strings.Split(id.FullyQualifiedName(), ".")
-			for i, part := range parts {
-				parts[i] = strings.Trim(part, `"`)
+			parts := make([]string, 0)
+			switch id.(type) {
+			case sdk.AccountObjectIdentifier:
+				parts = append(parts, id.(sdk.AccountObjectIdentifier).Name())
+			case sdk.DatabaseObjectIdentifier:
+				parts = append(parts, id.(sdk.DatabaseObjectIdentifier).DatabaseName(), id.(sdk.DatabaseObjectIdentifier).Name())
+			case sdk.SchemaObjectIdentifier:
+				parts = append(parts, id.(sdk.SchemaObjectIdentifier).DatabaseName(), id.(sdk.SchemaObjectIdentifier).SchemaName(), id.(sdk.SchemaObjectIdentifier).Name())
+			case sdk.TableColumnIdentifier:
+				parts = append(parts, id.(sdk.TableColumnIdentifier).DatabaseName(), id.(sdk.TableColumnIdentifier).SchemaName(), id.(sdk.TableColumnIdentifier).TableName(), id.(sdk.TableColumnIdentifier).Name())
+			default:
+				log.Panicf("Unsupported object identifier: %v", id)
 			}
 			return strings.Join(parts, IDDelimiter)
 		}

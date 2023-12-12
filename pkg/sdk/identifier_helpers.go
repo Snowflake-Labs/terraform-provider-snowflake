@@ -121,7 +121,9 @@ type AccountObjectIdentifier struct {
 }
 
 func NewAccountObjectIdentifier(name string) AccountObjectIdentifier {
-	return AccountObjectIdentifier{name: name}
+	return AccountObjectIdentifier{
+		name: strings.Trim(name, `"`),
+	}
 }
 
 func NewAccountObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) AccountObjectIdentifier {
@@ -268,7 +270,12 @@ type TableColumnIdentifier struct {
 }
 
 func NewTableColumnIdentifier(databaseName, schemaName, tableName, columnName string) TableColumnIdentifier {
-	return TableColumnIdentifier{databaseName: databaseName, schemaName: schemaName, tableName: tableName, columnName: columnName}
+	return TableColumnIdentifier{
+		databaseName: strings.Trim(databaseName, `"`),
+		schemaName:   strings.Trim(schemaName, `"`),
+		tableName:    strings.Trim(tableName, `"`),
+		columnName:   strings.Trim(columnName, `"`),
+	}
 }
 
 func NewTableColumnIdentifierFromFullyQualifiedName(fullyQualifiedName string) TableColumnIdentifier {
