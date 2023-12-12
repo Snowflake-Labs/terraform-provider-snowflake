@@ -186,12 +186,12 @@ const (
 
 	// -- For ICEBERG TABLE
 	SchemaObjectPrivilegeApplyBudget SchemaObjectPrivilege = "APPLYBUDGET"
-	//SchemaObjectPrivilegeDelete      SchemaObjectPrivilege = "DELETE" (duplicate)
-	//SchemaObjectPrivilegeInsert      SchemaObjectPrivilege = "INSERT" (duplicate)
-	//SchemaObjectPrivilegeReferences  SchemaObjectPrivilege = "REFERENCES" (duplicate)
-	//SchemaObjectPrivilegeSelect      SchemaObjectPrivilege = "SELECT" (duplicate)
-	//SchemaObjectPrivilegeTruncate      SchemaObjectPrivilege = "Truncate" (duplicate)
-	//SchemaObjectPrivilegeUpdate      SchemaObjectPrivilege = "Update" (duplicate)
+	// SchemaObjectPrivilegeDelete      SchemaObjectPrivilege = "DELETE" (duplicate)
+	// SchemaObjectPrivilegeInsert      SchemaObjectPrivilege = "INSERT" (duplicate)
+	// SchemaObjectPrivilegeReferences  SchemaObjectPrivilege = "REFERENCES" (duplicate)
+	// SchemaObjectPrivilegeSelect      SchemaObjectPrivilege = "SELECT" (duplicate)
+	// SchemaObjectPrivilegeTruncate      SchemaObjectPrivilege = "Truncate" (duplicate)
+	// SchemaObjectPrivilegeUpdate      SchemaObjectPrivilege = "Update" (duplicate)
 
 	// -- For PIPE
 	// { MONITOR | OPERATE } [ , ... ]
