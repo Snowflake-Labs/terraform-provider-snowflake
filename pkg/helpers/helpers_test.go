@@ -77,7 +77,7 @@ func TestDecodeSnowflakeParameterID(t *testing.T) {
 // TODO: add tests for non object identifiers
 func TestEncodeSnowflakeID(t *testing.T) {
 	testCases := map[string]struct {
-		identifier        any
+		identifier        sdk.ObjectIdentifier
 		expectedEncodedID string
 	}{
 		"encodes account object identifier": {
