@@ -91,8 +91,49 @@ func TestExternalTablesCreate(t *testing.T) {
 			errOneOf("CreateExternalTableOptions", "OrReplace", "IfNotExists"),
 			ErrInvalidObjectIdentifier,
 			errNotSet("CreateExternalTableOptions", "Location"),
-			errNotSet("CreateExternalTableOptions", "FileFormat"),
+			errExactlyOneOf("CreateExternalTableOptions", "RawFileFormat", "FileFormat"),
 		)
+	})
+
+	t.Run("raw file format", func(t *testing.T) {
+		opts := &CreateExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location:      "@s1/logs/",
+			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
+	})
+
+	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {
+		opts := &CreateExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location: "@s1/logs/",
+		}
+		assertOptsInvalid(t, opts, errExactlyOneOf("CreateExternalTableOptions", "RawFileFormat", "FileFormat"))
 	})
 }
 
@@ -153,8 +194,49 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 			errOneOf("CreateWithManualPartitioningExternalTableOptions", "OrReplace", "IfNotExists"),
 			ErrInvalidObjectIdentifier,
 			errNotSet("CreateWithManualPartitioningExternalTableOptions", "Location"),
-			errNotSet("CreateWithManualPartitioningExternalTableOptions", "FileFormat"),
+			errExactlyOneOf("CreateWithManualPartitioningExternalTableOptions", "RawFileFormat", "FileFormat"),
 		)
+	})
+
+	t.Run("raw file format", func(t *testing.T) {
+		opts := &CreateWithManualPartitioningExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location:      "@s1/logs/",
+			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
+	})
+
+	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {
+		opts := &CreateWithManualPartitioningExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location: "@s1/logs/",
+		}
+		assertOptsInvalid(t, opts, errExactlyOneOf("CreateWithManualPartitioningExternalTableOptions", "RawFileFormat", "FileFormat"))
 	})
 }
 
@@ -213,8 +295,49 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 			errOneOf("CreateDeltaLakeExternalTableOptions", "OrReplace", "IfNotExists"),
 			ErrInvalidObjectIdentifier,
 			errNotSet("CreateDeltaLakeExternalTableOptions", "Location"),
-			errNotSet("CreateDeltaLakeExternalTableOptions", "FileFormat"),
+			errExactlyOneOf("CreateDeltaLakeExternalTableOptions", "RawFileFormat", "FileFormat"),
 		)
+	})
+
+	t.Run("raw file format", func(t *testing.T) {
+		opts := &CreateDeltaLakeExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location:      "@s1/logs/",
+			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
+	})
+
+	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {
+		opts := &CreateDeltaLakeExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location: "@s1/logs/",
+		}
+		assertOptsInvalid(t, opts, errExactlyOneOf("CreateDeltaLakeExternalTableOptions", "RawFileFormat", "FileFormat"))
 	})
 }
 
@@ -263,8 +386,31 @@ func TestExternalTableUsingTemplateOpts(t *testing.T) {
 			ErrInvalidObjectIdentifier,
 			errNotSet("CreateExternalTableUsingTemplateOptions", "Query"),
 			errNotSet("CreateExternalTableUsingTemplateOptions", "Location"),
-			errNotSet("CreateExternalTableUsingTemplateOptions", "FileFormat"),
+			errExactlyOneOf("CreateExternalTableUsingTemplateOptions", "RawFileFormat", "FileFormat"),
 		)
+	})
+
+	t.Run("raw file format", func(t *testing.T) {
+		opts := &CreateExternalTableUsingTemplateOptions{
+			name:     NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Location: "@s1/logs/",
+			Query: []string{
+				"query statement",
+			},
+			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" USING TEMPLATE (query statement) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
+	})
+
+	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {
+		opts := &CreateExternalTableUsingTemplateOptions{
+			name:     NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Location: "@s1/logs/",
+			Query: []string{
+				"query statement",
+			},
+		}
+		assertOptsInvalid(t, opts, errExactlyOneOf("CreateExternalTableUsingTemplateOptions", "RawFileFormat", "FileFormat"))
 	})
 }
 

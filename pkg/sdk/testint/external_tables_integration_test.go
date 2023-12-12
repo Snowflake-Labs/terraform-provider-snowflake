@@ -40,16 +40,15 @@ func TestInt_ExternalTables(t *testing.T) {
 		return sdk.NewCreateExternalTableRequest(
 			sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name),
 			stageLocation,
-			sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON),
-		)
+		).WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON))
 	}
 
 	createExternalTableWithManualPartitioningReq := func(name string) *sdk.CreateWithManualPartitioningExternalTableRequest {
 		return sdk.NewCreateWithManualPartitioningExternalTableRequest(
 			sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name),
 			stageLocation,
-			sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON),
 		).
+			WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON)).
 			WithOrReplace(sdk.Bool(true)).
 			WithColumns(columnsWithPartition).
 			WithUserSpecifiedPartitionType(sdk.Bool(true)).
@@ -70,6 +69,20 @@ func TestInt_ExternalTables(t *testing.T) {
 		assert.Equal(t, name, externalTable.Name)
 	})
 
+	t.Run("Create: with raw file format", func(t *testing.T) {
+		name := random.AlphanumericN(32)
+		externalTableID := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name).
+			WithFileFormat(nil).
+			WithRawFileFormat(sdk.String("TYPE = JSON")),
+		)
+		require.NoError(t, err)
+
+		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		require.NoError(t, err)
+		assert.Equal(t, name, externalTable.Name)
+	})
+
 	t.Run("Create: complete", func(t *testing.T) {
 		name := random.AlphanumericN(32)
 		externalTableID := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
@@ -78,8 +91,8 @@ func TestInt_ExternalTables(t *testing.T) {
 			sdk.NewCreateExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON),
 			).
+				WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON)).
 				WithOrReplace(sdk.Bool(true)).
 				WithColumns(columns).
 				WithPartitionBy([]string{"filename"}).
@@ -111,8 +124,8 @@ func TestInt_ExternalTables(t *testing.T) {
 			sdk.NewCreateExternalTableUsingTemplateRequest(
 				id,
 				stageLocation,
-				sdk.NewExternalTableFileFormatRequest().WithName(sdk.String(fileFormat.ID().FullyQualifiedName())),
 			).
+				WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithName(sdk.String(fileFormat.ID().FullyQualifiedName()))).
 				WithQuery(query).
 				WithAutoRefresh(sdk.Bool(false)))
 		require.NoError(t, err)
@@ -140,8 +153,8 @@ func TestInt_ExternalTables(t *testing.T) {
 			sdk.NewCreateDeltaLakeExternalTableRequest(
 				externalTableID,
 				stageLocation,
-				sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeParquet),
 			).
+				WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeParquet)).
 				WithOrReplace(sdk.Bool(true)).
 				WithColumns(columnsWithPartition).
 				WithPartitionBy([]string{"filename"}).

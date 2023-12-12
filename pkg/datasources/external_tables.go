@@ -1,12 +1,14 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -58,34 +60,31 @@ func ExternalTables() *schema.Resource {
 
 func ReadExternalTables(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentExternalTables, err := snowflake.ListExternalTables(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] external tables in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse external tables in schema (%s)", d.Id())
+	schemaId := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
+	showIn := sdk.NewShowExternalTableInRequest().WithSchema(schemaId)
+	externalTables, err := client.ExternalTables.Show(ctx, sdk.NewShowExternalTableRequest().WithIn(showIn))
+	if err != nil {
+		log.Printf("[DEBUG] failed when searching external tables in schema (%s), err = %s", schemaId.FullyQualifiedName(), err.Error())
 		d.SetId("")
 		return nil
 	}
 
-	externalTables := []map[string]interface{}{}
-
-	for _, externalTable := range currentExternalTables {
-		externalTableMap := map[string]interface{}{}
-
-		externalTableMap["name"] = externalTable.ExternalTableName.String
-		externalTableMap["database"] = externalTable.DatabaseName.String
-		externalTableMap["schema"] = externalTable.SchemaName.String
-		externalTableMap["comment"] = externalTable.Comment.String
-
-		externalTables = append(externalTables, externalTableMap)
+	externalTablesObjects := make([]map[string]any, len(externalTables))
+	for i, externalTable := range externalTables {
+		externalTablesObjects[i] = map[string]any{
+			"name":     externalTable.Name,
+			"database": externalTable.DatabaseName,
+			"schema":   externalTable.SchemaName,
+			"comment":  externalTable.Comment,
+		}
 	}
 
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
-	return d.Set("external_tables", externalTables)
+	d.SetId(helpers.EncodeSnowflakeID(schemaId))
+
+	return d.Set("external_tables", externalTablesObjects)
 }
