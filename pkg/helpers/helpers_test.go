@@ -3,6 +3,7 @@ package helpers
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
 
@@ -70,4 +71,68 @@ func TestDecodeSnowflakeParameterID(t *testing.T) {
 		_, err := DecodeSnowflakeParameterID(id)
 		require.Errorf(t, err, "incompatible identifier: %s", id)
 	})
+}
+
+// TODO: add tests for non object identifiers
+func TestEncodeSnowflakeID(t *testing.T) {
+	testCases := map[string]struct {
+		identifier        sdk.ObjectIdentifier
+		expectedEncodedID string
+	}{
+		"encodes account object identifier": {
+			identifier:        sdk.NewAccountObjectIdentifier("account"),
+			expectedEncodedID: `account`,
+		},
+		"encodes quoted account object identifier": {
+			identifier:        sdk.NewAccountObjectIdentifier("\"account\""),
+			expectedEncodedID: `account`,
+		},
+		"encodes account object identifier with a dot": {
+			identifier:        sdk.NewAccountObjectIdentifier("acc.ount"),
+			expectedEncodedID: `acc.ount`,
+		},
+		"encodes database object identifier": {
+			identifier:        sdk.NewDatabaseObjectIdentifier("account", "database"),
+			expectedEncodedID: `account|database`,
+		},
+		"encodes quoted database object identifier": {
+			identifier:        sdk.NewDatabaseObjectIdentifier("\"account\"", "\"database\""),
+			expectedEncodedID: `account|database`,
+		},
+		"encodes database object identifier with dots": {
+			identifier:        sdk.NewDatabaseObjectIdentifier("acc.ount", "data.base"),
+			expectedEncodedID: `acc.ount|data.base`,
+		},
+		"encodes schema object identifier": {
+			identifier:        sdk.NewSchemaObjectIdentifier("account", "database", "schema"),
+			expectedEncodedID: `account|database|schema`,
+		},
+		"encodes quoted schema object identifier": {
+			identifier:        sdk.NewSchemaObjectIdentifier("\"account\"", "\"database\"", "\"schema\""),
+			expectedEncodedID: `account|database|schema`,
+		},
+		"encodes schema object identifier with dots": {
+			identifier:        sdk.NewSchemaObjectIdentifier("acc.ount", "data.base", "sche.ma"),
+			expectedEncodedID: `acc.ount|data.base|sche.ma`,
+		},
+		"encodes table column identifier": {
+			identifier:        sdk.NewTableColumnIdentifier("database", "schema", "table", "column"),
+			expectedEncodedID: `database|schema|table|column`,
+		},
+		"encodes quoted table column identifier": {
+			identifier:        sdk.NewTableColumnIdentifier("\"database\"", "\"schema\"", "\"table\"", "\"column\""),
+			expectedEncodedID: `database|schema|table|column`,
+		},
+		"encodes table column identifier with dots": {
+			identifier:        sdk.NewTableColumnIdentifier("data.base", "sche.ma", "tab.le", "col.umn"),
+			expectedEncodedID: `data.base|sche.ma|tab.le|col.umn`,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			encodedID := EncodeSnowflakeID(tc.identifier)
+			require.Equal(t, tc.expectedEncodedID, encodedID)
+		})
+	}
 }
