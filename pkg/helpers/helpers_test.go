@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -76,7 +77,7 @@ func TestDecodeSnowflakeParameterID(t *testing.T) {
 // TODO: add tests for non object identifiers
 func TestEncodeSnowflakeID(t *testing.T) {
 	testCases := map[string]struct {
-		identifier        sdk.ObjectIdentifier
+		identifier        any
 		expectedEncodedID string
 	}{
 		"encodes account object identifier": {
@@ -91,6 +92,10 @@ func TestEncodeSnowflakeID(t *testing.T) {
 			identifier:        sdk.NewAccountObjectIdentifier("data.base"),
 			expectedEncodedID: `data.base`,
 		},
+		"encodes pointer to account object identifier": {
+			identifier:        sdk.Pointer(sdk.NewAccountObjectIdentifier("database")),
+			expectedEncodedID: `database`,
+		},
 		"encodes database object identifier": {
 			identifier:        sdk.NewDatabaseObjectIdentifier("database", "schema"),
 			expectedEncodedID: `database|schema`,
@@ -102,6 +107,10 @@ func TestEncodeSnowflakeID(t *testing.T) {
 		"encodes database object identifier with dots": {
 			identifier:        sdk.NewDatabaseObjectIdentifier("data.base", "sche.ma"),
 			expectedEncodedID: `data.base|sche.ma`,
+		},
+		"encodes pointer to database object identifier": {
+			identifier:        sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database", "schema")),
+			expectedEncodedID: `database|schema`,
 		},
 		"encodes schema object identifier": {
 			identifier:        sdk.NewSchemaObjectIdentifier("database", "schema", "table"),
@@ -115,6 +124,10 @@ func TestEncodeSnowflakeID(t *testing.T) {
 			identifier:        sdk.NewSchemaObjectIdentifier("data.base", "sche.ma", "tab.le"),
 			expectedEncodedID: `data.base|sche.ma|tab.le`,
 		},
+		"encodes pointer to schema object identifier": {
+			identifier:        sdk.Pointer(sdk.NewSchemaObjectIdentifier("database", "schema", "table")),
+			expectedEncodedID: `database|schema|table`,
+		},
 		"encodes table column identifier": {
 			identifier:        sdk.NewTableColumnIdentifier("database", "schema", "table", "column"),
 			expectedEncodedID: `database|schema|table|column`,
@@ -127,6 +140,10 @@ func TestEncodeSnowflakeID(t *testing.T) {
 			identifier:        sdk.NewTableColumnIdentifier("data.base", "sche.ma", "tab.le", "col.umn"),
 			expectedEncodedID: `data.base|sche.ma|tab.le|col.umn`,
 		},
+		"encodes pointer to table column identifier": {
+			identifier:        sdk.Pointer(sdk.NewTableColumnIdentifier("database", "schema", "table", "column")),
+			expectedEncodedID: `database|schema|table|column`,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -137,10 +154,26 @@ func TestEncodeSnowflakeID(t *testing.T) {
 	}
 
 	t.Run("panics for unsupported object identifier", func(t *testing.T) {
-		require.Panics(t, func() {
-			EncodeSnowflakeID(unsupportedObjectIdentifier{})
+		id := unsupportedObjectIdentifier{}
+		require.PanicsWithValue(t, fmt.Sprintf("Unsupported object identifier: %v", id), func() {
+			EncodeSnowflakeID(id)
 		})
 	})
+
+	nilTestCases := []any{
+		(*sdk.AccountObjectIdentifier)(nil),
+		(*sdk.DatabaseObjectIdentifier)(nil),
+		(*sdk.SchemaObjectIdentifier)(nil),
+		(*sdk.TableColumnIdentifier)(nil),
+	}
+
+	for i, tt := range nilTestCases {
+		t.Run(fmt.Sprintf("handle nil pointer to object identifier %d", i), func(t *testing.T) {
+			require.PanicsWithValue(t, "Nil object identifier received", func() {
+				EncodeSnowflakeID(tt)
+			})
+		})
+	}
 }
 
 type unsupportedObjectIdentifier struct{}
