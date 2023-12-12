@@ -33,7 +33,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
-	golang.org/x/tools v0.15.0 // indirect
+	golang.org/x/tools v0.16.0 // indirect
 )
 
 require (
@@ -119,7 +119,7 @@ require (
 	github.com/zclconf/go-cty v1.14.1 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.18.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
