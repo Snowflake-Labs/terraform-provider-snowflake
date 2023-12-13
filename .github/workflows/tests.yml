@@ -44,9 +44,6 @@ jobs:
       - run: make test
         if: steps.create_config.conclusion == 'success'
 
-      - run: make test-client
-        if: steps.create_config.conclusion == 'success'
-
       - run: make test-acceptance
         if: steps.create_config.conclusion == 'success'
 

@@ -64,7 +64,7 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 			else echo "Aborting..."; \
 		fi;
 
-test: ## run unit and integration tests
+test: test-client ## run unit and integration tests
 	go test -v -cover -timeout=30m ./...
 
 test-acceptance: ## run acceptance tests

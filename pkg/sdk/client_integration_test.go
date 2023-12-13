@@ -29,8 +29,7 @@ func TestClient_NewClient(t *testing.T) {
 		_, err := NewClient(config)
 		require.NoError(t, err)
 
-		assert.NotContains(t, sql.Drivers(), "snowflake-not-instrumented")
-		assert.Contains(t, sql.Drivers(), "snowflake-instrumented")
+		assert.ElementsMatch(t, sql.Drivers(), []string{"snowflake-instrumented", "snowflake"})
 	})
 }
 

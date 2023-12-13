@@ -23,6 +23,6 @@ func TestNewClientWithoutInstrumentedSQL(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotContains(t, sql.Drivers(), "snowflake-instrumented")
-		assert.Contains(t, sql.Drivers(), "snowflake-not-instrumented")
+		assert.Contains(t, sql.Drivers(), "snowflake")
 	})
 }

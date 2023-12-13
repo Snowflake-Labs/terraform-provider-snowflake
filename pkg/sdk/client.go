@@ -103,7 +103,7 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	var client *Client
 	// register the snowflake driver if it hasn't been registered yet
 
-	var driverName string
+	var driverName = "snowflake"
 	if instrumentedSQL {
 		if !slices.Contains(sql.Drivers(), "snowflake-instrumented") {
 			log.Println("[DEBUG] Registering snowflake-instrumented driver")
@@ -118,12 +118,6 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 			sql.Register("snowflake-instrumented", instrumentedsql.WrapDriver(new(gosnowflake.SnowflakeDriver), instrumentedsql.WithLogger(logger)))
 		}
 		driverName = "snowflake-instrumented"
-	} else {
-		if !slices.Contains(sql.Drivers(), "snowflake-not-instrumented") {
-			log.Println("[DEBUG] Registering snowflake-not-instrumented driver")
-			sql.Register("snowflake-not-instrumented", new(gosnowflake.SnowflakeDriver))
-		}
-		driverName = "snowflake-not-instrumented"
 	}
 
 	dsn, err := gosnowflake.DSN(cfg)
