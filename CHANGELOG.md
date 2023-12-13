@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.80.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.79.1...v0.80.0) (2023-12-13)
+
+
+### 🎉 **What's new:**
+
+* Optional switch for instrumentedsql ([#2261](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2261)) ([9934a59](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9934a59c5ee31dc292961806440427000ea41ea7))
+* Use external tables from SDK ([#2228](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2228)) ([6941023](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6941023f95230a14f92dd099c1a6375129ee4bfb))
+
+
+### 🔧 **Misc**
+
+* Bump dependencies ([#2252](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2252)) ([581d75c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/581d75c566ea758c5f888dedb101e6318d7c0cc3))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix encode Snowflake ID for object identifiers ([#2256](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2256)) ([1c98a80](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1c98a80bb1486a04ead57dd0d8abcf65e00ea86c))
+* for 1624 resource monitor timestamps are always considered to have changed ([#2214](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2214)) ([4d5d3ca](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4d5d3ca4cfa3727240b05da9f5010b4fa908f695))
+
 ## [0.79.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.79.0...v0.79.1) (2023-12-11)
 
 
