@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,12 +15,22 @@ func TestClient_NewClient(t *testing.T) {
 		_, err := NewClient(config)
 		require.NoError(t, err)
 	})
+
 	t.Run("uses env vars if values are missing", func(t *testing.T) {
 		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
 		t.Cleanup(cleanupEnvVars)
 		config := EnvConfig()
 		_, err := NewClient(config)
 		require.Error(t, err)
+	})
+
+	t.Run("registers snowflake-instrumented driver", func(t *testing.T) {
+		config := DefaultConfig()
+		_, err := NewClient(config)
+		require.NoError(t, err)
+
+		assert.NotContains(t, sql.Drivers(), "snowflake-not-instrumented")
+		assert.Contains(t, sql.Drivers(), "snowflake-instrumented")
 	})
 }
 
