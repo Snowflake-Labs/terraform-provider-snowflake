@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
 	"golang.org/x/exp/slices"
-	"log"
-	"os"
 
 	"github.com/snowflakedb/gosnowflake"
 )
@@ -103,7 +104,7 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	var client *Client
 	// register the snowflake driver if it hasn't been registered yet
 
-	var driverName = "snowflake"
+	driverName := "snowflake"
 	if instrumentedSQL {
 		if !slices.Contains(sql.Drivers(), "snowflake-instrumented") {
 			log.Println("[DEBUG] Registering snowflake-instrumented driver")

@@ -2,11 +2,12 @@ package client
 
 import (
 	"database/sql"
+	"os"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 // TestNewClientWithoutInstrumentedSQL checks if the client is initialized with the different driver implementation.
