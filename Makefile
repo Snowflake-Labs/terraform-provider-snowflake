@@ -64,7 +64,7 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 			else echo "Aborting..."; \
 		fi;
 
-test: ## run unit and integration tests
+test: test-client ## run unit and integration tests
 	go test -v -cover -timeout=30m ./...
 
 test-acceptance: ## run acceptance tests
@@ -75,6 +75,9 @@ test-integration: ## run SDK integration tests
 
 test-architecture: ## check architecture constraints between packages
 	go test ./pkg/architests/... -v
+
+test-client: ## runs test that checks sdk.Client without instrumentedsql
+	SF_TF_NO_INSTRUMENTED_SQL=1 go test ./pkg/sdk/internal/client/... -v
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .

@@ -14,6 +14,8 @@ This is a terraform provider for managing [Snowflake](https://www.snowflake.com/
   - [Getting started](#getting-started)
   - [SDK migration table](#sdk-migration-table)
   - [Getting Help](#getting-help)
+  - [Additional debug logs for `snowflake_grant_privileges_to_role` resource](#additional-debug-logs-for-snowflake_grant_privileges_to_role-resource)
+  - [Additional SQL Client configuration](#additional-sql-client-configuration)
   - [Contributing](#contributing)
 
 
@@ -137,6 +139,9 @@ Set environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` to a non-empty value. 
 ```text
 2023/12/08 12:58:22.497078 sf-tf-additional-debug [DEBUG] Creating new client from db
 ```
+
+## Additional SQL Client configuration
+Currently underlying sql [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver is wrapped with [instrumentedsql](https://github.com/luna-duclos/instrumentedsql). In order to use raw [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver, set environment variable `SF_TF_NO_INSTRUMENTED_SQL` to a non-empty value.
 
 ## Contributing
 
