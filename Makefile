@@ -77,7 +77,7 @@ test-architecture: ## check architecture constraints between packages
 	go test ./pkg/architests/... -v
 
 test-client: ## runs test that checks sdk.Client without instrumentedsql
-	NO_INSTRUMENTED_SQL=1 go test ./pkg/sdk/internal/client/... -v
+	SF_TF_NO_INSTRUMENTED_SQL=1 go test ./pkg/sdk/internal/client/... -v
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .

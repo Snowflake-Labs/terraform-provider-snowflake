@@ -17,7 +17,7 @@ import (
 var instrumentedSQL bool
 
 func init() {
-	instrumentedSQL = os.Getenv("NO_INSTRUMENTED_SQL") == ""
+	instrumentedSQL = os.Getenv("SF_TF_NO_INSTRUMENTED_SQL") == ""
 }
 
 type Client struct {
