@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.79.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.79.0...v0.79.1) (2023-12-11)
+
+
+### 🐛 **Bug fixes:**
+
+* Add missing parameters ([#2250](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2250)) ([4f4c4a4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4f4c4a4fcb91725a55726c03429745bbf95fd642))
+
+## [0.79.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.78.0...v0.79.0) (2023-12-11)
+
+
+### 🎉 **What's new:**
+
+* add procedures to sdkv2 ([#2202](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2202)) ([6b563ac](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6b563acef0f702fc6a366219afac602fa106129c))
+
+
+### 🔧 **Misc**
+
+* Propose additional debug logging ([#2243](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2243)) ([a0984cd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a0984cd355c2004cc245fbd4672967ba59cfb3c7))
+
+## [0.78.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.77.0...v0.78.0) (2023-12-08)
+
+
+### 🎉 **What's new:**
+
+* add event tables to sdk ([#2215](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2215)) ([66cc80a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/66cc80a8cac24f4b7967986032b7da9e20bd4eab))
+* Add missing parameters to password policy resource ([#2231](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2231)) ([c189782](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c189782bb7d117e27979c21dfea60ba733e996df))
+* Add tables to the SDK ([#2042](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2042)) ([c1700de](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c1700de2a062852da7cb5e3cf3277cc19f6466d6))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix some bugs ([#2234](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2234)) ([774a7db](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/774a7db1ae912843f83561c3cd810c31af242958))
+* schemas show by id ([#2238](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2238)) ([bd8fc5d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/bd8fc5d1c9ad049ab76dbf5d689f5beb833a40ca))
+* snowpipe error integration ([#2227](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2227)) ([0b388bf](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0b388bf79346cd4ddedaac99d4651390f1f93358))
+
+## [0.77.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.76.0...v0.77.0) (2023-11-30)
+
+
+### 🎉 **What's new:**
+
+* Add unsafe_execute resource ([#2225](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2225)) ([196134c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/196134cbf91996eabc50bdc586a657fe7ac71900))
+* Introduce simple arch tests ([#2210](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2210)) ([c60db80](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c60db80f44d949258f0a692baafdc22b886c3010))
+
+
+### 🐛 **Bug fixes:**
+
+* cleanup workflows and makefile ([#2150](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2150)) ([64335e7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/64335e72e480393437dff9f88122a256a2ac0814))
+* documentation for role ownership grant ([#2203](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2203)) ([e3d405c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e3d405c91b494413d432e1aef9ff1da1f9ede4a7))
+* Fix workflows ([#2206](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2206)) ([6d7f833](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6d7f8336897dee17c102d69a517e2525c1bb4d91))
+
 ## [0.76.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.75.0...v0.76.0) (2023-11-15)
 
 

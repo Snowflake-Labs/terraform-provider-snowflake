@@ -217,7 +217,7 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(ExternalOauthIntegrationID(&input.ExternalOauthIntegration3))
 
-	return nil
+	return ReadExternalOauthIntegration(d, meta)
 }
 
 // ReadExternalOauthIntegration implements schema.ReadFunc.
@@ -543,7 +543,7 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return nil
+	return ReadExternalOauthIntegration(d, meta)
 }
 
 // DeleteExternalOauthIntegration implements schema.DeleteFunc.

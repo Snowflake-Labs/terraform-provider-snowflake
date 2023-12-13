@@ -11,20 +11,22 @@ default: help
 
 dev-setup: ## setup development dependencies
 	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.3
-	cd tools && go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-	cd tools && go install mvdan.cc/gofumpt
+	cd tools && mkdir -p bin/
+	cd tools && env GOBIN=$$PWD/bin go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+	cd tools && env GOBIN=$$PWD/bin go install mvdan.cc/gofumpt
 
 dev-cleanup: ## cleanup development dependencies
 	rm -rf bin/*
+	rm -rf tools/bin/*
 
 docs: ## generate docs
-	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
+	tools/bin/tfplugindocs generate
 
 docs-check: docs ## check that docs have been generated
 	git diff --exit-code -- docs
 
 fmt: terraform-fmt ## Run terraform fmt and gofumpt
-	gofumpt -l -w .
+	tools/bin/gofumpt -l -w .
 
 terraform-fmt: ## Run terraform fmt
 	terraform fmt -recursive ./examples/
@@ -38,10 +40,10 @@ install: ## install the binary
 	go install -v ./...
 
 lint: # Run static code analysis, check formatting. See https://golangci-lint.run/
-	golangci-lint run ./... -v
+	./bin/golangci-lint run ./... -v
 
 lint-fix: ## Run static code analysis, check formatting and try to fix findings
-	golangci-lint run ./... -v --fix
+	./bin/golangci-lint run ./... -v --fix
 
 mod: ## add missing and remove unused modules
 	go mod tidy -compat=1.20
@@ -49,7 +51,7 @@ mod: ## add missing and remove unused modules
 mod-check: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum
 
-pre-push: fmt docs mod lint   ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+pre-push: fmt docs mod lint test-architecture ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
 pre-push-check: fmt-check docs-check lint-check mod-check ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
@@ -67,6 +69,12 @@ test: ## run unit and integration tests
 
 test-acceptance: ## run acceptance tests
 	TF_ACC=1 go test -run "^TestAcc_" -v -cover -timeout=30m ./...
+
+test-integration: ## run SDK integration tests
+	go test -run "^TestInt_" -v -cover -timeout=20m ./...
+
+test-architecture: ## check architecture constraints between packages
+	go test ./pkg/architests/... -v
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .

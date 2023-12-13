@@ -13,6 +13,7 @@ const (
 	GlobalPrivilegeCreateFailoverGroup       GlobalPrivilege = "CREATE FAILOVER GROUP"
 	GlobalPrivilegeCreateIntegration         GlobalPrivilege = "CREATE INTEGRATION"
 	GlobalPrivilegeCreateNetworkPolicy       GlobalPrivilege = "CREATE NETWORK POLICY"
+	GlobalPrivilegeCreateExternalVolume      GlobalPrivilege = "CREATE EXTERNAL VOLUME"
 	GlobalPrivilegeCreateReplicationGroup    GlobalPrivilege = "CREATE REPLICATION GROUP"
 	GlobalPrivilegeCreateRole                GlobalPrivilege = "CREATE ROLE"
 	GlobalPrivilegeCreateShare               GlobalPrivilege = "CREATE SHARE"
@@ -71,6 +72,9 @@ const (
 	AccountObjectPrivilegeMonitor            AccountObjectPrivilege = "MONITOR"
 	AccountObjectPrivilegeUsage              AccountObjectPrivilege = "USAGE"
 
+	// -- For EXTERNAL VOLUME
+	// AccountObjectPrivilegeUsage              AccountObjectPrivilege = "USAGE" (duplicate)
+
 	// -- For FAILOVER GROUP
 	// { FAILOVER | MODIFY | MONITOR | REPLICATE } [ , ... ]
 	AccountObjectPrivilegeFailover AccountObjectPrivilege = "FAILOVER"
@@ -126,11 +130,13 @@ const (
 		[ , ... ]
 	*/
 	SchemaPrivilegeAddSearchOptimization  SchemaPrivilege = "ADD SEARCH OPTIMIZATION"
+	SchemaPrivilegeApplyBudget            SchemaPrivilege = "APPLYBUDGET"
 	SchemaPrivilegeCreateAlert            SchemaPrivilege = "CREATE ALERT"
 	SchemaPrivilegeCreateDynamicTable     SchemaPrivilege = "CREATE DYNAMIC TABLE"
 	SchemaPrivilegeCreateExternalTable    SchemaPrivilege = "CREATE EXTERNAL TABLE"
 	SchemaPrivilegeCreateFileFormat       SchemaPrivilege = "CREATE FILE FORMAT"
 	SchemaPrivilegeCreateFunction         SchemaPrivilege = "CREATE FUNCTION"
+	SchemaPrivilegeCreateIcebergTable     SchemaPrivilege = "CREATE ICEBERG TABLE"
 	SchemaPrivilegeCreateMaterializedView SchemaPrivilege = "CREATE MATERIALIZED VIEW"
 	SchemaPrivilegeCreatePipe             SchemaPrivilege = "CREATE PIPE"
 	SchemaPrivilegeCreateProcedure        SchemaPrivilege = "CREATE PROCEDURE"
@@ -177,6 +183,15 @@ const (
 	// -- For FILE FORMAT, FUNCTION (UDF or external function), PROCEDURE, SECRET, or SEQUENCE
 	// USAGE [ , ... ]
 	SchemaObjectPrivilegeUsage SchemaObjectPrivilege = "USAGE"
+
+	// -- For ICEBERG TABLE
+	SchemaObjectPrivilegeApplyBudget SchemaObjectPrivilege = "APPLYBUDGET"
+	// SchemaObjectPrivilegeDelete      SchemaObjectPrivilege = "DELETE" (duplicate)
+	// SchemaObjectPrivilegeInsert      SchemaObjectPrivilege = "INSERT" (duplicate)
+	// SchemaObjectPrivilegeReferences  SchemaObjectPrivilege = "REFERENCES" (duplicate)
+	// SchemaObjectPrivilegeSelect      SchemaObjectPrivilege = "SELECT" (duplicate)
+	// SchemaObjectPrivilegeTruncate      SchemaObjectPrivilege = "Truncate" (duplicate)
+	// SchemaObjectPrivilegeUpdate      SchemaObjectPrivilege = "Update" (duplicate)
 
 	// -- For PIPE
 	// { MONITOR | OPERATE } [ , ... ]

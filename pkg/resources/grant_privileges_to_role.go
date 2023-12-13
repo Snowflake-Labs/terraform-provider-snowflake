@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -55,7 +56,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 				"object_type": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "The object type of the account object on which privileges will be granted. Valid values are: USER | RESOURCE MONITOR | WAREHOUSE | DATABASE | INTEGRATION | FAILOVER GROUP | REPLICATION GROUP",
+					Description: "The object type of the account object on which privileges will be granted. Valid values are: USER | RESOURCE MONITOR | WAREHOUSE | DATABASE | INTEGRATION | FAILOVER GROUP | REPLICATION GROUP | EXTERNAL VOLUME",
 					ValidateFunc: validation.StringInSlice([]string{
 						"USER",
 						"RESOURCE MONITOR",
@@ -64,6 +65,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 						"INTEGRATION",
 						"FAILOVER GROUP",
 						"REPLICATION GROUP",
+						"EXTERNAL VOLUME",
 					}, true),
 				},
 				"object_name": {
@@ -119,7 +121,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 				"object_type": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					Description:   "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW",
+					Description:   "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | ICEBERG TABLE | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW",
 					RequiredWith:  []string{"on_schema_object.0.object_name"},
 					ConflictsWith: []string{"on_schema_object.0.all", "on_schema_object.0.future"},
 					ForceNew:      true,
@@ -129,6 +131,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 						"EVENT TABLE",
 						"FILE FORMAT",
 						"FUNCTION",
+						"ICEBERG TABLE",
 						"PROCEDURE",
 						"SECRET",
 						"SEQUENCE",
@@ -166,7 +169,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 							"object_type_plural": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
+								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:    true,
 								ValidateFunc: validation.StringInSlice([]string{
 									"ALERTS",
@@ -174,6 +177,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 									"EVENT TABLES",
 									"FILE FORMATS",
 									"FUNCTIONS",
+									"ICEBERG TABLES",
 									"PROCEDURES",
 									"SECRETS",
 									"SEQUENCES",
@@ -220,7 +224,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 							"object_type_plural": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
+								Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:    true,
 								ValidateFunc: validation.StringInSlice([]string{
 									"ALERTS",
@@ -228,6 +232,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 									"EVENT TABLES",
 									"FILE FORMATS",
 									"FUNCTIONS",
+									"ICEBERG TABLES",
 									"PROCEDURES",
 									"SECRETS",
 									"SEQUENCES",
@@ -442,12 +447,15 @@ func (v GrantPrivilegesToAccountRoleID) String() string {
 }
 
 func CreateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
+	logging.DebugLogger.Printf("[DEBUG] Entering create grant privileges to role")
 	db := meta.(*sql.DB)
+	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	resourceID := &GrantPrivilegesToAccountRoleID{}
 	var privileges []string
 	if p, ok := d.GetOk("privileges"); ok {
+		logging.DebugLogger.Printf("[DEBUG] Building privileges list based on config")
 		privileges = expandStringList(p.(*schema.Set).List())
 		resourceID.Privileges = privileges
 	}
@@ -465,17 +473,22 @@ func CreateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 	roleName := d.Get("role_name").(string)
 	resourceID.RoleName = roleName
 	roleID := sdk.NewAccountObjectIdentifier(roleName)
+	logging.DebugLogger.Printf("[DEBUG] About to grant privileges to account role")
 	err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, on, roleID, &opts)
+	logging.DebugLogger.Printf("[DEBUG] After granting privileges to account role: err = %v", err)
 	if err != nil {
 		return fmt.Errorf("error granting privileges to account role: %w", err)
 	}
 
+	logging.DebugLogger.Printf("[DEBUG] Setting ID to %s", resourceID.String())
 	d.SetId(resourceID.String())
 	return ReadGrantPrivilegesToRole(d, meta)
 }
 
 func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
+	logging.DebugLogger.Printf("[DEBUG] Entering read grant privileges to role")
 	db := meta.(*sql.DB)
+	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	resourceID := NewGrantPrivilegesToAccountRoleID(d.Id())
@@ -488,6 +501,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	var opts sdk.ShowGrantOptions
 	var grantOn sdk.ObjectType
 	if resourceID.OnAccount {
+		logging.DebugLogger.Printf("[DEBUG] Preparing to read privileges: on account")
 		grantOn = sdk.ObjectTypeAccount
 		opts = sdk.ShowGrantOptions{
 			On: &sdk.ShowGrantsOn{
@@ -497,6 +511,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if resourceID.OnAccountObject {
+		logging.DebugLogger.Printf("[DEBUG] Preparing to read privileges: on account object")
 		objectType := sdk.ObjectType(resourceID.ObjectType)
 		grantOn = objectType
 		opts = sdk.ShowGrantOptions{
@@ -510,6 +525,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if resourceID.OnSchema {
+		logging.DebugLogger.Printf("[DEBUG] Preparing to read privileges: on schema")
 		grantOn = sdk.ObjectTypeSchema
 		if resourceID.SchemaName != "" {
 			opts = sdk.ShowGrantOptions{
@@ -536,6 +552,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if resourceID.OnSchemaObject {
+		logging.DebugLogger.Printf("[DEBUG] Preparing to read privileges: on schema object")
 		if resourceID.ObjectName != "" {
 			objectType := sdk.ObjectType(resourceID.ObjectType)
 			grantOn = objectType
@@ -582,7 +599,9 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
+	logging.DebugLogger.Printf("[DEBUG] Entering update grant privileges to role")
 	db := meta.(*sql.DB)
+	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
@@ -590,7 +609,9 @@ func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 	roleName := d.Get("role_name").(string)
 	roleID := sdk.NewAccountObjectIdentifier(roleName)
 
+	logging.DebugLogger.Printf("[DEBUG] Checking if privileges have changed")
 	if d.HasChange("privileges") {
+		logging.DebugLogger.Printf("[DEBUG] Privileges have changed")
 		old, new := d.GetChange("privileges")
 		oldPrivileges := expandStringList(old.(*schema.Set).List())
 		newPrivileges := expandStringList(new.(*schema.Set).List())
@@ -611,11 +632,14 @@ func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 
 		// first add new privileges
 		if len(addPrivileges) > 0 {
+			logging.DebugLogger.Printf("[DEBUG] Adding new privileges")
 			privilegesToGrant, on, err := configureAccountRoleGrantPrivilegeOptions(d, addPrivileges, false, &GrantPrivilegesToAccountRoleID{})
 			if err != nil {
 				return fmt.Errorf("error configuring account role grant privilege options: %w", err)
 			}
+			logging.DebugLogger.Printf("[DEBUG] About to grant privileges to account role")
 			err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, on, roleID, nil)
+			logging.DebugLogger.Printf("[DEBUG] After granting privileges to account role: err = %v", err)
 			if err != nil {
 				return fmt.Errorf("error granting privileges to account role: %w", err)
 			}
@@ -623,15 +647,19 @@ func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 
 		// then remove old privileges
 		if len(removePrivileges) > 0 {
+			logging.DebugLogger.Printf("[DEBUG] Removing old privileges")
 			privilegesToRevoke, on, err := configureAccountRoleGrantPrivilegeOptions(d, removePrivileges, false, &GrantPrivilegesToAccountRoleID{})
 			if err != nil {
 				return fmt.Errorf("error configuring account role grant privilege options: %w", err)
 			}
+			logging.DebugLogger.Printf("[DEBUG] About to revoke privileges from account role")
 			err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privilegesToRevoke, on, roleID, nil)
+			logging.DebugLogger.Printf("[DEBUG] After revoking privileges from account role: err = %v", err)
 			if err != nil {
 				return fmt.Errorf("error revoking privileges from account role: %w", err)
 			}
 		}
+		logging.DebugLogger.Printf("[DEBUG] Setting new values")
 		resourceID := NewGrantPrivilegesToAccountRoleID(d.Id())
 		resourceID.Privileges = newPrivileges
 		d.SetId(resourceID.String())
@@ -640,7 +668,9 @@ func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 }
 
 func DeleteGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
+	logging.DebugLogger.Printf("[DEBUG] Entering delete grant privileges to role")
 	db := meta.(*sql.DB)
+	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
@@ -656,19 +686,23 @@ func DeleteGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return fmt.Errorf("error configuring account role grant privilege options: %w", err)
 	}
-
+	logging.DebugLogger.Printf("[DEBUG] About to revoke privileges from account role")
 	err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privilegesToRevoke, on, roleID, nil)
+	logging.DebugLogger.Printf("[DEBUG] After revoking privileges from account role: err = %v", err)
 	if err != nil {
 		return fmt.Errorf("error revoking privileges from account role: %w", err)
 	}
+	logging.DebugLogger.Printf("[DEBUG] Cleaning resource id")
 	d.SetId("")
 	return nil
 }
 
 func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privileges []string, allPrivileges bool, resourceID *GrantPrivilegesToAccountRoleID) (*sdk.AccountRoleGrantPrivileges, *sdk.AccountRoleGrantOn, error) {
+	logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options")
 	var privilegesToGrant *sdk.AccountRoleGrantPrivileges
 	on := sdk.AccountRoleGrantOn{}
 	if v, ok := d.GetOk("on_account"); ok && v.(bool) {
+		logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: on account")
 		on.Account = sdk.Bool(true)
 		resourceID.OnAccount = true
 		privilegesToGrant = setAccountRolePrivilegeOptions(privileges, allPrivileges, true, false, false, false)
@@ -676,6 +710,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 	}
 
 	if v, ok := d.GetOk("on_account_object"); ok && len(v.([]interface{})) > 0 {
+		logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: on account object")
 		on.AccountObject = &sdk.GrantOnAccountObject{}
 		resourceID.OnAccountObject = true
 		onAccountObject := v.([]interface{})[0].(map[string]interface{})
@@ -699,6 +734,8 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			on.AccountObject.User = &objectID
 		case sdk.ObjectTypeWarehouse:
 			on.AccountObject.Warehouse = &objectID
+		case sdk.ObjectTypeExternalVolume:
+			on.AccountObject.ExternalVolume = &objectID
 		default:
 			return nil, nil, fmt.Errorf("invalid object type %s", objectType)
 		}
@@ -707,14 +744,17 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 	}
 
 	if v, ok := d.GetOk("on_schema"); ok && len(v.([]interface{})) > 0 {
+		logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: on schema")
 		onSchema := v.([]interface{})[0].(map[string]interface{})
 		on.Schema = &sdk.GrantOnSchema{}
 		resourceID.OnSchema = true
 		if v, ok := onSchema["schema_name"]; ok && len(v.(string)) > 0 {
+			logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting schema name")
 			resourceID.SchemaName = v.(string)
 			on.Schema.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(v.(string)))
 		}
 		if v, ok := onSchema["all_schemas_in_database"]; ok && len(v.(string)) > 0 {
+			logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting all schemas in database")
 			resourceID.All = true
 			resourceID.InDatabase = true
 			resourceID.DatabaseName = v.(string)
@@ -722,6 +762,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 		}
 
 		if v, ok := onSchema["future_schemas_in_database"]; ok && len(v.(string)) > 0 {
+			logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting future schemas in database")
 			resourceID.Future = true
 			resourceID.InDatabase = true
 			resourceID.DatabaseName = v.(string)
@@ -732,20 +773,24 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 	}
 
 	if v, ok := d.GetOk("on_schema_object"); ok && len(v.([]interface{})) > 0 {
+		logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: on schema object")
 		onSchemaObject := v.([]interface{})[0].(map[string]interface{})
 		on.SchemaObject = &sdk.GrantOnSchemaObject{}
 		resourceID.OnSchemaObject = true
 		if v, ok := onSchemaObject["object_type"]; ok && len(v.(string)) > 0 {
+			logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting schema object type")
 			resourceID.ObjectType = v.(string)
 			on.SchemaObject.SchemaObject = &sdk.Object{
 				ObjectType: sdk.ObjectType(v.(string)),
 			}
 		}
 		if v, ok := onSchemaObject["object_name"]; ok && len(v.(string)) > 0 {
+			logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting schema object name")
 			resourceID.ObjectName = v.(string)
 			on.SchemaObject.SchemaObject.Name = sdk.Pointer(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(v.(string)))
 		}
 		if v, ok := onSchemaObject["all"]; ok && len(v.([]interface{})) > 0 {
+			logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting all")
 			all := v.([]interface{})[0].(map[string]interface{})
 			on.SchemaObject.All = &sdk.GrantOnSchemaObjectIn{}
 			resourceID.All = true
@@ -753,11 +798,13 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			resourceID.ObjectTypePlural = pluralObjectType
 			on.SchemaObject.All.PluralObjectType = sdk.PluralObjectType(pluralObjectType)
 			if v, ok := all["in_database"]; ok && len(v.(string)) > 0 {
+				logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting all in database")
 				resourceID.InDatabase = true
 				resourceID.DatabaseName = v.(string)
 				on.SchemaObject.All.InDatabase = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(v.(string)))
 			}
 			if v, ok := all["in_schema"]; ok && len(v.(string)) > 0 {
+				logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting all in schema")
 				resourceID.InSchema = true
 				resourceID.SchemaName = v.(string)
 				on.SchemaObject.All.InSchema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(v.(string)))
@@ -765,6 +812,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 		}
 
 		if v, ok := onSchemaObject["future"]; ok && len(v.([]interface{})) > 0 {
+			logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting future")
 			future := v.([]interface{})[0].(map[string]interface{})
 			resourceID.Future = true
 			on.SchemaObject.Future = &sdk.GrantOnSchemaObjectIn{}
@@ -772,11 +820,13 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			resourceID.ObjectTypePlural = pluralObjectType
 			on.SchemaObject.Future.PluralObjectType = sdk.PluralObjectType(pluralObjectType)
 			if v, ok := future["in_database"]; ok && len(v.(string)) > 0 {
+				logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting future in database")
 				resourceID.InDatabase = true
 				resourceID.DatabaseName = v.(string)
 				on.SchemaObject.Future.InDatabase = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(v.(string)))
 			}
 			if v, ok := future["in_schema"]; ok && len(v.(string)) > 0 {
+				logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: setting future in schema")
 				resourceID.InSchema = true
 				resourceID.SchemaName = v.(string)
 				on.SchemaObject.Future.InSchema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(v.(string)))
@@ -786,16 +836,19 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 		privilegesToGrant = setAccountRolePrivilegeOptions(privileges, allPrivileges, false, false, false, true)
 		return privilegesToGrant, &on, nil
 	}
+	logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: invalid")
 	return nil, nil, fmt.Errorf("invalid grant options")
 }
 
 func setAccountRolePrivilegeOptions(privileges []string, allPrivileges bool, onAccount bool, onAccountObject bool, onSchema bool, onSchemaObject bool) *sdk.AccountRoleGrantPrivileges {
 	privilegesToGrant := &sdk.AccountRoleGrantPrivileges{}
 	if allPrivileges {
+		logging.DebugLogger.Printf("[DEBUG] Setting all privileges on privileges to grant")
 		privilegesToGrant.AllPrivileges = sdk.Bool(true)
 		return privilegesToGrant
 	}
 	if onAccount {
+		logging.DebugLogger.Printf("[DEBUG] Setting global privileges on privileges to grant")
 		privilegesToGrant.GlobalPrivileges = []sdk.GlobalPrivilege{}
 		for _, privilege := range privileges {
 			privilegesToGrant.GlobalPrivileges = append(privilegesToGrant.GlobalPrivileges, sdk.GlobalPrivilege(privilege))
@@ -803,6 +856,7 @@ func setAccountRolePrivilegeOptions(privileges []string, allPrivileges bool, onA
 		return privilegesToGrant
 	}
 	if onAccountObject {
+		logging.DebugLogger.Printf("[DEBUG] Setting account object privileges on privileges to grant")
 		privilegesToGrant.AccountObjectPrivileges = []sdk.AccountObjectPrivilege{}
 		for _, privilege := range privileges {
 			privilegesToGrant.AccountObjectPrivileges = append(privilegesToGrant.AccountObjectPrivileges, sdk.AccountObjectPrivilege(privilege))
@@ -810,6 +864,7 @@ func setAccountRolePrivilegeOptions(privileges []string, allPrivileges bool, onA
 		return privilegesToGrant
 	}
 	if onSchema {
+		logging.DebugLogger.Printf("[DEBUG] Setting schema privileges on privileges to grant")
 		privilegesToGrant.SchemaPrivileges = []sdk.SchemaPrivilege{}
 		for _, privilege := range privileges {
 			privilegesToGrant.SchemaPrivileges = append(privilegesToGrant.SchemaPrivileges, sdk.SchemaPrivilege(privilege))
@@ -817,17 +872,21 @@ func setAccountRolePrivilegeOptions(privileges []string, allPrivileges bool, onA
 		return privilegesToGrant
 	}
 	if onSchemaObject {
+		logging.DebugLogger.Printf("[DEBUG] Setting schema object privileges on privileges to grant")
 		privilegesToGrant.SchemaObjectPrivileges = []sdk.SchemaObjectPrivilege{}
 		for _, privilege := range privileges {
 			privilegesToGrant.SchemaObjectPrivileges = append(privilegesToGrant.SchemaObjectPrivileges, sdk.SchemaObjectPrivilege(privilege))
 		}
 		return privilegesToGrant
 	}
+	logging.DebugLogger.Printf("[DEBUG] Not setting any privileges on privileges to grant")
 	return nil
 }
 
 func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn sdk.ObjectType, id GrantPrivilegesToAccountRoleID, opts *sdk.ShowGrantOptions, d *schema.ResourceData) error {
+	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)
+	logging.DebugLogger.Printf("[DEBUG] After showing grants: err = %v", err)
 	if err != nil {
 		return fmt.Errorf("error retrieving grants for account role: %w", err)
 	}
@@ -836,6 +895,7 @@ func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, gra
 	privileges := []string{}
 	roleName := d.Get("role_name").(string)
 
+	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {
 		// Only consider privileges that are already present in the ID so we
 		// don't delete privileges managed by other resources.
@@ -854,7 +914,9 @@ func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, gra
 			}
 		}
 	}
+	logging.DebugLogger.Printf("[DEBUG] Setting privileges on account")
 	if err := d.Set("privileges", privileges); err != nil {
+		logging.DebugLogger.Printf("[DEBUG] Error setting privileges for account role: err = %v", err)
 		return fmt.Errorf("error setting privileges for account role: %w", err)
 	}
 	return nil

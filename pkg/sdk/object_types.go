@@ -59,6 +59,8 @@ const (
 	ObjectTypeApplicationRole    ObjectType = "APPLICATION ROLE"
 	ObjectTypeStreamlit          ObjectType = "STREAMLIT"
 	ObjectTypeColumn             ObjectType = "COLUMN"
+	ObjectTypeIcebergTable       ObjectType = "ICEBERG TABLE"
+	ObjectTypeExternalVolume     ObjectType = "EXTERNAL VOLUME"
 )
 
 func (o ObjectType) String() string {
@@ -109,6 +111,8 @@ func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 		ObjectTypeApplicationPackage: PluralObjectTypeApplicationPackages,
 		ObjectTypeApplicationRole:    PluralObjectTypeApplicationRoles,
 		ObjectTypeStreamlit:          PluralObjectTypeStreamlits,
+		ObjectTypeIcebergTable:       PluralObjectTypeIcebergTables,
+		ObjectTypeExternalVolume:     PluralObjectTypeExternalVolumes,
 	}
 }
 
@@ -199,6 +203,8 @@ const (
 	PluralObjectTypeApplicationPackages PluralObjectType = "APPLICATION PACKAGES"
 	PluralObjectTypeApplicationRoles    PluralObjectType = "APPLICATION ROLES"
 	PluralObjectTypeStreamlits          PluralObjectType = "STREAMLITS"
+	PluralObjectTypeIcebergTables       PluralObjectType = "ICEBERG TABLES"
+	PluralObjectTypeExternalVolumes     PluralObjectType = "EXTERNAL VOLUMES"
 )
 
 func (p PluralObjectType) String() string {

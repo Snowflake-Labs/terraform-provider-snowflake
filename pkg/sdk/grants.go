@@ -52,6 +52,7 @@ type GrantOnAccountObject struct {
 	Integration      *AccountObjectIdentifier `ddl:"identifier" sql:"INTEGRATION"`
 	FailoverGroup    *AccountObjectIdentifier `ddl:"identifier" sql:"FAILOVER GROUP"`
 	ReplicationGroup *AccountObjectIdentifier `ddl:"identifier" sql:"REPLICATION GROUP"`
+	ExternalVolume   *AccountObjectIdentifier `ddl:"identifier" sql:"EXTERNAL VOLUME"`
 }
 
 type GrantOnSchema struct {

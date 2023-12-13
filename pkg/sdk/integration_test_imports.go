@@ -27,6 +27,13 @@ func (c *Client) QueryOneForTests(ctx context.Context, dest interface{}, sql str
 	return decodeDriverError(c.db.GetContext(ctx, dest, sql))
 }
 
+// QueryForTests is an exact copy of query (that is unexported), that some integration tests/helpers were using
+// TODO: remove after introducing all resources using this
+func (c *Client) QueryForTests(ctx context.Context, dest interface{}, sql string) error {
+	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	return decodeDriverError(c.db.SelectContext(ctx, dest, sql))
+}
+
 func ErrorsEqual(t *testing.T, expected error, actual error) {
 	t.Helper()
 	var expectedErr *Error

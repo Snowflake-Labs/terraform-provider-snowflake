@@ -35,6 +35,22 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, `GRANT ALL PRIVILEGES ON DATABASE "db1" TO ROLE "role1"`)
 	})
+
+	t.Run("on account object - external volume", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				AllPrivileges: Bool(true),
+			},
+			on: &AccountRoleGrantOn{
+				AccountObject: &GrantOnAccountObject{
+					ExternalVolume: Pointer(NewAccountObjectIdentifier("ex volume")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `GRANT ALL PRIVILEGES ON EXTERNAL VOLUME "ex volume" TO ROLE "role1"`)
+	})
+
 	t.Run("on schema", func(t *testing.T) {
 		opts := &GrantPrivilegesToAccountRoleOptions{
 			privileges: &AccountRoleGrantPrivileges{

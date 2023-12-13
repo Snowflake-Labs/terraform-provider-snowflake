@@ -50,7 +50,7 @@ func TestAcc_Warehouse(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "X-LARGE"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "XLARGE"),
 				),
 			},
 			// IMPORT
