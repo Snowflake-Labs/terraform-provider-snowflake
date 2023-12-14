@@ -185,3 +185,7 @@ func (i unsupportedObjectIdentifier) Name() string {
 func (i unsupportedObjectIdentifier) FullyQualifiedName() string {
 	return "fully qualified name"
 }
+
+func (i unsupportedObjectIdentifier) Representation() string {
+	return ""
+}
