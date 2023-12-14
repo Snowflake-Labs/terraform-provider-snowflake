@@ -1,6 +1,6 @@
 package generator
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 type FieldTransformer interface {
 	Transform(f *Field) *Field

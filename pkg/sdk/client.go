@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
-	"golang.org/x/exp/slices"
-
 	"github.com/snowflakedb/gosnowflake"
 )
 

@@ -3,9 +3,8 @@ package sdk
 import (
 	"context"
 	"log"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 func Sweep(client *Client, prefix string) error {

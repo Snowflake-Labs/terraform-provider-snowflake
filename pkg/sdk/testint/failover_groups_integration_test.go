@@ -3,6 +3,7 @@ package testint
 import (
 	"log"
 	"os"
+	"slices"
 	"testing"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 )
 
 func TestInt_FailoverGroupsCreate(t *testing.T) {

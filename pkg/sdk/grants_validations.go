@@ -3,9 +3,7 @@ package sdk
 import (
 	"errors"
 	"fmt"
-
-	// TODO: change to slices with go 1.21
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 var (

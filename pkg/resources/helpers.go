@@ -126,7 +126,7 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	return &typedValue
 }
 
-func IsDataType() schema.SchemaValidateFunc {
+func IsDataType() schema.SchemaValidateFunc { //nolint:staticcheck
 	return func(value any, key string) (warnings []string, errors []error) {
 		stringValue, ok := value.(string)
 		if !ok {
