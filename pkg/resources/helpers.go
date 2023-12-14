@@ -2,12 +2,7 @@ package resources
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -129,95 +124,4 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 		return nil
 	}
 	return &typedValue
-}
-
-func IsDataType() schema.SchemaValidateFunc { //nolint:staticcheck
-	return func(value any, key string) (warnings []string, errors []error) {
-		stringValue, ok := value.(string)
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected type of %s to be string, got %T", key, value))
-			return warnings, errors
-		}
-
-		_, err := sdk.ToDataType(stringValue)
-		if err != nil {
-			errors = append(errors, fmt.Errorf("expected %s to be one of %T values, got %s", key, sdk.DataTypeString, stringValue))
-		}
-
-		return warnings, errors
-	}
-}
-
-// IsValidIdentifier is a validator that can be used for validating identifiers passed in resources and data sources.
-// Typically, we expect passed identifiers to be a variation of sdk.ObjectIdentifier. To use this function, pass it as
-// a validation function on identifier field with generic parameter set to the desired sdk.ObjectIdentifier implementation.
-func IsValidIdentifier[T sdk.ObjectIdentifier]() schema.SchemaValidateDiagFunc {
-	return func(value any, path cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-
-		// For now, we won't support sdk.ExternalObjectIdentifiers. The reason behind it is that the functions that parse identifiers are not
-		// able to differentiate between sdk.ExternalObjectIdentifiers and sdk.DatabaseObjectIdentifier or sdk.SchemaObjectIdentifier,
-		// because sdk.ExternalObjectIdentifiers has varying parts count (2 or 3).
-		if _, ok := any(sdk.ExternalObjectIdentifier{}).(T); ok {
-			diags = append(diags, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "Invalid schema identifier type",
-				Detail:        "Identifier validation is not available for sdk.ExternalObjectIdentifier type. This is a provider error please file a report: https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/new/choose",
-				AttributePath: path,
-			})
-			return diags
-		}
-
-		if stringValue, ok := value.(string); ok {
-			id, err := helpers.DecodeSnowflakeParameterID(stringValue)
-			if err != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Unable to parse the identifier",
-					Detail: fmt.Sprintf(
-						"Unable to parse the identifier: %s. Make sure you are using the correct form of the fully qualified name for this field: %s",
-						stringValue,
-						getExpectedIdentifierForm[T](nil),
-					),
-					AttributePath: path,
-				})
-				return diags
-			}
-
-			if _, ok := id.(T); !ok {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Invalid identifier type",
-					Detail: fmt.Sprintf(
-						"Expected %s identifier type, but got: %T. The correct form of the fully qualified name for this field is: %s, but was %s",
-						reflect.TypeOf(new(T)).Elem().Name(),
-						id,
-						getExpectedIdentifierForm[T](nil),
-						getExpectedIdentifierForm(&id),
-					),
-					AttributePath: path,
-				})
-			}
-		} else {
-			diags = append(diags, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "Invalid schema identifier type",
-				Detail:        fmt.Sprintf("Expected schema string type, but got: %T. This is a provider error please file a report: https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/new/choose", value),
-				AttributePath: path,
-			})
-		}
-
-		return diags
-	}
-}
-
-// getExpectedIdentifierForm will choose the type either from the objectIdentifier parameter if it's present. If it's not,
-// then it will create a new identifier based on the generic type parameter T, then it will return the proper structure
-// we are expecting for the given sdk.ObjectIdentifier type.
-func getExpectedIdentifierForm[T sdk.ObjectIdentifier](objectIdentifier *T) string {
-	if objectIdentifier != nil {
-		return (*objectIdentifier).Representation()
-	}
-	id := new(T)
-	return sdk.GetIdentifierRepresentation(*id)
 }
