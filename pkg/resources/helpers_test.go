@@ -1,9 +1,10 @@
 package resources_test
 
 import (
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 
