@@ -12,6 +12,7 @@ type Identifier interface {
 type ObjectIdentifier interface {
 	Identifier
 	FullyQualifiedName() string
+	Representation() string
 }
 
 func NewObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) ObjectIdentifier {
@@ -80,6 +81,10 @@ func (i ExternalObjectIdentifier) FullyQualifiedName() string {
 	return fmt.Sprintf(`%v.%v`, i.accountIdentifier.Name(), i.objectIdentifier.FullyQualifiedName())
 }
 
+func (i ExternalObjectIdentifier) Representation() string {
+	return "<account_locator>.<name> or <org_name>.<account_name>.<name>"
+}
+
 type AccountIdentifier struct {
 	organizationName string
 	accountName      string
@@ -142,6 +147,10 @@ func (i AccountObjectIdentifier) FullyQualifiedName() string {
 	return fmt.Sprintf(`"%v"`, i.name)
 }
 
+func (i AccountObjectIdentifier) Representation() string {
+	return "<name>"
+}
+
 type DatabaseObjectIdentifier struct {
 	databaseName string
 	name         string
@@ -175,6 +184,10 @@ func (i DatabaseObjectIdentifier) FullyQualifiedName() string {
 		return ""
 	}
 	return fmt.Sprintf(`"%v"."%v"`, i.databaseName, i.name)
+}
+
+func (i DatabaseObjectIdentifier) Representation() string {
+	return "<database_name>.<name>"
 }
 
 type SchemaObjectIdentifier struct {
@@ -262,6 +275,10 @@ func (i SchemaObjectIdentifier) FullyQualifiedName() string {
 	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(args, ", "))
 }
 
+func (i SchemaObjectIdentifier) Representation() string {
+	return "<database_name>.<schema_name>.<name>"
+}
+
 type TableColumnIdentifier struct {
 	databaseName string
 	schemaName   string
@@ -309,4 +326,12 @@ func (i TableColumnIdentifier) FullyQualifiedName() string {
 		return ""
 	}
 	return fmt.Sprintf(`"%v"."%v"."%v"."%v"`, i.databaseName, i.schemaName, i.tableName, i.columnName)
+}
+
+func (i TableColumnIdentifier) Representation() string {
+	return "<database_name>.<schema_name>.<table_name>.<column_name>"
+}
+
+func GetIdentifierRepresentation(identifier ObjectIdentifier) string {
+	return identifier.Representation()
 }
