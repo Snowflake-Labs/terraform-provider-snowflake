@@ -2,12 +2,13 @@ package resources
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"reflect"
 )
 
 func IsDataType() schema.SchemaValidateFunc { //nolint:staticcheck
