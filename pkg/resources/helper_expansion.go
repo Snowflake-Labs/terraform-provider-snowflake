@@ -1,6 +1,6 @@
 package resources
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 // borrowed from https://github.com/terraform-providers/terraform-provider-aws/blob/master/aws/structure.go#L924:6
 

@@ -5,9 +5,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"slices"
 	"text/template"
-
-	"golang.org/x/exp/slices"
 )
 
 var (

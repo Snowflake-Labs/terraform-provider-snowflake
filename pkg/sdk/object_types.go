@@ -1,9 +1,8 @@
 package sdk
 
 import (
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 // Object bundles together the object type and name. Its used for DDL statements.
