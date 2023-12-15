@@ -134,7 +134,7 @@ func TestIsValidIdentifier(t *testing.T) {
 	}
 }
 
-func TestGetExpectedIdentifierForm(t *testing.T) {
+func TestGetExpectedIdentifierFormGeneric(t *testing.T) {
 	testCases := []struct {
 		Name     string
 		Expected string
@@ -160,31 +160,55 @@ func TestGetExpectedIdentifierForm(t *testing.T) {
 			Expected: "<database_name>.<schema_name>.<table_name>.<column_name>",
 			Actual:   getExpectedIdentifierRepresentationFromGeneric[sdk.TableColumnIdentifier](),
 		},
-		{
-			Name:     "correct account object identifier from function argument",
-			Expected: "<name>",
-			Actual:   getExpectedIdentifierRepresentationFromParam(&sdk.AccountObjectIdentifier{}),
-		},
-		{
-			Name:     "correct database object identifier from function argument",
-			Expected: "<database_name>.<name>",
-			Actual:   getExpectedIdentifierRepresentationFromParam(&sdk.DatabaseObjectIdentifier{}),
-		},
-		{
-			Name:     "correct schema object identifier from function argument",
-			Expected: "<database_name>.<schema_name>.<name>",
-			Actual:   getExpectedIdentifierRepresentationFromParam(&sdk.SchemaObjectIdentifier{}),
-		},
-		{
-			Name:     "correct table column identifier from function argument",
-			Expected: "<database_name>.<schema_name>.<table_name>.<column_name>",
-			Actual:   getExpectedIdentifierRepresentationFromParam(sdk.TableColumnIdentifier{}),
-		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.Name, func(t *testing.T) {
 			assert.Equal(t, tt.Expected, tt.Actual)
+		})
+	}
+}
+
+func TestGetExpectedIdentifierFormParam(t *testing.T) {
+	testCases := []struct {
+		Name              string
+		Expected          string
+		Identifier        sdk.ObjectIdentifier
+		IdentifierPointer sdk.ObjectIdentifier
+	}{
+		{
+			Name:              "correct account object identifier from function argument",
+			Expected:          "<name>",
+			Identifier:        sdk.AccountObjectIdentifier{},
+			IdentifierPointer: &sdk.AccountObjectIdentifier{},
+		},
+		{
+			Name:              "correct database object identifier from function argument",
+			Expected:          "<database_name>.<name>",
+			Identifier:        sdk.DatabaseObjectIdentifier{},
+			IdentifierPointer: &sdk.DatabaseObjectIdentifier{},
+		},
+		{
+			Name:              "correct schema object identifier from function argument",
+			Expected:          "<database_name>.<schema_name>.<name>",
+			Identifier:        sdk.SchemaObjectIdentifier{},
+			IdentifierPointer: &sdk.SchemaObjectIdentifier{},
+		},
+		{
+			Name:              "correct table column identifier from function argument",
+			Expected:          "<database_name>.<schema_name>.<table_name>.<column_name>",
+			Identifier:        sdk.TableColumnIdentifier{},
+			IdentifierPointer: &sdk.TableColumnIdentifier{},
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.Name+" - non-pointer", func(t *testing.T) {
+			assert.Equal(t, tt.Expected, getExpectedIdentifierRepresentationFromParam(tt.Identifier))
+		})
+
+		t.Run(tt.Name+" - pointer", func(t *testing.T) {
+			assert.Equal(t, tt.Expected, getExpectedIdentifierRepresentationFromParam(tt.IdentifierPointer))
 		})
 	}
 }
