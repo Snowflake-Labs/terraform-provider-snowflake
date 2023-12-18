@@ -3,10 +3,10 @@ package sdk
 import (
 	"context"
 	"encoding/json"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"golang.org/x/exp/slices"
 )
 
 var _ Tasks = (*tasks)(nil)

@@ -5,12 +5,10 @@ package sdk
 func NewCreateExternalTableRequest(
 	name SchemaObjectIdentifier,
 	location string,
-	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateExternalTableRequest {
 	s := CreateExternalTableRequest{}
 	s.name = name
 	s.location = location
-	s.fileFormat = fileFormat
 	return &s
 }
 
@@ -51,6 +49,16 @@ func (s *CreateExternalTableRequest) WithAutoRefresh(autoRefresh *bool) *CreateE
 
 func (s *CreateExternalTableRequest) WithPattern(pattern *string) *CreateExternalTableRequest {
 	s.pattern = pattern
+	return s
+}
+
+func (s *CreateExternalTableRequest) WithRawFileFormat(rawFileFormat *string) *CreateExternalTableRequest {
+	s.rawFileFormat = rawFileFormat
+	return s
+}
+
+func (s *CreateExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateExternalTableRequest {
+	s.fileFormat = fileFormat
 	return s
 }
 
@@ -280,12 +288,10 @@ func NewRowAccessPolicyRequest(
 func NewCreateWithManualPartitioningExternalTableRequest(
 	name SchemaObjectIdentifier,
 	location string,
-	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateWithManualPartitioningExternalTableRequest {
 	s := CreateWithManualPartitioningExternalTableRequest{}
 	s.name = name
 	s.location = location
-	s.fileFormat = fileFormat
 	return &s
 }
 
@@ -319,6 +325,16 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithUserSpecifiedPart
 	return s
 }
 
+func (s *CreateWithManualPartitioningExternalTableRequest) WithRawFileFormat(rawFileFormat *string) *CreateWithManualPartitioningExternalTableRequest {
+	s.rawFileFormat = rawFileFormat
+	return s
+}
+
+func (s *CreateWithManualPartitioningExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateWithManualPartitioningExternalTableRequest {
+	s.fileFormat = fileFormat
+	return s
+}
+
 func (s *CreateWithManualPartitioningExternalTableRequest) WithCopyGrants(copyGrants *bool) *CreateWithManualPartitioningExternalTableRequest {
 	s.copyGrants = copyGrants
 	return s
@@ -342,12 +358,10 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithTag(tag []*TagAss
 func NewCreateDeltaLakeExternalTableRequest(
 	name SchemaObjectIdentifier,
 	location string,
-	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateDeltaLakeExternalTableRequest {
 	s := CreateDeltaLakeExternalTableRequest{}
 	s.name = name
 	s.location = location
-	s.fileFormat = fileFormat
 	return &s
 }
 
@@ -391,6 +405,16 @@ func (s *CreateDeltaLakeExternalTableRequest) WithAutoRefresh(autoRefresh *bool)
 	return s
 }
 
+func (s *CreateDeltaLakeExternalTableRequest) WithRawFileFormat(rawFileFormat *string) *CreateDeltaLakeExternalTableRequest {
+	s.rawFileFormat = rawFileFormat
+	return s
+}
+
+func (s *CreateDeltaLakeExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateDeltaLakeExternalTableRequest {
+	s.fileFormat = fileFormat
+	return s
+}
+
 func (s *CreateDeltaLakeExternalTableRequest) WithDeltaTableFormat(deltaTableFormat *bool) *CreateDeltaLakeExternalTableRequest {
 	s.deltaTableFormat = deltaTableFormat
 	return s
@@ -419,12 +443,10 @@ func (s *CreateDeltaLakeExternalTableRequest) WithTag(tag []*TagAssociationReque
 func NewCreateExternalTableUsingTemplateRequest(
 	name SchemaObjectIdentifier,
 	location string,
-	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateExternalTableUsingTemplateRequest {
 	s := CreateExternalTableUsingTemplateRequest{}
 	s.name = name
 	s.location = location
-	s.fileFormat = fileFormat
 	return &s
 }
 
@@ -465,6 +487,16 @@ func (s *CreateExternalTableUsingTemplateRequest) WithAutoRefresh(autoRefresh *b
 
 func (s *CreateExternalTableUsingTemplateRequest) WithPattern(pattern *string) *CreateExternalTableUsingTemplateRequest {
 	s.pattern = pattern
+	return s
+}
+
+func (s *CreateExternalTableUsingTemplateRequest) WithRawFileFormat(rawFileFormat *string) *CreateExternalTableUsingTemplateRequest {
+	s.rawFileFormat = rawFileFormat
+	return s
+}
+
+func (s *CreateExternalTableUsingTemplateRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateExternalTableUsingTemplateRequest {
+	s.fileFormat = fileFormat
 	return s
 }
 

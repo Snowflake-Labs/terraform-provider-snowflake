@@ -2,9 +2,8 @@ package sdk
 
 import (
 	"fmt"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 // DataType is based on https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.
