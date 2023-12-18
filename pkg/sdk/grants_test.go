@@ -480,6 +480,14 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLY ON FUTURE TABLES IN SCHEMA "db1"."schema1" TO DATABASE ROLE "db1"."role1"`)
 	})
+
+	t.Run("grant all privileges", func(t *testing.T) {
+		opts := defaultGrantsForSchemaObject()
+		opts.privileges = &DatabaseRoleGrantPrivileges{
+			AllPrivileges: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `GRANT ALL PRIVILEGES ON TABLE "db1"."schema1"."table1" TO DATABASE ROLE "db1"."role1"`)
+	})
 }
 
 func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
