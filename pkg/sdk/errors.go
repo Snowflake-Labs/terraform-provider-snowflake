@@ -52,12 +52,24 @@ func errNotSet(structName string, fieldNames ...string) error {
 	return newError(fmt.Sprintf("%v fields: %v should be set", structName, fieldNames), 2)
 }
 
+func errSet(structName string, fieldNames ...string) error {
+	return newError(fmt.Sprintf("%v fields: %v should not be set", structName, fieldNames), 2)
+}
+
 func errExactlyOneOf(structName string, fieldNames ...string) error {
 	return newError(fmt.Sprintf("exactly one of %s fields %v must be set", structName, fieldNames), 2)
 }
 
 func errAtLeastOneOf(structName string, fieldNames ...string) error {
 	return newError(fmt.Sprintf("at least one of %s fields %v must be set", structName, fieldNames), 2)
+}
+
+func errMoreThanOneOf(structName string, fieldNames ...string) error {
+	return newError(fmt.Sprintf("more than one field (%v) of %s cannot be set", fieldNames, structName), 2)
+}
+
+func errInvalidValue(structName string, fieldName string, invalidValue string) error {
+	return newError(fmt.Sprintf("invalid value %s of struct %s field: %s", invalidValue, structName, fieldName), 2)
 }
 
 func decodeDriverError(err error) error {

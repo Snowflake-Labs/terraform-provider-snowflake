@@ -85,6 +85,11 @@ func (v *ParameterTransformer) NoQuotes() *ParameterTransformer {
 	return v
 }
 
+func (v *ListTransformer) MustParentheses() *ListTransformer {
+	v.parentheses = "must_parentheses"
+	return v
+}
+
 func (v *ParameterTransformer) NoEquals() *ParameterTransformer {
 	v.equals = "no_equals"
 	return v

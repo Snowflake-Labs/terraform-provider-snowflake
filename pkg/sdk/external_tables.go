@@ -17,6 +17,7 @@ type ExternalTables interface {
 	CreateWithManualPartitioning(ctx context.Context, req *CreateWithManualPartitioningExternalTableRequest) error
 	CreateDeltaLake(ctx context.Context, req *CreateDeltaLakeExternalTableRequest) error
 	CreateUsingTemplate(ctx context.Context, req *CreateExternalTableUsingTemplateRequest) error
+	// TODO: Add alter options from https://docs.snowflake.com/en/sql-reference/sql/alter-table#external-table-column-actions-exttablecolumnaction (for better UX)
 	Alter(ctx context.Context, req *AlterExternalTableRequest) error
 	AlterPartitions(ctx context.Context, req *AlterExternalTablePartitionRequest) error
 	Drop(ctx context.Context, req *DropExternalTableRequest) error
@@ -74,7 +75,7 @@ type CreateExternalTableOptions struct {
 	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
 	CopyGrants          *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
+	RowAccessPolicy     *TableRowAccessPolicy     `ddl:"keyword"`
 	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
@@ -82,6 +83,7 @@ type ExternalTableColumn struct {
 	Name             string   `ddl:"keyword"`
 	Type             DataType `ddl:"keyword"`
 	AsExpression     []string `ddl:"keyword,parentheses" sql:"AS"`
+	NotNull          *bool    `ddl:"keyword" sql:"NOT NULL"`
 	InlineConstraint *ColumnInlineConstraint
 }
 
@@ -205,7 +207,7 @@ type CreateWithManualPartitioningExternalTableOptions struct {
 	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
+	RowAccessPolicy            *TableRowAccessPolicy     `ddl:"keyword"`
 	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
@@ -227,7 +229,7 @@ type CreateDeltaLakeExternalTableOptions struct {
 	DeltaTableFormat           *bool                     `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
+	RowAccessPolicy            *TableRowAccessPolicy     `ddl:"keyword"`
 	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
@@ -248,7 +250,7 @@ type CreateExternalTableUsingTemplateOptions struct {
 	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
 	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
 	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
+	RowAccessPolicy     *TableRowAccessPolicy     `ddl:"keyword"`
 	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
