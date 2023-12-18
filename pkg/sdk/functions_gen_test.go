@@ -182,6 +182,24 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, NewError("IMPORTS must not be empty when AS is nil"))
 	})
 
+	t.Run("validation: returns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataType: DataTypeFloat,
+			},
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{
+						ColumnName:     "country_code",
+						ColumnDataType: DataTypeVARCHAR,
+					},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, ErrExactlyOneOf("CreateForPythonFunctionOptions.Returns", "ResultDataType", "Table"))
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -321,6 +339,24 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: returns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataType: DataTypeFloat,
+			},
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{
+						ColumnName:     "country_code",
+						ColumnDataType: DataTypeVARCHAR,
+					},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, ErrExactlyOneOf("CreateForSQLFunctionOptions.Returns", "ResultDataType", "Table"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -542,8 +578,14 @@ func TestFunctions_Describe(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("all options no arguments", func(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s`, id.FullyQualifiedName())
+	})
+
+	t.Run("all options with arguments", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ArgumentDataTypes = []DataType{DataTypeVARCHAR, DataTypeNumber}
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s (%s, %s)`, id.FullyQualifiedName(), DataTypeVARCHAR, DataTypeNumber)
 	})
 }
