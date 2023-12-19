@@ -9,6 +9,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 )
 
 func main() {
@@ -25,9 +27,9 @@ func getAccessToken() string {
 	return token
 }
 
-func fetchAllIssues(token string) []Issue {
+func fetchAllIssues(token string) []issues.Issue {
 	client := &http.Client{}
-	allIssues := make([]Issue, 0)
+	allIssues := make([]issues.Issue, 0)
 	moreIssues := true
 	page := 1
 	for moreIssues {
@@ -82,8 +84,8 @@ func invokeReq(client *http.Client, req *http.Request) []byte {
 	return bodyBytes
 }
 
-func getIssuesBatch(bytes []byte) []Issue {
-	var issues []Issue
+func getIssuesBatch(bytes []byte) []issues.Issue {
+	var issues []issues.Issue
 	err := json.Unmarshal(bytes, &issues)
 	if err != nil {
 		panic(err)
@@ -91,7 +93,7 @@ func getIssuesBatch(bytes []byte) []Issue {
 	return issues
 }
 
-func saveIssues(issues []Issue) {
+func saveIssues(issues []issues.Issue) {
 	bytes, err := json.Marshal(issues)
 	if err != nil {
 		panic(err)
