@@ -17,11 +17,25 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on database",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase|"on-database-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnDatabaseDatabaseRoleGrantKind,
-				Data: OnDatabaseGrantData{
+				Data: &OnDatabaseGrantData{
+					DatabaseName: sdk.NewAccountObjectIdentifier("on-database-name"),
+				},
+			},
+		},
+		{
+			Name:       "grant database role on database - all privileges",
+			Identifier: `"database-name"|false|ALL|OnDatabase|"on-database-name"`,
+			Expected: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
+				WithGrantOption:  false,
+				AllPrivileges:    true,
+				Privileges:       nil,
+				Kind:             OnDatabaseDatabaseRoleGrantKind,
+				Data: &OnDatabaseGrantData{
 					DatabaseName: sdk.NewAccountObjectIdentifier("on-database-name"),
 				},
 			},
@@ -30,11 +44,11 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on schema with schema name",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`, // TODO: OnSchema OnSchema x2
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaDatabaseRoleGrantKind,
-				Data: OnSchemaGrantData{
+				Data: &OnSchemaGrantData{
 					Kind:       OnSchemaSchemaGrantKind,
 					SchemaName: sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database-name", "schema-name")),
 				},
@@ -44,11 +58,11 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on all schemas in database",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaDatabaseRoleGrantKind,
-				Data: OnSchemaGrantData{
+				Data: &OnSchemaGrantData{
 					Kind:         OnAllSchemasInDatabaseSchemaGrantKind,
 					DatabaseName: sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name-123")),
 				},
@@ -58,11 +72,11 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on future schemas in database",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnFutureSchemasInDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaDatabaseRoleGrantKind,
-				Data: OnSchemaGrantData{
+				Data: &OnSchemaGrantData{
 					Kind:         OnFutureSchemasInDatabaseSchemaGrantKind,
 					DatabaseName: sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name-123")),
 				},
@@ -72,11 +86,11 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on schema object with on object option",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE|"database-name"."schema-name"."table-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
-				Data: OnSchemaObjectGrantData{
+				Data: &OnSchemaObjectGrantData{
 					Kind: OnObjectSchemaObjectGrantKind,
 					Object: &sdk.Object{
 						ObjectType: sdk.ObjectTypeTable,
@@ -89,11 +103,11 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on schema object with on all option",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
-				Data: OnSchemaObjectGrantData{
+				Data: &OnSchemaObjectGrantData{
 					Kind: OnAllSchemaObjectGrantKind,
 					OnAllOrFuture: &BulkOperationGrantData{
 						ObjectNamePlural: "TABLES",
@@ -105,15 +119,15 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on schema object with on all option in database",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
-				Data: OnSchemaObjectGrantData{
+				Data: &OnSchemaObjectGrantData{
 					Kind: OnAllSchemaObjectGrantKind,
 					OnAllOrFuture: &BulkOperationGrantData{
 						ObjectNamePlural: "TABLES",
-						Kind:             sdk.Pointer(InDatabaseBulkOperationGrantKind),
+						Kind:             InDatabaseBulkOperationGrantKind,
 						Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name-123")),
 					},
 				},
@@ -123,15 +137,15 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on schema object with on all option in schema",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InSchema|"database-name"."schema-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
-				Data: OnSchemaObjectGrantData{
+				Data: &OnSchemaObjectGrantData{
 					Kind: OnAllSchemaObjectGrantKind,
 					OnAllOrFuture: &BulkOperationGrantData{
 						ObjectNamePlural: "TABLES",
-						Kind:             sdk.Pointer(InSchemaBulkOperationGrantKind),
+						Kind:             InSchemaBulkOperationGrantKind,
 						Schema:           sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database-name", "schema-name")),
 					},
 				},
@@ -141,11 +155,11 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on schema object with on future option",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnFuture|TABLES`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
-				Data: OnSchemaObjectGrantData{
+				Data: &OnSchemaObjectGrantData{
 					Kind: OnFutureSchemaObjectGrantKind,
 					OnAllOrFuture: &BulkOperationGrantData{
 						ObjectNamePlural: "TABLES",
@@ -157,15 +171,15 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on schema object with on all option in database",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnFuture|TABLES|InDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
-				Data: OnSchemaObjectGrantData{
+				Data: &OnSchemaObjectGrantData{
 					Kind: OnFutureSchemaObjectGrantKind,
 					OnAllOrFuture: &BulkOperationGrantData{
 						ObjectNamePlural: "TABLES",
-						Kind:             sdk.Pointer(InDatabaseBulkOperationGrantKind),
+						Kind:             InDatabaseBulkOperationGrantKind,
 						Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name-123")),
 					},
 				},
@@ -175,15 +189,15 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Name:       "grant database role on schema object with on all option in schema",
 			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnFuture|TABLES|InSchema|"database-name"."schema-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewAccountObjectIdentifier("database-name"),
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
 				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
 				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
-				Data: OnSchemaObjectGrantData{
+				Data: &OnSchemaObjectGrantData{
 					Kind: OnFutureSchemaObjectGrantKind,
 					OnAllOrFuture: &BulkOperationGrantData{
 						ObjectNamePlural: "TABLES",
-						Kind:             sdk.Pointer(InSchemaBulkOperationGrantKind),
+						Kind:             InSchemaBulkOperationGrantKind,
 						Schema:           sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database-name", "schema-name")),
 					},
 				},
@@ -191,47 +205,47 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "validation: grant database role not enough parts",
-			Identifier: `"database-name"|false`,
+			Identifier: `"database-name"."role-name"|false`,
 			Error:      "database role identifier should hold at least 4 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnDatabase kind",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase`,
+			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase`,
 			Error:      "database role identifier should hold at least 4 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnSchema kind",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase`,
+			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase`,
 			Error:      "database role identifier should hold at least 6 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnSchemaObject kind",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject`,
+			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject`,
 			Error:      "database role identifier should hold at least 6 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnSchemaObject kind",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE`,
+			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE`,
 			Error:      "database role identifier should hold 7 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnSchemaObject.InDatabase kind",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase`,
+			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase`,
 			Error:      "database role identifier should hold 8 parts",
 		},
 		{
 			Name:       "validation: grant database role invalid DatabaseRoleGrantKind kind",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|some-kind|some-data`,
+			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|some-kind|some-data`,
 			Error:      "invalid DatabaseRoleGrantKind: some-kind",
 		},
 		{
 			Name:       "validation: grant database role invalid OnSchemaGrantKind kind",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|some-kind|some-data`,
+			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|some-kind|some-data`,
 			Error:      "invalid OnSchemaGrantKind: some-kind",
 		},
 		{
 			Name:       "validation: grant database role invalid OnSchemaObjectGrantKind kind",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|some-kind|some-data`,
+			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|some-kind|some-data`,
 			Error:      "invalid OnSchemaObjectGrantKind: some-kind",
 		},
 	}
@@ -245,6 +259,151 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			} else {
 				assert.ErrorContains(t, err, tt.Error)
 			}
+		})
+	}
+}
+
+func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
+	testCases := []struct {
+		Name       string
+		Identifier GrantPrivilegesToDatabaseRoleId
+		Expected   string
+		Error      string
+	}{
+		{
+			Name: "grant database role on database",
+			Identifier: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "role-name"),
+				WithGrantOption:  true,
+				AllPrivileges:    true,
+				Kind:             OnDatabaseDatabaseRoleGrantKind,
+				Data: &OnDatabaseGrantData{
+					DatabaseName: sdk.NewAccountObjectIdentifier("database-name"),
+				},
+			},
+			Expected: `"database-name"."role-name"|true|ALL|OnDatabase|"database-name"`,
+		},
+		{
+			Name: "grant database role on schema on schema",
+			Identifier: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "role-name"),
+				WithGrantOption:  false,
+				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
+				Kind:             OnSchemaDatabaseRoleGrantKind,
+				Data: &OnSchemaGrantData{
+					Kind:       OnSchemaSchemaGrantKind,
+					SchemaName: sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database-name", "schema-name")),
+				},
+			},
+			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`,
+			// TODO: Could be
+			// OnSchema|schema-name
+			// OnAllSchemasInDatabase|database-name
+			// OnFutureSchemasInDatabase|database-name
+			// instead of repeating OnSchema x2
+		},
+		{
+			Name: "grant database role on all schemas in database",
+			Identifier: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "role-name"),
+				WithGrantOption:  false,
+				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
+				Kind:             OnSchemaDatabaseRoleGrantKind,
+				Data: &OnSchemaGrantData{
+					Kind:         OnAllSchemasInDatabaseSchemaGrantKind,
+					DatabaseName: sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name")),
+				},
+			},
+			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase|"database-name"`,
+		},
+		{
+			Name: "grant database role on future schemas in database",
+			Identifier: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "role-name"),
+				WithGrantOption:  false,
+				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
+				Kind:             OnSchemaDatabaseRoleGrantKind,
+				Data: &OnSchemaGrantData{
+					Kind:         OnFutureSchemasInDatabaseSchemaGrantKind,
+					DatabaseName: sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name")),
+				},
+			},
+			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnFutureSchemasInDatabase|"database-name"`,
+		},
+		{
+			Name: "grant database role on schema object on object",
+			Identifier: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "role-name"),
+				WithGrantOption:  false,
+				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
+				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnObjectSchemaObjectGrantKind,
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeTable,
+						Name:       sdk.NewSchemaObjectIdentifier("database-name", "schema-name", "table-name"),
+					},
+				},
+			},
+			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE|"database-name"."schema-name"."table-name"`,
+		},
+		{
+			Name: "grant database role on schema object on all tables",
+			Identifier: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "role-name"),
+				WithGrantOption:  false,
+				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
+				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnAllSchemaObjectGrantKind,
+					OnAllOrFuture: &BulkOperationGrantData{
+						ObjectNamePlural: sdk.PluralObjectTypeTables,
+					},
+				},
+			},
+			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES`,
+		},
+		{
+			Name: "grant database role on schema object on all tables in database",
+			Identifier: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "role-name"),
+				WithGrantOption:  false,
+				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
+				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnAllSchemaObjectGrantKind,
+					OnAllOrFuture: &BulkOperationGrantData{
+						ObjectNamePlural: sdk.PluralObjectTypeTables,
+						Kind:             InDatabaseBulkOperationGrantKind,
+						Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name")),
+					},
+				},
+			},
+			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase|"database-name"`,
+		},
+		{
+			Name: "grant database role on schema object on all tables in schema",
+			Identifier: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "role-name"),
+				WithGrantOption:  false,
+				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
+				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnAllSchemaObjectGrantKind,
+					OnAllOrFuture: &BulkOperationGrantData{
+						ObjectNamePlural: sdk.PluralObjectTypeTables,
+						Kind:             InSchemaBulkOperationGrantKind,
+						Schema:           sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database-name", "schema-name")),
+					},
+				},
+			},
+			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InSchema|"database-name"."schema-name"`,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.Name, func(t *testing.T) {
+			assert.Equal(t, tt.Expected, tt.Identifier.String())
 		})
 	}
 }
