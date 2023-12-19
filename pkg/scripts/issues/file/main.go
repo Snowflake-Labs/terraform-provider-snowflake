@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -39,8 +40,8 @@ func processIssues(issues []i.Issue) []ProcessedIssue {
 		for _, label := range issue.Labels {
 			labels = append(labels, label.Name)
 		}
-		providerVersion := getProviderVersion()
-		terraformVersion := getTerraformVersion()
+		providerVersion := getProviderVersion(issue)
+		terraformVersion := getTerraformVersion(issue)
 		processed := ProcessedIssue{
 			ID:               issue.Number,
 			URL:              issue.HtmlUrl,
@@ -58,12 +59,36 @@ func processIssues(issues []i.Issue) []ProcessedIssue {
 	return processedIssues
 }
 
-func getProviderVersion() string {
-	return "NONE"
+/*
+ * For newer issues it should be where (...) are:
+ * 	 ### Terraform CLI and Provider Versions (...) ### Terraform Configuration
+ * For older issues it should be where (...) are:
+ *   **Provider Version** (...) **Terraform Version**
+ */
+func getProviderVersion(issue i.Issue) string {
+	oldRegex := regexp.MustCompile(`\*\*Provider Version\*\*\s*([[:graph:]]*)\s*\*\*Terraform Version\*\*`)
+	matches := oldRegex.FindStringSubmatch(issue.Body)
+	if len(matches) == 0 {
+		return "NONE"
+	} else {
+		return matches[1]
+	}
 }
 
-func getTerraformVersion() string {
-	return "NONE"
+/*
+ * For newer issues it should be where (...) are:
+ * 	 ### Terraform CLI and Provider Versions (...) ### Terraform Configuration
+ * For older issues it should be where (...) are:
+ *   **Terraform Version** (...) **Describe the bug**
+ */
+func getTerraformVersion(issue i.Issue) string {
+	oldRegex := regexp.MustCompile(`\*\*Terraform Version\*\*\s*([[:graph:]]*)\s*\*\*Describe the bug\*\*`)
+	matches := oldRegex.FindStringSubmatch(issue.Body)
+	if len(matches) == 0 {
+		return "NONE"
+	} else {
+		return matches[1]
+	}
 }
 
 func saveCsv(issues []ProcessedIssue) {
