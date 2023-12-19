@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	i "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/scripts/issues"
 )
@@ -40,19 +41,22 @@ func processIssues(issues []i.Issue) []ProcessedIssue {
 		for _, label := range issue.Labels {
 			labels = append(labels, label.Name)
 		}
-		providerVersion := getProviderVersion(issue)
+		providerVersion, providerVersionMinor := getProviderVersion(issue)
 		terraformVersion := getTerraformVersion(issue)
 		processed := ProcessedIssue{
-			ID:               issue.Number,
-			URL:              issue.HtmlUrl,
-			Title:            issue.Title,
-			ProviderVersion:  providerVersion,
-			TerraformVersion: terraformVersion,
-			IsBug:            slices.Contains(labels, "bug"),
-			IsFeatureRequest: slices.Contains(labels, "feature-request"),
-			CommentsCount:    issue.Comments,
-			ReactionsCount:   issue.Reactions.TotalCount,
-			Labels:           labels,
+			ID:                   issue.Number,
+			URL:                  issue.HtmlUrl,
+			NamedURL:             fmt.Sprintf(`=HYPERLINK("%s","#%d")`, issue.HtmlUrl, issue.Number),
+			Title:                issue.Title,
+			ProviderVersion:      providerVersion,
+			ProviderVersionMinor: providerVersionMinor,
+			TerraformVersion:     terraformVersion,
+			IsBug:                slices.Contains(labels, "bug"),
+			IsFeatureRequest:     slices.Contains(labels, "feature-request"),
+			CommentsCount:        issue.Comments,
+			ReactionsCount:       issue.Reactions.TotalCount,
+			CreatedAt:            issue.CreatedAt,
+			Labels:               labels,
 		}
 		processedIssues = append(processedIssues, processed)
 	}
@@ -65,13 +69,19 @@ func processIssues(issues []i.Issue) []ProcessedIssue {
  * For older issues it should be where (...) are:
  *   **Provider Version** (...) **Terraform Version**
  */
-func getProviderVersion(issue i.Issue) string {
-	oldRegex := regexp.MustCompile(`\*\*Provider Version\*\*\s*([[:graph:]]*)\s*\*\*Terraform Version\*\*`)
+func getProviderVersion(issue i.Issue) (string, string) {
+	oldRegex := regexp.MustCompile(`\*\*Provider Version\*\*\s*([[:ascii:]]*)\s*\*\*Terraform Version\*\*`)
 	matches := oldRegex.FindStringSubmatch(issue.Body)
 	if len(matches) == 0 {
-		return "NONE"
+		return "NONE", ""
 	} else {
-		return matches[1]
+		versionRegex := regexp.MustCompile(`v?\.?(\d+\.(\d+)(.\d+)?)`)
+		vMatches := versionRegex.FindStringSubmatch(matches[1])
+		if len(vMatches) == 0 {
+			return "NONE", ""
+		} else {
+			return vMatches[1], vMatches[2]
+		}
 	}
 }
 
@@ -82,12 +92,18 @@ func getProviderVersion(issue i.Issue) string {
  *   **Terraform Version** (...) **Describe the bug**
  */
 func getTerraformVersion(issue i.Issue) string {
-	oldRegex := regexp.MustCompile(`\*\*Terraform Version\*\*\s*([[:graph:]]*)\s*\*\*Describe the bug\*\*`)
+	oldRegex := regexp.MustCompile(`\*\*Terraform Version\*\*\s*([[:ascii:]]*)\s*\*\*Describe the bug\*\*`)
 	matches := oldRegex.FindStringSubmatch(issue.Body)
 	if len(matches) == 0 {
 		return "NONE"
 	} else {
-		return matches[1]
+		versionRegex := regexp.MustCompile(`v?\.?(\d+\.(\d+)(.\d+)?)`)
+		vMatches := versionRegex.FindStringSubmatch(matches[1])
+		if len(vMatches) == 0 {
+			return "NONE"
+		} else {
+			return vMatches[1]
+		}
 	}
 }
 
@@ -103,15 +119,18 @@ func saveCsv(issues []ProcessedIssue) {
 	var data [][]string
 	for _, issue := range issues {
 		row := []string{
-			strconv.Itoa(issue.ID),
-			issue.URL,
+			//strconv.Itoa(issue.ID),
+			//issue.URL,
+			issue.NamedURL,
 			issue.Title,
 			issue.ProviderVersion,
+			issue.ProviderVersionMinor,
 			issue.TerraformVersion,
 			strconv.FormatBool(issue.IsBug),
 			strconv.FormatBool(issue.IsFeatureRequest),
 			strconv.Itoa(issue.CommentsCount),
 			strconv.Itoa(issue.ReactionsCount),
+			issue.CreatedAt.Format(time.DateOnly),
 			strings.Join(issue.Labels, "|"),
 		}
 		data = append(data, row)
@@ -120,14 +139,17 @@ func saveCsv(issues []ProcessedIssue) {
 }
 
 type ProcessedIssue struct {
-	ID               int
-	URL              string
-	Title            string
-	ProviderVersion  string
-	TerraformVersion string
-	IsBug            bool
-	IsFeatureRequest bool
-	CommentsCount    int
-	ReactionsCount   int
-	Labels           []string
+	ID                   int
+	URL                  string
+	NamedURL             string
+	Title                string
+	ProviderVersion      string
+	ProviderVersionMinor string
+	TerraformVersion     string
+	IsBug                bool
+	IsFeatureRequest     bool
+	CommentsCount        int
+	ReactionsCount       int
+	CreatedAt            time.Time
+	Labels               []string
 }
