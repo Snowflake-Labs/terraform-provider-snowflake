@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -11,12 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
+// TODO: use email of our service user
 func TestAcc_EmailNotificationIntegration(t *testing.T) {
-	env := os.Getenv("SKIP_EMAIL_INTEGRATION_TESTS")
-	if env != "" {
-		t.Skip("Skipping TestAcc_EmailNotificationIntegration")
-	}
-
 	emailIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	verifiedEmail := "artur.sawicki@snowflake.com"
 
@@ -62,6 +57,8 @@ Either these email addresses are not yet validated or do not belong to any user 
 // Snowflake allowed empty allowed recipients in https://docs.snowflake.com/en/release-notes/2023/7_40#email-notification-integrations-allowed-recipients-no-longer-required.
 func TestAcc_EmailNotificationIntegration_issue2223(t *testing.T) {
 	emailIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	verifiedEmail := "artur.sawicki@snowflake.com"
+
 	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -71,7 +68,21 @@ func TestAcc_EmailNotificationIntegration_issue2223(t *testing.T) {
 				Config: emailNotificationIntegrationWithoutRecipientsConfig(emailIntegrationName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "name", emailIntegrationName),
-					resource.TestCheckNoResourceAttr("snowflake_email_notification_integration.test", "allowed_recipients"),
+					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "allowed_recipients.#", "0"),
+				),
+			},
+			{
+				Config: emailNotificationIntegrationConfig(emailIntegrationName, verifiedEmail),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "name", emailIntegrationName),
+					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "allowed_recipients.0", verifiedEmail),
+				),
+			},
+			{
+				Config: emailNotificationIntegrationWithoutRecipientsConfig(emailIntegrationName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "name", emailIntegrationName),
+					resource.TestCheckResourceAttr("snowflake_email_notification_integration.test", "allowed_recipients.#", "0"),
 				),
 			},
 		},
