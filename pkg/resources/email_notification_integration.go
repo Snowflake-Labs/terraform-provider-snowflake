@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -24,7 +25,7 @@ var emailNotificationIntegrationSchema = map[string]*schema.Schema{
 	"allowed_recipients": {
 		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
-		Required:    true,
+		Optional:    true,
 		Description: "List of email addresses that should receive notifications.",
 	},
 	"comment": {
@@ -58,7 +59,10 @@ func CreateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}
 
 	stmt.SetString("TYPE", "EMAIL")
 	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
-	stmt.SetStringList(`ALLOWED_RECIPIENTS`, expandStringList(d.Get("allowed_recipients").(*schema.Set).List()))
+
+	if v, ok := d.GetOk("allowed_recipients"); ok {
+		stmt.SetStringList(`ALLOWED_RECIPIENTS`, expandStringList(v.(*schema.Set).List()))
+	}
 
 	if v, ok := d.GetOk("comment"); ok {
 		stmt.SetString(`COMMENT`, v.(string))
@@ -115,8 +119,16 @@ func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) 
 		}
 		switch k {
 		case "ALLOWED_RECIPIENTS":
-			if err := d.Set("allowed_recipients", strings.Split(v.(string), ",")); err != nil {
-				return err
+			r := regexp.MustCompile(`[[:print:]]`)
+			if r.MatchString(v.(string)) {
+				if err := d.Set("allowed_recipients", strings.Split(v.(string), ",")); err != nil {
+					return err
+				}
+			} else {
+				empty := make([]string, 0)
+				if err := d.Set("allowed_recipients", empty); err != nil {
+					return err
+				}
 			}
 		default:
 			log.Printf("[WARN] unexpected property %v returned from Snowflake", k)
@@ -142,7 +154,16 @@ func UpdateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.HasChange("allowed_recipients") {
-		stmt.SetStringList(`ALLOWED_RECIPIENTS`, expandStringList(d.Get("allowed_recipients").(*schema.Set).List()))
+		if v, ok := d.GetOk("allowed_recipients"); ok {
+			stmt.SetStringList(`ALLOWED_RECIPIENTS`, expandStringList(v.(*schema.Set).List()))
+		} else {
+			// raw sql for now; will be updated with SDK rewrite
+			// https://docs.snowflake.com/en/sql-reference/sql/alter-notification-integration#syntax
+			unset := fmt.Sprintf(`ALTER NOTIFICATION INTEGRATION "%s" UNSET ALLOWED_RECIPIENTS`, id)
+			if err := snowflake.Exec(db, unset); err != nil {
+				return fmt.Errorf("error unsetting allowed recipients on email notification integration %v err = %w", id, err)
+			}
+		}
 	}
 
 	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
