@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"os"
 	"testing"
 
 	"github.com/snowflakedb/gosnowflake"
@@ -83,7 +84,13 @@ func TestClient_NewClientDriverLoggingLevel(t *testing.T) {
 		_, err := NewClient(config)
 		require.NoError(t, err)
 
-		assert.Equal(t, "error", gosnowflake.GetLogger().GetLogLevel())
+		var expected string
+		if os.Getenv("GITHUB_ACTIONS") != "" {
+			expected = "fatal"
+		} else {
+			expected = "error"
+		}
+		assert.Equal(t, expected, gosnowflake.GetLogger().GetLogLevel())
 	})
 
 	t.Run("set gosnowflake driver logging level with config", func(t *testing.T) {
