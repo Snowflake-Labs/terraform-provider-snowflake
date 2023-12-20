@@ -47,7 +47,7 @@ func fetchAllIssues(token string) []issues.Issue {
 					fmt.Printf("Skipping issue %d, it is a PR\n", issue.Number)
 				}
 			}
-			page = page + 1
+			page++
 		}
 		fmt.Printf("Sleeping for a moment...\n")
 		time.Sleep(5 * time.Second)
@@ -98,5 +98,5 @@ func saveIssues(issues []issues.Issue) {
 	if err != nil {
 		panic(err)
 	}
-	_ = os.WriteFile("issues.json", bytes, 0644)
+	_ = os.WriteFile("issues.json", bytes, 0o600)
 }

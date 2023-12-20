@@ -109,18 +109,18 @@ func getTerraformVersion(issue i.Issue) string {
 
 func saveCsv(issues []ProcessedIssue) {
 	file, err := os.Create("issues.csv")
-	defer file.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 	w := csv.NewWriter(file)
 	w.Comma = ';'
 
-	var data [][]string
+	data := make([][]string, 0, len(issues))
 	for _, issue := range issues {
 		row := []string{
-			//strconv.Itoa(issue.ID),
-			//issue.URL,
+			// strconv.Itoa(issue.ID),
+			// issue.URL,
 			issue.NamedURL,
 			issue.Title,
 			issue.ProviderVersion,
@@ -135,7 +135,7 @@ func saveCsv(issues []ProcessedIssue) {
 		}
 		data = append(data, row)
 	}
-	w.WriteAll(data)
+	_ = w.WriteAll(data)
 }
 
 type ProcessedIssue struct {
