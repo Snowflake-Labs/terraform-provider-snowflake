@@ -327,7 +327,9 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		for _, name := range userNames {
 			users = append(users, sdk.NotifiedUser{Name: name})
 		}
-		opts.NotifyUsers.Users = users
+		opts.NotifyUsers = &sdk.NotifyUsers{
+			Users: users,
+		}
 	}
 
 	if d.HasChange("credit_quota") {
