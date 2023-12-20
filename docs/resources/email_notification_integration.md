@@ -27,12 +27,12 @@ resource "snowflake_email_notification_integration" "email_int" {
 
 ### Required
 
-- `allowed_recipients` (Set of String) List of email addresses that should receive notifications.
 - `enabled` (Boolean)
 - `name` (String)
 
 ### Optional
 
+- `allowed_recipients` (Set of String) List of email addresses that should receive notifications.
 - `comment` (String) A comment for the email integration.
 
 ### Read-Only
