@@ -269,7 +269,7 @@ func TestAcc_DynamicTable_issue2276(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
-					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", query),
 				),
 			},
 			{
@@ -277,7 +277,7 @@ func TestAcc_DynamicTable_issue2276(t *testing.T) {
 				ConfigVariables: m2,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
-					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", fmt.Sprintf("select \"data\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", newQuery),
 				),
 			},
 		},
