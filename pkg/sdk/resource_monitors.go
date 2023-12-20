@@ -97,10 +97,19 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 		resourceMonitor.Frequency = *frequency
 	}
 	if row.StartTime.Valid {
-		resourceMonitor.StartTime = row.StartTime.String
+		convertedStartTime, err := ParseTimestampWithOffset(row.StartTime.String, "2006-01-02 15:04")
+		if err != nil {
+			return nil, err
+		}
+		resourceMonitor.StartTime = convertedStartTime
 	}
+
 	if row.EndTime.Valid {
-		resourceMonitor.EndTime = row.EndTime.String
+		convertedEndTime, err := ParseTimestampWithOffset(row.EndTime.String, "2006-01-02 15:04")
+		if err != nil {
+			return nil, err
+		}
+		resourceMonitor.EndTime = convertedEndTime
 	}
 	suspendTriggers, err := extractTriggerInts(row.SuspendAt)
 	if err != nil {

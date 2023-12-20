@@ -14,6 +14,8 @@ This is a terraform provider for managing [Snowflake](https://www.snowflake.com/
   - [Getting started](#getting-started)
   - [SDK migration table](#sdk-migration-table)
   - [Getting Help](#getting-help)
+  - [Additional debug logs for `snowflake_grant_privileges_to_role` resource](#additional-debug-logs-for-snowflake_grant_privileges_to_role-resource)
+  - [Additional SQL Client configuration](#additional-sql-client-configuration)
   - [Contributing](#contributing)
 
 
@@ -131,6 +133,15 @@ Some links that might help you:
 - The [discussions area](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions) of this repo, we use this forum to discuss new features and changes to the provider.
 - **If you are an enterprise customer**, reach out to your account team. This helps us prioritize issues.
 - The [issues section](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues) might already have an issue addressing your question.
+
+## Additional debug logs for `snowflake_grant_privileges_to_role` resource
+Set environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` to a non-empty value. Additional logs will be visible with `sf-tf-additional-debug` prefix, e.g.:
+```text
+2023/12/08 12:58:22.497078 sf-tf-additional-debug [DEBUG] Creating new client from db
+```
+
+## Additional SQL Client configuration
+Currently underlying sql [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver is wrapped with [instrumentedsql](https://github.com/luna-duclos/instrumentedsql). In order to use raw [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver, set environment variable `SF_TF_NO_INSTRUMENTED_SQL` to a non-empty value.
 
 ## Contributing
 

@@ -1,5 +1,3 @@
-
-
 resource "snowflake_table" "t" {
   database        = var.database
   schema          = var.schema

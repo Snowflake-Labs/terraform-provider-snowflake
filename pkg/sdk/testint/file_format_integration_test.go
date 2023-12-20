@@ -113,7 +113,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 				JSONTimestampFormat:   sdk.String("c"),
 				JSONBinaryFormat:      &sdk.BinaryFormatHex,
 				JSONTrimSpace:         sdk.Bool(true),
-				JSONNullIf:            &[]sdk.NullString{{S: "d"}, {S: "e"}},
+				JSONNullIf:            []sdk.NullString{{S: "d"}, {S: "e"}},
 				JSONFileExtension:     sdk.String("f"),
 				JSONEnableOctal:       sdk.Bool(true),
 				JSONAllowDuplicate:    sdk.Bool(true),
@@ -146,7 +146,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, "c", *result.Options.JSONTimestampFormat)
 		assert.Equal(t, sdk.BinaryFormatHex, *result.Options.JSONBinaryFormat)
 		assert.Equal(t, true, *result.Options.JSONTrimSpace)
-		assert.Equal(t, []sdk.NullString{{S: "d"}, {S: "e"}}, *result.Options.JSONNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "d"}, {S: "e"}}, result.Options.JSONNullIf)
 		assert.Equal(t, "f", *result.Options.JSONFileExtension)
 		assert.Equal(t, true, *result.Options.JSONEnableOctal)
 		assert.Equal(t, true, *result.Options.JSONAllowDuplicate)
@@ -164,7 +164,7 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, "c", *describeResult.Options.JSONTimestampFormat)
 		assert.Equal(t, sdk.BinaryFormatHex, *describeResult.Options.JSONBinaryFormat)
 		assert.Equal(t, true, *describeResult.Options.JSONTrimSpace)
-		assert.Equal(t, []sdk.NullString{{S: "d"}, {S: "e"}}, *describeResult.Options.JSONNullIf)
+		assert.Equal(t, []sdk.NullString{{S: "d"}, {S: "e"}}, describeResult.Options.JSONNullIf)
 		assert.Equal(t, "f", *describeResult.Options.JSONFileExtension)
 		assert.Equal(t, true, *describeResult.Options.JSONEnableOctal)
 		assert.Equal(t, true, *describeResult.Options.JSONAllowDuplicate)

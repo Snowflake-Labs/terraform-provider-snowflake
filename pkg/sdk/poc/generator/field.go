@@ -2,9 +2,8 @@ package generator
 
 import (
 	"fmt"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 // Field defines properties of a single field or struct (by defining Fields)

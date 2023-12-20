@@ -99,8 +99,9 @@ func (qm quoteModifier) String() string {
 type parenModifier string
 
 const (
-	NoParentheses parenModifier = "no_parentheses"
-	Parentheses   parenModifier = "parentheses"
+	NoParentheses   parenModifier = "no_parentheses"
+	Parentheses     parenModifier = "parentheses"
+	MustParentheses parenModifier = "must_parentheses"
 )
 
 func (pm parenModifier) Modify(v any) string {
@@ -109,6 +110,8 @@ func (pm parenModifier) Modify(v any) string {
 	case NoParentheses:
 		return s
 	case Parentheses:
+		return fmt.Sprintf(`(%v)`, s)
+	case MustParentheses:
 		return fmt.Sprintf(`(%v)`, s)
 	default:
 		return s
@@ -434,7 +437,14 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 		}
 	}
 	if len(listClauses) < 1 {
-		return nil, nil
+		// handle the case where the list is empty and parentheses are a must
+		modifier := b.getModifier(field.Tag, "ddl", parenModifierType, NoParentheses).(parenModifier)
+		switch modifier {
+		case MustParentheses:
+			listClauses = append(listClauses, sqlStaticClause(""))
+		default:
+			return nil, nil
+		}
 	}
 	clauses = append(clauses, sqlListClause{
 		clauses: listClauses,

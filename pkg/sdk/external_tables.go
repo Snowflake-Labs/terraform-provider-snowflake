@@ -17,6 +17,7 @@ type ExternalTables interface {
 	CreateWithManualPartitioning(ctx context.Context, req *CreateWithManualPartitioningExternalTableRequest) error
 	CreateDeltaLake(ctx context.Context, req *CreateDeltaLakeExternalTableRequest) error
 	CreateUsingTemplate(ctx context.Context, req *CreateExternalTableUsingTemplateRequest) error
+	// TODO: Add alter options from https://docs.snowflake.com/en/sql-reference/sql/alter-table#external-table-column-actions-exttablecolumnaction (for better UX)
 	Alter(ctx context.Context, req *AlterExternalTableRequest) error
 	AlterPartitions(ctx context.Context, req *AlterExternalTablePartitionRequest) error
 	Drop(ctx context.Context, req *DropExternalTableRequest) error
@@ -56,6 +57,10 @@ func (v *ExternalTable) ObjectType() ObjectType {
 	return ObjectTypeExternalTable
 }
 
+type RawFileFormat struct {
+	Format string `ddl:"keyword"`
+}
+
 // CreateExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table
 type CreateExternalTableOptions struct {
 	create              bool                   `ddl:"static" sql:"CREATE"`
@@ -71,17 +76,22 @@ type CreateExternalTableOptions struct {
 	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
 	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
-	CopyGrants          *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
-	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
-	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
+	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
+	// In the future it should most likely be replaced by a more structured version FileFormat
+	RawFileFormat   *RawFileFormat        `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	AwsSnsTopic     *string               `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
+	CopyGrants      *bool                 `ddl:"keyword" sql:"COPY GRANTS"`
+	Comment         *string               `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy *TableRowAccessPolicy `ddl:"keyword"`
+	Tag             []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 type ExternalTableColumn struct {
 	Name             string   `ddl:"keyword"`
 	Type             DataType `ddl:"keyword"`
 	AsExpression     []string `ddl:"keyword,parentheses" sql:"AS"`
+	NotNull          *bool    `ddl:"keyword" sql:"NOT NULL"`
 	InlineConstraint *ColumnInlineConstraint
 }
 
@@ -203,10 +213,14 @@ type CreateWithManualPartitioningExternalTableOptions struct {
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
 	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
 	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
-	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
-	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
+	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
+	// In the future it should most likely be replaced by a more structured version FileFormat
+	RawFileFormat   *RawFileFormat        `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	CopyGrants      *bool                 `ddl:"keyword" sql:"COPY GRANTS"`
+	Comment         *string               `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy *TableRowAccessPolicy `ddl:"keyword"`
+	Tag             []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // CreateDeltaLakeExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table
@@ -224,11 +238,15 @@ type CreateDeltaLakeExternalTableOptions struct {
 	AutoRefresh                *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
 	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	DeltaTableFormat           *bool                     `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
-	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
-	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
-	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
+	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
+	// In the future it should most likely be replaced by a more structured version FileFormat
+	RawFileFormat    *RawFileFormat        `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	DeltaTableFormat *bool                 `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
+	CopyGrants       *bool                 `ddl:"keyword" sql:"COPY GRANTS"`
+	Comment          *string               `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy  *TableRowAccessPolicy `ddl:"keyword"`
+	Tag              []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // CreateExternalTableUsingTemplateOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table#variant-syntax
@@ -246,10 +264,14 @@ type CreateExternalTableUsingTemplateOptions struct {
 	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
 	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
-	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
-	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
+	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
+	// In the future it should most likely be replaced by a more structured version FileFormat
+	RawFileFormat   *RawFileFormat        `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	AwsSnsTopic     *string               `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
+	Comment         *string               `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy *TableRowAccessPolicy `ddl:"keyword"`
+	Tag             []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // AlterExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-external-table

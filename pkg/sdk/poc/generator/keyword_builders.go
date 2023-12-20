@@ -79,7 +79,7 @@ func (v *QueryStruct) SetTags() *QueryStruct {
 }
 
 func (v *QueryStruct) OptionalSetTags() *QueryStruct {
-	return v.setTags(nil)
+	return v.setTags(KeywordOptions().SQL("SET TAG"))
 }
 
 func (v *QueryStruct) setTags(transformer *KeywordTransformer) *QueryStruct {
@@ -91,7 +91,7 @@ func (v *QueryStruct) UnsetTags() *QueryStruct {
 }
 
 func (v *QueryStruct) OptionalUnsetTags() *QueryStruct {
-	return v.unsetTags(nil)
+	return v.unsetTags(KeywordOptions().SQL("UNSET TAG"))
 }
 
 func (v *QueryStruct) unsetTags(transformer *KeywordTransformer) *QueryStruct {

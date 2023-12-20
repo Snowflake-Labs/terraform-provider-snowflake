@@ -1,6 +1,6 @@
 package generator
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 type FieldTransformer interface {
 	Transform(f *Field) *Field
@@ -82,6 +82,11 @@ func (v *ParameterTransformer) SQL(sqlPrefix string) *ParameterTransformer {
 
 func (v *ParameterTransformer) NoQuotes() *ParameterTransformer {
 	v.quotes = "no_quotes"
+	return v
+}
+
+func (v *ListTransformer) MustParentheses() *ListTransformer {
+	v.parentheses = "must_parentheses"
 	return v
 }
 

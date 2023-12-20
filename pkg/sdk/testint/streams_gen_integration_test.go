@@ -60,7 +60,7 @@ func TestInt_Streams(t *testing.T) {
 		_, _ = createStageWithURL(t, client, stageID, nycWeatherDataURL)
 
 		externalTableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
-		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(externalTableId, stageLocation, sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON)))
+		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(externalTableId, stageLocation).WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON)))
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err := client.ExternalTables.Drop(ctx, sdk.NewDropExternalTableRequest(externalTableId))

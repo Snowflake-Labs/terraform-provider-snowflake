@@ -2,8 +2,12 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -857,6 +861,72 @@ func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable
 				ResourceName:      "snowflake_grant_privileges_to_role.g",
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureIcebergTables(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "snowflake_role" "role" {
+  name = "TEST_ROLE_123"
+}
+
+resource "snowflake_grant_privileges_to_role" "grant" {
+  role_name  = snowflake_role.role.name
+  privileges = ["SELECT"]
+  on_schema_object {
+    future {
+      object_type_plural = "ICEBERG TABLES"
+      in_schema          = "\"%s\".\"%s\""
+    }
+  }
+}
+`, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.grant", "on_schema_object.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.grant", "on_schema_object.0.future.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_role.grant", "on_schema_object.0.future.0.object_type_plural", string(sdk.PluralObjectTypeIcebergTables)),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToRole_ValidatedIdentifiers(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "snowflake_role" "role" {
+  name = "TEST_ROLE_123"
+}
+
+resource "snowflake_grant_privileges_to_role" "test_invalidation" {
+  role_name  = snowflake_role.role.name
+  privileges = ["SELECT"]
+  on_schema_object {
+    future {
+      object_type_plural = "ICEBERG TABLES"
+      in_schema          = "%s"
+    }
+  }
+}`, acc.TestSchemaName),
+				ExpectError: regexp.MustCompile(".*Expected DatabaseObjectIdentifier identifier type.*"),
 			},
 		},
 	})

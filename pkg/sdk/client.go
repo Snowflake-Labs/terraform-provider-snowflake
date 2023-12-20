@@ -5,13 +5,19 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"slices"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
-	"golang.org/x/exp/slices"
-
 	"github.com/snowflakedb/gosnowflake"
 )
+
+var instrumentedSQL bool
+
+func init() {
+	instrumentedSQL = os.Getenv("SF_TF_NO_INSTRUMENTED_SQL") == ""
+}
 
 type Client struct {
 	config         *gosnowflake.Config
@@ -45,6 +51,7 @@ type Client struct {
 	Parameters       Parameters
 	PasswordPolicies PasswordPolicies
 	Pipes            Pipes
+	Procedures       Procedures
 	ResourceMonitors ResourceMonitors
 	Roles            Roles
 	Schemas          Schemas
@@ -53,6 +60,7 @@ type Client struct {
 	Shares           Shares
 	Stages           Stages
 	Streams          Streams
+	Tables           Tables
 	Tags             Tags
 	Tasks            Tasks
 	Users            Users
@@ -94,16 +102,22 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 
 	var client *Client
 	// register the snowflake driver if it hasn't been registered yet
-	if !slices.Contains(sql.Drivers(), "snowflake-instrumented") {
-		logger := instrumentedsql.LoggerFunc(func(ctx context.Context, s string, kv ...interface{}) {
-			switch s {
-			case "sql-conn-query", "sql-conn-exec":
-				log.Printf("[DEBUG] %s: %v (%s)\n", s, kv, ctx.Value(snowflakeAccountLocatorContextKey))
-			default:
-				return
-			}
-		})
-		sql.Register("snowflake-instrumented", instrumentedsql.WrapDriver(gosnowflake.SnowflakeDriver{}, instrumentedsql.WithLogger(logger)))
+
+	driverName := "snowflake"
+	if instrumentedSQL {
+		if !slices.Contains(sql.Drivers(), "snowflake-instrumented") {
+			log.Println("[DEBUG] Registering snowflake-instrumented driver")
+			logger := instrumentedsql.LoggerFunc(func(ctx context.Context, s string, kv ...interface{}) {
+				switch s {
+				case "sql-conn-query", "sql-conn-exec":
+					log.Printf("[DEBUG] %s: %v (%s)\n", s, kv, ctx.Value(snowflakeAccountLocatorContextKey))
+				default:
+					return
+				}
+			})
+			sql.Register("snowflake-instrumented", instrumentedsql.WrapDriver(new(gosnowflake.SnowflakeDriver), instrumentedsql.WithLogger(logger)))
+		}
+		driverName = "snowflake-instrumented"
 	}
 
 	dsn, err := gosnowflake.DSN(cfg)
@@ -111,7 +125,7 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 		return nil, err
 	}
 
-	db, err := sqlx.Connect("snowflake-instrumented", dsn)
+	db, err := sqlx.Connect(driverName, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open snowflake connection: %w", err)
 	}
@@ -173,6 +187,7 @@ func (c *Client) initialize() {
 	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
 	c.Pipes = &pipes{client: c}
+	c.Procedures = &procedures{client: c}
 	c.ReplicationFunctions = &replicationFunctions{client: c}
 	c.ResourceMonitors = &resourceMonitors{client: c}
 	c.Roles = &roles{client: c}
@@ -183,6 +198,7 @@ func (c *Client) initialize() {
 	c.Stages = &stages{client: c}
 	c.Streams = &streams{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
+	c.Tables = &tables{client: c}
 	c.Tags = &tags{client: c}
 	c.Tasks = &tasks{client: c}
 	c.Users = &users{client: c}
