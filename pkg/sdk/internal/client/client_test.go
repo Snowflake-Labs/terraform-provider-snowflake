@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,5 +26,19 @@ func TestNewClientWithoutInstrumentedSQL(t *testing.T) {
 
 		assert.NotContains(t, sql.Drivers(), "snowflake-instrumented")
 		assert.Contains(t, sql.Drivers(), "snowflake")
+	})
+}
+
+func TestNewClientWithDebugLoggingSetFromEnv(t *testing.T) {
+	t.Run("set gosnowflake driver logging to debug", func(t *testing.T) {
+		if os.Getenv("SF_TF_GOSNOWFLAKE_LOG_LEVEL") == "" {
+			t.Skip("Skipping TestNewClientWithDebugLoggingSet, because SF_TF_GOSNOWFLAKE_LOG_LEVEL is not set")
+		}
+
+		config := sdk.DefaultConfig()
+		_, err := sdk.NewClient(config)
+		require.NoError(t, err)
+
+		assert.Equal(t, "debug", gosnowflake.GetLogger().GetLogLevel())
 	})
 }

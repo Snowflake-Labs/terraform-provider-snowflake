@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -75,4 +75,23 @@ func TestClient_queryOne(t *testing.T) {
 	err := client.queryOne(ctx, &row, "SELECT 1 AS ONE")
 	require.NoError(t, err)
 	require.Equal(t, 1, row.One)
+}
+
+func TestClient_NewClientDriverLoggingLevel(t *testing.T) {
+	t.Run("get default gosnowflake driver logging level", func(t *testing.T) {
+		config := DefaultConfig()
+		_, err := NewClient(config)
+		require.NoError(t, err)
+
+		assert.Equal(t, "error", gosnowflake.GetLogger().GetLogLevel())
+	})
+
+	t.Run("set gosnowflake driver logging level with config", func(t *testing.T) {
+		config := DefaultConfig()
+		config.Tracing = "trace"
+		_, err := NewClient(config)
+		require.NoError(t, err)
+
+		assert.Equal(t, "trace", gosnowflake.GetLogger().GetLogLevel())
+	})
 }
