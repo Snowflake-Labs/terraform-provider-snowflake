@@ -32,8 +32,8 @@ var functionReturns = g.NewQueryStruct("FunctionReturns").
 	).WithValidation(g.ExactlyOneValueSet, "ResultDataType", "Table")
 
 var (
-	functionImports  = g.NewQueryStruct("FunctionImports").Text("Import", g.KeywordOptions().SingleQuotes())
-	functionPackages = g.NewQueryStruct("FunctionPackages").Text("Package", g.KeywordOptions().SingleQuotes())
+	functionImports  = g.NewQueryStruct("FunctionImport").Text("Import", g.KeywordOptions().SingleQuotes())
+	functionPackages = g.NewQueryStruct("FunctionPackage").Text("Package", g.KeywordOptions().SingleQuotes())
 )
 
 var FunctionsDef = g.NewInterface(
@@ -54,7 +54,7 @@ var FunctionsDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
-			g.ParameterOptions().Parentheses().NoEquals()).
+			g.ListOptions().MustParentheses()).
 		OptionalSQL("COPY GRANTS").
 		QueryStructField(
 			"Returns",
@@ -83,6 +83,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 ).CustomOperation(
 	"CreateForJavascript",
@@ -97,7 +98,7 @@ var FunctionsDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
-			g.ParameterOptions().Parentheses().NoEquals()).
+			g.ListOptions().MustParentheses()).
 		OptionalSQL("COPY GRANTS").
 		QueryStructField(
 			"Returns",
@@ -109,7 +110,8 @@ var FunctionsDef = g.NewInterface(
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
 		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		WithValidation(g.ValidateValueSet, "FunctionDefinition").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
 	"CreateForPython",
@@ -125,7 +127,7 @@ var FunctionsDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
-			g.ParameterOptions().Parentheses().NoEquals()).
+			g.ListOptions().MustParentheses()).
 		OptionalSQL("COPY GRANTS").
 		QueryStructField(
 			"Returns",
@@ -153,6 +155,8 @@ var FunctionsDef = g.NewInterface(
 		ListAssignment("SECRETS", "Secret", g.ParameterOptions().Parentheses()).
 		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 ).CustomOperation(
 	"CreateForScala",
@@ -168,7 +172,7 @@ var FunctionsDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
-			g.ParameterOptions().Parentheses().NoEquals()).
+			g.ListOptions().MustParentheses()).
 		OptionalSQL("COPY GRANTS").
 		PredefinedQueryStructField("ResultDataType", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
 		PredefinedQueryStructField("ReturnNullValues", "*ReturnNullValues", g.KeywordOptions()).
@@ -191,6 +195,7 @@ var FunctionsDef = g.NewInterface(
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 ).CustomOperation(
 	"CreateForSQL",
@@ -205,7 +210,7 @@ var FunctionsDef = g.NewInterface(
 		ListQueryStructField(
 			"Arguments",
 			functionArgument,
-			g.ParameterOptions().Parentheses().NoEquals()).
+			g.ListOptions().MustParentheses()).
 		OptionalSQL("COPY GRANTS").
 		QueryStructField(
 			"Returns",
@@ -216,7 +221,8 @@ var FunctionsDef = g.NewInterface(
 		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalSQL("MEMOIZABLE").
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		WithValidation(g.ValidateValueSet, "FunctionDefinition").
 		WithValidation(g.ValidIdentifier, "name"),
 ).AlterOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-function",

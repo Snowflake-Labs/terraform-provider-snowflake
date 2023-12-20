@@ -71,12 +71,12 @@ func (s *CreateForJavaFunctionRequest) WithComment(Comment *string) *CreateForJa
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithImports(Imports []FunctionImportsRequest) *CreateForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithImports(Imports []FunctionImportRequest) *CreateForJavaFunctionRequest {
 	s.Imports = Imports
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithPackages(Packages []FunctionPackagesRequest) *CreateForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithPackages(Packages []FunctionPackageRequest) *CreateForJavaFunctionRequest {
 	s.Packages = Packages
 	return s
 }
@@ -157,20 +157,20 @@ func NewFunctionColumnRequest(
 	return &s
 }
 
-func NewFunctionImportsRequest() *FunctionImportsRequest {
-	return &FunctionImportsRequest{}
+func NewFunctionImportRequest() *FunctionImportRequest {
+	return &FunctionImportRequest{}
 }
 
-func (s *FunctionImportsRequest) WithImport(Import string) *FunctionImportsRequest {
+func (s *FunctionImportRequest) WithImport(Import string) *FunctionImportRequest {
 	s.Import = Import
 	return s
 }
 
-func NewFunctionPackagesRequest() *FunctionPackagesRequest {
-	return &FunctionPackagesRequest{}
+func NewFunctionPackageRequest() *FunctionPackageRequest {
+	return &FunctionPackageRequest{}
 }
 
-func (s *FunctionPackagesRequest) WithPackage(Package string) *FunctionPackagesRequest {
+func (s *FunctionPackageRequest) WithPackage(Package string) *FunctionPackageRequest {
 	s.Package = Package
 	return s
 }
@@ -178,7 +178,7 @@ func (s *FunctionPackagesRequest) WithPackage(Package string) *FunctionPackagesR
 func NewCreateForJavascriptFunctionRequest(
 	name SchemaObjectIdentifier,
 	Returns FunctionReturnsRequest,
-	FunctionDefinition *string,
+	FunctionDefinition string,
 ) *CreateForJavascriptFunctionRequest {
 	s := CreateForJavascriptFunctionRequest{}
 	s.name = name
@@ -296,12 +296,12 @@ func (s *CreateForPythonFunctionRequest) WithComment(Comment *string) *CreateFor
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithImports(Imports []FunctionImportsRequest) *CreateForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithImports(Imports []FunctionImportRequest) *CreateForPythonFunctionRequest {
 	s.Imports = Imports
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithPackages(Packages []FunctionPackagesRequest) *CreateForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithPackages(Packages []FunctionPackageRequest) *CreateForPythonFunctionRequest {
 	s.Packages = Packages
 	return s
 }
@@ -388,12 +388,12 @@ func (s *CreateForScalaFunctionRequest) WithComment(Comment *string) *CreateForS
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithImports(Imports []FunctionImportsRequest) *CreateForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithImports(Imports []FunctionImportRequest) *CreateForScalaFunctionRequest {
 	s.Imports = Imports
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithPackages(Packages []FunctionPackagesRequest) *CreateForScalaFunctionRequest {
+func (s *CreateForScalaFunctionRequest) WithPackages(Packages []FunctionPackageRequest) *CreateForScalaFunctionRequest {
 	s.Packages = Packages
 	return s
 }
@@ -411,7 +411,7 @@ func (s *CreateForScalaFunctionRequest) WithFunctionDefinition(FunctionDefinitio
 func NewCreateForSQLFunctionRequest(
 	name SchemaObjectIdentifier,
 	Returns FunctionReturnsRequest,
-	FunctionDefinition *string,
+	FunctionDefinition string,
 ) *CreateForSQLFunctionRequest {
 	s := CreateForSQLFunctionRequest{}
 	s.name = name

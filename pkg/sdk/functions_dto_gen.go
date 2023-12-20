@@ -28,8 +28,8 @@ type CreateForJavaFunctionRequest struct {
 	ReturnResultsBehavior      *ReturnResultsBehavior
 	RuntimeVersion             *string
 	Comment                    *string
-	Imports                    []FunctionImportsRequest
-	Packages                   []FunctionPackagesRequest
+	Imports                    []FunctionImportRequest
+	Packages                   []FunctionPackageRequest
 	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []Secret
@@ -61,11 +61,11 @@ type FunctionColumnRequest struct {
 	ColumnDataType DataType // required
 }
 
-type FunctionImportsRequest struct {
+type FunctionImportRequest struct {
 	Import string
 }
 
-type FunctionPackagesRequest struct {
+type FunctionPackageRequest struct {
 	Package string
 }
 
@@ -81,7 +81,7 @@ type CreateForJavascriptFunctionRequest struct {
 	NullInputBehavior     *NullInputBehavior
 	ReturnResultsBehavior *ReturnResultsBehavior
 	Comment               *string
-	FunctionDefinition    *string // required
+	FunctionDefinition    string // required
 }
 
 type CreateForPythonFunctionRequest struct {
@@ -98,8 +98,8 @@ type CreateForPythonFunctionRequest struct {
 	ReturnResultsBehavior      *ReturnResultsBehavior
 	RuntimeVersion             string // required
 	Comment                    *string
-	Imports                    []FunctionImportsRequest
-	Packages                   []FunctionPackagesRequest
+	Imports                    []FunctionImportRequest
+	Packages                   []FunctionPackageRequest
 	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []Secret
@@ -120,8 +120,8 @@ type CreateForScalaFunctionRequest struct {
 	ReturnResultsBehavior *ReturnResultsBehavior
 	RuntimeVersion        *string
 	Comment               *string
-	Imports               []FunctionImportsRequest
-	Packages              []FunctionPackagesRequest
+	Imports               []FunctionImportRequest
+	Packages              []FunctionPackageRequest
 	Handler               string // required
 	TargetPath            *string
 	FunctionDefinition    *string
@@ -139,7 +139,7 @@ type CreateForSQLFunctionRequest struct {
 	ReturnResultsBehavior *ReturnResultsBehavior
 	Memoizable            *bool
 	Comment               *string
-	FunctionDefinition    *string // required
+	FunctionDefinition    string // required
 }
 
 type AlterFunctionRequest struct {

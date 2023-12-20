@@ -26,10 +26,16 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: returns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaFunctionOptions.Returns", "ResultDataType", "Table"))
+	})
+
 	t.Run("validation: function definition", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.TargetPath = String("@~/testfunc.jar")
-		opts.Packages = []FunctionPackages{
+		opts.Packages = []FunctionPackage{
 			{
 				Package: "com.snowflake:snowpark:1.2.0",
 			},
@@ -37,6 +43,16 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
 		assertOptsInvalidJoinedErrors(t, opts, NewError("PACKAGES must be empty when AS is nil"))
 		assertOptsInvalidJoinedErrors(t, opts, NewError("IMPORTS must not be empty when AS is nil"))
+	})
+
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataType: DataTypeVARCHAR,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaFunctionOptions", "Handler"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -75,12 +91,12 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		opts.ReturnResultsBehavior = ReturnResultsBehaviorPointer(ReturnResultsBehaviorImmutable)
 		opts.RuntimeVersion = String("2.0")
 		opts.Comment = String("comment")
-		opts.Imports = []FunctionImports{
+		opts.Imports = []FunctionImport{
 			{
 				Import: "@~/my_decrement_udf_package_dir/my_decrement_udf_jar.jar",
 			},
 		}
-		opts.Packages = []FunctionPackages{
+		opts.Packages = []FunctionPackage{
 			{
 				Package: "com.snowflake:snowpark:1.2.0",
 			},
@@ -125,6 +141,22 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: returns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavascriptFunctionOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataType: DataTypeVARCHAR,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavascriptFunctionOptions", "FunctionDefinition"))
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -147,7 +179,7 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorCalledOnNullInput)
 		opts.ReturnResultsBehavior = ReturnResultsBehaviorPointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("comment")
-		opts.FunctionDefinition = String("return 1;")
+		opts.FunctionDefinition = "return 1;"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s (d FLOAT DEFAULT 1.0) COPY GRANTS RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT CALLED ON NULL INPUT IMMUTABLE COMMENT = 'comment' AS 'return 1;'`, id.FullyQualifiedName())
 	})
 }
@@ -172,32 +204,31 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: returns", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonFunctionOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataType: DataTypeVARCHAR,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonFunctionOptions", "RuntimeVersion"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonFunctionOptions", "Handler"))
+	})
+
 	t.Run("validation: function definition", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Packages = []FunctionPackages{
+		opts.Packages = []FunctionPackage{
 			{
 				Package: "com.snowflake:snowpark:1.2.0",
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, NewError("IMPORTS must not be empty when AS is nil"))
-	})
-
-	t.Run("validation: returns", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = FunctionReturns{
-			ResultDataType: &FunctionReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
-			},
-			Table: &FunctionReturnsTable{
-				Columns: []FunctionColumn{
-					{
-						ColumnName:     "country_code",
-						ColumnDataType: DataTypeVARCHAR,
-					},
-				},
-			},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrExactlyOneOf("CreateForPythonFunctionOptions.Returns", "ResultDataType", "Table"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -223,7 +254,7 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		opts.ReturnResultsBehavior = ReturnResultsBehaviorPointer(ReturnResultsBehaviorImmutable)
 		opts.RuntimeVersion = "3.8"
 		opts.Comment = String("comment")
-		opts.Imports = []FunctionImports{
+		opts.Imports = []FunctionImport{
 			{
 				Import: "numpy",
 			},
@@ -231,7 +262,7 @@ func TestFunctions_CreateForPython(t *testing.T) {
 				Import: "pandas",
 			},
 		}
-		opts.Packages = []FunctionPackages{
+		opts.Packages = []FunctionPackage{
 			{
 				Package: "numpy",
 			},
@@ -281,7 +312,7 @@ func TestFunctions_CreateForScala(t *testing.T) {
 	t.Run("validation: function definition", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.TargetPath = String("@~/testfunc.jar")
-		opts.Packages = []FunctionPackages{
+		opts.Packages = []FunctionPackage{
 			{
 				Package: "com.snowflake:snowpark:1.2.0",
 			},
@@ -289,6 +320,12 @@ func TestFunctions_CreateForScala(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
 		assertOptsInvalidJoinedErrors(t, opts, NewError("PACKAGES must be empty when AS is nil"))
 		assertOptsInvalidJoinedErrors(t, opts, NewError("IMPORTS must not be empty when AS is nil"))
+	})
+
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ResultDataType = DataTypeVARCHAR
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaFunctionOptions", "Handler"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -310,7 +347,7 @@ func TestFunctions_CreateForScala(t *testing.T) {
 		opts.ReturnResultsBehavior = ReturnResultsBehaviorPointer(ReturnResultsBehaviorImmutable)
 		opts.RuntimeVersion = String("2.0")
 		opts.Comment = String("comment")
-		opts.Imports = []FunctionImports{
+		opts.Imports = []FunctionImport{
 			{
 				Import: "@udf_libs/echohandler.jar",
 			},
@@ -343,20 +380,29 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 
 	t.Run("validation: returns", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.Returns = FunctionReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: options are missing", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataType: DataTypeVARCHAR,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForSQLFunctionOptions", "FunctionDefinition"))
+	})
+
+	t.Run("create with no arguments", func(t *testing.T) {
+		opts := defaultOpts()
 		opts.Returns = FunctionReturns{
 			ResultDataType: &FunctionReturnsResultDataType{
 				ResultDataType: DataTypeFloat,
 			},
-			Table: &FunctionReturnsTable{
-				Columns: []FunctionColumn{
-					{
-						ColumnName:     "country_code",
-						ColumnDataType: DataTypeVARCHAR,
-					},
-				},
-			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrExactlyOneOf("CreateForSQLFunctionOptions.Returns", "ResultDataType", "Table"))
+		opts.FunctionDefinition = "3.141592654::FLOAT"
+		assertOptsValidAndSQLEquals(t, opts, `CREATE FUNCTION %s () RETURNS FLOAT AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -381,7 +427,7 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 		opts.ReturnResultsBehavior = ReturnResultsBehaviorPointer(ReturnResultsBehaviorImmutable)
 		opts.Memoizable = Bool(true)
 		opts.Comment = String("comment")
-		opts.FunctionDefinition = String("3.141592654::FLOAT")
+		opts.FunctionDefinition = "3.141592654::FLOAT"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s (message VARCHAR DEFAULT 'test') COPY GRANTS RETURNS FLOAT NOT NULL IMMUTABLE MEMOIZABLE COMMENT = 'comment' AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
 	})
 }
@@ -578,14 +624,9 @@ func TestFunctions_Describe(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("all options no arguments", func(t *testing.T) {
-		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s`, id.FullyQualifiedName())
-	})
-
-	t.Run("all options with arguments", func(t *testing.T) {
+	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ArgumentDataTypes = []DataType{DataTypeVARCHAR, DataTypeNumber}
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s (%s, %s)`, id.FullyQualifiedName(), DataTypeVARCHAR, DataTypeNumber)
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s (VARCHAR, NUMBER)`, id.FullyQualifiedName())
 	})
 }

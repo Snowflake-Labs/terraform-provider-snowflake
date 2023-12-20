@@ -128,18 +128,18 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 		}
 	}
 	if r.Imports != nil {
-		s := make([]FunctionImports, len(r.Imports))
+		s := make([]FunctionImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = FunctionImports{
+			s[i] = FunctionImport{
 				Import: v.Import,
 			}
 		}
 		opts.Imports = s
 	}
 	if r.Packages != nil {
-		s := make([]FunctionPackages, len(r.Packages))
+		s := make([]FunctionPackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = FunctionPackages{
+			s[i] = FunctionPackage{
 				Package: v.Package,
 			}
 		}
@@ -248,18 +248,18 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 		}
 	}
 	if r.Imports != nil {
-		s := make([]FunctionImports, len(r.Imports))
+		s := make([]FunctionImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = FunctionImports{
+			s[i] = FunctionImport{
 				Import: v.Import,
 			}
 		}
 		opts.Imports = s
 	}
 	if r.Packages != nil {
-		s := make([]FunctionPackages, len(r.Packages))
+		s := make([]FunctionPackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = FunctionPackages{
+			s[i] = FunctionPackage{
 				Package: v.Package,
 			}
 		}
@@ -300,18 +300,18 @@ func (r *CreateForScalaFunctionRequest) toOpts() *CreateForScalaFunctionOptions 
 		opts.Arguments = s
 	}
 	if r.Imports != nil {
-		s := make([]FunctionImports, len(r.Imports))
+		s := make([]FunctionImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = FunctionImports{
+			s[i] = FunctionImport{
 				Import: v.Import,
 			}
 		}
 		opts.Imports = s
 	}
 	if r.Packages != nil {
-		s := make([]FunctionPackages, len(r.Packages))
+		s := make([]FunctionPackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = FunctionPackages{
+			s[i] = FunctionPackage{
 				Package: v.Package,
 			}
 		}
