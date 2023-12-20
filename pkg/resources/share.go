@@ -70,7 +70,7 @@ func CreateShare(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if err := client.Shares.Create(ctx, id, &opts); err != nil {
-		return fmt.Errorf("error creating share err = %w", err)
+		return fmt.Errorf("error creating share (%v) err = %w", d.Id(), err)
 	}
 	d.SetId(name)
 
@@ -127,7 +127,7 @@ func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.Accou
 		Database: tempDatabaseID,
 	}, shareID)
 	if err != nil {
-		return fmt.Errorf("error granting privilege to share err = %w", err)
+		return fmt.Errorf("error granting privilege to share (%v) err = %w", shareID.Name(), err)
 	}
 	defer func() {
 		// revoke the REFERENCE_USAGE privilege during cleanup
@@ -135,14 +135,14 @@ func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.Accou
 			Database: tempDatabaseID,
 		}, shareID)
 		if err != nil {
-			log.Printf("[WARN] error revoking privilege from share err = %v", err)
+			log.Printf("[WARN] error revoking privilege from share (%v) err = %v", shareID.Name(), err)
 		}
 		// revoke the maybe automatically granted USAGE privilege during cleanup
 		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
 			Database: tempDatabaseID,
 		}, shareID)
 		if err != nil {
-			log.Printf("[WARN] error revoking privilege from share err = %v", err)
+			log.Printf("[WARN] error revoking privilege from share (%v) err = %v", shareID.Name(), err)
 		}
 	}()
 	// 3. Add accounts to the share
@@ -163,7 +163,7 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 
 	share, err := client.Shares.ShowByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("error reading share err = %w", err)
+		return fmt.Errorf("error reading share (%v) err = %w", d.Id(), err)
 	}
 	if err := d.Set("name", share.Name.Name()); err != nil {
 		return err
@@ -218,7 +218,7 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return fmt.Errorf("error removing accounts from share err = %w", err)
+				return fmt.Errorf("error removing accounts from share (%v) err = %w", d.Id(), err)
 			}
 		} else {
 			accountIdentifiers := accountIdentifiersFromSlice(newAccounts)
@@ -236,7 +236,7 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("error updating share comment err = %w", err)
+			return fmt.Errorf("error updating share (%v) comment err = %w", d.Id(), err)
 		}
 	}
 
@@ -250,7 +250,7 @@ func DeleteShare(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(d.Id()))
 	if err != nil {
-		return fmt.Errorf("error deleting share err = %w", err)
+		return fmt.Errorf("error deleting share (%v) err = %w", d.Id(), err)
 	}
 	return nil
 }
