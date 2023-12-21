@@ -443,6 +443,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_failover_group":                          resources.FailoverGroup(),
 		"snowflake_file_format":                             resources.FileFormat(),
 		"snowflake_function":                                resources.Function(),
+		"snowflake_grant_database_role":                     resources.GrantDatabaseRole(),
 		"snowflake_grant_privileges_to_role":                resources.GrantPrivilegesToRole(),
 		"snowflake_managed_account":                         resources.ManagedAccount(),
 		"snowflake_masking_policy":                          resources.MaskingPolicy(),

@@ -186,8 +186,9 @@ type ShowGrantsTo struct {
 }
 
 type ShowGrantsOf struct {
-	Role  AccountObjectIdentifier `ddl:"identifier" sql:"ROLE"`
-	Share AccountObjectIdentifier `ddl:"identifier" sql:"SHARE"`
+	Role         AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
+	DatabaseRole DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
+	Share        AccountObjectIdentifier  `ddl:"identifier" sql:"SHARE"`
 }
 
 type grantRow struct {
@@ -211,7 +212,7 @@ type Grant struct {
 	Name        ObjectIdentifier
 	GrantedTo   ObjectType
 	GrantTo     ObjectType
-	GranteeName AccountObjectIdentifier
+	GranteeName ObjectIdentifier
 	GrantOption bool
 	GrantedBy   AccountObjectIdentifier
 }
