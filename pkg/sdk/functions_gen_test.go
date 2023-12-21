@@ -452,6 +452,11 @@ func TestFunctions_Drop(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("no arguments", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, `DROP FUNCTION %s ()`, id.FullyQualifiedName())
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := &DropFunctionOptions{
 			name: id,
@@ -501,6 +506,13 @@ func TestFunctions_Alter(t *testing.T) {
 		target := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), random.StringN(12))
 		opts.RenameTo = &target
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) RENAME TO %s`, id.FullyQualifiedName(), opts.RenameTo.FullyQualifiedName())
+	})
+
+	t.Run("alter: set log level with no arguments", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ArgumentDataTypes = nil
+		opts.SetLogLevel = String("DEBUG")
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s () SET LOG_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set log level", func(t *testing.T) {
@@ -622,6 +634,11 @@ func TestFunctions_Describe(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("no arguments", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s ()`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {

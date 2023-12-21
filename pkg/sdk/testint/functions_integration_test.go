@@ -202,7 +202,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 	tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
 	t.Cleanup(tagCleanup)
 
-	assertFunction := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool) {
+	assertFunction := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool, withArguments bool) {
 		t.Helper()
 
 		function, err := client.Functions.ShowByID(ctx, id)
@@ -213,8 +213,13 @@ func TestInt_OtherFunctions(t *testing.T) {
 		assert.Equal(t, false, function.IsBuiltin)
 		assert.Equal(t, false, function.IsAggregate)
 		assert.Equal(t, false, function.IsAnsi)
-		assert.Equal(t, 1, function.MinNumArguments)
-		assert.Equal(t, 1, function.MaxNumArguments)
+		if withArguments {
+			assert.Equal(t, 1, function.MinNumArguments)
+			assert.Equal(t, 1, function.MaxNumArguments)
+		} else {
+			assert.Equal(t, 0, function.MinNumArguments)
+			assert.Equal(t, 0, function.MaxNumArguments)
+		}
 		assert.NotEmpty(t, function.Arguments)
 		assert.NotEmpty(t, function.Description)
 		assert.NotEmpty(t, function.CatalogName)
@@ -236,7 +241,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		}
 	}
 
-	createFunctionForSQLHandle := func(t *testing.T, cleanup bool) *sdk.Function {
+	createFunctionForSQLHandle := func(t *testing.T, cleanup bool, withArguments bool) *sdk.Function {
 		t.Helper()
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
 
@@ -244,14 +249,20 @@ func TestInt_OtherFunctions(t *testing.T) {
 
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(dt)
-		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
 		request := sdk.NewCreateForSQLFunctionRequest(id, *returns, definition).
-			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithOrReplace(sdk.Bool(true))
+		if withArguments {
+			argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
+			request = request.WithArguments([]sdk.FunctionArgumentRequest{*argument})
+		}
 		err := client.Functions.CreateForSQL(ctx, request)
 		require.NoError(t, err)
 		if cleanup {
-			t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
+			if withArguments {
+				t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
+			} else {
+				t.Cleanup(cleanupFunctionHandle(id, nil))
+			}
 		}
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -263,7 +274,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 	}
 
 	t.Run("alter function: rename", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, false)
+		f := createFunctionForSQLHandle(t, false, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		nid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(3))
@@ -284,79 +295,87 @@ func TestInt_OtherFunctions(t *testing.T) {
 	})
 
 	t.Run("alter function: set log level", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetLogLevel(sdk.String("DEBUG")))
 		require.NoError(t, err)
-		assertFunction(t, id, false)
+		assertFunction(t, id, false, true)
 	})
 
 	t.Run("alter function: unset log level", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetLogLevel(sdk.Bool(true)))
 		require.NoError(t, err)
-		assertFunction(t, id, false)
+		assertFunction(t, id, false, true)
 	})
 
 	t.Run("alter function: set trace level", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetTraceLevel(sdk.String("ALWAYS")))
 		require.NoError(t, err)
-		assertFunction(t, id, false)
+		assertFunction(t, id, false, true)
 	})
 
 	t.Run("alter function: unset trace level", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetTraceLevel(sdk.Bool(true)))
 		require.NoError(t, err)
-		assertFunction(t, id, false)
+		assertFunction(t, id, false, true)
 	})
 
 	t.Run("alter function: set comment", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetComment(sdk.String("test comment")))
 		require.NoError(t, err)
-		assertFunction(t, id, false)
+		assertFunction(t, id, false, true)
 	})
 
 	t.Run("alter function: unset comment", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetComment(sdk.Bool(true)))
 		require.NoError(t, err)
-		assertFunction(t, id, false)
+		assertFunction(t, id, false, true)
 	})
 
 	t.Run("alter function: set secure", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetSecure(sdk.Bool(true)))
 		require.NoError(t, err)
-		assertFunction(t, id, true)
+		assertFunction(t, id, true, true)
+	})
+
+	t.Run("alter function: set secure with no arguments", func(t *testing.T) {
+		f := createFunctionForSQLHandle(t, true, false)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id, nil).WithSetSecure(sdk.Bool(true)))
+		require.NoError(t, err)
+		assertFunction(t, id, true, false)
 	})
 
 	t.Run("alter function: unset secure", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetSecure(sdk.Bool(true)))
 		require.NoError(t, err)
-		assertFunction(t, id, false)
+		assertFunction(t, id, false, true)
 	})
 
 	t.Run("alter function: set and unset tags", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 		setTags := []sdk.TagAssociation{
@@ -367,19 +386,19 @@ func TestInt_OtherFunctions(t *testing.T) {
 		}
 		err := client.Functions.Alter(ctx, defaultAlterRequest(id).WithSetTags(setTags))
 		require.NoError(t, err)
-		assertFunction(t, id, false)
+		assertFunction(t, id, false, true)
 
 		unsetTags := []sdk.ObjectIdentifier{
 			tagTest.ID(),
 		}
 		err = client.Functions.Alter(ctx, defaultAlterRequest(id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
-		assertFunction(t, id, false)
+		assertFunction(t, id, false, true)
 	})
 
 	t.Run("show function for SQL: without like", func(t *testing.T) {
-		f1 := createFunctionForSQLHandle(t, true)
-		f2 := createFunctionForSQLHandle(t, true)
+		f1 := createFunctionForSQLHandle(t, true, true)
+		f2 := createFunctionForSQLHandle(t, true, true)
 
 		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest())
 		require.NoError(t, err)
@@ -390,8 +409,8 @@ func TestInt_OtherFunctions(t *testing.T) {
 	})
 
 	t.Run("show function for SQL: with like", func(t *testing.T) {
-		f1 := createFunctionForSQLHandle(t, true)
-		f2 := createFunctionForSQLHandle(t, true)
+		f1 := createFunctionForSQLHandle(t, true, true)
+		f2 := createFunctionForSQLHandle(t, true, true)
 
 		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().WithLike(&sdk.Like{Pattern: &f1.Name}))
 		require.NoError(t, err)
@@ -408,7 +427,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 	})
 
 	t.Run("describe function for SQL", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true)
+		f := createFunctionForSQLHandle(t, true, true)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
 
 		request := sdk.NewDescribeFunctionRequest(id, []sdk.DataType{sdk.DataTypeFloat})
@@ -422,5 +441,22 @@ func TestInt_OtherFunctions(t *testing.T) {
 		require.Equal(t, "FLOAT", pairs["returns"])
 		require.Equal(t, "3.141592654::FLOAT", pairs["body"])
 		require.Equal(t, "(X FLOAT)", pairs["signature"])
+	})
+
+	t.Run("describe function for SQL: no arguments", func(t *testing.T) {
+		f := createFunctionForSQLHandle(t, true, false)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, f.Name)
+
+		request := sdk.NewDescribeFunctionRequest(id, nil)
+		details, err := client.Functions.Describe(ctx, request)
+		require.NoError(t, err)
+		pairs := make(map[string]string)
+		for _, detail := range details {
+			pairs[detail.Property] = detail.Value
+		}
+		require.Equal(t, "SQL", pairs["language"])
+		require.Equal(t, "FLOAT", pairs["returns"])
+		require.Equal(t, "3.141592654::FLOAT", pairs["body"])
+		require.Equal(t, "()", pairs["signature"])
 	})
 }

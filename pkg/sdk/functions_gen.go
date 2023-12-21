@@ -171,7 +171,7 @@ type AlterFunctionOptions struct {
 	function          bool                    `ddl:"static" sql:"FUNCTION"`
 	IfExists          *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name              SchemaObjectIdentifier  `ddl:"identifier"`
-	ArgumentDataTypes []DataType              `ddl:"keyword,parentheses"`
+	ArgumentDataTypes []DataType              `ddl:"keyword,must_parentheses"`
 	RenameTo          *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 	SetComment        *string                 `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
 	SetLogLevel       *string                 `ddl:"parameter,single_quotes" sql:"SET LOG_LEVEL"`
@@ -247,7 +247,7 @@ type DescribeFunctionOptions struct {
 	describe          bool                   `ddl:"static" sql:"DESCRIBE"`
 	function          bool                   `ddl:"static" sql:"FUNCTION"`
 	name              SchemaObjectIdentifier `ddl:"identifier"`
-	ArgumentDataTypes []DataType             `ddl:"keyword,parentheses"`
+	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
 }
 
 type functionDetailRow struct {
