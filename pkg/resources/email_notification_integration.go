@@ -119,6 +119,8 @@ func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) 
 		}
 		switch k {
 		case "ALLOWED_RECIPIENTS":
+			// Empty list returns strange string (it's empty on worksheet level).
+			// This is a quick workaround, should be fixed with moving the email integration to SDK.
 			r := regexp.MustCompile(`[[:print:]]`)
 			if r.MatchString(v.(string)) {
 				if err := d.Set("allowed_recipients", strings.Split(v.(string), ",")); err != nil {
