@@ -300,13 +300,13 @@ func (opts *AlterResourceMonitorOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if everyValueNil(opts.Set, opts.NotifyUsers, opts.Triggers) {
+		errs = append(errs, errAtLeastOneOf("AlterResourceMonitorOptions", "Set", "NotifyUsers", "Triggers"))
+	}
 	if valueSet(opts.Set) {
 		if (opts.Set.Frequency != nil && opts.Set.StartTimestamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimestamp != nil) {
 			errs = append(errs, errors.New("must specify frequency and start time together"))
 		}
-	}
-	if !exactlyOneValueSet(opts.Set, opts.NotifyUsers) && opts.Triggers == nil {
-		errs = append(errs, errExactlyOneOf("AlterResourceMonitorOptions", "Set", "NotifyUsers", "Triggers"))
 	}
 	return errors.Join(errs...)
 }
