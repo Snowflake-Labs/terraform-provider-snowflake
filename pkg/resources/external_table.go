@@ -178,7 +178,8 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 	req.WithCopyGrants(sdk.Bool(d.Get("copy_grants").(bool)))
 
 	if v, ok := d.GetOk("partition_by"); ok {
-		req.WithPartitionBy(v.([]string))
+		partitionBy := expandStringList(v.([]any))
+		req.WithPartitionBy(partitionBy)
 	}
 
 	if v, ok := d.GetOk("pattern"); ok {
