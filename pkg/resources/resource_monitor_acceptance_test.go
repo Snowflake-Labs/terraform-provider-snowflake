@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_ResourceMonitor(t *testing.T) {
@@ -214,6 +216,35 @@ resource "snowflake_resource_monitor" "test" {
 	suspend_immediate_trigger = 95
 }
 `, accName)
+}
+
+// TestAcc_ResourceMonitor_issue2167 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2167 issue.
+// Second step is purposely error, because tests TestAcc_ResourceMonitorUpdateNotifyUsers and TestAcc_ResourceMonitorNotifyUsers are still skipped.
+// It can be fixed with them.
+func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configNoUsers, err := resourceMonitorNotifyUsersConfig(name, []string{})
+	require.NoError(t, err)
+	config, err := resourceMonitorNotifyUsersConfig(name, []string{"does not matter"})
+	require.NoError(t, err)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: configNoUsers,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+				),
+			},
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(`.*exactly one of AlterResourceMonitorOptions fields \[Set NotifyUsers Triggers] must be set.*`),
+			},
+		},
+	})
 }
 
 func TestAcc_ResourceMonitorNotifyUsers(t *testing.T) {

@@ -236,6 +236,54 @@ func TestAcc_DynamicTable_issue2134(t *testing.T) {
 	})
 }
 
+// TestAcc_DynamicTable_issue2276 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2276 issue.
+func TestAcc_DynamicTable_issue2276(t *testing.T) {
+	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := dynamicTableName + "_table"
+	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	newQuery := fmt.Sprintf(`select "data" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":       config.StringVariable(dynamicTableName),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"warehouse":  config.StringVariable(acc.TestWarehouseName),
+			"query":      config.StringVariable(query),
+			"comment":    config.StringVariable("Terraform acceptance test for GH issue 2276"),
+			"table_name": config.StringVariable(tableName),
+		}
+	}
+	m2 := m()
+	m2["query"] = config.StringVariable(newQuery)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDynamicTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", query),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
+				ConfigVariables: m2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", newQuery),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDynamicTableDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
 	client := sdk.NewClientFromDB(db)
