@@ -47,6 +47,11 @@ func (v *KeywordTransformer) Parentheses() *KeywordTransformer {
 	return v
 }
 
+func (v *KeywordTransformer) MustParentheses() *KeywordTransformer {
+	v.parentheses = "must_parentheses"
+	return v
+}
+
 func (v *KeywordTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "keyword")
 	if v.required {
