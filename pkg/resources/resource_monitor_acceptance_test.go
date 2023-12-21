@@ -225,7 +225,7 @@ func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configNoUsers, err := resourceMonitorNotifyUsersConfig(name, []string{})
 	require.NoError(t, err)
-	config, err := resourceMonitorNotifyUsersConfig(name, []string{"does not matter"})
+	config, err := resourceMonitorNotifyUsersConfig(name, []string{"non_existing_user"})
 	require.NoError(t, err)
 
 	resource.Test(t, resource.TestCase{
@@ -241,7 +241,7 @@ func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 			},
 			{
 				Config:      config,
-				ExpectError: regexp.MustCompile(`.*exactly one of AlterResourceMonitorOptions fields \[Set NotifyUsers Triggers] must be set.*`),
+				ExpectError: regexp.MustCompile(`.*090268 \(22023\): User non_existing_user does not exist.*`),
 			},
 		},
 	})
