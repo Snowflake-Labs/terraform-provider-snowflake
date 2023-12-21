@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"log"
 	"slices"
 	"strings"
 )
@@ -271,25 +271,25 @@ var grantPrivilegesOnDatabaseRoleBulkOperationSchema = map[string]*schema.Schema
 	},
 }
 
-func doesNotContainOwnershipGrant() func(value any, path cty.Path) diag.Diagnostics {
-	return func(value any, path cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		if privileges, ok := value.([]string); ok {
-			if slices.ContainsFunc(privileges, func(privilege string) bool {
-				return strings.ToUpper(privilege) == "OWNERSHIP"
-			}) {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Unsupported privilege type 'OWNERSHIP'.",
-					// TODO: Change when a new resource for granting ownership will be available
-					Detail:        "Granting ownership is only allowed in dedicated resources (snowflake_user_ownership_grant, snowflake_role_ownership_grant)",
-					AttributePath: nil,
-				})
-			}
-		}
-		return diags
-	}
-}
+//func doesNotContainOwnershipGrant() func(value any, path cty.Path) diag.Diagnostics {
+//	return func(value any, path cty.Path) diag.Diagnostics {
+//		var diags diag.Diagnostics
+//		if privileges, ok := value.([]string); ok {
+//			if slices.ContainsFunc(privileges, func(privilege string) bool {
+//				return strings.ToUpper(privilege) == "OWNERSHIP"
+//			}) {
+//				diags = append(diags, diag.Diagnostic{
+//					Severity: diag.Error,
+//					Summary:  "Unsupported privilege type 'OWNERSHIP'.",
+//					// TODO: Change when a new resource for granting ownership will be available
+//					Detail:        "Granting ownership is only allowed in dedicated resources (snowflake_user_ownership_grant, snowflake_role_ownership_grant)",
+//					AttributePath: nil,
+//				})
+//			}
+//		}
+//		return diags
+//	}
+//}
 
 func GrantPrivilegesToDatabaseRole() *schema.Resource {
 	return &schema.Resource{
@@ -322,6 +322,7 @@ func ImportGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 	if err := d.Set("privileges", id.Privileges); err != nil {
 		return nil, err
 	}
+	// TODO: Error when contains ownership as privilege
 	switch id.Kind {
 	case OnDatabaseDatabaseRoleGrantKind:
 		if err := d.Set("on_database", id.Data.(*OnDatabaseGrantData).DatabaseName.FullyQualifiedName()); err != nil {
@@ -396,17 +397,31 @@ func CreateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 	id.DatabaseRoleName = databaseRoleName
 	id.AllPrivileges = d.Get("all_privileges").(bool)
 	if p, ok := d.GetOk("privileges"); ok {
-		id.Privileges = expandStringList(p.(*schema.Set).List())
+		privileges := expandStringList(p.(*schema.Set).List())
+		if slices.ContainsFunc(privileges, func(s string) bool {
+			return strings.ToUpper(s) == "OWNERSHIP"
+		}) {
+			return append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "OWNERSHIP in the list of privileges",
+				Detail:   fmt.Sprintf("Id: %s\nMessage: TODO", id.DatabaseRoleName), // TODO: Message and link to ownership resource
+			})
+		}
+		id.Privileges = privileges
 	}
+	withGrantOption := d.Get("with_grant_option").(bool)
+	id.WithGrantOption = withGrantOption
 
 	on := getDatabaseRoleGrantOn(id, d) // TODO: It shouldn't modify
+	priv := getDatabaseRolePrivileges(id.Kind, id.AllPrivileges, id.Privileges)
+	log.Println("GRANTING PRIV:", priv)
 	err := client.Grants.GrantPrivilegesToDatabaseRole(
 		ctx,
-		getDatabaseRolePrivileges(id.Kind, id.AllPrivileges, id.Privileges),
+		priv,
 		on,
 		databaseRoleName,
 		&sdk.GrantPrivilegesToDatabaseRoleOptions{
-			WithGrantOption: GetPropertyAsPointer[bool](d, "with_grant_option"),
+			WithGrantOption: &withGrantOption,
 		},
 	)
 	if err != nil {
@@ -714,14 +729,14 @@ func getDatabaseRolePrivileges(kind DatabaseRoleGrantKind, allPrivileges bool, p
 
 // TODO: This should not set anything - remove id
 func getDatabaseRoleGrantOn(id *GrantPrivilegesToDatabaseRoleId, d *schema.ResourceData) *sdk.DatabaseRoleGrantOn {
-	onDatabase, onDatabaseOk := GetProperty[string](d, "on_database")
-	onSchema, onSchemaOk := GetProperty[map[string]any](d, "on_schema")
-	onSchemaObject, onSchemaObjectOk := GetProperty[map[string]any](d, "on_schema_object")
+	onDatabase, onDatabaseOk := d.GetOk("on_database")
+	onSchemaBlock, onSchemaOk := d.GetOk("on_schema")
+	onSchemaObjectBlock, onSchemaObjectOk := d.GetOk("on_schema_object")
 	on := new(sdk.DatabaseRoleGrantOn)
 
 	switch {
 	case onDatabaseOk:
-		databaseId := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(onDatabase)
+		databaseId := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(onDatabase.(string))
 
 		id.Kind = OnDatabaseDatabaseRoleGrantKind
 		id.Data = &OnDatabaseGrantData{
@@ -729,30 +744,36 @@ func getDatabaseRoleGrantOn(id *GrantPrivilegesToDatabaseRoleId, d *schema.Resou
 		}
 		on.Database = &databaseId
 	case onSchemaOk:
+		onSchema := onSchemaBlock.([]any)[0].(map[string]any)
 		id.Kind = OnSchemaDatabaseRoleGrantKind
 
 		onSchemaGrantData := new(OnSchemaGrantData)
 		grantOnSchema := new(sdk.GrantOnSchema)
 
-		schemaName, schemaNameOk := onSchema["schema_name"]
-		allSchemasInDatabase, allSchemasInDatabaseOk := onSchema["all_schemas_in_database"]
-		futureSchemasInDatabase, futureSchemasInDatabaseOk := onSchema["future_schemas_in_database"]
+		schemaName := onSchema["schema_name"].(string)
+		schemaNameOk := len(schemaName) > 0
+
+		allSchemasInDatabase := onSchema["all_schemas_in_database"].(string)
+		allSchemasInDatabaseOk := len(allSchemasInDatabase) > 0
+
+		futureSchemasInDatabase := onSchema["future_schemas_in_database"].(string)
+		futureSchemasInDatabaseOk := len(futureSchemasInDatabase) > 0
 
 		switch {
 		case schemaNameOk:
-			schemaId := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schemaName.(string))
+			schemaId := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schemaName)
 
 			onSchemaGrantData.Kind = OnSchemaSchemaGrantKind
 			onSchemaGrantData.SchemaName = &schemaId
 			grantOnSchema.Schema = &schemaId
 		case allSchemasInDatabaseOk:
-			databaseId := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(allSchemasInDatabase.(string))
+			databaseId := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(allSchemasInDatabase)
 
 			onSchemaGrantData.Kind = OnAllSchemasInDatabaseSchemaGrantKind
 			onSchemaGrantData.DatabaseName = &databaseId
 			grantOnSchema.AllSchemasInDatabase = &databaseId
 		case futureSchemasInDatabaseOk:
-			databaseId := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(futureSchemasInDatabase.(string))
+			databaseId := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(futureSchemasInDatabase)
 
 			onSchemaGrantData.Kind = OnFutureSchemasInDatabaseSchemaGrantKind
 			onSchemaGrantData.DatabaseName = &databaseId
@@ -762,7 +783,8 @@ func getDatabaseRoleGrantOn(id *GrantPrivilegesToDatabaseRoleId, d *schema.Resou
 		id.Data = onSchemaGrantData
 		on.Schema = grantOnSchema
 	case onSchemaObjectOk:
-		id.Kind = OnSchemaDatabaseRoleGrantKind
+		onSchemaObject := onSchemaObjectBlock.([]any)[0].(map[string]any)
+		id.Kind = OnSchemaObjectDatabaseRoleGrantKind
 
 		onSchemaObjectGrantData := new(OnSchemaObjectGrantData)
 		grantOnSchemaObject := new(sdk.GrantOnSchemaObject)
@@ -784,10 +806,10 @@ func getDatabaseRoleGrantOn(id *GrantPrivilegesToDatabaseRoleId, d *schema.Resou
 			grantOnSchemaObject.SchemaObject = object
 		case allOk:
 			onSchemaObjectGrantData.Kind = OnAllSchemaObjectGrantKind
-			grantOnSchemaObject.All = getGrantOnSchemaObjectIn(onSchemaObjectGrantData, all.(map[string]any))
+			grantOnSchemaObject.All = getGrantOnSchemaObjectIn(onSchemaObjectGrantData, all.([]any)[0].(map[string]any))
 		case futureOk:
 			onSchemaObjectGrantData.Kind = OnFutureSchemaObjectGrantKind
-			grantOnSchemaObject.Future = getGrantOnSchemaObjectIn(onSchemaObjectGrantData, future.(map[string]any))
+			grantOnSchemaObject.Future = getGrantOnSchemaObjectIn(onSchemaObjectGrantData, future.([]any)[0].(map[string]any))
 		}
 
 		id.Data = onSchemaObjectGrantData

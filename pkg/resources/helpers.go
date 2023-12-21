@@ -126,7 +126,7 @@ func GetPropertyAsPointer[T any](d *schema.ResourceData, property string) *T {
 	return &typedValue
 }
 
-func GetProperty[T any](d *schema.ResourceData, property string) (T, bool) {
+func GetPropertyOrDefault[T any](d *schema.ResourceData, property string) (T, bool) {
 	value, ok := d.GetOk(property)
 	if !ok {
 		var defaultValue T
