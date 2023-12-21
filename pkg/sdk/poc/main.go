@@ -24,6 +24,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"application_roles_def.go": sdk.ApplicationRolesDef,
 	"views_def.go":             sdk.ViewsDef,
 	"stages_def.go":            sdk.StagesDef,
+	"functions_def.go":         sdk.FunctionsDef,
 	"procedures_def.go":        sdk.ProceduresDef,
 	"event_tables_def.go":      sdk.EventTablesDef,
 }
