@@ -148,6 +148,7 @@ const (
 	SchemaPrivilegeCreateSequence         SchemaPrivilege = "CREATE SEQUENCE"
 	SchemaPrivilegeCreateStage            SchemaPrivilege = "CREATE STAGE"
 	SchemaPrivilegeCreateStream           SchemaPrivilege = "CREATE STREAM"
+	SchemaPrivilegeCreateStreamlit        SchemaPrivilege = "CREATE STREAMLIT"
 	SchemaPrivilegeCreateTag              SchemaPrivilege = "CREATE TAG"
 	SchemaPrivilegeCreateTable            SchemaPrivilege = "CREATE TABLE"
 	SchemaPrivilegeCreateTask             SchemaPrivilege = "CREATE TASK"
