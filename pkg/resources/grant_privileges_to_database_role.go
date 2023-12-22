@@ -52,6 +52,17 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "If specified, allows the recipient role to grant the privileges to other roles.",
 	},
+	"always_apply": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "If true, the resource will always produce a “plan” and on “apply” it will re-grant defined privileges. It is supposed to be used only in “grant privileges on all X’s in database / schema Y” or “grant all privileges to X” scenarios to make sure that every new object in a given database / schema is granted by the account role and every new privilege is granted to the database role. Important note: this flag is not compliant with the Terraform assumptions of the config being eventually convergent (producing an empty plan).",
+		AtLeastOneOf: []string{
+			"all_privileges",
+			"on_schema.0.all_schemas_in_database",
+			"on_schema_object.0.all",
+		},
+	},
 	"on_database": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -437,112 +448,6 @@ func CreateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 	return ReadGrantPrivilegesToDatabaseRole(ctx, d, meta)
 }
 
-func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
-	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to parse internal identifier",
-			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
-		})
-	}
-
-	if id.AllPrivileges {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "Show with all_privileges option is skipped for now.", // TODO: Details
-			Detail:   "<TODO_LINK>",                                         // TODO: link to the design decisions doc
-		})
-	}
-
-	opts, grantedOn, diagnostics := prepareShowGrantsRequest(id)
-	if len(diagnostics) != 0 {
-		return append(diags, diagnostics...)
-	}
-
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-	grants, err := client.Grants.Show(ctx, opts)
-	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to retrieve grants",
-			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
-		})
-	}
-
-	var privileges []string
-
-	// TODO: Refactor - check if correct with new conventions
-	// TODO: Compare privileges
-	for _, grant := range grants {
-		// TODO: What about all_privileges, right now we cannot assure that the list of privileges is correct
-		// Only consider privileges that are already present in the ID so we
-		// don't delete privileges managed by other resources.
-		if !slices.Contains(id.Privileges, grant.Privilege) {
-			continue
-		}
-		// TODO: What about GranteeName with database roles is it fully qualified or not ? if yes, refactor GranteeName.
-		if id.WithGrantOption == grant.GrantOption && id.DatabaseRoleName.Name() == grant.GranteeName.Name() {
-			// future grants do not have grantedBy, only current grants do. If grantedby
-			// is an empty string it means the grant could not have been created by terraform
-			if opts.Future != nil && *opts.Future == true && grant.GrantedBy.Name() == "" {
-				continue
-			}
-			// grant_on is for future grants, granted_on is for current grants. They function the same way though in a test for matching the object type
-			if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
-				privileges = append(privileges, grant.Privilege)
-			}
-		}
-	}
-
-	if err := d.Set("privileges", privileges); err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Error setting privileges for database role",
-			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
-		})
-	}
-
-	return diags
-}
-
-func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
-	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to parse internal identifier",
-			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
-		})
-	}
-
-	err = client.Grants.RevokePrivilegesFromDatabaseRole(
-		ctx,
-		getDatabaseRolePrivileges(id.Kind, id.AllPrivileges, id.Privileges),
-		getDatabaseRoleGrantOn(&id, d),
-		id.DatabaseRoleName,
-		&sdk.RevokePrivilegesFromDatabaseRoleOptions{},
-	)
-	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "An error occurred when revoking privileges from database role",
-			Detail:   fmt.Sprintf("Id: %s\nError: %s", id.DatabaseRoleName, err.Error()),
-		})
-	}
-
-	d.SetId("")
-
-	return diags
-}
-
 func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -619,6 +524,116 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 	return ReadGrantPrivilegesToDatabaseRole(ctx, d, meta)
 }
 
+func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
+	if err != nil {
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to parse internal identifier",
+			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+		})
+	}
+
+	err = client.Grants.RevokePrivilegesFromDatabaseRole(
+		ctx,
+		getDatabaseRolePrivileges(id.Kind, id.AllPrivileges, id.Privileges),
+		getDatabaseRoleGrantOn(&id, d),
+		id.DatabaseRoleName,
+		&sdk.RevokePrivilegesFromDatabaseRoleOptions{},
+	)
+	if err != nil {
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "An error occurred when revoking privileges from database role",
+			Detail:   fmt.Sprintf("Id: %s\nError: %s", id.DatabaseRoleName, err.Error()),
+		})
+	}
+
+	d.SetId("")
+
+	return diags
+}
+
+func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
+	if err != nil {
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to parse internal identifier",
+			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+		})
+	}
+
+	if id.AllPrivileges {
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Show with all_privileges option is skipped for now.", // TODO: Details
+			Detail:   "<TODO_LINK>",                                         // TODO: link to the design decisions doc
+		})
+	}
+
+	opts, grantedOn, diagnostics := prepareShowGrantsRequest(id)
+	if len(diagnostics) != 0 {
+		return append(diags, diagnostics...)
+	}
+
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	grants, err := client.Grants.Show(ctx, opts)
+	if err != nil {
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to retrieve grants",
+			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+		})
+	}
+
+	var privileges []string
+
+	// TODO: Refactor - check if correct with new conventions
+	// TODO: Compare privileges
+	for _, grant := range grants {
+		// Accept only DATABASE ROLEs
+		if grant.GrantTo != sdk.ObjectTypeDatabaseRole && grant.GrantedTo != sdk.ObjectTypeDatabaseRole {
+			continue
+		}
+		// TODO: What about all_privileges, right now we cannot assure that the list of privileges is correct
+		// Only consider privileges that are already present in the ID so we
+		// don't delete privileges managed by other resources.
+		if !slices.Contains(id.Privileges, grant.Privilege) {
+			continue
+		}
+		// TODO: What about GranteeName with database roles is it fully qualified or not ? if yes, refactor GranteeName.
+		if id.WithGrantOption == grant.GrantOption && id.DatabaseRoleName.Name() == grant.GranteeName.Name() {
+			// future grants do not have grantedBy, only current grants do. If grantedby
+			// is an empty string it means the grant could not have been created by terraform
+			if (opts.Future == nil || *opts.Future == false) && grant.GrantedBy.Name() == "" {
+				continue
+			}
+			// grant_on is for future grants, granted_on is for current grants. They function the same way though in a test for matching the object type
+			if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
+				privileges = append(privileges, grant.Privilege)
+			}
+		}
+	}
+
+	if err := d.Set("privileges", privileges); err != nil {
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Error setting privileges for database role",
+			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+		})
+	}
+
+	return diags
+}
+
 func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGrantOptions, sdk.ObjectType, diag.Diagnostics) {
 	opts := new(sdk.ShowGrantOptions)
 	var grantedOn sdk.ObjectType
@@ -655,9 +670,10 @@ func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGran
 			})
 		case OnFutureSchemasInDatabaseSchemaGrantKind:
 			// TODO: show future on database (collisions with other on future triggers and over fetching is ok ?)
-			//opts.Future = sdk.Bool(true)
-			//opts.In = &sdk.ShowGrantsIn{
-			//}
+			opts.Future = sdk.Bool(true)
+			opts.In = &sdk.ShowGrantsIn{
+				Database: data.DatabaseName,
+			}
 		}
 	case OnSchemaObjectDatabaseRoleGrantKind:
 		data := id.Data.(*OnSchemaObjectGrantData)
@@ -789,16 +805,23 @@ func getDatabaseRoleGrantOn(id *GrantPrivilegesToDatabaseRoleId, d *schema.Resou
 		onSchemaObjectGrantData := new(OnSchemaObjectGrantData)
 		grantOnSchemaObject := new(sdk.GrantOnSchemaObject)
 
-		objectType, objectTypeOk := onSchemaObject["object_type"]
-		objectName, objectNameOk := onSchemaObject["object_name"]
-		all, allOk := onSchemaObject["all"]
-		future, futureOk := onSchemaObject["future"]
+		objectType := onSchemaObject["object_type"].(string)
+		objectTypeOk := len(objectType) > 0
+
+		objectName := onSchemaObject["object_name"].(string)
+		objectNameOk := len(objectName) > 0
+
+		all := onSchemaObject["all"].([]any)
+		allOk := len(all) > 0
+
+		future := onSchemaObject["future"].([]any)
+		futureOk := len(future) > 0
 
 		switch {
 		case objectTypeOk && objectNameOk:
 			object := &sdk.Object{
-				ObjectType: sdk.ObjectType(objectType.(string)), // TODO: Should we validate it or just cast it
-				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName.(string)),
+				ObjectType: sdk.ObjectType(objectType), // TODO: Should we validate it or just cast it
+				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName),
 			}
 
 			onSchemaObjectGrantData.Kind = OnObjectSchemaObjectGrantKind
@@ -806,10 +829,10 @@ func getDatabaseRoleGrantOn(id *GrantPrivilegesToDatabaseRoleId, d *schema.Resou
 			grantOnSchemaObject.SchemaObject = object
 		case allOk:
 			onSchemaObjectGrantData.Kind = OnAllSchemaObjectGrantKind
-			grantOnSchemaObject.All = getGrantOnSchemaObjectIn(onSchemaObjectGrantData, all.([]any)[0].(map[string]any))
+			grantOnSchemaObject.All = getGrantOnSchemaObjectIn(onSchemaObjectGrantData, all[0].(map[string]any))
 		case futureOk:
 			onSchemaObjectGrantData.Kind = OnFutureSchemaObjectGrantKind
-			grantOnSchemaObject.Future = getGrantOnSchemaObjectIn(onSchemaObjectGrantData, future.([]any)[0].(map[string]any))
+			grantOnSchemaObject.Future = getGrantOnSchemaObjectIn(onSchemaObjectGrantData, future[0].(map[string]any))
 		}
 
 		id.Data = onSchemaObjectGrantData
@@ -828,16 +851,16 @@ func getGrantOnSchemaObjectIn(onSchemaObjectGrantData *OnSchemaObjectGrantData, 
 		PluralObjectType: pluralObjectType,
 	}
 
-	if inDatabase, inDatabaseOk := m["in_database"]; inDatabaseOk {
-		databaseId := sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(inDatabase.(string)))
+	if inDatabase, ok := m["in_database"].(string); ok && len(inDatabase) > 0 {
+		databaseId := sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(inDatabase))
 
 		bulkOperationGrantData.Kind = InDatabaseBulkOperationGrantKind
 		bulkOperationGrantData.Database = databaseId
 		grantOnSchemaObjectIn.InDatabase = databaseId
 	}
 
-	if inSchema, inSchemaOk := m["in_schema"]; inSchemaOk {
-		schemaId := sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(inSchema.(string)))
+	if inSchema, ok := m["in_schema"].(string); ok && len(inSchema) > 0 {
+		schemaId := sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(inSchema))
 
 		bulkOperationGrantData.Kind = InSchemaBulkOperationGrantKind
 		bulkOperationGrantData.Schema = schemaId
