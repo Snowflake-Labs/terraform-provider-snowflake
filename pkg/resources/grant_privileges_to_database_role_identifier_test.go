@@ -15,7 +15,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 	}{
 		{
 			Name:       "grant database role on database",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase|"on-database-name"`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase|"on-database-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -27,8 +27,22 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			},
 		},
 		{
+			Name:       "grant database role on database - always apply with grant option",
+			Identifier: `"database-name"."database-role"|true|true|CREATE SCHEMA,USAGE,MONITOR|OnDatabase|"on-database-name"`,
+			Expected: GrantPrivilegesToDatabaseRoleId{
+				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
+				WithGrantOption:  true,
+				AlwaysApply:      true,
+				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
+				Kind:             OnDatabaseDatabaseRoleGrantKind,
+				Data: &OnDatabaseGrantData{
+					DatabaseName: sdk.NewAccountObjectIdentifier("on-database-name"),
+				},
+			},
+		},
+		{
 			Name:       "grant database role on database - all privileges",
-			Identifier: `"database-name"|false|ALL|OnDatabase|"on-database-name"`,
+			Identifier: `"database-name"."database-role"|false|false|ALL|OnDatabase|"on-database-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -42,7 +56,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on schema with schema name",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`, // TODO: OnSchema OnSchema x2
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`, // TODO: OnSchema OnSchema x2
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -56,7 +70,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on all schemas in database",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase|"database-name-123"`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -70,7 +84,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on future schemas in database",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnFutureSchemasInDatabase|"database-name-123"`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnFutureSchemasInDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -84,7 +98,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on schema object with on object option",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE|"database-name"."schema-name"."table-name"`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE|"database-name"."schema-name"."table-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -101,7 +115,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on schema object with on all option",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -117,7 +131,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on schema object with on all option in database",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase|"database-name-123"`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -135,7 +149,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on schema object with on all option in schema",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InSchema|"database-name"."schema-name"`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InSchema|"database-name"."schema-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -153,7 +167,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on schema object with on future option",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnFuture|TABLES`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnFuture|TABLES`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -169,7 +183,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on schema object with on all option in database",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnFuture|TABLES|InDatabase|"database-name-123"`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnFuture|TABLES|InDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -187,7 +201,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on schema object with on all option in schema",
-			Identifier: `"database-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnFuture|TABLES|InSchema|"database-name"."schema-name"`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnFuture|TABLES|InSchema|"database-name"."schema-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -205,47 +219,47 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "validation: grant database role not enough parts",
-			Identifier: `"database-name"."role-name"|false`,
-			Error:      "database role identifier should hold at least 4 parts",
+			Identifier: `"database-name"."role-name"|false|false`,
+			Error:      "database role identifier should hold at least 5 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnDatabase kind",
-			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase`,
-			Error:      "database role identifier should hold at least 4 parts",
+			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase`,
+			Error:      "database role identifier should hold at least 5 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnSchema kind",
-			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase`,
-			Error:      "database role identifier should hold at least 6 parts",
+			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase`,
+			Error:      "database role identifier should hold at least 7 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnSchemaObject kind",
-			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject`,
-			Error:      "database role identifier should hold at least 6 parts",
+			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject`,
+			Error:      "database role identifier should hold at least 7 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnSchemaObject kind",
-			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE`,
-			Error:      "database role identifier should hold 7 parts",
-		},
-		{
-			Name:       "validation: grant database role not enough parts for OnSchemaObject.InDatabase kind",
-			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase`,
+			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE`,
 			Error:      "database role identifier should hold 8 parts",
 		},
 		{
+			Name:       "validation: grant database role not enough parts for OnSchemaObject.InDatabase kind",
+			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase`,
+			Error:      "database role identifier should hold 9 parts",
+		},
+		{
 			Name:       "validation: grant database role invalid DatabaseRoleGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|some-kind|some-data`,
+			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|some-kind|some-data`,
 			Error:      "invalid DatabaseRoleGrantKind: some-kind",
 		},
 		{
 			Name:       "validation: grant database role invalid OnSchemaGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|some-kind|some-data`,
+			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|some-kind|some-data`,
 			Error:      "invalid OnSchemaGrantKind: some-kind",
 		},
 		{
 			Name:       "validation: grant database role invalid OnSchemaObjectGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|some-kind|some-data`,
+			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|some-kind|some-data`,
 			Error:      "invalid OnSchemaObjectGrantKind: some-kind",
 		},
 	}

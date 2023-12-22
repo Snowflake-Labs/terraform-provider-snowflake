@@ -92,7 +92,8 @@ func ConfigurationDirectory(directory string) func(config.TestStepConfigRequest)
 	}
 }
 
-// ConfigurationInnerDirectory is similar to ConfigurationSameAsStepN, but instead of indices (steps) it's named.
+// ConfigurationInnerDirectory is similar to ConfigurationSameAsStepN, but instead of index-based directories,
+// you can choose a particular one by name.
 func ConfigurationInnerDirectory(innerDirectory string) func(config.TestStepConfigRequest) string {
 	return func(req config.TestStepConfigRequest) string {
 		return filepath.Join("testdata", req.TestName, innerDirectory)

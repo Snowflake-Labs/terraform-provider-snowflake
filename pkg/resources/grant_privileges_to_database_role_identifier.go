@@ -39,6 +39,7 @@ const (
 type GrantPrivilegesToDatabaseRoleId struct {
 	DatabaseRoleName sdk.DatabaseObjectIdentifier
 	WithGrantOption  bool
+	AlwaysApply      bool
 	AllPrivileges    bool
 	Privileges       []string
 	Kind             DatabaseRoleGrantKind
@@ -49,6 +50,7 @@ func (g *GrantPrivilegesToDatabaseRoleId) String() string {
 	var parts []string
 	parts = append(parts, g.DatabaseRoleName.FullyQualifiedName())
 	parts = append(parts, strconv.FormatBool(g.WithGrantOption))
+	parts = append(parts, strconv.FormatBool(g.AlwaysApply))
 	if g.AllPrivileges {
 		parts = append(parts, "ALL")
 	} else {
@@ -129,13 +131,14 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 	var databaseRoleId GrantPrivilegesToDatabaseRoleId
 
 	parts := strings.Split(id, helpers.IDDelimiter)
-	if len(parts) < 5 {
-		return databaseRoleId, sdk.NewError(`database role identifier should hold at least 4 parts "<database_role_name>|<with_grant_option>|<privileges>|<grant_type>|<grant_data>"`)
+	if len(parts) < 6 {
+		return databaseRoleId, sdk.NewError(`database role identifier should hold at least 5 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>"`)
 	}
 
 	databaseRoleId.DatabaseRoleName = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[0])
 	databaseRoleId.WithGrantOption = parts[1] == "true"
-	privileges := strings.Split(parts[2], ",")
+	databaseRoleId.AlwaysApply = parts[2] == "true"
+	privileges := strings.Split(parts[3], ",")
 	if len(privileges) == 1 && privileges[0] == "ALL" {
 		databaseRoleId.AllPrivileges = true
 	} else {
@@ -144,59 +147,59 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 		}
 		databaseRoleId.Privileges = privileges
 	}
-	databaseRoleId.Kind = DatabaseRoleGrantKind(parts[3])
+	databaseRoleId.Kind = DatabaseRoleGrantKind(parts[4])
 
 	switch databaseRoleId.Kind {
 	case OnDatabaseDatabaseRoleGrantKind:
 		databaseRoleId.Data = &OnDatabaseGrantData{
-			DatabaseName: sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[4]),
+			DatabaseName: sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[5]),
 		}
 	case OnSchemaDatabaseRoleGrantKind:
-		if len(parts) < 6 {
-			return databaseRoleId, sdk.NewError(`database role identifier should hold at least 6 parts "<database_role_name>|<with_grant_option>|<privileges>|<grant_type>|<grant_on_schema_type>|<on_schema_grant_data>..."`)
+		if len(parts) < 7 {
+			return databaseRoleId, sdk.NewError(`database role identifier should hold at least 7 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_on_schema_type>|<on_schema_grant_data>..."`)
 		}
 		onSchemaGrantData := OnSchemaGrantData{
-			Kind: OnSchemaGrantKind(parts[4]),
+			Kind: OnSchemaGrantKind(parts[5]),
 		}
 		switch onSchemaGrantData.Kind {
 		case OnSchemaSchemaGrantKind:
-			onSchemaGrantData.SchemaName = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[5]))
+			onSchemaGrantData.SchemaName = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[6]))
 		case OnAllSchemasInDatabaseSchemaGrantKind, OnFutureSchemasInDatabaseSchemaGrantKind:
-			onSchemaGrantData.DatabaseName = sdk.Pointer(sdk.NewAccountObjectIdentifier(parts[5]))
+			onSchemaGrantData.DatabaseName = sdk.Pointer(sdk.NewAccountObjectIdentifier(parts[6]))
 		default:
 			return databaseRoleId, sdk.NewError(fmt.Sprintf("invalid OnSchemaGrantKind: %s", onSchemaGrantData.Kind))
 		}
 		databaseRoleId.Data = &onSchemaGrantData
 	case OnSchemaObjectDatabaseRoleGrantKind:
-		if len(parts) < 6 {
-			return databaseRoleId, sdk.NewError(`database role identifier should hold at least 6 parts "<database_role_name>|<with_grant_option>|<privileges>|<grant_type>|<grant_on_schema_object_type>|<on_schema_object_grant_data>..."`)
+		if len(parts) < 7 {
+			return databaseRoleId, sdk.NewError(`database role identifier should hold at least 7 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_on_schema_object_type>|<on_schema_object_grant_data>..."`)
 		}
 		onSchemaObjectGrantData := OnSchemaObjectGrantData{
-			Kind: OnSchemaObjectGrantKind(parts[4]),
+			Kind: OnSchemaObjectGrantKind(parts[5]),
 		}
 		switch onSchemaObjectGrantData.Kind {
 		case OnObjectSchemaObjectGrantKind:
-			if len(parts) != 7 {
-				return databaseRoleId, sdk.NewError(`database role identifier should hold 7 parts "<database_role_name>|<with_grant_option>|<privileges>|OnSchemaObject|OnObject|<object_type>|<object_name>"`)
+			if len(parts) != 8 {
+				return databaseRoleId, sdk.NewError(`database role identifier should hold 8 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnObject|<object_type>|<object_name>"`)
 			}
 			onSchemaObjectGrantData.Object = &sdk.Object{
-				ObjectType: sdk.ObjectType(parts[5]),
-				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(parts[6]),
+				ObjectType: sdk.ObjectType(parts[6]),
+				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(parts[7]),
 			}
 		case OnAllSchemaObjectGrantKind, OnFutureSchemaObjectGrantKind:
 			bulkOperationGrantData := &BulkOperationGrantData{
-				ObjectNamePlural: sdk.PluralObjectType(parts[5]),
+				ObjectNamePlural: sdk.PluralObjectType(parts[6]),
 			}
-			if len(parts) > 6 {
-				if len(parts) != 8 {
-					return databaseRoleId, sdk.NewError(`database role identifier should hold 8 parts "<database_role_name>|<with_grant_option>|<privileges>|OnSchemaObject|On[All or Future]|<object_type_plural>|In[Database or Schema]|<identifier>"`)
+			if len(parts) > 7 {
+				if len(parts) != 9 {
+					return databaseRoleId, sdk.NewError(`database role identifier should hold 9 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|On[All or Future]|<object_type_plural>|In[Database or Schema]|<identifier>"`)
 				}
-				bulkOperationGrantData.Kind = BulkOperationGrantKind(parts[6])
+				bulkOperationGrantData.Kind = BulkOperationGrantKind(parts[7])
 				switch bulkOperationGrantData.Kind {
 				case InDatabaseBulkOperationGrantKind:
-					bulkOperationGrantData.Database = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[7]))
+					bulkOperationGrantData.Database = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[8]))
 				case InSchemaBulkOperationGrantKind:
-					bulkOperationGrantData.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[7]))
+					bulkOperationGrantData.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[8]))
 				default:
 					return databaseRoleId, sdk.NewError(fmt.Sprintf("invalid BulkOperationGrantKind: %s", bulkOperationGrantData.Kind))
 				}

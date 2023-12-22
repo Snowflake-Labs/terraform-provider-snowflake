@@ -8,18 +8,14 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"regexp"
 	"testing"
 )
 
 // TODO Use cases to cover in acc tests
-// - basic - check create, read and destroy
-// 		- grant privileges on database
-// - update - check update of privileges
-// 		- privileges
-//		- privileges to all_privileges
-//		- all_privileges to privilege
 // - import - check import
 // 		- different paths to parse (on database, on schema, on schema object)
 
@@ -224,6 +220,38 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 	})
 }
 
+func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPrivilege(t *testing.T) {
+	name := "test_database_role_name"
+	tableName := "test_database_role_table_name"
+	configVariables := config.Variables{
+		"name":       config.StringVariable(name),
+		"table_name": config.StringVariable(tableName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectOwnership)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"with_grant_option": config.BoolVariable(false),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		Steps: []resource.TestStep{
+			{
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject"),
+				ConfigVariables: configVariables,
+				ExpectError:     regexp.MustCompile("Unsupported privilege 'OWNERSHIP'"),
+			},
+		},
+	})
+}
+
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *testing.T) {
 	name := "test_database_role_name"
 	configVariables := config.Variables{
@@ -391,15 +419,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 
 func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 	name := "test_database_role_name"
-	configVariables := config.Variables{
-		"name": config.StringVariable(name),
-		"privileges": config.ListVariable(
-			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
-			config.StringVariable(string(sdk.AccountObjectPrivilegeModify)),
-			config.StringVariable(string(sdk.AccountObjectPrivilegeUsage)),
-		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"with_grant_option": config.BoolVariable(true),
+	configVariables := func(alwaysApply bool) config.Variables {
+		return config.Variables{
+			"name":           config.StringVariable(name),
+			"all_privileges": config.BoolVariable(true),
+			"database":       config.StringVariable(acc.TestDatabaseName),
+			"always_apply":   config.BoolVariable(alwaysApply),
+		}
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
@@ -414,16 +440,61 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
 				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "privileges.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeCreateSchema)),
-					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeModify)),
-					resource.TestCheckResourceAttr(resourceName, "privileges.2", string(sdk.AccountObjectPrivilegeUsage)),
-					resource.TestCheckResourceAttr(resourceName, "on_database", sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "true"),
-				),
+				ConfigVariables: configVariables(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(resourceName, "always_apply", "false"),
+			},
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: configVariables(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(resourceName, "always_apply", "false"),
+			},
+			{
+				ConfigDirectory:    config.TestNameDirectory(),
+				ConfigVariables:    configVariables(true),
+				Check:              resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: configVariables(true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+				},
+				Check:              resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: configVariables(true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+				},
+				Check:              resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: configVariables(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(resourceName, "always_apply", "false"),
 			},
 		},
 	})
