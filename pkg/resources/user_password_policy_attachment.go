@@ -66,7 +66,7 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	d.Set("user_name", helpers.EncodeSnowflakeID(userName))
 	d.SetId(fmt.Sprintf(`%s|%s`, helpers.EncodeSnowflakeID(passwordPolicy), helpers.EncodeSnowflakeID(userName)))
 
-	return nil
+	return ReadUserPasswordPolicyAttachment(d, meta)
 }
 
 // TODO: I think this is not correct: this only reads if there is a certain password policy, not if a user has the password policy attached
