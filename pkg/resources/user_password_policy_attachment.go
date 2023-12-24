@@ -62,8 +62,9 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(passwordPolicy))
-	// TODO: set the passwordPolicy
+	d.Set("password_policy", helpers.EncodeSnowflakeID(passwordPolicy))
+	d.Set("user_name", helpers.EncodeSnowflakeID(userName))
+	d.SetId(fmt.Sprintf(`%s|%s`, helpers.EncodeSnowflakeID(passwordPolicy), helpers.EncodeSnowflakeID(userName)))
 
 	return nil
 }
