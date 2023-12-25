@@ -73,13 +73,8 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	return ReadUserPasswordPolicyAttachment(d, meta)
 }
 
-// TODO: I think this is not correct: this only reads if there is a certain password policy, not if a user has the password policy attached
+// TODO: the client does not incorporate an API to read the view POLICY REFERENCES yet. implement a PolicyReference in client, similar to the function getRowAccessPolicyFor in helpers_test.go
 func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
-	passwordPolicy := helpers.DecodeSnowflakeID(d.Id())
-	if err := d.Set("password_policy", passwordPolicy.FullyQualifiedName()); err != nil {
-		return err
-	}
-
 	return nil
 }
 
