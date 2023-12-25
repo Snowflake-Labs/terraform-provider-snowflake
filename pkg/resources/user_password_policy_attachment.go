@@ -61,8 +61,7 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-
-	if err := d.Set("password_policy", helpers.EncodeSnowflakeID(passwordPolicy)); err != nil {
+	if err := d.Set("password_policy", passwordPolicy.FullyQualifiedName()); err != nil {
 		return err
 	}
 	if err := d.Set("user_name", helpers.EncodeSnowflakeID(userName)); err != nil {
