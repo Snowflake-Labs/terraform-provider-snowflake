@@ -10,9 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// TODO: what happens if there is a conflict with account policies and user policies?
-
-// TODO: how to return a reference to a struct literal? If I prepend a & it throws an error
 var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 	"user_name": {
 		Type:        schema.TypeString,
@@ -38,10 +35,7 @@ func UserPasswordPolicyAttachment() *schema.Resource {
 
 		Schema: userPasswordPolicyAttachmentSchema,
 
-		// TODO: importer, look into it because I am not really sure what is happening here
-		// Importer: &schema.ResourceImporter{
-		// 	StateContext: schema.ImportStatePassthroughContext,
-		// },
+		// TODO: importer
 	}
 }
 
