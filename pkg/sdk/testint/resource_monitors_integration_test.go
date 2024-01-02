@@ -2,6 +2,7 @@ package testint
 
 import (
 	"testing"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -51,7 +52,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		require.NoError(t, err)
 		startTimeStamp := "IMMEDIATELY"
 		creditQuota := 100
-		endTimeStamp := "2024-01-01 12:34"
+		endTimeStamp := time.Now().Add(24 * 10 * time.Hour).Format("2006-01-02 15:04")
 
 		triggers := []sdk.TriggerDefinition{
 			{
