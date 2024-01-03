@@ -630,7 +630,7 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 	}
 
 	opts, grantedOn, diags := prepareShowGrantsRequest(id)
-	if diags != nil && len(diags) != 0 {
+	if len(diags) != 0 {
 		return diags
 	}
 
