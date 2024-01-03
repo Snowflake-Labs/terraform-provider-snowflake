@@ -400,8 +400,6 @@ func ImportGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 }
 
 func CreateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
@@ -416,11 +414,13 @@ func CreateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		},
 	)
 	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "An error occurred when granting privileges to database role",
-			Detail:   fmt.Sprintf("Id: %s\nError: %s", id.DatabaseRoleName, err.Error()),
-		})
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "An error occurred when granting privileges to database role",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", id.DatabaseRoleName, err.Error()),
+			},
+		}
 	}
 
 	d.SetId(id.String())
@@ -429,17 +429,17 @@ func CreateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 }
 
 func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
 	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to parse internal identifier",
-			Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
-		})
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to parse internal identifier",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+			},
+		}
 	}
 
 	if d.HasChange("privileges") {
@@ -478,11 +478,13 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 				new(sdk.GrantPrivilegesToDatabaseRoleOptions),
 			)
 			if err != nil {
-				return append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Failed to grant added privileges",
-					Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
-				})
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "Failed to grant added privileges",
+						Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
+					},
+				}
 			}
 		}
 
@@ -501,11 +503,13 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 				new(sdk.RevokePrivilegesFromDatabaseRoleOptions),
 			)
 			if err != nil {
-				return append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Failed to revoke removed privileges",
-					Detail:   fmt.Sprintf("Id: %s\nPrivileges to remove: %v\nError: %s", d.Id(), privilegesToRemove, err.Error()),
-				})
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "Failed to revoke removed privileges",
+						Detail:   fmt.Sprintf("Id: %s\nPrivileges to remove: %v\nError: %s", d.Id(), privilegesToRemove, err.Error()),
+					},
+				}
 			}
 		}
 
@@ -527,11 +531,13 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 			},
 		)
 		if err != nil {
-			return append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Always apply. An error occurred when granting privileges to database role",
-				Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", d.Id(), id.DatabaseRoleName, err.Error()),
-			})
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Always apply. An error occurred when granting privileges to database role",
+					Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", d.Id(), id.DatabaseRoleName, err.Error()),
+				},
+			}
 		}
 	}
 
@@ -541,17 +547,17 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 }
 
 func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
 	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to parse internal identifier",
-			Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
-		})
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to parse internal identifier",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+			},
+		}
 	}
 
 	err = client.Grants.RevokePrivilegesFromDatabaseRole(
@@ -562,62 +568,70 @@ func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		&sdk.RevokePrivilegesFromDatabaseRoleOptions{},
 	)
 	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "An error occurred when revoking privileges from database role",
-			Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", d.Id(), id.DatabaseRoleName, err.Error()),
-		})
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "An error occurred when revoking privileges from database role",
+				Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", d.Id(), id.DatabaseRoleName, err.Error()),
+			},
+		}
 	}
 
 	d.SetId("")
 
-	return diags
+	return nil
 }
 
 func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
 	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to parse internal identifier",
-			Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
-		})
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to parse internal identifier",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+			},
+		}
 	}
 
 	if id.AlwaysApply {
 		triggerId, err := uuid.GenerateUUID()
 		if err != nil {
-			return append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to generate UUID",
-				Detail:   fmt.Sprintf("Original error: %s", err.Error()),
-			})
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Failed to generate UUID",
+					Detail:   fmt.Sprintf("Original error: %s", err.Error()),
+				},
+			}
 		}
 
 		// Change the value of always_apply_trigger to produce a plan
 		if err := d.Set("always_apply_trigger", triggerId); err != nil {
-			return append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Error setting always_apply_trigger for database role",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
-			})
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Error setting always_apply_trigger for database role",
+					Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+				},
+			}
 		}
 	}
 
 	if id.AllPrivileges {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "Show with all_privileges option is skipped.",
-			// TODO: link to the design decisions doc
-			Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
-		})
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Show with all_privileges option is skipped.",
+				// TODO: link to the design decisions doc
+				Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
+			},
+		}
 	}
 
-	opts, grantedOn, diagnostics := prepareShowGrantsRequest(id)
-	if len(diagnostics) != 0 {
-		return append(diags, diagnostics...)
+	opts, grantedOn, diags := prepareShowGrantsRequest(id)
+	if diags != nil && len(diags) != 0 {
+		return diags
 	}
 
 	db := meta.(*sql.DB)
@@ -671,7 +685,6 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGrantOptions, sdk.ObjectType, diag.Diagnostics) {
 	opts := new(sdk.ShowGrantOptions)
 	var grantedOn sdk.ObjectType
-	var diags diag.Diagnostics
 
 	switch id.Kind {
 	case OnDatabaseDatabaseRoleGrantKind:
@@ -696,12 +709,14 @@ func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGran
 				},
 			}
 		case OnAllSchemasInDatabaseSchemaGrantKind:
-			return nil, "", append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Show with OnAllSchemasInDatabase option is skipped.",
-				// TODO: link to the design decisions doc
-				Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
-			})
+			return nil, "", diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Show with OnAllSchemasInDatabase option is skipped.",
+					// TODO: link to the design decisions doc
+					Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
+				},
+			}
 		case OnFutureSchemasInDatabaseSchemaGrantKind:
 			opts.Future = sdk.Bool(true)
 			opts.In = &sdk.ShowGrantsIn{
@@ -718,12 +733,14 @@ func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGran
 				Object: data.Object,
 			}
 		case OnAllSchemaObjectGrantKind:
-			return nil, "", append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Show with OnAll option is skipped.",
-				// TODO: link to the design decisions doc
-				Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
-			})
+			return nil, "", diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Show with OnAll option is skipped.",
+					// TODO: link to the design decisions doc
+					Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
+				},
+			}
 		case OnFutureSchemaObjectGrantKind:
 			grantedOn = data.OnAllOrFuture.ObjectNamePlural.Singular()
 			opts.Future = sdk.Bool(true)
@@ -741,7 +758,7 @@ func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGran
 		}
 	}
 
-	return opts, grantedOn, diags
+	return opts, grantedOn, nil
 }
 
 func getDatabaseRolePrivilegesFromSchema(d *schema.ResourceData) *sdk.DatabaseRoleGrantPrivileges {

@@ -57,7 +57,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on schema with schema name",
-			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`, // TODO: OnSchema OnSchema x2
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -292,11 +292,12 @@ func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
 				WithGrantOption:  true,
 				AllPrivileges:    true,
 				Kind:             OnDatabaseDatabaseRoleGrantKind,
+				AlwaysApply:      true,
 				Data: &OnDatabaseGrantData{
 					DatabaseName: sdk.NewAccountObjectIdentifier("database-name"),
 				},
 			},
-			Expected: `"database-name"."role-name"|true|ALL|OnDatabase|"database-name"`,
+			Expected: `"database-name"."role-name"|true|true|ALL|OnDatabase|"database-name"`,
 		},
 		{
 			Name: "grant database role on schema on schema",
@@ -310,12 +311,7 @@ func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
 					SchemaName: sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database-name", "schema-name")),
 				},
 			},
-			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`,
-			// TODO: Could be
-			// OnSchema|schema-name
-			// OnAllSchemasInDatabase|database-name
-			// OnFutureSchemasInDatabase|database-name
-			// instead of repeating OnSchema x2
+			Expected: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`,
 		},
 		{
 			Name: "grant database role on all schemas in database",
@@ -329,7 +325,7 @@ func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
 					DatabaseName: sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name")),
 				},
 			},
-			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase|"database-name"`,
+			Expected: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase|"database-name"`,
 		},
 		{
 			Name: "grant database role on future schemas in database",
@@ -343,7 +339,7 @@ func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
 					DatabaseName: sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name")),
 				},
 			},
-			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnFutureSchemasInDatabase|"database-name"`,
+			Expected: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnFutureSchemasInDatabase|"database-name"`,
 		},
 		{
 			Name: "grant database role on schema object on object",
@@ -360,23 +356,7 @@ func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
 					},
 				},
 			},
-			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE|"database-name"."schema-name"."table-name"`,
-		},
-		{
-			Name: "grant database role on schema object on all tables",
-			Identifier: GrantPrivilegesToDatabaseRoleId{
-				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "role-name"),
-				WithGrantOption:  false,
-				Privileges:       []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
-				Kind:             OnSchemaObjectDatabaseRoleGrantKind,
-				Data: &OnSchemaObjectGrantData{
-					Kind: OnAllSchemaObjectGrantKind,
-					OnAllOrFuture: &BulkOperationGrantData{
-						ObjectNamePlural: sdk.PluralObjectTypeTables,
-					},
-				},
-			},
-			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES`,
+			Expected: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE|"database-name"."schema-name"."table-name"`,
 		},
 		{
 			Name: "grant database role on schema object on all tables in database",
@@ -394,7 +374,7 @@ func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
 					},
 				},
 			},
-			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase|"database-name"`,
+			Expected: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase|"database-name"`,
 		},
 		{
 			Name: "grant database role on schema object on all tables in schema",
@@ -412,7 +392,7 @@ func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
 					},
 				},
 			},
-			Expected: `"database-name"."role-name"|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InSchema|"database-name"."schema-name"`,
+			Expected: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InSchema|"database-name"."schema-name"`,
 		},
 	}
 

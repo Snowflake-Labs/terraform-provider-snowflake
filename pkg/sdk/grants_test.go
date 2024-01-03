@@ -351,7 +351,7 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 	t.Run("validation: no privileges set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.privileges = &DatabaseRoleGrantPrivileges{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	})
 
 	t.Run("validation: too many privileges set", func(t *testing.T) {
@@ -360,7 +360,7 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 			DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
 			SchemaPrivileges:   []SchemaPrivilege{SchemaPrivilegeCreateAlert},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	})
 
 	t.Run("validation: no on set", func(t *testing.T) {
@@ -545,7 +545,7 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 	t.Run("validation: no privileges set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.privileges = &DatabaseRoleGrantPrivileges{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	})
 
 	t.Run("validation: too many privileges set", func(t *testing.T) {
@@ -554,7 +554,7 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 			DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
 			SchemaPrivileges:   []SchemaPrivilege{SchemaPrivilegeCreateAlert},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	})
 
 	t.Run("validation: nil on set", func(t *testing.T) {
