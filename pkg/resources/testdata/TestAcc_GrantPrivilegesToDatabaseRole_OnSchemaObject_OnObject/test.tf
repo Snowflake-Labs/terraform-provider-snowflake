@@ -10,10 +10,10 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_grant_privileges_to_database_role" "test" {
-  depends_on = [snowflake_table.test]
+  depends_on         = [snowflake_table.test]
   database_role_name = "\"${var.database}\".\"${var.name}\""
-  privileges = var.privileges
-  with_grant_option = var.with_grant_option
+  privileges         = var.privileges
+  with_grant_option  = var.with_grant_option
 
   on_schema_object {
     object_type = "TABLE"

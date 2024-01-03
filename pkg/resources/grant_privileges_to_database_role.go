@@ -4,14 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"slices"
-	"strings"
 )
 
 // TODO: Imported privileges (after second account will be added)
@@ -645,7 +646,7 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 		if id.WithGrantOption == grant.GrantOption && id.DatabaseRoleName.Name() == grant.GranteeName.Name() {
 			// Future grants do not have grantedBy, only current grants do.
 			// If grantedby is an empty string, it means terraform could not have created the grant
-			if (opts.Future == nil || *opts.Future == false) && grant.GrantedBy.Name() == "" {
+			if (opts.Future == nil || !*opts.Future) && grant.GrantedBy.Name() == "" {
 				continue
 			}
 			// grant_on is for future grants, granted_on is for current grants.

@@ -245,7 +245,7 @@ where:
 - grant_type - enum
 - grant_data - enum data
 
-It has varying number of parts, depending on <grant_type>. All the possible types are:
+It has varying number of parts, depending on grant_type. All the possible types are:
 
 ### OnDatabase
 `terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnDatabase|<database_name>"`
