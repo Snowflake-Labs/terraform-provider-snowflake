@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-// TODO: Add unit tests for marshaling / unmarshalling
-
 type DatabaseRoleGrantKind string
 
 const (
@@ -18,7 +16,6 @@ const (
 	OnSchemaObjectDatabaseRoleGrantKind DatabaseRoleGrantKind = "OnSchemaObject"
 )
 
-// TODO: Move to the shareable file between this and grant_priv_to_role.go file
 type OnSchemaGrantKind string
 
 const (
@@ -27,7 +24,6 @@ const (
 	OnFutureSchemasInDatabaseSchemaGrantKind OnSchemaGrantKind = "OnFutureSchemasInDatabase"
 )
 
-// TODO: Move to the shareable file between this and grant_priv_to_role.go file
 type OnSchemaObjectGrantKind string
 
 const (
@@ -126,7 +122,6 @@ type BulkOperationGrantData struct {
 	Schema           *sdk.DatabaseObjectIdentifier
 }
 
-// TODO: Describe how to put a right identifier in the documentation (so the users will be able to use it in the import)
 func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseRoleId, error) {
 	var databaseRoleId GrantPrivilegesToDatabaseRoleId
 
@@ -139,7 +134,7 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 	databaseRoleId.WithGrantOption = parts[1] == "true"
 	databaseRoleId.AlwaysApply = parts[2] == "true"
 	privileges := strings.Split(parts[3], ",")
-	if len(privileges) == 1 && privileges[0] == "ALL" {
+	if len(privileges) == 1 && (privileges[0] == "ALL" || privileges[0] == "ALL PRIVILEGES") {
 		databaseRoleId.AllPrivileges = true
 	} else {
 		if len(privileges) == 1 && privileges[0] == "" {

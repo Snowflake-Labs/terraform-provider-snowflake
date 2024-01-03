@@ -10,17 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
 	"slices"
 	"strings"
 )
 
-// TODO:
-//	- resolve todos
-// 	- remove logs
-// 	- make error messages consistent
-//	- write documentation (document on_all, always_apply etc.)
-//	- test import
+// TODO: Imported privileges (after second account will be added)
 
 var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 	"database_role_name": {
@@ -65,18 +59,11 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     false,
 		Description: "If true, the resource will always produce a “plan” and on “apply” it will re-grant defined privileges. It is supposed to be used only in “grant privileges on all X’s in database / schema Y” or “grant all privileges to X” scenarios to make sure that every new object in a given database / schema is granted by the account role and every new privilege is granted to the database role. Important note: this flag is not compliant with the Terraform assumptions of the config being eventually convergent (producing an empty plan).",
-		// TODO: conflicts with
-		//AtLeastOneOf: []string{
-		//	"all_privileges",
-		//	"on_schema.0.all_schemas_in_database",
-		//	"on_schema_object.0.all",
-		//},
 	},
 	"always_apply_trigger": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Default:  "",
-		// TODO: Fix desc
+		Type:        schema.TypeString,
+		Optional:    true,
+		Default:     "",
 		Description: "This field should not be set and its main purpose is to achieve the functionality described by always_apply field. This is value will be flipped to the opposite value on every terraform apply, thus creating a new plan that will re-apply grants.",
 	},
 	"on_database": {
@@ -176,8 +163,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 						"FUNCTION",
 						"PROCEDURE",
 						"SECRET",
-						"SEQUENCE",
-						"PIPE",
+						"SEQUENCE", "PIPE",
 						"MASKING POLICY",
 						"PASSWORD POLICY",
 						"ROW ACCESS POLICY",
@@ -333,7 +319,7 @@ func ImportGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return nil, err
 	}
-	if err := d.Set("database_role_name", id.DatabaseRoleName); err != nil {
+	if err := d.Set("database_role_name", id.DatabaseRoleName.FullyQualifiedName()); err != nil {
 		return nil, err
 	}
 	if err := d.Set("with_grant_option", id.WithGrantOption); err != nil {
@@ -356,7 +342,7 @@ func ImportGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		}
 	case OnSchemaDatabaseRoleGrantKind:
 		data := id.Data.(*OnSchemaGrantData)
-		var onSchema map[string]any
+		onSchema := make(map[string]any)
 
 		switch data.Kind {
 		case OnSchemaSchemaGrantKind:
@@ -372,16 +358,16 @@ func ImportGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		}
 	case OnSchemaObjectDatabaseRoleGrantKind:
 		data := id.Data.(*OnSchemaObjectGrantData)
-		var onSchemaObject map[string]any
+		onSchemaObject := make(map[string]any)
 
 		switch data.Kind {
 		case OnObjectSchemaObjectGrantKind:
 			onSchemaObject["object_type"] = data.Object.ObjectType.String()
 			onSchemaObject["object_name"] = data.Object.Name.FullyQualifiedName()
 		case OnAllSchemaObjectGrantKind:
-			var onAll map[string]any
+			onAll := make(map[string]any)
 
-			onAll["object_name_plural"] = data.OnAllOrFuture.ObjectNamePlural.String()
+			onAll["object_type_plural"] = data.OnAllOrFuture.ObjectNamePlural.String()
 			switch data.OnAllOrFuture.Kind {
 			case InDatabaseBulkOperationGrantKind:
 				onAll["in_database"] = data.OnAllOrFuture.Database.FullyQualifiedName()
@@ -391,9 +377,9 @@ func ImportGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 
 			onSchemaObject["all"] = []any{onAll}
 		case OnFutureSchemaObjectGrantKind:
-			var onFuture map[string]any
+			onFuture := make(map[string]any)
 
-			onFuture["object_name_plural"] = data.OnAllOrFuture.ObjectNamePlural.String()
+			onFuture["object_type_plural"] = data.OnAllOrFuture.ObjectNamePlural.String()
 			switch data.OnAllOrFuture.Kind {
 			case InDatabaseBulkOperationGrantKind:
 				onFuture["in_database"] = data.OnAllOrFuture.Database.FullyQualifiedName()
@@ -451,7 +437,7 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		return append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Failed to parse internal identifier",
-			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+			Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
 		})
 	}
 
@@ -474,7 +460,6 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 			}
 		}
 
-		log.Println("PRIVILEGES TO CHANGE:", privilegesToAdd, privilegesToRemove)
 		grantOn := getDatabaseRoleGrantOn(d)
 
 		if len(privilegesToAdd) > 0 {
@@ -495,7 +480,7 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 				return append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "Failed to grant added privileges",
-					Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+					Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
 				})
 			}
 		}
@@ -518,7 +503,7 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 				return append(diags, diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "Failed to revoke removed privileges",
-					Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+					Detail:   fmt.Sprintf("Id: %s\nPrivileges to remove: %v\nError: %s", d.Id(), privilegesToRemove, err.Error()),
 				})
 			}
 		}
@@ -526,14 +511,11 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		id.Privileges = privilegesAfterChange
 	}
 
-	log.Println("UPDATE always_apply has change:", d.HasChange("always_apply"))
 	if d.HasChange("always_apply") {
-		log.Println("UPDATE always_apply get:", d.Get("always_apply"))
 		id.AlwaysApply = d.Get("always_apply").(bool)
 	}
 
 	if id.AlwaysApply {
-		log.Println("UPDATE applying grants")
 		err := client.Grants.GrantPrivilegesToDatabaseRole(
 			ctx,
 			getDatabaseRolePrivilegesFromSchema(d),
@@ -546,8 +528,8 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		if err != nil {
 			return append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "An error occurred when granting privileges to database role",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", id.DatabaseRoleName, err.Error()),
+				Summary:  "Always apply. An error occurred when granting privileges to database role",
+				Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", d.Id(), id.DatabaseRoleName, err.Error()),
 			})
 		}
 	}
@@ -567,7 +549,7 @@ func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		return append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Failed to parse internal identifier",
-			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+			Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
 		})
 	}
 
@@ -582,7 +564,7 @@ func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		return append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "An error occurred when revoking privileges from database role",
-			Detail:   fmt.Sprintf("Id: %s\nError: %s", id.DatabaseRoleName, err.Error()),
+			Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", d.Id(), id.DatabaseRoleName, err.Error()),
 		})
 	}
 
@@ -592,7 +574,6 @@ func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 }
 
 func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	log.Println("READ BEGINS")
 	var diags diag.Diagnostics
 
 	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
@@ -600,20 +581,26 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 		return append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Failed to parse internal identifier",
-			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+			Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
 		})
 	}
 
-	log.Println("READ id.AlwaysApply:", id.AlwaysApply)
 	if id.AlwaysApply {
+		triggerId, err := uuid.GenerateUUID()
+		if err != nil {
+			return append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to generate UUID",
+				Detail:   fmt.Sprintf("Original error: %s", err.Error()),
+			})
+		}
+
 		// Change the value of always_apply_trigger to produce a plan
-		triggerId, _ := uuid.GenerateUUID() // TODO handle error
-		log.Printf("READ applying triggerId: %s, was: %s\n", triggerId, d.Get("always_apply_trigger"))
 		if err := d.Set("always_apply_trigger", triggerId); err != nil {
 			return append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Error setting always_apply_trigger for database role",
-				Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
 			})
 		}
 	}
@@ -621,8 +608,9 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 	if id.AllPrivileges {
 		return append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
-			Summary:  "Show with all_privileges option is skipped for now.", // TODO: Details
-			Detail:   "<TODO_LINK>",                                         // TODO: link to the design decisions doc
+			Summary:  "Show with all_privileges option is skipped.",
+			// TODO: link to the design decisions doc
+			Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
 		})
 	}
 
@@ -638,46 +626,41 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 		return append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Failed to retrieve grants",
-			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+			Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
 		})
 	}
 
 	var privileges []string
 
-	// TODO: Refactor - check if correct with new conventions
-	// TODO: Compare privileges
 	for _, grant := range grants {
-		log.Println("GRANT:", grant)
 		// Accept only DATABASE ROLEs
 		if grant.GrantTo != sdk.ObjectTypeDatabaseRole && grant.GrantedTo != sdk.ObjectTypeDatabaseRole {
 			continue
 		}
-		// TODO: What about all_privileges, right now we cannot assure that the list of privileges is correct
-		// Only consider privileges that are already present in the ID so we
+		// Only consider privileges that are already present in the ID, so we
 		// don't delete privileges managed by other resources.
 		if !slices.Contains(id.Privileges, grant.Privilege) {
 			continue
 		}
-		// TODO: What about GranteeName with database roles is it fully qualified or not ? if yes, refactor GranteeName.
 		if id.WithGrantOption == grant.GrantOption && id.DatabaseRoleName.Name() == grant.GranteeName.Name() {
-			// future grants do not have grantedBy, only current grants do. If grantedby
-			// is an empty string it means the grant could not have been created by terraform
+			// Future grants do not have grantedBy, only current grants do.
+			// If grantedby is an empty string, it means terraform could not have created the grant
 			if (opts.Future == nil || *opts.Future == false) && grant.GrantedBy.Name() == "" {
 				continue
 			}
-			// grant_on is for future grants, granted_on is for current grants. They function the same way though in a test for matching the object type
+			// grant_on is for future grants, granted_on is for current grants.
+			// They function the same way though in a test for matching the object type
 			if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
 				privileges = append(privileges, grant.Privilege)
 			}
 		}
 	}
 
-	log.Println("PRIVILEGES:", id.Privileges, expandStringList(d.Get("privileges").(*schema.Set).List()), privileges)
 	if err := d.Set("privileges", privileges); err != nil {
 		return append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Error setting privileges for database role",
-			Detail:   fmt.Sprintf("Id: %s\nErr: %s", d.Id(), err.Error()), // TODO: link to the documentation (?). It should describe how the identifier looks.
+			Detail:   fmt.Sprintf("Id: %s\nPrivileges: %v\nError: %s", d.Id(), privileges, err.Error()),
 		})
 	}
 
@@ -712,14 +695,13 @@ func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGran
 				},
 			}
 		case OnAllSchemasInDatabaseSchemaGrantKind:
-			// TODO: Document
 			return nil, "", append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
-				Summary:  "Skipping",
-				Detail:   "TODO",
+				Summary:  "Show with OnAllSchemasInDatabase option is skipped.",
+				// TODO: link to the design decisions doc
+				Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
 			})
 		case OnFutureSchemasInDatabaseSchemaGrantKind:
-			// TODO: show future on database (collisions with other on future triggers and over fetching is ok ?)
 			opts.Future = sdk.Bool(true)
 			opts.In = &sdk.ShowGrantsIn{
 				Database: data.DatabaseName,
@@ -735,11 +717,11 @@ func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGran
 				Object: data.Object,
 			}
 		case OnAllSchemaObjectGrantKind:
-			// TODO: Document
 			return nil, "", append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
-				Summary:  "Skipping",
-				Detail:   "TODO",
+				Summary:  "Show with OnAll option is skipped.",
+				// TODO: link to the design decisions doc
+				Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
 			})
 		case OnFutureSchemaObjectGrantKind:
 			grantedOn = data.OnAllOrFuture.ObjectNamePlural.Singular()
@@ -860,7 +842,7 @@ func getDatabaseRoleGrantOn(d *schema.ResourceData) *sdk.DatabaseRoleGrantOn {
 		switch {
 		case objectTypeOk && objectNameOk:
 			grantOnSchemaObject.SchemaObject = &sdk.Object{
-				ObjectType: sdk.ObjectType(objectType), // TODO: Should we validate it or just cast it
+				ObjectType: sdk.ObjectType(objectType),
 				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName),
 			}
 		case allOk:
