@@ -263,6 +263,31 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|some-kind|some-data`,
 			Error:      "invalid OnSchemaObjectGrantKind: some-kind",
 		},
+		{
+			Name:       "validation: grant database role empty privileges",
+			Identifier: `"database-name"."database-role"|false|false||OnDatabase|"on-database-name"`,
+			Error:      `invalid Privileges value: , should be either a comma seperated list of privileges or "ALL" / "ALL PRIVILEGES" for all privileges`,
+		},
+		{
+			Name:       "validation: grant database role empty with grant option",
+			Identifier: `"database-name"."database-role"||false|ALL PRIVILEGES|OnDatabase|"on-database-name"`,
+			Error:      `invalid WithGrantOption value: , should be either "true" or "false"`,
+		},
+		{
+			Name:       "validation: grant database role empty always apply",
+			Identifier: `"database-name"."database-role"|false||ALL PRIVILEGES|OnDatabase|"on-database-name"`,
+			Error:      `invalid AlwaysApply value: , should be either "true" or "false"`,
+		},
+		{
+			Name:       "validation: grant database role empty database role name",
+			Identifier: `|false|false|ALL PRIVILEGES|OnDatabase|"on-database-name"`,
+			Error:      "invalid DatabaseRoleName value: , should be a fully qualified name of database object <database_name>.<name>",
+		},
+		{
+			Name:       "validation: grant database role empty type",
+			Identifier: `"database-name"."database-role"|false|false|ALL PRIVILEGES||"on-database-name"`,
+			Error:      "invalid DatabaseRoleGrantKind: ",
+		},
 	}
 
 	for _, tt := range testCases {

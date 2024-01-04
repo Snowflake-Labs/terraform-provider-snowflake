@@ -131,16 +131,35 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 		return databaseRoleId, sdk.NewError(`database role identifier should hold at least 5 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>"`)
 	}
 
-	databaseRoleId.DatabaseRoleName = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[0])
+	databaseRoleNameParts := strings.Split(parts[0], ".")
+	if len(databaseRoleNameParts) == 0 ||
+		(len(databaseRoleNameParts) == 1 && databaseRoleNameParts[0] == "") ||
+		(len(databaseRoleNameParts) == 2 && databaseRoleNameParts[1] == "") ||
+		len(databaseRoleNameParts) > 2 {
+		return databaseRoleId, sdk.NewError(fmt.Sprintf(`invalid DatabaseRoleName value: %s, should be a fully qualified name of database object <database_name>.<name>`, parts[0]))
+	}
+	databaseRoleId.DatabaseRoleName = sdk.NewDatabaseObjectIdentifier(
+		strings.Trim(databaseRoleNameParts[0], `"`),
+		strings.Trim(databaseRoleNameParts[1], `"`),
+	)
+
+	if parts[1] != "false" && parts[1] != "true" {
+		return databaseRoleId, sdk.NewError(fmt.Sprintf(`invalid WithGrantOption value: %s, should be either "true" or "false"`, parts[1]))
+	}
 	databaseRoleId.WithGrantOption = parts[1] == "true"
+
+	if parts[2] != "false" && parts[2] != "true" {
+		return databaseRoleId, sdk.NewError(fmt.Sprintf(`invalid AlwaysApply value: %s, should be either "true" or "false"`, parts[2]))
+	}
 	databaseRoleId.AlwaysApply = parts[2] == "true"
+
 	privileges := strings.Split(parts[3], ",")
+	if len(privileges) == 0 || (len(privileges) == 1 && privileges[0] == "") {
+		return databaseRoleId, sdk.NewError(fmt.Sprintf(`invalid Privileges value: %s, should be either a comma seperated list of privileges or "ALL" / "ALL PRIVILEGES" for all privileges`, parts[3]))
+	}
 	if len(privileges) == 1 && (privileges[0] == "ALL" || privileges[0] == "ALL PRIVILEGES") {
 		databaseRoleId.AllPrivileges = true
 	} else {
-		if len(privileges) == 1 && privileges[0] == "" {
-			privileges = []string{}
-		}
 		databaseRoleId.Privileges = privileges
 	}
 	databaseRoleId.Kind = DatabaseRoleGrantKind(parts[4])

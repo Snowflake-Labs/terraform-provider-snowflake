@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO: Imported privileges (after second account will be added)
+// TODO: Handle IMPORTED PRIVILEGES privilege (after second account will be added - SNOW-976501)
 
 var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 	"database_role_name": {
@@ -71,7 +71,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "The fully qualified name of the database on which privileges will be granted. If the identifier is not fully qualified (in the form of <db_name>.≤database_role_name>), the command looks for the database role in the current database for the session. All privileges are limited to the database that contains the database role, as well as other objects in the same database.",
+		Description:      "The fully qualified name of the database on which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		ExactlyOneOf: []string{
 			"on_database",
@@ -157,29 +157,30 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.future",
 					},
 					ValidateFunc: validation.StringInSlice([]string{
-						"ALERT",
-						"DYNAMIC TABLE",
-						"EVENT TABLE",
-						"FILE FORMAT",
-						"FUNCTION",
-						"PROCEDURE",
-						"SECRET",
-						"SEQUENCE", "PIPE",
-						"MASKING POLICY",
-						"PASSWORD POLICY",
-						"ROW ACCESS POLICY",
-						"SESSION POLICY",
-						"TAG",
-						"STAGE",
-						"STREAM",
-						"TABLE",
-						"EXTERNAL TABLE",
-						"TASK",
-						"VIEW",
-						"MATERIALIZED VIEW",
-						"NETWORK RULE",
-						"PACKAGES POLICY",
-						"ICEBERG TABLE",
+						sdk.ObjectTypeAlert.String(),
+						sdk.ObjectTypeDynamicTable.String(),
+						sdk.ObjectTypeEventTable.String(),
+						sdk.ObjectTypeFileFormat.String(),
+						sdk.ObjectTypeFunction.String(),
+						sdk.ObjectTypeProcedure.String(),
+						sdk.ObjectTypeSecret.String(),
+						sdk.ObjectTypeSequence.String(),
+						sdk.ObjectTypePipe.String(),
+						sdk.ObjectTypeMaskingPolicy.String(),
+						sdk.ObjectTypePasswordPolicy.String(),
+						sdk.ObjectTypeRowAccessPolicy.String(),
+						sdk.ObjectTypeSessionPolicy.String(),
+						sdk.ObjectTypeTag.String(),
+						sdk.ObjectTypeStage.String(),
+						sdk.ObjectTypeStream.String(),
+						sdk.ObjectTypeTable.String(),
+						sdk.ObjectTypeExternalTable.String(),
+						sdk.ObjectTypeTask.String(),
+						sdk.ObjectTypeView.String(),
+						sdk.ObjectTypeMaterializedView.String(),
+						sdk.ObjectTypeNetworkRule.String(),
+						sdk.ObjectTypePackagesPolicy.String(),
+						sdk.ObjectTypeIcebergTable.String(),
 					}, true),
 				},
 				"object_name": {
@@ -245,30 +246,30 @@ var grantPrivilegesOnDatabaseRoleBulkOperationSchema = map[string]*schema.Schema
 		ForceNew:    true,
 		Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS | NETWORK RULES | PACKAGES POLICIES | ICEBERG TABLES",
 		ValidateFunc: validation.StringInSlice([]string{
-			"ALERTS",
-			"DYNAMIC TABLES",
-			"EVENT TABLES",
-			"FILE FORMATS",
-			"FUNCTIONS",
-			"PROCEDURES",
-			"SECRETS",
-			"SEQUENCES",
-			"PIPES",
-			"MASKING POLICIES",
-			"PASSWORD POLICIES",
-			"ROW ACCESS POLICIES",
-			"SESSION POLICIES",
-			"TAGS",
-			"STAGES",
-			"STREAMS",
-			"TABLES",
-			"EXTERNAL TABLES",
-			"TASKS",
-			"VIEWS",
-			"MATERIALIZED VIEWS",
-			"NETWORK RULES",
-			"PACKAGES POLICIES",
-			"ICEBERG TABLES",
+			sdk.PluralObjectTypeAlerts.String(),
+			sdk.PluralObjectTypeDynamicTables.String(),
+			sdk.PluralObjectTypeEventTables.String(),
+			sdk.PluralObjectTypeFileFormats.String(),
+			sdk.PluralObjectTypeFunctions.String(),
+			sdk.PluralObjectTypeProcedures.String(),
+			sdk.PluralObjectTypeSecrets.String(),
+			sdk.PluralObjectTypeSequences.String(),
+			sdk.PluralObjectTypePipes.String(),
+			sdk.PluralObjectTypeMaskingPolicies.String(),
+			sdk.PluralObjectTypePasswordPolicies.String(),
+			sdk.PluralObjectTypeRowAccessPolicies.String(),
+			sdk.PluralObjectTypeSessionPolicies.String(),
+			sdk.PluralObjectTypeTags.String(),
+			sdk.PluralObjectTypeStages.String(),
+			sdk.PluralObjectTypeStreams.String(),
+			sdk.PluralObjectTypeTables.String(),
+			sdk.PluralObjectTypeExternalTables.String(),
+			sdk.PluralObjectTypeTasks.String(),
+			sdk.PluralObjectTypeViews.String(),
+			sdk.PluralObjectTypeMaterializedViews.String(),
+			sdk.PluralObjectTypeNetworkRules.String(),
+			sdk.PluralObjectTypePackagesPolicies.String(),
+			sdk.PluralObjectTypeIcebergTables.String(),
 		}, true),
 	},
 	"in_database": {
@@ -292,7 +293,7 @@ func isNotOwnershipGrant() func(value any, path cty.Path) diag.Diagnostics {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unsupported privilege 'OWNERSHIP'",
-				// TODO: Change when a new resource for granting ownership will be available
+				// TODO: Change when a new resource for granting ownership will be available (SNOW-991423)
 				Detail:        "Granting ownership is only allowed in dedicated resources (snowflake_user_ownership_grant, snowflake_role_ownership_grant)",
 				AttributePath: nil,
 			})
@@ -418,7 +419,7 @@ func CreateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "An error occurred when granting privileges to database role",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", id.DatabaseRoleName, err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", id.String(), id.DatabaseRoleName, err.Error()),
 			},
 		}
 	}
@@ -443,82 +444,141 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 	}
 
 	if d.HasChange("all_privileges") {
-		_, now := d.GetChange("all_privileges")
-		id.AllPrivileges = now.(bool)
-	}
+		_, allPrivileges := d.GetChange("all_privileges")
 
-	if d.HasChange("privileges") {
-		before, after := d.GetChange("privileges")
-		privilegesBeforeChange := expandStringList(before.(*schema.Set).List())
-		privilegesAfterChange := expandStringList(after.(*schema.Set).List())
-
-		var privilegesToAdd, privilegesToRemove []string
-
-		for _, privilegeBeforeChange := range privilegesBeforeChange {
-			if !slices.Contains(privilegesAfterChange, privilegeBeforeChange) {
-				privilegesToRemove = append(privilegesToRemove, privilegeBeforeChange)
-			}
-		}
-
-		for _, privilegeAfterChange := range privilegesAfterChange {
-			if !slices.Contains(privilegesBeforeChange, privilegeAfterChange) {
-				privilegesToAdd = append(privilegesToAdd, privilegeAfterChange)
-			}
-		}
-
-		grantOn := getDatabaseRoleGrantOn(d)
-
-		if len(privilegesToAdd) > 0 {
-			err = client.Grants.GrantPrivilegesToDatabaseRole(
-				ctx,
-				getDatabaseRolePrivileges(
-					false,
-					privilegesToAdd,
-					id.Kind == OnDatabaseDatabaseRoleGrantKind,
-					id.Kind == OnSchemaDatabaseRoleGrantKind,
-					id.Kind == OnSchemaObjectDatabaseRoleGrantKind,
-				),
-				grantOn,
-				id.DatabaseRoleName,
-				new(sdk.GrantPrivilegesToDatabaseRoleOptions),
-			)
-			if err != nil {
-				return diag.Diagnostics{
-					diag.Diagnostic{
-						Severity: diag.Error,
-						Summary:  "Failed to grant added privileges",
-						Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
-					},
-				}
-			}
-		}
-
-		if len(privilegesToRemove) > 0 {
-			err = client.Grants.RevokePrivilegesFromDatabaseRole(
-				ctx,
-				getDatabaseRolePrivileges(
-					false,
-					privilegesToRemove,
-					id.Kind == OnDatabaseDatabaseRoleGrantKind,
-					id.Kind == OnSchemaDatabaseRoleGrantKind,
-					id.Kind == OnSchemaObjectDatabaseRoleGrantKind,
-				),
-				grantOn,
+		if !allPrivileges.(bool) {
+			err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, &sdk.DatabaseRoleGrantPrivileges{
+				AllPrivileges: sdk.Bool(true),
+			},
+				getDatabaseRoleGrantOn(d),
 				id.DatabaseRoleName,
 				new(sdk.RevokePrivilegesFromDatabaseRoleOptions),
 			)
+
 			if err != nil {
 				return diag.Diagnostics{
 					diag.Diagnostic{
 						Severity: diag.Error,
-						Summary:  "Failed to revoke removed privileges",
-						Detail:   fmt.Sprintf("Id: %s\nPrivileges to remove: %v\nError: %s", d.Id(), privilegesToRemove, err.Error()),
+						Summary:  "Failed to revoke all privileges",
+						Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
 					},
 				}
 			}
 		}
 
-		id.Privileges = privilegesAfterChange
+		id.AllPrivileges = allPrivileges.(bool)
+	}
+
+	if d.HasChange("privileges") {
+		shouldGrantAndRevoke := true
+
+		// Skip if all_privileges was set to true
+		if d.HasChange("all_privileges") {
+			if _, allPrivileges := d.GetChange("all_privileges"); allPrivileges.(bool) {
+				shouldGrantAndRevoke = false
+				//id.Privileges = []string{}
+			}
+		}
+
+		if shouldGrantAndRevoke {
+			before, after := d.GetChange("privileges")
+			privilegesBeforeChange := expandStringList(before.(*schema.Set).List())
+			privilegesAfterChange := expandStringList(after.(*schema.Set).List())
+
+			var privilegesToAdd, privilegesToRemove []string
+
+			for _, privilegeBeforeChange := range privilegesBeforeChange {
+				if !slices.Contains(privilegesAfterChange, privilegeBeforeChange) {
+					privilegesToRemove = append(privilegesToRemove, privilegeBeforeChange)
+				}
+			}
+
+			for _, privilegeAfterChange := range privilegesAfterChange {
+				if !slices.Contains(privilegesBeforeChange, privilegeAfterChange) {
+					privilegesToAdd = append(privilegesToAdd, privilegeAfterChange)
+				}
+			}
+
+			grantOn := getDatabaseRoleGrantOn(d)
+
+			if len(privilegesToAdd) > 0 {
+				err = client.Grants.GrantPrivilegesToDatabaseRole(
+					ctx,
+					getDatabaseRolePrivileges(
+						false,
+						privilegesToAdd,
+						id.Kind == OnDatabaseDatabaseRoleGrantKind,
+						id.Kind == OnSchemaDatabaseRoleGrantKind,
+						id.Kind == OnSchemaObjectDatabaseRoleGrantKind,
+					),
+					grantOn,
+					id.DatabaseRoleName,
+					new(sdk.GrantPrivilegesToDatabaseRoleOptions),
+				)
+				if err != nil {
+					return diag.Diagnostics{
+						diag.Diagnostic{
+							Severity: diag.Error,
+							Summary:  "Failed to grant added privileges",
+							Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
+						},
+					}
+				}
+			}
+
+			if len(privilegesToRemove) > 0 {
+				err = client.Grants.RevokePrivilegesFromDatabaseRole(
+					ctx,
+					getDatabaseRolePrivileges(
+						false,
+						privilegesToRemove,
+						id.Kind == OnDatabaseDatabaseRoleGrantKind,
+						id.Kind == OnSchemaDatabaseRoleGrantKind,
+						id.Kind == OnSchemaObjectDatabaseRoleGrantKind,
+					),
+					grantOn,
+					id.DatabaseRoleName,
+					new(sdk.RevokePrivilegesFromDatabaseRoleOptions),
+				)
+				if err != nil {
+					return diag.Diagnostics{
+						diag.Diagnostic{
+							Severity: diag.Error,
+							Summary:  "Failed to revoke removed privileges",
+							Detail:   fmt.Sprintf("Id: %s\nPrivileges to remove: %v\nError: %s", d.Id(), privilegesToRemove, err.Error()),
+						},
+					}
+				}
+			}
+
+			id.Privileges = privilegesAfterChange
+		}
+	}
+
+	if d.HasChange("all_privileges") {
+		_, allPrivileges := d.GetChange("all_privileges")
+
+		if allPrivileges.(bool) {
+			err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, &sdk.DatabaseRoleGrantPrivileges{
+				AllPrivileges: sdk.Bool(true),
+			},
+				getDatabaseRoleGrantOn(d),
+				id.DatabaseRoleName,
+				new(sdk.GrantPrivilegesToDatabaseRoleOptions),
+			)
+
+			if err != nil {
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "Failed to grant all privileges",
+						Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+					},
+				}
+			}
+		}
+
+		id.AllPrivileges = allPrivileges.(bool)
 	}
 
 	if d.HasChange("always_apply") {
@@ -628,7 +688,7 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 			diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "Show with all_privileges option is skipped.",
-				// TODO: link to the design decisions doc
+				// TODO: link to the design decisions doc (SNOW-990811)
 				Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
 			},
 		}
@@ -718,7 +778,7 @@ func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGran
 				diag.Diagnostic{
 					Severity: diag.Warning,
 					Summary:  "Show with OnAllSchemasInDatabase option is skipped.",
-					// TODO: link to the design decisions doc
+					// TODO: link to the design decisions doc (SNOW-990811)
 					Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
 				},
 			}
@@ -742,7 +802,7 @@ func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGran
 				diag.Diagnostic{
 					Severity: diag.Warning,
 					Summary:  "Show with OnAll option is skipped.",
-					// TODO: link to the design decisions doc
+					// TODO: link to the design decisions doc (SNOW-990811)
 					Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
 				},
 			}
