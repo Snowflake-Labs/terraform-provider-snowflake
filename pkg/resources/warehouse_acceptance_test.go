@@ -1,14 +1,18 @@
 package resources_test
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Warehouse(t *testing.T) {
@@ -31,6 +35,7 @@ func TestAcc_Warehouse(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttrSet("snowflake_warehouse.w", "warehouse_size"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "8"),
 				),
 			},
 			// RENAME
@@ -45,14 +50,45 @@ func TestAcc_Warehouse(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: wConfig2(prefix2, "X-LARGE"),
+				Config: wConfig2(prefix2, "X-LARGE", 20),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
 					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "XLARGE"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "20"),
 				),
 			},
+			// CHANGE JUST max_concurrency_level
+			{
+				Config: wConfig2(prefix2, "XLARGE", 16),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "XLARGE"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "16"),
+				),
+			},
+			// CHANGE max_concurrency_level EXTERNALLY proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318
+			{
+				PreConfig: func() { alterWarehouseMaxConcurrencyLevelExternally(t, prefix2, 10) },
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Config: wConfig2(prefix2, "XLARGE", 16),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", prefix2),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "test comment 2"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "60"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", "XLARGE"),
+					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "16"),
+				),
+			},
+
 			// IMPORT
 			{
 				ResourceName:      "snowflake_warehouse.w",
@@ -112,7 +148,7 @@ resource "snowflake_warehouse" "w" {
 	return fmt.Sprintf(s, prefix)
 }
 
-func wConfig2(prefix string, size string) string {
+func wConfig2(prefix string, size string, maxConcurrencyLevel int) string {
 	s := `
 resource "snowflake_warehouse" "w" {
 	name           = "%s"
@@ -126,9 +162,10 @@ resource "snowflake_warehouse" "w" {
 	auto_resume           = true
 	initially_suspended   = true
 	wait_for_provisioning = false
+	max_concurrency_level = %d
 }
 `
-	return fmt.Sprintf(s, prefix, size)
+	return fmt.Sprintf(s, prefix, size, maxConcurrencyLevel)
 }
 
 func wConfigPattern(prefix string) string {
@@ -141,4 +178,15 @@ resource "snowflake_warehouse" "w2" {
 }
 `
 	return fmt.Sprintf(s, prefix, prefix)
+}
+
+func alterWarehouseMaxConcurrencyLevelExternally(t *testing.T, warehouseId string, level int) {
+	t.Helper()
+
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
+	ctx := context.Background()
+
+	err = client.Warehouses.Alter(ctx, sdk.NewAccountObjectIdentifier(warehouseId), &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{MaxConcurrencyLevel: sdk.Int(level)}})
+	require.NoError(t, err)
 }
