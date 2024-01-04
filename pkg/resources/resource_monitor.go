@@ -319,19 +319,6 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 	opts := sdk.AlterResourceMonitorOptions{}
 
-	if d.HasChange("notify_users") {
-		runSetStatement = true
-
-		userNames := expandStringList(d.Get("notify_users").(*schema.Set).List())
-		users := []sdk.NotifiedUser{}
-		for _, name := range userNames {
-			users = append(users, sdk.NotifiedUser{Name: name})
-		}
-		opts.NotifyUsers = &sdk.NotifyUsers{
-			Users: users,
-		}
-	}
-
 	set := sdk.ResourceMonitorSet{}
 	if d.HasChange("credit_quota") {
 		runSetStatement = true
@@ -351,6 +338,19 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("end_timestamp") {
 		runSetStatement = true
 		set.EndTimestamp = sdk.Pointer(d.Get("end_timestamp").(string))
+	}
+
+	if d.HasChange("notify_users") {
+		runSetStatement = true
+
+		userNames := expandStringList(d.Get("notify_users").(*schema.Set).List())
+		users := []sdk.NotifiedUser{}
+		for _, name := range userNames {
+			users = append(users, sdk.NotifiedUser{Name: name})
+		}
+		set.NotifyUsers = &sdk.NotifyUsers{
+			Users: users,
+		}
 	}
 
 	if set != (sdk.ResourceMonitorSet{}) {
