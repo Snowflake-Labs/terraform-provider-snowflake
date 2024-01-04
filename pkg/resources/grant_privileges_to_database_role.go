@@ -442,6 +442,11 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	if d.HasChange("all_privileges") {
+		_, now := d.GetChange("all_privileges")
+		id.AllPrivileges = now.(bool)
+	}
+
 	if d.HasChange("privileges") {
 		before, after := d.GetChange("privileges")
 		privilegesBeforeChange := expandStringList(before.(*schema.Set).List())
