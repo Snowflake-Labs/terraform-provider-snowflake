@@ -317,7 +317,7 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	var runSetStatement bool
 
-	opts := sdk.AlterResourceMonitorOptions{Set: &sdk.ResourceMonitorSet{}}
+	opts := sdk.AlterResourceMonitorOptions{}
 
 	if d.HasChange("notify_users") {
 		runSetStatement = true
@@ -332,9 +332,10 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	set := sdk.ResourceMonitorSet{}
 	if d.HasChange("credit_quota") {
 		runSetStatement = true
-		opts.Set.CreditQuota = sdk.Pointer(d.Get("credit_quota").(int))
+		set.CreditQuota = sdk.Pointer(d.Get("credit_quota").(int))
 	}
 
 	if d.HasChange("frequency") || d.HasChange("start_timestamp") {
@@ -343,13 +344,17 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		opts.Set.Frequency = frequency
-		opts.Set.StartTimestamp = sdk.Pointer(d.Get("start_timestamp").(string))
+		set.Frequency = frequency
+		set.StartTimestamp = sdk.Pointer(d.Get("start_timestamp").(string))
 	}
 
 	if d.HasChange("end_timestamp") {
 		runSetStatement = true
-		opts.Set.EndTimestamp = sdk.Pointer(d.Get("end_timestamp").(string))
+		set.EndTimestamp = sdk.Pointer(d.Get("end_timestamp").(string))
+	}
+
+	if set != (sdk.ResourceMonitorSet{}) {
+		opts.Set = &set
 	}
 
 	// If ANY of the triggers changed, we collect all triggers and set them
