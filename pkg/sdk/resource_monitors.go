@@ -288,7 +288,6 @@ type AlterResourceMonitorOptions struct {
 	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	Set             *ResourceMonitorSet     `ddl:"keyword" sql:"SET"`
-	NotifyUsers     *NotifyUsers            `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
 	Triggers        []TriggerDefinition     `ddl:"keyword,no_comma" sql:"TRIGGERS"`
 }
 
@@ -300,11 +299,14 @@ func (opts *AlterResourceMonitorOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if everyValueNil(opts.Set, opts.NotifyUsers, opts.Triggers) {
-		errs = append(errs, errAtLeastOneOf("AlterResourceMonitorOptions", "Set", "NotifyUsers", "Triggers"))
+	if everyValueNil(opts.Set, opts.Triggers) {
+		errs = append(errs, errAtLeastOneOf("AlterResourceMonitorOptions", "Set", "Triggers"))
 	}
-	if valueSet(opts.Set) {
-		if (opts.Set.Frequency != nil && opts.Set.StartTimestamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimestamp != nil) {
+	if set := opts.Set; valueSet(set) {
+		if everyValueNil(set.CreditQuota, set.Frequency, set.StartTimestamp, set.EndTimestamp, set.NotifyUsers) {
+			errs = append(errs, errAtLeastOneOf("ResourceMonitorSet", "CreditQuota", "Frequency", "StartTimestamp", "EndTimestamp", "NotifyUsers"))
+		}
+		if (set.Frequency != nil && set.StartTimestamp == nil) || (set.Frequency == nil && set.StartTimestamp != nil) {
 			errs = append(errs, errors.New("must specify frequency and start time together"))
 		}
 	}
@@ -330,10 +332,11 @@ func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier
 
 type ResourceMonitorSet struct {
 	// at least one
-	CreditQuota    *int       `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
-	Frequency      *Frequency `ddl:"parameter,equals" sql:"FREQUENCY"`
-	StartTimestamp *string    `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
-	EndTimestamp   *string    `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
+	CreditQuota    *int         `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
+	Frequency      *Frequency   `ddl:"parameter,equals" sql:"FREQUENCY"`
+	StartTimestamp *string      `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
+	EndTimestamp   *string      `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
+	NotifyUsers    *NotifyUsers `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
 }
 
 // dropResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-resource-monitor.
