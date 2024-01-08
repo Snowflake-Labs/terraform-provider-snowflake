@@ -125,6 +125,11 @@ func (v *ParameterTransformer) Parentheses() *ParameterTransformer {
 	return v
 }
 
+func (v *ParameterTransformer) MustParentheses() *ParameterTransformer {
+	v.parentheses = "must_parentheses"
+	return v
+}
+
 func (v *ParameterTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "parameter")
 	if v.required {

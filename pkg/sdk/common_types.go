@@ -198,3 +198,14 @@ type Secret struct {
 	VariableName string `ddl:"keyword,single_quotes"`
 	Name         string `ddl:"parameter,no_quotes"`
 }
+
+type Distribution string
+
+var (
+	DistributionInternal Distribution = "INTERNAL"
+	DistributionExternal Distribution = "EXTERNAL"
+)
+
+func DistributionPointer(v Distribution) *Distribution {
+	return &v
+}

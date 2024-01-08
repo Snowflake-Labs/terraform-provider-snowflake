@@ -16,17 +16,18 @@ import (
 )
 
 var definitionMapping = map[string]*generator.Interface{
-	"database_role_def.go":     example.DatabaseRole,
-	"network_policies_def.go":  sdk.NetworkPoliciesDef,
-	"session_policies_def.go":  sdk.SessionPoliciesDef,
-	"tasks_def.go":             sdk.TasksDef,
-	"streams_def.go":           sdk.StreamsDef,
-	"application_roles_def.go": sdk.ApplicationRolesDef,
-	"views_def.go":             sdk.ViewsDef,
-	"stages_def.go":            sdk.StagesDef,
-	"functions_def.go":         sdk.FunctionsDef,
-	"procedures_def.go":        sdk.ProceduresDef,
-	"event_tables_def.go":      sdk.EventTablesDef,
+	"database_role_def.go":        example.DatabaseRole,
+	"network_policies_def.go":     sdk.NetworkPoliciesDef,
+	"session_policies_def.go":     sdk.SessionPoliciesDef,
+	"tasks_def.go":                sdk.TasksDef,
+	"streams_def.go":              sdk.StreamsDef,
+	"application_roles_def.go":    sdk.ApplicationRolesDef,
+	"views_def.go":                sdk.ViewsDef,
+	"stages_def.go":               sdk.StagesDef,
+	"functions_def.go":            sdk.FunctionsDef,
+	"procedures_def.go":           sdk.ProceduresDef,
+	"event_tables_def.go":         sdk.EventTablesDef,
+	"application_packages_def.go": sdk.ApplicationPackagesDef,
 }
 
 func main() {
