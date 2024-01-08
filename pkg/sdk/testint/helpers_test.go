@@ -34,37 +34,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func getSecondaryAccountIdentifier(t *testing.T) sdk.AccountIdentifier {
-	t.Helper()
-	client := testSecondaryClient(t)
-	return getAccountIdentifier(t, client)
-}
-
-const (
-	secondaryAccountProfile = "secondary_test_account"
-)
-
-// TODO: for now we leave it as is, later it would be nice to configure it also once in TestMain
-func testSecondaryClient(t *testing.T) *sdk.Client {
-	t.Helper()
-
-	client, err := testClientFromProfile(t, secondaryAccountProfile)
-	if err != nil {
-		t.Skipf("Snowflake secondary account not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
-	}
-
-	return client
-}
-
-func testClientFromProfile(t *testing.T, profile string) (*sdk.Client, error) {
-	t.Helper()
-	config, err := sdk.ProfileConfig(profile)
-	if err != nil {
-		return nil, err
-	}
-	return sdk.NewClient(config)
-}
-
 func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
@@ -78,20 +47,20 @@ func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjec
 
 func createDatabase(t *testing.T, client *sdk.Client) (*sdk.Database, func()) {
 	t.Helper()
-	return createDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
+	return createDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), testSchema(t).ID(), &sdk.CreateDatabaseOptions{})
 }
 
-func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, _ *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
+func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, useSchemaAfterDatabaseDrop sdk.DatabaseObjectIdentifier, opts *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
 	t.Helper()
 	ctx := context.Background()
-	err := client.Databases.Create(ctx, id, nil)
+	err := client.Databases.Create(ctx, id, opts)
 	require.NoError(t, err)
 	database, err := client.Databases.ShowByID(ctx, id)
 	require.NoError(t, err)
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
 		require.NoError(t, err)
-		err = testClient(t).Sessions.UseSchema(ctx, testSchema(t).ID())
+		err = client.Sessions.UseSchema(ctx, useSchemaAfterDatabaseDrop)
 		require.NoError(t, err)
 	}
 }

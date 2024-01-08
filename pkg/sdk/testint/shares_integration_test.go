@@ -125,8 +125,7 @@ func TestInt_SharesDrop(t *testing.T) {
 
 func TestInt_SharesAlter(t *testing.T) {
 	client := testClient(t)
-	secondaryClient, err := testClientFromProfile(t, secondaryAccountProfile)
-	require.NoError(t, err)
+	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
 	t.Run("add and remove accounts", func(t *testing.T) {
@@ -184,23 +183,27 @@ func TestInt_SharesAlter(t *testing.T) {
 	})
 
 	t.Run("set accounts", func(t *testing.T) {
-		db, dbCleanup := createDatabase(t, secondaryClient)
+		db, dbCleanup := createDatabaseWithOptions(t, secondaryClient, sdk.RandomAccountObjectIdentifier(), testSchema(t).ID(), nil)
 		t.Cleanup(dbCleanup)
+
 		shareTest, shareCleanup := createShare(t, secondaryClient)
 		t.Cleanup(shareCleanup)
+
 		err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
 			Database: db.ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			err = secondaryClient.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
+			err := secondaryClient.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
 				Database: db.ID(),
 			}, shareTest.ID())
+			require.NoError(t, err)
 		})
-		require.NoError(t, err)
+
 		accountsToSet := []sdk.AccountIdentifier{
 			getAccountIdentifier(t, client),
 		}
+
 		// first add the account.
 		err = secondaryClient.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 			IfExists: sdk.Bool(true),
@@ -209,12 +212,14 @@ func TestInt_SharesAlter(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+
 		shares, err := secondaryClient.Shares.Show(ctx, &sdk.ShowShareOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String(shareTest.Name.Name()),
 			},
 		})
 		require.NoError(t, err)
+
 		assert.Equal(t, 1, len(shares))
 		share := shares[0]
 		assert.Equal(t, accountsToSet, share.To)
@@ -223,6 +228,7 @@ func TestInt_SharesAlter(t *testing.T) {
 	t.Run("set and unset comment", func(t *testing.T) {
 		shareTest, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
+
 		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
 			Database: testDb(t).ID(),
 		}, shareTest.ID())
@@ -242,12 +248,14 @@ func TestInt_SharesAlter(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+
 		shares, err := client.Shares.Show(ctx, &sdk.ShowShareOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String(shareTest.Name.Name()),
 			},
 		})
 		require.NoError(t, err)
+
 		assert.Equal(t, 1, len(shares))
 		share := shares[0]
 		assert.Equal(t, comment, share.Comment)
@@ -260,12 +268,14 @@ func TestInt_SharesAlter(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+
 		shares, err = client.Shares.Show(ctx, &sdk.ShowShareOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String(shareTest.Name.Name()),
 			},
 		})
 		require.NoError(t, err)
+
 		assert.Equal(t, 1, len(shares))
 		share = shares[0]
 		assert.Equal(t, "", share.Comment)
@@ -362,7 +372,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 	consumerClient := testClient(t)
 
 	t.Run("describe share", func(t *testing.T) {
-		db, dbCleanup := createDatabase(t, providerClient)
+		db, dbCleanup := createDatabaseWithOptions(t, providerClient, sdk.RandomAccountObjectIdentifier(), testSchema(t).ID(), nil)
 		t.Cleanup(dbCleanup)
 
 		shareTest, shareCleanup := createShare(t, providerClient)
