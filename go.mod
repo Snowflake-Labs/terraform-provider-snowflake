@@ -3,7 +3,7 @@ module github.com/Snowflake-Labs/terraform-provider-snowflake
 go 1.21
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.1
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/brianvoe/gofakeit/v6 v6.26.2
 	github.com/buger/jsonparser v1.1.1
