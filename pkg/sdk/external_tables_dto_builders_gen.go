@@ -275,16 +275,6 @@ func (s *NullStringRequest) WithStr(str string) *NullStringRequest {
 	return s
 }
 
-func NewRowAccessPolicyRequest(
-	name SchemaObjectIdentifier,
-	on []string,
-) *RowAccessPolicyRequest {
-	s := RowAccessPolicyRequest{}
-	s.Name = name
-	s.On = on
-	return &s
-}
-
 func NewCreateWithManualPartitioningExternalTableRequest(
 	name SchemaObjectIdentifier,
 	location string,
@@ -317,11 +307,6 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithCloudProviderPara
 
 func (s *CreateWithManualPartitioningExternalTableRequest) WithPartitionBy(partitionBy []string) *CreateWithManualPartitioningExternalTableRequest {
 	s.partitionBy = partitionBy
-	return s
-}
-
-func (s *CreateWithManualPartitioningExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateWithManualPartitioningExternalTableRequest {
-	s.userSpecifiedPartitionType = userSpecifiedPartitionType
 	return s
 }
 
@@ -387,11 +372,6 @@ func (s *CreateDeltaLakeExternalTableRequest) WithCloudProviderParams(cloudProvi
 
 func (s *CreateDeltaLakeExternalTableRequest) WithPartitionBy(partitionBy []string) *CreateDeltaLakeExternalTableRequest {
 	s.partitionBy = partitionBy
-	return s
-}
-
-func (s *CreateDeltaLakeExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateDeltaLakeExternalTableRequest {
-	s.userSpecifiedPartitionType = userSpecifiedPartitionType
 	return s
 }
 

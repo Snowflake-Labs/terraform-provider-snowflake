@@ -30,6 +30,14 @@ var externalTableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The database in which to create the external table.",
 	},
+	// TODO: Could be a string that we would validate as always "delta" (could be easy to add another type if snowflake introduces one)
+	"table_format_delta": {
+		Type:         schema.TypeBool,
+		Required:     true,
+		ForceNew:     true,
+		Description:  `Identifies the external table as referencing a Delta Lake on the cloud storage location. A Delta Lake on Amazon S3, Google Cloud Storage, or Microsoft Azure cloud storage is supported.`,
+		RequiredWith: []string{"user_specified_partitions"},
+	},
 	"column": {
 		Type:        schema.TypeList,
 		Required:    true,
@@ -84,11 +92,18 @@ var externalTableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies the aws sns topic for the external table.",
 	},
-	"partition_by": {
-		Type:        schema.TypeList,
+	"user_specified_partitions": {
+		Type:        schema.TypeBool,
 		Optional:    true,
-		Elem:        &schema.Schema{Type: schema.TypeString},
 		ForceNew:    true,
+		Description: "Enables to manage partitions manually and perform updates instead of recreating table on partition_by change.",
+	},
+	"partition_by": {
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem:     &schema.Schema{Type: schema.TypeString},
+		//ForceNew:    true,
+		// TODO: Update on user_specified_partitions = true and force new on false
 		Description: "Specifies any partition columns to evaluate for the external table.",
 	},
 	"refresh_on_create": {
@@ -152,7 +167,6 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
 	location := d.Get("location").(string)
 	fileFormat := d.Get("file_format").(string)
-	req := sdk.NewCreateExternalTableRequest(id, location).WithRawFileFormat(&fileFormat)
 
 	tableColumns := d.Get("column").([]any)
 	columnRequests := make([]*sdk.ExternalTableColumnRequest, len(tableColumns))
@@ -171,41 +185,92 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 		as := columnDef["as"]
 		columnRequests[i] = sdk.NewExternalTableColumnRequest(name, dataType, as)
 	}
-	req.WithColumns(columnRequests)
+	autoRefresh := sdk.Bool(d.Get("auto_refresh").(bool))
+	refreshOnCreate := sdk.Bool(d.Get("refresh_on_create").(bool))
+	copyGrants := sdk.Bool(d.Get("copy_grants").(bool))
 
-	req.WithAutoRefresh(sdk.Bool(d.Get("auto_refresh").(bool)))
-	req.WithRefreshOnCreate(sdk.Bool(d.Get("refresh_on_create").(bool)))
-	req.WithCopyGrants(sdk.Bool(d.Get("copy_grants").(bool)))
-
+	var partitionBy []string
 	if v, ok := d.GetOk("partition_by"); ok {
-		partitionBy := expandStringList(v.([]any))
-		req.WithPartitionBy(partitionBy)
+		partitionBy = expandStringList(v.([]any))
 	}
 
+	var pattern *string
 	if v, ok := d.GetOk("pattern"); ok {
-		req.WithPattern(sdk.String(v.(string)))
+		pattern = sdk.String(v.(string))
 	}
 
+	var awsSnsTopic *string
 	if v, ok := d.GetOk("aws_sns_topic"); ok {
-		req.WithAwsSnsTopic(sdk.String(v.(string)))
+		awsSnsTopic = sdk.String(v.(string))
 	}
 
+	var comment *string
 	if v, ok := d.GetOk("comment"); ok {
-		req.WithComment(sdk.String(v.(string)))
+		comment = sdk.String(v.(string))
 	}
 
+	var tagAssociationRequests []*sdk.TagAssociationRequest
 	if _, ok := d.GetOk("tag"); ok {
 		tagAssociations := getPropertyTags(d, "tag")
-		tagAssociationRequests := make([]*sdk.TagAssociationRequest, len(tagAssociations))
+		tagAssociationRequests = make([]*sdk.TagAssociationRequest, len(tagAssociations))
 		for i, t := range tagAssociations {
 			tagAssociationRequests[i] = sdk.NewTagAssociationRequest(t.Name, t.Value)
 		}
-		req.WithTag(tagAssociationRequests)
 	}
 
-	if err := client.ExternalTables.Create(ctx, req); err != nil {
-		return err
+	switch {
+	case d.Get("table_format_delta").(bool):
+		err := client.ExternalTables.CreateDeltaLake(
+			ctx,
+			sdk.NewCreateDeltaLakeExternalTableRequest(id, location).
+				WithRawFileFormat(&fileFormat).
+				WithColumns(columnRequests).
+				WithPartitionBy(partitionBy).
+				WithRefreshOnCreate(refreshOnCreate).
+				WithAutoRefresh(autoRefresh).
+				WithCopyGrants(copyGrants).
+				WithComment(comment).
+				WithTag(tagAssociationRequests),
+		)
+		if err != nil {
+			return err
+		}
+	case d.Get("user_specified_partitions").(bool):
+		err := client.ExternalTables.CreateWithManualPartitioning(
+			ctx,
+			sdk.NewCreateWithManualPartitioningExternalTableRequest(id, location).
+				WithRawFileFormat(&fileFormat).
+				WithColumns(columnRequests).
+				WithPartitionBy(partitionBy).
+				WithRawFileFormat(sdk.String(fileFormat)).
+				WithCopyGrants(copyGrants).
+				WithComment(comment).
+				WithTag(tagAssociationRequests),
+		)
+		if err != nil {
+			return err
+		}
+	default:
+		err := client.ExternalTables.Create(
+			ctx,
+			sdk.NewCreateExternalTableRequest(id, location).
+				WithRawFileFormat(&fileFormat).
+				WithColumns(columnRequests).
+				WithPartitionBy(partitionBy).
+				WithRefreshOnCreate(refreshOnCreate).
+				WithAutoRefresh(autoRefresh).
+				WithPattern(pattern).
+				WithRawFileFormat(sdk.String(fileFormat)).
+				WithAwsSnsTopic(awsSnsTopic).
+				WithCopyGrants(copyGrants).
+				WithComment(comment).
+				WithTag(tagAssociationRequests),
+		)
+		if err != nil {
+			return err
+		}
 	}
+
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadExternalTable(d, meta)

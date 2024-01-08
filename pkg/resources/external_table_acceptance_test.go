@@ -73,6 +73,10 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 	})
 }
 
+// TODO TEST: with partitionBy set (check with select get_ddl) - https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2293
+// TODO: support table_format = delta - https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1564
+// TODO: invalid column types - https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2310
+
 func testAccCheckExternalTableDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
 	client := sdk.NewClientFromDB(db)
