@@ -6,6 +6,9 @@ description: |-
   
 ---
 
+
+!> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).
+
 # snowflake_grant_privileges_to_database_role (Resource)
 
 
@@ -173,7 +176,7 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 - `all_privileges` (Boolean) Grant all privileges on the database role.
 - `always_apply` (Boolean) If true, the resource will always produce a “plan” and on “apply” it will re-grant defined privileges. It is supposed to be used only in “grant privileges on all X’s in database / schema Y” or “grant all privileges to X” scenarios to make sure that every new object in a given database / schema is granted by the account role and every new privilege is granted to the database role. Important note: this flag is not compliant with the Terraform assumptions of the config being eventually convergent (producing an empty plan).
 - `always_apply_trigger` (String) This field should not be set and its main purpose is to achieve the functionality described by always_apply field. This is value will be flipped to the opposite value on every terraform apply, thus creating a new plan that will re-apply grants.
-- `on_database` (String) The fully qualified name of the database on which privileges will be granted. If the identifier is not fully qualified (in the form of <db_name>.≤database_role_name>), the command looks for the database role in the current database for the session. All privileges are limited to the database that contains the database role, as well as other objects in the same database.
+- `on_database` (String) The fully qualified name of the database on which privileges will be granted.
 - `on_schema` (Block List, Max: 1) Specifies the schema on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema))
 - `on_schema_object` (Block List, Max: 1) Specifies the schema object on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema_object))
 - `privileges` (Set of String) The privileges to grant on the database role.

@@ -476,7 +476,7 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		if d.HasChange("all_privileges") {
 			if _, allPrivileges := d.GetChange("all_privileges"); allPrivileges.(bool) {
 				shouldGrantAndRevoke = false
-				//id.Privileges = []string{}
+				id.Privileges = []string{}
 			}
 		}
 

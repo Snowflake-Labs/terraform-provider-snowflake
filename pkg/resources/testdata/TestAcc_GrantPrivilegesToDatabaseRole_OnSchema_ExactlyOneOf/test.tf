@@ -3,7 +3,7 @@ resource "snowflake_grant_privileges_to_database_role" "test" {
   privileges         = ["USAGE"]
 
   on_schema {
-    schema_name = "some_database.schema_name"
+    schema_name             = "some_database.schema_name"
     all_schemas_in_database = "some_database"
   }
 }

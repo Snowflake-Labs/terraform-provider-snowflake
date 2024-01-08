@@ -266,7 +266,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		{
 			Name:       "validation: grant database role empty privileges",
 			Identifier: `"database-name"."database-role"|false|false||OnDatabase|"on-database-name"`,
-			Error:      `invalid Privileges value: , should be either a comma seperated list of privileges or "ALL" / "ALL PRIVILEGES" for all privileges`,
+			Error:      `invalid Privileges value: , should be either a comma separated list of privileges or "ALL" / "ALL PRIVILEGES" for all privileges`,
 		},
 		{
 			Name:       "validation: grant database role empty with grant option",

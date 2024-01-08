@@ -131,6 +131,8 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 		return databaseRoleId, sdk.NewError(`database role identifier should hold at least 5 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>"`)
 	}
 
+	// TODO: Identifier parsing should be replaced with better version introduced in SNOW-999049.
+	// Right now, it's same as sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName, but with error handling.
 	databaseRoleNameParts := strings.Split(parts[0], ".")
 	if len(databaseRoleNameParts) == 0 ||
 		(len(databaseRoleNameParts) == 1 && databaseRoleNameParts[0] == "") ||
@@ -155,7 +157,7 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 
 	privileges := strings.Split(parts[3], ",")
 	if len(privileges) == 0 || (len(privileges) == 1 && privileges[0] == "") {
-		return databaseRoleId, sdk.NewError(fmt.Sprintf(`invalid Privileges value: %s, should be either a comma seperated list of privileges or "ALL" / "ALL PRIVILEGES" for all privileges`, parts[3]))
+		return databaseRoleId, sdk.NewError(fmt.Sprintf(`invalid Privileges value: %s, should be either a comma separated list of privileges or "ALL" / "ALL PRIVILEGES" for all privileges`, parts[3]))
 	}
 	if len(privileges) == 1 && (privileges[0] == "ALL" || privileges[0] == "ALL PRIVILEGES") {
 		databaseRoleId.AllPrivileges = true
