@@ -91,7 +91,7 @@ func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountO
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
 		require.NoError(t, err)
-		err = client.Sessions.UseSchema(ctx, testSchema(t).ID())
+		err = testClient(t).Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)
 	}
 }
