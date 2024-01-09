@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"regexp"
 	"slices"
 	"testing"
@@ -775,7 +776,11 @@ func queriedPrivilegesEqualTo(databaseRoleName sdk.DatabaseObjectIdentifier, pri
 			return err
 		}
 		for _, grant := range grants {
-			if !slices.Contains(privileges, grant.Privilege) && grant.Privilege != "USAGE" && grant.Privilege != "OWNERSHIP" {
+			if grant.Privilege == "USAGE" || grant.Privilege == "OWNERSHIP" {
+				log.Printf("Skipping check for %s privilege as its one of the privileges that are implicitly granted by Snowflake", grant.Privilege)
+				continue
+			}
+			if !slices.Contains(privileges, grant.Privilege) {
 				return fmt.Errorf("grant not expected, grant: %v, not in %v", grants, privileges)
 			}
 		}
