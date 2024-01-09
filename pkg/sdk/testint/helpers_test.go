@@ -47,10 +47,10 @@ func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjec
 
 func createDatabase(t *testing.T, client *sdk.Client) (*sdk.Database, func()) {
 	t.Helper()
-	return createDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), testSchema(t).ID(), &sdk.CreateDatabaseOptions{})
+	return createDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
 }
 
-func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, useSchemaAfterDatabaseDrop sdk.DatabaseObjectIdentifier, opts *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
+func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
 	t.Helper()
 	ctx := context.Background()
 	err := client.Databases.Create(ctx, id, opts)
@@ -60,7 +60,7 @@ func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountO
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
 		require.NoError(t, err)
-		err = client.Sessions.UseSchema(ctx, useSchemaAfterDatabaseDrop)
+		err = client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName))
 		require.NoError(t, err)
 	}
 }

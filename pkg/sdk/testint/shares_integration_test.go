@@ -183,7 +183,7 @@ func TestInt_SharesAlter(t *testing.T) {
 	})
 
 	t.Run("set accounts", func(t *testing.T) {
-		db, dbCleanup := createDatabaseWithOptions(t, secondaryClient, sdk.RandomAccountObjectIdentifier(), testSchema(t).ID(), nil)
+		db, dbCleanup := createDatabase(t, secondaryClient)
 		t.Cleanup(dbCleanup)
 
 		shareTest, shareCleanup := createShare(t, secondaryClient)
@@ -372,7 +372,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 	consumerClient := testClient(t)
 
 	t.Run("describe share", func(t *testing.T) {
-		db, dbCleanup := createDatabaseWithOptions(t, providerClient, sdk.RandomAccountObjectIdentifier(), testSchema(t).ID(), nil)
+		db, dbCleanup := createDatabase(t, providerClient)
 		t.Cleanup(dbCleanup)
 
 		shareTest, shareCleanup := createShare(t, providerClient)
