@@ -141,6 +141,7 @@ func TestInt_CreateShared(t *testing.T) {
 			Accounts: accountsToSet,
 		},
 	})
+	require.NoError(t, err)
 
 	databaseID := sdk.RandomAccountObjectIdentifier()
 	err = client.Databases.CreateShared(ctx, databaseID, shareTest.ExternalID(), nil)
