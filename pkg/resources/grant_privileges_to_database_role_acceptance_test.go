@@ -45,7 +45,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -59,7 +59,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory:   config.TestNameDirectory(),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -96,7 +96,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -110,7 +110,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 				),
 			},
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase"),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -147,7 +147,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -161,7 +161,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory:   config.TestNameDirectory(),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -181,7 +181,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema_ExactlyOneOf(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema_ExactlyOneOf"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
@@ -215,7 +215,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -229,7 +229,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 				),
 			},
 			{
-				ConfigDirectory:   config.TestNameDirectory(),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllSchemasInDatabase"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -265,7 +265,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnFutureSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -279,7 +279,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 				),
 			},
 			{
-				ConfigDirectory:   config.TestNameDirectory(),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnFutureSchemasInDatabase"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -318,7 +318,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -333,7 +333,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 				),
 			},
 			{
-				ConfigDirectory:   config.TestNameDirectory(),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -367,7 +367,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPriv
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				ExpectError:     regexp.MustCompile("Unsupported privilege 'OWNERSHIP'"),
 			},
@@ -401,7 +401,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -417,7 +417,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 				),
 			},
 			{
-				ConfigDirectory:   config.TestNameDirectory(),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -453,7 +453,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -469,7 +469,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 				),
 			},
 			{
-				ConfigDirectory:   config.TestNameDirectory(),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -513,7 +513,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: acc.ConfigurationInnerDirectory("privileges"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges/privileges"),
 				ConfigVariables: configVariables(false, []sdk.AccountObjectPrivilege{
 					sdk.AccountObjectPrivilegeCreateSchema,
 					sdk.AccountObjectPrivilegeModify,
@@ -527,7 +527,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationInnerDirectory("privileges"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges/privileges"),
 				ConfigVariables: configVariables(false, []sdk.AccountObjectPrivilege{
 					sdk.AccountObjectPrivilegeCreateSchema,
 					sdk.AccountObjectPrivilegeMonitor,
@@ -543,7 +543,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationInnerDirectory("all_privileges"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges/all_privileges"),
 				ConfigVariables: configVariables(true, []sdk.AccountObjectPrivilege{}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "all_privileges", "true"),
@@ -552,7 +552,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationInnerDirectory("privileges"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges/privileges"),
 				ConfigVariables: configVariables(false, []sdk.AccountObjectPrivilege{
 					sdk.AccountObjectPrivilegeModify,
 					sdk.AccountObjectPrivilegeMonitor,
@@ -605,7 +605,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: acc.ConfigurationInnerDirectory("privileges"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/privileges"),
 				ConfigVariables: configVariables(false, []string{
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
@@ -617,7 +617,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationInnerDirectory("all_privileges"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/all_privileges"),
 				ConfigVariables: configVariables(true, []string{}, ""),
 				Check: queriedPrivilegesContainAtLeast(
 					databaseRoleName,
@@ -629,7 +629,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationInnerDirectory("privileges"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/privileges"),
 				ConfigVariables: configVariables(false, []string{
 					sdk.AccountObjectPrivilegeModify.String(),
 					sdk.AccountObjectPrivilegeMonitor.String(),
@@ -641,7 +641,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationInnerDirectory("on_schema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/on_schema"),
 				ConfigVariables: configVariables(false, []string{
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
@@ -681,7 +681,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
 				ConfigVariables: configVariables(false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -694,7 +694,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
@@ -703,21 +703,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(true),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectNonEmptyPlan(),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
 				ConfigVariables: configVariables(true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -731,7 +717,21 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
+				ConfigVariables: configVariables(true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
 				ConfigVariables: configVariables(false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{

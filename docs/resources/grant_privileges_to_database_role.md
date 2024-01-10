@@ -301,6 +301,9 @@ On future contains inner types for all options.
 #### Grant list of privileges OnAllSchemasInDatabase
 `terraform import "\"test_db\".\"test_db_role\"|false|false|CREATE TAG,CREATE TABLE|OnSchema|OnAllSchemasInDatabase|\"test_db\""`
 
+#### Grant list of privileges on table
+`terraform import "\"test_db\".\"test_db_role\"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnObject|TABLE|\"test_db\".\"test_schema\".\"test_table\""`
+
 #### Grant list of privileges OnAll tables in schema
-`terraform import "\"test_db\".\"test_db_role\"|false|false|SELECT|OnSchemaObject|OnAll|TABLES|InSchema|\"test_db\".\"test_schema\""`
+`terraform import "\"test_db\".\"test_db_role\"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnAll|TABLES|InSchema|\"test_db\".\"test_schema\""`
 

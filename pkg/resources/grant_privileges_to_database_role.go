@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // TODO: Handle IMPORTED PRIVILEGES privilege (after second account will be added - SNOW-976501)
@@ -156,32 +155,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.all",
 						"on_schema_object.0.future",
 					},
-					ValidateFunc: validation.StringInSlice([]string{
-						sdk.ObjectTypeAlert.String(),
-						sdk.ObjectTypeDynamicTable.String(),
-						sdk.ObjectTypeEventTable.String(),
-						sdk.ObjectTypeFileFormat.String(),
-						sdk.ObjectTypeFunction.String(),
-						sdk.ObjectTypeProcedure.String(),
-						sdk.ObjectTypeSecret.String(),
-						sdk.ObjectTypeSequence.String(),
-						sdk.ObjectTypePipe.String(),
-						sdk.ObjectTypeMaskingPolicy.String(),
-						sdk.ObjectTypePasswordPolicy.String(),
-						sdk.ObjectTypeRowAccessPolicy.String(),
-						sdk.ObjectTypeSessionPolicy.String(),
-						sdk.ObjectTypeTag.String(),
-						sdk.ObjectTypeStage.String(),
-						sdk.ObjectTypeStream.String(),
-						sdk.ObjectTypeTable.String(),
-						sdk.ObjectTypeExternalTable.String(),
-						sdk.ObjectTypeTask.String(),
-						sdk.ObjectTypeView.String(),
-						sdk.ObjectTypeMaterializedView.String(),
-						sdk.ObjectTypeNetworkRule.String(),
-						sdk.ObjectTypePackagesPolicy.String(),
-						sdk.ObjectTypeIcebergTable.String(),
-					}, true),
+					ValidateDiagFunc: ValidObjectType(),
 				},
 				"object_name": {
 					Type:        schema.TypeString,
@@ -241,36 +215,11 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 
 var grantPrivilegesOnDatabaseRoleBulkOperationSchema = map[string]*schema.Schema{
 	"object_type_plural": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS | NETWORK RULES | PACKAGES POLICIES | ICEBERG TABLES",
-		ValidateFunc: validation.StringInSlice([]string{
-			sdk.PluralObjectTypeAlerts.String(),
-			sdk.PluralObjectTypeDynamicTables.String(),
-			sdk.PluralObjectTypeEventTables.String(),
-			sdk.PluralObjectTypeFileFormats.String(),
-			sdk.PluralObjectTypeFunctions.String(),
-			sdk.PluralObjectTypeProcedures.String(),
-			sdk.PluralObjectTypeSecrets.String(),
-			sdk.PluralObjectTypeSequences.String(),
-			sdk.PluralObjectTypePipes.String(),
-			sdk.PluralObjectTypeMaskingPolicies.String(),
-			sdk.PluralObjectTypePasswordPolicies.String(),
-			sdk.PluralObjectTypeRowAccessPolicies.String(),
-			sdk.PluralObjectTypeSessionPolicies.String(),
-			sdk.PluralObjectTypeTags.String(),
-			sdk.PluralObjectTypeStages.String(),
-			sdk.PluralObjectTypeStreams.String(),
-			sdk.PluralObjectTypeTables.String(),
-			sdk.PluralObjectTypeExternalTables.String(),
-			sdk.PluralObjectTypeTasks.String(),
-			sdk.PluralObjectTypeViews.String(),
-			sdk.PluralObjectTypeMaterializedViews.String(),
-			sdk.PluralObjectTypeNetworkRules.String(),
-			sdk.PluralObjectTypePackagesPolicies.String(),
-			sdk.PluralObjectTypeIcebergTables.String(),
-		}, true),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS | NETWORK RULES | PACKAGES POLICIES | ICEBERG TABLES",
+		ValidateDiagFunc: ValidPluralObjectType(),
 	},
 	"in_database": {
 		Type:             schema.TypeString,
