@@ -2,6 +2,8 @@
 
 package sdk
 
+import ()
+
 func NewCreateExternalTableRequest(
 	name SchemaObjectIdentifier,
 	location string,
@@ -99,8 +101,8 @@ func NewExternalTableColumnRequest(
 	return &s
 }
 
-func (s *ExternalTableColumnRequest) WithNotNull() *ExternalTableColumnRequest {
-	s.notNull = Bool(true)
+func (s *ExternalTableColumnRequest) WithNotNull(notNull *bool) *ExternalTableColumnRequest {
+	s.notNull = notNull
 	return s
 }
 
@@ -392,11 +394,6 @@ func (s *CreateDeltaLakeExternalTableRequest) WithRawFileFormat(rawFileFormat *s
 
 func (s *CreateDeltaLakeExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateDeltaLakeExternalTableRequest {
 	s.fileFormat = fileFormat
-	return s
-}
-
-func (s *CreateDeltaLakeExternalTableRequest) WithDeltaTableFormat(deltaTableFormat *bool) *CreateDeltaLakeExternalTableRequest {
-	s.deltaTableFormat = deltaTableFormat
 	return s
 }
 

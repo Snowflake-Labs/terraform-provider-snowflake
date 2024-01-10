@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,13 +32,12 @@ var externalTableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "The database in which to create the external table.",
 	},
-	// TODO: Could be a string that we would validate as always "delta" (could be easy to add another type if snowflake introduces one)
-	"table_format_delta": {
-		Type:         schema.TypeBool,
-		Required:     true,
+	"table_format": {
+		Type:         schema.TypeString,
+		Optional:     true,
 		ForceNew:     true,
-		Description:  `Identifies the external table as referencing a Delta Lake on the cloud storage location. A Delta Lake on Amazon S3, Google Cloud Storage, or Microsoft Azure cloud storage is supported.`,
-		RequiredWith: []string{"user_specified_partitions"},
+		Description:  `Identifies the external table table type. For now, only "delta" for Delta Lake table format is supported.`,
+		ValidateFunc: validation.StringInSlice([]string{"delta"}, true),
 	},
 	"column": {
 		Type:        schema.TypeList,
@@ -92,18 +93,11 @@ var externalTableSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "Specifies the aws sns topic for the external table.",
 	},
-	"user_specified_partitions": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		ForceNew:    true,
-		Description: "Enables to manage partitions manually and perform updates instead of recreating table on partition_by change.",
-	},
 	"partition_by": {
-		Type:     schema.TypeList,
-		Optional: true,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		//ForceNew:    true,
-		// TODO: Update on user_specified_partitions = true and force new on false
+		Type:        schema.TypeList,
+		Optional:    true,
+		Elem:        &schema.Schema{Type: schema.TypeString},
+		ForceNew:    true,
 		Description: "Specifies any partition columns to evaluate for the external table.",
 	},
 	"refresh_on_create": {
@@ -175,15 +169,11 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 		for key, val := range col.(map[string]any) {
 			columnDef[key] = val.(string)
 		}
-
-		name := columnDef["name"]
-		dataTypeString := columnDef["type"]
-		dataType, err := sdk.ToDataType(dataTypeString)
-		if err != nil {
-			return fmt.Errorf(`failed to parse datatype: %s`, dataTypeString)
-		}
-		as := columnDef["as"]
-		columnRequests[i] = sdk.NewExternalTableColumnRequest(name, dataType, as)
+		columnRequests[i] = sdk.NewExternalTableColumnRequest(
+			columnDef["name"],
+			sdk.DataType(columnDef["type"]),
+			columnDef["as"],
+		)
 	}
 	autoRefresh := sdk.Bool(d.Get("auto_refresh").(bool))
 	refreshOnCreate := sdk.Bool(d.Get("refresh_on_create").(bool))
@@ -219,30 +209,15 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 	}
 
 	switch {
-	case d.Get("table_format_delta").(bool):
+	case d.Get("table_format").(string) == "delta":
 		err := client.ExternalTables.CreateDeltaLake(
 			ctx,
 			sdk.NewCreateDeltaLakeExternalTableRequest(id, location).
-				WithRawFileFormat(&fileFormat).
 				WithColumns(columnRequests).
 				WithPartitionBy(partitionBy).
 				WithRefreshOnCreate(refreshOnCreate).
 				WithAutoRefresh(autoRefresh).
-				WithCopyGrants(copyGrants).
-				WithComment(comment).
-				WithTag(tagAssociationRequests),
-		)
-		if err != nil {
-			return err
-		}
-	case d.Get("user_specified_partitions").(bool):
-		err := client.ExternalTables.CreateWithManualPartitioning(
-			ctx,
-			sdk.NewCreateWithManualPartitioningExternalTableRequest(id, location).
 				WithRawFileFormat(&fileFormat).
-				WithColumns(columnRequests).
-				WithPartitionBy(partitionBy).
-				WithRawFileFormat(sdk.String(fileFormat)).
 				WithCopyGrants(copyGrants).
 				WithComment(comment).
 				WithTag(tagAssociationRequests),
@@ -254,13 +229,12 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 		err := client.ExternalTables.Create(
 			ctx,
 			sdk.NewCreateExternalTableRequest(id, location).
-				WithRawFileFormat(&fileFormat).
 				WithColumns(columnRequests).
 				WithPartitionBy(partitionBy).
 				WithRefreshOnCreate(refreshOnCreate).
 				WithAutoRefresh(autoRefresh).
 				WithPattern(pattern).
-				WithRawFileFormat(sdk.String(fileFormat)).
+				WithRawFileFormat(&fileFormat).
 				WithAwsSnsTopic(awsSnsTopic).
 				WithCopyGrants(copyGrants).
 				WithComment(comment).

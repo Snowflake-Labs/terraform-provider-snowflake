@@ -365,7 +365,6 @@ type CreateDeltaLakeExternalTableRequest struct {
 	autoRefresh         *bool
 	rawFileFormat       *string
 	fileFormat          *ExternalTableFileFormatRequest
-	deltaTableFormat    *bool
 	copyGrants          *bool
 	comment             *string
 	rowAccessPolicy     *RowAccessPolicyRequest
@@ -421,7 +420,6 @@ func (v *CreateDeltaLakeExternalTableRequest) toOpts() *CreateDeltaLakeExternalT
 		AutoRefresh:         v.autoRefresh,
 		RawFileFormat:       rawFileFormat,
 		FileFormat:          fileFormat,
-		DeltaTableFormat:    v.deltaTableFormat,
 		CopyGrants:          v.copyGrants,
 		Comment:             v.comment,
 		RowAccessPolicy:     rowAccessPolicy,

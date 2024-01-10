@@ -6,7 +6,11 @@ variable "location" {
   type = string
 }
 
-variable "aws_arn" {
+variable "aws_key_id" {
+  type = string
+}
+
+variable "aws_secret_key" {
   type = string
 }
 
