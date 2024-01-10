@@ -92,4 +92,35 @@ var StorageIntegrationDef = g.NewInterface(
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ConflictingFields, "IfExists", "UnsetTags").
 			WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags"),
-	)
+	).
+	DropOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/drop-integration",
+		g.NewQueryStruct("DropStorageIntegration").
+			Drop().
+			SQL("STORAGE INTEGRATION").
+			IfExists().
+			Name().
+			WithValidation(g.ValidIdentifier, "name"),
+	).
+	ShowOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/show-integrations",
+		g.DbStruct("StorageIntegrationDbRow").
+			Text("name").
+			Text("type").
+			Text("category").
+			Text("enabled").
+			Text("comment").
+			Text("created_on"),
+		g.PlainStruct("StorageIntegration").
+			Text("name").
+			Text("type").
+			Text("category").
+			Bool("enabled").
+			Text("comment").
+			Text("created_on"),
+		g.NewQueryStruct("ShowStorageIntegration").
+			Show().
+			SQL("STORAGE INTEGRATION").
+			OptionalLike(),
+	).
+	ShowByIdOperation()
