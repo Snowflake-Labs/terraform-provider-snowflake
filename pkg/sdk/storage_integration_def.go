@@ -4,6 +4,8 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+var StorageLocationDef = g.NewQueryStruct("StorageLocation").Text("Path", g.KeywordOptions().SingleQuotes().Required())
+
 var StorageIntegrationDef = g.NewInterface(
 	"StorageIntegrations",
 	"StorageIntegration",
@@ -17,7 +19,7 @@ var StorageIntegrationDef = g.NewInterface(
 			SQL("STORAGE INTEGRATION").
 			IfNotExists().
 			Name().
-			PredefinedQueryStructField("externalStageType", "string", g.StaticOptions().SQL("TYPE = EXTERNAL STAGE")).
+			PredefinedQueryStructField("externalStageType", "string", g.StaticOptions().SQL("TYPE = EXTERNAL_STAGE")).
 			OptionalQueryStructField(
 				"S3StorageProviderParams",
 				g.NewQueryStruct("S3StorageParams").
@@ -40,12 +42,13 @@ var StorageIntegrationDef = g.NewInterface(
 				g.KeywordOptions(),
 			).
 			BooleanAssignment("ENABLED", g.ParameterOptions().Required()).
-			ListAssignment("STORAGE_ALLOWED_LOCATIONS", "string", g.ParameterOptions().Required()).
-			ListAssignment("STORAGE_BLOCKED_LOCATIONS", "string", g.ParameterOptions()).
+			ListAssignment("STORAGE_ALLOWED_LOCATIONS", "StorageLocation", g.ParameterOptions().Parentheses().Required()).
+			ListAssignment("STORAGE_BLOCKED_LOCATIONS", "StorageLocation", g.ParameterOptions().Parentheses()).
 			OptionalComment().
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace").
 			WithValidation(g.ExactlyOneValueSet, "S3StorageProviderParams", "GCSStorageProviderParams", "AzureStorageProviderParams"),
+		StorageLocationDef,
 	).
 	AlterOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-storage-integration",
@@ -71,8 +74,8 @@ var StorageIntegrationDef = g.NewInterface(
 						g.KeywordOptions(),
 					).
 					BooleanAssignment("ENABLED", g.ParameterOptions()).
-					ListAssignment("STORAGE_ALLOWED_LOCATIONS", "string", g.ParameterOptions()).
-					ListAssignment("STORAGE_BLOCKED_LOCATIONS", "string", g.ParameterOptions()).
+					ListAssignment("STORAGE_ALLOWED_LOCATIONS", "StorageLocation", g.ParameterOptions().Parentheses()).
+					ListAssignment("STORAGE_BLOCKED_LOCATIONS", "StorageLocation", g.ParameterOptions().Parentheses()).
 					OptionalComment(),
 				g.KeywordOptions().SQL("SET"),
 			).
@@ -82,7 +85,7 @@ var StorageIntegrationDef = g.NewInterface(
 					OptionalSQL("ENABLED").
 					OptionalSQL("STORAGE_BLOCKED_LOCATIONS").
 					OptionalSQL("COMMENT"),
-				g.KeywordOptions().SQL("UNSET"),
+				g.ListOptions().SQL("UNSET"),
 			).
 			OptionalSetTags().
 			OptionalUnsetTags().

@@ -14,9 +14,9 @@ type CreateStorageIntegrationRequest struct {
 	S3StorageProviderParams    *S3StorageParamsRequest
 	GCSStorageProviderParams   *GCSStorageParamsRequest
 	AzureStorageProviderParams *AzureStorageParamsRequest
-	Enabled                    bool     // required
-	StorageAllowedLocations    []string // required
-	StorageBlockedLocations    []string
+	Enabled                    bool              // required
+	StorageAllowedLocations    []StorageLocation // required
+	StorageBlockedLocations    []StorageLocation
 	Comment                    *string
 }
 
@@ -45,8 +45,8 @@ type StorageIntegrationSetRequest struct {
 	SetS3Params             *SetS3StorageParamsRequest
 	SetAzureParams          *SetAzureStorageParamsRequest
 	Enabled                 bool
-	StorageAllowedLocations []string
-	StorageBlockedLocations []string
+	StorageAllowedLocations []StorageLocation
+	StorageBlockedLocations []StorageLocation
 	Comment                 *string
 }
 

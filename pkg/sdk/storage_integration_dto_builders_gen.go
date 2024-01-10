@@ -7,7 +7,7 @@ import ()
 func NewCreateStorageIntegrationRequest(
 	name AccountObjectIdentifier,
 	Enabled bool,
-	StorageAllowedLocations []string,
+	StorageAllowedLocations []StorageLocation,
 ) *CreateStorageIntegrationRequest {
 	s := CreateStorageIntegrationRequest{}
 	s.name = name
@@ -41,7 +41,7 @@ func (s *CreateStorageIntegrationRequest) WithAzureStorageProviderParams(AzureSt
 	return s
 }
 
-func (s *CreateStorageIntegrationRequest) WithStorageBlockedLocations(StorageBlockedLocations []string) *CreateStorageIntegrationRequest {
+func (s *CreateStorageIntegrationRequest) WithStorageBlockedLocations(StorageBlockedLocations []StorageLocation) *CreateStorageIntegrationRequest {
 	s.StorageBlockedLocations = StorageBlockedLocations
 	return s
 }
@@ -128,12 +128,12 @@ func (s *StorageIntegrationSetRequest) WithEnabled(Enabled bool) *StorageIntegra
 	return s
 }
 
-func (s *StorageIntegrationSetRequest) WithStorageAllowedLocations(StorageAllowedLocations []string) *StorageIntegrationSetRequest {
+func (s *StorageIntegrationSetRequest) WithStorageAllowedLocations(StorageAllowedLocations []StorageLocation) *StorageIntegrationSetRequest {
 	s.StorageAllowedLocations = StorageAllowedLocations
 	return s
 }
 
-func (s *StorageIntegrationSetRequest) WithStorageBlockedLocations(StorageBlockedLocations []string) *StorageIntegrationSetRequest {
+func (s *StorageIntegrationSetRequest) WithStorageBlockedLocations(StorageBlockedLocations []StorageLocation) *StorageIntegrationSetRequest {
 	s.StorageBlockedLocations = StorageBlockedLocations
 	return s
 }

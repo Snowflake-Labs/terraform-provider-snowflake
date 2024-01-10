@@ -14,14 +14,18 @@ type CreateStorageIntegrationOptions struct {
 	storageIntegration         bool                    `ddl:"static" sql:"STORAGE INTEGRATION"`
 	IfNotExists                *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                       AccountObjectIdentifier `ddl:"identifier"`
-	externalStageType          string                  `ddl:"static" sql:"TYPE = EXTERNAL STAGE"`
+	externalStageType          string                  `ddl:"static" sql:"TYPE = EXTERNAL_STAGE"`
 	S3StorageProviderParams    *S3StorageParams        `ddl:"keyword"`
 	GCSStorageProviderParams   *GCSStorageParams       `ddl:"keyword"`
 	AzureStorageProviderParams *AzureStorageParams     `ddl:"keyword"`
 	Enabled                    bool                    `ddl:"parameter" sql:"ENABLED"`
-	StorageAllowedLocations    []string                `ddl:"parameter" sql:"STORAGE_ALLOWED_LOCATIONS"`
-	StorageBlockedLocations    []string                `ddl:"parameter" sql:"STORAGE_BLOCKED_LOCATIONS"`
+	StorageAllowedLocations    []StorageLocation       `ddl:"parameter,parentheses" sql:"STORAGE_ALLOWED_LOCATIONS"`
+	StorageBlockedLocations    []StorageLocation       `ddl:"parameter,parentheses" sql:"STORAGE_BLOCKED_LOCATIONS"`
 	Comment                    *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type StorageLocation struct {
+	Path string `ddl:"keyword,single_quotes"`
 }
 
 type S3StorageParams struct {
@@ -55,8 +59,8 @@ type StorageIntegrationSet struct {
 	SetS3Params             *SetS3StorageParams    `ddl:"keyword"`
 	SetAzureParams          *SetAzureStorageParams `ddl:"keyword"`
 	Enabled                 bool                   `ddl:"parameter" sql:"ENABLED"`
-	StorageAllowedLocations []string               `ddl:"parameter" sql:"STORAGE_ALLOWED_LOCATIONS"`
-	StorageBlockedLocations []string               `ddl:"parameter" sql:"STORAGE_BLOCKED_LOCATIONS"`
+	StorageAllowedLocations []StorageLocation      `ddl:"parameter,parentheses" sql:"STORAGE_ALLOWED_LOCATIONS"`
+	StorageBlockedLocations []StorageLocation      `ddl:"parameter,parentheses" sql:"STORAGE_BLOCKED_LOCATIONS"`
 	Comment                 *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
