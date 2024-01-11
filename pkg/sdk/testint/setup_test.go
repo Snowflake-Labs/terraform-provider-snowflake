@@ -11,6 +11,16 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 )
 
+const (
+	secondaryAccountProfile = "secondary_test_account"
+)
+
+var (
+	TestWarehouseName = "int_test_wh_" + random.UUID()
+	TestDatabaseName  = "int_test_db_" + random.UUID()
+	TestSchemaName    = "int_test_sc_" + random.UUID()
+)
+
 var itc integrationTestContext
 
 func TestMain(m *testing.M) {
@@ -45,6 +55,12 @@ func cleanup() {
 	if itc.schemaCleanup != nil {
 		defer itc.schemaCleanup()
 	}
+	if itc.secondaryDatabaseCleanup != nil {
+		defer itc.secondaryDatabaseCleanup()
+	}
+	if itc.secondarySchemaCleanup != nil {
+		defer itc.secondarySchemaCleanup()
+	}
 }
 
 type integrationTestContext struct {
@@ -57,11 +73,21 @@ type integrationTestContext struct {
 	schemaCleanup    func()
 	warehouse        *sdk.Warehouse
 	warehouseCleanup func()
+
+	secondaryClient *sdk.Client
+	secondaryCtx    context.Context
+
+	secondaryDatabase         *sdk.Database
+	secondaryDatabaseCleanup  func()
+	secondarySchema           *sdk.Schema
+	secondarySchemaCleanup    func()
+	secondaryWarehouse        *sdk.Warehouse
+	secondaryWarehouseCleanup func()
 }
 
 func (itc *integrationTestContext) initialize() error {
 	log.Println("Initializing integration test context")
-	var err error
+
 	c, err := sdk.NewDefaultClient()
 	if err != nil {
 		return err
@@ -90,12 +116,43 @@ func (itc *integrationTestContext) initialize() error {
 	itc.warehouse = wh
 	itc.warehouseCleanup = whCleanup
 
+	config, err := sdk.ProfileConfig(secondaryAccountProfile)
+	if err != nil {
+		return err
+	}
+	secondaryClient, err := sdk.NewClient(config)
+	if err != nil {
+		return err
+	}
+	itc.secondaryClient = secondaryClient
+	itc.secondaryCtx = context.Background()
+
+	secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx)
+	if err != nil {
+		return err
+	}
+	itc.secondaryDatabase = secondaryDb
+	itc.secondaryDatabaseCleanup = secondaryDbCleanup
+
+	secondarySchema, secondarySchemaCleanup, err := createSc(itc.secondaryClient, itc.secondaryCtx, itc.database)
+	if err != nil {
+		return err
+	}
+	itc.secondarySchema = secondarySchema
+	itc.secondarySchemaCleanup = secondarySchemaCleanup
+
+	secondaryWarehouse, secondaryWarehouseCleanup, err := createWh(itc.secondaryClient, itc.secondaryCtx)
+	if err != nil {
+		return err
+	}
+	itc.secondaryWarehouse = secondaryWarehouse
+	itc.secondaryWarehouseCleanup = secondaryWarehouseCleanup
+
 	return nil
 }
 
 func createDb(client *sdk.Client, ctx context.Context) (*sdk.Database, func(), error) {
-	name := "int_test_db_" + random.UUID()
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := sdk.NewAccountObjectIdentifier(TestDatabaseName)
 	err := client.Databases.Create(ctx, id, nil)
 	if err != nil {
 		return nil, nil, err
@@ -107,21 +164,19 @@ func createDb(client *sdk.Client, ctx context.Context) (*sdk.Database, func(), e
 }
 
 func createSc(client *sdk.Client, ctx context.Context, db *sdk.Database) (*sdk.Schema, func(), error) {
-	name := "int_test_sc_" + random.UUID()
-	id := sdk.NewDatabaseObjectIdentifier(db.Name, name)
+	id := sdk.NewDatabaseObjectIdentifier(db.Name, TestSchemaName)
 	err := client.Schemas.Create(ctx, id, nil)
 	if err != nil {
 		return nil, nil, err
 	}
-	schema, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(db.Name, name))
+	schema, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(db.Name, TestSchemaName))
 	return schema, func() {
 		_ = client.Schemas.Drop(ctx, id, nil)
 	}, err
 }
 
 func createWh(client *sdk.Client, ctx context.Context) (*sdk.Warehouse, func(), error) {
-	name := "int_test_wh_" + random.UUID()
-	id := sdk.NewAccountObjectIdentifier(name)
+	id := sdk.NewAccountObjectIdentifier(TestWarehouseName)
 	err := client.Warehouses.Create(ctx, id, nil)
 	if err != nil {
 		return nil, nil, err
@@ -166,4 +221,29 @@ func testSchema(t *testing.T) *sdk.Schema {
 func testWarehouse(t *testing.T) *sdk.Warehouse {
 	t.Helper()
 	return itc.warehouse
+}
+
+func testSecondaryClient(t *testing.T) *sdk.Client {
+	t.Helper()
+	return itc.secondaryClient
+}
+
+func testSecondaryContext(t *testing.T) context.Context {
+	t.Helper()
+	return itc.secondaryCtx
+}
+
+func testSecondaryDb(t *testing.T) *sdk.Database {
+	t.Helper()
+	return itc.secondaryDatabase
+}
+
+func testSecondarySchema(t *testing.T) *sdk.Schema {
+	t.Helper()
+	return itc.secondarySchema
+}
+
+func testSecondaryWarehouse(t *testing.T) *sdk.Warehouse {
+	t.Helper()
+	return itc.secondaryWarehouse
 }
