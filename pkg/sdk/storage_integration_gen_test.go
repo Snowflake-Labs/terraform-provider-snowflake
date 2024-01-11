@@ -200,3 +200,85 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `ALTER STORAGE INTEGRATION %s UNSET TAG "name", "second-name"`, id.FullyQualifiedName())
 	})
 }
+
+func TestStorageIntegrations_Drop(t *testing.T) {
+	id := RandomAccountObjectIdentifier()
+
+	// Minimal valid DropStorageIntegrationOptions
+	defaultOpts := func() *DropStorageIntegrationOptions {
+		return &DropStorageIntegrationOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *DropStorageIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewAccountObjectIdentifier("")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "DROP STORAGE INTEGRATION IF EXISTS %s", id.FullyQualifiedName())
+	})
+}
+
+func TestStorageIntegrations_Show(t *testing.T) {
+	id := RandomAccountObjectIdentifier()
+
+	// Minimal valid ShowStorageIntegrationOptions
+	defaultOpts := func() *ShowStorageIntegrationOptions {
+		return &ShowStorageIntegrationOptions{}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *ShowStorageIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, "SHOW STORAGE INTEGRATIONS")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Like = &Like{
+			Pattern: String(id.Name()),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW STORAGE INTEGRATIONS LIKE '%s'", id.Name())
+	})
+}
+
+func TestStorageIntegrations_Describe(t *testing.T) {
+	id := RandomAccountObjectIdentifier()
+
+	// Minimal valid DescribeStorageIntegrationOptions
+	defaultOpts := func() *DescribeStorageIntegrationOptions {
+		return &DescribeStorageIntegrationOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *DescribeStorageIntegrationOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewAccountObjectIdentifier("")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE STORAGE INTEGRATION %s", id.FullyQualifiedName())
+	})
+}
