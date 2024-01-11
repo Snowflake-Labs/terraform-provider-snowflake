@@ -3,8 +3,11 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateStorageIntegrationOptions] = new(CreateStorageIntegrationRequest)
-	_ optionsProvider[AlterStorageIntegrationOptions]  = new(AlterStorageIntegrationRequest)
+	_ optionsProvider[CreateStorageIntegrationOptions]   = new(CreateStorageIntegrationRequest)
+	_ optionsProvider[AlterStorageIntegrationOptions]    = new(AlterStorageIntegrationRequest)
+	_ optionsProvider[DropStorageIntegrationOptions]     = new(DropStorageIntegrationRequest)
+	_ optionsProvider[ShowStorageIntegrationOptions]     = new(ShowStorageIntegrationRequest)
+	_ optionsProvider[DescribeStorageIntegrationOptions] = new(DescribeStorageIntegrationRequest)
 )
 
 type CreateStorageIntegrationRequest struct {
@@ -63,4 +66,17 @@ type StorageIntegrationUnsetRequest struct {
 	Enabled                 *bool
 	StorageBlockedLocations *bool
 	Comment                 *bool
+}
+
+type DropStorageIntegrationRequest struct {
+	IfExists *bool
+	name     AccountObjectIdentifier // required
+}
+
+type ShowStorageIntegrationRequest struct {
+	Like *Like
+}
+
+type DescribeStorageIntegrationRequest struct {
+	name AccountObjectIdentifier // required
 }

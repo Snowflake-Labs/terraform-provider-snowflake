@@ -3,6 +3,9 @@ package sdk
 var (
 	_ validatable = new(CreateStorageIntegrationOptions)
 	_ validatable = new(AlterStorageIntegrationOptions)
+	_ validatable = new(DropStorageIntegrationOptions)
+	_ validatable = new(ShowStorageIntegrationOptions)
+	_ validatable = new(DescribeStorageIntegrationOptions)
 )
 
 func (opts *CreateStorageIntegrationOptions) validate() error {
@@ -35,6 +38,36 @@ func (opts *AlterStorageIntegrationOptions) validate() error {
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
 		errs = append(errs, errExactlyOneOf("AlterStorageIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	}
+	return JoinErrors(errs...)
+}
+
+func (opts *DropStorageIntegrationOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return JoinErrors(errs...)
+}
+
+func (opts *ShowStorageIntegrationOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	return JoinErrors(errs...)
+}
+
+func (opts *DescribeStorageIntegrationOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return JoinErrors(errs...)
 }

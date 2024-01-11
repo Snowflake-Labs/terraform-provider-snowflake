@@ -104,23 +104,42 @@ var StorageIntegrationDef = g.NewInterface(
 	).
 	ShowOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/show-integrations",
-		g.DbStruct("StorageIntegrationDbRow").
-			Text("name").
-			Text("type").
-			Text("category").
-			Text("enabled").
-			Text("comment").
-			Text("created_on"),
-		g.PlainStruct("StorageIntegration").
+		g.DbStruct("showStorageIntegrationsDbRow").
 			Text("name").
 			Text("type").
 			Text("category").
 			Bool("enabled").
 			Text("comment").
-			Text("created_on"),
-		g.NewQueryStruct("ShowStorageIntegration").
+			Time("created_on"),
+		g.PlainStruct("StorageIntegration").
+			Text("Name").
+			Text("StorageType").
+			Text("Category").
+			Bool("Enabled").
+			Text("Comment").
+			Time("CreatedOn"),
+		g.NewQueryStruct("ShowStorageIntegrations").
 			Show().
-			SQL("STORAGE INTEGRATION").
+			SQL("STORAGE INTEGRATIONS").
 			OptionalLike(),
 	).
-	ShowByIdOperation()
+	ShowByIdOperation().
+	DescribeOperation(
+		g.DescriptionMappingKindSlice,
+		"https://docs.snowflake.com/en/sql-reference/sql/desc-integration",
+		g.DbStruct("descStorageIntegrationsDbRow").
+			Text("property").
+			Text("property_type").
+			Text("property_value").
+			Text("property_default"),
+		g.PlainStruct("StorageIntegrationProperty").
+			Text("Name").
+			Text("Type").
+			Text("Value").
+			Text("Default"),
+		g.NewQueryStruct("DescribeStorageIntegration").
+			Describe().
+			SQL("STORAGE INTEGRATION").
+			Name().
+			WithValidation(g.ValidIdentifier, "name"),
+	)

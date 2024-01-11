@@ -182,3 +182,33 @@ func (s *StorageIntegrationUnsetRequest) WithComment(Comment *bool) *StorageInte
 	s.Comment = Comment
 	return s
 }
+
+func NewDropStorageIntegrationRequest(
+	name AccountObjectIdentifier,
+) *DropStorageIntegrationRequest {
+	s := DropStorageIntegrationRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *DropStorageIntegrationRequest) WithIfExists(IfExists *bool) *DropStorageIntegrationRequest {
+	s.IfExists = IfExists
+	return s
+}
+
+func NewShowStorageIntegrationRequest() *ShowStorageIntegrationRequest {
+	return &ShowStorageIntegrationRequest{}
+}
+
+func (s *ShowStorageIntegrationRequest) WithLike(Like *Like) *ShowStorageIntegrationRequest {
+	s.Like = Like
+	return s
+}
+
+func NewDescribeStorageIntegrationRequest(
+	name AccountObjectIdentifier,
+) *DescribeStorageIntegrationRequest {
+	s := DescribeStorageIntegrationRequest{}
+	s.name = name
+	return &s
+}

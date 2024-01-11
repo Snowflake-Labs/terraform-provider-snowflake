@@ -1,10 +1,17 @@
 package sdk
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type StorageIntegrations interface {
 	Create(ctx context.Context, request *CreateStorageIntegrationRequest) error
 	Alter(ctx context.Context, request *AlterStorageIntegrationRequest) error
+	Drop(ctx context.Context, request *DropStorageIntegrationRequest) error
+	Show(ctx context.Context, request *ShowStorageIntegrationRequest) ([]StorageIntegration, error)
+	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*StorageIntegration, error)
+	Describe(ctx context.Context, id AccountObjectIdentifier) ([]StorageIntegrationProperty, error)
 }
 
 // CreateStorageIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-storage-integration.
@@ -77,4 +84,58 @@ type StorageIntegrationUnset struct {
 	Enabled                 *bool `ddl:"keyword" sql:"ENABLED"`
 	StorageBlockedLocations *bool `ddl:"keyword" sql:"STORAGE_BLOCKED_LOCATIONS"`
 	Comment                 *bool `ddl:"keyword" sql:"COMMENT"`
+}
+
+// DropStorageIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-integration.
+type DropStorageIntegrationOptions struct {
+	drop               bool                    `ddl:"static" sql:"DROP"`
+	storageIntegration bool                    `ddl:"static" sql:"STORAGE INTEGRATION"`
+	IfExists           *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name               AccountObjectIdentifier `ddl:"identifier"`
+}
+
+// ShowStorageIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-integrations.
+type ShowStorageIntegrationOptions struct {
+	show                bool  `ddl:"static" sql:"SHOW"`
+	storageIntegrations bool  `ddl:"static" sql:"STORAGE INTEGRATIONS"`
+	Like                *Like `ddl:"keyword" sql:"LIKE"`
+}
+
+type showStorageIntegrationsDbRow struct {
+	Name      string    `db:"name"`
+	Type      string    `db:"type"`
+	Category  string    `db:"category"`
+	Enabled   bool      `db:"enabled"`
+	Comment   string    `db:"comment"`
+	CreatedOn time.Time `db:"created_on"`
+}
+
+type StorageIntegration struct {
+	Name        string
+	StorageType string
+	Category    string
+	Enabled     bool
+	Comment     string
+	CreatedOn   time.Time
+}
+
+// DescribeStorageIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-integration.
+type DescribeStorageIntegrationOptions struct {
+	describe           bool                    `ddl:"static" sql:"DESCRIBE"`
+	storageIntegration bool                    `ddl:"static" sql:"STORAGE INTEGRATION"`
+	name               AccountObjectIdentifier `ddl:"identifier"`
+}
+
+type descStorageIntegrationsDbRow struct {
+	Property        string `db:"property"`
+	PropertyType    string `db:"property_type"`
+	PropertyValue   string `db:"property_value"`
+	PropertyDefault string `db:"property_default"`
+}
+
+type StorageIntegrationProperty struct {
+	Name    string
+	Type    string
+	Value   string
+	Default string
 }

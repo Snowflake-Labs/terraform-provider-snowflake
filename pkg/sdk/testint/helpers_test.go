@@ -19,11 +19,14 @@ const (
 )
 
 var (
-	awsBucketUrl = os.Getenv("AWS_EXTERNAL_BUCKET_URL")
-	awsKeyId     = os.Getenv("AWS_EXTERNAL_BUCKET_URL")
-	awsSecretKey = os.Getenv("AWS_EXTERNAL_BUCKET_URL")
+	awsBucketUrl, awsBucketUrlIsSet = os.LookupEnv("AWS_EXTERNAL_BUCKET_URL")
+	awsKeyId, awsKeyIdIsSet         = os.LookupEnv("AWS_EXTERNAL_KEY_ID")
+	awsSecretKey, awsSecretKeyIsSet = os.LookupEnv("AWS_EXTERNAL_SECRET_KEY")
+	awsRoleARN, awsRoleARNIsSet     = os.LookupEnv("AWS_EXTERNAL_ROLE_ARN")
 
-	hasExternalEnvironmentVariablesSet = awsBucketUrl != "" && awsKeyId != "" && awsSecretKey != ""
+	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("GCS_EXTERNAL_BUCKET_URL")
+
+	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet && awsKeyIdIsSet && awsSecretKeyIsSet && awsRoleARNIsSet && gcsBucketUrlIsSet
 )
 
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know

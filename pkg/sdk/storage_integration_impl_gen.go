@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ StorageIntegrations = (*storageIntegrations)(nil)
@@ -18,6 +20,42 @@ func (v *storageIntegrations) Create(ctx context.Context, request *CreateStorage
 func (v *storageIntegrations) Alter(ctx context.Context, request *AlterStorageIntegrationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *storageIntegrations) Drop(ctx context.Context, request *DropStorageIntegrationRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *storageIntegrations) Show(ctx context.Context, request *ShowStorageIntegrationRequest) ([]StorageIntegration, error) {
+	opts := request.toOpts()
+	dbRows, err := validateAndQuery[showStorageIntegrationsDbRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	resultList := convertRows[showStorageIntegrationsDbRow, StorageIntegration](dbRows)
+	return resultList, nil
+}
+
+func (v *storageIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*StorageIntegration, error) {
+	storageIntegrations, err := v.Show(ctx, NewShowStorageIntegrationRequest().WithLike(&Like{
+		Pattern: String(id.Name()),
+	}))
+	if err != nil {
+		return nil, err
+	}
+	return collections.FindOne(storageIntegrations, func(r StorageIntegration) bool { return r.Name == id.Name() })
+}
+
+func (v *storageIntegrations) Describe(ctx context.Context, id AccountObjectIdentifier) ([]StorageIntegrationProperty, error) {
+	opts := &DescribeStorageIntegrationOptions{
+		name: id,
+	}
+	rows, err := validateAndQuery[descStorageIntegrationsDbRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return convertRows[descStorageIntegrationsDbRow, StorageIntegrationProperty](rows), nil
 }
 
 func (r *CreateStorageIntegrationRequest) toOpts() *CreateStorageIntegrationOptions {
@@ -84,4 +122,46 @@ func (r *AlterStorageIntegrationRequest) toOpts() *AlterStorageIntegrationOption
 		}
 	}
 	return opts
+}
+
+func (r *DropStorageIntegrationRequest) toOpts() *DropStorageIntegrationOptions {
+	opts := &DropStorageIntegrationOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+	}
+	return opts
+}
+
+func (r *ShowStorageIntegrationRequest) toOpts() *ShowStorageIntegrationOptions {
+	opts := &ShowStorageIntegrationOptions{
+		Like: r.Like,
+	}
+	return opts
+}
+
+func (r showStorageIntegrationsDbRow) convert() *StorageIntegration {
+	return &StorageIntegration{
+		Name:        r.Name,
+		StorageType: r.Type,
+		Category:    r.Category,
+		Enabled:     r.Enabled,
+		Comment:     r.Comment,
+		CreatedOn:   r.CreatedOn,
+	}
+}
+
+func (r *DescribeStorageIntegrationRequest) toOpts() *DescribeStorageIntegrationOptions {
+	opts := &DescribeStorageIntegrationOptions{
+		name: r.name,
+	}
+	return opts
+}
+
+func (r descStorageIntegrationsDbRow) convert() *StorageIntegrationProperty {
+	return &StorageIntegrationProperty{
+		Name:    r.Property,
+		Type:    r.PropertyType,
+		Value:   r.PropertyValue,
+		Default: r.PropertyDefault,
+	}
 }
