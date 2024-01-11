@@ -736,7 +736,7 @@ func (r *ResourceMonitorResource) update(ctx context.Context, plan *resourceMoni
 		for _, e := range elements {
 			notifiedUsers = append(notifiedUsers, sdk.NotifiedUser{Name: e.ValueString()})
 		}
-		opts.NotifyUsers = &sdk.NotifyUsers{
+		opts.Set.NotifyUsers = &sdk.NotifyUsers{
 			Users: notifiedUsers,
 		}
 	}

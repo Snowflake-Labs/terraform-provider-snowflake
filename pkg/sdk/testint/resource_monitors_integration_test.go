@@ -211,6 +211,30 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 	})
 
+	t.Run("when changing notify users", func(t *testing.T) {
+		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		t.Cleanup(resourceMonitorCleanup)
+		alterOptions := &sdk.AlterResourceMonitorOptions{
+			Set: &sdk.ResourceMonitorSet{
+				NotifyUsers: &sdk.NotifyUsers{
+					Users: []sdk.NotifiedUser{{Name: "ARTUR_SAWICKI"}},
+				},
+			},
+		}
+		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
+		require.NoError(t, err)
+		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(resourceMonitor.Name),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(resourceMonitors))
+		resourceMonitor = &resourceMonitors[0]
+		assert.Len(t, resourceMonitor.NotifyUsers, 1)
+		assert.Equal(t, "ARTUR_SAWICKI", resourceMonitor.NotifyUsers[0])
+	})
+
 	t.Run("when changing scheduling info", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
@@ -256,11 +280,11 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		alterOptions := &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
 				CreditQuota: &creditQuota,
+				NotifyUsers: &sdk.NotifyUsers{
+					Users: []sdk.NotifiedUser{{Name: "ARTUR_SAWICKI"}},
+				},
 			},
 			Triggers: newTriggers,
-			NotifyUsers: &sdk.NotifyUsers{
-				Users: []sdk.NotifiedUser{{Name: "ARTUR_SAWICKI"}},
-			},
 		}
 		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
 		require.NoError(t, err)
