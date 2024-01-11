@@ -234,14 +234,12 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 
 	uploadFileForStageHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier, name string) {
 		t.Helper()
-
-		tempFile := fmt.Sprintf("/tmp/%s", name)
-		f, err := os.Create(tempFile)
+		f, err := os.CreateTemp("", name)
 		require.NoError(t, err)
 		f.Close()
-		defer os.Remove(name)
+		defer os.Remove(f.Name())
 
-		_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, tempFile, id.FullyQualifiedName()))
+		_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, f.Name(), id.FullyQualifiedName()))
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			_, err = client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @%s/%s`, id.FullyQualifiedName(), name))

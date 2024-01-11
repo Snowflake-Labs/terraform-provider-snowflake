@@ -191,7 +191,7 @@ func TestApplicationPackages_Alter(t *testing.T) {
 			Using:             "@hello_snowflake_code.core.hello_snowflake_stage",
 			Label:             String("test"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s ADD VERSION v1_1 USING '@hello_snowflake_code.core.hello_snowflake_stage' Label = 'test'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s ADD VERSION v1_1 USING '@hello_snowflake_code.core.hello_snowflake_stage' LABEL = 'test'`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: drop version", func(t *testing.T) {

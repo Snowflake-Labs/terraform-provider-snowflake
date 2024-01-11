@@ -83,7 +83,7 @@ type UnsetReleaseDirective struct {
 type AddVersion struct {
 	VersionIdentifier *string `ddl:"keyword,no_quotes"`
 	Using             string  `ddl:"parameter,single_quotes,no_equals" sql:"USING"`
-	Label             *string `ddl:"parameter,single_quotes" sql:"Label"`
+	Label             *string `ddl:"parameter,single_quotes" sql:"LABEL"`
 }
 
 type DropVersion struct {
@@ -93,7 +93,7 @@ type DropVersion struct {
 type AddPatchForVersion struct {
 	VersionIdentifier *string `ddl:"keyword,no_quotes"`
 	Using             string  `ddl:"parameter,single_quotes,no_equals" sql:"USING"`
-	Label             *string `ddl:"parameter,single_quotes" sql:"Label"`
+	Label             *string `ddl:"parameter,single_quotes" sql:"LABEL"`
 }
 
 // DropApplicationPackageOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-application-package.

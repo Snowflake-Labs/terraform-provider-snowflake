@@ -25,7 +25,7 @@ var applicationPackageSetDefaultReleaseDirective = g.NewQueryStruct("SetDefaultR
 var applicationPackageAddVersion = g.NewQueryStruct("AddVersion").
 	OptionalText("VersionIdentifier", g.KeywordOptions().NoQuotes()).
 	TextAssignment("USING", g.ParameterOptions().NoEquals().SingleQuotes().Required()).
-	OptionalTextAssignment("Label", g.ParameterOptions().SingleQuotes())
+	OptionalTextAssignment("LABEL", g.ParameterOptions().SingleQuotes())
 
 var applicationPackageDropVersion = g.NewQueryStruct("DropVersion").
 	Text("VersionIdentifier", g.KeywordOptions().NoQuotes().Required())
@@ -33,7 +33,7 @@ var applicationPackageDropVersion = g.NewQueryStruct("DropVersion").
 var applicationPackageAddPatchForVersion = g.NewQueryStruct("AddPatchForVersion").
 	OptionalText("VersionIdentifier", g.KeywordOptions().NoQuotes().Required()).
 	TextAssignment("USING", g.ParameterOptions().NoEquals().SingleQuotes().Required()).
-	OptionalTextAssignment("Label", g.ParameterOptions().SingleQuotes())
+	OptionalTextAssignment("LABEL", g.ParameterOptions().SingleQuotes())
 
 var applicationPackageSet = g.NewQueryStruct("ApplicationPackageSet").
 	OptionalNumberAssignment("DATA_RETENTION_TIME_IN_DAYS", g.ParameterOptions().NoQuotes()).
