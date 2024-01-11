@@ -155,7 +155,7 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &StorageIntegrationSet{
 			SetAzureParams: &SetAzureStorageParams{
-				AzureTenantId: String("new-azure-tenant-id"),
+				AzureTenantId: "new-azure-tenant-id",
 			},
 			Enabled:                 false,
 			StorageAllowedLocations: []StorageLocation{{Path: "new-allowed-location"}},

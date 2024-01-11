@@ -59,7 +59,7 @@ type SetS3StorageParamsRequest struct {
 }
 
 type SetAzureStorageParamsRequest struct {
-	AzureTenantId *string // required
+	AzureTenantId string // required
 }
 
 type StorageIntegrationUnsetRequest struct {

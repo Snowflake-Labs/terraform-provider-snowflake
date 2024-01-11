@@ -77,7 +77,7 @@ type SetS3StorageParams struct {
 }
 
 type SetAzureStorageParams struct {
-	AzureTenantId *string `ddl:"parameter,single_quotes" sql:"AZURE_TENANT_ID"`
+	AzureTenantId string `ddl:"parameter,single_quotes" sql:"AZURE_TENANT_ID"`
 }
 
 type StorageIntegrationUnset struct {

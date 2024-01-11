@@ -26,7 +26,16 @@ var (
 
 	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("GCS_EXTERNAL_BUCKET_URL")
 
-	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet && awsKeyIdIsSet && awsSecretKeyIsSet && awsRoleARNIsSet && gcsBucketUrlIsSet
+	azureBucketUrl, azureBucketUrlIsSet = os.LookupEnv("AZURE_EXTERNAL_BUCKET_URL")
+	azureTenantId, azureTenantIdIsSet   = os.LookupEnv("AZURE_EXTERNAL_TENANT_ID")
+
+	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet &&
+		awsKeyIdIsSet &&
+		awsSecretKeyIsSet &&
+		awsRoleARNIsSet &&
+		gcsBucketUrlIsSet &&
+		azureBucketUrlIsSet &&
+		azureTenantIdIsSet
 )
 
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know

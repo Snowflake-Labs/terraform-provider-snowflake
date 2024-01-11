@@ -60,6 +60,60 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		assert.Equal(t, comment, findProp(t, props, "COMMENT").Value)
 	}
 
+	assertGCSStorageIntegrationDescResult := func(
+		t *testing.T,
+		props []sdk.StorageIntegrationProperty,
+		enabled bool,
+		allowedLocations []sdk.StorageLocation,
+		blockedLocations []sdk.StorageLocation,
+		comment string,
+	) {
+		allowed := make([]string, len(allowedLocations))
+		for i, a := range allowedLocations {
+			allowed[i] = a.Path
+		}
+		blocked := make([]string, len(blockedLocations))
+		for i, b := range blockedLocations {
+			blocked[i] = b.Path
+		}
+		assert.Equal(t, "Boolean", findProp(t, props, "ENABLED").Type)
+		assert.Equal(t, strconv.FormatBool(enabled), findProp(t, props, "ENABLED").Value)
+		assert.Equal(t, "false", findProp(t, props, "ENABLED").Default)
+		assert.Equal(t, "GCS", findProp(t, props, "STORAGE_PROVIDER").Value)
+		assert.Equal(t, strings.Join(allowed, ","), findProp(t, props, "STORAGE_ALLOWED_LOCATIONS").Value)
+		assert.Equal(t, strings.Join(blocked, ","), findProp(t, props, "STORAGE_BLOCKED_LOCATIONS").Value)
+		assert.NotEmpty(t, findProp(t, props, "STORAGE_GCP_SERVICE_ACCOUNT").Value)
+		assert.Equal(t, comment, findProp(t, props, "COMMENT").Value)
+	}
+
+	assertAzureStorageIntegrationDescResult := func(
+		t *testing.T,
+		props []sdk.StorageIntegrationProperty,
+		enabled bool,
+		allowedLocations []sdk.StorageLocation,
+		blockedLocations []sdk.StorageLocation,
+		comment string,
+	) {
+		allowed := make([]string, len(allowedLocations))
+		for i, a := range allowedLocations {
+			allowed[i] = a.Path
+		}
+		blocked := make([]string, len(blockedLocations))
+		for i, b := range blockedLocations {
+			blocked[i] = b.Path
+		}
+		assert.Equal(t, "Boolean", findProp(t, props, "ENABLED").Type)
+		assert.Equal(t, strconv.FormatBool(enabled), findProp(t, props, "ENABLED").Value)
+		assert.Equal(t, "false", findProp(t, props, "ENABLED").Default)
+		assert.Equal(t, "AZURE", findProp(t, props, "STORAGE_PROVIDER").Value)
+		assert.Equal(t, strings.Join(allowed, ","), findProp(t, props, "STORAGE_ALLOWED_LOCATIONS").Value)
+		assert.Equal(t, strings.Join(blocked, ","), findProp(t, props, "STORAGE_BLOCKED_LOCATIONS").Value)
+		assert.NotEmpty(t, findProp(t, props, "AZURE_TENANT_ID").Value)
+		assert.NotEmpty(t, findProp(t, props, "AZURE_CONSENT_URL").Value)
+		assert.NotEmpty(t, findProp(t, props, "AZURE_MULTI_TENANT_APP_NAME").Value)
+		assert.Equal(t, comment, findProp(t, props, "COMMENT").Value)
+	}
+
 	allowedLocations := func(prefix string) []sdk.StorageLocation {
 		return []sdk.StorageLocation{
 			{
@@ -72,6 +126,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	}
 	s3AllowedLocations := allowedLocations(awsBucketUrl)
 	gcsAllowedLocations := allowedLocations(gcsBucketUrl)
+	azureAllowedLocations := allowedLocations(azureBucketUrl)
 
 	blockedLocations := func(prefix string) []sdk.StorageLocation {
 		return []sdk.StorageLocation{
@@ -85,6 +140,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	}
 	s3BlockedLocations := blockedLocations(awsBucketUrl)
 	gcsBlockedLocations := blockedLocations(gcsBucketUrl)
+	azureBlockedLocations := blockedLocations(azureBucketUrl)
 
 	createS3StorageIntegration := func(t *testing.T) sdk.AccountObjectIdentifier {
 		t.Helper()
@@ -128,6 +184,27 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		return id
 	}
 
+	createAzureStorageIntegration := func(t *testing.T) sdk.AccountObjectIdentifier {
+		t.Helper()
+
+		id := sdk.RandomAccountObjectIdentifier()
+		req := sdk.NewCreateStorageIntegrationRequest(id, true, azureAllowedLocations).
+			WithIfNotExists(sdk.Bool(true)).
+			WithAzureStorageProviderParams(sdk.NewAzureStorageParamsRequest(sdk.String(azureTenantId))).
+			WithStorageBlockedLocations(azureBlockedLocations).
+			WithComment(sdk.String("some comment"))
+
+		err := client.StorageIntegrations.Create(ctx, req)
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			err := client.StorageIntegrations.Drop(ctx, sdk.NewDropStorageIntegrationRequest(id))
+			require.NoError(t, err)
+		})
+
+		return id
+	}
+
 	t.Run("Create - S3", func(t *testing.T) {
 		id := createS3StorageIntegration(t)
 
@@ -147,7 +224,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	})
 
 	t.Run("Create - Azure", func(t *testing.T) {
-		id := createS3StorageIntegration(t)
+		id := createAzureStorageIntegration(t)
 
 		storageIntegration, err := client.StorageIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -179,7 +256,26 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	})
 
 	t.Run("Alter - set - Azure", func(t *testing.T) {
-		// TODO: fill me
+		id := createAzureStorageIntegration(t)
+
+		changedAzureAllowedLocations := append(azureAllowedLocations, sdk.StorageLocation{Path: azureBucketUrl + "/allowed-location3"})
+		changedAzureBlockedLocations := append(azureBlockedLocations, sdk.StorageLocation{Path: azureBucketUrl + "/blocked-location3"})
+		req := sdk.NewAlterStorageIntegrationRequest(id).
+			WithSet(
+				sdk.NewStorageIntegrationSetRequest().
+					WithSetAzureParams(sdk.NewSetAzureStorageParamsRequest(azureTenantId)).
+					WithEnabled(true).
+					WithStorageAllowedLocations(changedAzureAllowedLocations).
+					WithStorageBlockedLocations(changedAzureBlockedLocations).
+					WithComment(sdk.String("changed comment")),
+			)
+		err := client.StorageIntegrations.Alter(ctx, req)
+		require.NoError(t, err)
+
+		props, err := client.StorageIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertAzureStorageIntegrationDescResult(t, props, true, changedAzureAllowedLocations, changedAzureBlockedLocations, "changed comment")
 	})
 
 	t.Run("Alter - unset", func(t *testing.T) {
@@ -231,10 +327,6 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		require.Error(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
-	t.Run("Show", func(t *testing.T) {
-		// TODO: fill me
-	})
-
 	t.Run("Describe - S3", func(t *testing.T) {
 		id := createS3StorageIntegration(t)
 
@@ -245,10 +337,20 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	})
 
 	t.Run("Describe - GCS", func(t *testing.T) {
-		// TODO: fill me
+		id := createGCSStorageIntegration(t)
+
+		desc, err := client.StorageIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertGCSStorageIntegrationDescResult(t, desc, true, gcsAllowedLocations, gcsBlockedLocations, "some comment")
 	})
 
 	t.Run("Describe - Azure", func(t *testing.T) {
-		// TODO: fill me
+		id := createAzureStorageIntegration(t)
+
+		desc, err := client.StorageIntegrations.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertAzureStorageIntegrationDescResult(t, desc, true, azureAllowedLocations, azureBlockedLocations, "some comment")
 	})
 }

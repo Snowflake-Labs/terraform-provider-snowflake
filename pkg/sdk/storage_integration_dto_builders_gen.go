@@ -157,7 +157,7 @@ func (s *SetS3StorageParamsRequest) WithStorageAwsObjectAcl(StorageAwsObjectAcl 
 }
 
 func NewSetAzureStorageParamsRequest(
-	AzureTenantId *string,
+	AzureTenantId string,
 ) *SetAzureStorageParamsRequest {
 	s := SetAzureStorageParamsRequest{}
 	s.AzureTenantId = AzureTenantId

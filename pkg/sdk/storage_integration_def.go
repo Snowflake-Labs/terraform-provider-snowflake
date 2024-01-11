@@ -70,7 +70,7 @@ var StorageIntegrationDef = g.NewInterface(
 					OptionalQueryStructField(
 						"SetAzureParams",
 						g.NewQueryStruct("SetAzureStorageParams").
-							OptionalTextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes().Required()),
+							TextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes().Required()),
 						g.KeywordOptions(),
 					).
 					BooleanAssignment("ENABLED", g.ParameterOptions()).
