@@ -16,6 +16,10 @@ import (
 /*
 todo: add tests for:
   - Creates a custom release directive for the specified accounts : https://docs.snowflake.com/en/sql-reference/sql/alter-application-package-release-directive
+  - Create application package with insufficient privileges for the following three fields
+	-  WithDataRetentionTimeInDays(sdk.Int(1)).
+	-  WithMaxDataExtensionTimeInDays(sdk.Int(1)).
+	-  WithDefaultDdlCollation(sdk.String("en_US")).
 */
 
 func TestInt_ApplicationPackages(t *testing.T) {
@@ -74,10 +78,6 @@ func TestInt_ApplicationPackages(t *testing.T) {
 		comment := random.StringN(4)
 		request := sdk.NewCreateApplicationPackageRequest(id).
 			WithComment(&comment).
-			// todo: insufficient privileges for the following three fields
-			// WithDataRetentionTimeInDays(sdk.Int(1)).
-			// WithMaxDataExtensionTimeInDays(sdk.Int(1)).
-			// WithDefaultDdlCollation(sdk.String("en_US")).
 			WithTag([]sdk.TagAssociation{
 				{
 					Name:  tagTest.ID(),

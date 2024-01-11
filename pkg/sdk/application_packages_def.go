@@ -4,8 +4,6 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
-// https://medium.com/snowflake/hello-world-snowflake-native-apps-76e1ce82e1be
-
 var applicationPackageModifyReleaseDirective = g.NewQueryStruct("ModifyReleaseDirective").
 	Text("ReleaseDirective", g.KeywordOptions().NoQuotes().Required()).
 	TextAssignment("VERSION", g.ParameterOptions().NoQuotes().Required()).
