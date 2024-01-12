@@ -16,10 +16,11 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	ctx := testContext(t)
 
 	if !hasExternalEnvironmentVariablesSet {
-		t.Skip("Skipping TestInt_StorageIntegrations (External environmental variables are not set)")
+		t.Skip("Skipping TestInt_StorageIntegrations (External env variables are not set)")
 	}
 
 	assertStorageIntegrationShowResult := func(t *testing.T, s *sdk.StorageIntegration, name sdk.AccountObjectIdentifier, comment string) {
+		t.Helper()
 		assert.Equal(t, name.Name(), s.Name)
 		assert.Equal(t, true, s.Enabled)
 		assert.Equal(t, "EXTERNAL_STAGE", s.StorageType)
@@ -28,6 +29,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	}
 
 	findProp := func(t *testing.T, props []sdk.StorageIntegrationProperty, name string) *sdk.StorageIntegrationProperty {
+		t.Helper()
 		prop, err := collections.FindOne(props, func(property sdk.StorageIntegrationProperty) bool { return property.Name == name })
 		require.NoError(t, err)
 		return prop
@@ -239,8 +241,8 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	t.Run("Alter - set - S3", func(t *testing.T) {
 		id := createS3StorageIntegration(t)
 
-		changedS3AllowedLocations := append(s3AllowedLocations, sdk.StorageLocation{Path: awsBucketUrl + "/allowed-location3"})
-		changedS3BlockedLocations := append(s3BlockedLocations, sdk.StorageLocation{Path: awsBucketUrl + "/blocked-location3"})
+		changedS3AllowedLocations := append([]sdk.StorageLocation{{Path: awsBucketUrl + "/allowed-location3"}}, s3AllowedLocations...)
+		changedS3BlockedLocations := append([]sdk.StorageLocation{{Path: awsBucketUrl + "/blocked-location3"}}, s3BlockedLocations...)
 		req := sdk.NewAlterStorageIntegrationRequest(id).
 			WithSet(
 				sdk.NewStorageIntegrationSetRequest().
@@ -262,8 +264,8 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	t.Run("Alter - set - Azure", func(t *testing.T) {
 		id := createAzureStorageIntegration(t)
 
-		changedAzureAllowedLocations := append(azureAllowedLocations, sdk.StorageLocation{Path: azureBucketUrl + "/allowed-location3"})
-		changedAzureBlockedLocations := append(azureBlockedLocations, sdk.StorageLocation{Path: azureBucketUrl + "/blocked-location3"})
+		changedAzureAllowedLocations := append([]sdk.StorageLocation{{Path: azureBucketUrl + "/allowed-location3"}}, azureAllowedLocations...)
+		changedAzureBlockedLocations := append([]sdk.StorageLocation{{Path: azureBucketUrl + "/blocked-location3"}}, azureBlockedLocations...)
 		req := sdk.NewAlterStorageIntegrationRequest(id).
 			WithSet(
 				sdk.NewStorageIntegrationSetRequest().
