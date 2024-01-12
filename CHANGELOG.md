@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.83.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.83.0...v0.83.1) (2024-01-12)
+
+
+### 🐛 **Bug fixes:**
+
+* Revert goreleaser mfa token caching ([#2343](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2343)) ([9a98031](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9a9803107f395ca350bdbb9fb8dc0f17820b8eb6))
+
 ## [0.83.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.82.0...v0.83.0) (2024-01-11)
 
 
