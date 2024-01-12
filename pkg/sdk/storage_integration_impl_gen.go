@@ -96,7 +96,6 @@ func (r *AlterStorageIntegrationRequest) toOpts() *AlterStorageIntegrationOption
 	}
 	if r.Set != nil {
 		opts.Set = &StorageIntegrationSet{
-
 			Enabled:                 r.Set.Enabled,
 			StorageAllowedLocations: r.Set.StorageAllowedLocations,
 			StorageBlockedLocations: r.Set.StorageBlockedLocations,

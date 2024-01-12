@@ -1,13 +1,14 @@
 package testint
 
 import (
+	"strconv"
+	"strings"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"strconv"
-	"strings"
-	"testing"
 )
 
 func TestInt_StorageIntegrations(t *testing.T) {
@@ -40,6 +41,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		blockedLocations []sdk.StorageLocation,
 		comment string,
 	) {
+		t.Helper()
 		allowed := make([]string, len(allowedLocations))
 		for i, a := range allowedLocations {
 			allowed[i] = a.Path
@@ -68,6 +70,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		blockedLocations []sdk.StorageLocation,
 		comment string,
 	) {
+		t.Helper()
 		allowed := make([]string, len(allowedLocations))
 		for i, a := range allowedLocations {
 			allowed[i] = a.Path
@@ -94,6 +97,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		blockedLocations []sdk.StorageLocation,
 		comment string,
 	) {
+		t.Helper()
 		allowed := make([]string, len(allowedLocations))
 		for i, a := range allowedLocations {
 			allowed[i] = a.Path
