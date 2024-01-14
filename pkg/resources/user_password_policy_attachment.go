@@ -68,7 +68,26 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 
 // TODO: the client does not incorporate an API to read the view POLICY REFERENCES yet. implement a PolicyReference in client, similar to the function getRowAccessPolicyFor in helpers_test.go
 func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
-	return nil
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
+	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
+		RefEntityName:   d.Get("user_name").(string),
+		RefEntityDomain: "user",
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(policyReferences) != 1 {
+		if len(policyReferences) == 0 {
+			d.SetId("")
+		}
+		return fmt.Errorf("internal error: multiple policy references found")
+	}
+	err = d.Set("password_policy", fmt.Sprintf("%s.%s.%s", policyReferences[0].PolicyDb, policyReferences[0].PolicySchema, policyReferences[0].PolicyName))
+	return err
 }
 
 // DeleteAccountPasswordPolicyAttachment implements schema.DeleteFunc.
