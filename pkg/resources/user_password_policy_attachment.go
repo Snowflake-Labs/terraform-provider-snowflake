@@ -66,7 +66,6 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	return ReadUserPasswordPolicyAttachment(d, meta)
 }
 
-// TODO: the client does not incorporate an API to read the view POLICY REFERENCES yet. implement a PolicyReference in client, similar to the function getRowAccessPolicyFor in helpers_test.go
 func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
@@ -80,13 +79,24 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	if len(policyReferences) != 1 {
-		if len(policyReferences) == 0 {
-			d.SetId("")
-		}
-		return fmt.Errorf("internal error: multiple policy references found")
+	// Note: this should never happen, but just in case: so far, Snowflake only allows one Password Policy per user.
+	if len(policyReferences) > 1 {
+		return fmt.Errorf("internal error: multiple policy references attached to a user. This should never happen")
 	}
-	err = d.Set("password_policy", fmt.Sprintf("%s.%s.%s", policyReferences[0].PolicyDb, policyReferences[0].PolicySchema, policyReferences[0].PolicyName))
+
+	// Note: this means the resource has been deleted outside of Terraform.
+	if len(policyReferences) == 0 {
+		d.SetId("")
+		return nil
+	}
+	policyReference := sdk.NewSchemaObjectIdentifier(
+		policyReferences[0].PolicyDb,
+		policyReferences[0].PolicySchema,
+		policyReferences[0].PolicyName,
+	)
+	if err := d.Set("password_policy", policyReference.FullyQualifiedName()); err != nil {
+		return err
+	}
 	return err
 }
 

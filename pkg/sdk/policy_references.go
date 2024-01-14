@@ -13,6 +13,7 @@ type getForEntityPolicyReferenceOptions struct {
 	select_          bool                              `ddl:"static" sql:"SELECT"`
 	asterisk         bool                              `ddl:"static" sql:"*"`
 	from             bool                              `ddl:"static" sql:"FROM"`
+	// TODO: not sure how to do the parentheses: it should be part of the list maybe?
 	tableFunction    bool                              `ddl:"static" sql:"TABLE(SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES("`
 	arguments        []policyReferenceFunctionArgument `ddl:"list,comma"`
 	endTableFunction bool                              `ddl:"static" sql:"))"`
