@@ -198,3 +198,14 @@ type Secret struct {
 	VariableName string `ddl:"keyword,single_quotes"`
 	Name         string `ddl:"parameter,no_quotes"`
 }
+
+type ValuesBehavior string
+
+var (
+	ValuesBehaviorOrder   ValuesBehavior = "ORDER"
+	ValuesBehaviorNoOrder ValuesBehavior = "NOORDER"
+)
+
+func ValuesBehaviorPointer(v ValuesBehavior) *ValuesBehavior {
+	return &v
+}

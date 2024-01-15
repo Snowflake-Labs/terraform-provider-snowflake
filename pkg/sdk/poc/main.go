@@ -27,6 +27,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"functions_def.go":         sdk.FunctionsDef,
 	"procedures_def.go":        sdk.ProceduresDef,
 	"event_tables_def.go":      sdk.EventTablesDef,
+	"sequences_def.go":         sdk.SequencesDef,
 }
 
 func main() {
