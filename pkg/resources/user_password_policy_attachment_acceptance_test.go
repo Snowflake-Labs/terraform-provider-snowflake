@@ -1,13 +1,13 @@
 package resources_test
 
 import (
-	// "context"
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
 
-	// "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -20,10 +20,10 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 	prefix2 := "tst-terraform2" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: acc.TestAccProviders(),
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		// CheckDestroy: testAccCheckYourResourceDestroy,
-		CheckDestroy: nil,
+		// Providers: acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		CheckDestroy:             testAccCheckYourResourceDestroy,
 		Steps: []resource.TestStep{
 			// CREATE
 			{
@@ -49,27 +49,28 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 
 func testAccCheckYourResourceDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
-	// client := sdk.NewClientFromDB(db)
-	// ctx := context.Background()
-	// for _, rs := range s.RootModule().Resources {
-	// 	// Note: I leverage the fact that the state during the test is specific to the test case, so there should only be there resources created in this test
-	// 	if rs.Type != "snowflake_user_password_policy_attachment" {
-	// 		continue
-	// 	}
-	// 	user_name := rs.Primary.Attributes["user_name"]
-	// 	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
-	// 		RefEntityName:   user_name,
-	// 		RefEntityDomain: "user",
-	// 	})
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if len(policyReferences) > 0 {
-	// 		return fmt.Errorf("User Password Policy attachment %v still exists", policyReferences[0].PolicyName)
-	// 	}
-	// }
-	if db != nil {
-		return nil
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+	for _, rs := range s.RootModule().Resources {
+		// Note: I leverage the fact that the state during the test is specific to the test case, so there should only be there resources created in this test
+		if rs.Type != "snowflake_user_password_policy_attachment" {
+			continue
+		}
+		user_name := rs.Primary.Attributes["user_name"]
+		policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
+			RefEntityName:   user_name,
+			RefEntityDomain: "user",
+		})
+		if err != nil {
+			if strings.Contains(err.Error(), "does not exist or not authorized") {
+				// Note: this can happen if the Policy Reference or the User have been deleted as well; in this case, just ignore the error
+				continue
+			}
+			return err
+		}
+		if len(policyReferences) > 0 {
+			return fmt.Errorf("User Password Policy attachment %v still exists", policyReferences[0].PolicyName)
+		}
 	}
 	return nil
 }
