@@ -254,9 +254,9 @@ func isNotOwnershipGrant() func(value any, path cty.Path) diag.Diagnostics {
 func GrantPrivilegesToDatabaseRole() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateGrantPrivilegesToDatabaseRole,
-		ReadContext:   ReadGrantPrivilegesToDatabaseRole,
-		DeleteContext: DeleteGrantPrivilegesToDatabaseRole,
 		UpdateContext: UpdateGrantPrivilegesToDatabaseRole,
+		DeleteContext: DeleteGrantPrivilegesToDatabaseRole,
+		ReadContext:   ReadGrantPrivilegesToDatabaseRole,
 
 		Schema: grantPrivilegesToDatabaseRoleSchema,
 		Importer: &schema.ResourceImporter{
