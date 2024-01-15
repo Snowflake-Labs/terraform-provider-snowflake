@@ -2,6 +2,9 @@ package resources
 
 import (
 	"database/sql"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"strings"
 	"time"
@@ -385,4 +388,79 @@ func changeDiff(d *schema.ResourceData, key string) (toAdd []string, toRemove []
 	toAdd = expandStringList(newSet.Difference(oldSet).List())
 	toRemove = expandStringList(oldSet.Difference(newSet).List())
 	return
+}
+
+func isNotOwnershipGrant() func(value any, path cty.Path) diag.Diagnostics {
+	return func(value any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		if privilege, ok := value.(string); ok && strings.ToUpper(privilege) == "OWNERSHIP" {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unsupported privilege 'OWNERSHIP'",
+				// TODO: Change when a new resource for granting ownership will be available (SNOW-991423)
+				Detail:        "Granting ownership is only allowed in dedicated resources (snowflake_user_ownership_grant, snowflake_role_ownership_grant)",
+				AttributePath: nil,
+			})
+		}
+		return diags
+	}
+}
+
+func ValidGrantedObjectType() schema.SchemaValidateDiagFunc {
+	return StringInSlice([]string{
+		sdk.ObjectTypeAlert.String(),
+		sdk.ObjectTypeDynamicTable.String(),
+		sdk.ObjectTypeEventTable.String(),
+		sdk.ObjectTypeFileFormat.String(),
+		sdk.ObjectTypeFunction.String(),
+		sdk.ObjectTypeProcedure.String(),
+		sdk.ObjectTypeSecret.String(),
+		sdk.ObjectTypeSequence.String(),
+		sdk.ObjectTypePipe.String(),
+		sdk.ObjectTypeMaskingPolicy.String(),
+		sdk.ObjectTypePasswordPolicy.String(),
+		sdk.ObjectTypeRowAccessPolicy.String(),
+		sdk.ObjectTypeSessionPolicy.String(),
+		sdk.ObjectTypeTag.String(),
+		sdk.ObjectTypeStage.String(),
+		sdk.ObjectTypeStream.String(),
+		sdk.ObjectTypeTable.String(),
+		sdk.ObjectTypeExternalTable.String(),
+		sdk.ObjectTypeTask.String(),
+		sdk.ObjectTypeView.String(),
+		sdk.ObjectTypeMaterializedView.String(),
+		sdk.ObjectTypeNetworkRule.String(),
+		sdk.ObjectTypePackagesPolicy.String(),
+		sdk.ObjectTypeIcebergTable.String(),
+	}, true)
+}
+
+func ValidGrantedPluralObjectType() schema.SchemaValidateDiagFunc {
+	return StringInSlice(
+		[]string{
+			sdk.PluralObjectTypeAlerts.String(),
+			sdk.PluralObjectTypeDynamicTables.String(),
+			sdk.PluralObjectTypeEventTables.String(),
+			sdk.PluralObjectTypeFileFormats.String(),
+			sdk.PluralObjectTypeFunctions.String(),
+			sdk.PluralObjectTypeProcedures.String(),
+			sdk.PluralObjectTypeSecrets.String(),
+			sdk.PluralObjectTypeSequences.String(),
+			sdk.PluralObjectTypePipes.String(),
+			sdk.PluralObjectTypeMaskingPolicies.String(),
+			sdk.PluralObjectTypePasswordPolicies.String(),
+			sdk.PluralObjectTypeRowAccessPolicies.String(),
+			sdk.PluralObjectTypeSessionPolicies.String(),
+			sdk.PluralObjectTypeTags.String(),
+			sdk.PluralObjectTypeStages.String(),
+			sdk.PluralObjectTypeStreams.String(),
+			sdk.PluralObjectTypeTables.String(),
+			sdk.PluralObjectTypeExternalTables.String(),
+			sdk.PluralObjectTypeTasks.String(),
+			sdk.PluralObjectTypeViews.String(),
+			sdk.PluralObjectTypeMaterializedViews.String(),
+			sdk.PluralObjectTypeNetworkRules.String(),
+			sdk.PluralObjectTypePackagesPolicies.String(),
+			sdk.PluralObjectTypeIcebergTables.String(),
+		}, true)
 }

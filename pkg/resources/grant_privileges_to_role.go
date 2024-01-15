@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// TODO: Deprecate
+
 var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 	"privileges": {
 		Type:        schema.TypeSet,
@@ -129,7 +131,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 					RequiredWith:     []string{"on_schema_object.0.object_name"},
 					ConflictsWith:    []string{"on_schema_object.0.all", "on_schema_object.0.future"},
 					ForceNew:         true,
-					ValidateDiagFunc: ValidObjectType(),
+					ValidateDiagFunc: ValidGrantedObjectType(),
 				},
 				"object_name": {
 					Type:             schema.TypeString,
@@ -153,7 +155,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 								Required:         true,
 								Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:         true,
-								ValidateDiagFunc: ValidPluralObjectType(),
+								ValidateDiagFunc: ValidGrantedPluralObjectType(),
 							},
 							"in_database": {
 								Type:             schema.TypeString,
@@ -187,7 +189,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 								Required:         true,
 								Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:         true,
-								ValidateDiagFunc: ValidPluralObjectType(),
+								ValidateDiagFunc: ValidGrantedPluralObjectType(),
 							},
 							"in_database": {
 								Type:             schema.TypeString,

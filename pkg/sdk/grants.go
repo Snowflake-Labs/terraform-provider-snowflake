@@ -50,6 +50,7 @@ type GrantOnAccountObject struct {
 	Warehouse        *AccountObjectIdentifier `ddl:"identifier" sql:"WAREHOUSE"`
 	Database         *AccountObjectIdentifier `ddl:"identifier" sql:"DATABASE"`
 	Integration      *AccountObjectIdentifier `ddl:"identifier" sql:"INTEGRATION"`
+	Connection       *AccountObjectIdentifier `ddl:"identifier" sql:"CONNECTION"`
 	FailoverGroup    *AccountObjectIdentifier `ddl:"identifier" sql:"FAILOVER GROUP"`
 	ReplicationGroup *AccountObjectIdentifier `ddl:"identifier" sql:"REPLICATION GROUP"`
 	ExternalVolume   *AccountObjectIdentifier `ddl:"identifier" sql:"EXTERNAL VOLUME"`
