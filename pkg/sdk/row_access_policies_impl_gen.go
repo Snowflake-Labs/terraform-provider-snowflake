@@ -38,8 +38,8 @@ func (v *rowAccessPolicies) Show(ctx context.Context, request *ShowRowAccessPoli
 }
 
 func (v *rowAccessPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*RowAccessPolicy, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	rowAccessPolicies, err := v.Show(ctx, NewShowRowAccessPolicyRequest())
+	request := NewShowRowAccessPolicyRequest().WithIn(&In{Database: NewAccountObjectIdentifier(id.DatabaseName())}).WithLike(&Like{String(id.Name())})
+	rowAccessPolicies, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -108,8 +108,20 @@ func (r *ShowRowAccessPolicyRequest) toOpts() *ShowRowAccessPolicyOptions {
 }
 
 func (r rowAccessPolicyDBRow) convert() *RowAccessPolicy {
-	// TODO: Mapping
-	return &RowAccessPolicy{}
+	rowAccessPolicy := &RowAccessPolicy{
+		CreatedOn:     r.CreatedOn,
+		Name:          r.Name,
+		DatabaseName:  r.DatabaseName,
+		SchemaName:    r.SchemaName,
+		Kind:          r.Kind,
+		Owner:         r.Owner,
+		Options:       r.Options,
+		OwnerRoleType: r.OwnerRoleType,
+	}
+	if r.Comment.Valid {
+		rowAccessPolicy.Comment = String(r.Comment.String)
+	}
+	return rowAccessPolicy
 }
 
 func (r *DescribeRowAccessPolicyRequest) toOpts() *DescribeRowAccessPolicyOptions {
@@ -120,6 +132,11 @@ func (r *DescribeRowAccessPolicyRequest) toOpts() *DescribeRowAccessPolicyOption
 }
 
 func (r describeRowAccessPolicyDBRow) convert() *RowAccessPolicyDescription {
-	// TODO: Mapping
-	return &RowAccessPolicyDescription{}
+	rowAccessPolicyDescription := &RowAccessPolicyDescription{
+		Name:       r.Name,
+		Signature:  r.Signature,
+		ReturnType: r.ReturnType,
+		Body:       r.Body,
+	}
+	return rowAccessPolicyDescription
 }
