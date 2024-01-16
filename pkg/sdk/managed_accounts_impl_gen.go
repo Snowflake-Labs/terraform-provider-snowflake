@@ -78,7 +78,7 @@ func (r managedAccountDBRow) convert() *ManagedAccount {
 		IsReader:          r.IsReader,
 	}
 	if r.Comment.Valid {
-		managedAccount.Comment = &r.Comment.String
+		managedAccount.Comment = r.Comment.String
 	}
 	return managedAccount
 }

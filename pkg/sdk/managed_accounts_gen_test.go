@@ -41,13 +41,13 @@ func TestManagedAccounts_Create(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, "CREATE MANAGED ACCOUNT %s ADMIN_NAME = admin, ADMIN_PASSWORD = 'password', TYPE = READER", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE MANAGED ACCOUNT %s ADMIN_NAME = 'admin', ADMIN_PASSWORD = 'password', TYPE = READER", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.CreateManagedAccountParams.Comment = String("comment")
-		assertOptsValidAndSQLEquals(t, opts, "CREATE MANAGED ACCOUNT %s ADMIN_NAME = admin, ADMIN_PASSWORD = 'password', TYPE = READER, COMMENT = 'comment'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE MANAGED ACCOUNT %s ADMIN_NAME = 'admin', ADMIN_PASSWORD = 'password', TYPE = READER, COMMENT = 'comment'", id.FullyQualifiedName())
 	})
 }
 
