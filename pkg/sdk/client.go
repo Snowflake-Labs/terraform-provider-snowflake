@@ -38,39 +38,40 @@ type Client struct {
 	ReplicationFunctions ReplicationFunctions
 
 	// DDL Commands
-	Accounts         Accounts
-	Alerts           Alerts
-	ApplicationRoles ApplicationRoles
-	Comments         Comments
-	DatabaseRoles    DatabaseRoles
-	Databases        Databases
-	DynamicTables    DynamicTables
-	ExternalTables   ExternalTables
-	EventTables      EventTables
-	FailoverGroups   FailoverGroups
-	FileFormats      FileFormats
-	Functions        Functions
-	Grants           Grants
-	MaskingPolicies  MaskingPolicies
-	NetworkPolicies  NetworkPolicies
-	Parameters       Parameters
-	PasswordPolicies PasswordPolicies
-	Pipes            Pipes
-	Procedures       Procedures
-	ResourceMonitors ResourceMonitors
-	Roles            Roles
-	Schemas          Schemas
-	SessionPolicies  SessionPolicies
-	Sessions         Sessions
-	Shares           Shares
-	Stages           Stages
-	Streams          Streams
-	Tables           Tables
-	Tags             Tags
-	Tasks            Tasks
-	Users            Users
-	Views            Views
-	Warehouses       Warehouses
+	Accounts            Accounts
+	Alerts              Alerts
+	ApplicationRoles    ApplicationRoles
+	Comments            Comments
+	DatabaseRoles       DatabaseRoles
+	Databases           Databases
+	DynamicTables       DynamicTables
+	ExternalTables      ExternalTables
+	EventTables         EventTables
+	FailoverGroups      FailoverGroups
+	FileFormats         FileFormats
+	Functions           Functions
+	Grants              Grants
+	MaskingPolicies     MaskingPolicies
+	NetworkPolicies     NetworkPolicies
+	Parameters          Parameters
+	PasswordPolicies    PasswordPolicies
+	Pipes               Pipes
+	Procedures          Procedures
+	ResourceMonitors    ResourceMonitors
+	Roles               Roles
+	Schemas             Schemas
+	SessionPolicies     SessionPolicies
+	Sessions            Sessions
+	Shares              Shares
+	Stages              Stages
+	StorageIntegrations StorageIntegrations
+	Streams             Streams
+	Tables              Tables
+	Tags                Tags
+	Tasks               Tasks
+	Users               Users
+	Views               Views
+	Warehouses          Warehouses
 }
 
 func (c *Client) GetAccountLocator() string {
@@ -206,6 +207,7 @@ func (c *Client) initialize() {
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}
 	c.Stages = &stages{client: c}
+	c.StorageIntegrations = &storageIntegrations{client: c}
 	c.Streams = &streams{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
 	c.Tables = &tables{client: c}

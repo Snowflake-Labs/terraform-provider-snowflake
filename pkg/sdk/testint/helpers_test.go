@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -15,6 +16,26 @@ import (
 
 const (
 	nycWeatherDataURL = "s3://snowflake-workshop-lab/weather-nyc"
+)
+
+var (
+	awsBucketUrl, awsBucketUrlIsSet = os.LookupEnv("AWS_EXTERNAL_BUCKET_URL")
+	awsKeyId, awsKeyIdIsSet         = os.LookupEnv("AWS_EXTERNAL_KEY_ID")
+	awsSecretKey, awsSecretKeyIsSet = os.LookupEnv("AWS_EXTERNAL_SECRET_KEY")
+	awsRoleARN, awsRoleARNIsSet     = os.LookupEnv("AWS_EXTERNAL_ROLE_ARN")
+
+	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("GCS_EXTERNAL_BUCKET_URL")
+
+	azureBucketUrl, azureBucketUrlIsSet = os.LookupEnv("AZURE_EXTERNAL_BUCKET_URL")
+	azureTenantId, azureTenantIdIsSet   = os.LookupEnv("AZURE_EXTERNAL_TENANT_ID")
+
+	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet &&
+		awsKeyIdIsSet &&
+		awsSecretKeyIsSet &&
+		awsRoleARNIsSet &&
+		gcsBucketUrlIsSet &&
+		azureBucketUrlIsSet &&
+		azureTenantIdIsSet
 )
 
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
