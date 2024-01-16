@@ -9,6 +9,10 @@ func TestManagedAccounts_Create(t *testing.T) {
 	defaultOpts := func() *CreateManagedAccountOptions {
 		return &CreateManagedAccountOptions{
 			name: id,
+			CreateManagedAccountParams: CreateManagedAccountParams{
+				AdminName:     "admin",
+				AdminPassword: "password",
+			},
 		}
 	}
 
@@ -19,32 +23,31 @@ func TestManagedAccounts_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: [opts.CreateManagedAccountParams.AdminName] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.CreateManagedAccountParams.AdminName = ""
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateManagedAccountOptions.CreateManagedAccountParams", "AdminName"))
 	})
 
 	t.Run("validation: [opts.CreateManagedAccountParams.AdminPassword] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.CreateManagedAccountParams.AdminPassword = ""
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateManagedAccountOptions.CreateManagedAccountParams", "AdminPassword"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE MANAGED ACCOUNT %s ADMIN_NAME = admin, ADMIN_PASSWORD = 'password', TYPE = READER", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.CreateManagedAccountParams.Comment = String("comment")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE MANAGED ACCOUNT %s ADMIN_NAME = admin, ADMIN_PASSWORD = 'password', TYPE = READER, COMMENT = 'comment'", id.FullyQualifiedName())
 	})
 }
 
@@ -65,31 +68,20 @@ func TestManagedAccounts_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
-	})
-
-	t.Run("all options", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "DROP MANAGED ACCOUNT %s", id.FullyQualifiedName())
 	})
 }
 
 func TestManagedAccounts_Show(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
-
 	// Minimal valid ShowManagedAccountOptions
 	defaultOpts := func() *ShowManagedAccountOptions {
-		return &ShowManagedAccountOptions{
-			name: id,
-		}
+		return &ShowManagedAccountOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
@@ -99,13 +91,14 @@ func TestManagedAccounts_Show(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MANAGED ACCOUNTS")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Like = &Like{
+			Pattern: String("myaccount"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MANAGED ACCOUNTS LIKE 'myaccount'")
 	})
 }

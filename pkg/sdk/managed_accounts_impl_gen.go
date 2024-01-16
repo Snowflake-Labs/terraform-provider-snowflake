@@ -33,8 +33,7 @@ func (v *managedAccounts) Show(ctx context.Context, request *ShowManagedAccountR
 }
 
 func (v *managedAccounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ManagedAccount, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	managedAccounts, err := v.Show(ctx, NewShowManagedAccountRequest())
+	managedAccounts, err := v.Show(ctx, NewShowManagedAccountRequest().WithLike(&Like{String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
@@ -45,12 +44,10 @@ func (r *CreateManagedAccountRequest) toOpts() *CreateManagedAccountOptions {
 	opts := &CreateManagedAccountOptions{
 		name: r.name,
 	}
-	if r.CreateManagedAccountParams != nil {
-		opts.CreateManagedAccountParams = &CreateManagedAccountParams{
-			AdminName:     r.CreateManagedAccountParams.AdminName,
-			AdminPassword: r.CreateManagedAccountParams.AdminPassword,
-			Comment:       r.CreateManagedAccountParams.Comment,
-		}
+	opts.CreateManagedAccountParams = CreateManagedAccountParams{
+		AdminName:     r.CreateManagedAccountParams.AdminName,
+		AdminPassword: r.CreateManagedAccountParams.AdminPassword,
+		Comment:       r.CreateManagedAccountParams.Comment,
 	}
 	return opts
 }
@@ -70,6 +67,18 @@ func (r *ShowManagedAccountRequest) toOpts() *ShowManagedAccountOptions {
 }
 
 func (r managedAccountDBRow) convert() *ManagedAccount {
-	// TODO: Mapping
-	return &ManagedAccount{}
+	managedAccount := &ManagedAccount{
+		Name:              r.Name,
+		Cloud:             r.Cloud,
+		Region:            r.Region,
+		Locator:           r.Locator,
+		CreatedOn:         r.CreatedOn,
+		URL:               r.Url,
+		AccountLocatorURL: r.AccountLocatorUrl,
+		IsReader:          r.IsReader,
+	}
+	if r.Comment.Valid {
+		managedAccount.Comment = &r.Comment.String
+	}
+	return managedAccount
 }
