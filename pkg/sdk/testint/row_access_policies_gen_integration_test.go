@@ -67,8 +67,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		return rowAccessPolicy
 	}
 
-	// createRowAccessPolicy
-	_ = func(t *testing.T) *sdk.RowAccessPolicy {
+	createRowAccessPolicy := func(t *testing.T) *sdk.RowAccessPolicy {
 		t.Helper()
 		return createRowAccessPolicyWithRequest(t, createRowAccessPolicyBasicRequest(t))
 	}
@@ -106,11 +105,31 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	})
 
 	t.Run("show row access policy: default", func(t *testing.T) {
-		// TODO: fill me
+		rowAccessPolicy1 := createRowAccessPolicy(t)
+		rowAccessPolicy2 := createRowAccessPolicy(t)
+
+		showRequest := sdk.NewShowRowAccessPolicyRequest()
+		returnedRowAccessPolicies, err := client.RowAccessPolicies.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Equal(t, 2, len(returnedRowAccessPolicies))
+		assert.Contains(t, returnedRowAccessPolicies, *rowAccessPolicy1)
+		assert.Contains(t, returnedRowAccessPolicies, *rowAccessPolicy2)
 	})
 
 	t.Run("show row access policy: with options", func(t *testing.T) {
-		// TODO: fill me
+		rowAccessPolicy1 := createRowAccessPolicy(t)
+		rowAccessPolicy2 := createRowAccessPolicy(t)
+
+		showRequest := sdk.NewShowRowAccessPolicyRequest().
+			WithLike(&sdk.Like{Pattern: &rowAccessPolicy1.Name}).
+			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)})
+		returnedRowAccessPolicies, err := client.RowAccessPolicies.Show(ctx, showRequest)
+
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(returnedRowAccessPolicies))
+		assert.Contains(t, returnedRowAccessPolicies, *rowAccessPolicy1)
+		assert.NotContains(t, returnedRowAccessPolicies, *rowAccessPolicy2)
 	})
 
 	t.Run("describe row access policy: existing", func(t *testing.T) {
