@@ -3,21 +3,30 @@ package testint
 import "testing"
 
 func TestInt_ManagedAccounts(t *testing.T) {
-	// TODO: prepare common resources
+	client := testClient(t)
+	ctx := testContext(t)
 
-	t.Run("Create", func(t *testing.T) {
+	t.Run("create managed account: no optionals", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("Drop", func(t *testing.T) {
+	t.Run("create managed account: full", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("Show", func(t *testing.T) {
+	t.Run("drop managed account: existing", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("ShowByID", func(t *testing.T) {
+	t.Run("drop managed account: non-existing", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("show managed account: default", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("show managed account: with like", func(t *testing.T) {
 		// TODO: fill me
 	})
 }
