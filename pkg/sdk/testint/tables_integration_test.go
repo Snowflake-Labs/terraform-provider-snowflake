@@ -209,7 +209,7 @@ func TestInt_Table(t *testing.T) {
 		assertColumns(t, expectedColumns, tableColumns)
 	})
 
-	// TODO: fix this test, it should create two integer column but is creating 3 text ones instead
+	// TODO [SNOW-1007542]: fix this test, it should create two integer column but is creating 3 text ones instead
 	t.Run("create table using template", func(t *testing.T) {
 		fileFormat, fileFormatCleanup := createFileFormat(t, client, schema.ID())
 		t.Cleanup(fileFormatCleanup)
@@ -645,7 +645,7 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, table.Comment, "")
 	})
 
-	// TODO: check added constraints
+	// TODO [SNOW-1007542]: check added constraints
 	// Add method similar to getTableColumnsFor based on https://docs.snowflake.com/en/sql-reference/info-schema/table_constraints.
 	t.Run("alter constraint: add", func(t *testing.T) {
 		name := random.String()
@@ -676,7 +676,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// TODO: check renamed constraint
+	// TODO [SNOW-1007542]: check renamed constraint
 	t.Run("alter constraint: rename", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -701,7 +701,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// TODO: check altered constraint
+	// TODO [SNOW-1007542]: check altered constraint
 	t.Run("alter constraint: alter", func(t *testing.T) {
 		t.Skip("Test is failing: generated statement is not compiling but it is aligned with Snowflake docs https://docs.snowflake.com/en/sql-reference/sql/alter-table#syntax. Requires further investigation.")
 		name := random.String()
@@ -723,7 +723,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// TODO: check dropped constraint
+	// TODO [SNOW-1007542]: check dropped constraint
 	t.Run("alter constraint: drop", func(t *testing.T) {
 		t.Skip("Test is failing: generated statement is not compiling but it is aligned with Snowflake docs https://docs.snowflake.com/en/sql-reference/sql/alter-table#syntax. Requires further investigation.")
 		name := random.String()
@@ -830,7 +830,7 @@ func TestInt_Table(t *testing.T) {
 		assertColumns(t, expectedColumns, currentColumns)
 	})
 
-	// TODO: check search optimization - after adding https://docs.snowflake.com/en/sql-reference/sql/desc-search-optimization
+	// TODO [SNOW-1007542]: check search optimization - after adding https://docs.snowflake.com/en/sql-reference/sql/desc-search-optimization
 	t.Run("add search optimization", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
@@ -850,7 +850,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// TODO: try to check more sets (ddl collation, max data extension time in days, etc.)
+	// TODO [SNOW-1007542]: try to check more sets (ddl collation, max data extension time in days, etc.)
 	t.Run("set: with complete options", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
