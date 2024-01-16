@@ -16,6 +16,12 @@ func (opts *CreateRowAccessPolicyOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if !valueSet(opts.args) {
+		errs = append(errs, errNotSet("CreateRowAccessPolicyOptions", "args"))
+	}
+	if !valueSet(opts.body) {
+		errs = append(errs, errNotSet("CreateRowAccessPolicyOptions", "body"))
+	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateRowAccessPolicyOptions", "OrReplace", "IfNotExists"))
 	}

@@ -35,7 +35,7 @@ type CreateRowAccessPolicyArgs struct {
 
 // AlterRowAccessPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-row-access-policy.
 type AlterRowAccessPolicyOptions struct {
-	drop            bool                    `ddl:"static" sql:"DROP"`
+	alter           bool                    `ddl:"static" sql:"ALTER"`
 	rowAccessPolicy bool                    `ddl:"static" sql:"ROW ACCESS POLICY"`
 	name            SchemaObjectIdentifier  `ddl:"identifier"`
 	RenameTo        *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
@@ -50,6 +50,7 @@ type AlterRowAccessPolicyOptions struct {
 type DropRowAccessPolicyOptions struct {
 	drop            bool                   `ddl:"static" sql:"DROP"`
 	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"`
+	IfExists        *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name            SchemaObjectIdentifier `ddl:"identifier"`
 }
 

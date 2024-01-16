@@ -51,12 +51,14 @@ var RowAccessPoliciesDef = g.NewInterface(
 			BodyWithPrecedingArrow().
 			OptionalComment().
 			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ValidateValueSet, "args").
+			WithValidation(g.ValidateValueSet, "body").
 			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 	).
 	AlterOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-row-access-policy",
 		g.NewQueryStruct("AlterRowAccessPolicy").
-			Drop().
+			Alter().
 			SQL("ROW ACCESS POLICY").
 			Name().
 			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
@@ -73,6 +75,7 @@ var RowAccessPoliciesDef = g.NewInterface(
 		g.NewQueryStruct("DropRowAccessPolicy").
 			Drop().
 			SQL("ROW ACCESS POLICY").
+			IfExists().
 			Name().
 			WithValidation(g.ValidIdentifier, "name"),
 	).
