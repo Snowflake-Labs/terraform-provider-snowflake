@@ -117,3 +117,7 @@ func (v *QueryStruct) OptionalLimit() *QueryStruct {
 func (v *QueryStruct) OptionalCopyGrants() *QueryStruct {
 	return v.OptionalSQL("COPY GRANTS")
 }
+
+func (v *QueryStruct) BodyWithPrecedingArrow() *QueryStruct {
+	return v.PredefinedQueryStructField("body", "string", ParameterOptions().NoEquals().NoQuotes().SQL("->").Required())
+}

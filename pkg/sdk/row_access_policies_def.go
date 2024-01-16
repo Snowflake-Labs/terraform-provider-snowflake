@@ -35,9 +35,23 @@ var RowAccessPoliciesDef = g.NewInterface(
 		"https://docs.snowflake.com/en/sql-reference/sql/create-row-access-policy",
 		g.NewQueryStruct("CreateRowAccessPolicy").
 			Create().
+			OrReplace().
 			SQL("ROW ACCESS POLICY").
+			IfNotExists().
 			Name().
-			WithValidation(g.ValidIdentifier, "name"),
+			SQL("AS").
+			ListQueryStructField(
+				"args",
+				g.NewQueryStruct("CreateRowAccessPolicyArgs").
+					Text("Name", g.KeywordOptions().NoQuotes().Required()).
+					Text("Type", g.KeywordOptions().NoQuotes().Required()),
+				g.ParameterOptions().Parentheses().NoEquals(),
+			).
+			SQL("RETURNS BOOLEAN").
+			BodyWithPrecedingArrow().
+			OptionalComment().
+			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 	).
 	AlterOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/alter-row-access-policy",
