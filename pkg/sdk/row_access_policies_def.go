@@ -13,7 +13,7 @@ var rowAccessPolicyDbRow = g.DbStruct("rowAccessPolicyDBRow").
 	Text("owner").
 	OptionalText("comment").
 	Text("options").
-	Bool("owner_role_type")
+	Text("owner_role_type")
 
 var rowAccessPolicy = g.PlainStruct("RowAccessPolicy").
 	Text("CreatedOn").
@@ -24,7 +24,7 @@ var rowAccessPolicy = g.PlainStruct("RowAccessPolicy").
 	Text("Owner").
 	OptionalText("Comment").
 	Text("Options").
-	Bool("OwnerRoleType")
+	Text("OwnerRoleType")
 
 var RowAccessPoliciesDef = g.NewInterface(
 	"RowAccessPolicies",

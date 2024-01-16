@@ -71,7 +71,7 @@ type rowAccessPolicyDBRow struct {
 	Owner         string         `db:"owner"`
 	Comment       sql.NullString `db:"comment"`
 	Options       string         `db:"options"`
-	OwnerRoleType bool           `db:"owner_role_type"`
+	OwnerRoleType string         `db:"owner_role_type"`
 }
 
 type RowAccessPolicy struct {
@@ -83,7 +83,11 @@ type RowAccessPolicy struct {
 	Owner         string
 	Comment       *string
 	Options       string
-	OwnerRoleType bool
+	OwnerRoleType string
+}
+
+func (v *RowAccessPolicy) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
 // DescribeRowAccessPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-row-access-policy.

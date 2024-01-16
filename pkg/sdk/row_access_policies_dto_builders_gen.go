@@ -14,6 +14,10 @@ func NewCreateRowAccessPolicyRequest(
 	return &s
 }
 
+func (r *CreateRowAccessPolicyRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
 func (s *CreateRowAccessPolicyRequest) WithOrReplace(OrReplace *bool) *CreateRowAccessPolicyRequest {
 	s.OrReplace = OrReplace
 	return s
