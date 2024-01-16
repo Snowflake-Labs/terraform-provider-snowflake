@@ -59,7 +59,14 @@ var RowAccessPoliciesDef = g.NewInterface(
 			Drop().
 			SQL("ROW ACCESS POLICY").
 			Name().
-			WithValidation(g.ValidIdentifier, "name"),
+			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+			OptionalSetBodyWithPrecedingArrow().
+			OptionalSetTags().
+			OptionalUnsetTags().
+			OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
+			OptionalSQL("UNSET COMMENT").
+			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetBody", "SetTags", "UnsetTags", "SetComment", "UnsetComment"),
 	).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-row-access-policy",
