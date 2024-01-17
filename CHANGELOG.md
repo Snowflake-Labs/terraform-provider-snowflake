@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.83.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.83.0...v0.83.1) (2024-01-12)
+
+
+### 🐛 **Bug fixes:**
+
+* Revert goreleaser mfa token caching ([#2343](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2343)) ([9a98031](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9a9803107f395ca350bdbb9fb8dc0f17820b8eb6))
+
+## [0.83.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.82.0...v0.83.0) (2024-01-11)
+
+
+### 🎉 **What's new:**
+
+* Add create streamlit privilege to the SDK ([#2303](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2303)) ([be01d5f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/be01d5fdab4f2d31db9c4c849b349e657c0352c8))
+* grant privileges to database role resource ([#2306](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2306)) ([0311cf8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0311cf8554f0fbd202b489a54c9428f55c52a490))
+
+
+### 🐛 **Bug fixes:**
+
+* Add secondary account and fix tests ([#2324](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2324)) ([da6ca73](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/da6ca733c7527c8918d1e1beb86d1641d94062ec))
+* external tables issues ([#2334](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2334)) ([ae41691](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ae416917be72ab55c6f1b758dd7e06269831fabc))
+* Fix test because of the date ([#2312](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2312)) ([9a9ea33](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9a9ea3331f090201c2d686ed7e726eb7d9cef926))
+* Fix warehouse read and resource monitor empty set ([#2319](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2319)) ([05f96c6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/05f96c699e4e36db4b28380d9ac3577d4f50a709)), closes [#2318](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318) [#2316](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2316)
+* goreleaser for mfa token caching ([#2320](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2320)) ([4fef709](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4fef709a376f5905effcc3439b1ad4cb9043ffca))
+
 ## [0.82.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.81.0...v0.82.0) (2023-12-21)
 
 

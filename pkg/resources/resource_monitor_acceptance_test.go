@@ -36,13 +36,25 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: resourceMonitorConfig2(name),
+				Config: resourceMonitorConfig2(name, 75),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "75"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
+				),
+			},
+			// CHANGE JUST suspend_trigger; proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2316
+			{
+				Config: resourceMonitorConfig2(name, 60),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "60"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
 				),
 			},
@@ -198,7 +210,7 @@ resource "snowflake_resource_monitor" "test" {
 `, accName)
 }
 
-func resourceMonitorConfig2(accName string) string {
+func resourceMonitorConfig2(accName string, suspendTrigger int) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "warehouse" {
   name           = "test"
@@ -212,10 +224,10 @@ resource "snowflake_resource_monitor" "test" {
 	set_for_account = true
 	notify_triggers = [50]
 	warehouses      = []
-	suspend_trigger = 75
+	suspend_trigger = %d
 	suspend_immediate_trigger = 95
 }
-`, accName)
+`, accName, suspendTrigger)
 }
 
 // TestAcc_ResourceMonitor_issue2167 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2167 issue.
