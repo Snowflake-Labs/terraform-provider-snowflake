@@ -15,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO: Deprecate
-
 var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 	"privileges": {
 		Type:        schema.TypeSet,
@@ -231,10 +229,11 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 
 func GrantPrivilegesToRole() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateGrantPrivilegesToRole,
-		Read:   ReadGrantPrivilegesToRole,
-		Delete: DeleteGrantPrivilegesToRole,
-		Update: UpdateGrantPrivilegesToRole,
+		Create:             CreateGrantPrivilegesToRole,
+		Read:               ReadGrantPrivilegesToRole,
+		Delete:             DeleteGrantPrivilegesToRole,
+		Update:             UpdateGrantPrivilegesToRole,
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_account_role instead.",
 
 		Schema: grantPrivilegesToRoleSchema,
 		Importer: &schema.ResourceImporter{
@@ -840,6 +839,8 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 
 	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {
+		fmt.Printf("Grant (name: %v, priv: %v)\n", grant.Name, grant.Privilege)
+
 		// Only consider privileges that are already present in the ID so we
 		// don't delete privileges managed by other resources.
 		if !slices.Contains(id.Privileges, grant.Privilege) {
@@ -857,6 +858,9 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 			}
 		}
 	}
+
+	fmt.Printf("Ended up with privileges: %v\n", privileges)
+
 	logging.DebugLogger.Printf("[DEBUG] Setting privileges on account")
 	if err := d.Set("privileges", privileges); err != nil {
 		logging.DebugLogger.Printf("[DEBUG] Error setting privileges for account role: err = %v", err)

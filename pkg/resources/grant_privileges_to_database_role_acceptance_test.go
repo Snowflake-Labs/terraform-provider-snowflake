@@ -845,7 +845,7 @@ func testAccCheckDatabaseRolePrivilegesRevoked(s *terraform.State) error {
 			}
 		}
 		if len(grantedPrivileges) > 0 {
-			return fmt.Errorf("database role (%s) still grants , granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
+			return fmt.Errorf("database role (%s) is still granted, granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
 		}
 	}
 	return nil

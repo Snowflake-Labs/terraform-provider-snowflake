@@ -700,7 +700,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	}
 	logging.DebugLogger.Printf("[DEBUG] After showing grants: err = %v", err)
 	if err != nil {
-		return diag.Errorf("error retrieving grants for account role: %w", err)
+		return diag.FromErr(fmt.Errorf("error retrieving grants for account role: %w", err))
 	}
 
 	var privileges []string

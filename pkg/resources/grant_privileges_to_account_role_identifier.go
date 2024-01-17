@@ -57,7 +57,10 @@ func (g *GrantPrivilegesToAccountRoleId) String() string {
 		parts = append(parts, strings.Join(g.Privileges, ","))
 	}
 	parts = append(parts, string(g.Kind))
-	parts = append(parts, g.Data.String())
+	data := g.Data.String()
+	if len(data) > 0 {
+		parts = append(parts, data)
+	}
 	return strings.Join(parts, helpers.IDDelimiter)
 }
 
@@ -105,7 +108,10 @@ func ParseGrantPrivilegesToAccountRoleId(id string) (GrantPrivilegesToAccountRol
 		if len(parts) != 7 {
 			return accountRoleId, sdk.NewError(`account role identifier should hold at least 7 parts "<role_name>|<with_grant_option>|<always_apply>|<privileges>|OnAccountObject|<object_type>|<object_name>"`)
 		}
-		accountRoleId.Data = &OnAccountObjectGrantData{}
+		accountRoleId.Data = &OnAccountObjectGrantData{
+			ObjectType: sdk.ObjectType(parts[5]),
+			ObjectName: sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[6]),
+		}
 	case OnSchemaAccountRoleGrantKind:
 		if len(parts) < 7 {
 			return accountRoleId, sdk.NewError(`account role identifier should hold at least 7 parts "<role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|<grant_on_schema_type>|<on_schema_grant_data>..."`)
