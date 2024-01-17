@@ -50,16 +50,19 @@ func NewCreateRowAccessPolicyArgsRequest(
 
 func NewAlterRowAccessPolicyRequest(
 	name SchemaObjectIdentifier,
-	SetBody *string,
 ) *AlterRowAccessPolicyRequest {
 	s := AlterRowAccessPolicyRequest{}
 	s.name = name
-	s.SetBody = SetBody
 	return &s
 }
 
 func (s *AlterRowAccessPolicyRequest) WithRenameTo(RenameTo *SchemaObjectIdentifier) *AlterRowAccessPolicyRequest {
 	s.RenameTo = RenameTo
+	return s
+}
+
+func (s *AlterRowAccessPolicyRequest) WithSetBody(SetBody *string) *AlterRowAccessPolicyRequest {
+	s.SetBody = SetBody
 	return s
 }
 

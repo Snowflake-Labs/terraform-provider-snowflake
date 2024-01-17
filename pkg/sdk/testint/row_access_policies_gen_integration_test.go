@@ -125,19 +125,113 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	})
 
 	t.Run("alter row access policy: rename", func(t *testing.T) {
-		// TODO: fill me
+		createRequest := createRowAccessPolicyBasicRequest(t)
+		id := createRequest.GetName()
+
+		err := client.RowAccessPolicies.Create(ctx, createRequest)
+		require.NoError(t, err)
+
+		newName := random.String()
+		newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
+		alterRequest := sdk.NewAlterRowAccessPolicyRequest(id).WithRenameTo(&newId)
+
+		err = client.RowAccessPolicies.Alter(ctx, alterRequest)
+		if err != nil {
+			t.Cleanup(cleanupRowAccessPolicyProvider(id))
+		} else {
+			t.Cleanup(cleanupRowAccessPolicyProvider(newId))
+		}
+		require.NoError(t, err)
+
+		_, err = client.RowAccessPolicies.ShowByID(ctx, id)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
+
+		rowAccessPolicy, err := client.RowAccessPolicies.ShowByID(ctx, newId)
+		require.NoError(t, err)
+
+		assertRowAccessPolicy(t, rowAccessPolicy, newId, "")
 	})
 
 	t.Run("alter row access policy: set and unset comment", func(t *testing.T) {
-		// TODO: fill me
+		rowAccessPolicy := createRowAccessPolicy(t)
+		id := rowAccessPolicy.ID()
+
+		alterRequest := sdk.NewAlterRowAccessPolicyRequest(id).WithSetComment(sdk.String("new comment"))
+		err := client.RowAccessPolicies.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredRowAccessPolicy, err := client.RowAccessPolicies.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "new comment", alteredRowAccessPolicy.Comment)
+
+		alterRequest = sdk.NewAlterRowAccessPolicyRequest(id).WithUnsetComment(sdk.Bool(true))
+		err = client.RowAccessPolicies.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredRowAccessPolicy, err = client.RowAccessPolicies.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "", alteredRowAccessPolicy.Comment)
 	})
 
-	t.Run("alter row access policy: set and unset body", func(t *testing.T) {
-		// TODO: fill me
+	t.Run("alter row access policy: set body", func(t *testing.T) {
+		rowAccessPolicy := createRowAccessPolicy(t)
+		id := rowAccessPolicy.ID()
+
+		alterRequest := sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.String("false"))
+		err := client.RowAccessPolicies.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "false", alteredRowAccessPolicyDescription.Body)
+
+		alterRequest = sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.String("true"))
+		err = client.RowAccessPolicies.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredRowAccessPolicyDescription, err = client.RowAccessPolicies.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "true", alteredRowAccessPolicyDescription.Body)
 	})
 
 	t.Run("alter row access policy: set and unset tags", func(t *testing.T) {
-		// TODO: fill me
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		t.Cleanup(tagCleanup)
+
+		rowAccessPolicy := createRowAccessPolicy(t)
+		id := rowAccessPolicy.ID()
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterRowAccessPolicyRequest(id).WithSetTags(tags)
+
+		err := client.RowAccessPolicies.Alter(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeRowAccessPolicy)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterRowAccessPolicyRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.RowAccessPolicies.Alter(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeRowAccessPolicy)
+		require.Error(t, err)
 	})
 
 	t.Run("show row access policy: default", func(t *testing.T) {

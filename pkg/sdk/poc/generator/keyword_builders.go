@@ -123,5 +123,5 @@ func (v *QueryStruct) BodyWithPrecedingArrow() *QueryStruct {
 }
 
 func (v *QueryStruct) OptionalSetBodyWithPrecedingArrow() *QueryStruct {
-	return v.PredefinedQueryStructField("SetBody", "*string", ParameterOptions().NoEquals().NoQuotes().SQL("SET BODY ->").Required())
+	return v.PredefinedQueryStructField("SetBody", "*string", ParameterOptions().NoEquals().NoQuotes().SQL("SET BODY ->"))
 }
