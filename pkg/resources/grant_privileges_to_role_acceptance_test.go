@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"regexp"
 	"strings"
 	"testing"

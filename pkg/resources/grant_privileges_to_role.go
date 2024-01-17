@@ -835,12 +835,10 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 
 	withGrantOption := d.Get("with_grant_option").(bool)
 	privileges := []string{}
-	roleName := sdk.NewAccountObjectIdentifier(d.Get("role_name").(string)).Name()
+	roleName := d.Get("role_name").(string)
 
 	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {
-		fmt.Printf("Grant (name: %v, priv: %v)\n", grant.Name, grant.Privilege)
-
 		// Only consider privileges that are already present in the ID so we
 		// don't delete privileges managed by other resources.
 		if !slices.Contains(id.Privileges, grant.Privilege) {
@@ -858,8 +856,6 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 			}
 		}
 	}
-
-	fmt.Printf("Ended up with privileges: %v\n", privileges)
 
 	logging.DebugLogger.Printf("[DEBUG] Setting privileges on account")
 	if err := d.Set("privileges", privileges); err != nil {
