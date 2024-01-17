@@ -29,8 +29,8 @@ type CreateRowAccessPolicyOptions struct {
 }
 
 type CreateRowAccessPolicyArgs struct {
-	Name string `ddl:"keyword,no_quotes"`
-	Type string `ddl:"keyword,no_quotes"`
+	Name string   `ddl:"keyword,no_quotes"`
+	Type DataType `ddl:"keyword,no_quotes"`
 }
 
 // AlterRowAccessPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-row-access-policy.

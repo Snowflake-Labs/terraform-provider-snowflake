@@ -94,7 +94,8 @@ func (r *AlterRowAccessPolicyRequest) toOpts() *AlterRowAccessPolicyOptions {
 
 func (r *DropRowAccessPolicyRequest) toOpts() *DropRowAccessPolicyOptions {
 	opts := &DropRowAccessPolicyOptions{
-		name: r.name,
+		IfExists: r.IfExists,
+		name:     r.name,
 	}
 	return opts
 }

@@ -11,7 +11,7 @@ func TestRowAccessPolicies_Create(t *testing.T) {
 			name: id,
 			args: []CreateRowAccessPolicyArgs{{
 				Name: "n",
-				Type: "VARCHAR",
+				Type: DataTypeVARCHAR,
 			}},
 			body: "true",
 		}
@@ -56,10 +56,10 @@ func TestRowAccessPolicies_Create(t *testing.T) {
 		opts := defaultOpts()
 		opts.args = []CreateRowAccessPolicyArgs{{
 			Name: "n",
-			Type: "VARCHAR",
+			Type: DataTypeVARCHAR,
 		}, {
 			Name: "h",
-			Type: "VARCHAR",
+			Type: DataTypeVARCHAR,
 		}}
 		assertOptsValidAndSQLEquals(t, opts, "CREATE ROW ACCESS POLICY %s AS (n VARCHAR, h VARCHAR) RETURNS BOOLEAN -> true", id.FullyQualifiedName())
 	})

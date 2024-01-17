@@ -58,7 +58,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		t.Helper()
 
 		argName := random.AlphaN(5)
-		argType := string(sdk.DataTypeVARCHAR)
+		argType := sdk.DataTypeVARCHAR
 		args := sdk.NewCreateRowAccessPolicyArgsRequest(argName, argType)
 
 		body := "true"
@@ -263,7 +263,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 	t.Run("describe row access policy: existing", func(t *testing.T) {
 		argName := random.AlphaN(5)
-		argType := string(sdk.DataTypeVARCHAR)
+		argType := sdk.DataTypeVARCHAR
 		args := sdk.NewCreateRowAccessPolicyArgsRequest(argName, argType)
 		body := "true"
 

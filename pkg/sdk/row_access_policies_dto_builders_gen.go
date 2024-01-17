@@ -37,7 +37,7 @@ func (s *CreateRowAccessPolicyRequest) WithComment(Comment *string) *CreateRowAc
 
 func NewCreateRowAccessPolicyArgsRequest(
 	Name string,
-	Type string,
+	Type DataType,
 ) *CreateRowAccessPolicyArgsRequest {
 	s := CreateRowAccessPolicyArgsRequest{}
 	s.Name = Name
@@ -89,6 +89,11 @@ func NewDropRowAccessPolicyRequest(
 	s := DropRowAccessPolicyRequest{}
 	s.name = name
 	return &s
+}
+
+func (s *DropRowAccessPolicyRequest) WithIfExists(IfExists *bool) *DropRowAccessPolicyRequest {
+	s.IfExists = IfExists
+	return s
 }
 
 func NewShowRowAccessPolicyRequest() *ShowRowAccessPolicyRequest {

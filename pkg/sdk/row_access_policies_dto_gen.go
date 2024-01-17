@@ -13,21 +13,21 @@ var (
 type CreateRowAccessPolicyRequest struct {
 	OrReplace   *bool
 	IfNotExists *bool
-	name        SchemaObjectIdentifier // required
-	args        []CreateRowAccessPolicyArgsRequest
-	body        string // required
+	name        SchemaObjectIdentifier             // required
+	args        []CreateRowAccessPolicyArgsRequest // required
+	body        string                             // required
 	Comment     *string
 }
 
 type CreateRowAccessPolicyArgsRequest struct {
-	Name string // required
-	Type string // required
+	Name string   // required
+	Type DataType // required
 }
 
 type AlterRowAccessPolicyRequest struct {
 	name         SchemaObjectIdentifier // required
 	RenameTo     *SchemaObjectIdentifier
-	SetBody      *string // required
+	SetBody      *string
 	SetTags      []TagAssociation
 	UnsetTags    []ObjectIdentifier
 	SetComment   *string
@@ -35,7 +35,8 @@ type AlterRowAccessPolicyRequest struct {
 }
 
 type DropRowAccessPolicyRequest struct {
-	name SchemaObjectIdentifier // required
+	IfExists *bool
+	name     SchemaObjectIdentifier // required
 }
 
 type ShowRowAccessPolicyRequest struct {
