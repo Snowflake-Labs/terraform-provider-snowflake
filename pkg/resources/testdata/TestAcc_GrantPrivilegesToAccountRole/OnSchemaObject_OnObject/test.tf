@@ -9,9 +9,9 @@ resource "snowflake_table" "test" {
   }
 }
 
-resource "snowflake_grant_privileges_to_database_role" "test" {
+resource "snowflake_grant_privileges_to_account_role" "test" {
   depends_on         = [snowflake_table.test]
-  database_role_name = "\"${var.database}\".\"${var.name}\""
+  role_name = var.name
   privileges         = var.privileges
   with_grant_option  = var.with_grant_option
 

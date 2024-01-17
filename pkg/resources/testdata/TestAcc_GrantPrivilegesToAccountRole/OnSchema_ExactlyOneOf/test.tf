@@ -1,5 +1,5 @@
-resource "snowflake_grant_privileges_to_database_role" "test" {
-  database_role_name = "some_database.role_name"
+resource "snowflake_grant_privileges_to_account_role" "test" {
+  role_name =       "role_name"
   privileges         = ["USAGE"]
 
   on_schema {
