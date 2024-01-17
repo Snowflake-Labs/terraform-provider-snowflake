@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"regexp"
 	"strings"
 	"testing"
@@ -47,6 +48,48 @@ func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
 				ResourceName:      "snowflake_grant_privileges_to_role.g",
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAcc_GrantPrivilegesToRole_OnSchema_InfinitePlan proves the fix for infinite plan, that was occurring.
+// The cause of it was incorrect comparison in the Read operation. When snowflake_grant_privileges_to_role.role_name
+// contains escaped identifier, it won't match in the comparison grant.GranteeName == role_name. This results in
+// setting privileges to an empty array, which causes infinite plan.
+func TestAcc_GrantPrivilegesToRole_OnSchema_InfinitePlan(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				 resource "snowflake_role" "r" {
+					  name = "some.role-123"
+				 }
+
+				 resource "snowflake_database" "db" {
+					  name = "infinite_plan_grants_db"
+				 }
+
+				 resource "snowflake_grant_privileges_to_role" "g" {
+					  depends_on = [snowflake_role.r, snowflake_database.db]
+					  privileges = ["CREATE SCHEMA"]
+					  role_name  = "\"some.role-123\""
+					  on_account_object {
+						object_type = "DATABASE"
+						object_name = snowflake_database.db.name
+					  }
+				   }
+				 `,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
