@@ -45,7 +45,7 @@ var RowAccessPoliciesDef = g.NewInterface(
 				g.NewQueryStruct("CreateRowAccessPolicyArgs").
 					Text("Name", g.KeywordOptions().NoQuotes().Required()).
 					Text("Type", g.KeywordOptions().NoQuotes().Required()),
-				g.ParameterOptions().Parentheses().NoEquals(),
+				g.ParameterOptions().Parentheses().NoEquals().Required(),
 			).
 			SQL("RETURNS BOOLEAN").
 			BodyWithPrecedingArrow().

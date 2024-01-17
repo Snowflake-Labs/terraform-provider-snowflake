@@ -6,10 +6,12 @@ import ()
 
 func NewCreateRowAccessPolicyRequest(
 	name SchemaObjectIdentifier,
+	args []CreateRowAccessPolicyArgsRequest,
 	body string,
 ) *CreateRowAccessPolicyRequest {
 	s := CreateRowAccessPolicyRequest{}
 	s.name = name
+	s.args = args
 	s.body = body
 	return &s
 }
@@ -25,11 +27,6 @@ func (s *CreateRowAccessPolicyRequest) WithOrReplace(OrReplace *bool) *CreateRow
 
 func (s *CreateRowAccessPolicyRequest) WithIfNotExists(IfNotExists *bool) *CreateRowAccessPolicyRequest {
 	s.IfNotExists = IfNotExists
-	return s
-}
-
-func (s *CreateRowAccessPolicyRequest) WithArgs(args []CreateRowAccessPolicyArgsRequest) *CreateRowAccessPolicyRequest {
-	s.args = args
 	return s
 }
 

@@ -51,8 +51,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
 
-		// TODO: args should be required
-		return sdk.NewCreateRowAccessPolicyRequest(id, body).WithArgs(args)
+		return sdk.NewCreateRowAccessPolicyRequest(id, args, body)
 	}
 
 	createRowAccessPolicyBasicRequest := func(t *testing.T) *sdk.CreateRowAccessPolicyRequest {
