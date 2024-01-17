@@ -214,7 +214,6 @@ func TestRowAccessPolicies_Show(t *testing.T) {
 			Account: Bool(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW ROW ACCESS POLICIES LIKE 'myaccount' IN ACCOUNT")
-
 	})
 }
 

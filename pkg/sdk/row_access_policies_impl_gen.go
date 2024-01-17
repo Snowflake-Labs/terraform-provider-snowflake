@@ -69,10 +69,7 @@ func (r *CreateRowAccessPolicyRequest) toOpts() *CreateRowAccessPolicyOptions {
 	if r.args != nil {
 		s := make([]CreateRowAccessPolicyArgs, len(r.args))
 		for i, v := range r.args {
-			s[i] = CreateRowAccessPolicyArgs{
-				Name: v.Name,
-				Type: v.Type,
-			}
+			s[i] = CreateRowAccessPolicyArgs(v)
 		}
 		opts.args = s
 	}
