@@ -4,9 +4,9 @@ resource "snowflake_schema" "test" {
 }
 
 resource "snowflake_grant_privileges_to_account_role" "test" {
-  depends_on         = [snowflake_schema.test]
-  role_name = var.name
-  privileges         = var.privileges
+  depends_on = [snowflake_schema.test]
+  role_name  = var.name
+  privileges = var.privileges
   on_schema {
     schema_name = "${var.database}.${var.schema_name}"
   }

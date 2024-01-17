@@ -2,10 +2,11 @@ package resources
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 type AccountRoleGrantKind string
@@ -17,8 +18,7 @@ const (
 	OnSchemaObjectAccountRoleGrantKind  AccountRoleGrantKind = "OnSchemaObject"
 )
 
-type OnAccountGrantData struct {
-}
+type OnAccountGrantData struct{}
 
 func (d *OnAccountGrantData) String() string {
 	return ""

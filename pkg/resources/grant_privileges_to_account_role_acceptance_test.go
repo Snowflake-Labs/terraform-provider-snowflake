@@ -153,11 +153,11 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
 				// TODO (SNOW-999049): this fails, because after import object_name identifier is escaped (was unescaped)
 				// 	Make grant_privileges_to_account_role and grant_privileges_to_account_role identifiers accept
 				//  quoted and unquoted identifiers.
-				//ConfigPlanChecks: resource.ConfigPlanChecks{
+				// ConfigPlanChecks: resource.ConfigPlanChecks{
 				//	PostApplyPostRefresh: []plancheck.PlanCheck{
 				//		plancheck.ExpectEmptyPlan(),
 				//	},
-				//},
+				// },
 				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,

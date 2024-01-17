@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"slices"
 )
 
 var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
@@ -613,6 +614,16 @@ func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	client := sdk.NewClientFromDB(db)
 
 	id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
+	if err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to parse internal identifier",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+			},
+		}
+	}
+
 	err = client.Grants.RevokePrivilegesFromAccountRole(
 		ctx,
 		getAccountRolePrivilegesFromSchema(d),
