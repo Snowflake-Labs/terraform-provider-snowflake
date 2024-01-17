@@ -16,6 +16,19 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	assertRowAccessPolicy := func(t *testing.T, rowAccessPolicy *sdk.RowAccessPolicy, id sdk.SchemaObjectIdentifier, comment string) {
+		t.Helper()
+		assert.NotEmpty(t, rowAccessPolicy.CreatedOn)
+		assert.Equal(t, id.Name(), rowAccessPolicy.Name)
+		assert.Equal(t, id.DatabaseName(), rowAccessPolicy.DatabaseName)
+		assert.Equal(t, id.SchemaName(), rowAccessPolicy.SchemaName)
+		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicy.Kind)
+		assert.Equal(t, "ACCOUNTADMIN", rowAccessPolicy.Owner)
+		assert.Equal(t, comment, rowAccessPolicy.Comment)
+		assert.Empty(t, rowAccessPolicy.Options)
+		assert.Equal(t, "ROLE", rowAccessPolicy.OwnerRoleType)
+	}
+
 	assertRowAccessPolicyDescription := func(t *testing.T, rowAccessPolicyDescription *sdk.RowAccessPolicyDescription, id sdk.SchemaObjectIdentifier, expectedSignature string, expectedBody string) {
 		t.Helper()
 		assert.Equal(t, sdk.RowAccessPolicyDescription{
@@ -74,11 +87,20 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	}
 
 	t.Run("create row access policy: no optionals", func(t *testing.T) {
-		// TODO: fill me
+		request := createRowAccessPolicyBasicRequest(t)
+
+		rowAccessPolicy := createRowAccessPolicyWithRequest(t, request)
+
+		assertRowAccessPolicy(t, rowAccessPolicy, request.GetName(), "")
 	})
 
 	t.Run("create row access policy: full", func(t *testing.T) {
-		// TODO: fill me
+		request := createRowAccessPolicyBasicRequest(t)
+		request.Comment = sdk.String("some comment")
+
+		rowAccessPolicy := createRowAccessPolicyWithRequest(t, request)
+
+		assertRowAccessPolicy(t, rowAccessPolicy, request.GetName(), "some comment")
 	})
 
 	t.Run("drop row access policy: existing", func(t *testing.T) {

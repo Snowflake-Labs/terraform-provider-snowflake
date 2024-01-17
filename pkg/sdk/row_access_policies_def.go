@@ -22,7 +22,7 @@ var rowAccessPolicy = g.PlainStruct("RowAccessPolicy").
 	Text("SchemaName").
 	Text("Kind").
 	Text("Owner").
-	OptionalText("Comment").
+	Text("Comment").
 	Text("Options").
 	Text("OwnerRoleType")
 

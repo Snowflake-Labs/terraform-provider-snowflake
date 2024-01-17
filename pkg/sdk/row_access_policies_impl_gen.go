@@ -119,7 +119,7 @@ func (r rowAccessPolicyDBRow) convert() *RowAccessPolicy {
 		OwnerRoleType: r.OwnerRoleType,
 	}
 	if r.Comment.Valid {
-		rowAccessPolicy.Comment = String(r.Comment.String)
+		rowAccessPolicy.Comment = r.Comment.String
 	}
 	return rowAccessPolicy
 }

@@ -81,7 +81,7 @@ type RowAccessPolicy struct {
 	SchemaName    string
 	Kind          string
 	Owner         string
-	Comment       *string
+	Comment       string
 	Options       string
 	OwnerRoleType string
 }
