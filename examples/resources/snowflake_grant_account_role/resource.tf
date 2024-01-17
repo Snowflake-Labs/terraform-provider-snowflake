@@ -10,7 +10,7 @@ resource "snowflake_role" "parent_role" {
   name = var.parent_role_name
 }
 
-resource "snowflake_grant_role" "g" {
+resource "snowflake_grant_account_role" "g" {
   role_name        = snowflake_role.role.name
   parent_role_name = snowflake_role.parent_role.name
 }
@@ -28,7 +28,7 @@ resource "snowflake_user" "user" {
   name = var.user_name
 }
 
-resource "snowflake_grant_role" "g" {
+resource "snowflake_grant_account_role" "g" {
   role_name = snowflake_role.role.name
   user_name = snowflake_user.user.name
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var grantRoleSchema = map[string]*schema.Schema{
+var grantAccountRoleSchema = map[string]*schema.Schema{
 	"role_name": {
 		Type:             schema.TypeString,
 		Required:         true,
@@ -44,12 +44,12 @@ var grantRoleSchema = map[string]*schema.Schema{
 	},
 }
 
-func GrantRole() *schema.Resource {
+func GrantAccountRole() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateGrantRole,
-		Read:   ReadGrantRole,
-		Delete: DeleteGrantRole,
-		Schema: grantRoleSchema,
+		Create: CreateGrantAccountRole,
+		Read:   ReadGrantAccountRole,
+		Delete: DeleteGrantAccountRole,
+		Schema: grantAccountRoleSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				parts := strings.Split(d.Id(), helpers.IDDelimiter)
@@ -65,7 +65,7 @@ func GrantRole() *schema.Resource {
 						return nil, err
 					}
 				case "USER":
-					if err := d.Set("usere_name", parts[2]); err != nil {
+					if err := d.Set("user_name", parts[2]); err != nil {
 						return nil, err
 					}
 				default:
@@ -78,8 +78,8 @@ func GrantRole() *schema.Resource {
 	}
 }
 
-// CreateGrantRole implements schema.CreateFunc.
-func CreateGrantRole(d *schema.ResourceData, meta interface{}) error {
+// CreateGrantAccountRole implements schema.CreateFunc.
+func CreateGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
@@ -109,13 +109,16 @@ func CreateGrantRole(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("invalid role grant specified: %v", d)
 	}
 	d.SetId(snowflakeResourceID)
-	return ReadGrantRole(d, meta)
+	return ReadGrantAccountRole(d, meta)
 }
 
-func ReadGrantRole(d *schema.ResourceData, meta interface{}) error {
+func ReadGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	parts := strings.Split(d.Id(), helpers.IDDelimiter)
+	if len(parts) != 3 {
+		return fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id())
+	}
 	roleName := parts[0]
 	roleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(roleName)
 	objectType := parts[1]
@@ -149,10 +152,13 @@ func ReadGrantRole(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func DeleteGrantRole(d *schema.ResourceData, meta interface{}) error {
+func DeleteGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	parts := strings.Split(d.Id(), helpers.IDDelimiter)
+	if len(parts) != 3 {
+		return fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id())
+	}
 	id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[0])
 	objectType := parts[1]
 	granteeName := parts[2]
