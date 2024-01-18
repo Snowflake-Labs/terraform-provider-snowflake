@@ -15,7 +15,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
-	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
 
 const (
@@ -24,11 +23,11 @@ const (
 
 var mpAttachmentPolicySchema = map[string]*schema.Schema{
 	"tag_id": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
-		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedObjectID,
-		ForceNew:     true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
+		ForceNew:         true,
 	},
 	"masking_policy_id": {
 		Type:        schema.TypeString,
