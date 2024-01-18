@@ -92,9 +92,6 @@ func TestAcc_GrantDataseRole_accountRole(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"parent_role_name",
-				},
 			},
 		},
 	})
@@ -162,7 +159,7 @@ func testAccCheckGrantDatabaseRoleDestroy(s *terraform.State) error {
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("database role (%s) not found", id)
+			continue
 		}
 		for _, grant := range grants {
 			if grant.GrantedTo == sdk.ObjectType(objectType) {
