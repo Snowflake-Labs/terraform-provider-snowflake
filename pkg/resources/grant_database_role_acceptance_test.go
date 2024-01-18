@@ -57,7 +57,7 @@ func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
 	})
 }
 
-func TestAcc_GrantDataseRole_accountRole(t *testing.T) {
+func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
 	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	parentRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_grant_database_role.g"
