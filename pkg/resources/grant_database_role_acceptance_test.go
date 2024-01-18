@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_GrantDataseRole_databaseRole(t *testing.T) {
+func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
 	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	parentDatabaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_grant_database_role.g"
@@ -99,7 +99,7 @@ func TestAcc_GrantDataseRole_accountRole(t *testing.T) {
 
 /*
 todo: once snowflake_grant_privileges_to_share is implemented. Cannot test this without having  'GRANT USAGE ON DATABASE <NAME> TO SHARE <share_name>',
-func TestAcc_GrantDataseRole_share(t *testing.T) {
+func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_grant_database_role.g"
