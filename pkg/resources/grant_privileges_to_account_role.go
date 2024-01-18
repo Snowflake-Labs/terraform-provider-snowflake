@@ -15,7 +15,6 @@ import (
 )
 
 var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
-	// TODO: or account_role_name ?
 	"role_name": {
 		Type:             schema.TypeString,
 		Required:         true,
@@ -256,8 +255,6 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 	},
 }
 
-// TODO: Handle pipes in bulk operations
-
 var grantPrivilegesOnAccountRoleBulkOperationSchema = map[string]*schema.Schema{
 	"object_type_plural": {
 		Type:             schema.TypeString,
@@ -296,10 +293,12 @@ func GrantPrivilegesToAccountRole() *schema.Resource {
 
 func ImportGrantPrivilegesToAccountRole() func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+		logging.DebugLogger.Printf("[DEBUG] Entering import grant privileges to account role")
 		id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
 		if err != nil {
 			return nil, err
 		}
+		logging.DebugLogger.Printf("[DEBUG] Imported identifier: %s", id.String())
 		if err := d.Set("role_name", id.RoleName.FullyQualifiedName()); err != nil {
 			return nil, err
 		}
@@ -393,10 +392,15 @@ func ImportGrantPrivilegesToAccountRole() func(ctx context.Context, d *schema.Re
 }
 
 func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	logging.DebugLogger.Printf("[DEBUG] Entering create grant privileges to account role")
 	db := meta.(*sql.DB)
+
+	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
 	client := sdk.NewClientFromDB(db)
 
 	id := createGrantPrivilegesToAccountRoleIdFromSchema(d)
+	logging.DebugLogger.Printf("[DEBUG] created identifier from schema: %s", id.String())
+
 	err := client.Grants.GrantPrivilegesToAccountRole(
 		ctx,
 		getAccountRolePrivilegesFromSchema(d),
@@ -416,14 +420,19 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	logging.DebugLogger.Printf("[DEBUG] Setting identifier to %s", id.String())
 	d.SetId(id.String())
 
 	return ReadGrantPrivilegesToAccountRole(ctx, d, meta)
 }
 
 func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	logging.DebugLogger.Printf("[DEBUG] Entering update grant privileges to account role")
 	db := meta.(*sql.DB)
+
+	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
 	client := sdk.NewClientFromDB(db)
+
 	id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
 	if err != nil {
 		return diag.Diagnostics{
@@ -434,12 +443,14 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			},
 		}
 	}
+	logging.DebugLogger.Printf("[DEBUG] Parsed identifier to %s", id.String())
 
 	// handle all_privileges -> privileges change (revoke all privileges)
 	if d.HasChange("all_privileges") {
 		_, allPrivileges := d.GetChange("all_privileges")
 
 		if !allPrivileges.(bool) {
+			logging.DebugLogger.Printf("[DEBUG] Revoking all privileges")
 			err = client.Grants.RevokePrivilegesFromAccountRole(ctx, &sdk.AccountRoleGrantPrivileges{
 				AllPrivileges: sdk.Bool(true),
 			},
@@ -478,6 +489,8 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			privilegesBeforeChange := expandStringList(before.(*schema.Set).List())
 			privilegesAfterChange := expandStringList(after.(*schema.Set).List())
 
+			logging.DebugLogger.Printf("[DEBUG] Changes in privileges. Before: %v, after: %v", privilegesBeforeChange, privilegesAfterChange)
+
 			var privilegesToAdd, privilegesToRemove []string
 
 			for _, privilegeBeforeChange := range privilegesBeforeChange {
@@ -495,6 +508,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			grantOn := getAccountRoleGrantOn(d)
 
 			if len(privilegesToAdd) > 0 {
+				logging.DebugLogger.Printf("[DEBUG] Granting privileges: %v", privilegesToAdd)
 				err = client.Grants.GrantPrivilegesToAccountRole(
 					ctx,
 					getAccountRolePrivileges(
@@ -521,6 +535,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			}
 
 			if len(privilegesToRemove) > 0 {
+				logging.DebugLogger.Printf("[DEBUG] Revoking privileges: %v", privilegesToRemove)
 				err = client.Grants.RevokePrivilegesFromAccountRole(
 					ctx,
 					getAccountRolePrivileges(
@@ -555,6 +570,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 		_, allPrivileges := d.GetChange("all_privileges")
 
 		if allPrivileges.(bool) {
+			logging.DebugLogger.Printf("[DEBUG] Granting all privileges")
 			err = client.Grants.GrantPrivilegesToAccountRole(ctx, &sdk.AccountRoleGrantPrivileges{
 				AllPrivileges: sdk.Bool(true),
 			},
@@ -582,6 +598,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	}
 
 	if id.AlwaysApply {
+		logging.DebugLogger.Printf("[DEBUG] Performing always_apply re-grant")
 		err := client.Grants.GrantPrivilegesToAccountRole(
 			ctx,
 			getAccountRolePrivilegesFromSchema(d),
@@ -602,14 +619,16 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
+	logging.DebugLogger.Printf("[DEBUG] Setting identifier to %s", id.String())
 	d.SetId(id.String())
 
 	return ReadGrantPrivilegesToAccountRole(ctx, d, meta)
 }
 
 func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	logging.DebugLogger.Printf("[DEBUG] Entering delete grant privileges to role")
+	logging.DebugLogger.Printf("[DEBUG] Entering delete grant privileges to account role")
 	db := meta.(*sql.DB)
+
 	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
 	client := sdk.NewClientFromDB(db)
 
@@ -623,6 +642,7 @@ func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			},
 		}
 	}
+	logging.DebugLogger.Printf("[DEBUG] Parsed identifier: %s", id.String())
 
 	err = client.Grants.RevokePrivilegesFromAccountRole(
 		ctx,
@@ -658,6 +678,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 			},
 		}
 	}
+	logging.DebugLogger.Printf("[DEBUG] Parsed identifier: %s", id.String())
 
 	if id.AlwaysApply {
 		triggerId, err := uuid.GenerateUUID()
@@ -706,15 +727,13 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
-		return append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to retrieve grants",
-			Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
-		})
-	}
-	logging.DebugLogger.Printf("[DEBUG] After showing grants: err = %v", err)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error retrieving grants for account role: %w", err))
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to retrieve grants",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+			},
+		}
 	}
 
 	var privileges []string
@@ -744,9 +763,8 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	logging.DebugLogger.Printf("[DEBUG] Setting privileges on account")
+	logging.DebugLogger.Printf("[DEBUG] Setting privileges: %v", privileges)
 	if err := d.Set("privileges", privileges); err != nil {
-		logging.DebugLogger.Printf("[DEBUG] Error setting privileges for account role: err = %v", err)
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
