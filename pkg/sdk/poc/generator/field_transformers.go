@@ -6,6 +6,25 @@ type FieldTransformer interface {
 	Transform(f *Field) *Field
 }
 
+func StaticOptions() *StaticTransformer {
+	return new(StaticTransformer)
+}
+
+type StaticTransformer struct {
+	sqlPrefix string
+}
+
+func (v *StaticTransformer) SQL(sqlPrefix string) *StaticTransformer {
+	v.sqlPrefix = sqlPrefix
+	return v
+}
+
+func (v *StaticTransformer) Transform(f *Field) *Field {
+	addTagIfMissing(f.Tags, "ddl", "static")
+	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
+	return f
+}
+
 type KeywordTransformer struct {
 	required    bool
 	sqlPrefix   string
@@ -44,6 +63,11 @@ func (v *KeywordTransformer) DoubleQuotes() *KeywordTransformer {
 
 func (v *KeywordTransformer) Parentheses() *KeywordTransformer {
 	v.parentheses = "parentheses"
+	return v
+}
+
+func (v *KeywordTransformer) MustParentheses() *KeywordTransformer {
+	v.parentheses = "must_parentheses"
 	return v
 }
 

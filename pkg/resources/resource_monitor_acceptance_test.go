@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_ResourceMonitor(t *testing.T) {
@@ -34,13 +36,25 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: resourceMonitorConfig2(name),
+				Config: resourceMonitorConfig2(name, 75),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "75"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
+				),
+			},
+			// CHANGE JUST suspend_trigger; proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2316
+			{
+				Config: resourceMonitorConfig2(name, 60),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "150"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "set_for_account", "true"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "notify_triggers.0", "50"),
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_trigger", "60"),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "suspend_immediate_trigger", "95"),
 				),
 			},
@@ -196,7 +210,7 @@ resource "snowflake_resource_monitor" "test" {
 `, accName)
 }
 
-func resourceMonitorConfig2(accName string) string {
+func resourceMonitorConfig2(accName string, suspendTrigger int) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "warehouse" {
   name           = "test"
@@ -210,10 +224,39 @@ resource "snowflake_resource_monitor" "test" {
 	set_for_account = true
 	notify_triggers = [50]
 	warehouses      = []
-	suspend_trigger = 75
+	suspend_trigger = %d
 	suspend_immediate_trigger = 95
 }
-`, accName)
+`, accName, suspendTrigger)
+}
+
+// TestAcc_ResourceMonitor_issue2167 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2167 issue.
+// Second step is purposely error, because tests TestAcc_ResourceMonitorUpdateNotifyUsers and TestAcc_ResourceMonitorNotifyUsers are still skipped.
+// It can be fixed with them.
+func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configNoUsers, err := resourceMonitorNotifyUsersConfig(name, []string{})
+	require.NoError(t, err)
+	config, err := resourceMonitorNotifyUsersConfig(name, []string{"non_existing_user"})
+	require.NoError(t, err)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: configNoUsers,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
+				),
+			},
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(`.*090268 \(22023\): User non_existing_user does not exist.*`),
+			},
+		},
+	})
 }
 
 func TestAcc_ResourceMonitorNotifyUsers(t *testing.T) {

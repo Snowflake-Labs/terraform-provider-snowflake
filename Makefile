@@ -1,5 +1,4 @@
 export SKIP_EMAIL_INTEGRATION_TESTS=true
-export SKIP_EXTERNAL_TABLE_TEST=true
 export SKIP_NOTIFICATION_INTEGRATION_TESTS=true
 export SKIP_SAML_INTEGRATION_TESTS=true
 export SKIP_STREAM_TEST=true
@@ -51,9 +50,7 @@ mod: ## add missing and remove unused modules
 mod-check: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum
 
-pre-push: fmt docs mod lint test-architecture ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
-
-pre-push-check: fmt-check docs-check lint-check mod-check ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+pre-push: mod fmt docs lint test-architecture ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
 sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
@@ -77,7 +74,7 @@ test-architecture: ## check architecture constraints between packages
 	go test ./pkg/architests/... -v
 
 test-client: ## runs test that checks sdk.Client without instrumentedsql
-	SF_TF_NO_INSTRUMENTED_SQL=1 go test ./pkg/sdk/internal/client/... -v
+	SF_TF_NO_INSTRUMENTED_SQL=1 SF_TF_GOSNOWFLAKE_LOG_LEVEL=debug go test ./pkg/sdk/internal/client/... -v
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .

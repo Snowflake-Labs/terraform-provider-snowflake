@@ -1,5 +1,65 @@
 # Changelog
 
+## [0.83.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.83.0...v0.83.1) (2024-01-12)
+
+
+### 🐛 **Bug fixes:**
+
+* Revert goreleaser mfa token caching ([#2343](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2343)) ([9a98031](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9a9803107f395ca350bdbb9fb8dc0f17820b8eb6))
+
+## [0.83.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.82.0...v0.83.0) (2024-01-11)
+
+
+### 🎉 **What's new:**
+
+* Add create streamlit privilege to the SDK ([#2303](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2303)) ([be01d5f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/be01d5fdab4f2d31db9c4c849b349e657c0352c8))
+* grant privileges to database role resource ([#2306](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2306)) ([0311cf8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0311cf8554f0fbd202b489a54c9428f55c52a490))
+
+
+### 🐛 **Bug fixes:**
+
+* Add secondary account and fix tests ([#2324](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2324)) ([da6ca73](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/da6ca733c7527c8918d1e1beb86d1641d94062ec))
+* external tables issues ([#2334](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2334)) ([ae41691](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ae416917be72ab55c6f1b758dd7e06269831fabc))
+* Fix test because of the date ([#2312](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2312)) ([9a9ea33](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9a9ea3331f090201c2d686ed7e726eb7d9cef926))
+* Fix warehouse read and resource monitor empty set ([#2319](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2319)) ([05f96c6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/05f96c699e4e36db4b28380d9ac3577d4f50a709)), closes [#2318](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318) [#2316](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2316)
+* goreleaser for mfa token caching ([#2320](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2320)) ([4fef709](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4fef709a376f5905effcc3439b1ad4cb9043ffca))
+
+## [0.82.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.81.0...v0.82.0) (2023-12-21)
+
+
+### 🎉 **What's new:**
+
+* add functions to sdk ([#2205](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2205)) ([e542b67](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e542b67f761850e812114ce593fa5f6deca941cb))
+
+
+### 🔧 **Misc**
+
+* Add short scripts used to fetch all currently opened issues ([#2288](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2288)) ([0b5ce4e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0b5ce4eff21562406a473ba8d796804efb1bd94f))
+* Bump dependencies and fix linter complaints ([#2300](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2300)) ([124e862](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/124e862b406526e08d865e0f70414926e50f4d4d))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix email notification integration ([#2292](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2292)) ([70edd3e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/70edd3e5e010dcd2d2a6aa1bd1dd735a252d22c6))
+
+## [0.81.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.80.0...v0.81.0) (2023-12-20)
+
+
+### 🎉 **What's new:**
+
+* identifier validation ([#2269](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2269)) ([9687972](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9687972fc673bb7b768f9b4100a6d2b67fc46e48))
+
+
+### 🔧 **Misc**
+
+* Allow setting gosnowflake logging level from environment variable ([#2285](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2285)) ([843e8fc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/843e8fc8f8879fdb5b1148155e7e64174571e975))
+* Bump go to 1.21 ([#2267](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2267)) ([6b852c2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6b852c2ba6b1348ba83ec2e2190e8175371524be))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix small issues ([#2287](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2287)) ([4e2613c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4e2613c82edc1e0f91fb0cb56dcaa977d412d785))
+
 ## [0.80.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.79.1...v0.80.0) (2023-12-13)
 
 

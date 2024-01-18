@@ -2,6 +2,7 @@ package testint
 
 import (
 	"testing"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -51,7 +52,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		require.NoError(t, err)
 		startTimeStamp := "IMMEDIATELY"
 		creditQuota := 100
-		endTimeStamp := "2024-01-01 12:34"
+		endTimeStamp := time.Now().Add(24 * 10 * time.Hour).Format("2006-01-02 15:04")
 
 		triggers := []sdk.TriggerDefinition{
 			{
@@ -209,6 +210,31 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		resourceMonitor = &resourceMonitors[0]
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
 	})
+
+	t.Run("when changing notify users", func(t *testing.T) {
+		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		t.Cleanup(resourceMonitorCleanup)
+		alterOptions := &sdk.AlterResourceMonitorOptions{
+			Set: &sdk.ResourceMonitorSet{
+				NotifyUsers: &sdk.NotifyUsers{
+					Users: []sdk.NotifiedUser{{Name: "ARTUR_SAWICKI"}},
+				},
+			},
+		}
+		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
+		require.NoError(t, err)
+		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(resourceMonitor.Name),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(resourceMonitors))
+		resourceMonitor = &resourceMonitors[0]
+		assert.Len(t, resourceMonitor.NotifyUsers, 1)
+		assert.Equal(t, "ARTUR_SAWICKI", resourceMonitor.NotifyUsers[0])
+	})
+
 	t.Run("when changing scheduling info", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
@@ -241,6 +267,40 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, startTimeStamp, startTime)
 		assert.Equal(t, endTimeStamp, endTime)
+	})
+
+	t.Run("all options together", func(t *testing.T) {
+		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
+		t.Cleanup(resourceMonitorCleanup)
+
+		newTriggers := make([]sdk.TriggerDefinition, 0)
+		newTriggers = append(newTriggers, sdk.TriggerDefinition{Threshold: 30, TriggerAction: sdk.TriggerActionNotify})
+
+		creditQuota := 100
+		alterOptions := &sdk.AlterResourceMonitorOptions{
+			Set: &sdk.ResourceMonitorSet{
+				CreditQuota: &creditQuota,
+				NotifyUsers: &sdk.NotifyUsers{
+					Users: []sdk.NotifiedUser{{Name: "ARTUR_SAWICKI"}},
+				},
+			},
+			Triggers: newTriggers,
+		}
+		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
+		require.NoError(t, err)
+		resourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(resourceMonitor.Name),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(resourceMonitors))
+		resourceMonitor = &resourceMonitors[0]
+		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
+		assert.Len(t, resourceMonitor.NotifyUsers, 1)
+		assert.Equal(t, "ARTUR_SAWICKI", resourceMonitor.NotifyUsers[0])
+		assert.Len(t, resourceMonitor.NotifyTriggers, 1)
+		assert.Equal(t, 30, resourceMonitor.NotifyTriggers[0])
 	})
 }
 

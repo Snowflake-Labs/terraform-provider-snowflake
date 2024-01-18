@@ -62,7 +62,15 @@ func TestResourceMonitorAlter(t *testing.T) {
 		opts := &AlterResourceMonitorOptions{
 			name: id,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterResourceMonitorOptions", "Set", "NotifyUsers", "Triggers"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterResourceMonitorOptions", "Set", "Triggers"))
+	})
+
+	t.Run("validation: no option for set provided", func(t *testing.T) {
+		opts := &AlterResourceMonitorOptions{
+			name: id,
+			Set:  &ResourceMonitorSet{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("ResourceMonitorSet", "CreditQuota", "Frequency", "StartTimestamp", "EndTimestamp", "NotifyUsers"))
 	})
 
 	t.Run("with a single set", func(t *testing.T) {
@@ -74,6 +82,21 @@ func TestResourceMonitorAlter(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d", id.FullyQualifiedName(), *newCreditQuota)
+	})
+
+	t.Run("set notify users", func(t *testing.T) {
+		opts := &AlterResourceMonitorOptions{
+			name: id,
+			Set: &ResourceMonitorSet{
+				NotifyUsers: &NotifyUsers{
+					Users: []NotifiedUser{
+						{Name: "user1"},
+						{Name: "user2"},
+					},
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER RESOURCE MONITOR %s SET NOTIFY_USERS = (\"user1\", \"user2\")", id.FullyQualifiedName())
 	})
 
 	t.Run("with a multitple set", func(t *testing.T) {

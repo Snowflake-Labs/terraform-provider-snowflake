@@ -29,6 +29,10 @@ func (v *dbStruct) Text(dbName string) *dbStruct {
 	return v.Field(dbName, "string")
 }
 
+func (v *dbStruct) Time(dbName string) *dbStruct {
+	return v.Field(dbName, "time.Time")
+}
+
 func (v *dbStruct) OptionalText(dbName string) *dbStruct {
 	return v.Field(dbName, "sql.NullString")
 }

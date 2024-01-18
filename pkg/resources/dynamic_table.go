@@ -65,6 +65,7 @@ var dynamicTableShema = map[string]*schema.Schema{
 	"query": {
 		Type:             schema.TypeString,
 		Required:         true,
+		ForceNew:         true,
 		Description:      "Specifies the query to use to populate the dynamic table.",
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
