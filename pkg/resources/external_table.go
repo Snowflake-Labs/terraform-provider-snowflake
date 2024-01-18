@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,6 +31,13 @@ var externalTableSchema = map[string]*schema.Schema{
 		Required:    true,
 		ForceNew:    true,
 		Description: "The database in which to create the external table.",
+	},
+	"table_format": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		ForceNew:     true,
+		Description:  `Identifies the external table table type. For now, only "delta" for Delta Lake table format is supported.`,
+		ValidateFunc: validation.StringInSlice([]string{"delta"}, true),
 	},
 	"column": {
 		Type:        schema.TypeList,
@@ -152,7 +161,6 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
 	location := d.Get("location").(string)
 	fileFormat := d.Get("file_format").(string)
-	req := sdk.NewCreateExternalTableRequest(id, location).WithRawFileFormat(&fileFormat)
 
 	tableColumns := d.Get("column").([]any)
 	columnRequests := make([]*sdk.ExternalTableColumnRequest, len(tableColumns))
@@ -161,50 +169,82 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 		for key, val := range col.(map[string]any) {
 			columnDef[key] = val.(string)
 		}
-
-		name := columnDef["name"]
-		dataTypeString := columnDef["type"]
-		dataType, err := sdk.ToDataType(dataTypeString)
-		if err != nil {
-			return fmt.Errorf(`failed to parse datatype: %s`, dataTypeString)
-		}
-		as := columnDef["as"]
-		columnRequests[i] = sdk.NewExternalTableColumnRequest(name, dataType, as)
+		columnRequests[i] = sdk.NewExternalTableColumnRequest(
+			columnDef["name"],
+			sdk.DataType(columnDef["type"]),
+			columnDef["as"],
+		)
 	}
-	req.WithColumns(columnRequests)
+	autoRefresh := sdk.Bool(d.Get("auto_refresh").(bool))
+	refreshOnCreate := sdk.Bool(d.Get("refresh_on_create").(bool))
+	copyGrants := sdk.Bool(d.Get("copy_grants").(bool))
 
-	req.WithAutoRefresh(sdk.Bool(d.Get("auto_refresh").(bool)))
-	req.WithRefreshOnCreate(sdk.Bool(d.Get("refresh_on_create").(bool)))
-	req.WithCopyGrants(sdk.Bool(d.Get("copy_grants").(bool)))
-
+	var partitionBy []string
 	if v, ok := d.GetOk("partition_by"); ok {
-		req.WithPartitionBy(v.([]string))
+		partitionBy = expandStringList(v.([]any))
 	}
 
+	var pattern *string
 	if v, ok := d.GetOk("pattern"); ok {
-		req.WithPattern(sdk.String(v.(string)))
+		pattern = sdk.String(v.(string))
 	}
 
+	var awsSnsTopic *string
 	if v, ok := d.GetOk("aws_sns_topic"); ok {
-		req.WithAwsSnsTopic(sdk.String(v.(string)))
+		awsSnsTopic = sdk.String(v.(string))
 	}
 
+	var comment *string
 	if v, ok := d.GetOk("comment"); ok {
-		req.WithComment(sdk.String(v.(string)))
+		comment = sdk.String(v.(string))
 	}
 
+	var tagAssociationRequests []*sdk.TagAssociationRequest
 	if _, ok := d.GetOk("tag"); ok {
 		tagAssociations := getPropertyTags(d, "tag")
-		tagAssociationRequests := make([]*sdk.TagAssociationRequest, len(tagAssociations))
+		tagAssociationRequests = make([]*sdk.TagAssociationRequest, len(tagAssociations))
 		for i, t := range tagAssociations {
 			tagAssociationRequests[i] = sdk.NewTagAssociationRequest(t.Name, t.Value)
 		}
-		req.WithTag(tagAssociationRequests)
 	}
 
-	if err := client.ExternalTables.Create(ctx, req); err != nil {
-		return err
+	switch {
+	case d.Get("table_format").(string) == "delta":
+		err := client.ExternalTables.CreateDeltaLake(
+			ctx,
+			sdk.NewCreateDeltaLakeExternalTableRequest(id, location).
+				WithColumns(columnRequests).
+				WithPartitionBy(partitionBy).
+				WithRefreshOnCreate(refreshOnCreate).
+				WithAutoRefresh(autoRefresh).
+				WithRawFileFormat(&fileFormat).
+				WithCopyGrants(copyGrants).
+				WithComment(comment).
+				WithTag(tagAssociationRequests),
+		)
+		if err != nil {
+			return err
+		}
+	default:
+		err := client.ExternalTables.Create(
+			ctx,
+			sdk.NewCreateExternalTableRequest(id, location).
+				WithColumns(columnRequests).
+				WithPartitionBy(partitionBy).
+				WithRefreshOnCreate(refreshOnCreate).
+				WithAutoRefresh(autoRefresh).
+				WithPattern(pattern).
+				WithRawFileFormat(&fileFormat).
+				WithAwsSnsTopic(awsSnsTopic).
+				WithCopyGrants(copyGrants).
+				WithComment(comment).
+				WithTag(tagAssociationRequests),
+		)
+		if err != nil {
+			return err
+		}
 	}
+
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadExternalTable(d, meta)
