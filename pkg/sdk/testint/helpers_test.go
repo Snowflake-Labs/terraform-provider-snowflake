@@ -256,69 +256,44 @@ func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema 
 
 func createStageWithDirectory(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
 	t.Helper()
-	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE STAGE "%s" DIRECTORY = (ENABLE = TRUE)`, name))
-	require.NoError(t, err)
-
-	return &sdk.Stage{
-			DatabaseName: database.Name,
-			SchemaName:   schema.Name,
-			Name:         name,
-		}, func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name))
-			require.NoError(t, err)
-		}
-}
-
-func createStageWithName(t *testing.T, client *sdk.Client, name string) (*string, func()) {
-	t.Helper()
-	ctx := context.Background()
-	stageCleanup := func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP STAGE %s", name))
-		require.NoError(t, err)
-	}
-	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE STAGE %s", name))
-	if err != nil {
-		return nil, stageCleanup
-	}
-	require.NoError(t, err)
-	return &name, stageCleanup
-}
-
-func createStage(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
-	t.Helper()
-	require.NotNil(t, database, "database has to be created")
-	require.NotNil(t, schema, "schema has to be created")
-
 	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	ctx := context.Background()
-
-	stageCleanup := func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP STAGE %s", id.FullyQualifiedName()))
-		require.NoError(t, err)
-	}
-
-	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE STAGE %s", id.FullyQualifiedName()))
-	if err != nil {
-		return nil, stageCleanup
-	}
-	require.NoError(t, err)
-
-	return &sdk.Stage{
-		DatabaseName: database.Name,
-		SchemaName:   schema.Name,
-		Name:         name,
-	}, stageCleanup
+	return createStageWithOptions(t, client, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest {
+		return request.WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true)))
+	})
 }
 
-func createStageWithURL(t *testing.T, client *sdk.Client, name sdk.AccountObjectIdentifier, url string) (*sdk.Stage, func()) {
+func createStage(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier) (*sdk.Stage, func()) {
+	t.Helper()
+	return createStageWithOptions(t, client, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest { return request })
+}
+
+func createStageWithURL(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, url string) (*sdk.Stage, func()) {
 	t.Helper()
 	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE STAGE "%s" URL = '%s'`, name.Name(), url))
+	err := client.Stages.CreateOnS3(ctx, sdk.NewCreateOnS3StageRequest(id).
+		WithExternalStageParams(sdk.NewExternalS3StageParamsRequest(url)))
 	require.NoError(t, err)
 
-	return nil, func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name.Name()))
+	stage, err := client.Stages.ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return stage, func() {
+		client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
+		require.NoError(t, err)
+	}
+}
+
+func createStageWithOptions(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, reqMapping func(*sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest) (*sdk.Stage, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.Stages.CreateInternal(ctx, reqMapping(sdk.NewCreateInternalStageRequest(id)))
+	require.NoError(t, err)
+
+	stage, err := client.Stages.ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return stage, func() {
+		client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
 		require.NoError(t, err)
 	}
 }

@@ -55,8 +55,8 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnExternalTable", func(t *testing.T) {
-		stageID := sdk.NewAccountObjectIdentifier("EXTERNAL_TABLE_STAGE")
-		stageLocation := "@external_table_stage"
+		stageID := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, "EXTERNAL_TABLE_STAGE")
+		stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
 		_, _ = createStageWithURL(t, client, stageID, nycWeatherDataURL)
 
 		externalTableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
