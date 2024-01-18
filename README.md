@@ -66,7 +66,7 @@ Integration status - indicates if given resource / datasource is using new SDK.
 | Object Type                         | SDK migration status | Resource name                                  | Datasource name               | Integration status |
 |-------------------------------------|----------------------|------------------------------------------------|-------------------------------|--------------------|
 | Account                             | ✅                    | snowflake_account                              | snowflake_account             | ✅                  |
-| Managed Account                     | 👨‍💻                | snowflake_managed_account                      | snowflake_managed_account     | ❌                  |
+| Managed Account                     | ✅                | snowflake_managed_account                      | snowflake_managed_account     | 👨‍💻                  |
 | User                                | ✅                    | snowflake_user                                 | snowflake_user                | ✅                  |
 | Database Role                       | ✅                    | snowflake_database_role                        | snowflake_database_role       | ✅                  |
 | Role                                | ✅                    | snowflake_role                                 | snowflake_role                | 👨‍💻              |
@@ -75,9 +75,9 @@ Integration status - indicates if given resource / datasource is using new SDK.
 | Grant Privilege to Role             | ✅                    | snowflake_grant_privileges_to_role             | snowflake_grants              | ✅                  |
 | Grant Role                          | ✅                    | snowflake_grant_role                           | snowflake_grants              | 👨‍💻              |
 | Grant Database Role                 | ✅                    | snowflake_grant_database_role                  | snowflake_grants              | 👨‍💻              |
-| Grant Application Role              | ✅                    | snowflake_grant_application_role               | snowflake_grants              | ❌                  |
-| Grant Privilege to Share            | ✅                    | snowflake_grant_privileges_to_share            | snowflake_grants              | ❌                  |
-| Grant Ownership                     | ✅                    | snowflake_grant_ownership                      | snowflake_grants              | ❌                  |
+| Grant Application Role              | ✅                    | snowflake_grant_application_role               | snowflake_grants              | 👨‍💻                  |
+| Grant Privilege to Share            | ✅                    | snowflake_grant_privileges_to_share            | snowflake_grants              | 👨‍💻                  |
+| Grant Ownership                     | ✅                    | snowflake_grant_ownership                      | snowflake_grants              | 👨‍💻                  |
 | API Integration                     | ❌                    | snowflake_api_integration                      | snowflake_integrations        | ❌                  |
 | Notification Integration            | ❌                    | snowflake_notification_integration             | snowflake_integrations        | ❌                  |
 | Security Integration                | ❌                    | snowflake_security_integration                 | snowflake_integrations        | ❌                  |
@@ -102,22 +102,22 @@ Integration status - indicates if given resource / datasource is using new SDK.
 | Event Table                         | ✅                    | snowflake_event_table                          | snowflake_event_table         | ❌                  |
 | View                                | ✅                    | snowflake_view                                 | snowflake_view                | ❌                  |
 | Materialized View                   | ❌                    | snowflake_materialized_view                    | snowflake_materialized_view   | ❌                  |
-| Sequence                            | ❌                    | snowflake_sequence                             | snowflake_sequence            | ❌                  |
+| Sequence                            | ✅                    | snowflake_sequence                             | snowflake_sequence            | ❌                  |
 | Function                            | ✅                    | snowflake_function                             | snowflake_function            | ❌                  |
 | External Function                   | ✅                    | snowflake_external_function                    | snowflake_external_function   | ❌                  |
 | Stored Procedure                    | ✅                    | snowflake_stored_procedure                     | snowflake_stored_procedure    | ❌                  |
 | Stream                              | ✅                    | snowflake_stream                               | snowflake_stream              | ✅                  |
 | Task                                | ✅                    | snowflake_task                                 | snowflake_task                | ✅                  |
 | Masking Policy                      | ✅                    | snowflake_masking_policy                       | snowflake_masking_policy      | ✅                  |
-| Row Access Policy                   | 👨‍💻                | snowflake_row_access_policy                    | snowflake_row_access_policy   | ❌                  |
+| Row Access Policy                   | ✅                | snowflake_row_access_policy                    | snowflake_row_access_policy   | ❌                  |
 | Tag                                 | ✅                    | snowflake_tag                                  | snowflake_tag                 | ❌                  |
 | Secret                              | ❌                    | snowflake_secret                               | snowflake_secret              | ❌                  |
 | Stage                               | 🟨                   | snowflake_stage                                | snowflake_stage               | ❌                  |
 | File Format                         | ✅                    | snowflake_file_format                          | snowflake_file_format         | ✅                  |
 | Pipe                                | ✅                    | snowflake_pipe                                 | snowflake_pipe                | ✅                  |
 | Alert                               | ✅                    | snowflake_alert                                | snowflake_alert               | ✅                  |
-| Application                         | 👨‍💻                | snowflake_application                          | snowflake_application         | ❌                  |
-| Application Package                 | 👨‍💻                | snowflake_application_package                  | snowflake_application_package | ❌                  |
+| Application                         | ✅                | snowflake_application                          | snowflake_application         | ❌                  |
+| Application Package                 | ✅                | snowflake_application_package                  | snowflake_application_package | ❌                  |
 | Application Role                    | ✅                    | snowflake_application_role                     | snowflake_application_role    | ❌                  |
 | Streamlit                           | ❌                    | snowflake_streamlit                            | snowflake_streamlit           | ❌                  |
 | Versioned Schema                    | ❌                    | snowflake_versioned_schema                     | snowflake_versioned_schema    | ❌                  |
