@@ -35,7 +35,7 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 	"parent_database_role_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "The fully qualified name of the parent database role which will create a parent-child relationship between the roles. If the identifier is not fully qualified (in the form of <db_name>.≤database_role_name>), the command looks for the database role in the current database for the session.",
+		Description:      "The fully qualified name of the parent database role which will create a parent-child relationship between the roles.",
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 		ExactlyOneOf: []string{
@@ -58,7 +58,6 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 	},
 }
 
-// DynamicTable returns a pointer to the resource representing a dynamic table.
 func GrantDatabaseRole() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateGrantDatabaseRole,
@@ -76,7 +75,7 @@ func GrantDatabaseRole() *schema.Resource {
 				}
 				switch parts[1] {
 				case "ROLE":
-					if err := d.Set("parent_role_name", parts[2]); err != nil {
+					if err := d.Set("parent_role_name", strings.Trim(parts[2], "\"")); err != nil {
 						return nil, err
 					}
 				case "DATABASE ROLE":

@@ -34,7 +34,7 @@ func TestAcc_GrantDataseRole_databaseRole(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: testAccCheckGrantDatabaseRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/database_role"),
@@ -74,7 +74,7 @@ func TestAcc_GrantDataseRole_accountRole(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: testAccCheckGrantDatabaseRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/account_role"),
@@ -143,7 +143,7 @@ func TestAcc_GrantDataseRole_share(t *testing.T) {
 }
 */
 
-func testAccCheckGrantDataseRoleDestroy(s *terraform.State) error {
+func testAccCheckGrantDatabaseRoleDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	for _, rs := range s.RootModule().Resources {

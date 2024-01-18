@@ -154,25 +154,6 @@ func ValidateAdminName(i interface{}, k string) (s []string, errors []error) {
 	return
 }
 
-func ValidateFullyQualifiedObjectID(i interface{}, _ string) (s []string, errors []error) {
-	v, _ := i.(string)
-	if strings.Contains(v, ".") { //nolint:gocritic // todo: please fix this
-		tagArray := strings.Split(v, ".")
-		if len(tagArray) > 3 {
-			errors = append(errors, fmt.Errorf("%v, is not a valid id. If using period delimiter, no morethan three parts must be specified <db_name>.<schema_name>.<object_name>", v))
-		}
-	} else if strings.Contains(v, "|") {
-		tagArray := strings.Split(v, "|")
-		if len(tagArray) > 3 {
-			errors = append(errors, fmt.Errorf("%v, is not a valid id. If using pipe delimiter, nomorethan three parts must be specified <db_name>|<schema_name>|<object_name>", v))
-		}
-	} else {
-		errors = append(errors, fmt.Errorf("%v, is not a valid id. please use one of the following formats:"+
-			"\n\"<db_name>\".\"<schema_name>\".\"<object_name>\" or '<db_name>'.'<schema_name>'.'<object_name>' or <db_name>|<schema_name>|<object_name>", v))
-	}
-	return
-}
-
 func FormatFullyQualifiedObjectID(dbName, schemaName, objectName string) string {
 	var n strings.Builder
 
