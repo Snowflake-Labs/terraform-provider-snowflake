@@ -65,12 +65,6 @@ func (r *AlterApplicationPackageRequest) toOpts() *AlterApplicationPackageOption
 		IfExists: r.IfExists,
 		name:     r.name,
 
-		UnsetDataRetentionTimeInDays:    r.UnsetDataRetentionTimeInDays,
-		UnsetMaxDataExtensionTimeInDays: r.UnsetMaxDataExtensionTimeInDays,
-		UnsetDefaultDdlCollation:        r.UnsetDefaultDdlCollation,
-		UnsetComment:                    r.UnsetComment,
-		UnsetDistribution:               r.UnsetDistribution,
-
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
 	}
@@ -81,6 +75,15 @@ func (r *AlterApplicationPackageRequest) toOpts() *AlterApplicationPackageOption
 			DefaultDdlCollation:        r.Set.DefaultDdlCollation,
 			Comment:                    r.Set.Comment,
 			Distribution:               r.Set.Distribution,
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &ApplicationPackageUnset{
+			DataRetentionTimeInDays:    r.Unset.DataRetentionTimeInDays,
+			MaxDataExtensionTimeInDays: r.Unset.MaxDataExtensionTimeInDays,
+			DefaultDdlCollation:        r.Unset.DefaultDdlCollation,
+			Comment:                    r.Unset.Comment,
+			Distribution:               r.Unset.Distribution,
 		}
 	}
 	if r.ModifyReleaseDirective != nil {

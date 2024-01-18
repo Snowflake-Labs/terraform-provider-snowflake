@@ -42,6 +42,14 @@ var applicationPackageSet = g.NewQueryStruct("ApplicationPackageSet").
 	OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 	PredefinedQueryStructField("Distribution", "*Distribution", g.ParameterOptions().SQL("DISTRIBUTION"))
 
+var applicationPackageUnset = g.NewQueryStruct("ApplicationPackageUnset").
+	OptionalSQL("DATA_RETENTION_TIME_IN_DAYS").
+	OptionalSQL("MAX_DATA_EXTENSION_TIME_IN_DAYS").
+	OptionalSQL("DEFAULT_DDL_COLLATION").
+	OptionalSQL("COMMENT").
+	OptionalSQL("DISTRIBUTION").
+	WithValidation(g.ExactlyOneValueSet, "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution")
+
 var ApplicationPackagesDef = g.NewInterface(
 	"ApplicationPackages",
 	"ApplicationPackage",
@@ -72,11 +80,11 @@ var ApplicationPackagesDef = g.NewInterface(
 			applicationPackageSet,
 			g.KeywordOptions().SQL("SET"),
 		).
-		OptionalSQL("UNSET DATA_RETENTION_TIME_IN_DAYS").
-		OptionalSQL("UNSET MAX_DATA_EXTENSION_TIME_IN_DAYS").
-		OptionalSQL("UNSET DEFAULT_DDL_COLLATION").
-		OptionalSQL("UNSET COMMENT").
-		OptionalSQL("UNSET DISTRIBUTION").
+		OptionalQueryStructField(
+			"Unset",
+			applicationPackageUnset,
+			g.KeywordOptions().SQL("UNSET"),
+		).
 		OptionalQueryStructField(
 			"ModifyReleaseDirective",
 			applicationPackageModifyReleaseDirective,
@@ -115,7 +123,7 @@ var ApplicationPackagesDef = g.NewInterface(
 		OptionalSetTags().
 		OptionalUnsetTags().
 		WithValidation(g.ValidIdentifier, "name").
-		WithValidation(g.ExactlyOneValueSet, "Set", "UnsetDataRetentionTimeInDays", "UnsetMaxDataExtensionTimeInDays", "UnsetDefaultDdlCollation", "UnsetComment", "UnsetDistribution", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"),
+		WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"),
 ).DropOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/drop-application-package",
 	g.NewQueryStruct("DropApplicationPackage").

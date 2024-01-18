@@ -65,28 +65,8 @@ func (s *AlterApplicationPackageRequest) WithSet(Set *ApplicationPackageSetReque
 	return s
 }
 
-func (s *AlterApplicationPackageRequest) WithUnsetDataRetentionTimeInDays(UnsetDataRetentionTimeInDays *bool) *AlterApplicationPackageRequest {
-	s.UnsetDataRetentionTimeInDays = UnsetDataRetentionTimeInDays
-	return s
-}
-
-func (s *AlterApplicationPackageRequest) WithUnsetMaxDataExtensionTimeInDays(UnsetMaxDataExtensionTimeInDays *bool) *AlterApplicationPackageRequest {
-	s.UnsetMaxDataExtensionTimeInDays = UnsetMaxDataExtensionTimeInDays
-	return s
-}
-
-func (s *AlterApplicationPackageRequest) WithUnsetDefaultDdlCollation(UnsetDefaultDdlCollation *bool) *AlterApplicationPackageRequest {
-	s.UnsetDefaultDdlCollation = UnsetDefaultDdlCollation
-	return s
-}
-
-func (s *AlterApplicationPackageRequest) WithUnsetComment(UnsetComment *bool) *AlterApplicationPackageRequest {
-	s.UnsetComment = UnsetComment
-	return s
-}
-
-func (s *AlterApplicationPackageRequest) WithUnsetDistribution(UnsetDistribution *bool) *AlterApplicationPackageRequest {
-	s.UnsetDistribution = UnsetDistribution
+func (s *AlterApplicationPackageRequest) WithUnset(Unset *ApplicationPackageUnsetRequest) *AlterApplicationPackageRequest {
+	s.Unset = Unset
 	return s
 }
 
@@ -160,6 +140,35 @@ func (s *ApplicationPackageSetRequest) WithComment(Comment *string) *Application
 }
 
 func (s *ApplicationPackageSetRequest) WithDistribution(Distribution *Distribution) *ApplicationPackageSetRequest {
+	s.Distribution = Distribution
+	return s
+}
+
+func NewApplicationPackageUnsetRequest() *ApplicationPackageUnsetRequest {
+	return &ApplicationPackageUnsetRequest{}
+}
+
+func (s *ApplicationPackageUnsetRequest) WithDataRetentionTimeInDays(DataRetentionTimeInDays *bool) *ApplicationPackageUnsetRequest {
+	s.DataRetentionTimeInDays = DataRetentionTimeInDays
+	return s
+}
+
+func (s *ApplicationPackageUnsetRequest) WithMaxDataExtensionTimeInDays(MaxDataExtensionTimeInDays *bool) *ApplicationPackageUnsetRequest {
+	s.MaxDataExtensionTimeInDays = MaxDataExtensionTimeInDays
+	return s
+}
+
+func (s *ApplicationPackageUnsetRequest) WithDefaultDdlCollation(DefaultDdlCollation *bool) *ApplicationPackageUnsetRequest {
+	s.DefaultDdlCollation = DefaultDdlCollation
+	return s
+}
+
+func (s *ApplicationPackageUnsetRequest) WithComment(Comment *bool) *ApplicationPackageUnsetRequest {
+	s.Comment = Comment
+	return s
+}
+
+func (s *ApplicationPackageUnsetRequest) WithDistribution(Distribution *bool) *ApplicationPackageUnsetRequest {
 	s.Distribution = Distribution
 	return s
 }

@@ -124,14 +124,16 @@ func TestInt_ApplicationPackages(t *testing.T) {
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
 		// unset comment
-		err := client.ApplicationPackages.Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithUnsetComment(sdk.Bool(true)))
+		unset := sdk.NewApplicationPackageUnsetRequest().WithComment(sdk.Bool(true))
+		err := client.ApplicationPackages.Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithUnset(unset))
 		require.NoError(t, err)
 		o, err := client.ApplicationPackages.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Empty(t, o.Comment)
 
 		// unset distribution
-		err = client.ApplicationPackages.Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithUnsetDistribution(sdk.Bool(true)))
+		unset = sdk.NewApplicationPackageUnsetRequest().WithDistribution(sdk.Bool(true))
+		err = client.ApplicationPackages.Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithUnset(unset))
 		require.NoError(t, err)
 		o, err = client.ApplicationPackages.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -232,12 +234,14 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 		return e
 	}
 
-	uploadFileForStageHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier, name string) {
+	putOnStageHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier, name string) {
 		t.Helper()
-		f, err := os.CreateTemp("", name)
+
+		tempFile := fmt.Sprintf("/tmp/%s", name)
+		f, err := os.Create(tempFile)
 		require.NoError(t, err)
 		f.Close()
-		defer os.Remove(f.Name())
+		defer os.Remove(name)
 
 		_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, f.Name(), id.FullyQualifiedName()))
 		require.NoError(t, err)
@@ -259,8 +263,8 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 	t.Run("alter application package: add, patch and drop version", func(t *testing.T) {
 		e := createApplicationPackageHandle(t)
 		s := createStageHandle(t)
-		uploadFileForStageHandle(t, s.ID(), "manifest.yml")
-		uploadFileForStageHandle(t, s.ID(), "setup.sql")
+		putOnStageHandle(t, s.ID(), "manifest.yml")
+		putOnStageHandle(t, s.ID(), "setup.sql")
 
 		version := "V001"
 		using := "@" + s.ID().FullyQualifiedName()
@@ -298,8 +302,8 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 	t.Run("alter application package: set default release directive", func(t *testing.T) {
 		e := createApplicationPackageHandle(t)
 		s := createStageHandle(t)
-		uploadFileForStageHandle(t, s.ID(), "manifest.yml")
-		uploadFileForStageHandle(t, s.ID(), "setup.sql")
+		putOnStageHandle(t, s.ID(), "manifest.yml")
+		putOnStageHandle(t, s.ID(), "setup.sql")
 
 		version := "V001"
 		using := "@" + s.ID().FullyQualifiedName()

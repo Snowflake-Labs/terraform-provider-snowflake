@@ -64,7 +64,7 @@ func TestApplicationPackages_Alter(t *testing.T) {
 
 	t.Run("validation: exactly one field should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApplicationPackageOptions", "Set", "UnsetDataRetentionTimeInDays", "UnsetMaxDataExtensionTimeInDays", "UnsetDefaultDdlCollation", "UnsetComment", "UnsetDistribution", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApplicationPackageOptions", "Set", "Unset", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: exactly one field should be present", func(t *testing.T) {
@@ -76,7 +76,7 @@ func TestApplicationPackages_Alter(t *testing.T) {
 		opts.UnsetReleaseDirective = &UnsetReleaseDirective{
 			ReleaseDirective: "DEFAULT",
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApplicationPackageOptions", "Set", "UnsetDataRetentionTimeInDays", "UnsetMaxDataExtensionTimeInDays", "UnsetDefaultDdlCollation", "UnsetComment", "UnsetDistribution", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApplicationPackageOptions", "Set", "Unset", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("alter: set options", func(t *testing.T) {
@@ -93,23 +93,33 @@ func TestApplicationPackages_Alter(t *testing.T) {
 
 	t.Run("alter: unset options", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.UnsetComment = Bool(true)
+		opts.Unset = &ApplicationPackageUnset{
+			Comment: Bool(true),
+		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s UNSET COMMENT`, id.FullyQualifiedName())
 
 		opts = defaultOpts()
-		opts.UnsetDataRetentionTimeInDays = Bool(true)
+		opts.Unset = &ApplicationPackageUnset{
+			DataRetentionTimeInDays: Bool(true),
+		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s UNSET DATA_RETENTION_TIME_IN_DAYS`, id.FullyQualifiedName())
 
 		opts = defaultOpts()
-		opts.UnsetMaxDataExtensionTimeInDays = Bool(true)
+		opts.Unset = &ApplicationPackageUnset{
+			MaxDataExtensionTimeInDays: Bool(true),
+		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s UNSET MAX_DATA_EXTENSION_TIME_IN_DAYS`, id.FullyQualifiedName())
 
 		opts = defaultOpts()
-		opts.UnsetDefaultDdlCollation = Bool(true)
+		opts.Unset = &ApplicationPackageUnset{
+			DefaultDdlCollation: Bool(true),
+		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s UNSET DEFAULT_DDL_COLLATION`, id.FullyQualifiedName())
 
 		opts = defaultOpts()
-		opts.UnsetDistribution = Bool(true)
+		opts.Unset = &ApplicationPackageUnset{
+			Distribution: Bool(true),
+		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s UNSET DISTRIBUTION`, id.FullyQualifiedName())
 	})
 
@@ -209,7 +219,7 @@ func TestApplicationPackages_Alter(t *testing.T) {
 			Using:             "@hello_snowflake_code.core.hello_snowflake_stage",
 			Label:             String("test"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s ADD PATCH FOR VERSION v1_1 USING '@hello_snowflake_code.core.hello_snowflake_stage' Label = 'test'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s ADD PATCH FOR VERSION v1_1 USING '@hello_snowflake_code.core.hello_snowflake_stage' LABEL = 'test'`, id.FullyQualifiedName())
 	})
 }
 

@@ -26,8 +26,13 @@ func (opts *AlterApplicationPackageOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Set, opts.UnsetDataRetentionTimeInDays, opts.UnsetMaxDataExtensionTimeInDays, opts.UnsetDefaultDdlCollation, opts.UnsetComment, opts.UnsetDistribution, opts.ModifyReleaseDirective, opts.SetDefaultReleaseDirective, opts.SetReleaseDirective, opts.UnsetReleaseDirective, opts.AddVersion, opts.DropVersion, opts.AddPatchForVersion, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterApplicationPackageOptions", "Set", "UnsetDataRetentionTimeInDays", "UnsetMaxDataExtensionTimeInDays", "UnsetDefaultDdlCollation", "UnsetComment", "UnsetDistribution", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"))
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.ModifyReleaseDirective, opts.SetDefaultReleaseDirective, opts.SetReleaseDirective, opts.UnsetReleaseDirective, opts.AddVersion, opts.DropVersion, opts.AddPatchForVersion, opts.SetTags, opts.UnsetTags) {
+		errs = append(errs, errExactlyOneOf("AlterApplicationPackageOptions", "Set", "Unset", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"))
+	}
+	if valueSet(opts.Unset) {
+		if !exactlyOneValueSet(opts.Unset.DataRetentionTimeInDays, opts.Unset.MaxDataExtensionTimeInDays, opts.Unset.DefaultDdlCollation, opts.Unset.Comment, opts.Unset.Distribution) {
+			errs = append(errs, errExactlyOneOf("AlterApplicationPackageOptions.Unset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution"))
+		}
 	}
 	return JoinErrors(errs...)
 }

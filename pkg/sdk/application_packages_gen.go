@@ -29,25 +29,21 @@ type CreateApplicationPackageOptions struct {
 
 // AlterApplicationPackageOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-application-package.
 type AlterApplicationPackageOptions struct {
-	alter                           bool                        `ddl:"static" sql:"ALTER"`
-	applicationPackage              bool                        `ddl:"static" sql:"APPLICATION PACKAGE"`
-	IfExists                        *bool                       `ddl:"keyword" sql:"IF EXISTS"`
-	name                            AccountObjectIdentifier     `ddl:"identifier"`
-	Set                             *ApplicationPackageSet      `ddl:"keyword" sql:"SET"`
-	UnsetDataRetentionTimeInDays    *bool                       `ddl:"keyword" sql:"UNSET DATA_RETENTION_TIME_IN_DAYS"`
-	UnsetMaxDataExtensionTimeInDays *bool                       `ddl:"keyword" sql:"UNSET MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	UnsetDefaultDdlCollation        *bool                       `ddl:"keyword" sql:"UNSET DEFAULT_DDL_COLLATION"`
-	UnsetComment                    *bool                       `ddl:"keyword" sql:"UNSET COMMENT"`
-	UnsetDistribution               *bool                       `ddl:"keyword" sql:"UNSET DISTRIBUTION"`
-	ModifyReleaseDirective          *ModifyReleaseDirective     `ddl:"keyword" sql:"MODIFY RELEASE DIRECTIVE"`
-	SetDefaultReleaseDirective      *SetDefaultReleaseDirective `ddl:"keyword" sql:"SET DEFAULT RELEASE DIRECTIVE"`
-	SetReleaseDirective             *SetReleaseDirective        `ddl:"keyword" sql:"SET RELEASE DIRECTIVE"`
-	UnsetReleaseDirective           *UnsetReleaseDirective      `ddl:"keyword" sql:"UNSET RELEASE DIRECTIVE"`
-	AddVersion                      *AddVersion                 `ddl:"keyword" sql:"ADD VERSION"`
-	DropVersion                     *DropVersion                `ddl:"keyword" sql:"DROP VERSION"`
-	AddPatchForVersion              *AddPatchForVersion         `ddl:"keyword" sql:"ADD PATCH FOR VERSION"`
-	SetTags                         []TagAssociation            `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags                       []ObjectIdentifier          `ddl:"keyword" sql:"UNSET TAG"`
+	alter                      bool                        `ddl:"static" sql:"ALTER"`
+	applicationPackage         bool                        `ddl:"static" sql:"APPLICATION PACKAGE"`
+	IfExists                   *bool                       `ddl:"keyword" sql:"IF EXISTS"`
+	name                       AccountObjectIdentifier     `ddl:"identifier"`
+	Set                        *ApplicationPackageSet      `ddl:"keyword" sql:"SET"`
+	Unset                      *ApplicationPackageUnset    `ddl:"keyword" sql:"UNSET"`
+	ModifyReleaseDirective     *ModifyReleaseDirective     `ddl:"keyword" sql:"MODIFY RELEASE DIRECTIVE"`
+	SetDefaultReleaseDirective *SetDefaultReleaseDirective `ddl:"keyword" sql:"SET DEFAULT RELEASE DIRECTIVE"`
+	SetReleaseDirective        *SetReleaseDirective        `ddl:"keyword" sql:"SET RELEASE DIRECTIVE"`
+	UnsetReleaseDirective      *UnsetReleaseDirective      `ddl:"keyword" sql:"UNSET RELEASE DIRECTIVE"`
+	AddVersion                 *AddVersion                 `ddl:"keyword" sql:"ADD VERSION"`
+	DropVersion                *DropVersion                `ddl:"keyword" sql:"DROP VERSION"`
+	AddPatchForVersion         *AddPatchForVersion         `ddl:"keyword" sql:"ADD PATCH FOR VERSION"`
+	SetTags                    []TagAssociation            `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags                  []ObjectIdentifier          `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 type ApplicationPackageSet struct {
@@ -56,6 +52,14 @@ type ApplicationPackageSet struct {
 	DefaultDdlCollation        *string       `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
 	Comment                    *string       `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Distribution               *Distribution `ddl:"parameter" sql:"DISTRIBUTION"`
+}
+
+type ApplicationPackageUnset struct {
+	DataRetentionTimeInDays    *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	DefaultDdlCollation        *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
+	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
+	Distribution               *bool `ddl:"keyword" sql:"DISTRIBUTION"`
 }
 
 type ModifyReleaseDirective struct {
