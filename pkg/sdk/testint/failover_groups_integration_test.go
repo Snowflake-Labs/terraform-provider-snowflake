@@ -29,7 +29,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 			sdk.PluralObjectTypeDatabases,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			getSecondaryAccountIdentifier(t),
+			getAccountIdentifier(t, testSecondaryClient(t)),
 		}
 		replicationSchedule := "10 MINUTE"
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
@@ -80,7 +80,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 			sdk.PluralObjectTypeIntegrations,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			getSecondaryAccountIdentifier(t),
+			getAccountIdentifier(t, testSecondaryClient(t)),
 		}
 		allowedIntegrationTypes := []sdk.IntegrationType{
 			sdk.IntegrationTypeAPIIntegrations,
@@ -105,6 +105,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 }
 
 func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
+	// TODO: Business Critical Snowflake Edition (SNOW-1002023)
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
@@ -386,7 +387,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		failoverGroup, cleanupFailoverGroup := createFailoverGroup(t, client)
 		t.Cleanup(cleanupFailoverGroup)
 
-		secondaryAccountID := getSecondaryAccountIdentifier(t)
+		secondaryAccountID := getAccountIdentifier(t, testSecondaryClient(t))
 		// first add target account
 		opts := &sdk.AlterSourceFailoverGroupOptions{
 			Add: &sdk.FailoverGroupAdd{
@@ -538,6 +539,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 }
 
 func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
+	// TODO: Business Critical Snowflake Edition (SNOW-1002023)
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}

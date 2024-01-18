@@ -52,6 +52,7 @@ type Client struct {
 	FileFormats         FileFormats
 	Functions           Functions
 	Grants              Grants
+	ManagedAccounts     ManagedAccounts
 	MaskingPolicies     MaskingPolicies
 	NetworkPolicies     NetworkPolicies
 	Parameters          Parameters
@@ -60,11 +61,13 @@ type Client struct {
 	Procedures          Procedures
 	ResourceMonitors    ResourceMonitors
 	Roles               Roles
+	RowAccessPolicies   RowAccessPolicies
 	Schemas             Schemas
 	SessionPolicies     SessionPolicies
 	Sessions            Sessions
 	Shares              Shares
 	Stages              Stages
+	StorageIntegrations StorageIntegrations
 	Streams             Streams
 	Tables              Tables
 	Tags                Tags
@@ -194,6 +197,7 @@ func (c *Client) initialize() {
 	c.FileFormats = &fileFormats{client: c}
 	c.Functions = &functions{client: c}
 	c.Grants = &grants{client: c}
+	c.ManagedAccounts = &managedAccounts{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
 	c.NetworkPolicies = &networkPolicies{client: c}
 	c.Parameters = &parameters{client: c}
@@ -203,11 +207,13 @@ func (c *Client) initialize() {
 	c.ReplicationFunctions = &replicationFunctions{client: c}
 	c.ResourceMonitors = &resourceMonitors{client: c}
 	c.Roles = &roles{client: c}
+	c.RowAccessPolicies = &rowAccessPolicies{client: c}
 	c.Schemas = &schemas{client: c}
 	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}
 	c.Stages = &stages{client: c}
+	c.StorageIntegrations = &storageIntegrations{client: c}
 	c.Streams = &streams{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
 	c.Tables = &tables{client: c}

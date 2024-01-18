@@ -160,8 +160,8 @@ func (opts *GrantPrivilegesToDatabaseRoleOptions) validate() error {
 
 func (v *DatabaseRoleGrantPrivileges) validate() error {
 	var errs []error
-	if !exactlyOneValueSet(v.DatabasePrivileges, v.SchemaPrivileges, v.SchemaObjectPrivileges) {
-		errs = append(errs, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges"))
+	if !exactlyOneValueSet(v.DatabasePrivileges, v.SchemaPrivileges, v.SchemaObjectPrivileges, v.AllPrivileges) {
+		errs = append(errs, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	}
 	if valueSet(v.DatabasePrivileges) {
 		allowedPrivileges := []AccountObjectPrivilege{
