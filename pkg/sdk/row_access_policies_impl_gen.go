@@ -38,7 +38,7 @@ func (v *rowAccessPolicies) Show(ctx context.Context, request *ShowRowAccessPoli
 }
 
 func (v *rowAccessPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*RowAccessPolicy, error) {
-	request := NewShowRowAccessPolicyRequest().WithIn(&In{Database: NewAccountObjectIdentifier(id.DatabaseName())}).WithLike(&Like{String(id.Name())})
+	request := NewShowRowAccessPolicyRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&Like{String(id.Name())})
 	rowAccessPolicies, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
