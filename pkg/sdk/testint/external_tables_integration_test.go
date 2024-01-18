@@ -51,7 +51,6 @@ func TestInt_ExternalTables(t *testing.T) {
 			WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON)).
 			WithOrReplace(sdk.Bool(true)).
 			WithColumns(columnsWithPartition).
-			WithUserSpecifiedPartitionType(sdk.Bool(true)).
 			WithPartitionBy([]string{"part_date"}).
 			WithCopyGrants(sdk.Bool(true)).
 			WithComment(sdk.String("some_comment")).
@@ -158,7 +157,6 @@ func TestInt_ExternalTables(t *testing.T) {
 				WithOrReplace(sdk.Bool(true)).
 				WithColumns(columnsWithPartition).
 				WithPartitionBy([]string{"filename"}).
-				WithDeltaTableFormat(sdk.Bool(true)).
 				WithAutoRefresh(sdk.Bool(false)).
 				WithRefreshOnCreate(sdk.Bool(false)).
 				WithCopyGrants(sdk.Bool(true)).

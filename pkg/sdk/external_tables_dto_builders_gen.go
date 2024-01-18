@@ -2,6 +2,8 @@
 
 package sdk
 
+import ()
+
 func NewCreateExternalTableRequest(
 	name SchemaObjectIdentifier,
 	location string,
@@ -99,8 +101,8 @@ func NewExternalTableColumnRequest(
 	return &s
 }
 
-func (s *ExternalTableColumnRequest) WithNotNull() *ExternalTableColumnRequest {
-	s.notNull = Bool(true)
+func (s *ExternalTableColumnRequest) WithNotNull(notNull *bool) *ExternalTableColumnRequest {
+	s.notNull = notNull
 	return s
 }
 
@@ -275,16 +277,6 @@ func (s *NullStringRequest) WithStr(str string) *NullStringRequest {
 	return s
 }
 
-func NewRowAccessPolicyRequest(
-	name SchemaObjectIdentifier,
-	on []string,
-) *RowAccessPolicyRequest {
-	s := RowAccessPolicyRequest{}
-	s.Name = name
-	s.On = on
-	return &s
-}
-
 func NewCreateWithManualPartitioningExternalTableRequest(
 	name SchemaObjectIdentifier,
 	location string,
@@ -317,11 +309,6 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithCloudProviderPara
 
 func (s *CreateWithManualPartitioningExternalTableRequest) WithPartitionBy(partitionBy []string) *CreateWithManualPartitioningExternalTableRequest {
 	s.partitionBy = partitionBy
-	return s
-}
-
-func (s *CreateWithManualPartitioningExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateWithManualPartitioningExternalTableRequest {
-	s.userSpecifiedPartitionType = userSpecifiedPartitionType
 	return s
 }
 
@@ -390,11 +377,6 @@ func (s *CreateDeltaLakeExternalTableRequest) WithPartitionBy(partitionBy []stri
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateDeltaLakeExternalTableRequest {
-	s.userSpecifiedPartitionType = userSpecifiedPartitionType
-	return s
-}
-
 func (s *CreateDeltaLakeExternalTableRequest) WithRefreshOnCreate(refreshOnCreate *bool) *CreateDeltaLakeExternalTableRequest {
 	s.refreshOnCreate = refreshOnCreate
 	return s
@@ -412,11 +394,6 @@ func (s *CreateDeltaLakeExternalTableRequest) WithRawFileFormat(rawFileFormat *s
 
 func (s *CreateDeltaLakeExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateDeltaLakeExternalTableRequest {
 	s.fileFormat = fileFormat
-	return s
-}
-
-func (s *CreateDeltaLakeExternalTableRequest) WithDeltaTableFormat(deltaTableFormat *bool) *CreateDeltaLakeExternalTableRequest {
-	s.deltaTableFormat = deltaTableFormat
 	return s
 }
 

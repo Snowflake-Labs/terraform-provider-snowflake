@@ -2,12 +2,8 @@ variable "name" {
   type = string
 }
 
-variable "location" {
-  type = string
-}
-
-variable "aws_arn" {
-  type = string
+variable "privileges" {
+  type = list(string)
 }
 
 variable "database" {
@@ -16,4 +12,8 @@ variable "database" {
 
 variable "schema" {
   type = string
+}
+
+variable "with_grant_option" {
+  type = bool
 }
