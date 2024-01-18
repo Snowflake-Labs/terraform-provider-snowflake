@@ -56,16 +56,16 @@ func GrantAccountRole() *schema.Resource {
 				if len(parts) != 3 {
 					return nil, fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id())
 				}
-				if err := d.Set("role_name", parts[0]); err != nil {
+				if err := d.Set("role_name", strings.Trim(parts[0], "\"")); err != nil {
 					return nil, err
 				}
 				switch parts[1] {
 				case "ROLE":
-					if err := d.Set("parent_role_name", parts[2]); err != nil {
+					if err := d.Set("parent_role_name", strings.Trim(parts[2], "\"")); err != nil {
 						return nil, err
 					}
 				case "USER":
-					if err := d.Set("user_name", parts[2]); err != nil {
+					if err := d.Set("user_name", strings.Trim(parts[2], "\"")); err != nil {
 						return nil, err
 					}
 				default:

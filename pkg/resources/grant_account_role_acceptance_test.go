@@ -46,6 +46,8 @@ func TestAcc_GrantAccountRole_accountRole(t *testing.T) {
 			},
 			// import
 			{
+				ConfigDirectory:   config.StaticDirectory("testdata/TestAcc_GrantAccountRole/account_role"),
+				ConfigVariables:   m(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -83,6 +85,8 @@ func TestAcc_GrantAccountRole_user(t *testing.T) {
 			},
 			// import
 			{
+				ConfigDirectory:   config.StaticDirectory("testdata/TestAcc_GrantAccountRole/user"),
+				ConfigVariables:   m(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
