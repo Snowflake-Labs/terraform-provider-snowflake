@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-SNOW-1011985]: unskip the tests
+// TODO [SNOW-1011985]: unskip the tests
 func TestInt_ManagedAccounts(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_MANAGED_ACCOUNT_INT_TEST"); ok {
 		t.Skip("Skipping TestInt_ManagedAccounts due to error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support.")
