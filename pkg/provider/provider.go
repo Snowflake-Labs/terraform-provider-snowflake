@@ -444,7 +444,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_file_format":                             resources.FileFormat(),
 		"snowflake_function":                                resources.Function(),
 		"snowflake_grant_account_role":                      resources.GrantAccountRole(),
-    "snowflake_grant_database_role":                     resources.GrantDatabaseRole(),
+		"snowflake_grant_database_role":                     resources.GrantDatabaseRole(),
 		"snowflake_grant_privileges_to_role":                resources.GrantPrivilegesToRole(),
 		"snowflake_grant_privileges_to_database_role":       resources.GrantPrivilegesToDatabaseRole(),
 		"snowflake_managed_account":                         resources.ManagedAccount(),
