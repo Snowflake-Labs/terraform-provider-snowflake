@@ -749,11 +749,15 @@ func createRowAccessPolicy(t *testing.T, client *sdk.Client, schema *sdk.Schema)
 	t.Helper()
 	ctx := context.Background()
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.String())
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE ROW ACCESS POLICY %s AS (A NUMBER) RETURNS BOOLEAN -> TRUE`, id.FullyQualifiedName()))
+
+	arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", sdk.DataTypeNumber)
+	body := "true"
+	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, body)
+	err := client.RowAccessPolicies.Create(ctx, createRequest)
 	require.NoError(t, err)
 
 	return id, func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP ROW ACCESS POLICY %s`, id.FullyQualifiedName()))
+		err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
 		require.NoError(t, err)
 	}
 }
