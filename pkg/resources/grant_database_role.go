@@ -83,7 +83,7 @@ func GrantDatabaseRole() *schema.Resource {
 						return nil, err
 					}
 				case "SHARE":
-					if err := d.Set("share_name", parts[2]); err != nil {
+					if err := d.Set("share_name", strings.Trim(parts[2], "\"")); err != nil {
 						return nil, err
 					}
 				default:
