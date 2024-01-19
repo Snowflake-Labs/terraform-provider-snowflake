@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -81,9 +82,20 @@ type SetAzureStorageParams struct {
 }
 
 type StorageIntegrationUnset struct {
-	Enabled                 *bool `ddl:"keyword" sql:"ENABLED"`
-	StorageBlockedLocations *bool `ddl:"keyword" sql:"STORAGE_BLOCKED_LOCATIONS"`
-	Comment                 *bool `ddl:"keyword" sql:"COMMENT"`
+	SetS3Params             *UnsetS3StorageParams    `ddl:"keyword"`
+	SetAzureParams          *UnsetAzureStorageParams `ddl:"keyword"`
+	Enabled                 *bool                    `ddl:"keyword" sql:"ENABLED"`
+	StorageBlockedLocations *bool                    `ddl:"keyword" sql:"STORAGE_BLOCKED_LOCATIONS"`
+	Comment                 *bool                    `ddl:"keyword" sql:"COMMENT"`
+}
+
+type UnsetS3StorageParams struct {
+	StorageAwsRoleArn   string  `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_ROLE_ARN"`
+	StorageAwsObjectAcl *string `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_OBJECT_ACL"`
+}
+
+type UnsetAzureStorageParams struct {
+	AzureTenantId string `ddl:"parameter,single_quotes" sql:"AZURE_TENANT_ID"`
 }
 
 // DropStorageIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-integration.
@@ -102,12 +114,12 @@ type ShowStorageIntegrationOptions struct {
 }
 
 type showStorageIntegrationsDbRow struct {
-	Name      string    `db:"name"`
-	Type      string    `db:"type"`
-	Category  string    `db:"category"`
-	Enabled   bool      `db:"enabled"`
-	Comment   string    `db:"comment"`
-	CreatedOn time.Time `db:"created_on"`
+	Name      string         `db:"name"`
+	Type      string         `db:"type"`
+	Category  string         `db:"category"`
+	Enabled   bool           `db:"enabled"`
+	Comment   sql.NullString `db:"comment"`
+	CreatedOn time.Time      `db:"created_on"`
 }
 
 type StorageIntegration struct {

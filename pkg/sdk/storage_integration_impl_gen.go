@@ -139,14 +139,17 @@ func (r *ShowStorageIntegrationRequest) toOpts() *ShowStorageIntegrationOptions 
 }
 
 func (r showStorageIntegrationsDbRow) convert() *StorageIntegration {
-	return &StorageIntegration{
+	s := &StorageIntegration{
 		Name:        r.Name,
 		StorageType: r.Type,
 		Category:    r.Category,
 		Enabled:     r.Enabled,
-		Comment:     r.Comment,
 		CreatedOn:   r.CreatedOn,
 	}
+	if r.Comment.Valid {
+		s.Comment = r.Comment.String
+	}
+	return s
 }
 
 func (r *DescribeStorageIntegrationRequest) toOpts() *DescribeStorageIntegrationOptions {

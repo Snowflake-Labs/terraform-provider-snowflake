@@ -82,6 +82,19 @@ var StorageIntegrationDef = g.NewInterface(
 			OptionalQueryStructField(
 				"Unset",
 				g.NewQueryStruct("StorageIntegrationUnset").
+					OptionalQueryStructField(
+						"UnsetS3Params",
+						g.NewQueryStruct("SetS3StorageParams").
+							TextAssignment("STORAGE_AWS_ROLE_ARN", g.ParameterOptions().SingleQuotes().Required()).
+							OptionalTextAssignment("STORAGE_AWS_OBJECT_ACL", g.ParameterOptions().SingleQuotes()),
+						g.KeywordOptions(),
+					).
+					OptionalQueryStructField(
+						"UnsetAzureParams",
+						g.NewQueryStruct("SetAzureStorageParams").
+							TextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes().Required()),
+						g.KeywordOptions(),
+					).
 					OptionalSQL("ENABLED").
 					OptionalSQL("STORAGE_BLOCKED_LOCATIONS").
 					OptionalSQL("COMMENT"),
