@@ -18,6 +18,7 @@ This is a terraform provider for managing [Snowflake](https://www.snowflake.com/
 - [Snowflake Terraform Provider](#snowflake-terraform-provider)
   - [Table of contents](#table-of-contents)
   - [Getting started](#getting-started)
+  - [Roadmap](#roadmap)
   - [SDK migration table](#sdk-migration-table)
   - [Getting Help](#getting-help)
   - [Additional debug logs for `snowflake_grant_privileges_to_role` resource](#additional-debug-logs-for-snowflake_grant_privileges_to_role-resource)
