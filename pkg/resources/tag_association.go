@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
@@ -65,11 +64,10 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		ForceNew: true,
 	},
 	"tag_id": {
-		Type:             schema.TypeString,
-		Required:         true,
-		Description:      "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
-		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
-		ForceNew:         true,
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
+		ForceNew:    true,
 	},
 	"tag_value": {
 		Type:        schema.TypeString,
