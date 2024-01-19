@@ -2,11 +2,12 @@ package testint
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInt_Stages(t *testing.T) {
@@ -56,6 +57,7 @@ func TestInt_Stages(t *testing.T) {
 	}
 
 	createBasicAzureStage := func(t *testing.T, stageId sdk.SchemaObjectIdentifier) {
+		t.Helper()
 		err := client.Stages.CreateOnAzure(ctx, sdk.NewCreateOnAzureStageRequest(stageId).
 			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
 			WithExternalStageParams(sdk.NewExternalAzureStageParamsRequest(azureBucketUrl).

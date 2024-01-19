@@ -278,7 +278,7 @@ func createStageWithURL(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIde
 	require.NoError(t, err)
 
 	return stage, func() {
-		client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
+		err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
 		require.NoError(t, err)
 	}
 }
@@ -293,7 +293,7 @@ func createStageWithOptions(t *testing.T, client *sdk.Client, id sdk.SchemaObjec
 	require.NoError(t, err)
 
 	return stage, func() {
-		client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
+		err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
 		require.NoError(t, err)
 	}
 }
