@@ -64,8 +64,8 @@ type AlterStorageIntegrationOptions struct {
 }
 
 type StorageIntegrationSet struct {
-	SetS3Params             *SetS3StorageParams    `ddl:"keyword"`
-	SetAzureParams          *SetAzureStorageParams `ddl:"keyword"`
+	S3Params                *SetS3StorageParams    `ddl:"keyword"`
+	AzureParams             *SetAzureStorageParams `ddl:"keyword"`
 	Enabled                 bool                   `ddl:"parameter" sql:"ENABLED"`
 	StorageAllowedLocations []StorageLocation      `ddl:"parameter,parentheses" sql:"STORAGE_ALLOWED_LOCATIONS"`
 	StorageBlockedLocations []StorageLocation      `ddl:"parameter,parentheses" sql:"STORAGE_BLOCKED_LOCATIONS"`
@@ -82,20 +82,20 @@ type SetAzureStorageParams struct {
 }
 
 type StorageIntegrationUnset struct {
-	SetS3Params             *UnsetS3StorageParams    `ddl:"keyword"`
-	SetAzureParams          *UnsetAzureStorageParams `ddl:"keyword"`
+	S3Params                *UnsetS3StorageParams    `ddl:"list"`
+	AzureParams             *UnsetAzureStorageParams `ddl:"list"`
 	Enabled                 *bool                    `ddl:"keyword" sql:"ENABLED"`
 	StorageBlockedLocations *bool                    `ddl:"keyword" sql:"STORAGE_BLOCKED_LOCATIONS"`
 	Comment                 *bool                    `ddl:"keyword" sql:"COMMENT"`
 }
 
 type UnsetS3StorageParams struct {
-	StorageAwsRoleArn   string  `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_ROLE_ARN"`
-	StorageAwsObjectAcl *string `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_OBJECT_ACL"`
+	StorageAwsRoleArn   *bool `ddl:"keyword" sql:"STORAGE_AWS_ROLE_ARN"`
+	StorageAwsObjectAcl *bool `ddl:"keyword" sql:"STORAGE_AWS_OBJECT_ACL"`
 }
 
 type UnsetAzureStorageParams struct {
-	AzureTenantId string `ddl:"parameter,single_quotes" sql:"AZURE_TENANT_ID"`
+	AzureTenantId *bool `ddl:"keyword" sql:"AZURE_TENANT_ID"`
 }
 
 // DropStorageIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-integration.

@@ -28,7 +28,8 @@ type S3StorageParamsRequest struct {
 	StorageAwsObjectAcl *string
 }
 
-type GCSStorageParamsRequest struct{}
+type GCSStorageParamsRequest struct {
+}
 
 type AzureStorageParamsRequest struct {
 	AzureTenantId *string // required
@@ -44,8 +45,8 @@ type AlterStorageIntegrationRequest struct {
 }
 
 type StorageIntegrationSetRequest struct {
-	SetS3Params             *SetS3StorageParamsRequest
-	SetAzureParams          *SetAzureStorageParamsRequest
+	S3Params                *SetS3StorageParamsRequest
+	AzureParams             *SetAzureStorageParamsRequest
 	Enabled                 bool
 	StorageAllowedLocations []StorageLocation
 	StorageBlockedLocations []StorageLocation
@@ -62,9 +63,20 @@ type SetAzureStorageParamsRequest struct {
 }
 
 type StorageIntegrationUnsetRequest struct {
+	S3Params                *UnsetS3StorageParamsRequest
+	AzureParams             *UnsetAzureStorageParamsRequest
 	Enabled                 *bool
 	StorageBlockedLocations *bool
 	Comment                 *bool
+}
+
+type UnsetS3StorageParamsRequest struct {
+	StorageAwsRoleArn   *bool
+	StorageAwsObjectAcl *bool
+}
+
+type UnsetAzureStorageParamsRequest struct {
+	AzureTenantId *bool
 }
 
 type DropStorageIntegrationRequest struct {

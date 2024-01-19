@@ -246,7 +246,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		req := sdk.NewAlterStorageIntegrationRequest(id).
 			WithSet(
 				sdk.NewStorageIntegrationSetRequest().
-					WithSetS3Params(sdk.NewSetS3StorageParamsRequest(awsRoleARN)).
+					WithS3Params(sdk.NewSetS3StorageParamsRequest(awsRoleARN)).
 					WithEnabled(true).
 					WithStorageAllowedLocations(changedS3AllowedLocations).
 					WithStorageBlockedLocations(changedS3BlockedLocations).
@@ -269,7 +269,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		req := sdk.NewAlterStorageIntegrationRequest(id).
 			WithSet(
 				sdk.NewStorageIntegrationSetRequest().
-					WithSetAzureParams(sdk.NewSetAzureStorageParamsRequest(azureTenantId)).
+					WithAzureParams(sdk.NewSetAzureStorageParamsRequest(azureTenantId)).
 					WithEnabled(true).
 					WithStorageAllowedLocations(changedAzureAllowedLocations).
 					WithStorageBlockedLocations(changedAzureBlockedLocations).

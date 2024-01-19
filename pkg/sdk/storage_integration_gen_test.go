@@ -139,7 +139,7 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 	t.Run("set - s3", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &StorageIntegrationSet{
-			SetS3Params: &SetS3StorageParams{
+			S3Params: &SetS3StorageParams{
 				StorageAwsRoleArn:   "new-aws-role-arn",
 				StorageAwsObjectAcl: String("new-aws-object-acl"),
 			},
@@ -154,7 +154,7 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 	t.Run("set - azure", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &StorageIntegrationSet{
-			SetAzureParams: &SetAzureStorageParams{
+			AzureParams: &SetAzureStorageParams{
 				AzureTenantId: "new-azure-tenant-id",
 			},
 			Enabled:                 false,
@@ -189,6 +189,33 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 			Comment:                 Bool(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER STORAGE INTEGRATION %s UNSET ENABLED, STORAGE_BLOCKED_LOCATIONS, COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("unset s3 params", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &StorageIntegrationUnset{
+			S3Params: &UnsetS3StorageParams{
+				StorageAwsRoleArn:   Bool(true),
+				StorageAwsObjectAcl: Bool(true),
+			},
+			Enabled:                 Bool(true),
+			StorageBlockedLocations: Bool(true),
+			Comment:                 Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER STORAGE INTEGRATION %s UNSET STORAGE_AWS_ROLE_ARN, STORAGE_AWS_OBJECT_ACL, ENABLED, STORAGE_BLOCKED_LOCATIONS, COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("unset azure params", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &StorageIntegrationUnset{
+			AzureParams: &UnsetAzureStorageParams{
+				AzureTenantId: Bool(true),
+			},
+			Enabled:                 Bool(true),
+			StorageBlockedLocations: Bool(true),
+			Comment:                 Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER STORAGE INTEGRATION %s UNSET AZURE_TENANT_ID, ENABLED, STORAGE_BLOCKED_LOCATIONS, COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("unset tags", func(t *testing.T) {

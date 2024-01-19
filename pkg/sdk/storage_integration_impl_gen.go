@@ -96,20 +96,21 @@ func (r *AlterStorageIntegrationRequest) toOpts() *AlterStorageIntegrationOption
 	}
 	if r.Set != nil {
 		opts.Set = &StorageIntegrationSet{
+
 			Enabled:                 r.Set.Enabled,
 			StorageAllowedLocations: r.Set.StorageAllowedLocations,
 			StorageBlockedLocations: r.Set.StorageBlockedLocations,
 			Comment:                 r.Set.Comment,
 		}
-		if r.Set.SetS3Params != nil {
-			opts.Set.SetS3Params = &SetS3StorageParams{
-				StorageAwsRoleArn:   r.Set.SetS3Params.StorageAwsRoleArn,
-				StorageAwsObjectAcl: r.Set.SetS3Params.StorageAwsObjectAcl,
+		if r.Set.S3Params != nil {
+			opts.Set.S3Params = &SetS3StorageParams{
+				StorageAwsRoleArn:   r.Set.S3Params.StorageAwsRoleArn,
+				StorageAwsObjectAcl: r.Set.S3Params.StorageAwsObjectAcl,
 			}
 		}
-		if r.Set.SetAzureParams != nil {
-			opts.Set.SetAzureParams = &SetAzureStorageParams{
-				AzureTenantId: r.Set.SetAzureParams.AzureTenantId,
+		if r.Set.AzureParams != nil {
+			opts.Set.AzureParams = &SetAzureStorageParams{
+				AzureTenantId: r.Set.AzureParams.AzureTenantId,
 			}
 		}
 	}
@@ -118,6 +119,17 @@ func (r *AlterStorageIntegrationRequest) toOpts() *AlterStorageIntegrationOption
 			Enabled:                 r.Unset.Enabled,
 			StorageBlockedLocations: r.Unset.StorageBlockedLocations,
 			Comment:                 r.Unset.Comment,
+		}
+		if r.Unset.S3Params != nil {
+			opts.Unset.S3Params = &UnsetS3StorageParams{
+				StorageAwsRoleArn:   r.Unset.S3Params.StorageAwsRoleArn,
+				StorageAwsObjectAcl: r.Unset.S3Params.StorageAwsObjectAcl,
+			}
+		}
+		if r.Unset.AzureParams != nil {
+			opts.Unset.AzureParams = &UnsetAzureStorageParams{
+				AzureTenantId: r.Unset.AzureParams.AzureTenantId,
+			}
 		}
 	}
 	return opts
