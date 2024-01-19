@@ -54,6 +54,10 @@ Don't forget to run `terraform init` and you're ready to go! 🚀
 
 Start browsing the [registry docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) to find resources and data sources to use.
 
+## Roadmap
+
+Check [Roadmap](./ROADMAP.md).
+
 ## SDK migration table
 
 This table represents the current state of SDK migration from pkg/snowflake to pkg/sdk package.
