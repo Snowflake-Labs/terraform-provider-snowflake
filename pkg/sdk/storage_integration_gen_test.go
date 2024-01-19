@@ -143,7 +143,7 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 				StorageAwsRoleArn:   "new-aws-role-arn",
 				StorageAwsObjectAcl: String("new-aws-object-acl"),
 			},
-			Enabled:                 false,
+			Enabled:                 Bool(false),
 			StorageAllowedLocations: []StorageLocation{{Path: "new-allowed-location"}},
 			StorageBlockedLocations: []StorageLocation{{Path: "new-blocked-location"}},
 			Comment:                 String("changed comment"),
@@ -157,7 +157,7 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 			AzureParams: &SetAzureStorageParams{
 				AzureTenantId: "new-azure-tenant-id",
 			},
-			Enabled:                 false,
+			Enabled:                 Bool(false),
 			StorageAllowedLocations: []StorageLocation{{Path: "new-allowed-location"}},
 			StorageBlockedLocations: []StorageLocation{{Path: "new-blocked-location"}},
 			Comment:                 String("changed comment"),

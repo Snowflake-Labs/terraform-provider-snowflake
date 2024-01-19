@@ -9,7 +9,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -54,6 +53,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 	"storage_provider": {
 		Type:         schema.TypeString,
 		Required:     true,
+		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice([]string{"S3", "S3gov", "GCS", "AZURE", "S3GOV"}, false),
 	},
 	"storage_aws_external_id": {
@@ -171,7 +171,7 @@ func CreateStorageIntegration(d *schema.ResourceData, meta any) error {
 		}
 		req.WithAzureStorageProviderParams(sdk.NewAzureStorageParamsRequest(sdk.String(v.(string))))
 	case "GCS":
-		// nothing to set here
+		req.WithGCSStorageProviderParams(sdk.NewGCSStorageParamsRequest())
 	default:
 		return fmt.Errorf("unexpected provider %v", storageProvider)
 	}
@@ -189,8 +189,8 @@ func ReadStorageIntegration(d *schema.ResourceData, meta any) error {
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
 	id, ok := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	if ok {
-		return fmt.Errorf("error decoding id: %s as sdk.AccountObjectIdentifier", d.Id())
+	if !ok {
+		return fmt.Errorf("storage integration read, error decoding id: %s as sdk.AccountObjectIdentifier, got: %T", d.Id(), id)
 	}
 
 	s, err := client.StorageIntegrations.ShowByID(ctx, id)
@@ -209,7 +209,7 @@ func ReadStorageIntegration(d *schema.ResourceData, meta any) error {
 	if err := d.Set("type", s.StorageType); err != nil {
 		return err
 	}
-	if err := d.Set("created_on", s.CreatedOn.String); err != nil {
+	if err := d.Set("created_on", s.CreatedOn.String()); err != nil {
 		return err
 	}
 	if err := d.Set("enabled", s.Enabled); err != nil {
@@ -281,15 +281,12 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta any) error {
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
 	id, ok := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	if ok {
-		return fmt.Errorf("error decoding id: %s as sdk.AccountObjectIdentifier", d.Id())
+	if !ok {
+		return fmt.Errorf("storage integration update, error decoding id: %s as sdk.AccountObjectIdentifier, got: %T", d.Id(), id)
 	}
 
 	var runSetStatement bool
-	req := sdk.NewAlterStorageIntegrationRequest(id)
 	setReq := sdk.NewStorageIntegrationSetRequest()
-	_ = runSetStatement
-	_ = req
 
 	if d.HasChange("comment") {
 		runSetStatement = true
@@ -334,63 +331,50 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta any) error {
 		}
 	}
 
-	// also need to UNSET STORAGE_AWS_OBJECT_ACL if removed
-	if d.HasChange("storage_aws_object_acl") {
-		if _, ok := d.GetOk("storage_aws_object_acl"); ok {
-			if err := setStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL", "bucket-owner-full-control"); err != nil {
-				return fmt.Errorf("error setting storage_aws_object_acl: %w", err)
-			}
-		} else {
-			if err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).
-				WithUnset(sdk.NewStorageIntegrationUnsetRequest())); err != nil {
-				return fmt.Errorf("error unsetting storage_blocked_locations, err = %w", err)
-			}
-			if err := unsetStorageIntegrationProp(db, d.Id(), "STORAGE_AWS_OBJECT_ACL"); err != nil {
-				return fmt.Errorf("error unsetting storage_aws_object_acl: %w", err)
+	if d.HasChange("storage_aws_role_arn") || d.HasChange("storage_aws_object_acl") {
+		runSetStatement = true
+		s3SetParams := sdk.NewSetS3StorageParamsRequest(d.Get("storage_aws_role_arn").(string))
+
+		if d.HasChange("storage_aws_object_acl") {
+			if v, ok := d.GetOk("storage_aws_object_acl"); ok {
+				s3SetParams.WithStorageAwsObjectAcl(sdk.String(v.(string)))
+			} else {
+				if err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).
+					WithUnset(sdk.NewStorageIntegrationUnsetRequest().WithStorageAwsObjectAcl(sdk.Bool(true)))); err != nil {
+					return fmt.Errorf("error unsetting storage_aws_object_acl, err = %w", err)
+				}
 			}
 		}
+
+		setReq.WithS3Params(s3SetParams)
 	}
 
-	//if d.HasChange("storage_provider") {
-	//	runSetStatement = true
-	//	err := setStorageProviderSettings(d, stmt)
-	//	if err != nil {
-	//		return err
-	//	}
-	//} else {
-	//	if d.HasChange("storage_aws_role_arn") {
-	//		runSetStatement = true
-	//		stmt.SetString("STORAGE_AWS_ROLE_ARN", d.Get("storage_aws_role_arn").(string))
-	//	}
-	//	if d.HasChange("azure_tenant_id") {
-	//		runSetStatement = true
-	//		stmt.SetString("AZURE_TENANT_ID", d.Get("azure_tenant_id").(string))
-	//	}
-	//	if d.HasChange("storage_gcp_service_account") {
-	//		runSetStatement = true
-	//		stmt.SetString("STORAGE_GCP_SERVICE_ACCOUNT", d.Get("storage_gcp_service_account").(string))
-	//	}
-	//}
-	//
-	//if runSetStatement {
-	//	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-	//		return fmt.Errorf("error updating storage integration: %w", err)
-	//	}
-	//}
+	if d.HasChange("azure_tenant_id") {
+		runSetStatement = true
+		setReq.WithAzureParams(sdk.NewSetAzureStorageParamsRequest(d.Get("azure_tenant_id").(string)))
+	}
+
+	if runSetStatement {
+		if err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).WithSet(setReq)); err != nil {
+			return fmt.Errorf("error updating storage integration, err = %w", err)
+		}
+	}
 
 	return ReadStorageIntegration(d, meta)
 }
 
 func DeleteStorageIntegration(d *schema.ResourceData, meta any) error {
-	return DeleteResource("", snowflake.NewStorageIntegrationBuilder)(d, meta)
-}
+	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id, ok := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	if !ok {
+		return fmt.Errorf("storage integration delete, error decoding id: %s as sdk.AccountObjectIdentifier, got: %T", d.Id(), id)
+	}
+	if err := client.StorageIntegrations.Drop(ctx, sdk.NewDropStorageIntegrationRequest(id)); err != nil {
+		return fmt.Errorf("error dropping storage integration (%s), err = %w", d.Id(), err)
+	}
 
-func setStorageIntegrationProp(db *sql.DB, name string, prop string, val string) error {
-	stmt := fmt.Sprintf(`ALTER STORAGE INTEGRATION "%s" SET %s = '%s'`, name, prop, val)
-	return snowflake.Exec(db, stmt)
-}
-
-func unsetStorageIntegrationProp(db *sql.DB, name string, prop string) error {
-	stmt := fmt.Sprintf(`ALTER STORAGE INTEGRATION "%s" UNSET %s`, name, prop)
-	return snowflake.Exec(db, stmt)
+	d.SetId("")
+	return nil
 }

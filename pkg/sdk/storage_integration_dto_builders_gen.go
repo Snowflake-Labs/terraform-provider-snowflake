@@ -124,7 +124,7 @@ func (s *StorageIntegrationSetRequest) WithAzureParams(AzureParams *SetAzureStor
 }
 
 func (s *StorageIntegrationSetRequest) WithEnabled(Enabled bool) *StorageIntegrationSetRequest {
-	s.Enabled = Enabled
+	s.Enabled = &Enabled
 	return s
 }
 

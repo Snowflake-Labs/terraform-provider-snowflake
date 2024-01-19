@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,6 +20,26 @@ const (
 	normal grantType = iota
 	onFuture
 	onAll
+)
+
+var (
+	awsBucketUrl, awsBucketUrlIsSet = os.LookupEnv("AWS_EXTERNAL_BUCKET_URL")
+	awsKeyId, awsKeyIdIsSet         = os.LookupEnv("AWS_EXTERNAL_KEY_ID")
+	awsSecretKey, awsSecretKeyIsSet = os.LookupEnv("AWS_EXTERNAL_SECRET_KEY")
+	awsRoleARN, awsRoleARNIsSet     = os.LookupEnv("AWS_EXTERNAL_ROLE_ARN")
+
+	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("GCS_EXTERNAL_BUCKET_URL")
+
+	azureBucketUrl, azureBucketUrlIsSet = os.LookupEnv("AZURE_EXTERNAL_BUCKET_URL")
+	azureTenantId, azureTenantIdIsSet   = os.LookupEnv("AZURE_EXTERNAL_TENANT_ID")
+
+	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet &&
+		awsKeyIdIsSet &&
+		awsSecretKeyIsSet &&
+		awsRoleARNIsSet &&
+		gcsBucketUrlIsSet &&
+		azureBucketUrlIsSet &&
+		azureTenantIdIsSet
 )
 
 func TestGetPropertyAsPointer(t *testing.T) {

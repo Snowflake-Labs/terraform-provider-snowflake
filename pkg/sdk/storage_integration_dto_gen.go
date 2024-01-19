@@ -47,7 +47,7 @@ type AlterStorageIntegrationRequest struct {
 type StorageIntegrationSetRequest struct {
 	S3Params                *SetS3StorageParamsRequest
 	AzureParams             *SetAzureStorageParamsRequest
-	Enabled                 bool
+	Enabled                 *bool
 	StorageAllowedLocations []StorageLocation
 	StorageBlockedLocations []StorageLocation
 	Comment                 *string
