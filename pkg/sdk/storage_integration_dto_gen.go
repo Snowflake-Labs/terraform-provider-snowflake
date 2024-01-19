@@ -28,8 +28,7 @@ type S3StorageParamsRequest struct {
 	StorageAwsObjectAcl *string
 }
 
-type GCSStorageParamsRequest struct {
-}
+type GCSStorageParamsRequest struct{}
 
 type AzureStorageParamsRequest struct {
 	AzureTenantId *string // required

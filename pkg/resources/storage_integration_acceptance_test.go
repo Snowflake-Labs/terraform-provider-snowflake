@@ -4,14 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
-	"regexp"
-	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -257,17 +258,10 @@ func TestAcc_StorageIntegration_Azure_Update(t *testing.T) {
 }
 
 func TestAcc_StorageIntegration_GCP_Update(t *testing.T) {
-	//if !azureBucketUrlIsSet {
-	//	t.Skip("Skipping TestAcc_StorageIntegration_Azure_Update (Azure bucket url is not set)")
-	//}
-
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	azureTenantId, err := uuid.GenerateUUID()
-	require.NoError(t, err)
 	configVariables := func(set bool) config.Variables {
 		variables := config.Variables{
-			"name":            config.StringVariable(name),
-			"azure_tenant_id": config.StringVariable(azureTenantId),
+			"name": config.StringVariable(name),
 			"allowed_locations": config.SetVariable(
 				config.StringVariable("gcs://foo/"),
 			),
