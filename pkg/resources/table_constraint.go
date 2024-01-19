@@ -6,7 +6,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,11 +32,10 @@ var tableConstraintSchema = map[string]*schema.Schema{
 		},
 	},
 	"table_id": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		Description:      "Idenfifier for table to create constraint on. Must be of the form Note: format must follow: \"<db_name>\".\"<schema_name>\".\"<table_name>\" or \"<db_name>.<schema_name>.<table_name>\" or \"<db_name>|<schema_name>.<table_name>\" (snowflake_table.my_table.id)",
-		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Idenfifier for table to create constraint on. Must be of the form Note: format must follow: \"<db_name>\".\"<schema_name>\".\"<table_name>\" or \"<db_name>.<schema_name>.<table_name>\" or \"<db_name>|<schema_name>.<table_name>\" (snowflake_table.my_table.id)",
 	},
 	"columns": {
 		Type:     schema.TypeList,

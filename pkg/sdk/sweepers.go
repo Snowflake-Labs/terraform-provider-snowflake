@@ -172,7 +172,11 @@ func getDatabaseSweeper(client *Client, prefix string) func() error {
 			if (prefix == "" || strings.HasPrefix(db.Name, prefix)) && db.Name != "SNOWFLAKE" && db.Name != "terraform_test_database" {
 				log.Printf("[DEBUG] Dropping database %s", db.Name)
 				if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
-					return err
+					if strings.Contains(err.Error(), "Object found is of type 'APPLICATION', not specified type 'DATABASE'") {
+						log.Printf("[DEBUG] Skipping database %s", db.Name)
+					} else {
+						return err
+					}
 				}
 			} else {
 				log.Printf("[DEBUG] Skipping database %s", db.Name)
