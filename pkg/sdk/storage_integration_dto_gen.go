@@ -63,20 +63,10 @@ type SetAzureStorageParamsRequest struct {
 }
 
 type StorageIntegrationUnsetRequest struct {
-	S3Params                *UnsetS3StorageParamsRequest
-	AzureParams             *UnsetAzureStorageParamsRequest
+	StorageAwsObjectAcl     *bool
 	Enabled                 *bool
 	StorageBlockedLocations *bool
 	Comment                 *bool
-}
-
-type UnsetS3StorageParamsRequest struct {
-	StorageAwsRoleArn   *bool
-	StorageAwsObjectAcl *bool
-}
-
-type UnsetAzureStorageParamsRequest struct {
-	AzureTenantId *bool
 }
 
 type DropStorageIntegrationRequest struct {

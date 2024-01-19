@@ -168,13 +168,8 @@ func NewStorageIntegrationUnsetRequest() *StorageIntegrationUnsetRequest {
 	return &StorageIntegrationUnsetRequest{}
 }
 
-func (s *StorageIntegrationUnsetRequest) WithS3Params(S3Params *UnsetS3StorageParamsRequest) *StorageIntegrationUnsetRequest {
-	s.S3Params = S3Params
-	return s
-}
-
-func (s *StorageIntegrationUnsetRequest) WithAzureParams(AzureParams *UnsetAzureStorageParamsRequest) *StorageIntegrationUnsetRequest {
-	s.AzureParams = AzureParams
+func (s *StorageIntegrationUnsetRequest) WithStorageAwsObjectAcl(StorageAwsObjectAcl *bool) *StorageIntegrationUnsetRequest {
+	s.StorageAwsObjectAcl = StorageAwsObjectAcl
 	return s
 }
 
@@ -190,29 +185,6 @@ func (s *StorageIntegrationUnsetRequest) WithStorageBlockedLocations(StorageBloc
 
 func (s *StorageIntegrationUnsetRequest) WithComment(Comment *bool) *StorageIntegrationUnsetRequest {
 	s.Comment = Comment
-	return s
-}
-
-func NewUnsetS3StorageParamsRequest() *UnsetS3StorageParamsRequest {
-	return &UnsetS3StorageParamsRequest{}
-}
-
-func (s *UnsetS3StorageParamsRequest) WithStorageAwsRoleArn(StorageAwsRoleArn *bool) *UnsetS3StorageParamsRequest {
-	s.StorageAwsRoleArn = StorageAwsRoleArn
-	return s
-}
-
-func (s *UnsetS3StorageParamsRequest) WithStorageAwsObjectAcl(StorageAwsObjectAcl *bool) *UnsetS3StorageParamsRequest {
-	s.StorageAwsObjectAcl = StorageAwsObjectAcl
-	return s
-}
-
-func NewUnsetAzureStorageParamsRequest() *UnsetAzureStorageParamsRequest {
-	return &UnsetAzureStorageParamsRequest{}
-}
-
-func (s *UnsetAzureStorageParamsRequest) WithAzureTenantId(AzureTenantId *bool) *UnsetAzureStorageParamsRequest {
-	s.AzureTenantId = AzureTenantId
 	return s
 }
 

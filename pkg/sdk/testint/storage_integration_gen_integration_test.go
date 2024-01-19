@@ -290,6 +290,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		req := sdk.NewAlterStorageIntegrationRequest(id).
 			WithUnset(
 				sdk.NewStorageIntegrationUnsetRequest().
+					WithStorageAwsObjectAcl(sdk.Bool(true)).
 					WithEnabled(sdk.Bool(true)).
 					WithStorageBlockedLocations(sdk.Bool(true)).
 					WithComment(sdk.Bool(true)),

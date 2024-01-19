@@ -82,20 +82,10 @@ type SetAzureStorageParams struct {
 }
 
 type StorageIntegrationUnset struct {
-	S3Params                *UnsetS3StorageParams    `ddl:"list"`
-	AzureParams             *UnsetAzureStorageParams `ddl:"list"`
-	Enabled                 *bool                    `ddl:"keyword" sql:"ENABLED"`
-	StorageBlockedLocations *bool                    `ddl:"keyword" sql:"STORAGE_BLOCKED_LOCATIONS"`
-	Comment                 *bool                    `ddl:"keyword" sql:"COMMENT"`
-}
-
-type UnsetS3StorageParams struct {
-	StorageAwsRoleArn   *bool `ddl:"keyword" sql:"STORAGE_AWS_ROLE_ARN"`
-	StorageAwsObjectAcl *bool `ddl:"keyword" sql:"STORAGE_AWS_OBJECT_ACL"`
-}
-
-type UnsetAzureStorageParams struct {
-	AzureTenantId *bool `ddl:"keyword" sql:"AZURE_TENANT_ID"`
+	StorageAwsObjectAcl     *bool `ddl:"keyword" sql:"STORAGE_AWS_OBJECT_ACL"`
+	Enabled                 *bool `ddl:"keyword" sql:"ENABLED"`
+	StorageBlockedLocations *bool `ddl:"keyword" sql:"STORAGE_BLOCKED_LOCATIONS"`
+	Comment                 *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 // DropStorageIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-integration.
