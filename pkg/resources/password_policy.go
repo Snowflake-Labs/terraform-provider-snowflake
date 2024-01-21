@@ -428,7 +428,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(helpers.EncodeSnowflakeID(newID))
 	}
 
-	return nil
+	return ReadPasswordPolicy(d, meta)
 }
 
 // DeletePasswordPolicy implements schema.DeleteFunc.
