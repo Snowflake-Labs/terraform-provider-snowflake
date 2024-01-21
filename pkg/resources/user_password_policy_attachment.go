@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -53,7 +54,32 @@ func UserPasswordPolicyAttachment() *schema.Resource {
 
 		Schema: userPasswordPolicyAttachmentSchema,
 
-		// TODO: importer
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.Split(d.Id(), helpers.IDDelimiter)
+				if len(parts) != 4 {
+					return nil, fmt.Errorf("id should be in the format 'database|schema|password_policy|user_name|roles', but I got '%s'", d.Id())
+				}
+				passwordPolicyDatabase := sdk.NewAccountIdentifierFromFullyQualifiedName(parts[0])
+				passwordPolicySchema := sdk.NewAccountIdentifierFromFullyQualifiedName(parts[1])
+				passwordPolicyName := sdk.NewAccountIdentifierFromFullyQualifiedName(parts[2])
+				userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[3])
+				if err := d.Set("password_policy_database", passwordPolicyDatabase.Name()); err != nil {
+					return nil, err
+				}
+				if err := d.Set("password_policy_schema", passwordPolicySchema.Name()); err != nil {
+					return nil, err
+				}
+				if err := d.Set("password_policy_name", passwordPolicyName.Name()); err != nil {
+					return nil, err
+				}
+				// TODO: change for a fully qualified name
+				if err := d.Set("user_name", userName.Name()); err != nil {
+					return nil, err
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 	}
 }
 
@@ -61,6 +87,7 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
+	fmt.Printf("CREATE FUNCTION: '%s'\n", d.Get("user_name").(string))
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
 	passwordPolicyDatabase := sdk.NewAccountIdentifierFromFullyQualifiedName(d.Get("password_policy_database").(string))
@@ -97,7 +124,7 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-
+	fmt.Printf("READ FUNCTION: '%s'\n", d.Get("user_name").(string))
 	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
 		RefEntityName:   d.Get("user_name").(string),
 		RefEntityDomain: "user",
@@ -113,6 +140,7 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 
 	// Note: this means the resource has been deleted outside of Terraform.
 	if len(policyReferences) == 0 {
+		// fmt.Printf("THE RESOURCE HAS BEEN DELETED '%s'\n", d.Get("user_name").(string))
 		d.SetId("")
 		return nil
 	}
@@ -125,11 +153,18 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 	if err := d.Set("password_policy_name", sdk.NewAccountIdentifierFromFullyQualifiedName(policyReferences[0].PolicyName).Name()); err != nil {
 		return err
 	}
+	// TODO: not sure if this is needed
+	// if err := d.Set("user_name", d.Get("user_name").(string)); err != nil {
+	// 	return err
+	// }
+	// fmt.Printf(policyReference.FullyQualifiedName())
+	fmt.Printf("END FUNCTION: '%s'\n", d.Get("user_name").(string))
 	return err
 }
 
 // DeleteAccountPasswordPolicyAttachment implements schema.DeleteFunc.
 func DeleteUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+	fmt.Printf("DELETE FUNCTION: '%s'\n", d.Get("user_name").(string))
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
