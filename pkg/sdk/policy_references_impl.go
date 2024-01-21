@@ -24,9 +24,9 @@ func (request *GetForEntityPolicyReferenceRequest) toOpts() *getForEntityPolicyR
 		asterisk:      true,
 		from:          true,
 		tableFunction: true,
-		arguments: []policyReferenceFunctionArgument{
-			{Key: "ref_entity_name", Value: request.RefEntityName},
-			{Key: "ref_entity_domain", Value: request.RefEntityDomain},
+		arguments: &policyReferenceFunctionArguments{
+			refEntityName:   request.RefEntityName,
+			refEntityDomain: request.RefEntityDomain,
 		},
 		endTableFunction: true,
 	}

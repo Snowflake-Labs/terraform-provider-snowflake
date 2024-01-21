@@ -125,9 +125,11 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	fmt.Printf("READ FUNCTION: '%s'\n", d.Get("user_name").(string))
+	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
+	userNameName := userName.Name()
 	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
-		RefEntityName:   d.Get("user_name").(string),
-		RefEntityDomain: "user",
+		RefEntityName:   &userNameName,
+		RefEntityDomain: sdk.String("user"),
 	})
 	if err != nil {
 		return err

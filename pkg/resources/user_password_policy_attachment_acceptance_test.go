@@ -85,8 +85,8 @@ func testAccCheckYourResourceDestroy(s *terraform.State) error {
 		}
 		user_name := rs.Primary.Attributes["user_name"]
 		policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
-			RefEntityName:   user_name,
-			RefEntityDomain: "user",
+			RefEntityName:   &user_name,
+			RefEntityDomain: sdk.String("user"),
 		})
 		if err != nil {
 			if strings.Contains(err.Error(), "does not exist or not authorized") {

@@ -10,22 +10,18 @@ type PolicyReferences interface {
 }
 
 type getForEntityPolicyReferenceOptions struct {
-	select_          bool                              `ddl:"static" sql:"SELECT"`
-	asterisk         bool                              `ddl:"static" sql:"*"`
-	from             bool                              `ddl:"static" sql:"FROM"`
+	select_  bool `ddl:"static" sql:"SELECT"`
+	asterisk bool `ddl:"static" sql:"*"`
+	from     bool `ddl:"static" sql:"FROM"`
 	// TODO: not sure how to do the parentheses: it should be part of the list maybe?
-	tableFunction    bool                              `ddl:"static" sql:"TABLE(SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES("`
-	arguments        []policyReferenceFunctionArgument `ddl:"list,comma"`
-	endTableFunction bool                              `ddl:"static" sql:"))"`
+	tableFunction    bool                              `ddl:"keyword" sql:"TABLE(SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES"`
+	arguments        *policyReferenceFunctionArguments `ddl:"list,parentheses"`
+	endTableFunction bool                              `ddl:"static" sql:")"`
 }
 
 type policyReferenceFunctionArguments struct {
-	Args []policyReferenceFunctionArgument `ddl:"list,comma"`
-}
-
-type policyReferenceFunctionArgument struct {
-	Key   string `ddl:"keyword"`
-	Value string `ddl:"parameter,arrow_equals,single_quotes"`
+	refEntityName   *string `ddl:"parameter,single_quotes,double_quotes,arrow_equals" sql:"ref_entity_name"`
+	refEntityDomain *string `ddl:"parameter,single_quotes,arrow_equals" sql:"ref_entity_domain"`
 }
 
 type PolicyReference struct {
