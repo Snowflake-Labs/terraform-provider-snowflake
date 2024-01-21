@@ -20,11 +20,8 @@ func (opts *getForEntityPolicyReferenceOptions) validate() error {
 	if !opts.from {
 		errs = append(errs, errors.New("from must be true"))
 	}
-	if !opts.tableFunction {
-		errs = append(errs, errors.New("tableFunction must be true"))
-	}
-	if !opts.endTableFunction {
-		errs = append(errs, errors.New("endTableFunction must be true"))
+	if opts.tableFunction == nil {
+		errs = append(errs, errors.New("tableFunction must not be nil"))
 	}
 	return errors.Join(errs...)
 }

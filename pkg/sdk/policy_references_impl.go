@@ -20,14 +20,18 @@ func (v *policyReference) GetForEntity(ctx context.Context, request *GetForEntit
 
 func (request *GetForEntityPolicyReferenceRequest) toOpts() *getForEntityPolicyReferenceOptions {
 	return &getForEntityPolicyReferenceOptions{
-		select_:       true,
-		asterisk:      true,
-		from:          true,
-		tableFunction: true,
-		arguments: &policyReferenceFunctionArguments{
-			refEntityName:   request.RefEntityName,
-			refEntityDomain: request.RefEntityDomain,
+		select_:  true,
+		asterisk: true,
+		from:     true,
+		tableFunction: &tableFunction{
+			table: Bool(true),
+			policyReferenceFunction: &policyReferenceFunction{
+				functionFullyQualifiedName: Bool(true),
+				arguments: &policyReferenceFunctionArguments{
+					refEntityName:   request.RefEntityName,
+					refEntityDomain: request.RefEntityDomain,
+				},
+			},
 		},
-		endTableFunction: true,
 	}
 }
