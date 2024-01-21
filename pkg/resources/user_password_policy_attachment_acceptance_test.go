@@ -19,13 +19,13 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		// resource.Test(t, resource.TestCase{
-		Providers: acc.TestAccProviders(),
-		// ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck: func() { acc.TestAccPreCheck(t) },
-		// CheckDestroy:             testAccCheckYourResourceDestroy,
-		CheckDestroy: nil,
+	// resource.ParallelTest(t, resource.TestCase{
+		resource.Test(t, resource.TestCase{
+		// Providers: acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: testAccCheckYourResourceDestroy,
+		// CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			// CREATE
 			{
@@ -82,9 +82,9 @@ func testAccCheckYourResourceDestroy(s *terraform.State) error {
 		if rs.Type != "snowflake_user_password_policy_attachment" {
 			continue
 		}
-		user_name := rs.Primary.Attributes["user_name"]
+		userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"])
 		policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
-			RefEntityName:   &user_name,
+			RefEntityName:   sdk.String(userName.FullyQualifiedName()),
 			RefEntityDomain: sdk.String("user"),
 		})
 		if err != nil {
