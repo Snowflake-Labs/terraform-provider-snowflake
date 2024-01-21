@@ -40,12 +40,10 @@ type PolicyReference struct {
 	RefEntityName   string
 	RefEntityDomain string
 	RefColumnName   string
-	// TODO: this is an array, but not really sure of what
 	RefArgColumnNames string
 	TagDatabase       string
 	TagSchema         string
 	TagName           string
-	// TODO: only certain values are accepted. Do I want to specify it?
 	PolicyStatus string
 }
 
