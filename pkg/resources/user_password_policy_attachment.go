@@ -17,11 +17,29 @@ var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "User name of the user you want to attach the password policy to",
 	},
-	"password_policy": {
+	// "password_policy": {
+	// 	Type:        schema.TypeString,
+	// 	Required:    true,
+	// 	ForceNew:    true,
+	// 	Description: "Qualified name (`\"db\".\"schema\".\"policy_name\"`) of the password policy to apply to the current account.",
+	// },
+	"password_policy_database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Qualified name (`\"db\".\"schema\".\"policy_name\"`) of the password policy to apply to the current account.",
+		Description: "Database name where the password policy is stored",
+	},
+	"password_policy_schema": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Schema name where the password policy is stored",
+	},
+	"password_policy_name": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Non-qualified name of the password policy",
 	},
 }
 
@@ -45,7 +63,10 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	ctx := context.Background()
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
-	passwordPolicy := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("password_policy").(string))
+	passwordPolicyDatabase := sdk.NewAccountIdentifierFromFullyQualifiedName(d.Get("password_policy_database").(string))
+	passwordPolicySchema := sdk.NewAccountIdentifierFromFullyQualifiedName(d.Get("password_policy_schema").(string))
+	passwordPolicyName := sdk.NewAccountIdentifierFromFullyQualifiedName(d.Get("password_policy_name").(string))
+	passwordPolicy := sdk.NewSchemaObjectIdentifier(passwordPolicyDatabase.Name(), passwordPolicySchema.Name(), passwordPolicyName.Name())
 
 	err := client.Users.Alter(ctx, userName, &sdk.AlterUserOptions{
 		Set: &sdk.UserSet{
@@ -55,7 +76,13 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	if err := d.Set("password_policy", passwordPolicy.FullyQualifiedName()); err != nil {
+	if err := d.Set("password_policy_database", passwordPolicyDatabase.Name()); err != nil {
+		return err
+	}
+	if err := d.Set("password_policy_schema", passwordPolicySchema.Name()); err != nil {
+		return err
+	}
+	if err := d.Set("password_policy_name", passwordPolicyName.Name()); err != nil {
 		return err
 	}
 	if err := d.Set("user_name", helpers.EncodeSnowflakeID(userName)); err != nil {
@@ -89,12 +116,13 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 		d.SetId("")
 		return nil
 	}
-	policyReference := sdk.NewSchemaObjectIdentifier(
-		policyReferences[0].PolicyDb,
-		policyReferences[0].PolicySchema,
-		policyReferences[0].PolicyName,
-	)
-	if err := d.Set("password_policy", policyReference.FullyQualifiedName()); err != nil {
+	if err := d.Set("password_policy_database", sdk.NewAccountIdentifierFromFullyQualifiedName(policyReferences[0].PolicyDb).Name()); err != nil {
+		return err
+	}
+	if err := d.Set("password_policy_schema", sdk.NewAccountIdentifierFromFullyQualifiedName(policyReferences[0].PolicySchema).Name()); err != nil {
+		return err
+	}
+	if err := d.Set("password_policy_name", sdk.NewAccountIdentifierFromFullyQualifiedName(policyReferences[0].PolicyName).Name()); err != nil {
 		return err
 	}
 	return err
