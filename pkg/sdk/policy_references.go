@@ -31,20 +31,20 @@ type policyReferenceFunctionArguments struct {
 }
 
 type PolicyReference struct {
-	PolicyDb        string
-	PolicySchema    string
-	PolicyName      string
-	PolicyKind      string
-	RefDatabaseName string
-	RefSchemaName   string
-	RefEntityName   string
-	RefEntityDomain string
-	RefColumnName   string
+	PolicyDb          string
+	PolicySchema      string
+	PolicyName        string
+	PolicyKind        string
+	RefDatabaseName   string
+	RefSchemaName     string
+	RefEntityName     string
+	RefEntityDomain   string
+	RefColumnName     string
 	RefArgColumnNames string
 	TagDatabase       string
 	TagSchema         string
 	TagName           string
-	PolicyStatus string
+	PolicyStatus      string
 }
 
 type policyReferenceDBRow struct {
