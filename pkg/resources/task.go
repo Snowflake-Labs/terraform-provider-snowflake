@@ -530,7 +530,7 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				toAdd = append(toAdd, sdk.NewSchemaObjectIdentifier(taskId.DatabaseName(), taskId.SchemaName(), dep))
 			}
 		}
-		// TODO [SNOW-884987]: for now leaving old copy-pasted implementation; extract function for task suspension in following change
+		// TODO [SNOW-1007541]: for now leaving old copy-pasted implementation; extract function for task suspension in following change
 		if len(toAdd) > 0 {
 			// need to suspend any new root tasks from dependencies before adding them
 			for _, dep := range toAdd {

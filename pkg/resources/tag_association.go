@@ -64,11 +64,10 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		ForceNew: true,
 	},
 	"tag_id": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
-		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedObjectID,
-		ForceNew:     true,
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
+		ForceNew:    true,
 	},
 	"tag_value": {
 		Type:        schema.TypeString,

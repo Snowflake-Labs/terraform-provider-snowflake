@@ -3,6 +3,7 @@ package resources
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -107,4 +108,81 @@ func getExpectedIdentifierForm(id any) string {
 		return "<database_name>.<schema_name>.<table_name>.<column_name>"
 	}
 	return ""
+}
+
+func ValidObjectType() schema.SchemaValidateDiagFunc {
+	return StringInSlice([]string{
+		sdk.ObjectTypeAlert.String(),
+		sdk.ObjectTypeDynamicTable.String(),
+		sdk.ObjectTypeEventTable.String(),
+		sdk.ObjectTypeFileFormat.String(),
+		sdk.ObjectTypeFunction.String(),
+		sdk.ObjectTypeProcedure.String(),
+		sdk.ObjectTypeSecret.String(),
+		sdk.ObjectTypeSequence.String(),
+		sdk.ObjectTypePipe.String(),
+		sdk.ObjectTypeMaskingPolicy.String(),
+		sdk.ObjectTypePasswordPolicy.String(),
+		sdk.ObjectTypeRowAccessPolicy.String(),
+		sdk.ObjectTypeSessionPolicy.String(),
+		sdk.ObjectTypeTag.String(),
+		sdk.ObjectTypeStage.String(),
+		sdk.ObjectTypeStream.String(),
+		sdk.ObjectTypeTable.String(),
+		sdk.ObjectTypeExternalTable.String(),
+		sdk.ObjectTypeTask.String(),
+		sdk.ObjectTypeView.String(),
+		sdk.ObjectTypeMaterializedView.String(),
+		sdk.ObjectTypeNetworkRule.String(),
+		sdk.ObjectTypePackagesPolicy.String(),
+		sdk.ObjectTypeIcebergTable.String(),
+	}, true)
+}
+
+func ValidPluralObjectType() schema.SchemaValidateDiagFunc {
+	return StringInSlice(
+		[]string{
+			sdk.PluralObjectTypeAlerts.String(),
+			sdk.PluralObjectTypeDynamicTables.String(),
+			sdk.PluralObjectTypeEventTables.String(),
+			sdk.PluralObjectTypeFileFormats.String(),
+			sdk.PluralObjectTypeFunctions.String(),
+			sdk.PluralObjectTypeProcedures.String(),
+			sdk.PluralObjectTypeSecrets.String(),
+			sdk.PluralObjectTypeSequences.String(),
+			sdk.PluralObjectTypePipes.String(),
+			sdk.PluralObjectTypeMaskingPolicies.String(),
+			sdk.PluralObjectTypePasswordPolicies.String(),
+			sdk.PluralObjectTypeRowAccessPolicies.String(),
+			sdk.PluralObjectTypeSessionPolicies.String(),
+			sdk.PluralObjectTypeTags.String(),
+			sdk.PluralObjectTypeStages.String(),
+			sdk.PluralObjectTypeStreams.String(),
+			sdk.PluralObjectTypeTables.String(),
+			sdk.PluralObjectTypeExternalTables.String(),
+			sdk.PluralObjectTypeTasks.String(),
+			sdk.PluralObjectTypeViews.String(),
+			sdk.PluralObjectTypeMaterializedViews.String(),
+			sdk.PluralObjectTypeNetworkRules.String(),
+			sdk.PluralObjectTypePackagesPolicies.String(),
+			sdk.PluralObjectTypeIcebergTables.String(),
+		}, true)
+}
+
+// StringInSlice has the same implementation as validation.StringInSlice, but adapted to schema.SchemaValidateDiagFunc
+func StringInSlice(valid []string, ignoreCase bool) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		v, ok := i.(string)
+		if !ok {
+			return diag.Errorf("expected type of %v to be string", path)
+		}
+
+		for _, str := range valid {
+			if v == str || (ignoreCase && strings.EqualFold(v, str)) {
+				return nil
+			}
+		}
+
+		return diag.Errorf("expected %v to be one of %q, got %s", path, valid, v)
+	}
 }

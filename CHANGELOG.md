@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.84.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.83.1...v0.84.0) (2024-01-19)
+
+
+### 🎉 **What's new:**
+
+* add app packages ([#2323](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2323)) ([ca030fc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ca030fce209ccc1e5e924b3bb1fd3c680c930471))
+* add grant role resource ([#2304](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2304)) ([ba91e25](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ba91e25be15197067e934eb867fb6837b4354e4a))
+* add grant_database_role resource ([#2301](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2301)) ([2e7651f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2e7651f35b625bc11f17f42443d062118b6354ba))
+* Add managed account to the SDK ([#2357](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2357)) ([f968db1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f968db11a9b41ffa594170415c4edd9376f574e7))
+* Add row access policy to the SDK ([#2363](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2363)) ([14a3e5b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/14a3e5b07a97cb18ba99f314990191241d4b15c2))
+* Migrate storage integration to the new sdk ([#2339](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2339)) ([d970a56](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d970a567741edf1ce72e566f9e76b3858ece6288))
+
+
+### 🔧 **Misc**
+
+* 0.84 release ([#2374](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2374)) ([18638fe](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/18638fea4c498158c8840a3ccfe03bdaac942923))
+* Add missing issues to existing TODOs and add missing ones ([#2354](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2354)) ([c3bc66c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c3bc66cffa4b87c49e027cc685df1abd8a6ebfe6))
+* Skip managed account SDK integration tests temporarily ([#2370](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2370)) ([9b2f551](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9b2f551fc9df34930805b3429fccf88be7e7f851))
+* update readme and fmt ([#2373](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2373)) ([a648ca7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a648ca7ae1ca46d8bd05a11d7581ffd55d20ffd2))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix old masking policy implementation ([#2371](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2371)) ([c4837d6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c4837d660c9595f82ccb95997121aa3e4d49bb64)), closes [#2362](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2362)
+* mfa token caching ([#2360](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2360)) ([1404aac](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1404aacaf3cdfc670d2b2a9e40c40b47c50f53d8))
+
+## [0.83.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.83.0...v0.83.1) (2024-01-12)
+
+
+### 🐛 **Bug fixes:**
+
+* Revert goreleaser mfa token caching ([#2343](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2343)) ([9a98031](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9a9803107f395ca350bdbb9fb8dc0f17820b8eb6))
+
+## [0.83.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.82.0...v0.83.0) (2024-01-11)
+
+
+### 🎉 **What's new:**
+
+* Add create streamlit privilege to the SDK ([#2303](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2303)) ([be01d5f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/be01d5fdab4f2d31db9c4c849b349e657c0352c8))
+* grant privileges to database role resource ([#2306](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2306)) ([0311cf8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0311cf8554f0fbd202b489a54c9428f55c52a490))
+
+
+### 🐛 **Bug fixes:**
+
+* Add secondary account and fix tests ([#2324](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2324)) ([da6ca73](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/da6ca733c7527c8918d1e1beb86d1641d94062ec))
+* external tables issues ([#2334](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2334)) ([ae41691](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ae416917be72ab55c6f1b758dd7e06269831fabc))
+* Fix test because of the date ([#2312](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2312)) ([9a9ea33](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9a9ea3331f090201c2d686ed7e726eb7d9cef926))
+* Fix warehouse read and resource monitor empty set ([#2319](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2319)) ([05f96c6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/05f96c699e4e36db4b28380d9ac3577d4f50a709)), closes [#2318](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318) [#2316](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2316)
+* goreleaser for mfa token caching ([#2320](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2320)) ([4fef709](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4fef709a376f5905effcc3439b1ad4cb9043ffca))
+
 ## [0.82.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.81.0...v0.82.0) (2023-12-21)
 
 
