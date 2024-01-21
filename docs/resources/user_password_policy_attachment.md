@@ -17,7 +17,9 @@ Specifies the password policy to use for the current account. To set the passwor
 
 ### Required
 
-- `password_policy` (String) Qualified name (`"db"."schema"."policy_name"`) of the password policy to apply to the current account.
+- `password_policy_database` (String) Database name where the password policy is stored
+- `password_policy_name` (String) Non-qualified name of the password policy
+- `password_policy_schema` (String) Schema name where the password policy is stored
 - `user_name` (String) User name of the user you want to attach the password policy to
 
 ### Read-Only
