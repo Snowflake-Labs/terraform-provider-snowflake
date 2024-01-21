@@ -18,12 +18,6 @@ var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "User name of the user you want to attach the password policy to",
 	},
-	// "password_policy": {
-	// 	Type:        schema.TypeString,
-	// 	Required:    true,
-	// 	ForceNew:    true,
-	// 	Description: "Qualified name (`\"db\".\"schema\".\"policy_name\"`) of the password policy to apply to the current account.",
-	// },
 	"password_policy_database": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -73,7 +67,6 @@ func UserPasswordPolicyAttachment() *schema.Resource {
 				if err := d.Set("password_policy_name", passwordPolicyName.Name()); err != nil {
 					return nil, err
 				}
-				// TODO: change for a fully qualified name
 				if err := d.Set("user_name", userName.Name()); err != nil {
 					return nil, err
 				}
@@ -87,7 +80,6 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	fmt.Printf("CREATE FUNCTION: '%s'\n", d.Get("user_name").(string))
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
 	passwordPolicyDatabase := sdk.NewAccountIdentifierFromFullyQualifiedName(d.Get("password_policy_database").(string))
@@ -124,11 +116,9 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	fmt.Printf("READ FUNCTION: '%s'\n", d.Get("user_name").(string))
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
 	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
-		// TODO (technical debt): I cannot insert both single and double quotes in the SDK, so for now I need to do this
-		// RefEntityName:   sdk.String("\"" + userNameName + "\""),
+		// Note: I cannot insert both single and double quotes in the SDK, so for now I need to do this
 		RefEntityName:   sdk.String(userName.FullyQualifiedName()),
 		RefEntityDomain: sdk.String("user"),
 	})
@@ -143,7 +133,6 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 
 	// Note: this means the resource has been deleted outside of Terraform.
 	if len(policyReferences) == 0 {
-		// fmt.Printf("THE RESOURCE HAS BEEN DELETED '%s'\n", d.Get("user_name").(string))
 		d.SetId("")
 		return nil
 	}
@@ -156,18 +145,11 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 	if err := d.Set("password_policy_name", sdk.NewAccountIdentifierFromFullyQualifiedName(policyReferences[0].PolicyName).Name()); err != nil {
 		return err
 	}
-	// TODO: not sure if this is needed
-	// if err := d.Set("user_name", d.Get("user_name").(string)); err != nil {
-	// 	return err
-	// }
-	// fmt.Printf(policyReference.FullyQualifiedName())
-	fmt.Printf("END FUNCTION: '%s'\n", d.Get("user_name").(string))
 	return err
 }
 
 // DeleteAccountPasswordPolicyAttachment implements schema.DeleteFunc.
 func DeleteUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
-	fmt.Printf("DELETE FUNCTION: '%s'\n", d.Get("user_name").(string))
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()

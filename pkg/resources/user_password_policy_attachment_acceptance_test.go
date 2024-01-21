@@ -19,21 +19,16 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	// resource.ParallelTest(t, resource.TestCase{
-		resource.Test(t, resource.TestCase{
-		// Providers: acc.TestAccProviders(),
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: testAccCheckYourResourceDestroy,
-		// CheckDestroy: nil,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		CheckDestroy:             testAccCheckYourResourceDestroy,
 		Steps: []resource.TestStep{
 			// CREATE
 			{
-				// TODO: handle the case where the user is in lowercase
 				Config: userPasswordPolicyAttachmentConfig("USER", acc.TestDatabaseName, acc.TestSchemaName, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("snowflake_user_password_policy_attachment.ppa", "id"),
-					// printState(prefix),
 				),
 				Destroy: false,
 			},
@@ -43,7 +38,6 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("snowflake_user_password_policy_attachment.ppa", "id"),
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", fmt.Sprintf("USER_%s", prefix)),
-					// printState(prefix2),
 				),
 			},
 			// IMPORT
@@ -55,23 +49,6 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 		},
 	})
 }
-
-// func printState(prefix2 string) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		for _, module := range s.Modules {
-// 			for key, rs := range module.Resources {
-// 				fmt.Printf("Resource Address: %s\n", key)
-// 				fmt.Printf("Resource Type: %s\n", rs.Type)
-// 				fmt.Printf("Resource ID: %s\n", rs.Primary.ID)
-// 				for attrKey, attrValue := range rs.Primary.Attributes {
-// 					fmt.Printf("  %s = %s\n", attrKey, attrValue)
-// 				}
-// 			}
-// 		}
-// 		fmt.Printf("ANDTHERENDERsnowflake_user_password_policy_attachment.password_policy_attachment_acceptance_test_user_%s\n", prefix2)
-// 		return nil
-// 	}
-// }
 
 func testAccCheckYourResourceDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
@@ -101,26 +78,6 @@ func testAccCheckYourResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-// func userPasswordPolicyAttachmentConfig(userName, databaseName, schemaName, prefix string) string {
-// 	s := `
-// resource "snowflake_user" "user_password_policy_attachment_acceptance_test_user_%s" {
-// 	name = "%s"
-// }
-// resource "snowflake_password_policy" "password_policy_password_policy_attachment_acceptance_test_user_%s" {
-// 	database   = "%s"
-// 	schema     = "%s"
-// 	name       = "%v"
-// }
-
-// resource "snowflake_user_password_policy_attachment" "password_policy_attachment_acceptance_test_user_%s" {
-// 	password_policy = snowflake_password_policy.password_policy_password_policy_attachment_acceptance_test_user_%s.qualified_name
-// 	user_name = snowflake_user.user_password_policy_attachment_acceptance_test_user_%s.name
-// }
-// `
-// 	return fmt.Sprintf(s, prefix, userName, prefix, databaseName, schemaName, prefix, prefix, prefix, prefix)
-// }
-
-// TODO: the USER needs to be suffixed, but for this we need to fix the lower - upper case problem
 func userPasswordPolicyAttachmentConfig(userName, databaseName, schemaName, prefix string) string {
 	s := `
 resource "snowflake_user" "user" {
