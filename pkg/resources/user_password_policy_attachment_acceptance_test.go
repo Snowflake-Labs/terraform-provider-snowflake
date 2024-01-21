@@ -39,11 +39,10 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 			},
 			// UPDATE
 			{
-				Config: userPasswordPolicyAttachmentConfig("USER2", acc.TestDatabaseName, acc.TestSchemaName, prefix2),
+				Config: userPasswordPolicyAttachmentConfig(fmt.Sprintf("USER_%s", prefix), acc.TestDatabaseName, acc.TestSchemaName, prefix2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("snowflake_user_password_policy_attachment.ppa", "id"),
-					// TODO: change the USER
-					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", "USER2"),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", fmt.Sprintf("USER_%s", prefix)),
 					// printState(prefix2),
 				),
 			},
