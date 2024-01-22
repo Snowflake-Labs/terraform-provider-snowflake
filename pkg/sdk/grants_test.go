@@ -1017,6 +1017,16 @@ func TestGrantShow(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "SHOW GRANTS OF ROLE %s", roleID.FullyQualifiedName())
 	})
 
+	t.Run("of database role", func(t *testing.T) {
+		roleID := RandomDatabaseObjectIdentifier()
+		opts := &ShowGrantOptions{
+			Of: &ShowGrantsOf{
+				DatabaseRole: roleID,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW GRANTS OF DATABASE ROLE %s", roleID.FullyQualifiedName())
+	})
+
 	t.Run("of share", func(t *testing.T) {
 		shareID := RandomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{

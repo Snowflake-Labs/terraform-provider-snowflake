@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// TODO: use email of our service user
+// TODO [SNOW-1007539]: use email of our service user
 func TestAcc_EmailNotificationIntegration(t *testing.T) {
 	emailIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	verifiedEmail := "artur.sawicki@snowflake.com"

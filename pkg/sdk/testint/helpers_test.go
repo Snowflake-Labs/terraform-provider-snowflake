@@ -18,6 +18,26 @@ const (
 	nycWeatherDataURL = "s3://snowflake-workshop-lab/weather-nyc"
 )
 
+var (
+	awsBucketUrl, awsBucketUrlIsSet = os.LookupEnv("AWS_EXTERNAL_BUCKET_URL")
+	awsKeyId, awsKeyIdIsSet         = os.LookupEnv("AWS_EXTERNAL_KEY_ID")
+	awsSecretKey, awsSecretKeyIsSet = os.LookupEnv("AWS_EXTERNAL_SECRET_KEY")
+	awsRoleARN, awsRoleARNIsSet     = os.LookupEnv("AWS_EXTERNAL_ROLE_ARN")
+
+	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("GCS_EXTERNAL_BUCKET_URL")
+
+	azureBucketUrl, azureBucketUrlIsSet = os.LookupEnv("AZURE_EXTERNAL_BUCKET_URL")
+	azureTenantId, azureTenantIdIsSet   = os.LookupEnv("AZURE_EXTERNAL_TENANT_ID")
+
+	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet &&
+		awsKeyIdIsSet &&
+		awsSecretKeyIsSet &&
+		awsRoleARNIsSet &&
+		gcsBucketUrlIsSet &&
+		azureBucketUrlIsSet &&
+		azureTenantIdIsSet
+)
+
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
 // the account locator and by filtering the list of accounts in replication accounts by the account locator
 func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifier {
@@ -751,11 +771,15 @@ func createRowAccessPolicy(t *testing.T, client *sdk.Client, schema *sdk.Schema)
 	t.Helper()
 	ctx := context.Background()
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.String())
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE ROW ACCESS POLICY %s AS (A NUMBER) RETURNS BOOLEAN -> TRUE`, id.FullyQualifiedName()))
+
+	arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", sdk.DataTypeNumber)
+	body := "true"
+	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, body)
+	err := client.RowAccessPolicies.Create(ctx, createRequest)
 	require.NoError(t, err)
 
 	return id, func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP ROW ACCESS POLICY %s`, id.FullyQualifiedName()))
+		err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
 		require.NoError(t, err)
 	}
 }

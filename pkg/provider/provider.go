@@ -105,7 +105,7 @@ func Provider() *schema.Provider {
 			},
 			"authenticator": {
 				Type:        schema.TypeString,
-				Description: "Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA. Can also be sourced from the `SNOWFLAKE_AUTHENTICATOR` environment variable.",
+				Description: "Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA. Can also be sourced from the `SNOWFLAKE_AUTHENTICATOR` environment variable. It has to be set explicitly to JWT for private key authentication.",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_AUTHENTICATOR", nil),
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
@@ -443,6 +443,8 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_failover_group":                          resources.FailoverGroup(),
 		"snowflake_file_format":                             resources.FileFormat(),
 		"snowflake_function":                                resources.Function(),
+		"snowflake_grant_account_role":                      resources.GrantAccountRole(),
+		"snowflake_grant_database_role":                     resources.GrantDatabaseRole(),
 		"snowflake_grant_privileges_to_role":                resources.GrantPrivilegesToRole(),
 		"snowflake_grant_privileges_to_database_role":       resources.GrantPrivilegesToDatabaseRole(),
 		"snowflake_managed_account":                         resources.ManagedAccount(),

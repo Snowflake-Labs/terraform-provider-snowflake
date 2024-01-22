@@ -5,6 +5,10 @@ description: Manage SnowflakeDB with Terraform.
 
 # Snowflake Provider
 
+~> **Disclaimer** the project is still in the 0.x.x version, which means it’s still in the experimental phase (check [Go module versioning](https://go.dev/doc/modules/version-numbers#v0-number) for more details). It can be used in production but makes no stability or backward compatibility guarantees. We do not provide backward bug fixes and, therefore, always suggest using the newest version. We are providing only limited support for the provider; priorities will be assigned on a case-by-case basis. Our main current goals are stabilization, addressing existing issues, and providing the missing features (prioritizing the GA features; supporting PrPr and PuPr features are not high priorities now). With all that in mind, we aim to reach V1 with a stable, reliable, and functional provider. V1 will be free of all the above limitations.
+
+-> **Note** the current roadmap is available in our GitHub repository: [ROADMAP.md](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md).
+
 This is a terraform provider plugin for managing [Snowflake](https://www.snowflake.com/) accounts.
 Coverage is focused on part of Snowflake related to access control.
 

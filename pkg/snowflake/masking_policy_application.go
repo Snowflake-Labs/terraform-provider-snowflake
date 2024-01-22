@@ -38,10 +38,10 @@ func (m *TableColumnMaskingPolicyApplicationManager) Read(x *TableColumnMaskingP
 }
 
 func (m *TableColumnMaskingPolicyApplicationManager) Parse(rows *sql.Rows, column string) (string, error) {
-	var name, sqlType, kind, null, defaultValue, primaryKey, uniqueKey, check, expression, comment, policyName sql.NullString
+	var name, sqlType, kind, null, defaultValue, primaryKey, uniqueKey, check, expression, comment, policyName, privacyDomain sql.NullString
 
 	for rows.Next() {
-		if err := rows.Scan(&name, &sqlType, &kind, &null, &defaultValue, &primaryKey, &uniqueKey, &check, &expression, &comment, &policyName); err != nil {
+		if err := rows.Scan(&name, &sqlType, &kind, &null, &defaultValue, &primaryKey, &uniqueKey, &check, &expression, &comment, &policyName, &privacyDomain); err != nil {
 			return "", err
 		}
 

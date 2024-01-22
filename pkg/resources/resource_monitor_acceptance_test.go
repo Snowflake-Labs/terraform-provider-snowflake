@@ -107,7 +107,7 @@ func TestAcc_ResourceMonitorChangeStartEndTimestamp(t *testing.T) {
 func resourceMonitorConfigUpdatedTimestamp(accName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "warehouse" {
-  name           = "test"
+  name           = "test%v"
   comment        = "foo"
   warehouse_size = "XSMALL"
 }
@@ -119,7 +119,7 @@ resource "snowflake_resource_monitor" "test" {
 	end_timestamp = "2056-01-01 12:00"
 
 }
-`, accName)
+`, accName, accName)
 }
 
 // fix 2 added empy notifiy user
