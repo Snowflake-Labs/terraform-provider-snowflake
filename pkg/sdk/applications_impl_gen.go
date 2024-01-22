@@ -46,15 +46,15 @@ func (v *applications) ShowByID(ctx context.Context, id AccountObjectIdentifier)
 	return collections.FindOne(applications, func(r Application) bool { return r.Name == id.Name() })
 }
 
-func (v *applications) Describe(ctx context.Context, id AccountObjectIdentifier) ([]ApplicationDetail, error) {
+func (v *applications) Describe(ctx context.Context, id AccountObjectIdentifier) ([]ApplicationProperty, error) {
 	opts := &DescribeApplicationOptions{
 		name: id,
 	}
-	rows, err := validateAndQuery[applicationDetailRow](v.client, ctx, opts)
+	rows, err := validateAndQuery[applicationPropertyRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	return convertRows[applicationDetailRow, ApplicationDetail](rows), nil
+	return convertRows[applicationPropertyRow, ApplicationProperty](rows), nil
 }
 
 func (r *CreateApplicationRequest) toOpts() *CreateApplicationOptions {
@@ -94,10 +94,7 @@ func (r *AlterApplicationRequest) toOpts() *AlterApplicationOptions {
 		IfExists: r.IfExists,
 		name:     r.name,
 
-		UnsetComment:                 r.UnsetComment,
-		UnsetShareEventsWithProvider: r.UnsetShareEventsWithProvider,
-		UnsetDebugMode:               r.UnsetDebugMode,
-		Upgrade:                      r.Upgrade,
+		Upgrade: r.Upgrade,
 
 		SetTags:   r.SetTags,
 		UnsetTags: r.UnsetTags,
@@ -107,6 +104,13 @@ func (r *AlterApplicationRequest) toOpts() *AlterApplicationOptions {
 			Comment:                 r.Set.Comment,
 			ShareEventsWithProvider: r.Set.ShareEventsWithProvider,
 			DebugMode:               r.Set.DebugMode,
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &ApplicationUnset{
+			Comment:                 r.Unset.Comment,
+			ShareEventsWithProvider: r.Unset.ShareEventsWithProvider,
+			DebugMode:               r.Unset.DebugMode,
 		}
 	}
 	if r.UpgradeVersion != nil {
@@ -169,8 +173,8 @@ func (r *DescribeApplicationRequest) toOpts() *DescribeApplicationOptions {
 	return opts
 }
 
-func (r applicationDetailRow) convert() *ApplicationDetail {
-	e := &ApplicationDetail{
+func (r applicationPropertyRow) convert() *ApplicationProperty {
+	e := &ApplicationProperty{
 		Property: r.Property,
 	}
 	if r.Value.Valid {

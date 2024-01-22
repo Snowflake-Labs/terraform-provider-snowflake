@@ -22,6 +22,12 @@ var applicationSet = g.NewQueryStruct("ApplicationSet").
 	OptionalBooleanAssignment("SHARE_EVENTS_WITH_PROVIDER", g.ParameterOptions()).
 	OptionalBooleanAssignment("DEBUG_MODE", g.ParameterOptions())
 
+var applicationUnset = g.NewQueryStruct("ApplicationUnset").
+	OptionalSQL("COMMENT").
+	OptionalSQL("SHARE_EVENTS_WITH_PROVIDER").
+	OptionalSQL("DEBUG_MODE").
+	WithValidation(g.ExactlyOneValueSet, "Comment", "ShareEventsWithProvider", "DebugMode")
+
 var applicationReferences = g.NewQueryStruct("ApplicationReferences").ListQueryStructField(
 	"References",
 	g.NewQueryStruct("ApplicationReference").Text("Reference", g.KeywordOptions().SingleQuotes()),
@@ -71,9 +77,11 @@ var ApplicationsDef = g.NewInterface(
 			applicationSet,
 			g.KeywordOptions().SQL("SET"),
 		).
-		OptionalSQL("UNSET COMMENT").
-		OptionalSQL("UNSET SHARE_EVENTS_WITH_PROVIDER").
-		OptionalSQL("UNSET DEBUG_MODE").
+		OptionalQueryStructField(
+			"Unset",
+			applicationUnset,
+			g.KeywordOptions().SQL("UNSET"),
+		).
 		OptionalSQL("UPGRADE").
 		OptionalQueryStructField(
 			"UpgradeVersion",
@@ -88,7 +96,7 @@ var ApplicationsDef = g.NewInterface(
 		OptionalSetTags().
 		OptionalUnsetTags().
 		WithValidation(g.ValidIdentifier, "name").
-		WithValidation(g.ExactlyOneValueSet, "Set", "UnsetComment", "UnsetShareEventsWithProvider", "UnsetDebugMode", "Upgrade", "UpgradeVersion", "UnsetReferences", "SetTags", "UnsetTags"),
+		WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "Upgrade", "UpgradeVersion", "UnsetReferences", "SetTags", "UnsetTags"),
 ).ShowOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/show-applications",
 	g.DbStruct("applicationRow").
@@ -128,10 +136,10 @@ var ApplicationsDef = g.NewInterface(
 ).ShowByIdOperation().DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-application",
-	g.DbStruct("applicationDetailRow").
+	g.DbStruct("applicationPropertyRow").
 		Field("property", "string").
 		Field("value", "sql.NullString"),
-	g.PlainStruct("ApplicationDetail").
+	g.PlainStruct("ApplicationProperty").
 		Field("Property", "string").
 		Field("Value", "string"),
 	g.NewQueryStruct("DescribeApplication").

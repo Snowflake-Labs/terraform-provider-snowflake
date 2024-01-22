@@ -24,6 +24,9 @@ func (opts *CreateApplicationOptions) validate() error {
 			errs = append(errs, errExactlyOneOf("CreateApplicationOptions.Version", "VersionDirectory", "VersionAndPatch"))
 		}
 	}
+	if valueSet(opts.DebugMode) && !valueSet(opts.Version) {
+		errs = append(errs, NewError("CreateApplicationOptions.DebugMode can be set only when CreateApplicationOptions.Version is set"))
+	}
 	return JoinErrors(errs...)
 }
 
@@ -46,12 +49,22 @@ func (opts *AlterApplicationOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Set, opts.UnsetComment, opts.UnsetShareEventsWithProvider, opts.UnsetDebugMode, opts.Upgrade, opts.UpgradeVersion, opts.UnsetReferences, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterApplicationOptions", "Set", "UnsetComment", "UnsetShareEventsWithProvider", "UnsetDebugMode", "Upgrade", "UpgradeVersion", "UnsetReferences", "SetTags", "UnsetTags"))
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.Upgrade, opts.UpgradeVersion, opts.UnsetReferences, opts.SetTags, opts.UnsetTags) {
+		errs = append(errs, errExactlyOneOf("AlterApplicationOptions", "Set", "Unset", "Upgrade", "UpgradeVersion", "UnsetReferences", "SetTags", "UnsetTags"))
+	}
+	if valueSet(opts.Unset) {
+		if !exactlyOneValueSet(opts.Unset.Comment, opts.Unset.ShareEventsWithProvider, opts.Unset.DebugMode) {
+			errs = append(errs, errExactlyOneOf("AlterApplicationOptions.Unset", "Comment", "ShareEventsWithProvider", "DebugMode"))
+		}
 	}
 	if valueSet(opts.UpgradeVersion) {
 		if !exactlyOneValueSet(opts.UpgradeVersion.VersionDirectory, opts.UpgradeVersion.VersionAndPatch) {
 			errs = append(errs, errExactlyOneOf("AlterApplicationOptions.UpgradeVersion", "VersionDirectory", "VersionAndPatch"))
+		}
+	}
+	if valueSet(opts.IfExists) {
+		if !valueSet(opts.Set) && !valueSet(opts.Unset) {
+			errs = append(errs, NewError("AlterApplicationOptions.IfExists can be set only when AlterApplicationOptions.Set or AlterApplicationOptions.Unset is set"))
 		}
 	}
 	return JoinErrors(errs...)

@@ -94,18 +94,8 @@ func (s *AlterApplicationRequest) WithSet(Set *ApplicationSetRequest) *AlterAppl
 	return s
 }
 
-func (s *AlterApplicationRequest) WithUnsetComment(UnsetComment *bool) *AlterApplicationRequest {
-	s.UnsetComment = UnsetComment
-	return s
-}
-
-func (s *AlterApplicationRequest) WithUnsetShareEventsWithProvider(UnsetShareEventsWithProvider *bool) *AlterApplicationRequest {
-	s.UnsetShareEventsWithProvider = UnsetShareEventsWithProvider
-	return s
-}
-
-func (s *AlterApplicationRequest) WithUnsetDebugMode(UnsetDebugMode *bool) *AlterApplicationRequest {
-	s.UnsetDebugMode = UnsetDebugMode
+func (s *AlterApplicationRequest) WithUnset(Unset *ApplicationUnsetRequest) *AlterApplicationRequest {
+	s.Unset = Unset
 	return s
 }
 
@@ -149,6 +139,25 @@ func (s *ApplicationSetRequest) WithShareEventsWithProvider(ShareEventsWithProvi
 }
 
 func (s *ApplicationSetRequest) WithDebugMode(DebugMode *bool) *ApplicationSetRequest {
+	s.DebugMode = DebugMode
+	return s
+}
+
+func NewApplicationUnsetRequest() *ApplicationUnsetRequest {
+	return &ApplicationUnsetRequest{}
+}
+
+func (s *ApplicationUnsetRequest) WithComment(Comment *bool) *ApplicationUnsetRequest {
+	s.Comment = Comment
+	return s
+}
+
+func (s *ApplicationUnsetRequest) WithShareEventsWithProvider(ShareEventsWithProvider *bool) *ApplicationUnsetRequest {
+	s.ShareEventsWithProvider = ShareEventsWithProvider
+	return s
+}
+
+func (s *ApplicationUnsetRequest) WithDebugMode(DebugMode *bool) *ApplicationUnsetRequest {
 	s.DebugMode = DebugMode
 	return s
 }

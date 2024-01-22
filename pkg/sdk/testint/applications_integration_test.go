@@ -3,7 +3,6 @@ package testint
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"testing"
 
@@ -15,6 +14,8 @@ import (
 
 /*
  * todo: add integration test for `ALTER APPLICATION <name> UPGRADE`
+ * todo: ALTER APPLICATION [ IF EXISTS ] <name> SET [ SHARE_EVENTS_WITH_PROVIDER ]
+ *       attention: SHARE_EVENTS_WITH_PROVIDER can only be set/unset if the application is created in a different account from the application package
  */
 
 func TestInt_Applications(t *testing.T) {
@@ -35,33 +36,13 @@ func TestInt_Applications(t *testing.T) {
 		}
 	}
 
-	putOnStageHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier, name string, content string) {
-		t.Helper()
-		tempFile := fmt.Sprintf("/tmp/%s", name)
-		f, err := os.Create(tempFile)
-		require.NoError(t, err)
-		if content != "" {
-			_, err = f.Write([]byte(content))
-			require.NoError(t, err)
-		}
-		f.Close()
-		defer os.Remove(f.Name())
-
-		_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, f.Name(), id.FullyQualifiedName()))
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			_, err = client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @%s/%s`, id.FullyQualifiedName(), name))
-			require.NoError(t, err)
-		})
-	}
-
 	createApplicationPackageHandle := func(t *testing.T, applicationPackageName, version string, patch int, defaultReleaseDirective bool) *sdk.Stage {
 		t.Helper()
 
 		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, "dev_stage_test")
 		t.Cleanup(cleanupStage)
-		putOnStageHandle(t, stage.ID(), "manifest.yml", "")
-		putOnStageHandle(t, stage.ID(), "setup.sql", "CREATE APPLICATION ROLE IF NOT EXISTS APP_HELLO_SNOWFLAKE;")
+		putOnStageWithContent(t, client, stage.ID(), "manifest.yml", "")
+		putOnStageWithContent(t, client, stage.ID(), "setup.sql", "CREATE APPLICATION ROLE IF NOT EXISTS APP_HELLO_SNOWFLAKE;")
 		cleanupApplicationPackage := createApplicationPackage(t, client, applicationPackageName)
 		t.Cleanup(cleanupApplicationPackage)
 		addApplicationPackageVersion(t, client, stage, applicationPackageName, version)
@@ -99,7 +80,7 @@ func TestInt_Applications(t *testing.T) {
 		return stage, application
 	}
 
-	assertApplication := func(t *testing.T, id sdk.AccountObjectIdentifier, applicationPackageName, version string, patch int) {
+	assertApplication := func(t *testing.T, id sdk.AccountObjectIdentifier, applicationPackageName, version string, patch int, comment string) {
 		t.Helper()
 
 		e, err := client.Applications.ShowByID(ctx, id)
@@ -114,7 +95,7 @@ func TestInt_Applications(t *testing.T) {
 		assert.Equal(t, version, e.Version)
 		assert.Equal(t, patch, e.Patch)
 		assert.Equal(t, "ACCOUNTADMIN", e.Owner)
-		assert.Empty(t, e.Comment)
+		assert.Equal(t, comment, e.Comment)
 		assert.Equal(t, 1, e.RetentionTime)
 		assert.Empty(t, e.Options)
 	}
@@ -165,15 +146,7 @@ func TestInt_Applications(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupApplicationHandle(id))
 
-		e, err := client.Applications.ShowByID(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, id.Name(), e.Name)
-		require.Equal(t, "ACCOUNTADMIN", e.Owner)
-		require.Equal(t, comment, e.Comment)
-		require.Equal(t, "APPLICATION PACKAGE", e.SourceType)
-		require.Equal(t, applicationPackageName, e.Source)
-		require.Equal(t, version, e.Version)
-		require.Equal(t, patch, e.Patch)
+		assertApplication(t, id, applicationPackageName, version, patch, comment)
 	})
 
 	t.Run("create application: version directory", func(t *testing.T) {
@@ -198,15 +171,7 @@ func TestInt_Applications(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupApplicationHandle(id))
 
-		e, err := client.Applications.ShowByID(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, id.Name(), e.Name)
-		require.Equal(t, "ACCOUNTADMIN", e.Owner)
-		require.Equal(t, comment, e.Comment)
-		require.Equal(t, "APPLICATION PACKAGE", e.SourceType)
-		require.Equal(t, applicationPackageName, e.Source)
-		require.Equal(t, "UNVERSIONED", e.Version)
-		require.Equal(t, patch, e.Patch)
+		assertApplication(t, id, applicationPackageName, "UNVERSIONED", patch, comment)
 	})
 
 	t.Run("show application: with like", func(t *testing.T) {
@@ -250,14 +215,16 @@ func TestInt_Applications(t *testing.T) {
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
 		// unset coment
-		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnsetComment(sdk.Bool(true)))
+		unset := sdk.NewApplicationUnsetRequest().WithComment(sdk.Bool(true))
+		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnset(unset))
 		require.NoError(t, err)
 		o, err := client.Applications.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Empty(t, o.Comment)
 
 		// unset debug mode
-		err = client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnsetDebugMode(sdk.Bool(true)))
+		unset = sdk.NewApplicationUnsetRequest().WithDebugMode(sdk.Bool(true))
+		err = client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnset(unset))
 		require.NoError(t, err)
 		details, err := client.Applications.Describe(ctx, id)
 		require.NoError(t, err)
@@ -281,14 +248,19 @@ func TestInt_Applications(t *testing.T) {
 		}
 		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithSetTags(setTags))
 		require.NoError(t, err)
-		assertApplication(t, id, applicationPackageName, version, patch)
+		assertApplication(t, id, applicationPackageName, version, patch, "")
+
+		// TODO: 391801 (0A000): SQL compilation error: Object tagging not supported for object type APPLICATION.
+		// tv, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeApplication)
+		// require.NoError(t, err)
+		// assert.Equal(t, "v1", tv)
 
 		unsetTags := []sdk.ObjectIdentifier{
 			tagTest.ID(),
 		}
 		err = client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
-		assertApplication(t, id, applicationPackageName, version, patch)
+		assertApplication(t, id, applicationPackageName, version, patch, "")
 	})
 
 	t.Run("alter application: upgrade with version and patch", func(t *testing.T) {
@@ -300,7 +272,7 @@ func TestInt_Applications(t *testing.T) {
 		av := sdk.NewApplicationVersionRequest().WithVersionAndPatch(vr)
 		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUpgradeVersion(av))
 		require.NoError(t, err)
-		assertApplication(t, id, applicationPackageName, version, patch+1)
+		assertApplication(t, id, applicationPackageName, version, patch+1, "")
 	})
 
 	t.Run("alter application: upgrade with version directory", func(t *testing.T) {
@@ -311,7 +283,7 @@ func TestInt_Applications(t *testing.T) {
 		av := sdk.NewApplicationVersionRequest().WithVersionDirectory(sdk.String("@" + s.ID().FullyQualifiedName()))
 		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUpgradeVersion(av))
 		require.NoError(t, err)
-		assertApplication(t, id, applicationPackageName, "UNVERSIONED", patch+1)
+		assertApplication(t, id, applicationPackageName, "UNVERSIONED", patch+1, "")
 	})
 
 	t.Run("alter application: unset references", func(t *testing.T) {
@@ -321,7 +293,7 @@ func TestInt_Applications(t *testing.T) {
 
 		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnsetReferences(sdk.NewApplicationReferencesRequest()))
 		require.NoError(t, err)
-		assertApplication(t, id, applicationPackageName, version, patch)
+		assertApplication(t, id, applicationPackageName, version, patch, "")
 	})
 
 	t.Run("describe application", func(t *testing.T) {
@@ -329,11 +301,11 @@ func TestInt_Applications(t *testing.T) {
 		_, e := createApplicationHandle(t, applicationPackageName, version, patch, false, true, false)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
-		details, err := client.Applications.Describe(ctx, id)
+		properties, err := client.Applications.Describe(ctx, id)
 		require.NoError(t, err)
 		pairs := make(map[string]string)
-		for _, detail := range details {
-			pairs[detail.Property] = detail.Value
+		for _, item := range properties {
+			pairs[item.Property] = item.Value
 		}
 		require.Equal(t, e.SourceType, pairs["source_type"])
 		require.Equal(t, e.Source, pairs["source"])

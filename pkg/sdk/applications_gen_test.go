@@ -40,6 +40,12 @@ func TestApplications_Create(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateApplicationOptions.Version", "VersionDirectory", "VersionAndPatch"))
 	})
 
+	t.Run("validation: version must be set when debug mode is set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.DebugMode = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, NewError("CreateApplicationOptions.DebugMode can be set only when CreateApplicationOptions.Version is set"))
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		tid := NewSchemaObjectIdentifier(random.StringN(4), random.StringN(4), random.StringN(4))
 
@@ -108,14 +114,22 @@ func TestApplications_Alter(t *testing.T) {
 
 	t.Run("validation: exactly one field should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApplicationOptions", "Set", "UnsetComment", "UnsetShareEventsWithProvider", "UnsetDebugMode", "Upgrade", "UpgradeVersion", "UnsetReferences", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApplicationOptions", "Set", "Unset", "Upgrade", "UpgradeVersion", "UnsetReferences", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: exactly one field should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Upgrade = Bool(true)
-		opts.UnsetComment = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApplicationOptions", "Set", "UnsetComment", "UnsetShareEventsWithProvider", "UnsetDebugMode", "Upgrade", "UpgradeVersion", "UnsetReferences", "SetTags", "UnsetTags"))
+		opts.Unset = &ApplicationUnset{
+			Comment: Bool(true),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApplicationOptions", "Set", "Unset", "Upgrade", "UpgradeVersion", "UnsetReferences", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("validation: if exits can be set only when set or unset is set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, NewError("AlterApplicationOptions.IfExists can be set only when AlterApplicationOptions.Set or AlterApplicationOptions.Unset is set"))
 	})
 
 	t.Run("alter: set options", func(t *testing.T) {
@@ -132,17 +146,23 @@ func TestApplications_Alter(t *testing.T) {
 	t.Run("alter: unset options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
-		opts.UnsetComment = Bool(true)
+		opts.Unset = &ApplicationUnset{
+			Comment: Bool(true),
+		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION IF EXISTS %s UNSET COMMENT`, id.FullyQualifiedName())
 
 		opts = defaultOpts()
 		opts.IfExists = Bool(true)
-		opts.UnsetShareEventsWithProvider = Bool(true)
+		opts.Unset = &ApplicationUnset{
+			ShareEventsWithProvider: Bool(true),
+		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION IF EXISTS %s UNSET SHARE_EVENTS_WITH_PROVIDER`, id.FullyQualifiedName())
 
 		opts = defaultOpts()
 		opts.IfExists = Bool(true)
-		opts.UnsetDebugMode = Bool(true)
+		opts.Unset = &ApplicationUnset{
+			DebugMode: Bool(true),
+		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION IF EXISTS %s UNSET DEBUG_MODE`, id.FullyQualifiedName())
 	})
 

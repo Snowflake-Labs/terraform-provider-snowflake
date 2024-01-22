@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -693,6 +694,28 @@ func putOnStage(t *testing.T, client *sdk.Client, stage *sdk.Stage, filename str
 
 	_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT '%s' @%s AUTO_COMPRESS = FALSE`, absPath, stage.ID().FullyQualifiedName()))
 	require.NoError(t, err)
+}
+
+func putOnStageWithContent(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, filename string, content string) {
+	t.Helper()
+	ctx := context.Background()
+
+	tf := fmt.Sprintf("/tmp/%s", filename)
+	f, err := os.Create(tf)
+	require.NoError(t, err)
+	if content != "" {
+		_, err = f.Write([]byte(content))
+		require.NoError(t, err)
+	}
+	f.Close()
+	defer os.Remove(f.Name())
+
+	_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, f.Name(), id.FullyQualifiedName()))
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_, err = client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @%s/%s`, id.FullyQualifiedName(), filename))
+		require.NoError(t, err)
+	})
 }
 
 func createApplicationPackage(t *testing.T, client *sdk.Client, name string) func() {
