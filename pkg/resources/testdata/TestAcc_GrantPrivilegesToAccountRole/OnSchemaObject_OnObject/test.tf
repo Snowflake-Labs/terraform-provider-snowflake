@@ -11,7 +11,7 @@ resource "snowflake_table" "test" {
 
 resource "snowflake_grant_privileges_to_account_role" "test" {
   depends_on        = [snowflake_table.test]
-  role_name         = var.name
+  account_role_name = var.name
   privileges        = var.privileges
   with_grant_option = var.with_grant_option
 

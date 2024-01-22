@@ -15,7 +15,7 @@ import (
 )
 
 var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
-	"role_name": {
+	"account_role_name": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
@@ -62,7 +62,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Default:     "",
-		Description: "This field should not be set and its main purpose is to achieve the functionality described by always_apply field. This is value will be flipped to the opposite value on every terraform apply, thus creating a new plan that will re-apply grants.",
+		Description: "This is a helper field and should not be set. Its main purpose is to help to achieve the functionality described by the always_apply field.",
 	},
 	"on_account": {
 		Type:        schema.TypeBool,
@@ -299,7 +299,7 @@ func ImportGrantPrivilegesToAccountRole() func(ctx context.Context, d *schema.Re
 			return nil, err
 		}
 		logging.DebugLogger.Printf("[DEBUG] Imported identifier: %s", id.String())
-		if err := d.Set("role_name", id.RoleName.FullyQualifiedName()); err != nil {
+		if err := d.Set("account_role_name", id.RoleName.FullyQualifiedName()); err != nil {
 			return nil, err
 		}
 		if err := d.Set("with_grant_option", id.WithGrantOption); err != nil {
@@ -405,7 +405,7 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 		ctx,
 		getAccountRolePrivilegesFromSchema(d),
 		getAccountRoleGrantOn(d),
-		sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("role_name").(string)),
+		sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("account_role_name").(string)),
 		&sdk.GrantPrivilegesToAccountRoleOptions{
 			WithGrantOption: sdk.Bool(d.Get("with_grant_option").(bool)),
 		},
@@ -681,6 +681,16 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	logging.DebugLogger.Printf("[DEBUG] Parsed identifier: %s", id.String())
 
 	if id.AlwaysApply {
+		// The Trigger is a string rather than boolean that would be flipped on every terraform apply
+		// because it's easier to think about and not to worry about edge cases that may occur with 1bit values.
+		// The only place to have the "flip" is Read operation, because there we can set value and produce a plan
+		// that later on will be executed in the Update operation.
+		//
+		// The following example shows that we can end up with the same value as before, which may lead to empty plans:
+		// 1. Create configuration with always_apply = false (let's say trigger will be false by default)
+		// 2. terraform apply: Create (Read will update it to false)
+		// 3. Update config so that always_apply = true
+		// 4. terraform apply: Read (updated trigger to false) -> change is not detected (no plan; no Update)
 		triggerId, err := uuid.GenerateUUID()
 		if err != nil {
 			return diag.Diagnostics{
@@ -932,26 +942,25 @@ func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
 
 		objectType := onAccountObject["object_type"].(string)
 		objectName := onAccountObject["object_name"].(string)
+		objectIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName)
 
 		switch sdk.ObjectType(objectType) {
 		case sdk.ObjectTypeDatabase:
-			grantOnAccountObject.Database = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName))
+			grantOnAccountObject.Database = &objectIdentifier
 		case sdk.ObjectTypeFailoverGroup:
-			grantOnAccountObject.FailoverGroup = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName))
+			grantOnAccountObject.FailoverGroup = &objectIdentifier
 		case sdk.ObjectTypeIntegration:
-			grantOnAccountObject.Integration = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName))
-		case sdk.ObjectTypeConnection:
-			grantOnAccountObject.Connection = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName))
+			grantOnAccountObject.Integration = &objectIdentifier
 		case sdk.ObjectTypeReplicationGroup:
-			grantOnAccountObject.ReplicationGroup = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName))
+			grantOnAccountObject.ReplicationGroup = &objectIdentifier
 		case sdk.ObjectTypeResourceMonitor:
-			grantOnAccountObject.ResourceMonitor = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName))
+			grantOnAccountObject.ResourceMonitor = &objectIdentifier
 		case sdk.ObjectTypeUser:
-			grantOnAccountObject.User = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName))
+			grantOnAccountObject.User = &objectIdentifier
 		case sdk.ObjectTypeWarehouse:
-			grantOnAccountObject.Warehouse = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName))
+			grantOnAccountObject.Warehouse = &objectIdentifier
 		case sdk.ObjectTypeExternalVolume:
-			grantOnAccountObject.ExternalVolume = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName))
+			grantOnAccountObject.ExternalVolume = &objectIdentifier
 		}
 
 		on.AccountObject = grantOnAccountObject
@@ -1016,7 +1025,7 @@ func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
 
 func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) *GrantPrivilegesToAccountRoleId {
 	id := new(GrantPrivilegesToAccountRoleId)
-	id.RoleName = sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("role_name").(string))
+	id.RoleName = sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("account_role_name").(string))
 	id.AllPrivileges = d.Get("all_privileges").(bool)
 	if p, ok := d.GetOk("privileges"); ok {
 		id.Privileges = expandStringList(p.(*schema.Set).List())
@@ -1047,9 +1056,6 @@ func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) *Gra
 		case on.AccountObject.Integration != nil:
 			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeIntegration
 			onAccountObjectGrantData.ObjectName = *on.AccountObject.Integration
-		case on.AccountObject.Connection != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeConnection
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.Connection
 		case on.AccountObject.FailoverGroup != nil:
 			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeFailoverGroup
 			onAccountObjectGrantData.ObjectName = *on.AccountObject.FailoverGroup

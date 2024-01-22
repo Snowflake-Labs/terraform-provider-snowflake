@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"regexp"
-	"slices"
+	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -18,7 +21,7 @@ import (
 )
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleName),
@@ -36,14 +39,14 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.GlobalPrivilegeCreateDatabase)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.GlobalPrivilegeCreateRole)),
@@ -64,7 +67,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount_PrivilegesReversed(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleName),
@@ -82,14 +85,14 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_PrivilegesReversed(t *testin
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.GlobalPrivilegeCreateDatabase)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.GlobalPrivilegeCreateRole)),
@@ -110,7 +113,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_PrivilegesReversed(t *testin
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -130,14 +133,14 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeCreateDatabaseRole)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeCreateSchema)),
@@ -168,19 +171,23 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
 	})
 }
 
+// This proves that infinite plan is not produced as in snowflake_grant_privileges_to_role.
+// More details can be found in the fix pr https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2364.
 func TestAcc_GrantPrivilegesToApplicationRole_OnAccountObject_InfinitePlan(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
+				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject_InfinitePlan"),
 				ConfigVariables: config.Variables{
-					"name":     config.StringVariable("test_account_role_name"),
+					"name":     config.StringVariable(name),
 					"database": config.StringVariable(acc.TestDatabaseName),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -194,7 +201,7 @@ func TestAcc_GrantPrivilegesToApplicationRole_OnAccountObject_InfinitePlan(t *te
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleName),
@@ -216,14 +223,14 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchema"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeModify)),
@@ -245,15 +252,17 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchema_ExactlyOneOf(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
+				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchema_ExactlyOneOf"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
@@ -263,7 +272,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema_ExactlyOneOf(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAllSchemasInDatabase(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -283,14 +292,14 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAllSchemasInDatabase(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAllSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeModify)),
@@ -312,7 +321,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAllSchemasInDatabase(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnFutureSchemasInDatabase(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -332,14 +341,14 @@ func TestAcc_GrantPrivilegesToAccountRole_OnFutureSchemasInDatabase(t *testing.T
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnFutureSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeModify)),
@@ -361,7 +370,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnFutureSchemasInDatabase(t *testing.T
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	tblName := "test_database_role_table_name"
 	tableName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tblName).FullyQualifiedName()
@@ -384,14 +393,14 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeInsert)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaObjectPrivilegeUpdate)),
@@ -414,8 +423,8 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivilege(t *testing.T) {
-	name := "test_account_role_name"
-	tableName := "test_database_role_table_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{
 		"name":       config.StringVariable(name),
 		"table_name": config.StringVariable(tableName),
@@ -433,7 +442,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
@@ -446,7 +455,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivi
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -466,14 +475,14 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *tes
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeInsert)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaObjectPrivilegeUpdate)),
@@ -497,7 +506,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *tes
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_InDatabase(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := config.Variables{
@@ -517,14 +526,14 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_InDatabase(t *
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeInsert)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaObjectPrivilegeUpdate)),
@@ -548,7 +557,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_InDatabase(t *
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := func(allPrivileges bool, privileges []sdk.AccountObjectPrivilege) config.Variables {
@@ -576,7 +585,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
@@ -637,7 +646,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name)
 	schemaName := "test_database_role_schema_name"
 	configVariables := func(allPrivileges bool, privileges []string, schemaName string) config.Variables {
@@ -667,7 +676,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
@@ -723,7 +732,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply(t *testing.T) {
-	name := "test_account_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
 	configVariables := func(alwaysApply bool) config.Variables {
@@ -742,7 +751,7 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked,
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
@@ -825,85 +834,61 @@ func createAccountRoleOutsideTerraform(t *testing.T, name string) {
 	}
 }
 
-func testAccCheckAccountRolePrivilegesRevoked(s *terraform.State) error {
-	db := acc.TestAccProvider.Meta().(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_grant_privileges_to_account_role" {
-			continue
-		}
-		ctx := context.Background()
-
-		id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["role_name"])
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				Role: id,
-			},
-		})
-		if err != nil {
-			return err
-		}
-		var grantedPrivileges []string
-		for _, grant := range grants {
-			grantedPrivileges = append(grantedPrivileges, grant.Privilege)
-		}
-		if len(grantedPrivileges) > 0 {
-			return fmt.Errorf("account role (%s) is still granted, granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
-		}
-	}
-	return nil
-}
-
-// queriedAccountRolePrivilegesEqualTo will check if all the privileges specified in the argument are granted in Snowflake.
-func queriedAccountRolePrivilegesEqualTo(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return func(s *terraform.State) error {
+func testAccCheckAccountRolePrivilegesRevoked(name string) func(*terraform.State) error {
+	return func(state *terraform.State) error {
 		db := acc.TestAccProvider.Meta().(*sql.DB)
-		ctx := context.Background()
 		client := sdk.NewClientFromDB(db)
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				Role: roleName,
-			},
-		})
-		if err != nil {
-			return err
-		}
-		for _, grant := range grants {
-			if !slices.Contains(privileges, grant.Privilege) {
-				return fmt.Errorf("grant not expected, grant: %v, not in %v", grants, privileges)
+
+		defer func() {
+			err := client.Roles.Drop(context.Background(), sdk.NewDropRoleRequest(sdk.NewAccountObjectIdentifier(name)))
+			if err != nil {
+				log.Printf("failed to drop account role (%s), err = %s\n", name, err.Error())
+			}
+		}()
+
+		for _, rs := range state.RootModule().Resources {
+			if rs.Type != "snowflake_grant_privileges_to_account_role" {
+				continue
+			}
+			ctx := context.Background()
+
+			id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["account_role_name"])
+			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+				To: &sdk.ShowGrantsTo{
+					Role: id,
+				},
+			})
+			if err != nil {
+				return err
+			}
+			var grantedPrivileges []string
+			for _, grant := range grants {
+				grantedPrivileges = append(grantedPrivileges, grant.Privilege)
+			}
+			if len(grantedPrivileges) > 0 {
+				return fmt.Errorf("account role (%s) is still granted, granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
 			}
 		}
-
 		return nil
 	}
 }
 
-// queriedAccountRolePrivilegesContainAtLeast will check if all the privileges specified in the argument are granted in Snowflake.
-// Any additional grants will be ignored.
-func queriedAccountRolePrivilegesContainAtLeast(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return func(s *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		ctx := context.Background()
-		client := sdk.NewClientFromDB(db)
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+func queriedAccountRolePrivilegesEqualTo(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesEqualTo(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
+		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 			To: &sdk.ShowGrantsTo{
 				Role: roleName,
 			},
 		})
-		if err != nil {
-			return err
-		}
-		var grantedPrivileges []string
-		for _, grant := range grants {
-			grantedPrivileges = append(grantedPrivileges, grant.Privilege)
-		}
-		notAllPrivilegesInGrantedPrivileges := slices.ContainsFunc(privileges, func(privilege string) bool {
-			return !slices.Contains(grantedPrivileges, privilege)
-		})
-		if notAllPrivilegesInGrantedPrivileges {
-			return fmt.Errorf("not every privilege from the list: %v was found in grant privileges: %v, for database role name: %s", privileges, grantedPrivileges, roleName.FullyQualifiedName())
-		}
+	}, privileges...)
+}
 
-		return nil
-	}
+func queriedAccountRolePrivilegesContainAtLeast(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesContainAtLeast(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
+		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Role: roleName,
+			},
+		})
+	}, roleName, privileges...)
 }

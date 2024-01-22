@@ -6,6 +6,8 @@ description: |-
   
 ---
 
+!> **Warning** This is a preview resource. It's not production-ready (yet), and some of the edge cases may not be covered. In case of any errors, please file an issue in our GitHub repository.
+
 
 !> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).
 
@@ -175,7 +177,7 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 
 - `all_privileges` (Boolean) Grant all privileges on the database role.
 - `always_apply` (Boolean) If true, the resource will always produce a “plan” and on “apply” it will re-grant defined privileges. It is supposed to be used only in “grant privileges on all X’s in database / schema Y” or “grant all privileges to X” scenarios to make sure that every new object in a given database / schema is granted by the account role and every new privilege is granted to the database role. Important note: this flag is not compliant with the Terraform assumptions of the config being eventually convergent (producing an empty plan).
-- `always_apply_trigger` (String) This field should not be set and its main purpose is to achieve the functionality described by always_apply field. This is value will be flipped to the opposite value on every terraform apply, thus creating a new plan that will re-apply grants.
+- `always_apply_trigger` (String) This is a helper field and should not be set. Its main purpose is to help to achieve the functionality described by the always_apply field.
 - `on_database` (String) The fully qualified name of the database on which privileges will be granted.
 - `on_schema` (Block List, Max: 1) Specifies the schema on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema))
 - `on_schema_object` (Block List, Max: 1) Specifies the schema object on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema_object))

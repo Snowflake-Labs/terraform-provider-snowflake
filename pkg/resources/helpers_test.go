@@ -491,3 +491,52 @@ func tagGrant(t *testing.T, id string, params map[string]interface{}) *schema.Re
 	d.SetId(id)
 	return d
 }
+
+// queriedAccountRolePrivilegesEqualTo will check if all the privileges specified in the argument are granted in Snowflake.
+func queriedPrivilegesEqualTo(query func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error), privileges ...string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		db := acc.TestAccProvider.Meta().(*sql.DB)
+		ctx := context.Background()
+		client := sdk.NewClientFromDB(db)
+		grants, err := query(client, ctx)
+		if err != nil {
+			return err
+		}
+		for _, grant := range grants {
+			if (grant.GrantTo == sdk.ObjectTypeDatabaseRole || grant.GrantedTo == sdk.ObjectTypeDatabaseRole) && grant.Privilege == "USAGE" {
+				continue
+			}
+			if !slices.Contains(privileges, grant.Privilege) {
+				return fmt.Errorf("grant not expected, grant: %v, not in %v", grants, privileges)
+			}
+		}
+
+		return nil
+	}
+}
+
+// queriedAccountRolePrivilegesContainAtLeast will check if all the privileges specified in the argument are granted in Snowflake.
+// Any additional grants will be ignored.
+func queriedPrivilegesContainAtLeast(query func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error), roleName sdk.ObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		db := acc.TestAccProvider.Meta().(*sql.DB)
+		ctx := context.Background()
+		client := sdk.NewClientFromDB(db)
+		grants, err := query(client, ctx)
+		if err != nil {
+			return err
+		}
+		var grantedPrivileges []string
+		for _, grant := range grants {
+			grantedPrivileges = append(grantedPrivileges, grant.Privilege)
+		}
+		notAllPrivilegesInGrantedPrivileges := slices.ContainsFunc(privileges, func(privilege string) bool {
+			return !slices.Contains(grantedPrivileges, privilege)
+		})
+		if notAllPrivilegesInGrantedPrivileges {
+			return fmt.Errorf("not every privilege from the list: %v was found in grant privileges: %v, for role name: %s", privileges, grantedPrivileges, roleName.FullyQualifiedName())
+		}
+
+		return nil
+	}
+}

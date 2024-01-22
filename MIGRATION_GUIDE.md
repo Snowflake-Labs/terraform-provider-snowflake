@@ -92,5 +92,3 @@ provider "snowflake" {
 #### *(behavior change)* authenticator (JWT)
 
 Before the change `authenticator` parameter did not have to be set for private key authentication and was deduced by the provider. The change is a result of the introduced configuration alignment with an underlying [gosnowflake driver](https://github.com/snowflakedb/gosnowflake). The authentication type is required there, and it defaults to user+password one. From this version, set `authenticator` to `JWT` explicitly.
-
-// TODO: Update identifiers 0.82.0 -> 0.83.1 + grant migration (new name ...account_role)

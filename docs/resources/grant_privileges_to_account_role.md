@@ -6,6 +6,8 @@ description: |-
   
 ---
 
+!> **Warning** This is a preview resource. It has more features and should cover more edge cases than its predecessor `snowflake_grant_privileges_to_role`, but it's not battle-tested yet. In case of any errors, please file an issue in our GitHub repository.
+
 
 !> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).
 
@@ -35,6 +37,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   on_account = true
 }
 
+## ID: "\"role_name\"|false|false|CREATE DATABASE,CREATE USER|OnAccount"
+
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
   role_name         = snowflake_role.db_role.name
@@ -42,6 +46,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|false|ALL|OnAccount"
 
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_account_role" "example" {
@@ -51,6 +57,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|true|ALL|OnAccount"
 
 ##################################
 ### on account object privileges
@@ -66,6 +74,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|CREATE SCHEMA,CREATE DATABASE ROLE|OnAccountObject|DATABASE|\"database\""
+
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
   role_name = snowflake_role.db_role.name
@@ -76,6 +86,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|false|ALL|OnAccountObject|DATABASE|\"database\""
 
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_account_role" "example" {
@@ -88,6 +100,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|true|ALL|OnAccountObject|DATABASE|\"database\""
 
 ##################################
 ### schema privileges
@@ -102,6 +116,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|MODIFY,CREATE TABLE|OnSchema|OnSchema|\"database\".\"my_schema\""
+
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
   role_name = snowflake_role.db_role.name
@@ -112,6 +128,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   with_grant_option = true
 }
 
+## ID: "\"role_name\"|true|false|MODIFY,CREATE TABLE|OnSchema|OnSchema|\"database\".\"my_schema\""
+
 # all schemas in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
   privileges = ["MODIFY", "CREATE TABLE"]
@@ -121,6 +139,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|MODIFY,CREATE TABLE|OnSchema|OnAllSchemasInDatabase|\"database\""
+
 # future schemas in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
   privileges = ["MODIFY", "CREATE TABLE"]
@@ -129,6 +149,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
     future_schemas_in_database = snowflake_database.db.name
   }
 }
+
+## ID: "\"role_name\"|false|false|MODIFY,CREATE TABLE|OnSchema|OnFutureSchemasInDatabase|\"database\""
 
 ##################################
 ### schema object privileges
@@ -144,6 +166,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|SELECT,REFERENCES|OnSchemaObject|VIEW|\"database\".\"my_schema\".\"my_view\""
+
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
   role_name = snowflake_role.db_role.name
@@ -154,6 +178,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|false|ALL|OnSchemaObject|OnObject|VIEW|\"database\".\"my_schema\".\"my_view\""
 
 # all in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
@@ -167,6 +193,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|SELECT,INSERT|OnSchemaObject|OnAll|TABLES|InDatabase|\"database\""
+
 # all in schema
 resource "snowflake_grant_privileges_to_account_role" "example" {
   privileges = ["SELECT", "INSERT"]
@@ -178,6 +206,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
     }
   }
 }
+
+## ID: "\"role_name\"|false|false|SELECT,INSERT|OnSchemaObject|OnAll|TABLES|InSchema|\"database\".\"my_schema\""
 
 # future in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
@@ -191,6 +221,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|SELECT,INSERT|OnSchemaObject|OnFuture|TABLES|InDatabase|\"database\""
+
 # future in schema
 resource "snowflake_grant_privileges_to_account_role" "example" {
   privileges = ["SELECT", "INSERT"]
@@ -202,6 +234,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
     }
   }
 }
+
+## ID: "\"role_name\"|false|false|SELECT,INSERT|OnSchemaObject|OnFuture|TABLES|InSchema|\"database\".\"my_schema\""
 ```
 
 <!-- schema generated by tfplugindocs -->
@@ -209,13 +243,13 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 ### Required
 
-- `role_name` (String) The fully qualified name of the account role to which privileges will be granted.
+- `account_role_name` (String) The fully qualified name of the account role to which privileges will be granted.
 
 ### Optional
 
 - `all_privileges` (Boolean) Grant all privileges on the account role.
 - `always_apply` (Boolean) If true, the resource will always produce a “plan” and on “apply” it will re-grant defined privileges. It is supposed to be used only in “grant privileges on all X’s in database / schema Y” or “grant all privileges to X” scenarios to make sure that every new object in a given database / schema is granted by the account role and every new privilege is granted to the database role. Important note: this flag is not compliant with the Terraform assumptions of the config being eventually convergent (producing an empty plan).
-- `always_apply_trigger` (String) This field should not be set and its main purpose is to achieve the functionality described by always_apply field. This is value will be flipped to the opposite value on every terraform apply, thus creating a new plan that will re-apply grants.
+- `always_apply_trigger` (String) This is a helper field and should not be set. Its main purpose is to help to achieve the functionality described by the always_apply field.
 - `on_account` (Boolean) If true, the privileges will be granted on the account.
 - `on_account_object` (Block List, Max: 1) Specifies the account object on which privileges will be granted (see [below for nested schema](#nestedblock--on_account_object))
 - `on_schema` (Block List, Max: 1) Specifies the schema on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema))
@@ -301,62 +335,62 @@ where:
 It has varying number of parts, depending on grant_type. All the possible types are:
 
 ### OnAccount
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnAccount`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnAccount`
 
 ### OnAccountObject
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnAccountObject|<object_type>|<object_name>`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnAccountObject|<object_type>|<object_name>`
 
 ### OnSchema
 
 On schema contains inner types for all options.
 
 #### OnSchema
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnSchema|<schema_name>"`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnSchema|<schema_name>"`
 
 #### OnAllSchemasInDatabase
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnAllSchemasInDatabase|<database_name>"`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnAllSchemasInDatabase|<database_name>"`
 
 #### OnFutureSchemasInDatabase
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnFutureSchemasInDatabase|<database_name>"`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnFutureSchemasInDatabase|<database_name>"`
 
 ### OnSchemaObject
 
 On schema object contains inner types for all options.
 
 #### OnObject
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnObject|<object_type>|<object_name>"`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnObject|<object_type>|<object_name>"`
 
 #### OnAll
 
 On all contains inner types for all options.
 
 ##### InDatabase
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnAll|<object_type_plural>|InDatabase|<identifier>"`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnAll|<object_type_plural>|InDatabase|<identifier>"`
 
 ##### InSchema
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnAll|<object_type_plural>|InSchema|<identifier>"`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnAll|<object_type_plural>|InSchema|<identifier>"`
 
 #### OnFuture
 
 On future contains inner types for all options.
 
 ##### InDatabase
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnFuture|<object_type_plural>|InDatabase|<identifier>"`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnFuture|<object_type_plural>|InDatabase|<identifier>"`
 
 ##### InSchema
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnFuture|<object_type_plural>|InSchema|<identifier>"`
+`terraform import "<account_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnFuture|<object_type_plural>|InSchema|<identifier>"`
 
 ### Import examples
 
 #### Grant all privileges OnAccountObject (Database)
-`terraform import "\"test_db\".\"test_db_role\"|false|false|ALL|OnAccountObject|DATABASE|\"test_db\""`
+`terraform import "\"test_db_role\"|false|false|ALL|OnAccountObject|DATABASE|\"test_db\""`
 
 #### Grant list of privileges OnAllSchemasInDatabase
-`terraform import "\"test_db\".\"test_db_role\"|false|false|CREATE TAG,CREATE TABLE|OnSchema|OnAllSchemasInDatabase|\"test_db\""`
+`terraform import "\"test_db_role\"|false|false|CREATE TAG,CREATE TABLE|OnSchema|OnAllSchemasInDatabase|\"test_db\""`
 
 #### Grant list of privileges on table
-`terraform import "\"test_db\".\"test_db_role\"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnObject|TABLE|\"test_db\".\"test_schema\".\"test_table\""`
+`terraform import "\"test_db_role\"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnObject|TABLE|\"test_db\".\"test_schema\".\"test_table\""`
 
 #### Grant list of privileges OnAll tables in schema
-`terraform import "\"test_db\".\"test_db_role\"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnAll|TABLES|InSchema|\"test_db\".\"test_schema\""`
+`terraform import "\"test_db_role\"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnAll|TABLES|InSchema|\"test_db\".\"test_schema\""`
 

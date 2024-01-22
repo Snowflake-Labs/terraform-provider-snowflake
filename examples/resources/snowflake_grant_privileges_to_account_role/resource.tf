@@ -17,6 +17,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   on_account = true
 }
 
+## ID: "\"role_name\"|false|false|CREATE DATABASE,CREATE USER|OnAccount"
+
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
   role_name         = snowflake_role.db_role.name
@@ -24,6 +26,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|false|ALL|OnAccount"
 
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_account_role" "example" {
@@ -33,6 +37,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|true|ALL|OnAccount"
 
 ##################################
 ### on account object privileges
@@ -48,6 +54,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|CREATE SCHEMA,CREATE DATABASE ROLE|OnAccountObject|DATABASE|\"database\""
+
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
   role_name = snowflake_role.db_role.name
@@ -58,6 +66,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|false|ALL|OnAccountObject|DATABASE|\"database\""
 
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_account_role" "example" {
@@ -70,6 +80,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|true|ALL|OnAccountObject|DATABASE|\"database\""
 
 ##################################
 ### schema privileges
@@ -84,6 +96,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|MODIFY,CREATE TABLE|OnSchema|OnSchema|\"database\".\"my_schema\""
+
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
   role_name = snowflake_role.db_role.name
@@ -94,6 +108,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   with_grant_option = true
 }
 
+## ID: "\"role_name\"|true|false|MODIFY,CREATE TABLE|OnSchema|OnSchema|\"database\".\"my_schema\""
+
 # all schemas in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
   privileges = ["MODIFY", "CREATE TABLE"]
@@ -103,6 +119,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|MODIFY,CREATE TABLE|OnSchema|OnAllSchemasInDatabase|\"database\""
+
 # future schemas in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
   privileges = ["MODIFY", "CREATE TABLE"]
@@ -111,6 +129,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
     future_schemas_in_database = snowflake_database.db.name
   }
 }
+
+## ID: "\"role_name\"|false|false|MODIFY,CREATE TABLE|OnSchema|OnFutureSchemasInDatabase|\"database\""
 
 ##################################
 ### schema object privileges
@@ -126,6 +146,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|SELECT,REFERENCES|OnSchemaObject|VIEW|\"database\".\"my_schema\".\"my_view\""
+
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
   role_name = snowflake_role.db_role.name
@@ -136,6 +158,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   all_privileges    = true
   with_grant_option = true
 }
+
+## ID: "\"role_name\"|true|false|ALL|OnSchemaObject|OnObject|VIEW|\"database\".\"my_schema\".\"my_view\""
 
 # all in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
@@ -149,6 +173,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|SELECT,INSERT|OnSchemaObject|OnAll|TABLES|InDatabase|\"database\""
+
 # all in schema
 resource "snowflake_grant_privileges_to_account_role" "example" {
   privileges = ["SELECT", "INSERT"]
@@ -160,6 +186,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
     }
   }
 }
+
+## ID: "\"role_name\"|false|false|SELECT,INSERT|OnSchemaObject|OnAll|TABLES|InSchema|\"database\".\"my_schema\""
 
 # future in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
@@ -173,6 +201,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
   }
 }
 
+## ID: "\"role_name\"|false|false|SELECT,INSERT|OnSchemaObject|OnFuture|TABLES|InDatabase|\"database\""
+
 # future in schema
 resource "snowflake_grant_privileges_to_account_role" "example" {
   privileges = ["SELECT", "INSERT"]
@@ -184,3 +214,5 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
     }
   }
 }
+
+## ID: "\"role_name\"|false|false|SELECT,INSERT|OnSchemaObject|OnFuture|TABLES|InSchema|\"database\".\"my_schema\""

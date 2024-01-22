@@ -64,7 +64,7 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			},
 		},
 		{
-			Name:       "grant database role on schema with schema name",
+			Name:       "grant account role on schema with schema name",
 			Identifier: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`,
 			Expected: GrantPrivilegesToAccountRoleId{
 				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
@@ -78,7 +78,7 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			},
 		},
 		{
-			Name:       "grant database role on all schemas in database",
+			Name:       "grant account role on all schemas in database",
 			Identifier: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToAccountRoleId{
 				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
@@ -92,7 +92,7 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			},
 		},
 		{
-			Name:       "grant database role on future schemas in database",
+			Name:       "grant account role on future schemas in database",
 			Identifier: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnFutureSchemasInDatabase|"database-name-123"`,
 			Expected: GrantPrivilegesToAccountRoleId{
 				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
@@ -227,7 +227,7 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			},
 		},
 		{
-			Name:       "validation: grant database role not enough parts",
+			Name:       "validation: grant account role not enough parts",
 			Identifier: `"database-name"."role-name"|false|false`,
 			Error:      "account role identifier should hold at least 5 parts",
 		},
@@ -273,17 +273,17 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 		},
 		{
 			Name:       "validation: grant account role empty privileges",
-			Identifier: `"database-name"."database-role"|false|false||OnAccount`,
+			Identifier: `"account-role"|false|false||OnAccount`,
 			Error:      `invalid Privileges value: , should be either a comma separated list of privileges or "ALL" / "ALL PRIVILEGES" for all privileges`,
 		},
 		{
 			Name:       "validation: grant account role empty with grant option",
-			Identifier: `"database-name"."database-role"||false|ALL PRIVILEGES|OnAccount`,
+			Identifier: `"account-role"||false|ALL PRIVILEGES|OnAccount`,
 			Error:      `invalid WithGrantOption value: , should be either "true" or "false"`,
 		},
 		{
 			Name:       "validation: grant account role empty always apply",
-			Identifier: `"database-name"."database-role"|false||ALL PRIVILEGES|OnAccount`,
+			Identifier: `"account-role"|false||ALL PRIVILEGES|OnAccount`,
 			Error:      `invalid AlwaysApply value: , should be either "true" or "false"`,
 		},
 		{
@@ -292,13 +292,14 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			Error:      "invalid (empty) AccountRoleName value: , should be a fully qualified name of account object <name>",
 		},
 		{
-			Name:       "validation: account database role empty type",
-			Identifier: `"database-name"."database-role"|false|false|ALL PRIVILEGES||"on-database-name"`,
+			Name:       "validation: account role empty type",
+			Identifier: `"account-role"|false|false|ALL PRIVILEGES||"on-database-name"`,
 			Error:      "invalid AccountRoleGrantKind: ",
 		},
 	}
 
 	for _, tt := range testCases {
+		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			id, err := ParseGrantPrivilegesToAccountRoleId(tt.Identifier)
 			if tt.Error == "" {
@@ -346,7 +347,7 @@ func TestGrantPrivilegesToAccountRoleIdString(t *testing.T) {
 			Expected: `"account-role"|true|true|ALL|OnAccountObject|DATABASE|"database-name"`,
 		},
 		{
-			Name: "grant database role on schema on schema",
+			Name: "grant account role on schema on schema",
 			Identifier: GrantPrivilegesToAccountRoleId{
 				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
 				WithGrantOption: false,
@@ -360,7 +361,7 @@ func TestGrantPrivilegesToAccountRoleIdString(t *testing.T) {
 			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`,
 		},
 		{
-			Name: "grant database role on all schemas in database",
+			Name: "grant account role on all schemas in database",
 			Identifier: GrantPrivilegesToAccountRoleId{
 				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
 				WithGrantOption: false,
@@ -374,7 +375,7 @@ func TestGrantPrivilegesToAccountRoleIdString(t *testing.T) {
 			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase|"database-name"`,
 		},
 		{
-			Name: "grant database role on future schemas in database",
+			Name: "grant account role on future schemas in database",
 			Identifier: GrantPrivilegesToAccountRoleId{
 				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
 				WithGrantOption: false,
@@ -388,7 +389,7 @@ func TestGrantPrivilegesToAccountRoleIdString(t *testing.T) {
 			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnFutureSchemasInDatabase|"database-name"`,
 		},
 		{
-			Name: "grant database role on schema object on object",
+			Name: "grant account role on schema object on object",
 			Identifier: GrantPrivilegesToAccountRoleId{
 				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
 				WithGrantOption: false,
@@ -405,7 +406,7 @@ func TestGrantPrivilegesToAccountRoleIdString(t *testing.T) {
 			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE|"database-name"."schema-name"."table-name"`,
 		},
 		{
-			Name: "grant database role on schema object on all tables in database",
+			Name: "grant account role on schema object on all tables in database",
 			Identifier: GrantPrivilegesToAccountRoleId{
 				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
 				WithGrantOption: false,
@@ -423,7 +424,7 @@ func TestGrantPrivilegesToAccountRoleIdString(t *testing.T) {
 			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase|"database-name"`,
 		},
 		{
-			Name: "grant database role on schema object on all tables in schema",
+			Name: "grant account role on schema object on all tables in schema",
 			Identifier: GrantPrivilegesToAccountRoleId{
 				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
 				WithGrantOption: false,
@@ -443,6 +444,7 @@ func TestGrantPrivilegesToAccountRoleIdString(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
+		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			assert.Equal(t, tt.Expected, tt.Identifier.String())
 		})

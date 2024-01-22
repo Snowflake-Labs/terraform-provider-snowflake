@@ -62,7 +62,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Default:     "",
-		Description: "This field should not be set and its main purpose is to achieve the functionality described by always_apply field. This is value will be flipped to the opposite value on every terraform apply, thus creating a new plan that will re-apply grants.",
+		Description: "This is a helper field and should not be set. Its main purpose is to help to achieve the functionality described by the always_apply field.",
 	},
 	"on_database": {
 		Type:             schema.TypeString,
@@ -593,6 +593,16 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if id.AlwaysApply {
+		// The Trigger is a string rather than boolean that would be flipped on every terraform apply
+		// because it's easier to think about and not to worry about edge cases that may occur with 1bit values.
+		// The only place to have the "flip" is Read operation, because there we can set value and produce a plan
+		// that later on will be executed in the Update operation.
+		//
+		// The following example shows that we can end up with the same value as before, which may lead to empty plans:
+		// 1. Create configuration with always_apply = false (let's say trigger will be false by default)
+		// 2. terraform apply: Create (Read will update it to false)
+		// 3. Update config so that always_apply = true
+		// 4. terraform apply: Read (updated trigger to false) -> change is not detected (no plan; no Update)
 		triggerId, err := uuid.GenerateUUID()
 		if err != nil {
 			return diag.Diagnostics{
