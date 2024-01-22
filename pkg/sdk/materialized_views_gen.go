@@ -73,7 +73,7 @@ type AlterMaterializedViewOptions struct {
 	Suspend           *bool                      `ddl:"keyword" sql:"SUSPEND"`
 	Resume            *bool                      `ddl:"keyword" sql:"RESUME"`
 	Set               *MaterializedViewSet       `ddl:"keyword" sql:"SET"`
-	Unset             *MaterializedViewUnset     `ddl:"keyword" sql:"UNSET"`
+	Unset             *MaterializedViewUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type MaterializedViewSet struct {

@@ -152,7 +152,7 @@ var MaterializedViewsDef = g.NewInterface(
 			OptionalSQL("SUSPEND").
 			OptionalSQL("RESUME").
 			OptionalQueryStructField("Set", materializedViewSet, g.KeywordOptions().SQL("SET")).
-			OptionalQueryStructField("Unset", materializedViewUnset, g.KeywordOptions().SQL("UNSET")).
+			OptionalQueryStructField("Unset", materializedViewUnset, g.ListOptions().NoParentheses().SQL("UNSET")).
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ExactlyOneValueSet, "RenameTo", "ClusterBy", "DropClusteringKey", "SuspendRecluster", "ResumeRecluster", "Suspend", "Resume", "Set", "Unset"),
 	).
