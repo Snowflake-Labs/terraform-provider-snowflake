@@ -272,14 +272,18 @@ func TestMaterializedViews_Show(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MATERIALIZED VIEWS")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Like = &Like{
+			Pattern: String("myaccount"),
+		}
+		opts.In = &In{
+			Account: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MATERIALIZED VIEWS LIKE 'myaccount' IN ACCOUNT")
 	})
 }
 
