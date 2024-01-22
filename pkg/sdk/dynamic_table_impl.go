@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ DynamicTables = (*dynamicTables)(nil)
@@ -44,13 +46,13 @@ func (v *dynamicTables) Show(ctx context.Context, request *ShowDynamicTableReque
 	return result, nil
 }
 
-func (v *dynamicTables) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*DynamicTable, error) {
-	request := NewShowDynamicTableRequest().WithLike(&Like{Pattern: String(id.Name())})
+func (v *dynamicTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*DynamicTable, error) {
+	request := NewShowDynamicTableRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&Like{String(id.Name())})
 	dynamicTables, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	return findOne(dynamicTables, func(r DynamicTable) bool { return r.Name == id.Name() })
+	return collections.FindOne(dynamicTables, func(r DynamicTable) bool { return r.Name == id.Name() })
 }
 
 func (s *CreateDynamicTableRequest) toOpts() *createDynamicTableOptions {

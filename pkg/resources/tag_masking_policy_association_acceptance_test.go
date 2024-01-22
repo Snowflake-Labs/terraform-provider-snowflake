@@ -5,53 +5,44 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_TagMaskingPolicyAssociation(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tagAttachmentConfig(accName),
+				Config: tagAttachmentConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "masking_policy_id", fmt.Sprintf("%[1]v|%[1]v|%[1]v", accName)),
-					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "tag_id", fmt.Sprintf("%[1]v|%[1]v|%[1]v", accName)),
+					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "masking_policy_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, accName)),
+					resource.TestCheckResourceAttr("snowflake_tag_masking_policy_association.test", "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, accName)),
 				),
 			},
 		},
 	})
 }
 
-func tagAttachmentConfig(n string) string {
+func tagAttachmentConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%[1]v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%[1]v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_tag" "test" {
 	name = "%[1]v"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "%[2]s"
+	schema = "%[3]s"
 	allowed_values = []
 	comment = "Terraform acceptance test"
 }
 
 resource "snowflake_masking_policy" "test" {
 	name = "%[1]v"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "%[2]s"
+	schema = "%[3]s"
 	signature {
 		column {
 			name = "val"
@@ -66,7 +57,6 @@ resource "snowflake_masking_policy" "test" {
 resource "snowflake_tag_masking_policy_association" "test" {
 	tag_id = snowflake_tag.test.id
 	masking_policy_id = snowflake_masking_policy.test.id
-	
-  }
-`, n)
+}
+`, n, databaseName, schemaName)
 }

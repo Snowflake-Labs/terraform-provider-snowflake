@@ -8,16 +8,16 @@ func TestExternalTablesCreate(t *testing.T) {
 	t.Run("basic options", func(t *testing.T) {
 		opts := &CreateExternalTableOptions{
 			IfNotExists: Bool(true),
-			name:        NewAccountObjectIdentifier("external_table"),
+			name:        NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			Columns: []ExternalTableColumn{
 				{
 					Name:         "column",
 					Type:         "varchar",
 					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
 					InlineConstraint: &ColumnInlineConstraint{
-						Name:    String("my_constraint"),
-						NotNull: Bool(true),
-						Type:    &ColumnConstraintTypeUnique,
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
 					},
 				},
 			},
@@ -31,22 +31,22 @@ func TestExternalTablesCreate(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE IF NOT EXISTS "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE IF NOT EXISTS "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
 	})
 
 	t.Run("every optional field", func(t *testing.T) {
 		opts := &CreateExternalTableOptions{
 			OrReplace: Bool(true),
-			name:      NewAccountObjectIdentifier("external_table"),
+			name:      NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			Columns: []ExternalTableColumn{
 				{
 					Name:         "column",
 					Type:         "varchar",
 					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
 					InlineConstraint: &ColumnInlineConstraint{
-						Name:    String("my_constraint"),
-						NotNull: Bool(true),
-						Type:    &ColumnConstraintTypeUnique,
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
 					},
 				},
 			},
@@ -61,7 +61,7 @@ func TestExternalTablesCreate(t *testing.T) {
 			},
 			AwsSnsTopic: String("aws_sns_topic"),
 			CopyGrants:  Bool(true),
-			RowAccessPolicy: &RowAccessPolicy{
+			RowAccessPolicy: &TableRowAccessPolicy{
 				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
 			},
@@ -77,22 +77,63 @@ func TestExternalTablesCreate(t *testing.T) {
 			},
 			Comment: String("some_comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) AWS_SNS_TOPIC = 'aws_sns_topic' COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) AWS_SNS_TOPIC = 'aws_sns_topic' COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
 	})
 
 	t.Run("invalid options", func(t *testing.T) {
 		opts := &CreateExternalTableOptions{
 			OrReplace:   Bool(true),
 			IfNotExists: Bool(true),
-			name:        NewAccountObjectIdentifier(""),
+			name:        NewSchemaObjectIdentifier("", "", ""),
 		}
 		assertOptsInvalidJoinedErrors(
 			t, opts,
 			errOneOf("CreateExternalTableOptions", "OrReplace", "IfNotExists"),
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errNotSet("CreateExternalTableOptions", "Location"),
-			errNotSet("CreateExternalTableOptions", "FileFormat"),
+			errExactlyOneOf("CreateExternalTableOptions", "RawFileFormat", "FileFormat"),
 		)
+	})
+
+	t.Run("raw file format", func(t *testing.T) {
+		opts := &CreateExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location:      "@s1/logs/",
+			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
+	})
+
+	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {
+		opts := &CreateExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location: "@s1/logs/",
+		}
+		assertOptsInvalid(t, opts, errExactlyOneOf("CreateExternalTableOptions", "RawFileFormat", "FileFormat"))
 	})
 }
 
@@ -100,16 +141,16 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 	t.Run("valid options", func(t *testing.T) {
 		opts := &CreateWithManualPartitioningExternalTableOptions{
 			OrReplace: Bool(true),
-			name:      NewAccountObjectIdentifier("external_table"),
+			name:      NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			Columns: []ExternalTableColumn{
 				{
 					Name:         "column",
 					Type:         "varchar",
 					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
 					InlineConstraint: &ColumnInlineConstraint{
-						Name:    String("my_constraint"),
-						NotNull: Bool(true),
-						Type:    &ColumnConstraintTypeUnique,
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
 					},
 				},
 			},
@@ -123,7 +164,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 				},
 			},
 			CopyGrants: Bool(true),
-			RowAccessPolicy: &RowAccessPolicy{
+			RowAccessPolicy: &TableRowAccessPolicy{
 				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
 			},
@@ -139,22 +180,63 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 			},
 			Comment: String("some_comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (TYPE = JSON) COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
 	})
 
 	t.Run("invalid options", func(t *testing.T) {
 		opts := &CreateWithManualPartitioningExternalTableOptions{
 			OrReplace:   Bool(true),
 			IfNotExists: Bool(true),
-			name:        NewAccountObjectIdentifier(""),
+			name:        NewSchemaObjectIdentifier("", "", ""),
 		}
 		assertOptsInvalidJoinedErrors(
 			t, opts,
 			errOneOf("CreateWithManualPartitioningExternalTableOptions", "OrReplace", "IfNotExists"),
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errNotSet("CreateWithManualPartitioningExternalTableOptions", "Location"),
-			errNotSet("CreateWithManualPartitioningExternalTableOptions", "FileFormat"),
+			errExactlyOneOf("CreateWithManualPartitioningExternalTableOptions", "RawFileFormat", "FileFormat"),
 		)
+	})
+
+	t.Run("raw file format", func(t *testing.T) {
+		opts := &CreateWithManualPartitioningExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location:      "@s1/logs/",
+			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (TYPE = JSON)`)
+	})
+
+	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {
+		opts := &CreateWithManualPartitioningExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location: "@s1/logs/",
+		}
+		assertOptsInvalid(t, opts, errExactlyOneOf("CreateWithManualPartitioningExternalTableOptions", "RawFileFormat", "FileFormat"))
 	})
 }
 
@@ -162,7 +244,7 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 	t.Run("valid options", func(t *testing.T) {
 		opts := &CreateDeltaLakeExternalTableOptions{
 			OrReplace: Bool(true),
-			name:      NewAccountObjectIdentifier("external_table"),
+			name:      NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			Columns: []ExternalTableColumn{
 				{
 					Name:             "column",
@@ -181,9 +263,8 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 					Name: String("JSON"),
 				},
 			},
-			DeltaTableFormat: Bool(true),
-			CopyGrants:       Bool(true),
-			RowAccessPolicy: &RowAccessPolicy{
+			CopyGrants: Bool(true),
+			RowAccessPolicy: &TableRowAccessPolicy{
 				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
 			},
@@ -199,22 +280,63 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 			},
 			Comment: String("some_comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "external_table" (column varchar AS (value::column::varchar)) INTEGRATION = '123' PARTITION BY (column) LOCATION = @s1/logs/ FILE_FORMAT = (FORMAT_NAME = 'JSON') TABLE_FORMAT = DELTA COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar)) INTEGRATION = '123' PARTITION BY (column) LOCATION = @s1/logs/ FILE_FORMAT = (FORMAT_NAME = 'JSON') TABLE_FORMAT = DELTA COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
 	})
 
 	t.Run("invalid options", func(t *testing.T) {
 		opts := &CreateDeltaLakeExternalTableOptions{
 			OrReplace:   Bool(true),
 			IfNotExists: Bool(true),
-			name:        NewAccountObjectIdentifier(""),
+			name:        NewSchemaObjectIdentifier("", "", ""),
 		}
 		assertOptsInvalidJoinedErrors(
 			t, opts,
 			errOneOf("CreateDeltaLakeExternalTableOptions", "OrReplace", "IfNotExists"),
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errNotSet("CreateDeltaLakeExternalTableOptions", "Location"),
-			errNotSet("CreateDeltaLakeExternalTableOptions", "FileFormat"),
+			errExactlyOneOf("CreateDeltaLakeExternalTableOptions", "RawFileFormat", "FileFormat"),
 		)
+	})
+
+	t.Run("raw file format", func(t *testing.T) {
+		opts := &CreateDeltaLakeExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location:      "@s1/logs/",
+			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) TABLE_FORMAT = DELTA`)
+	})
+
+	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {
+		opts := &CreateDeltaLakeExternalTableOptions{
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Columns: []ExternalTableColumn{
+				{
+					Name:         "column",
+					Type:         "varchar",
+					AsExpression: []string{"value::column::varchar"},
+					NotNull:      Bool(true),
+					InlineConstraint: &ColumnInlineConstraint{
+						Name: String("my_constraint"),
+						Type: ColumnConstraintTypeUnique,
+					},
+				},
+			},
+			Location: "@s1/logs/",
+		}
+		assertOptsInvalid(t, opts, errExactlyOneOf("CreateDeltaLakeExternalTableOptions", "RawFileFormat", "FileFormat"))
 	})
 }
 
@@ -222,7 +344,7 @@ func TestExternalTableUsingTemplateOpts(t *testing.T) {
 	t.Run("valid options", func(t *testing.T) {
 		opts := &CreateExternalTableUsingTemplateOptions{
 			OrReplace:  Bool(true),
-			name:       NewAccountObjectIdentifier("external_table"),
+			name:       NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			CopyGrants: Bool(true),
 			Query:      []string{"query statement"},
 			CloudProviderParams: &CloudProviderParams{
@@ -236,7 +358,7 @@ func TestExternalTableUsingTemplateOpts(t *testing.T) {
 				},
 			},
 			Comment: String("some_comment"),
-			RowAccessPolicy: &RowAccessPolicy{
+			RowAccessPolicy: &TableRowAccessPolicy{
 				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
 			},
@@ -251,20 +373,43 @@ func TestExternalTableUsingTemplateOpts(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "external_table" COPY GRANTS USING TEMPLATE (query statement) INTEGRATION = '123' PARTITION BY (column) LOCATION = @s1/logs/ FILE_FORMAT = (FORMAT_NAME = 'JSON') COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "db"."schema"."external_table" COPY GRANTS USING TEMPLATE (query statement) INTEGRATION = '123' PARTITION BY (column) LOCATION = @s1/logs/ FILE_FORMAT = (FORMAT_NAME = 'JSON') COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
 	})
 
 	t.Run("invalid options", func(t *testing.T) {
 		opts := &CreateExternalTableUsingTemplateOptions{
-			name: NewAccountObjectIdentifier(""),
+			name: NewSchemaObjectIdentifier("", "", ""),
 		}
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errNotSet("CreateExternalTableUsingTemplateOptions", "Query"),
 			errNotSet("CreateExternalTableUsingTemplateOptions", "Location"),
-			errNotSet("CreateExternalTableUsingTemplateOptions", "FileFormat"),
+			errExactlyOneOf("CreateExternalTableUsingTemplateOptions", "RawFileFormat", "FileFormat"),
 		)
+	})
+
+	t.Run("raw file format", func(t *testing.T) {
+		opts := &CreateExternalTableUsingTemplateOptions{
+			name:     NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Location: "@s1/logs/",
+			Query: []string{
+				"query statement",
+			},
+			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" USING TEMPLATE (query statement) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
+	})
+
+	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {
+		opts := &CreateExternalTableUsingTemplateOptions{
+			name:     NewSchemaObjectIdentifier("db", "schema", "external_table"),
+			Location: "@s1/logs/",
+			Query: []string{
+				"query statement",
+			},
+		}
+		assertOptsInvalid(t, opts, errExactlyOneOf("CreateExternalTableUsingTemplateOptions", "RawFileFormat", "FileFormat"))
 	})
 }
 
@@ -272,56 +417,56 @@ func TestExternalTablesAlter(t *testing.T) {
 	t.Run("refresh without path", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
 			IfExists: Bool(true),
-			name:     NewAccountObjectIdentifier("external_table"),
+			name:     NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			Refresh:  &RefreshExternalTable{},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE IF EXISTS "external_table" REFRESH ''`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE IF EXISTS "db"."schema"."external_table" REFRESH ''`)
 	})
 
 	t.Run("refresh with path", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
 			IfExists: Bool(true),
-			name:     NewAccountObjectIdentifier("external_table"),
+			name:     NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			Refresh: &RefreshExternalTable{
 				Path: "some/path",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE IF EXISTS "external_table" REFRESH 'some/path'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE IF EXISTS "db"."schema"."external_table" REFRESH 'some/path'`)
 	})
 
 	t.Run("add files", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
-			name: NewAccountObjectIdentifier("external_table"),
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			AddFiles: []ExternalTableFile{
 				{Name: "one/file.txt"},
 				{Name: "second/file.txt"},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "external_table" ADD FILES ('one/file.txt', 'second/file.txt')`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "db"."schema"."external_table" ADD FILES ('one/file.txt', 'second/file.txt')`)
 	})
 
 	t.Run("remove files", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
-			name: NewAccountObjectIdentifier("external_table"),
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			RemoveFiles: []ExternalTableFile{
 				{Name: "one/file.txt"},
 				{Name: "second/file.txt"},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "external_table" REMOVE FILES ('one/file.txt', 'second/file.txt')`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "db"."schema"."external_table" REMOVE FILES ('one/file.txt', 'second/file.txt')`)
 	})
 
 	t.Run("set auto refresh", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
-			name:        NewAccountObjectIdentifier("external_table"),
+			name:        NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			AutoRefresh: Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "external_table" SET AUTO_REFRESH = true`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "db"."schema"."external_table" SET AUTO_REFRESH = true`)
 	})
 
 	t.Run("set tag", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
-			name: NewAccountObjectIdentifier("external_table"),
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			SetTag: []TagAssociation{
 				{
 					Name:  NewAccountObjectIdentifier("tag1"),
@@ -333,30 +478,30 @@ func TestExternalTablesAlter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "external_table" SET TAG "tag1" = 'tag_value1', "tag2" = 'tag_value2'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "db"."schema"."external_table" SET TAG "tag1" = 'tag_value1', "tag2" = 'tag_value2'`)
 	})
 
 	t.Run("unset tag", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
-			name: NewAccountObjectIdentifier("external_table"),
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			UnsetTag: []ObjectIdentifier{
 				NewAccountObjectIdentifier("tag1"),
 				NewAccountObjectIdentifier("tag2"),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "external_table" UNSET TAG "tag1", "tag2"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE "db"."schema"."external_table" UNSET TAG "tag1", "tag2"`)
 	})
 
 	t.Run("invalid options", func(t *testing.T) {
 		opts := &AlterExternalTableOptions{
-			name:        NewAccountObjectIdentifier(""),
+			name:        NewSchemaObjectIdentifier("", "", ""),
 			AddFiles:    []ExternalTableFile{{Name: "some file"}},
 			RemoveFiles: []ExternalTableFile{{Name: "some other file"}},
 		}
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
-			errOneOf("AlterExternalTableOptions", "Refresh", "AddFiles", "RemoveFiles", "AutoRefresh", "SetTag", "UnsetTag"),
+			ErrInvalidObjectIdentifier,
+			errExactlyOneOf("AlterExternalTableOptions", "Refresh", "AddFiles", "RemoveFiles", "AutoRefresh", "SetTag", "UnsetTag"),
 		)
 	})
 }
@@ -364,7 +509,7 @@ func TestExternalTablesAlter(t *testing.T) {
 func TestExternalTablesAlterPartitions(t *testing.T) {
 	t.Run("add partition", func(t *testing.T) {
 		opts := &AlterExternalTablePartitionOptions{
-			name:     NewAccountObjectIdentifier("external_table"),
+			name:     NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			IfExists: Bool(true),
 			AddPartitions: []Partition{
 				{
@@ -378,28 +523,28 @@ func TestExternalTablesAlterPartitions(t *testing.T) {
 			},
 			Location: "123",
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE IF EXISTS "external_table" ADD PARTITION (one = 'one_value', two = 'two_value') LOCATION '123'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE IF EXISTS "db"."schema"."external_table" ADD PARTITION (one = 'one_value', two = 'two_value') LOCATION '123'`)
 	})
 
 	t.Run("remove partition", func(t *testing.T) {
 		opts := &AlterExternalTablePartitionOptions{
-			name:          NewAccountObjectIdentifier("external_table"),
+			name:          NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			IfExists:      Bool(true),
 			DropPartition: Bool(true),
 			Location:      "partition_location",
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE IF EXISTS "external_table" DROP PARTITION LOCATION 'partition_location'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER EXTERNAL TABLE IF EXISTS "db"."schema"."external_table" DROP PARTITION LOCATION 'partition_location'`)
 	})
 
 	t.Run("invalid options", func(t *testing.T) {
 		opts := &AlterExternalTablePartitionOptions{
-			name:          NewAccountObjectIdentifier(""),
+			name:          NewSchemaObjectIdentifier("", "", ""),
 			AddPartitions: []Partition{{ColumnName: "colName", Value: "value"}},
 			DropPartition: Bool(true),
 		}
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errOneOf("AlterExternalTablePartitionOptions", "AddPartitions", "DropPartition"),
 		)
 	})
@@ -409,28 +554,28 @@ func TestExternalTablesDrop(t *testing.T) {
 	t.Run("restrict", func(t *testing.T) {
 		opts := &DropExternalTableOptions{
 			IfExists: Bool(true),
-			name:     NewAccountObjectIdentifier("external_table"),
+			name:     NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			DropOption: &ExternalTableDropOption{
 				Restrict: Bool(true),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `DROP EXTERNAL TABLE IF EXISTS "external_table" RESTRICT`)
+		assertOptsValidAndSQLEquals(t, opts, `DROP EXTERNAL TABLE IF EXISTS "db"."schema"."external_table" RESTRICT`)
 	})
 
 	t.Run("cascade", func(t *testing.T) {
 		opts := &DropExternalTableOptions{
 			IfExists: Bool(true),
-			name:     NewAccountObjectIdentifier("external_table"),
+			name:     NewSchemaObjectIdentifier("db", "schema", "external_table"),
 			DropOption: &ExternalTableDropOption{
 				Cascade: Bool(true),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `DROP EXTERNAL TABLE IF EXISTS "external_table" CASCADE`)
+		assertOptsValidAndSQLEquals(t, opts, `DROP EXTERNAL TABLE IF EXISTS "db"."schema"."external_table" CASCADE`)
 	})
 
 	t.Run("invalid options", func(t *testing.T) {
 		opts := &DropExternalTableOptions{
-			name: NewAccountObjectIdentifier(""),
+			name: NewSchemaObjectIdentifier("", "", ""),
 			DropOption: &ExternalTableDropOption{
 				Restrict: Bool(true),
 				Cascade:  Bool(true),
@@ -439,7 +584,7 @@ func TestExternalTablesDrop(t *testing.T) {
 
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errOneOf("ExternalTableDropOption", "Restrict", "Cascade"),
 		)
 	})
@@ -486,7 +631,7 @@ func TestExternalTablesShow(t *testing.T) {
 
 	t.Run("invalid options", func(t *testing.T) {
 		opts := &DropExternalTableOptions{
-			name: NewAccountObjectIdentifier(""),
+			name: NewSchemaObjectIdentifier("", "", ""),
 			DropOption: &ExternalTableDropOption{
 				Restrict: Bool(true),
 				Cascade:  Bool(true),
@@ -495,7 +640,7 @@ func TestExternalTablesShow(t *testing.T) {
 
 		assertOptsInvalidJoinedErrors(
 			t, opts,
-			errInvalidObjectIdentifier,
+			ErrInvalidObjectIdentifier,
 			errOneOf("ExternalTableDropOption", "Restrict", "Cascade"),
 		)
 	})
@@ -504,15 +649,15 @@ func TestExternalTablesShow(t *testing.T) {
 func TestExternalTablesDescribe(t *testing.T) {
 	t.Run("type columns", func(t *testing.T) {
 		opts := &describeExternalTableColumnsOptions{
-			name: NewAccountObjectIdentifier("external_table"),
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE EXTERNAL TABLE "external_table" TYPE = COLUMNS`)
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE EXTERNAL TABLE "db"."schema"."external_table" TYPE = COLUMNS`)
 	})
 
 	t.Run("type stage", func(t *testing.T) {
 		opts := &describeExternalTableStageOptions{
-			name: NewAccountObjectIdentifier("external_table"),
+			name: NewSchemaObjectIdentifier("db", "schema", "external_table"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE EXTERNAL TABLE "external_table" TYPE = STAGE`)
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE EXTERNAL TABLE "db"."schema"."external_table" TYPE = STAGE`)
 	})
 }

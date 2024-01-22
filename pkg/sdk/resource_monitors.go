@@ -97,10 +97,19 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 		resourceMonitor.Frequency = *frequency
 	}
 	if row.StartTime.Valid {
-		resourceMonitor.StartTime = row.StartTime.String
+		convertedStartTime, err := ParseTimestampWithOffset(row.StartTime.String, "2006-01-02 15:04")
+		if err != nil {
+			return nil, err
+		}
+		resourceMonitor.StartTime = convertedStartTime
 	}
+
 	if row.EndTime.Valid {
-		resourceMonitor.EndTime = row.EndTime.String
+		convertedEndTime, err := ParseTimestampWithOffset(row.EndTime.String, "2006-01-02 15:04")
+		if err != nil {
+			return nil, err
+		}
+		resourceMonitor.EndTime = convertedEndTime
 	}
 	suspendTriggers, err := extractTriggerInts(row.SuspendAt)
 	if err != nil {
@@ -196,8 +205,11 @@ type ResourceMonitorWith struct {
 }
 
 func (opts *CreateResourceMonitorOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -276,22 +288,29 @@ type AlterResourceMonitorOptions struct {
 	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	Set             *ResourceMonitorSet     `ddl:"keyword" sql:"SET"`
-	NotifyUsers     *NotifyUsers            `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
 	Triggers        []TriggerDefinition     `ddl:"keyword,no_comma" sql:"TRIGGERS"`
 }
 
 func (opts *AlterResourceMonitorOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-	if opts.Set == nil {
-		return nil
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if (opts.Set.Frequency != nil && opts.Set.StartTimestamp == nil) || (opts.Set.Frequency == nil && opts.Set.StartTimestamp != nil) {
-		return errors.New("must specify frequency and start time together")
+	if everyValueNil(opts.Set, opts.Triggers) {
+		errs = append(errs, errAtLeastOneOf("AlterResourceMonitorOptions", "Set", "Triggers"))
 	}
-
-	return nil
+	if set := opts.Set; valueSet(set) {
+		if everyValueNil(set.CreditQuota, set.Frequency, set.StartTimestamp, set.EndTimestamp, set.NotifyUsers) {
+			errs = append(errs, errAtLeastOneOf("ResourceMonitorSet", "CreditQuota", "Frequency", "StartTimestamp", "EndTimestamp", "NotifyUsers"))
+		}
+		if (set.Frequency != nil && set.StartTimestamp == nil) || (set.Frequency == nil && set.StartTimestamp != nil) {
+			errs = append(errs, errors.New("must specify frequency and start time together"))
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error {
@@ -313,10 +332,11 @@ func (v *resourceMonitors) Alter(ctx context.Context, id AccountObjectIdentifier
 
 type ResourceMonitorSet struct {
 	// at least one
-	CreditQuota    *int       `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
-	Frequency      *Frequency `ddl:"parameter,equals" sql:"FREQUENCY"`
-	StartTimestamp *string    `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
-	EndTimestamp   *string    `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
+	CreditQuota    *int         `ddl:"parameter,equals" sql:"CREDIT_QUOTA"`
+	Frequency      *Frequency   `ddl:"parameter,equals" sql:"FREQUENCY"`
+	StartTimestamp *string      `ddl:"parameter,equals,single_quotes" sql:"START_TIMESTAMP"`
+	EndTimestamp   *string      `ddl:"parameter,equals,single_quotes" sql:"END_TIMESTAMP"`
+	NotifyUsers    *NotifyUsers `ddl:"parameter,equals" sql:"NOTIFY_USERS"`
 }
 
 // dropResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-resource-monitor.
@@ -327,8 +347,11 @@ type dropResourceMonitorOptions struct {
 }
 
 func (opts *dropResourceMonitorOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -356,6 +379,9 @@ type ShowResourceMonitorOptions struct {
 }
 
 func (opts *ShowResourceMonitorOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -398,5 +424,5 @@ func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentif
 			return &resourceMonitor, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }

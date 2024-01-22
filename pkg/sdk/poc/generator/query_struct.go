@@ -2,53 +2,60 @@ package generator
 
 // TODO For Field abstractions use internal Field representation instead of copying only needed fields, e.g.
 //
-//	type queryStruct struct {
+//	type QueryStruct struct {
 //		internalRepresentation *Field
 //		...additional fields that are not present in the Field
 //	}
-type queryStruct struct {
+type QueryStruct struct {
 	name            string
 	fields          []*Field
 	identifierField *Field
 	validations     []*Validation
 }
 
-func QueryStruct(name string) *queryStruct {
-	return &queryStruct{
+func NewQueryStruct(name string) *QueryStruct {
+	return &QueryStruct{
 		name:        name,
 		fields:      make([]*Field, 0),
 		validations: make([]*Validation, 0),
 	}
 }
 
-func (v *queryStruct) IntoField() *Field {
+func (v *QueryStruct) IntoField() *Field {
 	return NewField(v.name, v.name, nil, nil).
 		withFields(v.fields...).
 		withValidations(v.validations...)
 }
 
-func (v *queryStruct) WithValidation(validationType ValidationType, fieldNames ...string) *queryStruct {
+func (v *QueryStruct) WithValidation(validationType ValidationType, fieldNames ...string) *QueryStruct {
 	v.validations = append(v.validations, NewValidation(validationType, fieldNames...))
 	return v
 }
 
-func (v *queryStruct) QueryStructField(name string, queryStruct *queryStruct, transformer FieldTransformer) *queryStruct {
+func (v *QueryStruct) PredefinedQueryStructField(name string, kind string, transformer FieldTransformer) *QueryStruct {
+	v.fields = append(v.fields, NewField(name, kind, Tags(), transformer))
+	return v
+}
+
+func (v *QueryStruct) QueryStructField(name string, queryStruct *QueryStruct, transformer FieldTransformer) *QueryStruct {
 	return v.queryStructField(name, queryStruct, "", transformer)
 }
 
-func (v *queryStruct) ListQueryStructField(name string, queryStruct *queryStruct, transformer FieldTransformer) *queryStruct {
+func (v *QueryStruct) ListQueryStructField(name string, queryStruct *QueryStruct, transformer FieldTransformer) *QueryStruct {
 	return v.queryStructField(name, queryStruct, "[]", transformer)
 }
 
-func (v *queryStruct) OptionalQueryStructField(name string, queryStruct *queryStruct, transformer FieldTransformer) *queryStruct {
+func (v *QueryStruct) OptionalQueryStructField(name string, queryStruct *QueryStruct, transformer FieldTransformer) *QueryStruct {
 	return v.queryStructField(name, queryStruct, "*", transformer)
 }
 
-func (v *queryStruct) queryStructField(name string, queryStruct *queryStruct, kindPrefix string, transformer FieldTransformer) *queryStruct {
+func (v *QueryStruct) queryStructField(name string, queryStruct *QueryStruct, kindPrefix string, transformer FieldTransformer) *QueryStruct {
 	qs := queryStruct.IntoField()
 	qs.Name = name
 	qs.Kind = kindPrefix + qs.Kind
-	qs = transformer.Transform(qs)
+	if transformer != nil {
+		qs = transformer.Transform(qs)
+	}
 	v.fields = append(v.fields, qs)
 	return v
 }

@@ -35,6 +35,22 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, `GRANT ALL PRIVILEGES ON DATABASE "db1" TO ROLE "role1"`)
 	})
+
+	t.Run("on account object - external volume", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				AllPrivileges: Bool(true),
+			},
+			on: &AccountRoleGrantOn{
+				AccountObject: &GrantOnAccountObject{
+					ExternalVolume: Pointer(NewAccountObjectIdentifier("ex volume")),
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `GRANT ALL PRIVILEGES ON EXTERNAL VOLUME "ex volume" TO ROLE "role1"`)
+	})
+
 	t.Run("on schema", func(t *testing.T) {
 		opts := &GrantPrivilegesToAccountRoleOptions{
 			privileges: &AccountRoleGrantPrivileges{
@@ -326,16 +342,16 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 		}
 	}
 
-	t.Run("validation: no privileges set", func(t *testing.T) {
+	t.Run("validation: nil privileges set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.privileges = nil
-		assertOptsInvalid(t, opts, fmt.Errorf("privileges must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("GrantPrivilegesToDatabaseRoleOptions", "privileges"))
 	})
 
 	t.Run("validation: no privileges set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.privileges = &DatabaseRoleGrantPrivileges{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	})
 
 	t.Run("validation: too many privileges set", func(t *testing.T) {
@@ -344,19 +360,19 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 			DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
 			SchemaPrivileges:   []SchemaPrivilege{SchemaPrivilegeCreateAlert},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	})
 
 	t.Run("validation: no on set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.on = nil
-		assertOptsInvalid(t, opts, fmt.Errorf("on must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("GrantPrivilegesToDatabaseRoleOptions", "on"))
 	})
 
 	t.Run("validation: no on set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.on = &DatabaseRoleGrantOn{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantOn", "Database", "Schema", "SchemaObject"))
 	})
 
 	t.Run("validation: too many ons set", func(t *testing.T) {
@@ -367,19 +383,19 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 				Schema: Pointer(NewDatabaseObjectIdentifier("db1", "schema1")),
 			},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantOn", "Database", "Schema", "SchemaObject"))
 	})
 
 	t.Run("validation: grant on schema", func(t *testing.T) {
 		opts := defaultGrantsForSchema()
 		opts.on.Schema = &GrantOnSchema{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Schema, AllSchemasInDatabase, or FutureSchemasInDatabase must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchema", "Schema", "AllSchemasInDatabase", "FutureSchemasInDatabase"))
 	})
 
 	t.Run("validation: grant on schema object", func(t *testing.T) {
 		opts := defaultGrantsForSchemaObject()
 		opts.on.SchemaObject = &GrantOnSchemaObject{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Object, AllIn or Future must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchemaObject", "SchemaObject", "All", "Future"))
 	})
 
 	t.Run("validation: grant on schema object - all", func(t *testing.T) {
@@ -391,7 +407,7 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 				},
 			},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchemaObjectIn", "InDatabase", "InSchema"))
 	})
 
 	t.Run("validation: grant on schema object - future", func(t *testing.T) {
@@ -403,13 +419,13 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 				},
 			},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchemaObjectIn", "InDatabase", "InSchema"))
 	})
 
 	t.Run("validation: unsupported database privilege", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.privileges.DatabasePrivileges = []AccountObjectPrivilege{AccountObjectPrivilegeCreateDatabaseRole}
-		assertOptsInvalid(t, opts, fmt.Errorf("privilege CREATE DATABASE ROLE is not allowed"))
+		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("privilege CREATE DATABASE ROLE is not allowed"))
 	})
 
 	t.Run("on database", func(t *testing.T) {
@@ -464,6 +480,14 @@ func TestGrants_GrantPrivilegesToDatabaseRole(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, `GRANT APPLY ON FUTURE TABLES IN SCHEMA "db1"."schema1" TO DATABASE ROLE "db1"."role1"`)
 	})
+
+	t.Run("grant all privileges", func(t *testing.T) {
+		opts := defaultGrantsForSchemaObject()
+		opts.privileges = &DatabaseRoleGrantPrivileges{
+			AllPrivileges: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `GRANT ALL PRIVILEGES ON TABLE "db1"."schema1"."table1" TO DATABASE ROLE "db1"."role1"`)
+	})
 }
 
 func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
@@ -512,16 +536,16 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 		}
 	}
 
-	t.Run("validation: no privileges set", func(t *testing.T) {
+	t.Run("validation: nil privileges set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.privileges = nil
-		assertOptsInvalid(t, opts, fmt.Errorf("privileges must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("RevokePrivilegesFromDatabaseRoleOptions", "privileges"))
 	})
 
 	t.Run("validation: no privileges set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.privileges = &DatabaseRoleGrantPrivileges{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	})
 
 	t.Run("validation: too many privileges set", func(t *testing.T) {
@@ -530,19 +554,19 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 			DatabasePrivileges: []AccountObjectPrivilege{AccountObjectPrivilegeCreateSchema},
 			SchemaPrivileges:   []SchemaPrivilege{SchemaPrivilegeCreateAlert},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of DatabasePrivileges, SchemaPrivileges, or SchemaObjectPrivileges must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	})
 
-	t.Run("validation: no on set", func(t *testing.T) {
+	t.Run("validation: nil on set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.on = nil
-		assertOptsInvalid(t, opts, fmt.Errorf("on must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("RevokePrivilegesFromDatabaseRoleOptions", "on"))
 	})
 
 	t.Run("validation: no on set", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.on = &DatabaseRoleGrantOn{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantOn", "Database", "Schema", "SchemaObject"))
 	})
 
 	t.Run("validation: too many ons set", func(t *testing.T) {
@@ -553,19 +577,19 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 				Schema: Pointer(NewDatabaseObjectIdentifier("db1", "schema1")),
 			},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Database, Schema, or SchemaObject must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("DatabaseRoleGrantOn", "Database", "Schema", "SchemaObject"))
 	})
 
 	t.Run("validation: grant on schema", func(t *testing.T) {
 		opts := defaultGrantsForSchema()
 		opts.on.Schema = &GrantOnSchema{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Schema, AllSchemasInDatabase, or FutureSchemasInDatabase must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchema", "Schema", "AllSchemasInDatabase", "FutureSchemasInDatabase"))
 	})
 
 	t.Run("validation: grant on schema object", func(t *testing.T) {
 		opts := defaultGrantsForSchemaObject()
 		opts.on.SchemaObject = &GrantOnSchemaObject{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of Object, AllIn or Future must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchemaObject", "SchemaObject", "All", "Future"))
 	})
 
 	t.Run("validation: grant on schema object - all", func(t *testing.T) {
@@ -577,7 +601,7 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 				},
 			},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchemaObjectIn", "InDatabase", "InSchema"))
 	})
 
 	t.Run("validation: grant on schema object - future", func(t *testing.T) {
@@ -589,13 +613,13 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 				},
 			},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchemaObjectIn", "InDatabase", "InSchema"))
 	})
 
 	t.Run("validation: unsupported database privilege", func(t *testing.T) {
 		opts := defaultGrantsForDb()
 		opts.privileges.DatabasePrivileges = []AccountObjectPrivilege{AccountObjectPrivilegeCreateDatabaseRole}
-		assertOptsInvalid(t, opts, errors.New("privilege CREATE DATABASE ROLE is not allowed"))
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("privilege CREATE DATABASE ROLE is not allowed"))
 	})
 
 	t.Run("on database", func(t *testing.T) {
@@ -655,9 +679,9 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 }
 
 func TestGrantPrivilegeToShare(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 	t.Run("on database", func(t *testing.T) {
-		otherID := randomAccountObjectIdentifier(t)
+		otherID := RandomAccountObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
@@ -669,7 +693,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on schema", func(t *testing.T) {
-		otherID := randomDatabaseObjectIdentifier(t)
+		otherID := RandomDatabaseObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
@@ -681,7 +705,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on table", func(t *testing.T) {
-		otherID := randomSchemaObjectIdentifier(t)
+		otherID := RandomSchemaObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
@@ -695,7 +719,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on all tables", func(t *testing.T) {
-		otherID := randomDatabaseObjectIdentifier(t)
+		otherID := RandomDatabaseObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
@@ -709,7 +733,7 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 	})
 
 	t.Run("on view", func(t *testing.T) {
-		otherID := randomSchemaObjectIdentifier(t)
+		otherID := RandomSchemaObjectIdentifier()
 		opts := &grantPrivilegeToShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &GrantPrivilegeToShareOn{
@@ -722,9 +746,9 @@ func TestGrantPrivilegeToShare(t *testing.T) {
 }
 
 func TestRevokePrivilegeFromShare(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 	t.Run("on database", func(t *testing.T) {
-		otherID := randomAccountObjectIdentifier(t)
+		otherID := RandomAccountObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
@@ -736,7 +760,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on schema", func(t *testing.T) {
-		otherID := randomDatabaseObjectIdentifier(t)
+		otherID := RandomDatabaseObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
@@ -748,7 +772,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on table", func(t *testing.T) {
-		otherID := randomSchemaObjectIdentifier(t)
+		otherID := RandomSchemaObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
@@ -762,7 +786,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on all tables", func(t *testing.T) {
-		otherID := randomDatabaseObjectIdentifier(t)
+		otherID := RandomDatabaseObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
@@ -776,7 +800,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on view", func(t *testing.T) {
-		otherID := randomSchemaObjectIdentifier(t)
+		otherID := RandomSchemaObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
@@ -790,7 +814,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	t.Run("on all views", func(t *testing.T) {
-		otherID := randomDatabaseObjectIdentifier(t)
+		otherID := RandomDatabaseObjectIdentifier()
 		opts := &revokePrivilegeFromShareOptions{
 			privilege: ObjectPrivilegeUsage,
 			On: &RevokePrivilegeFromShareOn{
@@ -828,7 +852,7 @@ func TestGrants_GrantOwnership(t *testing.T) {
 	t.Run("validation: grant on empty", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.On = OwnershipGrantOn{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [Object AllIn Future] must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("OwnershipGrantOn", "Object", "AllIn", "Future"))
 	})
 
 	t.Run("validation: grant on too many", func(t *testing.T) {
@@ -843,7 +867,7 @@ func TestGrants_GrantOwnership(t *testing.T) {
 				InDatabase:       Pointer(dbId),
 			},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [Object AllIn Future] must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("OwnershipGrantOn", "Object", "AllIn", "Future"))
 	})
 
 	t.Run("validation: grant on schema object - all", func(t *testing.T) {
@@ -853,7 +877,7 @@ func TestGrants_GrantOwnership(t *testing.T) {
 				PluralObjectType: PluralObjectTypeTables,
 			},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchemaObjectIn", "InDatabase", "InSchema"))
 	})
 
 	t.Run("validation: grant on schema object - future", func(t *testing.T) {
@@ -863,13 +887,13 @@ func TestGrants_GrantOwnership(t *testing.T) {
 				PluralObjectType: PluralObjectTypeTables,
 			},
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of InDatabase, or InSchema must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchemaObjectIn", "InDatabase", "InSchema"))
 	})
 
 	t.Run("validation: grant to empty", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.To = OwnershipGrantTo{}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [databaseRoleName accountRoleName] must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("OwnershipGrantTo", "databaseRoleName", "accountRoleName"))
 	})
 
 	t.Run("validation: grant to role and database role", func(t *testing.T) {
@@ -878,7 +902,7 @@ func TestGrants_GrantOwnership(t *testing.T) {
 			DatabaseRoleName: Pointer(databaseRoleId),
 			AccountRoleName:  Pointer(roleId),
 		}
-		assertOptsInvalid(t, opts, fmt.Errorf("exactly one of [databaseRoleName accountRoleName] must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("OwnershipGrantTo", "databaseRoleName", "accountRoleName"))
 	})
 
 	t.Run("on schema object to role", func(t *testing.T) {
@@ -941,7 +965,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("on database", func(t *testing.T) {
-		dbID := randomAccountObjectIdentifier(t)
+		dbID := RandomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			On: &ShowGrantsOn{
 				Object: &Object{
@@ -954,7 +978,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("to role", func(t *testing.T) {
-		roleID := randomAccountObjectIdentifier(t)
+		roleID := RandomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
 				Role: roleID,
@@ -964,7 +988,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("to user", func(t *testing.T) {
-		userID := randomAccountObjectIdentifier(t)
+		userID := RandomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
 				User: userID,
@@ -974,7 +998,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("to share", func(t *testing.T) {
-		shareID := randomAccountObjectIdentifier(t)
+		shareID := RandomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
 				Share: shareID,
@@ -984,7 +1008,7 @@ func TestGrantShow(t *testing.T) {
 	})
 
 	t.Run("of role", func(t *testing.T) {
-		roleID := randomAccountObjectIdentifier(t)
+		roleID := RandomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			Of: &ShowGrantsOf{
 				Role: roleID,
@@ -993,8 +1017,18 @@ func TestGrantShow(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "SHOW GRANTS OF ROLE %s", roleID.FullyQualifiedName())
 	})
 
+	t.Run("of database role", func(t *testing.T) {
+		roleID := RandomDatabaseObjectIdentifier()
+		opts := &ShowGrantOptions{
+			Of: &ShowGrantsOf{
+				DatabaseRole: roleID,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW GRANTS OF DATABASE ROLE %s", roleID.FullyQualifiedName())
+	})
+
 	t.Run("of share", func(t *testing.T) {
-		shareID := randomAccountObjectIdentifier(t)
+		shareID := RandomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			Of: &ShowGrantsOf{
 				Share: shareID,

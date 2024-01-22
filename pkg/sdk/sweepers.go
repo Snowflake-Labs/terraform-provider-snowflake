@@ -3,9 +3,8 @@ package sdk
 import (
 	"context"
 	"log"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 func Sweep(client *Client, prefix string) error {
@@ -170,10 +169,14 @@ func getDatabaseSweeper(client *Client, prefix string) func() error {
 			return err
 		}
 		for _, db := range dbs {
-			if (prefix == "" || strings.HasPrefix(db.Name, prefix)) && db.Name != "SNOWFLAKE" {
+			if (prefix == "" || strings.HasPrefix(db.Name, prefix)) && db.Name != "SNOWFLAKE" && db.Name != "terraform_test_database" {
 				log.Printf("[DEBUG] Dropping database %s", db.Name)
 				if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
-					return err
+					if strings.Contains(err.Error(), "Object found is of type 'APPLICATION', not specified type 'DATABASE'") {
+						log.Printf("[DEBUG] Skipping database %s", db.Name)
+					} else {
+						return err
+					}
 				}
 			} else {
 				log.Printf("[DEBUG] Skipping database %s", db.Name)
@@ -196,7 +199,7 @@ func getWarehouseSweeper(client *Client, prefix string) func() error {
 			return err
 		}
 		for _, wh := range whs {
-			if (prefix == "" || strings.HasPrefix(wh.Name, prefix)) && wh.Name != "SNOWFLAKE" {
+			if (prefix == "" || strings.HasPrefix(wh.Name, prefix)) && wh.Name != "SNOWFLAKE" && wh.Name != "terraform_test_warehouse" {
 				log.Printf("[DEBUG] Dropping warehouse %s", wh.Name)
 				if err := client.Warehouses.Drop(ctx, wh.ID(), nil); err != nil {
 					return err

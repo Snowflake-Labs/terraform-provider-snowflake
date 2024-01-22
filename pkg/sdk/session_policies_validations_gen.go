@@ -12,11 +12,11 @@ var (
 
 func (opts *CreateSessionPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateSessionPolicyOptions", "OrReplace", "IfNotExists"))
@@ -26,23 +26,23 @@ func (opts *CreateSessionPolicyOptions) validate() error {
 
 func (opts *AlterSessionPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if ok := exactlyOneValueSet(opts.RenameTo, opts.Set, opts.SetTags, opts.UnsetTags, opts.Unset); !ok {
-		errs = append(errs, errExactlyOneOf("RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
+		errs = append(errs, errExactlyOneOf("AlterSessionPolicyOptions", "RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
 	}
 	if valueSet(opts.Set) {
 		if ok := anyValueSet(opts.Set.SessionIdleTimeoutMins, opts.Set.SessionUiIdleTimeoutMins, opts.Set.Comment); !ok {
-			errs = append(errs, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterSessionPolicyOptions.Set", "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
 		if ok := anyValueSet(opts.Unset.SessionIdleTimeoutMins, opts.Unset.SessionUiIdleTimeoutMins, opts.Unset.Comment); !ok {
-			errs = append(errs, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterSessionPolicyOptions.Unset", "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
 		}
 	}
 	return errors.Join(errs...)
@@ -50,18 +50,18 @@ func (opts *AlterSessionPolicyOptions) validate() error {
 
 func (opts *DropSessionPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }
 
 func (opts *ShowSessionPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
 	return errors.Join(errs...)
@@ -69,11 +69,11 @@ func (opts *ShowSessionPolicyOptions) validate() error {
 
 func (opts *DescribeSessionPolicyOptions) validate() error {
 	if opts == nil {
-		return errors.Join(errNilOptions)
+		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !validObjectidentifier(opts.name) {
-		errs = append(errs, errInvalidObjectIdentifier)
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
 }

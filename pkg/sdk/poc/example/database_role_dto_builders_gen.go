@@ -2,8 +2,6 @@
 
 package example
 
-import ()
-
 func NewCreateDatabaseRoleRequest(
 	name DatabaseObjectIdentifier,
 ) *CreateDatabaseRoleRequest {

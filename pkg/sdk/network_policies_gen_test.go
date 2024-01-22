@@ -5,7 +5,7 @@ import (
 )
 
 func TestNetworkPolicies_Create(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	// Minimal valid CreateNetworkPolicyOptions
 	defaultOpts := func() *CreateNetworkPolicyOptions {
@@ -20,13 +20,13 @@ func TestNetworkPolicies_Create(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -36,7 +36,7 @@ func TestNetworkPolicies_Create(t *testing.T) {
 }
 
 func TestNetworkPolicies_Alter(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	// Minimal valid AlterNetworkPolicyOptions
 	defaultOpts := func() *AlterNetworkPolicyOptions {
@@ -48,25 +48,25 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
 		opts.UnsetComment = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.Set opts.UnsetComment opts.RenameTo] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Set", "UnsetComment", "RenameTo"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNetworkPolicyOptions", "Set", "UnsetComment", "RenameTo"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.AllowedIpList opts.Set.BlockedIpList opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &NetworkPolicySet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AllowedIpList", "BlockedIpList", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterNetworkPolicyOptions.Set", "AllowedIpList", "BlockedIpList", "Comment"))
 	})
 
 	t.Run("set allowed ip list", func(t *testing.T) {
@@ -101,14 +101,14 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 
 	t.Run("rename to", func(t *testing.T) {
 		opts := defaultOpts()
-		newName := randomAccountObjectIdentifier(t)
+		newName := RandomAccountObjectIdentifier()
 		opts.RenameTo = &newName
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s RENAME TO %s", id.FullyQualifiedName(), newName.FullyQualifiedName())
 	})
 }
 
 func TestNetworkPolicies_Drop(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	// Minimal valid DropNetworkPolicyOptions
 	defaultOpts := func() *DropNetworkPolicyOptions {
@@ -119,13 +119,13 @@ func TestNetworkPolicies_Drop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DropNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -143,7 +143,7 @@ func TestNetworkPolicies_Show(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ShowNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -153,7 +153,7 @@ func TestNetworkPolicies_Show(t *testing.T) {
 }
 
 func TestNetworkPolicies_Describe(t *testing.T) {
-	id := randomAccountObjectIdentifier(t)
+	id := RandomAccountObjectIdentifier()
 
 	// Minimal valid DescribeNetworkPolicyOptions
 	defaultOpts := func() *DescribeNetworkPolicyOptions {
@@ -164,13 +164,13 @@ func TestNetworkPolicies_Describe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DescribeNetworkPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewAccountObjectIdentifier("")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {

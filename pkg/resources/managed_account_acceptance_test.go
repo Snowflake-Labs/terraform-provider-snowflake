@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 const (
@@ -15,8 +16,9 @@ const (
 )
 
 func TestAcc_ManagedAccount(t *testing.T) {
+	// TODO [SNOW-1011985]: unskip the tests
 	if _, ok := os.LookupEnv("SKIP_MANAGED_ACCOUNT_TEST"); ok {
-		t.Skip("Skipping TestAccManagedAccount")
+		t.Skip("Skipping TestAcc_ManagedAccounts due to error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support.")
 	}
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -24,7 +26,8 @@ func TestAcc_ManagedAccount(t *testing.T) {
 	adminPass := fmt.Sprintf("A1%v", acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

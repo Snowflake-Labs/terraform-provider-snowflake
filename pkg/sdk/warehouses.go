@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -119,16 +120,20 @@ type CreateWarehouseOptions struct {
 }
 
 func (opts *CreateWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
-		return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
+		errs = append(errs, fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount"))
 	}
 	if valueSet(opts.QueryAccelerationMaxScaleFactor) && !validateIntInRange(*opts.QueryAccelerationMaxScaleFactor, 0, 100) {
-		return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
+		errs = append(errs, errIntBetween("CreateWarehouseOptions", "QueryAccelerationMaxScaleFactor", 0, 100))
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (c *warehouses) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateWarehouseOptions) error {
@@ -154,49 +159,46 @@ type AlterWarehouseOptions struct {
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      AccountObjectIdentifier `ddl:"identifier"`
 
-	Suspend         *bool                   `ddl:"keyword" sql:"SUSPEND"`
-	Resume          *bool                   `ddl:"keyword" sql:"RESUME"`
-	IfSuspended     *bool                   `ddl:"keyword" sql:"IF SUSPENDED"`
-	AbortAllQueries *bool                   `ddl:"keyword" sql:"ABORT ALL QUERIES"`
-	NewName         AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	Suspend         *bool                    `ddl:"keyword" sql:"SUSPEND"`
+	Resume          *bool                    `ddl:"keyword" sql:"RESUME"`
+	IfSuspended     *bool                    `ddl:"keyword" sql:"IF SUSPENDED"`
+	AbortAllQueries *bool                    `ddl:"keyword" sql:"ABORT ALL QUERIES"`
+	NewName         *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 
-	Set   *WarehouseSet   `ddl:"keyword" sql:"SET"`
-	Unset *WarehouseUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set      *WarehouseSet      `ddl:"keyword" sql:"SET"`
+	Unset    *WarehouseUnset    `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTag   []TagAssociation   `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 func (opts *AlterWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
 	}
-	if ok := exactlyOneValueSet(
-		opts.Suspend,
-		opts.Resume,
-		opts.AbortAllQueries,
-		opts.NewName,
-		opts.Set,
-		opts.Unset); !ok {
-		return fmt.Errorf("exactly one of Suspend, Resume, AbortAllQueries, NewName, Set, Unset must be set")
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if !exactlyOneValueSet(opts.Suspend, opts.Resume, opts.AbortAllQueries, opts.NewName, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag) {
+		errs = append(errs, errExactlyOneOf("AlterWarehouseOptions", "Suspend", "Resume", "AbortAllQueries", "NewName", "Set", "Unset", "SetTag", "UnsetTag"))
 	}
 	if everyValueSet(opts.Suspend, opts.Resume) && (*opts.Suspend && *opts.Resume) {
-		return fmt.Errorf("Suspend and Resume cannot both be true")
+		errs = append(errs, errOneOf("AlterWarehouseOptions", "Suspend", "Resume"))
 	}
 	if (valueSet(opts.IfSuspended) && *opts.IfSuspended) && (!valueSet(opts.Resume) || !*opts.Resume) {
-		return fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`)
-	}
-	if everyValueSet(opts.Set, opts.Unset) {
-		return fmt.Errorf("Set and Unset cannot both be set")
+		errs = append(errs, fmt.Errorf(`"Resume" has to be set when using "IfSuspended"`))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
 	if valueSet(opts.Unset) {
 		if err := opts.Unset.validate(); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type WarehouseSet struct {
@@ -218,13 +220,17 @@ type WarehouseSet struct {
 	MaxConcurrencyLevel             *int `ddl:"parameter" sql:"MAX_CONCURRENCY_LEVEL"`
 	StatementQueuedTimeoutInSeconds *int `ddl:"parameter" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
 	StatementTimeoutInSeconds       *int `ddl:"parameter" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
-
-	Tag []TagAssociation `ddl:"keyword" sql:"TAG"`
 }
 
 func (v *WarehouseSet) validate() error {
 	if v.MinClusterCount != nil {
-		if ok := validateIntInRange(*v.MinClusterCount, 1, *v.MaxClusterCount); !ok {
+		var max int
+		if valueSet(v.MaxClusterCount) {
+			max = *v.MaxClusterCount
+		} else {
+			max = 1
+		}
+		if ok := validateIntInRange(*v.MinClusterCount, 1, max); !ok {
 			return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
 		}
 	}
@@ -238,8 +244,8 @@ func (v *WarehouseSet) validate() error {
 			return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
 		}
 	}
-	if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
-		return fmt.Errorf("Tag cannot be set with any other Set parameter")
+	if everyValueNil(v.WarehouseType, v.WarehouseSize, v.WaitForCompletion, v.MaxClusterCount, v.MinClusterCount, v.ScalingPolicy, v.AutoSuspend, v.AutoResume, v.ResourceMonitor, v.Comment, v.EnableQueryAcceleration, v.QueryAccelerationMaxScaleFactor, v.MaxConcurrencyLevel, v.StatementQueuedTimeoutInSeconds, v.StatementTimeoutInSeconds) {
+		return errAtLeastOneOf("WarehouseSet", "WarehouseType", "WarehouseSize", "WaitForCompletion", "MaxClusterCount", "MinClusterCount", "ScalingPolicy", "AutoSuspend", "AutoResume", "ResourceMonitor", "Comment", "EnableQueryAcceleration", "QueryAccelerationMaxScaleFactor", "MaxConcurrencyLevel", "StatementQueuedTimeoutInSeconds", "StatementTimeoutInSeconds")
 	}
 	return nil
 }
@@ -247,7 +253,6 @@ func (v *WarehouseSet) validate() error {
 type WarehouseUnset struct {
 	// Object properties
 	WarehouseType                   *bool `ddl:"keyword" sql:"WAREHOUSE_TYPE"`
-	WarehouseSize                   *bool `ddl:"keyword" sql:"WAREHOUSE_SIZE"`
 	WaitForCompletion               *bool `ddl:"keyword" sql:"WAIT_FOR_COMPLETION"`
 	MaxClusterCount                 *bool `ddl:"keyword" sql:"MAX_CLUSTER_COUNT"`
 	MinClusterCount                 *bool `ddl:"keyword" sql:"MIN_CLUSTER_COUNT"`
@@ -260,15 +265,14 @@ type WarehouseUnset struct {
 	QueryAccelerationMaxScaleFactor *bool `ddl:"keyword" sql:"QUERY_ACCELERATION_MAX_SCALE_FACTOR"`
 
 	// Object params
-	MaxConcurrencyLevel             *bool              `ddl:"keyword" sql:"MAX_CONCURRENCY_LEVEL"`
-	StatementQueuedTimeoutInSeconds *bool              `ddl:"keyword" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	StatementTimeoutInSeconds       *bool              `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
-	Tag                             []ObjectIdentifier `ddl:"keyword" sql:"TAG"`
+	MaxConcurrencyLevel             *bool `ddl:"keyword" sql:"MAX_CONCURRENCY_LEVEL"`
+	StatementQueuedTimeoutInSeconds *bool `ddl:"keyword" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
+	StatementTimeoutInSeconds       *bool `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
 }
 
 func (v *WarehouseUnset) validate() error {
-	if valueSet(v.Tag) && !everyValueNil(v.AutoResume, v.EnableQueryAcceleration, v.MaxClusterCount, v.MinClusterCount, v.AutoSuspend, v.QueryAccelerationMaxScaleFactor) {
-		return fmt.Errorf("Tag cannot be unset with any other Unset parameter")
+	if everyValueNil(v.WarehouseType, v.WaitForCompletion, v.MaxClusterCount, v.MinClusterCount, v.ScalingPolicy, v.AutoSuspend, v.AutoResume, v.ResourceMonitor, v.Comment, v.EnableQueryAcceleration, v.QueryAccelerationMaxScaleFactor, v.MaxConcurrencyLevel, v.StatementQueuedTimeoutInSeconds, v.StatementTimeoutInSeconds) {
+		return errAtLeastOneOf("WarehouseUnset", "WarehouseType", "WaitForCompletion", "MaxClusterCount", "MinClusterCount", "ScalingPolicy", "AutoSuspend", "AutoResume", "ResourceMonitor", "Comment", "EnableQueryAcceleration", "QueryAccelerationMaxScaleFactor", "MaxConcurrencyLevel", "StatementQueuedTimeoutInSeconds", "StatementTimeoutInSeconds")
 	}
 	return nil
 }
@@ -298,8 +302,11 @@ type DropWarehouseOptions struct {
 }
 
 func (opts *DropWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }
@@ -333,6 +340,9 @@ type ShowWarehouseOptions struct {
 }
 
 func (opts *ShowWarehouseOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
 	return nil
 }
 
@@ -476,7 +486,7 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 			return &warehouse, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 // describeWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-warehouse.
@@ -487,8 +497,11 @@ type describeWarehouseOptions struct {
 }
 
 func (opts *describeWarehouseOptions) validate() error {
-	if !validObjectidentifier(opts.name) {
-		return errInvalidObjectIdentifier
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	if !ValidObjectIdentifier(opts.name) {
+		return errors.Join(ErrInvalidObjectIdentifier)
 	}
 	return nil
 }

@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccAlterStageWhenBothURLAndStorageIntegrationChange(t *testing.T) {
+func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: stageIntegrationConfig(name, "si1", "s3://foo/"),
+				Config: stageIntegrationConfig(name, "si1", "s3://foo/", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://foo/"),
@@ -24,7 +26,7 @@ func TestAccAlterStageWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 				Destroy: false,
 			},
 			{
-				Config: stageIntegrationConfig(name, "changed", "s3://changed/"),
+				Config: stageIntegrationConfig(name, "changed", "s3://changed/", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://changed/"),
@@ -34,19 +36,8 @@ func TestAccAlterStageWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 	})
 }
 
-func stageIntegrationConfig(name string, siNameSuffix string, url string) string {
+func stageIntegrationConfig(name string, siNameSuffix string, url string, databaseName string, schemaName string) string {
 	resources := `
-resource "snowflake_database" "test" {
-	name = "%s"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%s"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_storage_integration" "test" {
 	name = "%s%s"
 	storage_allowed_locations = ["%s"]
@@ -59,10 +50,10 @@ resource "snowflake_stage" "test" {
 	name = "%s"
 	url = "%s"
 	storage_integration = snowflake_storage_integration.test.name
-	schema = snowflake_schema.test.name
-	database = snowflake_database.test.name
+	database = "%s"
+	schema = "%s"
 }
 `
 
-	return fmt.Sprintf(resources, name, name, name, siNameSuffix, url, name, url)
+	return fmt.Sprintf(resources, name, siNameSuffix, url, name, url, databaseName, schemaName)
 }

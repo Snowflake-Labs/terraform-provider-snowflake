@@ -1,6 +1,10 @@
 package sdk
 
-import "context"
+import (
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+)
 
 var _ ExternalTables = (*externalTables)(nil)
 
@@ -46,16 +50,18 @@ func (v *externalTables) Show(ctx context.Context, req *ShowExternalTableRequest
 }
 
 func (v *externalTables) ShowByID(ctx context.Context, req *ShowExternalTableByIDRequest) (*ExternalTable, error) {
-	if !validObjectidentifier(req.id) {
-		return nil, errInvalidObjectIdentifier
+	if !ValidObjectIdentifier(req.id) {
+		return nil, ErrInvalidObjectIdentifier
 	}
 
-	externalTables, err := v.client.ExternalTables.Show(ctx, NewShowExternalTableRequest().WithLike(String(req.id.Name())))
+	externalTables, err := v.client.ExternalTables.Show(ctx, NewShowExternalTableRequest().
+		WithIn(NewShowExternalTableInRequest().WithSchema(NewDatabaseObjectIdentifier(req.id.DatabaseName(), req.id.SchemaName()))).
+		WithLike(String(req.id.Name())))
 	if err != nil {
 		return nil, err
 	}
 
-	return findOne(externalTables, func(t ExternalTable) bool { return t.ID() == req.id })
+	return collections.FindOne(externalTables, func(t ExternalTable) bool { return t.ID().FullyQualifiedName() == req.id.FullyQualifiedName() })
 }
 
 func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error) {

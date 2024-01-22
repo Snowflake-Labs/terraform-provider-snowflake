@@ -17,6 +17,7 @@ type ExternalTables interface {
 	CreateWithManualPartitioning(ctx context.Context, req *CreateWithManualPartitioningExternalTableRequest) error
 	CreateDeltaLake(ctx context.Context, req *CreateDeltaLakeExternalTableRequest) error
 	CreateUsingTemplate(ctx context.Context, req *CreateExternalTableUsingTemplateRequest) error
+	// TODO: Add alter options from https://docs.snowflake.com/en/sql-reference/sql/alter-table#external-table-column-actions-exttablecolumnaction (for better UX)
 	Alter(ctx context.Context, req *AlterExternalTableRequest) error
 	AlterPartitions(ctx context.Context, req *AlterExternalTablePartitionRequest) error
 	Drop(ctx context.Context, req *DropExternalTableRequest) error
@@ -48,22 +49,26 @@ type ExternalTable struct {
 	OwnerRoleType       string
 }
 
-func (v *ExternalTable) ID() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(v.Name)
+func (v *ExternalTable) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
 func (v *ExternalTable) ObjectType() ObjectType {
 	return ObjectTypeExternalTable
 }
 
+type RawFileFormat struct {
+	Format string `ddl:"keyword"`
+}
+
 // CreateExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table
 type CreateExternalTableOptions struct {
-	create              bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace           *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	externalTable       bool                    `ddl:"static" sql:"EXTERNAL TABLE"`
-	IfNotExists         *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                AccountObjectIdentifier `ddl:"identifier"`
-	Columns             []ExternalTableColumn   `ddl:"list,parentheses"`
+	create              bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable       bool                   `ddl:"static" sql:"EXTERNAL TABLE"`
+	IfNotExists         *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                SchemaObjectIdentifier `ddl:"identifier"`
+	Columns             []ExternalTableColumn  `ddl:"list,parentheses"`
 	CloudProviderParams *CloudProviderParams
 	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location            string                    `ddl:"parameter" sql:"LOCATION"`
@@ -71,17 +76,22 @@ type CreateExternalTableOptions struct {
 	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
 	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
-	CopyGrants          *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
-	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
-	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
+	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
+	// In the future it should most likely be replaced by a more structured version FileFormat
+	RawFileFormat   *RawFileFormat        `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	AwsSnsTopic     *string               `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
+	CopyGrants      *bool                 `ddl:"keyword" sql:"COPY GRANTS"`
+	Comment         *string               `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy *TableRowAccessPolicy `ddl:"keyword"`
+	Tag             []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 type ExternalTableColumn struct {
 	Name             string   `ddl:"keyword"`
 	Type             DataType `ddl:"keyword"`
 	AsExpression     []string `ddl:"keyword,parentheses" sql:"AS"`
+	NotNull          *bool    `ddl:"keyword" sql:"NOT NULL"`
 	InlineConstraint *ColumnInlineConstraint
 }
 
@@ -192,53 +202,60 @@ var (
 
 // CreateWithManualPartitioningExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table
 type CreateWithManualPartitioningExternalTableOptions struct {
-	create                     bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	externalTable              bool                    `ddl:"static" sql:"EXTERNAL TABLE"`
-	IfNotExists                *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       AccountObjectIdentifier `ddl:"identifier"`
-	Columns                    []ExternalTableColumn   `ddl:"list,parentheses"`
+	create                     bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable              bool                   `ddl:"static" sql:"EXTERNAL TABLE"`
+	IfNotExists                *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       SchemaObjectIdentifier `ddl:"identifier"`
+	Columns                    []ExternalTableColumn  `ddl:"list,parentheses"`
 	CloudProviderParams        *CloudProviderParams
 	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
-	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
+	userSpecifiedPartitionType bool                      `ddl:"static" sql:"PARTITION_TYPE = USER_SPECIFIED"`
 	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
-	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
-	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
+	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
+	// In the future it should most likely be replaced by a more structured version FileFormat
+	RawFileFormat   *RawFileFormat        `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	CopyGrants      *bool                 `ddl:"keyword" sql:"COPY GRANTS"`
+	Comment         *string               `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy *TableRowAccessPolicy `ddl:"keyword"`
+	Tag             []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // CreateDeltaLakeExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table
 type CreateDeltaLakeExternalTableOptions struct {
-	create                     bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	externalTable              bool                    `ddl:"static" sql:"EXTERNAL TABLE"`
-	IfNotExists                *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       AccountObjectIdentifier `ddl:"identifier"`
-	Columns                    []ExternalTableColumn   `ddl:"list,parentheses"`
-	CloudProviderParams        *CloudProviderParams
-	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
-	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
-	RefreshOnCreate            *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
-	AutoRefresh                *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
-	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
-	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	DeltaTableFormat           *bool                     `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
-	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
-	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy            *RowAccessPolicy          `ddl:"keyword"`
-	Tag                        []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	create              bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable       bool                   `ddl:"static" sql:"EXTERNAL TABLE"`
+	IfNotExists         *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                SchemaObjectIdentifier `ddl:"identifier"`
+	Columns             []ExternalTableColumn  `ddl:"list,parentheses"`
+	CloudProviderParams *CloudProviderParams
+	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location            string                    `ddl:"parameter" sql:"LOCATION"`
+	RefreshOnCreate     *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
+	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
+	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
+	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
+	// In the future it should most likely be replaced by a more structured version FileFormat
+	RawFileFormat    *RawFileFormat        `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	deltaTableFormat bool                  `ddl:"static" sql:"TABLE_FORMAT = DELTA"`
+	CopyGrants       *bool                 `ddl:"keyword" sql:"COPY GRANTS"`
+	Comment          *string               `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy  *TableRowAccessPolicy `ddl:"keyword"`
+	Tag              []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // CreateExternalTableUsingTemplateOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table#variant-syntax
 type CreateExternalTableUsingTemplateOptions struct {
-	create              bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace           *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	externalTable       bool                    `ddl:"static" sql:"EXTERNAL TABLE"`
-	name                AccountObjectIdentifier `ddl:"identifier"`
-	CopyGrants          *bool                   `ddl:"keyword" sql:"COPY GRANTS"`
-	Query               []string                `ddl:"parameter,no_equals,parentheses" sql:"USING TEMPLATE"`
+	create              bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable       bool                   `ddl:"static" sql:"EXTERNAL TABLE"`
+	name                SchemaObjectIdentifier `ddl:"identifier"`
+	CopyGrants          *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
+	Query               []string               `ddl:"parameter,no_equals,parentheses" sql:"USING TEMPLATE"`
 	CloudProviderParams *CloudProviderParams
 	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location            string                    `ddl:"parameter" sql:"LOCATION"`
@@ -246,17 +263,21 @@ type CreateExternalTableUsingTemplateOptions struct {
 	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
 	Pattern             *string                   `ddl:"parameter,single_quotes" sql:"PATTERN"`
 	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
-	AwsSnsTopic         *string                   `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
-	Comment             *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	RowAccessPolicy     *RowAccessPolicy          `ddl:"keyword"`
-	Tag                 []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
+	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
+	// In the future it should most likely be replaced by a more structured version FileFormat
+	RawFileFormat   *RawFileFormat        `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	AwsSnsTopic     *string               `ddl:"parameter,single_quotes" sql:"AWS_SNS_TOPIC"`
+	Comment         *string               `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	RowAccessPolicy *TableRowAccessPolicy `ddl:"keyword"`
+	Tag             []TagAssociation      `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 // AlterExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-external-table
 type AlterExternalTableOptions struct {
-	alterExternalTable bool                    `ddl:"static" sql:"ALTER EXTERNAL TABLE"`
-	IfExists           *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name               AccountObjectIdentifier `ddl:"identifier"`
+	alterExternalTable bool                   `ddl:"static" sql:"ALTER EXTERNAL TABLE"`
+	IfExists           *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name               SchemaObjectIdentifier `ddl:"identifier"`
 	// One of
 	Refresh     *RefreshExternalTable `ddl:"keyword" sql:"REFRESH"`
 	AddFiles    []ExternalTableFile   `ddl:"keyword,no_quotes,parentheses" sql:"ADD FILES"`
@@ -276,12 +297,12 @@ type ExternalTableFile struct {
 
 // AlterExternalTablePartitionOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-external-table
 type AlterExternalTablePartitionOptions struct {
-	alterExternalTable bool                    `ddl:"static" sql:"ALTER EXTERNAL TABLE"`
-	IfExists           *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name               AccountObjectIdentifier `ddl:"identifier"`
-	AddPartitions      []Partition             `ddl:"keyword,parentheses" sql:"ADD PARTITION"`
-	DropPartition      *bool                   `ddl:"keyword" sql:"DROP PARTITION"`
-	Location           string                  `ddl:"parameter,no_equals,single_quotes" sql:"LOCATION"`
+	alterExternalTable bool                   `ddl:"static" sql:"ALTER EXTERNAL TABLE"`
+	IfExists           *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name               SchemaObjectIdentifier `ddl:"identifier"`
+	AddPartitions      []Partition            `ddl:"keyword,parentheses" sql:"ADD PARTITION"`
+	DropPartition      *bool                  `ddl:"keyword" sql:"DROP PARTITION"`
+	Location           string                 `ddl:"parameter,no_equals,single_quotes" sql:"LOCATION"`
 }
 
 type Partition struct {
@@ -291,9 +312,9 @@ type Partition struct {
 
 // DropExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/drop-external-table
 type DropExternalTableOptions struct {
-	dropExternalTable bool                    `ddl:"static" sql:"DROP EXTERNAL TABLE"`
-	IfExists          *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name              AccountObjectIdentifier `ddl:"identifier"`
+	dropExternalTable bool                   `ddl:"static" sql:"DROP EXTERNAL TABLE"`
+	IfExists          *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name              SchemaObjectIdentifier `ddl:"identifier"`
 	DropOption        *ExternalTableDropOption
 }
 
@@ -314,25 +335,25 @@ type ShowExternalTableOptions struct {
 }
 
 type externalTableRow struct {
-	CreatedOn           time.Time
-	Name                string
-	DatabaseName        string
-	SchemaName          string
-	Invalid             bool
-	InvalidReason       sql.NullString
-	Owner               string
-	Comment             string
-	Stage               string
-	Location            string
-	FileFormatName      string
-	FileFormatType      string
-	Cloud               string
-	Region              string
-	NotificationChannel sql.NullString
-	LastRefreshedOn     sql.NullTime
-	TableFormat         string
-	LastRefreshDetails  sql.NullString
-	OwnerRoleType       string
+	CreatedOn           time.Time      `db:"created_on"`
+	Name                string         `db:"name"`
+	DatabaseName        string         `db:"database_name"`
+	SchemaName          string         `db:"schema_name"`
+	Invalid             bool           `db:"invalid"`
+	InvalidReason       sql.NullString `db:"invalid_reason"`
+	Owner               string         `db:"owner"`
+	Comment             string         `db:"comment"`
+	Stage               string         `db:"stage"`
+	Location            string         `db:"location"`
+	FileFormatName      string         `db:"file_format_name"`
+	FileFormatType      sql.NullString `db:"file_format_type"`
+	Cloud               string         `db:"cloud"`
+	Region              string         `db:"region"`
+	NotificationChannel sql.NullString `db:"notification_channel"`
+	LastRefreshedOn     sql.NullTime   `db:"last_refreshed_on"`
+	TableFormat         string         `db:"table_format"`
+	LastRefreshDetails  sql.NullString `db:"last_refresh_details"`
+	OwnerRoleType       string         `db:"owner_role_type"`
 }
 
 func (e externalTableRow) convert() *ExternalTable {
@@ -340,13 +361,12 @@ func (e externalTableRow) convert() *ExternalTable {
 		CreatedOn:      e.CreatedOn,
 		Name:           e.Name,
 		DatabaseName:   e.DatabaseName,
-		SchemaName:     e.DatabaseName,
+		SchemaName:     e.SchemaName,
 		Invalid:        e.Invalid,
 		Owner:          e.Owner,
 		Stage:          e.Stage,
 		Location:       e.Location,
 		FileFormatName: e.FileFormatName,
-		FileFormatType: e.FileFormatType,
 		Cloud:          e.Cloud,
 		Region:         e.Region,
 		TableFormat:    e.TableFormat,
@@ -365,14 +385,17 @@ func (e externalTableRow) convert() *ExternalTable {
 	if e.LastRefreshDetails.Valid {
 		et.LastRefreshDetails = e.LastRefreshDetails.String
 	}
+	if e.FileFormatType.Valid {
+		et.FileFormatType = e.FileFormatType.String
+	}
 	return et
 }
 
 // describeExternalTableColumnsOptions based on https://docs.snowflake.com/en/sql-reference/sql/desc-external-table
 type describeExternalTableColumnsOptions struct {
-	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"`
-	name                  AccountObjectIdentifier `ddl:"identifier"`
-	columnsType           bool                    `ddl:"static" sql:"TYPE = COLUMNS"`
+	describeExternalTable bool                   `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"`
+	name                  SchemaObjectIdentifier `ddl:"identifier"`
+	columnsType           bool                   `ddl:"static" sql:"TYPE = COLUMNS"`
 }
 
 type ExternalTableColumnDetails struct {
@@ -432,9 +455,9 @@ func (r externalTableColumnDetailsRow) convert() *ExternalTableColumnDetails {
 }
 
 type describeExternalTableStageOptions struct {
-	describeExternalTable bool                    `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"`
-	name                  AccountObjectIdentifier `ddl:"identifier"`
-	stageType             bool                    `ddl:"static" sql:"TYPE = STAGE"`
+	describeExternalTable bool                   `ddl:"static" sql:"DESCRIBE EXTERNAL TABLE"`
+	name                  SchemaObjectIdentifier `ddl:"identifier"`
+	stageType             bool                   `ddl:"static" sql:"TYPE = STAGE"`
 }
 
 type ExternalTableStageDetails struct {

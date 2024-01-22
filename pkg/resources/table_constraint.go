@@ -32,11 +32,10 @@ var tableConstraintSchema = map[string]*schema.Schema{
 		},
 	},
 	"table_id": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  "Idenfifier for table to create constraint on. Must be of the form Note: format must follow: \"<db_name>\".\"<schema_name>\".\"<table_name>\" or \"<db_name>.<schema_name>.<table_name>\" or \"<db_name>|<schema_name>.<table_name>\" (snowflake_table.my_table.id)",
-		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedObjectID,
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    true,
+		Description: "Idenfifier for table to create constraint on. Must be of the form Note: format must follow: \"<db_name>\".\"<schema_name>\".\"<table_name>\" or \"<db_name>.<schema_name>.<table_name>\" or \"<db_name>|<schema_name>.<table_name>\" (snowflake_table.my_table.id)",
 	},
 	"columns": {
 		Type:     schema.TypeList,

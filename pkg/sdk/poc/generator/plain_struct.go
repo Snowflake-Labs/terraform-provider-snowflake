@@ -25,6 +25,26 @@ func (v *plainStruct) Field(name string, kind string) *plainStruct {
 	return v
 }
 
+func (v *plainStruct) Text(name string) *plainStruct {
+	return v.Field(name, "string")
+}
+
+func (v *plainStruct) Time(name string) *plainStruct {
+	return v.Field(name, "time.Time")
+}
+
+func (v *plainStruct) OptionalText(name string) *plainStruct {
+	return v.Field(name, "*string")
+}
+
+func (v *plainStruct) Bool(name string) *plainStruct {
+	return v.Field(name, "bool")
+}
+
+func (v *plainStruct) OptionalBool(name string) *plainStruct {
+	return v.Field(name, "*bool")
+}
+
 func (v *plainStruct) IntoField() *Field {
 	f := NewField(v.name, v.name, nil, nil)
 	for _, field := range v.fields {

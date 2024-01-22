@@ -52,6 +52,7 @@ type GrantOnAccountObject struct {
 	Integration      *AccountObjectIdentifier `ddl:"identifier" sql:"INTEGRATION"`
 	FailoverGroup    *AccountObjectIdentifier `ddl:"identifier" sql:"FAILOVER GROUP"`
 	ReplicationGroup *AccountObjectIdentifier `ddl:"identifier" sql:"REPLICATION GROUP"`
+	ExternalVolume   *AccountObjectIdentifier `ddl:"identifier" sql:"EXTERNAL VOLUME"`
 }
 
 type GrantOnSchema struct {
@@ -96,6 +97,7 @@ type DatabaseRoleGrantPrivileges struct {
 	DatabasePrivileges     []AccountObjectPrivilege `ddl:"-"`
 	SchemaPrivileges       []SchemaPrivilege        `ddl:"-"`
 	SchemaObjectPrivileges []SchemaObjectPrivilege  `ddl:"-"`
+	AllPrivileges          *bool                    `ddl:"keyword" sql:"ALL PRIVILEGES"`
 }
 
 type DatabaseRoleGrantOn struct {
@@ -185,8 +187,9 @@ type ShowGrantsTo struct {
 }
 
 type ShowGrantsOf struct {
-	Role  AccountObjectIdentifier `ddl:"identifier" sql:"ROLE"`
-	Share AccountObjectIdentifier `ddl:"identifier" sql:"SHARE"`
+	Role         AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
+	DatabaseRole DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
+	Share        AccountObjectIdentifier  `ddl:"identifier" sql:"SHARE"`
 }
 
 type grantRow struct {
@@ -210,7 +213,7 @@ type Grant struct {
 	Name        ObjectIdentifier
 	GrantedTo   ObjectType
 	GrantTo     ObjectType
-	GranteeName AccountObjectIdentifier
+	GranteeName ObjectIdentifier
 	GrantOption bool
 	GrantedBy   AccountObjectIdentifier
 }

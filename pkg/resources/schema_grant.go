@@ -16,6 +16,7 @@ import (
 
 var validSchemaPrivileges = NewPrivilegeSet(
 	privilegeAddSearchOptimization,
+	privilegeCreateDynamicTable,
 	privilegeCreateExternalTable,
 	privilegeCreateFileFormat,
 	privilegeCreateFunction,

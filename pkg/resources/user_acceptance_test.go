@@ -7,10 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,7 +40,8 @@ func TestAcc_User(t *testing.T) {
 	r.NoError(err)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -54,7 +56,7 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "FOO"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
 					checkBool("snowflake_user.w", "has_rsa_public_key", true),
@@ -74,7 +76,7 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.com"),
 					checkBool("snowflake_user.w", "disabled", false),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "foo"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "foo"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "FOO"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.0", "ALL"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "FOO"),
 				),
@@ -93,7 +95,7 @@ func TestAcc_User(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_user.w", "email", "fake@email.net"),
 					checkBool("snowflake_user.w", "disabled", true),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_warehouse", "bar"),
-					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "bar"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "default_role", "BAR"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_secondary_roles.#", "0"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "default_namespace", "BAR"),
 					checkBool("snowflake_user.w", "has_rsa_public_key", false),
@@ -159,4 +161,30 @@ resource "snowflake_user" "w" {
 `
 	log.Printf("[DEBUG] s2 %s", s)
 	return fmt.Sprintf(s, prefix, prefix)
+}
+
+// TestAcc_User_issue2058 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2058 issue.
+// The problem was with a dot in user identifier.
+// Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
+func TestAcc_User_issue2058(t *testing.T) {
+	r := require.New(t)
+	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)) + "user.123"
+	sshkey1, err := testhelpers.Fixture("userkey1")
+	r.NoError(err)
+	sshkey2, err := testhelpers.Fixture("userkey2")
+	r.NoError(err)
+
+	resource.Test(t, resource.TestCase{
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: uConfig(prefix, sshkey1, sshkey2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
+				),
+			},
+		},
+	})
 }

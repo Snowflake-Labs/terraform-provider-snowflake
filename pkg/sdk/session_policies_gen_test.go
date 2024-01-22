@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func TestSessionPolicies_Create(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid CreateSessionPolicyOptions
 	defaultOpts := func() *CreateSessionPolicyOptions {
@@ -14,13 +14,13 @@ func TestSessionPolicies_Create(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateSessionPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
@@ -46,7 +46,7 @@ func TestSessionPolicies_Create(t *testing.T) {
 }
 
 func TestSessionPolicies_Alter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid AlterSessionPolicyOptions
 	defaultOpts := func() *AlterSessionPolicyOptions {
@@ -57,18 +57,18 @@ func TestSessionPolicies_Alter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterSessionPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.SetTags opts.UnsetTags opts.Unset] should be present - none present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSessionPolicyOptions", "RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
 	})
 
 	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.SetTags opts.UnsetTags opts.Unset] should be present - more present", func(t *testing.T) {
@@ -79,19 +79,19 @@ func TestSessionPolicies_Alter(t *testing.T) {
 		opts.Unset = &SessionPolicyUnset{
 			Comment: Bool(true),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSessionPolicyOptions", "RenameTo", "Set", "SetTags", "UnsetTags", "Unset"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.SessionIdleTimeoutMins opts.Set.SessionUiIdleTimeoutMins opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &SessionPolicySet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSessionPolicyOptions.Set", "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.SessionIdleTimeoutMins opts.Unset.SessionUiIdleTimeoutMins opts.Unset.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &SessionPolicyUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSessionPolicyOptions.Unset", "SessionIdleTimeoutMins", "SessionUiIdleTimeoutMins", "Comment"))
 	})
 
 	t.Run("alter set", func(t *testing.T) {
@@ -112,7 +112,7 @@ func TestSessionPolicies_Alter(t *testing.T) {
 
 	t.Run("alter rename", func(t *testing.T) {
 		opts := defaultOpts()
-		newId := randomSchemaObjectIdentifier(t)
+		newId := RandomSchemaObjectIdentifier()
 		opts.RenameTo = &newId
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SESSION POLICY %s RENAME TO %s", id.FullyQualifiedName(), newId.FullyQualifiedName())
 	})
@@ -143,7 +143,7 @@ func TestSessionPolicies_Alter(t *testing.T) {
 }
 
 func TestSessionPolicies_Drop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DropSessionPolicyOptions
 	defaultOpts := func() *DropSessionPolicyOptions {
@@ -154,13 +154,13 @@ func TestSessionPolicies_Drop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DropSessionPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -177,7 +177,7 @@ func TestSessionPolicies_Show(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ShowSessionPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -187,7 +187,7 @@ func TestSessionPolicies_Show(t *testing.T) {
 }
 
 func TestSessionPolicies_Describe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeSessionPolicyOptions
 	defaultOpts := func() *DescribeSessionPolicyOptions {
@@ -198,13 +198,13 @@ func TestSessionPolicies_Describe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DescribeSessionPolicyOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("all options", func(t *testing.T) {

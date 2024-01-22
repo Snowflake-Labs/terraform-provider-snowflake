@@ -1,0 +1,20 @@
+name: staticcheck
+on: [pull_request]
+jobs:
+  reviewdog:
+    # disable the job temporarily (until we configure linters appropriately)
+    if: false
+    name: reviewdog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: ./go.mod
+          cache: false
+      - uses: reviewdog/action-staticcheck@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          filter_mode: nofilter
+          fail_on_error: false

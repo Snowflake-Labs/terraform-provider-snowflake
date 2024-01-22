@@ -1,0 +1,3 @@
+variable "db" {
+  type = string
+}

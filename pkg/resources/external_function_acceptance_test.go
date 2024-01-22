@@ -6,19 +6,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_ExternalFunction(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_EXTERNAL_FUNCTION_TESTS"); ok {
-		t.Skip("Skipping TestAccExternalFunction")
+		t.Skip("Skipping TestAcc_ExternalFunction")
 	}
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -41,7 +43,7 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 		name    = "%s"
 		comment = "Terraform acceptance test"
 	}
-	
+
 	resource "snowflake_schema" "test_schema" {
 		name     = "%s"
 		database = snowflake_database.test_database.name
@@ -72,8 +74,8 @@ func externalFunctionConfig(name string, prefixes []string, url string) string {
 		  	return { "body": { "name": test }}
 	  	EOH
 	}
-		
-		
+
+
 		resource "snowflake_function" "test_func_res_translator" {
 		  name     =  upper("test_func_res_translator")
 		  database = snowflake_database.test_database.name

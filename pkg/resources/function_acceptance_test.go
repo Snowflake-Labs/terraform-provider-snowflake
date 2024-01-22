@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_Function(t *testing.T) {
@@ -15,8 +16,6 @@ func TestAcc_Function(t *testing.T) {
 		t.Skip("Skipping TestAcc_Function")
 	}
 
-	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	functName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	expBody1 := "3.141592654::FLOAT"
@@ -25,11 +24,12 @@ func TestAcc_Function(t *testing.T) {
 	expBody4 := `class CoolFunc {public static String test(int n) {return "hello!";}}`
 
 	resource.Test(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functionConfig(dbName, schemaName, functName),
+				Config: functionConfig(functName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "name", functName),
 					resource.TestCheckResourceAttr("snowflake_function.test_funct", "comment", "Terraform acceptance test"),
@@ -70,31 +70,20 @@ func TestAcc_Function(t *testing.T) {
 	})
 }
 
-func functionConfig(db, schema, name string) string {
+func functionConfig(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_database" "test_database" {
-		name    = "%s"
-		comment = "Terraform acceptance test"
-	}
-	
-	resource "snowflake_schema" "test_schema" {
-		name     = "%s"
-		database = snowflake_database.test_database.name
-		comment  = "Terraform acceptance test"
-	}
-	
 	resource "snowflake_function" "test_funct_simple" {
 		name = "%s"
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
+		database = "%s"
+		schema   = "%s"
 		return_type = "float"
 		statement = "3.141592654::FLOAT"
 	}
 
 	resource "snowflake_function" "test_funct" {
 		name = "%s"
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
+		database = "%s"
+		schema   = "%s"
 		arguments {
 			name = "arg1"
 			type = "varchar"
@@ -107,8 +96,8 @@ func functionConfig(db, schema, name string) string {
 
 	resource "snowflake_function" "test_funct_java" {
 		name = "%s"
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
+		database = "%s"
+		schema   = "%s"
 		arguments {
 			name = "arg1"
 			type = "number"
@@ -122,8 +111,8 @@ func functionConfig(db, schema, name string) string {
 
 	resource "snowflake_function" "test_funct_complex" {
 		name = "%s"
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
+		database = "%s"
+		schema   = "%s"
 		arguments {
 			name = "arg1"
 			type = "varchar"
@@ -131,7 +120,7 @@ func functionConfig(db, schema, name string) string {
 		arguments {
 			name = "arg2"
 			type = "DATE"
-		}		
+		}
 		comment = "Table func with 2 args"
 		return_type = "table (x number, y number)"
 		statement = <<EOT
@@ -140,5 +129,5 @@ union all
 select 3, 4
 EOT
 	}
-	`, db, schema, name, name, name, name)
+	`, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName)
 }

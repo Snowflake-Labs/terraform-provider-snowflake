@@ -1,12 +1,11 @@
 package sdk
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestTasks_Create(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	sql := "SELECT CURRENT_TIMESTAMP"
 
 	// Minimal valid CreateTaskOptions
@@ -19,13 +18,13 @@ func TestTasks_Create(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
@@ -38,7 +37,7 @@ func TestTasks_Create(t *testing.T) {
 	t.Run("validation: exactly one field from [opts.Warehouse.Warehouse opts.Warehouse.UserTaskManagedInitialWarehouseSize] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Warehouse = &CreateTaskWarehouse{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Warehouse", "UserTaskManagedInitialWarehouseSize"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateTaskOptions.Warehouse", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
 	})
 
 	t.Run("validation: opts.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
@@ -46,7 +45,7 @@ func TestTasks_Create(t *testing.T) {
 		opts.SessionParameters = &SessionParameters{
 			JSONIndent: Int(25),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("JSON_INDENT must be between 0 and 16"))
+		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -61,9 +60,9 @@ func TestTasks_Create(t *testing.T) {
 	})
 
 	t.Run("all options", func(t *testing.T) {
-		warehouseId := randomAccountObjectIdentifier(t)
-		otherTaskId := randomSchemaObjectIdentifier(t)
-		tagId := randomSchemaObjectIdentifier(t)
+		warehouseId := RandomAccountObjectIdentifier()
+		otherTaskId := RandomSchemaObjectIdentifier()
+		tagId := RandomSchemaObjectIdentifier()
 
 		req := NewCreateTaskRequest(id, sql).
 			WithOrReplace(Bool(true)).
@@ -72,7 +71,8 @@ func TestTasks_Create(t *testing.T) {
 			WithConfig(String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
 			WithAllowOverlappingExecution(Bool(true)).
 			WithSessionParameters(&SessionParameters{
-				JSONIndent: Int(10),
+				JSONIndent:  Int(10),
+				LockTimeout: Int(5),
 			}).
 			WithUserTaskTimeoutMs(Int(5)).
 			WithSuspendTaskAfterNumFailures(Int(6)).
@@ -86,13 +86,55 @@ func TestTasks_Create(t *testing.T) {
 			}}).
 			WithWhen(String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
 
-		assertOptsValidAndSQLEquals(t, req.toOpts(), "CREATE OR REPLACE TASK %s WAREHOUSE = %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true JSON_INDENT = 10 USER_TASK_TIMEOUT_MS = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = some_error_integration COPY GRANTS COMMENT = 'some comment' AFTER %s TAG (%s = 'v1') WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), otherTaskId.FullyQualifiedName(), tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, req.toOpts(), "CREATE OR REPLACE TASK %s WAREHOUSE = %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true JSON_INDENT = 10, LOCK_TIMEOUT = 5 USER_TASK_TIMEOUT_MS = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = some_error_integration COPY GRANTS COMMENT = 'some comment' AFTER %s TAG (%s = 'v1') WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), otherTaskId.FullyQualifiedName(), tagId.FullyQualifiedName())
+	})
+}
+
+func TestTasks_Clone(t *testing.T) {
+	id := RandomSchemaObjectIdentifier()
+	sourceId := RandomSchemaObjectIdentifier()
+
+	// Minimal valid CloneTaskOptions
+	defaultOpts := func() *CloneTaskOptions {
+		return &CloneTaskOptions{
+			name:       id,
+			sourceTask: sourceId,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *CloneTaskOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: valid identifier for [opts.sourceTask]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.sourceTask = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, "CREATE TASK %s CLONE %s", id.FullyQualifiedName(), sourceId.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.CopyGrants = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TASK %s CLONE %s COPY GRANTS", id.FullyQualifiedName(), sourceId.FullyQualifiedName())
 	})
 }
 
 func TestTasks_Alter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
-	otherTaskId := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
+	otherTaskId := RandomSchemaObjectIdentifier()
 
 	// Minimal valid AlterTaskOptions
 	defaultOpts := func() *AlterTaskOptions {
@@ -103,31 +145,40 @@ func TestTasks_Alter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *AlterTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.Resume opts.Suspend opts.RemoveAfter opts.AddAfter opts.Set opts.Unset opts.SetTags opts.UnsetTags opts.ModifyAs opts.ModifyWhen] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterTaskOptions", "Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
 	})
 
 	t.Run("validation: exactly one field from [opts.Resume opts.Suspend opts.RemoveAfter opts.AddAfter opts.Set opts.Unset opts.SetTags opts.UnsetTags opts.ModifyAs opts.ModifyWhen] should be present - more present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Resume = Bool(true)
 		opts.Suspend = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterTaskOptions", "Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Set.Warehouse opts.Set.Schedule opts.Set.Config opts.Set.AllowOverlappingExecution opts.Set.UserTaskTimeoutMs opts.Set.SuspendTaskAfterNumFailures opts.Set.Comment opts.Set.SessionParameters] should be set", func(t *testing.T) {
+	t.Run("validation: at least one of the fields [opts.Set.Warehouse opts.Set.UserTaskManagedInitialWarehouseSize opts.Set.Schedule opts.Set.Config opts.Set.AllowOverlappingExecution opts.Set.UserTaskTimeoutMs opts.Set.SuspendTaskAfterNumFailures opts.Set.ErrorIntegration opts.Set.Comment opts.Set.SessionParameters] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &TaskSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "Comment", "SessionParameters"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterTaskOptions.Set", "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters"))
+	})
+
+	t.Run("validation: conflicting fields for [opts.Set.Warehouse opts.Set.UserTaskManagedInitialWarehouseSize]", func(t *testing.T) {
+		warehouseId := RandomAccountObjectIdentifier()
+		opts := defaultOpts()
+		opts.Set = &TaskSet{}
+		opts.Set.Warehouse = &warehouseId
+		opts.Set.UserTaskManagedInitialWarehouseSize = &WarehouseSizeXSmall
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterTaskOptions.Set", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
 	})
 
 	t.Run("validation: opts.Set.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
@@ -136,20 +187,20 @@ func TestTasks_Alter(t *testing.T) {
 		opts.Set.SessionParameters = &SessionParameters{
 			JSONIndent: Int(25),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("JSON_INDENT must be between 0 and 16"))
+		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Unset.Warehouse opts.Unset.Schedule opts.Unset.Config opts.Unset.AllowOverlappingExecution opts.Unset.UserTaskTimeoutMs opts.Unset.SuspendTaskAfterNumFailures opts.Unset.Comment opts.Unset.SessionParametersUnset] should be set", func(t *testing.T) {
+	t.Run("validation: at least one of the fields [opts.Unset.Warehouse opts.Unset.Schedule opts.Unset.Config opts.Unset.AllowOverlappingExecution opts.Unset.UserTaskTimeoutMs opts.Unset.SuspendTaskAfterNumFailures opts.Unset.ErrorIntegration opts.Unset.Comment opts.Unset.SessionParametersUnset] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TaskUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "Comment", "SessionParametersUnset"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterTaskOptions.Unset", "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset"))
 	})
 
 	t.Run("validation: opts.Unset.SessionParametersUnset.SessionParametersUnset should be valid", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TaskUnset{}
 		opts.Unset.SessionParametersUnset = &SessionParametersUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("at least one session parameter must be set"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("SessionParametersUnset", "AbortDetachedQuery", "Autocommit", "BinaryInputFormat", "BinaryOutputFormat", "DateInputFormat", "DateOutputFormat", "ErrorOnNondeterministicMerge", "ErrorOnNondeterministicUpdate", "GeographyOutputFormat", "JSONIndent", "LockTimeout", "QueryTag", "RowsPerResultset", "SimulatedDataSharingConsumer", "StatementTimeoutInSeconds", "StrictJSONOutput", "TimestampDayIsAlways24h", "TimestampInputFormat", "TimestampLTZOutputFormat", "TimestampNTZOutputFormat", "TimestampOutputFormat", "TimestampTypeMapping", "TimestampTZOutputFormat", "Timezone", "TimeInputFormat", "TimeOutputFormat", "TransactionDefaultIsolationLevel", "TwoDigitCenturyStart", "UnsupportedDDLAction", "UseCachedResult", "WeekOfYearPolicy", "WeekStart"))
 	})
 
 	t.Run("alter resume", func(t *testing.T) {
@@ -184,6 +235,24 @@ func TestTasks_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
+	t.Run("alter set: multiple", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &TaskSet{
+			UserTaskTimeoutMs: Int(2000),
+			Comment:           String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET USER_TASK_TIMEOUT_MS = 2000, COMMENT = 'some comment'", id.FullyQualifiedName())
+	})
+
+	t.Run("alter set warehouse", func(t *testing.T) {
+		warehouseId := RandomAccountObjectIdentifier()
+		opts := defaultOpts()
+		opts.Set = &TaskSet{
+			Warehouse: &warehouseId,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET WAREHOUSE = %s", id.FullyQualifiedName(), warehouseId.FullyQualifiedName())
+	})
+
 	t.Run("alter set session parameter", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &TaskSet{
@@ -200,6 +269,15 @@ func TestTasks_Alter(t *testing.T) {
 			Comment: Bool(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s UNSET COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("alter unset: multiple", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &TaskUnset{
+			UserTaskTimeoutMs: Bool(true),
+			Comment:           Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s UNSET USER_TASK_TIMEOUT_MS, COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("alter set tags", func(t *testing.T) {
@@ -240,7 +318,7 @@ func TestTasks_Alter(t *testing.T) {
 }
 
 func TestTasks_Drop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DropTaskOptions
 	defaultOpts := func() *DropTaskOptions {
@@ -251,13 +329,13 @@ func TestTasks_Drop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DropTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -274,7 +352,7 @@ func TestTasks_Show(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ShowTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -299,7 +377,7 @@ func TestTasks_Show(t *testing.T) {
 }
 
 func TestTasks_Describe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeTaskOptions
 	defaultOpts := func() *DescribeTaskOptions {
@@ -310,13 +388,13 @@ func TestTasks_Describe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *DescribeTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -326,7 +404,7 @@ func TestTasks_Describe(t *testing.T) {
 }
 
 func TestTasks_Execute(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 
 	// Minimal valid ExecuteTaskOptions
 	defaultOpts := func() *ExecuteTaskOptions {
@@ -337,13 +415,13 @@ func TestTasks_Execute(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *ExecuteTaskOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {

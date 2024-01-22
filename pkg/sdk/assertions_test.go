@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -14,7 +15,14 @@ func assertOptsInvalid(t *testing.T, opts validatable, expectedError error) {
 	t.Helper()
 	err := opts.validate()
 	assert.Error(t, err)
-	assert.Equal(t, expectedError, err)
+	var sdkErr *Error
+	if errors.As(err, &sdkErr) {
+		errorWithoutFileInfo := errorFileInfoRegexp.ReplaceAllString(sdkErr.Error(), "")
+		expectedErrorWithoutFileInfo := errorFileInfoRegexp.ReplaceAllString(expectedError.Error(), "")
+		assert.Equal(t, expectedErrorWithoutFileInfo, errorWithoutFileInfo)
+	} else {
+		assert.Equal(t, expectedError, err)
+	}
 }
 
 // assertOptsInvalidJoinedErrors could be reused in tests for other interfaces in sdk package.
@@ -23,7 +31,13 @@ func assertOptsInvalidJoinedErrors(t *testing.T, opts validatable, expectedError
 	err := opts.validate()
 	assert.Error(t, err)
 	for _, expectedError := range expectedErrors {
-		assert.Contains(t, err.Error(), expectedError.Error())
+		var sdkErr *Error
+		if errors.As(expectedError, &sdkErr) {
+			expectedErrorWithoutFileInfo := errorFileInfoRegexp.ReplaceAllString(sdkErr.Error(), "")
+			assert.Contains(t, err.Error(), expectedErrorWithoutFileInfo)
+		} else {
+			assert.Contains(t, err.Error(), expectedError.Error())
+		}
 	}
 }
 

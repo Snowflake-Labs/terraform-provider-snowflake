@@ -3,14 +3,12 @@ package sdk
 import (
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDatabasesCreate(t *testing.T) {
 	t.Run("clone", func(t *testing.T) {
 		opts := &CreateDatabaseOptions{
+			name: NewAccountObjectIdentifier("db"),
 			Clone: &Clone{
 				SourceObject: NewAccountObjectIdentifier("db1"),
 				At: &TimeTravel{
@@ -18,14 +16,12 @@ func TestDatabasesCreate(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE DATABASE CLONE "db1" AT (TIMESTAMP => '2021-01-01 00:00:00 +0000 UTC')`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db" CLONE "db1" AT (TIMESTAMP => '2021-01-01 00:00:00 +0000 UTC')`)
 	})
 
 	t.Run("complete", func(t *testing.T) {
 		opts := &CreateDatabaseOptions{
+			name:                       NewAccountObjectIdentifier("db"),
 			OrReplace:                  Bool(true),
 			Transient:                  Bool(true),
 			Comment:                    String("comment"),
@@ -38,10 +34,7 @@ func TestDatabasesCreate(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE OR REPLACE TRANSIENT DATABASE DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TRANSIENT DATABASE "db" DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 COMMENT = 'comment' TAG ("db1"."schema1"."tag1" = 'v1')`)
 	})
 }
 
@@ -52,10 +45,7 @@ func TestDatabasesCreateShared(t *testing.T) {
 			name:      databaseID,
 			fromShare: NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator("account1"), NewAccountObjectIdentifier("db1")),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE DATABASE "db1" FROM SHARE account1."db1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db1" FROM SHARE account1."db1"`)
 	})
 
 	t.Run("with comment", func(t *testing.T) {
@@ -65,10 +55,7 @@ func TestDatabasesCreateShared(t *testing.T) {
 			fromShare: NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator("account1"), NewAccountObjectIdentifier("db1")),
 			Comment:   String("comment"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `CREATE DATABASE "db1" FROM SHARE account1."db1" COMMENT = 'comment'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db1" FROM SHARE account1."db1" COMMENT = 'comment'`)
 	})
 }
 
@@ -78,11 +65,7 @@ func TestDatabasesCreateSecondary(t *testing.T) {
 		primaryDatabase:         NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator("account1"), NewAccountObjectIdentifier("db1")),
 		DataRetentionTimeInDays: Int(1),
 	}
-	actual, err := structToSQL(opts)
-	require.NoError(t, err)
-	expected := `CREATE DATABASE "db1" AS REPLICA OF account1."db1" DATA_RETENTION_TIME_IN_DAYS = 1`
-
-	assert.Equal(t, expected, actual)
+	assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db1" AS REPLICA OF account1."db1" DATA_RETENTION_TIME_IN_DAYS = 1`)
 }
 
 func TestDatabasesDrop(t *testing.T) {
@@ -90,10 +73,7 @@ func TestDatabasesDrop(t *testing.T) {
 		opts := &DropDatabaseOptions{
 			name: NewAccountObjectIdentifier("db1"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DROP DATABASE "db1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DROP DATABASE "db1"`)
 	})
 }
 
@@ -102,10 +82,7 @@ func TestDatabasesUndrop(t *testing.T) {
 		opts := &undropDatabaseOptions{
 			name: NewAccountObjectIdentifier("db1"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `UNDROP DATABASE "db1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `UNDROP DATABASE "db1"`)
 	})
 }
 
@@ -114,10 +91,7 @@ func TestDatabasesDescribe(t *testing.T) {
 		opts := &describeDatabaseOptions{
 			name: NewAccountObjectIdentifier("db1"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `DESCRIBE DATABASE "db1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE DATABASE "db1"`)
 	})
 }
 
@@ -128,10 +102,7 @@ func TestDatabasesAlter(t *testing.T) {
 			name:     NewAccountObjectIdentifier("db1"),
 			NewName:  NewAccountObjectIdentifier("db2"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE IF EXISTS "db1" RENAME TO "db2"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE IF EXISTS "db1" RENAME TO "db2"`)
 	})
 
 	t.Run("swap with", func(t *testing.T) {
@@ -139,10 +110,7 @@ func TestDatabasesAlter(t *testing.T) {
 			name:     NewAccountObjectIdentifier("db1"),
 			SwapWith: NewAccountObjectIdentifier("db2"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" SWAP WITH "db2"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" SWAP WITH "db2"`)
 	})
 
 	t.Run("swap with", func(t *testing.T) {
@@ -150,10 +118,7 @@ func TestDatabasesAlter(t *testing.T) {
 			name:     NewAccountObjectIdentifier("db1"),
 			SwapWith: NewAccountObjectIdentifier("db2"),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" SWAP WITH "db2"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" SWAP WITH "db2"`)
 	})
 
 	t.Run("set comment and retention time in days", func(t *testing.T) {
@@ -164,10 +129,7 @@ func TestDatabasesAlter(t *testing.T) {
 				Comment:                 String("comment"),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" SET DATA_RETENTION_TIME_IN_DAYS = 1, COMMENT = 'comment'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" SET DATA_RETENTION_TIME_IN_DAYS = 1, COMMENT = 'comment'`)
 	})
 
 	t.Run("unset comment", func(t *testing.T) {
@@ -177,10 +139,7 @@ func TestDatabasesAlter(t *testing.T) {
 				Comment: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" UNSET COMMENT`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" UNSET COMMENT`)
 	})
 }
 
@@ -195,10 +154,7 @@ func TestDatabasesAlterReplication(t *testing.T) {
 				IgnoreEditionCheck: Bool(true),
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" ENABLE REPLICATION TO ACCOUNTS "account1" IGNORE EDITION CHECK`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" ENABLE REPLICATION TO ACCOUNTS "account1" IGNORE EDITION CHECK`)
 	})
 
 	t.Run("disable replication", func(t *testing.T) {
@@ -210,10 +166,7 @@ func TestDatabasesAlterReplication(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" DISABLE REPLICATION TO ACCOUNTS "account1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" DISABLE REPLICATION TO ACCOUNTS "account1"`)
 	})
 
 	t.Run("refresh", func(t *testing.T) {
@@ -221,10 +174,7 @@ func TestDatabasesAlterReplication(t *testing.T) {
 			name:    NewAccountObjectIdentifier("db1"),
 			Refresh: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" REFRESH`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" REFRESH`)
 	})
 }
 
@@ -238,10 +188,7 @@ func TestDatabasesAlterFailover(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" ENABLE FAILOVER TO ACCOUNTS "account1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" ENABLE FAILOVER TO ACCOUNTS "account1"`)
 	})
 
 	t.Run("disable failover", func(t *testing.T) {
@@ -253,10 +200,7 @@ func TestDatabasesAlterFailover(t *testing.T) {
 				},
 			},
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" DISABLE FAILOVER TO ACCOUNTS "account1"`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" DISABLE FAILOVER TO ACCOUNTS "account1"`)
 	})
 
 	t.Run("primary", func(t *testing.T) {
@@ -264,56 +208,41 @@ func TestDatabasesAlterFailover(t *testing.T) {
 			name:    NewAccountObjectIdentifier("db1"),
 			Primary: Bool(true),
 		}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `ALTER DATABASE "db1" PRIMARY`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE "db1" PRIMARY`)
 	})
 }
 
 func TestDatabasesShow(t *testing.T) {
 	t.Run("without show options", func(t *testing.T) {
 		opts := &ShowDatabasesOptions{}
-		actual, err := structToSQL(opts)
-		require.NoError(t, err)
-		expected := `SHOW DATABASES`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASES`)
 	})
 
 	t.Run("terse", func(t *testing.T) {
-		showOptions := &ShowDatabasesOptions{
+		opts := &ShowDatabasesOptions{
 			Terse: Bool(true),
 		}
-		actual, err := structToSQL(showOptions)
-		require.NoError(t, err)
-		expected := `SHOW TERSE DATABASES`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE DATABASES`)
 	})
 
 	t.Run("history", func(t *testing.T) {
-		showOptions := &ShowDatabasesOptions{
+		opts := &ShowDatabasesOptions{
 			History: Bool(true),
 		}
-		actual, err := structToSQL(showOptions)
-		require.NoError(t, err)
-		expected := `SHOW DATABASES HISTORY`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASES HISTORY`)
 	})
 
 	t.Run("like", func(t *testing.T) {
-		showOptions := &ShowDatabasesOptions{
+		opts := &ShowDatabasesOptions{
 			Like: &Like{
 				Pattern: String("db1"),
 			},
 		}
-		actual, err := structToSQL(showOptions)
-		require.NoError(t, err)
-		expected := `SHOW DATABASES LIKE 'db1'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASES LIKE 'db1'`)
 	})
 
 	t.Run("complete", func(t *testing.T) {
-		showOptions := &ShowDatabasesOptions{
+		opts := &ShowDatabasesOptions{
 			Terse:   Bool(true),
 			History: Bool(true),
 			Like: &Like{
@@ -324,9 +253,6 @@ func TestDatabasesShow(t *testing.T) {
 				From: String("db1"),
 			},
 		}
-		actual, err := structToSQL(showOptions)
-		require.NoError(t, err)
-		expected := `SHOW TERSE DATABASES HISTORY LIKE 'db2' LIMIT 1 FROM 'db1'`
-		assert.Equal(t, expected, actual)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE DATABASES HISTORY LIKE 'db2' LIMIT 1 FROM 'db1'`)
 	})
 }

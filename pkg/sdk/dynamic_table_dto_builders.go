@@ -56,13 +56,13 @@ func NewDynamicTableSetRequest() *DynamicTableSetRequest {
 	return &DynamicTableSetRequest{}
 }
 
-func (s *DynamicTableSetRequest) WithTargetLag(targetLag *TargetLag) *DynamicTableSetRequest {
-	s.targetLag = targetLag
+func (s *DynamicTableSetRequest) WithTargetLag(targetLag TargetLag) *DynamicTableSetRequest {
+	s.targetLag = &targetLag
 	return s
 }
 
-func (s *DynamicTableSetRequest) WithWarehourse(warehourse *AccountObjectIdentifier) *DynamicTableSetRequest {
-	s.warehourse = warehourse
+func (s *DynamicTableSetRequest) WithWarehouse(warehourse AccountObjectIdentifier) *DynamicTableSetRequest {
+	s.warehourse = &warehourse
 	return s
 }
 

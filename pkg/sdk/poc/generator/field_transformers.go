@@ -1,15 +1,35 @@
 package generator
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 type FieldTransformer interface {
 	Transform(f *Field) *Field
 }
 
-type KeywordTransformer struct {
-	required  bool
+func StaticOptions() *StaticTransformer {
+	return new(StaticTransformer)
+}
+
+type StaticTransformer struct {
 	sqlPrefix string
-	quotes    string
+}
+
+func (v *StaticTransformer) SQL(sqlPrefix string) *StaticTransformer {
+	v.sqlPrefix = sqlPrefix
+	return v
+}
+
+func (v *StaticTransformer) Transform(f *Field) *Field {
+	addTagIfMissing(f.Tags, "ddl", "static")
+	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
+	return f
+}
+
+type KeywordTransformer struct {
+	required    bool
+	sqlPrefix   string
+	quotes      string
+	parentheses string
 }
 
 func KeywordOptions() *KeywordTransformer {
@@ -41,6 +61,16 @@ func (v *KeywordTransformer) DoubleQuotes() *KeywordTransformer {
 	return v
 }
 
+func (v *KeywordTransformer) Parentheses() *KeywordTransformer {
+	v.parentheses = "parentheses"
+	return v
+}
+
+func (v *KeywordTransformer) MustParentheses() *KeywordTransformer {
+	v.parentheses = "must_parentheses"
+	return v
+}
+
 func (v *KeywordTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "keyword")
 	if v.required {
@@ -48,6 +78,7 @@ func (v *KeywordTransformer) Transform(f *Field) *Field {
 	}
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.quotes)
+	addTagIfMissing(f.Tags, "ddl", v.parentheses)
 	return f
 }
 
@@ -78,8 +109,18 @@ func (v *ParameterTransformer) NoQuotes() *ParameterTransformer {
 	return v
 }
 
+func (v *ListTransformer) MustParentheses() *ListTransformer {
+	v.parentheses = "must_parentheses"
+	return v
+}
+
 func (v *ParameterTransformer) NoEquals() *ParameterTransformer {
 	v.equals = "no_equals"
+	return v
+}
+
+func (v *ParameterTransformer) ArrowEquals() *ParameterTransformer {
+	v.equals = "arrow_equals"
 	return v
 }
 
@@ -103,6 +144,11 @@ func (v *ParameterTransformer) Parentheses() *ParameterTransformer {
 	return v
 }
 
+func (v *ParameterTransformer) MustParentheses() *ParameterTransformer {
+	v.parentheses = "must_parentheses"
+	return v
+}
+
 func (v *ParameterTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "ddl", "parameter")
 	if v.required {
@@ -120,6 +166,7 @@ type ListTransformer struct {
 	sqlPrefix   string
 	parentheses string
 	equals      string
+	comma       string
 }
 
 func ListOptions() *ListTransformer {
@@ -131,13 +178,23 @@ func (v *ListTransformer) Required() *ListTransformer {
 	return v
 }
 
-func (v *ListTransformer) NoParens() *ListTransformer {
+func (v *ListTransformer) Parentheses() *ListTransformer {
+	v.parentheses = "parentheses"
+	return v
+}
+
+func (v *ListTransformer) NoParentheses() *ListTransformer {
 	v.parentheses = "no_parentheses"
 	return v
 }
 
 func (v *ListTransformer) NoEquals() *ListTransformer {
 	v.equals = "no_equals"
+	return v
+}
+
+func (v *ListTransformer) NoComma() *ListTransformer {
+	v.equals = "no_comma"
 	return v
 }
 
@@ -154,6 +211,7 @@ func (v *ListTransformer) Transform(f *Field) *Field {
 	addTagIfMissing(f.Tags, "sql", v.sqlPrefix)
 	addTagIfMissing(f.Tags, "ddl", v.parentheses)
 	addTagIfMissing(f.Tags, "ddl", v.equals)
+	addTagIfMissing(f.Tags, "ddl", v.comma)
 	return f
 }
 

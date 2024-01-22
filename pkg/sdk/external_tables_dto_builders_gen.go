@@ -5,14 +5,12 @@ package sdk
 import ()
 
 func NewCreateExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	location string,
-	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateExternalTableRequest {
 	s := CreateExternalTableRequest{}
 	s.name = name
 	s.location = location
-	s.fileFormat = fileFormat
 	return &s
 }
 
@@ -56,6 +54,16 @@ func (s *CreateExternalTableRequest) WithPattern(pattern *string) *CreateExterna
 	return s
 }
 
+func (s *CreateExternalTableRequest) WithRawFileFormat(rawFileFormat *string) *CreateExternalTableRequest {
+	s.rawFileFormat = rawFileFormat
+	return s
+}
+
+func (s *CreateExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateExternalTableRequest {
+	s.fileFormat = fileFormat
+	return s
+}
+
 func (s *CreateExternalTableRequest) WithAwsSnsTopic(awsSnsTopic *string) *CreateExternalTableRequest {
 	s.awsSnsTopic = awsSnsTopic
 	return s
@@ -93,125 +101,13 @@ func NewExternalTableColumnRequest(
 	return &s
 }
 
-func (s *ExternalTableColumnRequest) WithInlineConstraint(inlineConstraint *ColumnInlineConstraintRequest) *ExternalTableColumnRequest {
-	s.inlineConstraint = inlineConstraint
-	return s
-}
-
-func NewColumnInlineConstraintRequest(
-	name string,
-	constraintType ColumnConstraintType,
-) *ColumnInlineConstraintRequest {
-	s := ColumnInlineConstraintRequest{}
-	s.name = name
-	s.constraintType = constraintType
-	return &s
-}
-
-func (s *ColumnInlineConstraintRequest) WithNotNull(notNull *bool) *ColumnInlineConstraintRequest {
+func (s *ExternalTableColumnRequest) WithNotNull(notNull *bool) *ExternalTableColumnRequest {
 	s.notNull = notNull
 	return s
 }
 
-func (s *ColumnInlineConstraintRequest) WithForeignKey(foreignKey *InlineForeignKey) *ColumnInlineConstraintRequest {
-	s.foreignKey = foreignKey
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithEnforced(enforced *bool) *ColumnInlineConstraintRequest {
-	s.enforced = enforced
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithNotEnforced(notEnforced *bool) *ColumnInlineConstraintRequest {
-	s.notEnforced = notEnforced
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithDeferrable(deferrable *bool) *ColumnInlineConstraintRequest {
-	s.deferrable = deferrable
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithNotDeferrable(notDeferrable *bool) *ColumnInlineConstraintRequest {
-	s.notDeferrable = notDeferrable
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithInitiallyDeferred(initiallyDeferred *bool) *ColumnInlineConstraintRequest {
-	s.initiallyDeferred = initiallyDeferred
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithInitiallyImmediate(initiallyImmediate *bool) *ColumnInlineConstraintRequest {
-	s.initiallyImmediate = initiallyImmediate
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithEnable(enable *bool) *ColumnInlineConstraintRequest {
-	s.enable = enable
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithDisable(disable *bool) *ColumnInlineConstraintRequest {
-	s.disable = disable
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithValidate(validate *bool) *ColumnInlineConstraintRequest {
-	s.validate = validate
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithNoValidate(noValidate *bool) *ColumnInlineConstraintRequest {
-	s.noValidate = noValidate
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithRely(rely *bool) *ColumnInlineConstraintRequest {
-	s.rely = rely
-	return s
-}
-
-func (s *ColumnInlineConstraintRequest) WithNoRely(noRely *bool) *ColumnInlineConstraintRequest {
-	s.noRely = noRely
-	return s
-}
-
-func NewInlineForeignKeyRequest(
-	tableName string,
-) *InlineForeignKeyRequest {
-	s := InlineForeignKeyRequest{}
-	s.tableName = tableName
-	return &s
-}
-
-func (s *InlineForeignKeyRequest) WithColumnName(columnName []string) *InlineForeignKeyRequest {
-	s.columnName = columnName
-	return s
-}
-
-func (s *InlineForeignKeyRequest) WithMatch(match *MatchType) *InlineForeignKeyRequest {
-	s.match = match
-	return s
-}
-
-func (s *InlineForeignKeyRequest) WithOn(on *ForeignKeyOnActionRequest) *InlineForeignKeyRequest {
-	s.on = on
-	return s
-}
-
-func NewForeignKeyOnActionRequest() *ForeignKeyOnActionRequest {
-	return &ForeignKeyOnActionRequest{}
-}
-
-func (s *ForeignKeyOnActionRequest) WithOnUpdate(onUpdate *bool) *ForeignKeyOnActionRequest {
-	s.onUpdate = onUpdate
-	return s
-}
-
-func (s *ForeignKeyOnActionRequest) WithOnDelete(onDelete *bool) *ForeignKeyOnActionRequest {
-	s.onDelete = onDelete
+func (s *ExternalTableColumnRequest) WithInlineConstraint(inlineConstraint *ColumnInlineConstraintRequest) *ExternalTableColumnRequest {
+	s.inlineConstraint = inlineConstraint
 	return s
 }
 
@@ -381,35 +277,13 @@ func (s *NullStringRequest) WithStr(str string) *NullStringRequest {
 	return s
 }
 
-func NewRowAccessPolicyRequest(
-	name SchemaObjectIdentifier,
-	on []string,
-) *RowAccessPolicyRequest {
-	s := RowAccessPolicyRequest{}
-	s.name = name
-	s.on = on
-	return &s
-}
-
-func NewTagAssociationRequest(
-	name ObjectIdentifier,
-	value string,
-) *TagAssociationRequest {
-	s := TagAssociationRequest{}
-	s.name = name
-	s.value = value
-	return &s
-}
-
 func NewCreateWithManualPartitioningExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	location string,
-	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateWithManualPartitioningExternalTableRequest {
 	s := CreateWithManualPartitioningExternalTableRequest{}
 	s.name = name
 	s.location = location
-	s.fileFormat = fileFormat
 	return &s
 }
 
@@ -438,8 +312,13 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithPartitionBy(parti
 	return s
 }
 
-func (s *CreateWithManualPartitioningExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateWithManualPartitioningExternalTableRequest {
-	s.userSpecifiedPartitionType = userSpecifiedPartitionType
+func (s *CreateWithManualPartitioningExternalTableRequest) WithRawFileFormat(rawFileFormat *string) *CreateWithManualPartitioningExternalTableRequest {
+	s.rawFileFormat = rawFileFormat
+	return s
+}
+
+func (s *CreateWithManualPartitioningExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateWithManualPartitioningExternalTableRequest {
+	s.fileFormat = fileFormat
 	return s
 }
 
@@ -464,14 +343,12 @@ func (s *CreateWithManualPartitioningExternalTableRequest) WithTag(tag []*TagAss
 }
 
 func NewCreateDeltaLakeExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	location string,
-	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateDeltaLakeExternalTableRequest {
 	s := CreateDeltaLakeExternalTableRequest{}
 	s.name = name
 	s.location = location
-	s.fileFormat = fileFormat
 	return &s
 }
 
@@ -500,11 +377,6 @@ func (s *CreateDeltaLakeExternalTableRequest) WithPartitionBy(partitionBy []stri
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithUserSpecifiedPartitionType(userSpecifiedPartitionType *bool) *CreateDeltaLakeExternalTableRequest {
-	s.userSpecifiedPartitionType = userSpecifiedPartitionType
-	return s
-}
-
 func (s *CreateDeltaLakeExternalTableRequest) WithRefreshOnCreate(refreshOnCreate *bool) *CreateDeltaLakeExternalTableRequest {
 	s.refreshOnCreate = refreshOnCreate
 	return s
@@ -515,8 +387,13 @@ func (s *CreateDeltaLakeExternalTableRequest) WithAutoRefresh(autoRefresh *bool)
 	return s
 }
 
-func (s *CreateDeltaLakeExternalTableRequest) WithDeltaTableFormat(deltaTableFormat *bool) *CreateDeltaLakeExternalTableRequest {
-	s.deltaTableFormat = deltaTableFormat
+func (s *CreateDeltaLakeExternalTableRequest) WithRawFileFormat(rawFileFormat *string) *CreateDeltaLakeExternalTableRequest {
+	s.rawFileFormat = rawFileFormat
+	return s
+}
+
+func (s *CreateDeltaLakeExternalTableRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateDeltaLakeExternalTableRequest {
+	s.fileFormat = fileFormat
 	return s
 }
 
@@ -541,14 +418,12 @@ func (s *CreateDeltaLakeExternalTableRequest) WithTag(tag []*TagAssociationReque
 }
 
 func NewCreateExternalTableUsingTemplateRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 	location string,
-	fileFormat *ExternalTableFileFormatRequest,
 ) *CreateExternalTableUsingTemplateRequest {
 	s := CreateExternalTableUsingTemplateRequest{}
 	s.name = name
 	s.location = location
-	s.fileFormat = fileFormat
 	return &s
 }
 
@@ -592,6 +467,16 @@ func (s *CreateExternalTableUsingTemplateRequest) WithPattern(pattern *string) *
 	return s
 }
 
+func (s *CreateExternalTableUsingTemplateRequest) WithRawFileFormat(rawFileFormat *string) *CreateExternalTableUsingTemplateRequest {
+	s.rawFileFormat = rawFileFormat
+	return s
+}
+
+func (s *CreateExternalTableUsingTemplateRequest) WithFileFormat(fileFormat *ExternalTableFileFormatRequest) *CreateExternalTableUsingTemplateRequest {
+	s.fileFormat = fileFormat
+	return s
+}
+
 func (s *CreateExternalTableUsingTemplateRequest) WithAwsSnsTopic(awsSnsTopic *string) *CreateExternalTableUsingTemplateRequest {
 	s.awsSnsTopic = awsSnsTopic
 	return s
@@ -613,7 +498,7 @@ func (s *CreateExternalTableUsingTemplateRequest) WithTag(tag []*TagAssociationR
 }
 
 func NewAlterExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *AlterExternalTableRequest {
 	s := AlterExternalTableRequest{}
 	s.name = name
@@ -672,7 +557,7 @@ func NewExternalTableFileRequest(
 }
 
 func NewAlterExternalTablePartitionRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *AlterExternalTablePartitionRequest {
 	s := AlterExternalTablePartitionRequest{}
 	s.name = name
@@ -710,7 +595,7 @@ func NewPartitionRequest(
 }
 
 func NewDropExternalTableRequest(
-	name AccountObjectIdentifier,
+	name SchemaObjectIdentifier,
 ) *DropExternalTableRequest {
 	s := DropExternalTableRequest{}
 	s.name = name
@@ -789,22 +674,8 @@ func (s *ShowExternalTableInRequest) WithSchema(schema DatabaseObjectIdentifier)
 	return s
 }
 
-func NewLimitFromRequest() *LimitFromRequest {
-	return &LimitFromRequest{}
-}
-
-func (s *LimitFromRequest) WithRows(rows *int) *LimitFromRequest {
-	s.rows = rows
-	return s
-}
-
-func (s *LimitFromRequest) WithFrom(from *string) *LimitFromRequest {
-	s.from = from
-	return s
-}
-
 func NewShowExternalTableByIDRequest(
-	id AccountObjectIdentifier,
+	id SchemaObjectIdentifier,
 ) *ShowExternalTableByIDRequest {
 	s := ShowExternalTableByIDRequest{}
 	s.id = id
@@ -812,7 +683,7 @@ func NewShowExternalTableByIDRequest(
 }
 
 func NewDescribeExternalTableColumnsRequest(
-	id AccountObjectIdentifier,
+	id SchemaObjectIdentifier,
 ) *DescribeExternalTableColumnsRequest {
 	s := DescribeExternalTableColumnsRequest{}
 	s.id = id
@@ -820,7 +691,7 @@ func NewDescribeExternalTableColumnsRequest(
 }
 
 func NewDescribeExternalTableStageRequest(
-	id AccountObjectIdentifier,
+	id SchemaObjectIdentifier,
 ) *DescribeExternalTableStageRequest {
 	s := DescribeExternalTableStageRequest{}
 	s.id = id

@@ -3,8 +3,10 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -13,6 +15,7 @@ var (
 	_ validatable = new(SessionParameters)
 	_ validatable = new(ObjectParameters)
 	_ validatable = new(UserParameters)
+	_ validatable = new(setParameterOnObject)
 )
 
 var _ Parameters = (*parameters)(nil)
@@ -148,327 +151,31 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 }
 
 func (parameters *parameters) SetSessionParameterOnAccount(ctx context.Context, parameter SessionParameter, value string) error {
-	opts := AlterAccountOptions{Set: &AccountSet{Parameters: &AccountLevelParameters{SessionParameters: &SessionParameters{}}}}
-	switch parameter {
-	case SessionParameterAbortDetachedQuery:
-		b, err := parseBooleanParameter(string(parameter), value)
+	sp := &SessionParameters{}
+	err := sp.setParam(parameter, value)
+	if err == nil {
+		opts := AlterAccountOptions{Set: &AccountSet{Parameters: &AccountLevelParameters{SessionParameters: sp}}}
+		err = parameters.client.Accounts.Alter(ctx, &opts)
 		if err != nil {
 			return err
 		}
-		opts.Set.Parameters.SessionParameters.AbortDetachedQuery = b
-	case SessionParameterAutocommit:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
+		return nil
+	} else {
+		if strings.Contains(err.Error(), "session parameter is not supported") {
+			return parameters.SetObjectParameterOnAccount(ctx, ObjectParameter(parameter), value)
 		}
-		opts.Set.Parameters.SessionParameters.Autocommit = b
-	case SessionParameterBinaryInputFormat:
-		opts.Set.Parameters.SessionParameters.BinaryInputFormat = Pointer(BinaryInputFormat(value))
-	case SessionParameterBinaryOutputFormat:
-		opts.Set.Parameters.SessionParameters.BinaryOutputFormat = Pointer(BinaryOutputFormat(value))
-	case SessionParameterClientMetadataRequestUseConnectionCtx:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.Parameters.SessionParameters.ClientMetadataRequestUseConnectionCtx = b
-	case SessionParameterClientMetadataUseSessionDatabase:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.Parameters.SessionParameters.ClientMetadataUseSessionDatabase = b
-	case SessionParameterClientResultColumnCaseInsensitive:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.Parameters.SessionParameters.ClientResultColumnCaseInsensitive = b
-	case SessionParameterDateInputFormat:
-		opts.Set.Parameters.SessionParameters.DateInputFormat = &value
-	case SessionParameterDateOutputFormat:
-		opts.Set.Parameters.SessionParameters.DateOutputFormat = &value
-	case SessionParameterErrorOnNondeterministicMerge:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.Parameters.SessionParameters.ErrorOnNondeterministicMerge = b
-	case SessionParameterErrorOnNondeterministicUpdate:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.Parameters.SessionParameters.ErrorOnNondeterministicUpdate = b
-	case SessionParameterGeographyOutputFormat:
-		opts.Set.Parameters.SessionParameters.GeographyOutputFormat = Pointer(GeographyOutputFormat(value))
-	case SessionParameterJSONIndent:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("JSON_INDENT session parameter is an integer, got %v", value)
-		}
-		opts.Set.Parameters.SessionParameters.JSONIndent = Pointer(v)
-	case SessionParameterLockTimeout:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("LOCK_TIMEOUT session parameter is an integer, got %v", value)
-		}
-		opts.Set.Parameters.SessionParameters.LockTimeout = Pointer(v)
-	case SessionParameterMultiStatementCount:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("MULTI_STATEMENT_COUNT session parameter is an integer, got %v", value)
-		}
-		opts.Set.Parameters.SessionParameters.MultiStatementCount = Pointer(v)
-
-	case SessionParameterQueryTag:
-		opts.Set.Parameters.SessionParameters.QueryTag = &value
-	case SessionParameterQuotedIdentifiersIgnoreCase:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.Parameters.SessionParameters.QuotedIdentifiersIgnoreCase = b
-	case SessionParameterRowsPerResultset:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("ROWS_PER_RESULTSET session parameter is an integer, got %v", value)
-		}
-		opts.Set.Parameters.SessionParameters.RowsPerResultset = Pointer(v)
-	case SessionParameterSimulatedDataSharingConsumer:
-		opts.Set.Parameters.SessionParameters.SimulatedDataSharingConsumer = &value
-	case SessionParameterStatementTimeoutInSeconds:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("STATEMENT_TIMEOUT_IN_SECONDS session parameter is an integer, got %v", value)
-		}
-		opts.Set.Parameters.SessionParameters.StatementTimeoutInSeconds = Pointer(v)
-	case SessionParameterStrictJSONOutput:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.Parameters.SessionParameters.StrictJSONOutput = b
-	case SessionParameterTimestampDayIsAlways24h:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.Parameters.SessionParameters.TimestampDayIsAlways24h = b
-	case SessionParameterTimestampInputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampInputFormat = &value
-	case SessionParameterTimestampLTZOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampLTZOutputFormat = &value
-	case SessionParameterTimestampNTZOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampNTZOutputFormat = &value
-	case SessionParameterTimestampOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampOutputFormat = &value
-	case SessionParameterTimestampTypeMapping:
-		opts.Set.Parameters.SessionParameters.TimestampTypeMapping = &value
-	case SessionParameterTimestampTZOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimestampTZOutputFormat = &value
-	case SessionParameterTimezone:
-		opts.Set.Parameters.SessionParameters.Timezone = &value
-	case SessionParameterTimeInputFormat:
-		opts.Set.Parameters.SessionParameters.TimeInputFormat = &value
-	case SessionParameterTimeOutputFormat:
-		opts.Set.Parameters.SessionParameters.TimeOutputFormat = &value
-	case SessionParameterTransactionDefaultIsolationLevel:
-		opts.Set.Parameters.SessionParameters.TransactionDefaultIsolationLevel = Pointer(TransactionDefaultIsolationLevel(value))
-	case SessionParameterTwoDigitCenturyStart:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("TWO_DIGIT_CENTURY_START session parameter is an integer, got %v", value)
-		}
-		opts.Set.Parameters.SessionParameters.TwoDigitCenturyStart = Pointer(v)
-	case SessionParameterUnsupportedDDLAction:
-		opts.Set.Parameters.SessionParameters.UnsupportedDDLAction = Pointer(UnsupportedDDLAction(value))
-	case SessionParameterUseCachedResult:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.Parameters.SessionParameters.UseCachedResult = b
-	case SessionParameterWeekOfYearPolicy:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("WEEK_OF_YEAR_POLICY session parameter is an integer, got %v", value)
-		}
-		opts.Set.Parameters.SessionParameters.WeekOfYearPolicy = Pointer(v)
-	case SessionParameterWeekStart:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("WEEK_START session parameter is an integer, got %v", value)
-		}
-		opts.Set.Parameters.SessionParameters.WeekStart = Pointer(v)
-	default:
-		return parameters.SetObjectParameterOnAccount(ctx, ObjectParameter(parameter), value)
-	}
-	err := parameters.client.Accounts.Alter(ctx, &opts)
-	if err != nil {
 		return err
 	}
-	return nil
 }
 
 func (parameters *parameters) SetSessionParameterOnUser(ctx context.Context, userId AccountObjectIdentifier, parameter SessionParameter, value string) error {
-	opts := AlterUserOptions{Set: &UserSet{SessionParameters: &SessionParameters{}}}
-	switch parameter {
-	case SessionParameterAbortDetachedQuery:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.AbortDetachedQuery = b
-	case SessionParameterAutocommit:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.Autocommit = b
-	case SessionParameterBinaryInputFormat:
-		opts.Set.SessionParameters.BinaryInputFormat = Pointer(BinaryInputFormat(value))
-	case SessionParameterBinaryOutputFormat:
-		opts.Set.SessionParameters.BinaryOutputFormat = Pointer(BinaryOutputFormat(value))
-	case SessionParameterClientMetadataRequestUseConnectionCtx:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.ClientMetadataRequestUseConnectionCtx = b
-	case SessionParameterClientMetadataUseSessionDatabase:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.ClientMetadataUseSessionDatabase = b
-	case SessionParameterClientResultColumnCaseInsensitive:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.ClientResultColumnCaseInsensitive = b
-	case SessionParameterDateInputFormat:
-		opts.Set.SessionParameters.DateInputFormat = &value
-	case SessionParameterDateOutputFormat:
-		opts.Set.SessionParameters.DateOutputFormat = &value
-	case SessionParameterErrorOnNondeterministicMerge:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.ErrorOnNondeterministicMerge = b
-	case SessionParameterErrorOnNondeterministicUpdate:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.ErrorOnNondeterministicUpdate = b
-	case SessionParameterGeographyOutputFormat:
-		opts.Set.SessionParameters.GeographyOutputFormat = Pointer(GeographyOutputFormat(value))
-	case SessionParameterJSONIndent:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("JSON_INDENT session parameter is an integer, got %v", value)
-		}
-		opts.Set.SessionParameters.JSONIndent = Pointer(v)
-	case SessionParameterLockTimeout:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("LOCK_TIMEOUT session parameter is an integer, got %v", value)
-		}
-		opts.Set.SessionParameters.LockTimeout = Pointer(v)
-	case SessionParameterMultiStatementCount:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("MULTI_STATEMENT_COUNT session parameter is an integer, got %v", value)
-		}
-		opts.Set.SessionParameters.MultiStatementCount = Pointer(v)
-
-	case SessionParameterQueryTag:
-		opts.Set.SessionParameters.QueryTag = &value
-	case SessionParameterQuotedIdentifiersIgnoreCase:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.QuotedIdentifiersIgnoreCase = b
-	case SessionParameterRowsPerResultset:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("ROWS_PER_RESULTSET session parameter is an integer, got %v", value)
-		}
-		opts.Set.SessionParameters.RowsPerResultset = Pointer(v)
-	case SessionParameterSimulatedDataSharingConsumer:
-		opts.Set.SessionParameters.SimulatedDataSharingConsumer = &value
-	case SessionParameterStatementTimeoutInSeconds:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("STATEMENT_TIMEOUT_IN_SECONDS session parameter is an integer, got %v", value)
-		}
-		opts.Set.SessionParameters.StatementTimeoutInSeconds = Pointer(v)
-	case SessionParameterStrictJSONOutput:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.StrictJSONOutput = b
-	case SessionParameterTimestampDayIsAlways24h:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.TimestampDayIsAlways24h = b
-	case SessionParameterTimestampInputFormat:
-		opts.Set.SessionParameters.TimestampInputFormat = &value
-	case SessionParameterTimestampLTZOutputFormat:
-		opts.Set.SessionParameters.TimestampLTZOutputFormat = &value
-	case SessionParameterTimestampNTZOutputFormat:
-		opts.Set.SessionParameters.TimestampNTZOutputFormat = &value
-	case SessionParameterTimestampOutputFormat:
-		opts.Set.SessionParameters.TimestampOutputFormat = &value
-	case SessionParameterTimestampTypeMapping:
-		opts.Set.SessionParameters.TimestampTypeMapping = &value
-	case SessionParameterTimestampTZOutputFormat:
-		opts.Set.SessionParameters.TimestampTZOutputFormat = &value
-	case SessionParameterTimezone:
-		opts.Set.SessionParameters.Timezone = &value
-	case SessionParameterTimeInputFormat:
-		opts.Set.SessionParameters.TimeInputFormat = &value
-	case SessionParameterTimeOutputFormat:
-		opts.Set.SessionParameters.TimeOutputFormat = &value
-	case SessionParameterTransactionDefaultIsolationLevel:
-		opts.Set.SessionParameters.TransactionDefaultIsolationLevel = Pointer(TransactionDefaultIsolationLevel(value))
-	case SessionParameterTwoDigitCenturyStart:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("TWO_DIGIT_CENTURY_START session parameter is an integer, got %v", value)
-		}
-		opts.Set.SessionParameters.TwoDigitCenturyStart = Pointer(v)
-	case SessionParameterUnsupportedDDLAction:
-		opts.Set.SessionParameters.UnsupportedDDLAction = Pointer(UnsupportedDDLAction(value))
-	case SessionParameterUseCachedResult:
-		b, err := parseBooleanParameter(string(parameter), value)
-		if err != nil {
-			return err
-		}
-		opts.Set.SessionParameters.UseCachedResult = b
-	case SessionParameterWeekOfYearPolicy:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("WEEK_OF_YEAR_POLICY session parameter is an integer, got %v", value)
-		}
-		opts.Set.SessionParameters.WeekOfYearPolicy = Pointer(v)
-	case SessionParameterWeekStart:
-		v, err := strconv.Atoi(value)
-		if err != nil {
-			return fmt.Errorf("WEEK_START session parameter is an integer, got %v", value)
-		}
-		opts.Set.SessionParameters.WeekStart = Pointer(v)
-	default:
-		return fmt.Errorf("Invalid session parameter: %v", string(parameter))
+	sp := &SessionParameters{}
+	err := sp.setParam(parameter, value)
+	if err != nil {
+		return err
 	}
-	err := parameters.client.Users.Alter(ctx, userId, &opts)
+	opts := AlterUserOptions{Set: &UserSet{SessionParameters: sp}}
+	err = parameters.client.Users.Alter(ctx, userId, &opts)
 	if err != nil {
 		return err
 	}
@@ -559,13 +266,18 @@ func (parameters *parameters) SetObjectParameterOnAccount(ctx context.Context, p
 }
 
 type setParameterOnObject struct {
-	alter            bool             `ddl:"static" sql:"ALTER"` //lint:ignore U1000 This is used in the ddl tag
+	alter            bool             `ddl:"static" sql:"ALTER"`
 	objectType       ObjectType       `ddl:"keyword"`
 	objectIdentifier ObjectIdentifier `ddl:"identifier"`
-	set              bool             `ddl:"static" sql:"SET"` //lint:ignore U1000 This is used in the ddl tag
+	set              bool             `ddl:"static" sql:"SET"`
 	parameterKey     ObjectParameter  `ddl:"keyword"`
-	equals           bool             `ddl:"static" sql:"="` //lint:ignore U1000 This is used in the ddl tag
+	equals           bool             `ddl:"static" sql:"="`
 	parameterValue   string           `ddl:"keyword"`
+}
+
+// TODO: add validations
+func (v *setParameterOnObject) validate() error {
+	return nil
 }
 
 func (parameters *parameters) SetObjectParameterOnObject(ctx context.Context, object Object, parameter ObjectParameter, value string) error {
@@ -574,6 +286,9 @@ func (parameters *parameters) SetObjectParameterOnObject(ctx context.Context, ob
 		objectIdentifier: object.Name,
 		parameterKey:     parameter,
 		parameterValue:   value,
+	}
+	if err := opts.validate(); err != nil {
+		return err
 	}
 	sql, err := structToSQL(opts)
 	if err != nil {
@@ -806,24 +521,24 @@ type AccountParameters struct {
 }
 
 func (v *AccountParameters) validate() error {
+	var errs []error
 	if valueSet(v.ClientEncryptionKeySize) {
 		if !(*v.ClientEncryptionKeySize == 128 || *v.ClientEncryptionKeySize == 256) {
-			return fmt.Errorf("CLIENT_ENCRYPTION_KEY_SIZE must be either 128 or 256")
+			errs = append(errs, fmt.Errorf("CLIENT_ENCRYPTION_KEY_SIZE must be either 128 or 256"))
 		}
 	}
 	if valueSet(v.InitialReplicationSizeLimitInTB) {
 		l := *v.InitialReplicationSizeLimitInTB
 		if l < 0.0 || (l < 0.0 && l < 1.0) {
-			return fmt.Errorf("%v must be 0.0 and above with a scale of at least 1 (e.g. 20.5, 32.25, 33.333, etc.)", l)
+			errs = append(errs, fmt.Errorf("%v must be 0.0 and above with a scale of at least 1 (e.g. 20.5, 32.25, 33.333, etc.)", l))
 		}
-		return nil
 	}
 	if valueSet(v.MinDataRetentionTimeInDays) {
-		if ok := validateIntInRange(*v.MinDataRetentionTimeInDays, 0, 90); !ok {
-			return fmt.Errorf("MIN_DATA_RETENTION_TIME_IN_DAYS must be between 0 and 90")
+		if !validateIntInRange(*v.MinDataRetentionTimeInDays, 0, 90) {
+			errs = append(errs, errIntBetween("AccountParameters", "MinDataRetentionTimeInDays", 0, 90))
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type AccountParametersUnset struct {
@@ -923,82 +638,88 @@ type SessionParameters struct {
 }
 
 func (v *SessionParameters) validate() error {
+	var errs []error
 	if valueSet(v.JSONIndent) {
-		if ok := validateIntInRange(*v.JSONIndent, 0, 16); !ok {
-			return fmt.Errorf("JSON_INDENT must be between 0 and 16")
+		if !validateIntInRange(*v.JSONIndent, 0, 16) {
+			errs = append(errs, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
 		}
 	}
 	if valueSet(v.LockTimeout) {
-		if ok := validateIntGreaterThanOrEqual(*v.LockTimeout, 0); !ok {
-			return fmt.Errorf("LOCK_TIMEOUT must be greater than or equal to 0")
+		if !validateIntGreaterThanOrEqual(*v.LockTimeout, 0) {
+			errs = append(errs, errIntValue("SessionParameters", "LockTimeout", IntErrGreaterOrEqual, 0))
 		}
 	}
 	if valueSet(v.QueryTag) {
 		if len(*v.QueryTag) > 2000 {
-			return fmt.Errorf("QUERY_TAG must be less than 2000 characters")
+			errs = append(errs, errIntValue("SessionParameters", "QueryTag", IntErrLess, 2000))
 		}
 	}
 	if valueSet(v.RowsPerResultset) {
-		if ok := validateIntGreaterThanOrEqual(*v.RowsPerResultset, 0); !ok {
-			return fmt.Errorf("ROWS_PER_RESULTSET must be greater than or equal to 0")
+		if !validateIntGreaterThanOrEqual(*v.RowsPerResultset, 0) {
+			errs = append(errs, errIntValue("SessionParameters", "RowsPerResultset", IntErrGreaterOrEqual, 0))
 		}
 	}
 	if valueSet(v.TwoDigitCenturyStart) {
-		if ok := validateIntInRange(*v.TwoDigitCenturyStart, 1900, 2100); !ok {
-			return fmt.Errorf("TWO_DIGIT_CENTURY_START must be between 1900 and 2100")
+		if !validateIntInRange(*v.TwoDigitCenturyStart, 1900, 2100) {
+			errs = append(errs, errIntBetween("SessionParameters", "TwoDigitCenturyStart", 1900, 2100))
 		}
 	}
 	if valueSet(v.WeekOfYearPolicy) {
-		if ok := validateIntInRange(*v.WeekOfYearPolicy, 0, 1); !ok {
-			return fmt.Errorf("WEEK_OF_YEAR_POLICY must be either 0 or 1")
+		if !validateIntInRange(*v.WeekOfYearPolicy, 0, 1) {
+			errs = append(errs, fmt.Errorf("WEEK_OF_YEAR_POLICY must be either 0 or 1"))
 		}
 	}
 	if valueSet(v.WeekStart) {
-		if ok := validateIntInRange(*v.WeekStart, 0, 1); !ok {
-			return fmt.Errorf("WEEK_START must be either 0 or 1")
+		if !validateIntInRange(*v.WeekStart, 0, 1) {
+			errs = append(errs, fmt.Errorf("WEEK_START must be either 0 or 1"))
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type SessionParametersUnset struct {
-	AbortDetachedQuery               *bool `ddl:"keyword" sql:"ABORT_DETACHED_QUERY"`
-	Autocommit                       *bool `ddl:"keyword" sql:"AUTOCOMMIT"`
-	BinaryInputFormat                *bool `ddl:"keyword" sql:"BINARY_INPUT_FORMAT"`
-	BinaryOutputFormat               *bool `ddl:"keyword" sql:"BINARY_OUTPUT_FORMAT"`
-	DateInputFormat                  *bool `ddl:"keyword" sql:"DATE_INPUT_FORMAT"`
-	DateOutputFormat                 *bool `ddl:"keyword" sql:"DATE_OUTPUT_FORMAT"`
-	ErrorOnNondeterministicMerge     *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_MERGE"`
-	ErrorOnNondeterministicUpdate    *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
-	GeographyOutputFormat            *bool `ddl:"keyword" sql:"GEOGRAPHY_OUTPUT_FORMAT"`
-	JSONIndent                       *bool `ddl:"keyword" sql:"JSON_INDENT"`
-	LockTimeout                      *bool `ddl:"keyword" sql:"LOCK_TIMEOUT"`
-	QueryTag                         *bool `ddl:"keyword" sql:"QUERY_TAG"`
-	RowsPerResultset                 *bool `ddl:"keyword" sql:"ROWS_PER_RESULTSET"`
-	SimulatedDataSharingConsumer     *bool `ddl:"keyword" sql:"SIMULATED_DATA_SHARING_CONSUMER"`
-	StatementTimeoutInSeconds        *bool `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
-	StrictJSONOutput                 *bool `ddl:"keyword" sql:"STRICT_JSON_OUTPUT"`
-	TimestampDayIsAlways24h          *bool `ddl:"keyword" sql:"TIMESTAMP_DAY_IS_ALWAYS_24H"`
-	TimestampInputFormat             *bool `ddl:"keyword" sql:"TIMESTAMP_INPUT_FORMAT"`
-	TimestampLTZOutputFormat         *bool `ddl:"keyword" sql:"TIMESTAMP_LTZ_OUTPUT_FORMAT"`
-	TimestampNTZOutputFormat         *bool `ddl:"keyword" sql:"TIMESTAMP_NTZ_OUTPUT_FORMAT"`
-	TimestampOutputFormat            *bool `ddl:"keyword" sql:"TIMESTAMP_OUTPUT_FORMAT"`
-	TimestampTypeMapping             *bool `ddl:"keyword" sql:"TIMESTAMP_TYPE_MAPPING"`
-	TimestampTZOutputFormat          *bool `ddl:"keyword" sql:"TIMESTAMP_TZ_OUTPUT_FORMAT"`
-	Timezone                         *bool `ddl:"keyword" sql:"TIMEZONE"`
-	TimeInputFormat                  *bool `ddl:"keyword" sql:"TIME_INPUT_FORMAT"`
-	TimeOutputFormat                 *bool `ddl:"keyword" sql:"TIME_OUTPUT_FORMAT"`
-	TransactionDefaultIsolationLevel *bool `ddl:"keyword" sql:"TRANSACTION_DEFAULT_ISOLATION_LEVEL"`
-	TwoDigitCenturyStart             *bool `ddl:"keyword" sql:"TWO_DIGIT_CENTURY_START"`
-	UnsupportedDDLAction             *bool `ddl:"keyword" sql:"UNSUPPORTED_DDL_ACTION"`
-	UseCachedResult                  *bool `ddl:"keyword" sql:"USE_CACHED_RESULT"`
-	WeekOfYearPolicy                 *bool `ddl:"keyword" sql:"WEEK_OF_YEAR_POLICY"`
-	WeekStart                        *bool `ddl:"keyword" sql:"WEEK_START"`
+	AbortDetachedQuery                    *bool `ddl:"keyword" sql:"ABORT_DETACHED_QUERY"`
+	Autocommit                            *bool `ddl:"keyword" sql:"AUTOCOMMIT"`
+	BinaryInputFormat                     *bool `ddl:"keyword" sql:"BINARY_INPUT_FORMAT"`
+	BinaryOutputFormat                    *bool `ddl:"keyword" sql:"BINARY_OUTPUT_FORMAT"`
+	ClientMetadataRequestUseConnectionCtx *bool `ddl:"keyword" sql:"CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"`
+	ClientMetadataUseSessionDatabase      *bool `ddl:"keyword" sql:"CLIENT_METADATA_USE_SESSION_DATABASE"`
+	ClientResultColumnCaseInsensitive     *bool `ddl:"keyword" sql:"CLIENT_RESULT_COLUMN_CASE_INSENSITIVE"`
+	DateInputFormat                       *bool `ddl:"keyword" sql:"DATE_INPUT_FORMAT"`
+	DateOutputFormat                      *bool `ddl:"keyword" sql:"DATE_OUTPUT_FORMAT"`
+	ErrorOnNondeterministicMerge          *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_MERGE"`
+	ErrorOnNondeterministicUpdate         *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
+	GeographyOutputFormat                 *bool `ddl:"keyword" sql:"GEOGRAPHY_OUTPUT_FORMAT"`
+	JSONIndent                            *bool `ddl:"keyword" sql:"JSON_INDENT"`
+	LockTimeout                           *bool `ddl:"keyword" sql:"LOCK_TIMEOUT"`
+	MultiStatementCount                   *bool `ddl:"keyword" sql:"MULTI_STATEMENT_COUNT"`
+	QueryTag                              *bool `ddl:"keyword" sql:"QUERY_TAG"`
+	QuotedIdentifiersIgnoreCase           *bool `ddl:"keyword" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	RowsPerResultset                      *bool `ddl:"keyword" sql:"ROWS_PER_RESULTSET"`
+	SimulatedDataSharingConsumer          *bool `ddl:"keyword" sql:"SIMULATED_DATA_SHARING_CONSUMER"`
+	StatementTimeoutInSeconds             *bool `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
+	StrictJSONOutput                      *bool `ddl:"keyword" sql:"STRICT_JSON_OUTPUT"`
+	TimestampDayIsAlways24h               *bool `ddl:"keyword" sql:"TIMESTAMP_DAY_IS_ALWAYS_24H"`
+	TimestampInputFormat                  *bool `ddl:"keyword" sql:"TIMESTAMP_INPUT_FORMAT"`
+	TimestampLTZOutputFormat              *bool `ddl:"keyword" sql:"TIMESTAMP_LTZ_OUTPUT_FORMAT"`
+	TimestampNTZOutputFormat              *bool `ddl:"keyword" sql:"TIMESTAMP_NTZ_OUTPUT_FORMAT"`
+	TimestampOutputFormat                 *bool `ddl:"keyword" sql:"TIMESTAMP_OUTPUT_FORMAT"`
+	TimestampTypeMapping                  *bool `ddl:"keyword" sql:"TIMESTAMP_TYPE_MAPPING"`
+	TimestampTZOutputFormat               *bool `ddl:"keyword" sql:"TIMESTAMP_TZ_OUTPUT_FORMAT"`
+	Timezone                              *bool `ddl:"keyword" sql:"TIMEZONE"`
+	TimeInputFormat                       *bool `ddl:"keyword" sql:"TIME_INPUT_FORMAT"`
+	TimeOutputFormat                      *bool `ddl:"keyword" sql:"TIME_OUTPUT_FORMAT"`
+	TransactionDefaultIsolationLevel      *bool `ddl:"keyword" sql:"TRANSACTION_DEFAULT_ISOLATION_LEVEL"`
+	TwoDigitCenturyStart                  *bool `ddl:"keyword" sql:"TWO_DIGIT_CENTURY_START"`
+	UnsupportedDDLAction                  *bool `ddl:"keyword" sql:"UNSUPPORTED_DDL_ACTION"`
+	UseCachedResult                       *bool `ddl:"keyword" sql:"USE_CACHED_RESULT"`
+	WeekOfYearPolicy                      *bool `ddl:"keyword" sql:"WEEK_OF_YEAR_POLICY"`
+	WeekStart                             *bool `ddl:"keyword" sql:"WEEK_START"`
 }
 
 func (v *SessionParametersUnset) validate() error {
-	if ok := anyValueSet(v.AbortDetachedQuery, v.Autocommit, v.BinaryInputFormat, v.BinaryOutputFormat, v.DateInputFormat, v.DateOutputFormat, v.ErrorOnNondeterministicMerge, v.ErrorOnNondeterministicUpdate, v.GeographyOutputFormat, v.JSONIndent, v.LockTimeout, v.QueryTag, v.RowsPerResultset, v.SimulatedDataSharingConsumer, v.StatementTimeoutInSeconds, v.StrictJSONOutput, v.TimestampDayIsAlways24h, v.TimestampInputFormat, v.TimestampLTZOutputFormat, v.TimestampNTZOutputFormat, v.TimestampOutputFormat, v.TimestampTypeMapping, v.TimestampTZOutputFormat, v.Timezone, v.TimeInputFormat, v.TimeOutputFormat, v.TransactionDefaultIsolationLevel, v.TwoDigitCenturyStart, v.UnsupportedDDLAction, v.UseCachedResult, v.WeekOfYearPolicy, v.WeekStart); !ok {
-		return fmt.Errorf("at least one session parameter must be set")
+	if !anyValueSet(v.AbortDetachedQuery, v.Autocommit, v.BinaryInputFormat, v.BinaryOutputFormat, v.ClientMetadataRequestUseConnectionCtx, v.ClientMetadataUseSessionDatabase, v.ClientResultColumnCaseInsensitive, v.DateInputFormat, v.DateOutputFormat, v.ErrorOnNondeterministicMerge, v.ErrorOnNondeterministicUpdate, v.GeographyOutputFormat, v.JSONIndent, v.LockTimeout, v.MultiStatementCount, v.QueryTag, v.QuotedIdentifiersIgnoreCase, v.RowsPerResultset, v.SimulatedDataSharingConsumer, v.StatementTimeoutInSeconds, v.StrictJSONOutput, v.TimestampDayIsAlways24h, v.TimestampInputFormat, v.TimestampLTZOutputFormat, v.TimestampNTZOutputFormat, v.TimestampOutputFormat, v.TimestampTypeMapping, v.TimestampTZOutputFormat, v.Timezone, v.TimeInputFormat, v.TimeOutputFormat, v.TransactionDefaultIsolationLevel, v.TwoDigitCenturyStart, v.UnsupportedDDLAction, v.UseCachedResult, v.WeekOfYearPolicy, v.WeekStart) {
+		return errors.Join(errAtLeastOneOf("SessionParametersUnset", "AbortDetachedQuery", "Autocommit", "BinaryInputFormat", "BinaryOutputFormat", "DateInputFormat", "DateOutputFormat", "ErrorOnNondeterministicMerge", "ErrorOnNondeterministicUpdate", "GeographyOutputFormat", "JSONIndent", "LockTimeout", "QueryTag", "RowsPerResultset", "SimulatedDataSharingConsumer", "StatementTimeoutInSeconds", "StrictJSONOutput", "TimestampDayIsAlways24h", "TimestampInputFormat", "TimestampLTZOutputFormat", "TimestampNTZOutputFormat", "TimestampOutputFormat", "TimestampTypeMapping", "TimestampTZOutputFormat", "Timezone", "TimeInputFormat", "TimeOutputFormat", "TransactionDefaultIsolationLevel", "TwoDigitCenturyStart", "UnsupportedDDLAction", "UseCachedResult", "WeekOfYearPolicy", "WeekStart"))
 	}
 	return nil
 }
@@ -1043,41 +764,38 @@ type ObjectParameters struct {
 }
 
 func (v *ObjectParameters) validate() error {
+	var errs []error
 	if valueSet(v.DataRetentionTimeInDays) {
-		if ok := validateIntInRange(*v.DataRetentionTimeInDays, 0, 90); !ok {
-			return fmt.Errorf("DATA_RETENTION_TIME_IN_DAYS must be between 0 and 90")
+		if !validateIntInRange(*v.DataRetentionTimeInDays, 0, 90) {
+			errs = append(errs, errIntBetween("ObjectParameters", "DataRetentionTimeInDays", 0, 90))
 		}
 	}
 	if valueSet(v.MaxConcurrencyLevel) {
-		if ok := validateIntGreaterThanOrEqual(*v.MaxConcurrencyLevel, 1); !ok {
-			return fmt.Errorf("MAX_CONCURRENCY_LEVEL must be greater than or equal to 1")
+		if !validateIntGreaterThanOrEqual(*v.MaxConcurrencyLevel, 1) {
+			errs = append(errs, errIntValue("ObjectParameters", "MaxConcurrencyLevel", IntErrGreaterOrEqual, 1))
 		}
 	}
-
 	if valueSet(v.MaxDataExtensionTimeInDays) {
-		if ok := validateIntInRange(*v.MaxDataExtensionTimeInDays, 0, 90); !ok {
-			return fmt.Errorf("MAX_DATA_EXTENSION_TIME_IN_DAYS must be between 0 and 90")
+		if !validateIntInRange(*v.MaxDataExtensionTimeInDays, 0, 90) {
+			errs = append(errs, errIntBetween("ObjectParameters", "MaxDataExtensionTimeInDays", 0, 90))
 		}
 	}
-
 	if valueSet(v.StatementQueuedTimeoutInSeconds) {
-		if ok := validateIntGreaterThanOrEqual(*v.StatementQueuedTimeoutInSeconds, 0); !ok {
-			return fmt.Errorf("STATEMENT_QUEUED_TIMEOUT_IN_SECONDS must be greater than or equal to 0")
+		if !validateIntGreaterThanOrEqual(*v.StatementQueuedTimeoutInSeconds, 0) {
+			errs = append(errs, errIntValue("ObjectParameters", "StatementQueuedTimeoutInSeconds", IntErrGreaterOrEqual, 0))
 		}
 	}
-
 	if valueSet(v.SuspendTaskAfterNumFailures) {
-		if ok := validateIntGreaterThanOrEqual(*v.SuspendTaskAfterNumFailures, 0); !ok {
-			return fmt.Errorf("SUSPEND_TASK_AFTER_NUM_FAILURES must be greater than or equal to 0")
+		if !validateIntGreaterThanOrEqual(*v.SuspendTaskAfterNumFailures, 0) {
+			errs = append(errs, errIntValue("ObjectParameters", "SuspendTaskAfterNumFailures", IntErrGreaterOrEqual, 0))
 		}
 	}
-
 	if valueSet(v.UserTaskTimeoutMs) {
-		if ok := validateIntInRange(*v.UserTaskTimeoutMs, 0, 86400000); !ok {
-			return fmt.Errorf("USER_TASK_TIMEOUT_MS must be between 0 and 86400000")
+		if !validateIntInRange(*v.UserTaskTimeoutMs, 0, 86400000) {
+			errs = append(errs, errIntBetween("ObjectParameters", "UserTaskTimeoutMs", 0, 86400000))
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 type ObjectParametersUnset struct {
@@ -1111,8 +829,8 @@ type UserParametersUnset struct {
 
 // ShowParametersOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-parameters.
 type ShowParametersOptions struct {
-	show       bool          `ddl:"static" sql:"SHOW"`       //lint:ignore U1000 This is used in the ddl tag
-	parameters bool          `ddl:"static" sql:"PARAMETERS"` //lint:ignore U1000 This is used in the ddl tag
+	show       bool          `ddl:"static" sql:"SHOW"`
+	parameters bool          `ddl:"static" sql:"PARAMETERS"`
 	Like       *Like         `ddl:"keyword" sql:"LIKE"`
 	In         *ParametersIn `ddl:"keyword" sql:"IN"`
 }
@@ -1138,8 +856,8 @@ type ParametersIn struct {
 }
 
 func (v *ParametersIn) validate() error {
-	if ok := anyValueSet(v.Session, v.Account, v.User, v.Warehouse, v.Database, v.Schema, v.Task, v.Table); !ok {
-		return fmt.Errorf("at least one IN parameter must be set")
+	if !anyValueSet(v.Session, v.Account, v.User, v.Warehouse, v.Database, v.Schema, v.Task, v.Table) {
+		return errors.Join(errAtLeastOneOf("Session", "Account", "User", "Warehouse", "Database", "Schema", "Task", "Table"))
 	}
 	return nil
 }

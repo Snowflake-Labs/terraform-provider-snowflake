@@ -15,7 +15,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
-	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
 
 const (
@@ -24,11 +23,10 @@ const (
 
 var mpAttachmentPolicySchema = map[string]*schema.Schema{
 	"tag_id": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
-		ValidateFunc: snowflakeValidation.ValidateFullyQualifiedObjectID,
-		ForceNew:     true,
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the identifier for the tag. Note: format must follow: \"databaseName\".\"schemaName\".\"tagName\" or \"databaseName.schemaName.tagName\" or \"databaseName|schemaName.tagName\" (snowflake_tag.tag.id)",
+		ForceNew:    true,
 	},
 	"masking_policy_id": {
 		Type:        schema.TypeString,
@@ -209,22 +207,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	tagID := TagID{
-		DatabaseName: t.RefDB.String,
-		SchemaName:   t.RefSchema.String,
-		TagName:      t.RefEntity.String,
-	}
-
-	tagIDString, err := tagID.String()
-	if err != nil {
-		return err
-	}
-
 	mpIDString := helpers.EncodeSnowflakeID(t.PolicyDB.String, t.PolicySchema.String, t.PolicyName.String)
-
-	if err := d.Set("tag_id", tagIDString); err != nil {
-		return err
-	}
 
 	if err := d.Set("masking_policy_id", mpIDString); err != nil {
 		return err

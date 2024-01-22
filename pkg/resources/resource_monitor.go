@@ -300,22 +300,6 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-// setDataFromNullString blanks the value if v is null, otherwise sets the value to the value of v.
-func setDataFromNullStrings(data *schema.ResourceData, ns map[string]sql.NullString) error {
-	for k, v := range ns {
-		var err error
-		if v.Valid {
-			err = data.Set(k, v.String) // lintignore:R001
-		} else {
-			err = data.Set(k, "") // lintignore:R001
-		}
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // UpdateResourceMonitor implements schema.UpdateFunc.
 func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -333,7 +317,28 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	var runSetStatement bool
 
-	opts := sdk.AlterResourceMonitorOptions{Set: &sdk.ResourceMonitorSet{}}
+	opts := sdk.AlterResourceMonitorOptions{}
+
+	set := sdk.ResourceMonitorSet{}
+	if d.HasChange("credit_quota") {
+		runSetStatement = true
+		set.CreditQuota = sdk.Pointer(d.Get("credit_quota").(int))
+	}
+
+	if d.HasChange("frequency") || d.HasChange("start_timestamp") {
+		runSetStatement = true
+		frequency, err := sdk.FrequencyFromString(d.Get("frequency").(string))
+		if err != nil {
+			return err
+		}
+		set.Frequency = frequency
+		set.StartTimestamp = sdk.Pointer(d.Get("start_timestamp").(string))
+	}
+
+	if d.HasChange("end_timestamp") {
+		runSetStatement = true
+		set.EndTimestamp = sdk.Pointer(d.Get("end_timestamp").(string))
+	}
 
 	if d.HasChange("notify_users") {
 		runSetStatement = true
@@ -343,38 +348,18 @@ func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		for _, name := range userNames {
 			users = append(users, sdk.NotifiedUser{Name: name})
 		}
-		opts.NotifyUsers.Users = users
-	}
-
-	if d.HasChange("credit_quota") {
-		runSetStatement = true
-		opts.Set.CreditQuota = sdk.Pointer(d.Get("credit_quota").(int))
-	}
-
-	if d.HasChange("frequency") {
-		runSetStatement = true
-		frequency, err := sdk.FrequencyFromString(d.Get("frequency").(string))
-		if err != nil {
-			return err
+		set.NotifyUsers = &sdk.NotifyUsers{
+			Users: users,
 		}
-		opts.Set.Frequency = frequency
 	}
 
-	if d.HasChange("start_timestamp") {
-		runSetStatement = true
-		opts.Set.StartTimestamp = sdk.Pointer(d.Get("start_timestamp").(string))
-	}
-
-	if d.HasChange("end_timestamp") {
-		runSetStatement = true
-		opts.Set.EndTimestamp = sdk.Pointer(d.Get("end_timestamp").(string))
+	if set != (sdk.ResourceMonitorSet{}) {
+		opts.Set = &set
 	}
 
 	// If ANY of the triggers changed, we collect all triggers and set them
-	if d.HasChange("suspend_trigger") ||
-		d.HasChange("suspend_triggers") ||
-		d.HasChange("suspend_immediate_trigger") ||
-		d.HasChange("suspend_immediate_triggers") ||
+	if d.HasChange("suspend_trigger") || d.HasChange("suspend_triggers") ||
+		d.HasChange("suspend_immediate_trigger") || d.HasChange("suspend_immediate_triggers") ||
 		d.HasChange("notify_triggers") {
 		runSetStatement = true
 		triggers := collectResourceMonitorTriggers(d)

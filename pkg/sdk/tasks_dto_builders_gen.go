@@ -103,6 +103,26 @@ func (s *CreateTaskWarehouseRequest) WithUserTaskManagedInitialWarehouseSize(Use
 	return s
 }
 
+func NewCloneTaskRequest(
+	name SchemaObjectIdentifier,
+	sourceTask SchemaObjectIdentifier,
+) *CloneTaskRequest {
+	s := CloneTaskRequest{}
+	s.name = name
+	s.sourceTask = sourceTask
+	return &s
+}
+
+func (s *CloneTaskRequest) WithOrReplace(OrReplace *bool) *CloneTaskRequest {
+	s.OrReplace = OrReplace
+	return s
+}
+
+func (s *CloneTaskRequest) WithCopyGrants(CopyGrants *bool) *CloneTaskRequest {
+	s.CopyGrants = CopyGrants
+	return s
+}
+
 func NewAlterTaskRequest(
 	name SchemaObjectIdentifier,
 ) *AlterTaskRequest {
@@ -175,6 +195,11 @@ func (s *TaskSetRequest) WithWarehouse(Warehouse *AccountObjectIdentifier) *Task
 	return s
 }
 
+func (s *TaskSetRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize *WarehouseSize) *TaskSetRequest {
+	s.UserTaskManagedInitialWarehouseSize = UserTaskManagedInitialWarehouseSize
+	return s
+}
+
 func (s *TaskSetRequest) WithSchedule(Schedule *string) *TaskSetRequest {
 	s.Schedule = Schedule
 	return s
@@ -197,6 +222,11 @@ func (s *TaskSetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *int) *TaskSetR
 
 func (s *TaskSetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *int) *TaskSetRequest {
 	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+	return s
+}
+
+func (s *TaskSetRequest) WithErrorIntegration(ErrorIntegration *string) *TaskSetRequest {
+	s.ErrorIntegration = ErrorIntegration
 	return s
 }
 
@@ -241,6 +271,11 @@ func (s *TaskUnsetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *bool) *TaskU
 
 func (s *TaskUnsetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *bool) *TaskUnsetRequest {
 	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+	return s
+}
+
+func (s *TaskUnsetRequest) WithErrorIntegration(ErrorIntegration *bool) *TaskUnsetRequest {
+	s.ErrorIntegration = ErrorIntegration
 	return s
 }
 

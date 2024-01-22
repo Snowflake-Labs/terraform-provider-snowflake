@@ -6,9 +6,10 @@ import (
 	"testing"
 	"text/template"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +22,8 @@ func TestAcc_UserPublicKeys(t *testing.T) {
 	r.NoError(err)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -35,14 +37,16 @@ func TestAcc_UserPublicKeys(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_user_public_keys.foobar", "rsa_public_key", sshkey1),
 					resource.TestCheckResourceAttr("snowflake_user_public_keys.foobar", "rsa_public_key_2", sshkey2),
+					resource.TestCheckNoResourceAttr("snowflake_user_public_keys.foobar", "has_rsa_public_key"),
 				),
 			},
 			// IMPORT
 			{
-				ResourceName:            "snowflake_user.w",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2", "must_change_password"},
+				ResourceName:      "snowflake_user.w",
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Ignoring because keys are currently altered outside of snowflake_user resource (in snowflake_user_public_keys).
+				ImportStateVerifyIgnore: []string{"password", "rsa_public_key", "rsa_public_key_2", "has_rsa_public_key", "must_change_password"},
 			},
 		},
 	})

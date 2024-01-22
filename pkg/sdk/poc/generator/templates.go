@@ -115,7 +115,11 @@ var ImplementationTemplate, _ = template.New("implementationTemplate").
 		return &{{ .To.KindNoPtr }}{}
 	}
 {{ end }}
-import "context"
+import (
+"context"
+
+"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+)
 
 {{ $impl := .NameLowerCased }}
 var _ {{ .Name }} = (*{{ $impl }})(nil)
@@ -141,7 +145,7 @@ type {{ $impl }} struct {
 			if err != nil {
 				return nil, err
 			}
-			return findOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
+			return collections.FindOne({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
 		}
 	{{ else if and (eq .Name "Describe") .DescribeMapping }}
 		{{ if .DescribeKind }}
@@ -219,7 +223,7 @@ import "testing"
 {{ range .Operations }}
 	{{- if .OptsField }}
 	func Test{{ .ObjectInterface.Name }}_{{ .Name }}(t *testing.T) {
-		id := random{{ .ObjectInterface.IdentifierKind }}(t)
+		id := Random{{ .ObjectInterface.IdentifierKind }}()
 
 		// Minimal valid {{ .OptsField.KindNoPtr }}
 		defaultOpts := func() *{{ .OptsField.KindNoPtr }} {
@@ -230,7 +234,7 @@ import "testing"
 
 		t.Run("validation: nil options", func(t *testing.T) {
 			var opts *{{ .OptsField.KindNoPtr }} = nil
-			assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+			assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 		})
 
 		{{- template "VALIDATIONS" .OptsField }}
@@ -268,11 +272,9 @@ var ValidationsImplTemplate, _ = template.New("validationsImplTemplate").Parse(`
 	{{- end -}}
 {{ end }}
 
-import "errors"
-
 var (
 {{- range .Operations }}
-	{{- if .OptsField }}	
+	{{- if .OptsField }}
 	_ validatable = new({{ .OptsField.KindNoPtr }})
 	{{- end }}
 {{- end }}
@@ -281,11 +283,11 @@ var (
 	{{- if .OptsField }}
 	func (opts *{{ .OptsField.KindNoPtr }}) validate() error {
 		if opts == nil {
-			return errors.Join(errNilOptions)
+			return ErrNilOptions
 		}
 		var errs []error
 		{{- template "VALIDATIONS" .OptsField }}
-		return errors.Join(errs...)
+		return JoinErrors(errs...)
 	}
 	{{- end }}
 {{ end }}

@@ -4,11 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var databaseSchema = map[string]*schema.Schema{
@@ -190,8 +189,10 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 
 	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
-		return err
+		d.SetId("")
+		return nil
 	}
+
 	if err := d.Set("name", database.Name); err != nil {
 		return err
 	}

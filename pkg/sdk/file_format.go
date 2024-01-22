@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/exp/slices"
 )
 
 var (
@@ -161,7 +160,7 @@ func (row FileFormatRow) convert() *FileFormat {
 		ff.Options.JSONTimestampFormat = &inputOptions.TimestampFormat
 		ff.Options.JSONBinaryFormat = (*BinaryFormat)(&inputOptions.BinaryFormat)
 		ff.Options.JSONTrimSpace = &inputOptions.TrimSpace
-		ff.Options.JSONNullIf = &newNullIf
+		ff.Options.JSONNullIf = newNullIf
 		ff.Options.JSONFileExtension = &inputOptions.FileExtension
 		ff.Options.JSONEnableOctal = &inputOptions.EnableOctal
 		ff.Options.JSONAllowDuplicate = &inputOptions.AllowDuplicate
@@ -201,7 +200,7 @@ func (row FileFormatRow) convert() *FileFormat {
 
 type FileFormatType string
 
-const (
+var (
 	FileFormatTypeCSV     FileFormatType = "CSV"
 	FileFormatTypeJSON    FileFormatType = "JSON"
 	FileFormatTypeAvro    FileFormatType = "AVRO"
@@ -329,8 +328,8 @@ type CreateFileFormatOptions struct {
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
 	Type        FileFormatType         `ddl:"parameter" sql:"TYPE"`
-
 	FileFormatTypeOptions
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *CreateFileFormatOptions) validate() error {
@@ -341,7 +340,7 @@ func (opts *CreateFileFormatOptions) validate() error {
 			continue
 		}
 		if anyValueSet(fields[formatType]...) {
-			return fmt.Errorf("Cannot set %s fields when TYPE = %s", formatType, opts.Type)
+			return fmt.Errorf("cannot set %s fields when TYPE = %s", formatType, opts.Type)
 		}
 	}
 
@@ -376,13 +375,14 @@ type AlterFileFormatOptions struct {
 	IfExists   *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name       SchemaObjectIdentifier `ddl:"identifier"`
 
-	Rename *AlterFileFormatRenameOptions
-	Set    *FileFormatTypeOptions `ddl:"list,no_comma" sql:"SET"`
+	Rename     *AlterFileFormatRenameOptions
+	Set        *FileFormatTypeOptions `ddl:"list,no_comma" sql:"SET"`
+	SetComment *string                `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
 }
 
 func (opts *AlterFileFormatOptions) validate() error {
 	if !exactlyOneValueSet(opts.Rename, opts.Set) {
-		return fmt.Errorf("Only one of Rename or Set can be set at once.")
+		return fmt.Errorf("only one of Rename or Set can be set at once.")
 	}
 	if valueSet(opts.Set) {
 		err := opts.Set.validate()
@@ -428,7 +428,7 @@ type FileFormatTypeOptions struct {
 	JSONTimestampFormat          *string          `ddl:"parameter,single_quotes" sql:"TIMESTAMP_FORMAT"`
 	JSONBinaryFormat             *BinaryFormat    `ddl:"parameter" sql:"BINARY_FORMAT"`
 	JSONTrimSpace                *bool            `ddl:"parameter" sql:"TRIM_SPACE"`
-	JSONNullIf                   *[]NullString    `ddl:"parameter,parentheses" sql:"NULL_IF"`
+	JSONNullIf                   []NullString     `ddl:"parameter,parentheses" sql:"NULL_IF"`
 	JSONFileExtension            *string          `ddl:"parameter,single_quotes" sql:"FILE_EXTENSION"`
 	JSONEnableOctal              *bool            `ddl:"parameter" sql:"ENABLE_OCTAL"`
 	JSONAllowDuplicate           *bool            `ddl:"parameter" sql:"ALLOW_DUPLICATE"`
@@ -466,8 +466,6 @@ type FileFormatTypeOptions struct {
 	XMLDisableAutoConvert       *bool           `ddl:"parameter" sql:"DISABLE_AUTO_CONVERT"`
 	XMLReplaceInvalidCharacters *bool           `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
 	XMLSkipByteOrderMark        *bool           `ddl:"parameter" sql:"SKIP_BYTE_ORDER_MARK"`
-
-	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (opts *FileFormatTypeOptions) fieldsByType() map[FileFormatType][]any {
@@ -663,7 +661,7 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 			return &f, nil
 		}
 	}
-	return nil, errObjectNotExistOrAuthorized
+	return nil, ErrObjectNotExistOrAuthorized
 }
 
 type FileFormatDetails struct {
@@ -737,7 +735,7 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 			case "PARSE_HEADER":
 				b, err := strconv.ParseBool(v)
 				if err != nil {
-					return nil, fmt.Errorf(`cannot cast SKIP_HEADER value "%s" to bool: %w`, v, err)
+					return nil, fmt.Errorf(`cannot cast PARSE_HEADER value "%s" to bool: %w`, v, err)
 				}
 				details.Options.CSVParseHeader = &b
 			case "DATE_FORMAT":
@@ -836,7 +834,7 @@ func (v *fileFormats) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 				for _, s := range strings.Split(strings.Trim(v, "[]"), ", ") {
 					newNullIf = append(newNullIf, NullString{s})
 				}
-				details.Options.JSONNullIf = &newNullIf
+				details.Options.JSONNullIf = newNullIf
 			case "COMPRESSION":
 				comp := JSONCompression(v)
 				details.Options.JSONCompression = &comp

@@ -5,12 +5,12 @@ import (
 )
 
 func TestDynamicTableCreate(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *createDynamicTableOptions {
 		return &createDynamicTableOptions{
 			name: id,
 			targetLag: TargetLag{
-				Lagtime: String("1 minutes"),
+				MaximumDuration: String("1 minutes"),
 			},
 			warehouse: AccountObjectIdentifier{
 				name: "warehouse_name",
@@ -20,13 +20,13 @@ func TestDynamicTableCreate(t *testing.T) {
 	}
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *createDynamicTableOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -44,7 +44,7 @@ func TestDynamicTableCreate(t *testing.T) {
 }
 
 func TestDynamicTableAlter(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *alterDynamicTableOptions {
 		return &alterDynamicTableOptions{
 			name: id,
@@ -53,30 +53,30 @@ func TestDynamicTableAlter(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *alterDynamicTableOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: no alter action", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDynamicTableOptions", "Suspend", "Resume", "Refresh", "Set"))
 	})
 
 	t.Run("validation: multiple alter actions", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Resume = Bool(true)
 		opts.Suspend = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsExactlyOneAction)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDynamicTableOptions", "Suspend", "Resume", "Refresh", "Set"))
 	})
 
 	t.Run("validation: no property to unset", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errAlterNeedsAtLeastOneProperty)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDynamicTableOptions", "Suspend", "Resume", "Refresh", "Set"))
 	})
 
 	t.Run("suspend", func(t *testing.T) {
@@ -95,7 +95,7 @@ func TestDynamicTableAlter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &DynamicTableSet{
 			TargetLag: &TargetLag{
-				Lagtime: String("1 minutes"),
+				MaximumDuration: String("1 minutes"),
 			},
 			Warehouse: &AccountObjectIdentifier{
 				name: "warehouse_name",
@@ -106,7 +106,7 @@ func TestDynamicTableAlter(t *testing.T) {
 }
 
 func TestDynamicTableDrop(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *dropDynamicTableOptions {
 		return &dropDynamicTableOptions{
 			name: id,
@@ -115,13 +115,13 @@ func TestDynamicTableDrop(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *dropDynamicTableOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("empty options", func(t *testing.T) {
@@ -131,20 +131,20 @@ func TestDynamicTableDrop(t *testing.T) {
 }
 
 func TestDynamicTableShow(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *showDynamicTableOptions {
 		return &showDynamicTableOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *showDynamicTableOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: empty like", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Like = &Like{}
-		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
+		assertOptsInvalidJoinedErrors(t, opts, ErrPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("show with in", func(t *testing.T) {
@@ -176,7 +176,7 @@ func TestDynamicTableShow(t *testing.T) {
 }
 
 func TestDynamicTableDescribe(t *testing.T) {
-	id := randomSchemaObjectIdentifier(t)
+	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *describeDynamicTableOptions {
 		return &describeDynamicTableOptions{
 			name: id,
@@ -185,13 +185,13 @@ func TestDynamicTableDescribe(t *testing.T) {
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *describeDynamicTableOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, errNilOptions)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("describe", func(t *testing.T) {

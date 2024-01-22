@@ -1,6 +1,10 @@
 package sdk
 
-import "context"
+import (
+	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
+)
 
 var _ Grants = (*grants)(nil)
 
@@ -9,22 +13,26 @@ type grants struct {
 }
 
 func (v *grants) GrantPrivilegesToAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *GrantPrivilegesToAccountRoleOptions) error {
+	logging.DebugLogger.Printf("[DEBUG] Grant privileges to account role")
 	if opts == nil {
 		opts = &GrantPrivilegesToAccountRoleOptions{}
 	}
 	opts.privileges = privileges
 	opts.on = on
 	opts.accountRole = role
+	logging.DebugLogger.Printf("[DEBUG] Grant privileges to account role: opts %+v", opts)
 	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *grants) RevokePrivilegesFromAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *RevokePrivilegesFromAccountRoleOptions) error {
+	logging.DebugLogger.Printf("[DEBUG] Revoke privileges from account role")
 	if opts == nil {
 		opts = &RevokePrivilegesFromAccountRoleOptions{}
 	}
 	opts.privileges = privileges
 	opts.on = on
 	opts.accountRole = role
+	logging.DebugLogger.Printf("[DEBUG] Revoke privileges from account role: opts %+v", opts)
 	return validateAndExec(v.client, ctx, opts)
 }
 
@@ -76,14 +84,19 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 }
 
 func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, error) {
+	logging.DebugLogger.Printf("[DEBUG] Show grants")
 	if opts == nil {
 		opts = &ShowGrantOptions{}
 	}
 
+	logging.DebugLogger.Printf("[DEBUG] Show grants: opts %+v", opts)
 	dbRows, err := validateAndQuery[grantRow](v.client, ctx, opts)
+	logging.DebugLogger.Printf("[DEBUG] Show grants: query finished err = %v", err)
 	if err != nil {
 		return nil, err
 	}
+	logging.DebugLogger.Printf("[DEBUG] Show grants: converting rows")
 	resultList := convertRows[grantRow, Grant](dbRows)
+	logging.DebugLogger.Printf("[DEBUG] Show grants: rows converted")
 	return resultList, nil
 }

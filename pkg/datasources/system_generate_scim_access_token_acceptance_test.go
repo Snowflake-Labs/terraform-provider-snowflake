@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_SystemGenerateSCIMAccessToken(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_SCIM_INTEGRATION_TESTS"); ok {
-		t.Skip("Skipping TestAccScimIntegration")
+		t.Skip("Skipping TestAcc_SystemGenerateSCIMAccessToken")
 	}
 
 	scimIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

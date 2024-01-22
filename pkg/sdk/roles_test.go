@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"errors"
 	"testing"
 )
 
@@ -33,16 +32,16 @@ func TestRolesCreate(t *testing.T) {
 		opts := &CreateRoleOptions{
 			name: NewAccountObjectIdentifier(""),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: one of OrReplace, IfNotExists", func(t *testing.T) {
 		opts := &CreateRoleOptions{
-			name:        randomAccountObjectIdentifier(t),
+			name:        RandomAccountObjectIdentifier(),
 			IfNotExists: Bool(true),
 			OrReplace:   Bool(true),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("OrReplace", "IfNotExists"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateRoleOptions", "OrReplace", "IfNotExists"))
 	})
 }
 
@@ -66,7 +65,7 @@ func TestRolesDrop(t *testing.T) {
 		opts := &DropRoleOptions{
 			name: NewAccountObjectIdentifier(""),
 		}
-		assertOptsInvalid(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 }
 
@@ -129,23 +128,23 @@ func TestRolesAlter(t *testing.T) {
 			name:         NewAccountObjectIdentifier(""),
 			UnsetComment: Bool(true),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: no alter action specified", func(t *testing.T) {
 		opts := &AlterRoleOptions{
-			name: randomAccountObjectIdentifier(t),
+			name: RandomAccountObjectIdentifier(),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("no alter action specified"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterRoleOptions", "RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: more than one alter action specified", func(t *testing.T) {
 		opts := &AlterRoleOptions{
-			name:         randomAccountObjectIdentifier(t),
+			name:         RandomAccountObjectIdentifier(),
 			SetComment:   String("comment"),
 			UnsetComment: Bool(true),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterRoleOptions", "RenameTo", "SetComment", "UnsetComment", "SetTags", "UnsetTags"))
 	})
 }
 
@@ -177,7 +176,7 @@ func TestRolesShow(t *testing.T) {
 		opts := &ShowRoleOptions{
 			Like: &Like{},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errPatternRequiredForLikeKeyword)
+		assertOptsInvalidJoinedErrors(t, opts, ErrPatternRequiredForLikeKeyword)
 	})
 
 	t.Run("validation: invalid class name", func(t *testing.T) {
@@ -187,7 +186,7 @@ func TestRolesShow(t *testing.T) {
 				Class: &class,
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 }
 
@@ -216,29 +215,29 @@ func TestRolesGrant(t *testing.T) {
 		opts := &GrantRoleOptions{
 			name: NewAccountObjectIdentifier(""),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier, errors.New("only one grant option can be set [TO ROLE or TO USER]"))
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("GrantRoleOptions.Grant", "Role", "User"))
 	})
 
 	t.Run("validation: invalid object identifier for granted role", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("")
 		opts := &GrantRoleOptions{
-			name: randomAccountObjectIdentifier(t),
+			name: RandomAccountObjectIdentifier(),
 			Grant: GrantRole{
 				Role: &id,
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("invalid object identifier for granted role"))
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("GrantRoleOptions.Grant", "Role"))
 	})
 
 	t.Run("validation: invalid object identifier for granted user", func(t *testing.T) {
 		id := NewAccountObjectIdentifier("")
 		opts := &GrantRoleOptions{
-			name: randomAccountObjectIdentifier(t),
+			name: RandomAccountObjectIdentifier(),
 			Grant: GrantRole{
 				User: &id,
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("invalid object identifier for granted user"))
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("GrantRoleOptions.Grant", "User"))
 	})
 }
 
@@ -267,6 +266,6 @@ func TestRolesRevoke(t *testing.T) {
 		opts := &RevokeRoleOptions{
 			name: NewAccountObjectIdentifier(""),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidObjectIdentifier, errors.New("only one revoke option can be set [FROM ROLE or FROM USER]"))
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errOneOf("RevokeRoleOptions.Revoke", "Role", "User"))
 	})
 }

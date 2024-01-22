@@ -4,6 +4,7 @@ package sdk
 
 var (
 	_ optionsProvider[CreateTaskOptions]   = new(CreateTaskRequest)
+	_ optionsProvider[CloneTaskOptions]    = new(CloneTaskRequest)
 	_ optionsProvider[AlterTaskOptions]    = new(AlterTaskRequest)
 	_ optionsProvider[DropTaskOptions]     = new(DropTaskRequest)
 	_ optionsProvider[ShowTaskOptions]     = new(ShowTaskRequest)
@@ -31,9 +32,24 @@ type CreateTaskRequest struct {
 	sql                         string // required
 }
 
+func (r *CreateTaskRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
 type CreateTaskWarehouseRequest struct {
 	Warehouse                           *AccountObjectIdentifier
 	UserTaskManagedInitialWarehouseSize *WarehouseSize
+}
+
+type CloneTaskRequest struct {
+	OrReplace  *bool
+	name       SchemaObjectIdentifier // required
+	sourceTask SchemaObjectIdentifier // required
+	CopyGrants *bool
+}
+
+func (r *CloneTaskRequest) GetName() SchemaObjectIdentifier {
+	return r.name
 }
 
 type AlterTaskRequest struct {
@@ -52,14 +68,16 @@ type AlterTaskRequest struct {
 }
 
 type TaskSetRequest struct {
-	Warehouse                   *AccountObjectIdentifier
-	Schedule                    *string
-	Config                      *string
-	AllowOverlappingExecution   *bool
-	UserTaskTimeoutMs           *int
-	SuspendTaskAfterNumFailures *int
-	Comment                     *string
-	SessionParameters           *SessionParameters
+	Warehouse                           *AccountObjectIdentifier
+	UserTaskManagedInitialWarehouseSize *WarehouseSize
+	Schedule                            *string
+	Config                              *string
+	AllowOverlappingExecution           *bool
+	UserTaskTimeoutMs                   *int
+	SuspendTaskAfterNumFailures         *int
+	ErrorIntegration                    *string
+	Comment                             *string
+	SessionParameters                   *SessionParameters
 }
 
 type TaskUnsetRequest struct {
@@ -69,6 +87,7 @@ type TaskUnsetRequest struct {
 	AllowOverlappingExecution   *bool
 	UserTaskTimeoutMs           *bool
 	SuspendTaskAfterNumFailures *bool
+	ErrorIntegration            *bool
 	Comment                     *bool
 	SessionParametersUnset      *SessionParametersUnset
 }

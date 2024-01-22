@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"reflect"
@@ -10,6 +11,11 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+)
+
+const (
+	IDDelimiter          = "|"
+	ParameterIDDelimiter = '.'
 )
 
 // ToDo: We can merge these two functions together and also add more functions here with similar functionality
@@ -59,10 +65,29 @@ func EncodeSnowflakeID(attributes ...interface{}) string {
 	// is attribute already an object identifier?
 	if len(attributes) == 1 {
 		if id, ok := attributes[0].(sdk.ObjectIdentifier); ok {
-			// remove quotes and replace dots with pipes
-			parts := strings.Split(id.FullyQualifiedName(), ".")
-			for i, part := range parts {
-				parts[i] = strings.Trim(part, `"`)
+			if val := reflect.ValueOf(id); val.Kind() == reflect.Ptr && val.IsNil() {
+				log.Panicf("Nil object identifier received")
+			}
+			parts := make([]string, 0)
+			switch v := id.(type) {
+			case sdk.AccountObjectIdentifier:
+				parts = append(parts, v.Name())
+			case *sdk.AccountObjectIdentifier:
+				parts = append(parts, v.Name())
+			case sdk.DatabaseObjectIdentifier:
+				parts = append(parts, v.DatabaseName(), v.Name())
+			case *sdk.DatabaseObjectIdentifier:
+				parts = append(parts, v.DatabaseName(), v.Name())
+			case sdk.SchemaObjectIdentifier:
+				parts = append(parts, v.DatabaseName(), v.SchemaName(), v.Name())
+			case *sdk.SchemaObjectIdentifier:
+				parts = append(parts, v.DatabaseName(), v.SchemaName(), v.Name())
+			case sdk.TableColumnIdentifier:
+				parts = append(parts, v.DatabaseName(), v.SchemaName(), v.TableName(), v.Name())
+			case *sdk.TableColumnIdentifier:
+				parts = append(parts, v.DatabaseName(), v.SchemaName(), v.TableName(), v.Name())
+			default:
+				log.Panicf("Unsupported object identifier: %v", id)
 			}
 			return strings.Join(parts, IDDelimiter)
 		}
@@ -100,6 +125,42 @@ func DecodeSnowflakeID(id string) sdk.ObjectIdentifier {
 	}
 }
 
+// DecodeSnowflakeParameterID decodes identifier (usually passed as one of the parameter in tf configuration) into sdk.ObjectIdentifier.
+// identifier can be specified in two ways: quoted and unquoted, e.g.
+//
+// quoted { "some_identifier": "\"database.name\".\"schema.name\".\"test.name\" }
+// (note that here dots as part of the name are allowed)
+//
+// unquoted { "some_identifier": "database_name.schema_name.test_name" }
+// (note that here dots as part of the name are NOT allowed, because they're treated in this case as dividers)
+//
+// The following configuration { "some_identifier": "db.name" } will be parsed as an object called "name" that lives
+// inside database called "db", not a database called "db.name". In this case quotes should be used.
+func DecodeSnowflakeParameterID(identifier string) (sdk.ObjectIdentifier, error) {
+	reader := csv.NewReader(strings.NewReader(identifier))
+	reader.Comma = ParameterIDDelimiter
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("unable to read identifier: %s, err = %w", identifier, err)
+	}
+	if len(lines) != 1 {
+		return nil, fmt.Errorf("incompatible identifier: %s", identifier)
+	}
+	parts := lines[0]
+	switch len(parts) {
+	case 1:
+		return sdk.NewAccountObjectIdentifier(parts[0]), nil
+	case 2:
+		return sdk.NewDatabaseObjectIdentifier(parts[0], parts[1]), nil
+	case 3:
+		return sdk.NewSchemaObjectIdentifier(parts[0], parts[1], parts[2]), nil
+	case 4:
+		return sdk.NewTableColumnIdentifier(parts[0], parts[1], parts[2], parts[3]), nil
+	default:
+		return nil, fmt.Errorf("unable to classify identifier: %s", identifier)
+	}
+}
+
 func Retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) error {
 	for i := 0; i < attempts; i++ {
 		err, done := f()
@@ -115,5 +176,3 @@ func Retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) er
 	}
 	return fmt.Errorf("giving up after %v attempts", attempts)
 }
-
-const IDDelimiter = "|"

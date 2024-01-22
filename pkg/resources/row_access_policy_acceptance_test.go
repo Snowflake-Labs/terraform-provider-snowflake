@@ -6,27 +6,29 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_RowAccessPolicy(t *testing.T) {
 	if _, ok := os.LookupEnv("SKIP_ROW_ACCESS_POLICY_TESTS"); ok {
-		t.Skip("Skipping TestAccRowAccessPolicy")
+		t.Skip("Skipping TestAcc_RowAccessPolicy")
 	}
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: rowAccessPolicyConfig(accName),
+				Config: rowAccessPolicyConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", accName),
-					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", accName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "row_access_expression", "case when current_role() in ('ANALYST') then true else false end"),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "signature.N", "VARCHAR"),
@@ -37,23 +39,12 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 	})
 }
 
-func rowAccessPolicyConfig(n string) string {
+func rowAccessPolicyConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%v"
-	comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-	name = "%v"
-	database = snowflake_database.test.name
-	comment = "Terraform acceptance test"
-}
-
 resource "snowflake_row_access_policy" "test" {
 	name = "%v"
-	database = snowflake_database.test.name
-	schema = snowflake_schema.test.name
+	database = "%s"
+	schema = "%s"
 	signature = {
 		N = "VARCHAR"
 		V = "VARCHAR",
@@ -61,5 +52,5 @@ resource "snowflake_row_access_policy" "test" {
 	row_access_expression = "case when current_role() in ('ANALYST') then true else false end"
 	comment = "Terraform acceptance test"
 }
-`, n, n, n)
+`, n, databaseName, schemaName)
 }

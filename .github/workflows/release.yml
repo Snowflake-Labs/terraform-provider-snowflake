@@ -16,9 +16,9 @@ jobs:
           result-encoding: string
           script: |
             const changelogTypes = [
-              {type: "feat", section: "Features", hidden: false},
-              {type: "chore", section: "Misc", hidden: false},
-              {type: "fix", section: "BugFixes", hidden: false},
+              {type: "feat", section: "🎉 **What's new:**", hidden: false},
+              {type: "chore", section: "🔧 **Misc**", hidden: false},
+              {type: "fix", section: "🐛 **Bug fixes:**", hidden: false},
             ]
 
             return JSON.stringify(changelogTypes)
@@ -64,7 +64,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
-          args: release --rm-dist
+          args: release --rm-dist --verbose
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}

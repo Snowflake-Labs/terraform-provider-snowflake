@@ -2,9 +2,8 @@ package generator
 
 import (
 	"fmt"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 // Field defines properties of a single field or struct (by defining Fields)
@@ -130,6 +129,15 @@ func (f *Field) Path() string {
 		return ""
 	} else {
 		return fmt.Sprintf("%s.%s", f.Parent.Path(), f.Name)
+	}
+}
+
+// PathWithRoot returns the way through the tree to the top, with dot separator and root included (e.g. Struct.SomeField.SomeChild)
+func (f *Field) PathWithRoot() string {
+	if f.IsRoot() {
+		return f.Name
+	} else {
+		return fmt.Sprintf("%s.%s", f.Parent.PathWithRoot(), f.Name)
 	}
 }
 

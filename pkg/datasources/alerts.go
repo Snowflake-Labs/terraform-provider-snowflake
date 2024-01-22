@@ -87,24 +87,36 @@ func ReadAlerts(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 
 	d.SetId("alerts_read")
-	databaseName := d.Get("database").(string)
-	schemaName := d.Get("schema").(string)
-	alertPattern := d.Get("pattern").(string)
-	var like sdk.Like
-	if alertPattern != "" {
-		like = sdk.Like{Pattern: &alertPattern}
+
+	opts := sdk.ShowAlertOptions{}
+
+	if v, ok := d.GetOk("pattern"); ok {
+		alertPattern := v.(string)
+		opts.Like = &sdk.Like{Pattern: &alertPattern}
 	}
-	listAlerts, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
-		In: &sdk.In{
-			Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
-		},
-		Like: &like,
-	})
+
+	if v, ok := d.GetOk("database"); ok {
+		databaseName := v.(string)
+
+		if v, ok := d.GetOk("schema"); ok {
+			schemaName := v.(string)
+			opts.In = &sdk.In{
+				Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
+			}
+		} else {
+			opts.In = &sdk.In{
+				Database: sdk.NewAccountObjectIdentifier(databaseName),
+			}
+		}
+	}
+
+	listAlerts, err := client.Alerts.Show(ctx, &opts)
 	if err != nil {
 		log.Printf("[DEBUG] failed to list alerts in schema (%s)", d.Id())
 		d.SetId("")
 		return err
 	}
+
 	alerts := make([]map[string]any, 0, len(listAlerts))
 	for _, alert := range listAlerts {
 		alertMap := map[string]any{}

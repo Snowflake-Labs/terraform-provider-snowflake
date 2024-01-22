@@ -1,0 +1,27 @@
+name: check
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  # pull-requests: read
+
+jobs:
+  docs-and-fmt:
+    name: docs and fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: ./go.mod
+          cache: false
+      - name: Install dependencies
+        run: make dev-setup
+      - run: make docs-check
+      - run: if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then exit 1; fi
+        name: check gofmt
