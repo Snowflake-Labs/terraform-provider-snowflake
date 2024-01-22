@@ -53,7 +53,7 @@ type MaterializedViewClusterByExpressionRequest struct {
 type AlterMaterializedViewRequest struct {
 	name              SchemaObjectIdentifier // required
 	RenameTo          *SchemaObjectIdentifier
-	ClusterBy         []string
+	ClusterBy         *MaterializedViewClusterByRequest
 	DropClusteringKey *bool
 	SuspendRecluster  *bool
 	ResumeRecluster   *bool

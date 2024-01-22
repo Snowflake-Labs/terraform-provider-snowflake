@@ -145,7 +145,7 @@ var MaterializedViewsDef = g.NewInterface(
 			SQL("MATERIALIZED VIEW").
 			Name().
 			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
-			NamedListWithParens("CLUSTER BY", g.KindOfT[string](), g.KeywordOptions()).
+			OptionalQueryStructField("ClusterBy", materializedViewClusterBy, g.KeywordOptions()).
 			OptionalSQL("DROP CLUSTERING KEY").
 			OptionalSQL("SUSPEND RECLUSTER").
 			OptionalSQL("RESUME RECLUSTER").

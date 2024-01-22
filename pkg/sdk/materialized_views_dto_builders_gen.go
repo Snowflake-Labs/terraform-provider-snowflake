@@ -137,7 +137,7 @@ func (s *AlterMaterializedViewRequest) WithRenameTo(RenameTo *SchemaObjectIdenti
 	return s
 }
 
-func (s *AlterMaterializedViewRequest) WithClusterBy(ClusterBy []string) *AlterMaterializedViewRequest {
+func (s *AlterMaterializedViewRequest) WithClusterBy(ClusterBy *MaterializedViewClusterByRequest) *AlterMaterializedViewRequest {
 	s.ClusterBy = ClusterBy
 	return s
 }

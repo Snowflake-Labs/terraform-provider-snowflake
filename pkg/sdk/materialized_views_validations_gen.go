@@ -46,6 +46,11 @@ func (opts *AlterMaterializedViewOptions) validate() error {
 	if !exactlyOneValueSet(opts.RenameTo, opts.ClusterBy, opts.DropClusteringKey, opts.SuspendRecluster, opts.ResumeRecluster, opts.Suspend, opts.Resume, opts.Set, opts.Unset) {
 		errs = append(errs, errExactlyOneOf("AlterMaterializedViewOptions", "RenameTo", "ClusterBy", "DropClusteringKey", "SuspendRecluster", "ResumeRecluster", "Suspend", "Resume", "Set", "Unset"))
 	}
+	if valueSet(opts.ClusterBy) {
+		if !valueSet(opts.ClusterBy.Expressions) {
+			errs = append(errs, errNotSet("AlterMaterializedViewOptions.ClusterBy", "Expressions"))
+		}
+	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Secure, opts.Set.Comment) {
 			errs = append(errs, errAtLeastOneOf("AlterMaterializedViewOptions.Set", "Secure", "Comment"))

@@ -131,6 +131,14 @@ func TestMaterializedViews_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaterializedViewOptions", "RenameTo", "ClusterBy", "DropClusteringKey", "SuspendRecluster", "ResumeRecluster", "Suspend", "Resume", "Set", "Unset"))
 	})
 
+	t.Run("validation: [opts.ClusterBy.Expressions] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ClusterBy = &MaterializedViewClusterBy{
+			Expressions: []MaterializedViewClusterByExpression{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterMaterializedViewOptions.ClusterBy", "Expressions"))
+	})
+
 	t.Run("validation: at least one of the fields [opts.Set.Secure opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &MaterializedViewSet{}
@@ -157,6 +165,70 @@ func TestMaterializedViews_Alter(t *testing.T) {
 			Expressions: []MaterializedViewClusterByExpression{{"column"}},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER MATERIALIZED VIEW %s CLUSTER BY ("column")`, id.FullyQualifiedName())
+	})
+
+	t.Run("drop clustering key", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.DropClusteringKey = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s DROP CLUSTERING KEY", id.FullyQualifiedName())
+	})
+
+	t.Run("suspend recluster", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SuspendRecluster = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s SUSPEND RECLUSTER", id.FullyQualifiedName())
+	})
+
+	t.Run("resume recluster", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ResumeRecluster = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s RESUME RECLUSTER", id.FullyQualifiedName())
+	})
+
+	t.Run("suspend ", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Suspend = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s SUSPEND", id.FullyQualifiedName())
+	})
+
+	t.Run("resume", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Resume = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s RESUME", id.FullyQualifiedName())
+	})
+
+	t.Run("set single", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &MaterializedViewSet{
+			Secure: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s SET SECURE", id.FullyQualifiedName())
+	})
+
+	t.Run("set multiple", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &MaterializedViewSet{
+			Secure:  Bool(true),
+			Comment: String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s SET SECURE COMMENT = 'some comment'", id.FullyQualifiedName())
+	})
+
+	t.Run("unset single", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &MaterializedViewUnset{
+			Secure: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s UNSET SECURE", id.FullyQualifiedName())
+	})
+
+	t.Run("unset multiple", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &MaterializedViewUnset{
+			Secure:  Bool(true),
+			Comment: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s UNSET SECURE, COMMENT", id.FullyQualifiedName())
 	})
 }
 

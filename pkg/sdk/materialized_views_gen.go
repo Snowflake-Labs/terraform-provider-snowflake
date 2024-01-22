@@ -62,18 +62,18 @@ type MaterializedViewClusterByExpression struct {
 
 // AlterMaterializedViewOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-materialized-view.
 type AlterMaterializedViewOptions struct {
-	alter             bool                    `ddl:"static" sql:"ALTER"`
-	materializedView  bool                    `ddl:"static" sql:"MATERIALIZED VIEW"`
-	name              SchemaObjectIdentifier  `ddl:"identifier"`
-	RenameTo          *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	ClusterBy         []string                `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
-	DropClusteringKey *bool                   `ddl:"keyword" sql:"DROP CLUSTERING KEY"`
-	SuspendRecluster  *bool                   `ddl:"keyword" sql:"SUSPEND RECLUSTER"`
-	ResumeRecluster   *bool                   `ddl:"keyword" sql:"RESUME RECLUSTER"`
-	Suspend           *bool                   `ddl:"keyword" sql:"SUSPEND"`
-	Resume            *bool                   `ddl:"keyword" sql:"RESUME"`
-	Set               *MaterializedViewSet    `ddl:"keyword" sql:"SET"`
-	Unset             *MaterializedViewUnset  `ddl:"keyword" sql:"UNSET"`
+	alter             bool                       `ddl:"static" sql:"ALTER"`
+	materializedView  bool                       `ddl:"static" sql:"MATERIALIZED VIEW"`
+	name              SchemaObjectIdentifier     `ddl:"identifier"`
+	RenameTo          *SchemaObjectIdentifier    `ddl:"identifier" sql:"RENAME TO"`
+	ClusterBy         *MaterializedViewClusterBy `ddl:"keyword"`
+	DropClusteringKey *bool                      `ddl:"keyword" sql:"DROP CLUSTERING KEY"`
+	SuspendRecluster  *bool                      `ddl:"keyword" sql:"SUSPEND RECLUSTER"`
+	ResumeRecluster   *bool                      `ddl:"keyword" sql:"RESUME RECLUSTER"`
+	Suspend           *bool                      `ddl:"keyword" sql:"SUSPEND"`
+	Resume            *bool                      `ddl:"keyword" sql:"RESUME"`
+	Set               *MaterializedViewSet       `ddl:"keyword" sql:"SET"`
+	Unset             *MaterializedViewUnset     `ddl:"keyword" sql:"UNSET"`
 }
 
 type MaterializedViewSet struct {

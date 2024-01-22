@@ -116,14 +116,26 @@ func (r *CreateMaterializedViewRequest) toOpts() *CreateMaterializedViewOptions 
 
 func (r *AlterMaterializedViewRequest) toOpts() *AlterMaterializedViewOptions {
 	opts := &AlterMaterializedViewOptions{
-		name:              r.name,
-		RenameTo:          r.RenameTo,
-		ClusterBy:         r.ClusterBy,
+		name:     r.name,
+		RenameTo: r.RenameTo,
+
 		DropClusteringKey: r.DropClusteringKey,
 		SuspendRecluster:  r.SuspendRecluster,
 		ResumeRecluster:   r.ResumeRecluster,
 		Suspend:           r.Suspend,
 		Resume:            r.Resume,
+	}
+	if r.ClusterBy != nil {
+		opts.ClusterBy = &MaterializedViewClusterBy{}
+		if r.ClusterBy.Expressions != nil {
+			s := make([]MaterializedViewClusterByExpression, len(r.ClusterBy.Expressions))
+			for i, v := range r.ClusterBy.Expressions {
+				s[i] = MaterializedViewClusterByExpression{
+					Name: v.Name,
+				}
+			}
+			opts.ClusterBy.Expressions = s
+		}
 	}
 	if r.Set != nil {
 		opts.Set = &MaterializedViewSet{
