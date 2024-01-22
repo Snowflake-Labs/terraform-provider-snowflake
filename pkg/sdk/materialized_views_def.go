@@ -19,6 +19,16 @@ var materializedViewRowAccessPolicy = g.NewQueryStruct("MaterializedViewRowAcces
 	NamedListWithParens("ON", g.KindOfT[string](), g.KeywordOptions().Required()). // TODO: double quotes here?
 	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
 
+var materializedViewSet = g.NewQueryStruct("MaterializedViewSet").
+	OptionalSQL("SECURE").
+	OptionalComment().
+	WithValidation(g.AtLeastOneValueSet, "Secure", "Comment")
+
+var materializedViewUnset = g.NewQueryStruct("MaterializedViewUnset").
+	OptionalSQL("SECURE").
+	OptionalSQL("COMMENT").
+	WithValidation(g.AtLeastOneValueSet, "Secure", "Comment")
+
 var MaterializedViewsDef = g.NewInterface(
 	"MaterializedViews",
 	"MaterializedView",
@@ -46,4 +56,22 @@ var MaterializedViewsDef = g.NewInterface(
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
+	).
+	AlterOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-materialized-view",
+		g.NewQueryStruct("AlterMaterializedView").
+			Alter().
+			SQL("MATERIALIZED VIEW").
+			Name().
+			OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
+			NamedListWithParens("CLUSTER BY", g.KindOfT[string](), g.KeywordOptions()).
+			OptionalSQL("DROP CLUSTERING KEY").
+			OptionalSQL("SUSPEND RECLUSTER").
+			OptionalSQL("RESUME RECLUSTER").
+			OptionalSQL("SUSPEND").
+			OptionalSQL("RESUME").
+			OptionalQueryStructField("Set", materializedViewSet, g.KeywordOptions().SQL("SET")).
+			OptionalQueryStructField("Unset", materializedViewUnset, g.KeywordOptions().SQL("UNSET")).
+			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ExactlyOneValueSet, "RenameTo", "ClusterBy", "DropClusteringKey", "SuspendRecluster", "ResumeRecluster", "Suspend", "Resume", "Set", "Unset"),
 	)
