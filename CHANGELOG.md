@@ -1,18 +1,5 @@
 # Changelog
 
-## [0.84.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.84.0...v0.84.1) (2024-01-22)
-
-
-### 🔧 **Misc**
-
-* skip acc managed account test ([#2376](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2376)) ([dbf645d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dbf645d8ea508582bebd1aab485f54807c818bd2))
-
-
-### 🐛 **Bug fixes:**
-
-* Fix whitespace in goreleaser envs ([#2388](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2388)) ([5e1266d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5e1266d6463219bbe9edddfd327d25c3b2d67f5f))
-* grant read opeartion ([#2364](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2364)) ([5f51f0f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5f51f0f5c27f2d92409d8cc274917e70dd0c522c))
-
 ## [0.84.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.83.1...v0.84.0) (2024-01-19)
 
 
