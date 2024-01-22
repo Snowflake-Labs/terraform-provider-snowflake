@@ -50,7 +50,7 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Explicitly prohibits external stages that use the integration from referencing one or more storage locations.",
 	},
-	// This part of the schema is the cloudProviderParams in the Snowflake documentation and differs between vendors
+	// TODO (SNOW-1015282): Remove S3gov option before going into V1
 	"storage_provider": {
 		Type:         schema.TypeString,
 		Required:     true,
@@ -154,7 +154,7 @@ func CreateStorageIntegration(d *schema.ResourceData, meta any) error {
 	storageProvider := d.Get("storage_provider").(string)
 
 	switch storageProvider {
-	case "S3", "S3GOV":
+	case "S3", "S3GOV", "S3gov":
 		v, ok := d.GetOk("storage_aws_role_arn")
 		if !ok {
 			return fmt.Errorf("if you use the S3 storage provider you must specify a storage_aws_role_arn")
