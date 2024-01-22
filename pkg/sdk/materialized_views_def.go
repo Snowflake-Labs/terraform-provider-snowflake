@@ -164,7 +164,7 @@ var MaterializedViewsDef = g.NewInterface(
 		materializedView,
 		g.NewQueryStruct("ShowMaterializedViews").
 			Show().
-			SQL("VIEWS").
+			SQL("MATERIALIZED VIEWS").
 			OptionalLike().
 			OptionalIn(),
 	).
