@@ -79,6 +79,30 @@ var materializedView = g.PlainStruct("MaterializedView").
 	OptionalText("OwnerRoleType").
 	OptionalText("Budget")
 
+var materializedViewDetailsDbRow = g.DbStruct("materializedViewDetailsRow").
+	Text("name").
+	Field("type", "DataType").
+	Text("kind").
+	Text("null").
+	OptionalText("default").
+	Text("primary key").
+	Text("unique key").
+	OptionalText("check").
+	OptionalText("expression").
+	OptionalText("comment")
+
+var materializedViewDetails = g.PlainStruct("MaterializedViewDetails").
+	Text("Name").
+	Field("Type", "DataType").
+	Text("Kind").
+	Bool("IsNullable").
+	OptionalText("Default").
+	Bool("IsPrimary").
+	Bool("IsUnique").
+	OptionalBool("Check").
+	OptionalText("Expression").
+	OptionalText("Comment")
+
 var MaterializedViewsDef = g.NewInterface(
 	"MaterializedViews",
 	"MaterializedView",
@@ -144,4 +168,15 @@ var MaterializedViewsDef = g.NewInterface(
 			OptionalLike().
 			OptionalIn(),
 	).
-	ShowByIdOperation()
+	ShowByIdOperation().
+	DescribeOperation(
+		g.DescriptionMappingKindSlice,
+		"https://docs.snowflake.com/en/sql-reference/sql/desc-materialized-view",
+		materializedViewDetailsDbRow,
+		materializedViewDetails,
+		g.NewQueryStruct("DescribeMaterializedView").
+			Describe().
+			SQL("MATERIALIZED VIEW").
+			Name().
+			WithValidation(g.ValidIdentifier, "name"),
+	)
