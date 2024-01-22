@@ -45,6 +45,14 @@ func (v *plainStruct) OptionalBool(name string) *plainStruct {
 	return v.Field(name, "*bool")
 }
 
+func (v *plainStruct) Number(dbName string) *plainStruct {
+	return v.Field(dbName, "int")
+}
+
+func (v *plainStruct) OptionalNumber(dbName string) *plainStruct {
+	return v.Field(dbName, "*int")
+}
+
 func (v *plainStruct) IntoField() *Field {
 	f := NewField(v.name, v.name, nil, nil)
 	for _, field := range v.fields {

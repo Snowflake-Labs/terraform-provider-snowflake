@@ -29,6 +29,56 @@ var materializedViewUnset = g.NewQueryStruct("MaterializedViewUnset").
 	OptionalSQL("COMMENT").
 	WithValidation(g.AtLeastOneValueSet, "Secure", "Comment")
 
+var materializedViewDbRow = g.DbStruct("materializedViewDBRow").
+	Text("created_on").
+	Text("name").
+	OptionalText("reserved").
+	Text("database_name").
+	Text("schema_name").
+	OptionalText("cluster_by").
+	Number("rows").
+	Number("bytes").
+	Text("source_database_name").
+	Text("source_schema_name").
+	Text("source_table_name").
+	Time("refreshed_on").
+	Time("compacted_on").
+	OptionalText("owner").
+	Bool("invalid").
+	OptionalText("invalid_reason").
+	Text("behind_by").
+	OptionalText("comment").
+	Text("text").
+	Bool("is_secure").
+	Bool("automatic_clustering").
+	OptionalText("owner_role_type").
+	OptionalText("budget")
+
+var materializedView = g.PlainStruct("MaterializedView").
+	Text("CreatedOn").
+	Text("Name").
+	OptionalText("Reserved").
+	Text("DatabaseName").
+	Text("SchemaName").
+	OptionalText("ClusterBy").
+	Number("Rows").
+	Number("Bytes").
+	Text("SourceDatabaseName").
+	Text("SourceSchemaName").
+	Text("SourceTableName").
+	Time("RefreshedOn").
+	Time("CompactedOn").
+	OptionalText("Owner").
+	Bool("Invalid").
+	OptionalText("InvalidReason").
+	Text("BehindBy").
+	OptionalText("Comment").
+	Text("Text").
+	Bool("IsSecure").
+	Bool("AutomaticClustering").
+	OptionalText("OwnerRoleType").
+	OptionalText("Budget")
+
 var MaterializedViewsDef = g.NewInterface(
 	"MaterializedViews",
 	"MaterializedView",
@@ -83,4 +133,15 @@ var MaterializedViewsDef = g.NewInterface(
 			IfExists().
 			Name().
 			WithValidation(g.ValidIdentifier, "name"),
-	)
+	).
+	ShowOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/show-materialized-views",
+		materializedViewDbRow,
+		materializedView,
+		g.NewQueryStruct("ShowMaterializedViews").
+			Show().
+			SQL("VIEWS").
+			OptionalLike().
+			OptionalIn(),
+	).
+	ShowByIdOperation()
