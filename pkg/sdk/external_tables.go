@@ -211,7 +211,7 @@ type CreateWithManualPartitioningExternalTableOptions struct {
 	CloudProviderParams        *CloudProviderParams
 	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
 	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
-	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
+	userSpecifiedPartitionType bool                      `ddl:"static" sql:"PARTITION_TYPE = USER_SPECIFIED"`
 	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
 	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
 	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
@@ -225,24 +225,23 @@ type CreateWithManualPartitioningExternalTableOptions struct {
 
 // CreateDeltaLakeExternalTableOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-external-table
 type CreateDeltaLakeExternalTableOptions struct {
-	create                     bool                   `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                  `ddl:"keyword" sql:"OR REPLACE"`
-	externalTable              bool                   `ddl:"static" sql:"EXTERNAL TABLE"`
-	IfNotExists                *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       SchemaObjectIdentifier `ddl:"identifier"`
-	Columns                    []ExternalTableColumn  `ddl:"list,parentheses"`
-	CloudProviderParams        *CloudProviderParams
-	PartitionBy                []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
-	Location                   string                    `ddl:"parameter" sql:"LOCATION"`
-	RefreshOnCreate            *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
-	AutoRefresh                *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
-	UserSpecifiedPartitionType *bool                     `ddl:"keyword" sql:"PARTITION_TYPE = USER_SPECIFIED"`
-	FileFormat                 []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
+	create              bool                   `ddl:"static" sql:"CREATE"`
+	OrReplace           *bool                  `ddl:"keyword" sql:"OR REPLACE"`
+	externalTable       bool                   `ddl:"static" sql:"EXTERNAL TABLE"`
+	IfNotExists         *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                SchemaObjectIdentifier `ddl:"identifier"`
+	Columns             []ExternalTableColumn  `ddl:"list,parentheses"`
+	CloudProviderParams *CloudProviderParams
+	PartitionBy         []string                  `ddl:"keyword,parentheses" sql:"PARTITION BY"`
+	Location            string                    `ddl:"parameter" sql:"LOCATION"`
+	RefreshOnCreate     *bool                     `ddl:"parameter" sql:"REFRESH_ON_CREATE"`
+	AutoRefresh         *bool                     `ddl:"parameter" sql:"AUTO_REFRESH"`
+	FileFormat          []ExternalTableFileFormat `ddl:"parameter,parentheses" sql:"FILE_FORMAT"`
 	// RawFileFormat was introduced, because of the decision taken during https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2228
 	// that for now the snowflake_external_table resource should continue on using raw file format, which wasn't previously supported by the new SDK.
 	// In the future it should most likely be replaced by a more structured version FileFormat
 	RawFileFormat    *RawFileFormat        `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
-	DeltaTableFormat *bool                 `ddl:"keyword" sql:"TABLE_FORMAT = DELTA"`
+	deltaTableFormat bool                  `ddl:"static" sql:"TABLE_FORMAT = DELTA"`
 	CopyGrants       *bool                 `ddl:"keyword" sql:"COPY GRANTS"`
 	Comment          *string               `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	RowAccessPolicy  *TableRowAccessPolicy `ddl:"keyword"`

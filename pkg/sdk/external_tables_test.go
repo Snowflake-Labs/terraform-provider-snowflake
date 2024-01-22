@@ -180,7 +180,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 			},
 			Comment: String("some_comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) INTEGRATION = '123' LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (TYPE = JSON) COPY GRANTS COMMENT = 'some_comment' ROW ACCESS POLICY "db"."schema"."row_access_policy" ON (value1, value2) TAG ("tag1" = 'value1', "tag2" = 'value2')`)
 	})
 
 	t.Run("invalid options", func(t *testing.T) {
@@ -216,7 +216,7 @@ func TestExternalTablesCreateWithManualPartitioning(t *testing.T) {
 			Location:      "@s1/logs/",
 			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ PARTITION_TYPE = USER_SPECIFIED FILE_FORMAT = (TYPE = JSON)`)
 	})
 
 	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {
@@ -263,8 +263,7 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 					Name: String("JSON"),
 				},
 			},
-			DeltaTableFormat: Bool(true),
-			CopyGrants:       Bool(true),
+			CopyGrants: Bool(true),
 			RowAccessPolicy: &TableRowAccessPolicy{
 				Name: NewSchemaObjectIdentifier("db", "schema", "row_access_policy"),
 				On:   []string{"value1", "value2"},
@@ -317,7 +316,7 @@ func TestExternalTablesCreateDeltaLake(t *testing.T) {
 			Location:      "@s1/logs/",
 			RawFileFormat: &RawFileFormat{Format: "TYPE = JSON"},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON)`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE EXTERNAL TABLE "db"."schema"."external_table" (column varchar AS (value::column::varchar) NOT NULL CONSTRAINT my_constraint UNIQUE) LOCATION = @s1/logs/ FILE_FORMAT = (TYPE = JSON) TABLE_FORMAT = DELTA`)
 	})
 
 	t.Run("validation: neither raw file format is set, nor file format", func(t *testing.T) {

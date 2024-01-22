@@ -53,6 +53,7 @@ resource "snowflake_external_table" "external_table" {
 - `partition_by` (List of String) Specifies any partition columns to evaluate for the external table.
 - `pattern` (String) Specifies the file names and/or paths on the external stage to match.
 - `refresh_on_create` (Boolean) Specifies weather to refresh when an external table is created.
+- `table_format` (String) Identifies the external table table type. For now, only "delta" for Delta Lake table format is supported.
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 
 ### Read-Only

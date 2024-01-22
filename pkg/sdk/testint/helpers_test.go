@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -15,6 +16,26 @@ import (
 
 const (
 	nycWeatherDataURL = "s3://snowflake-workshop-lab/weather-nyc"
+)
+
+var (
+	awsBucketUrl, awsBucketUrlIsSet = os.LookupEnv("AWS_EXTERNAL_BUCKET_URL")
+	awsKeyId, awsKeyIdIsSet         = os.LookupEnv("AWS_EXTERNAL_KEY_ID")
+	awsSecretKey, awsSecretKeyIsSet = os.LookupEnv("AWS_EXTERNAL_SECRET_KEY")
+	awsRoleARN, awsRoleARNIsSet     = os.LookupEnv("AWS_EXTERNAL_ROLE_ARN")
+
+	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("GCS_EXTERNAL_BUCKET_URL")
+
+	azureBucketUrl, azureBucketUrlIsSet = os.LookupEnv("AZURE_EXTERNAL_BUCKET_URL")
+	azureTenantId, azureTenantIdIsSet   = os.LookupEnv("AZURE_EXTERNAL_TENANT_ID")
+
+	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet &&
+		awsKeyIdIsSet &&
+		awsSecretKeyIsSet &&
+		awsRoleARNIsSet &&
+		gcsBucketUrlIsSet &&
+		azureBucketUrlIsSet &&
+		azureTenantIdIsSet
 )
 
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
@@ -34,37 +55,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func getSecondaryAccountIdentifier(t *testing.T) sdk.AccountIdentifier {
-	t.Helper()
-	client := testSecondaryClient(t)
-	return getAccountIdentifier(t, client)
-}
-
-const (
-	secondaryAccountProfile = "secondary_test_account"
-)
-
-// TODO: for now we leave it as is, later it would be nice to configure it also once in TestMain
-func testSecondaryClient(t *testing.T) *sdk.Client {
-	t.Helper()
-
-	client, err := testClientFromProfile(t, secondaryAccountProfile)
-	if err != nil {
-		t.Skipf("Snowflake secondary account not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
-	}
-
-	return client
-}
-
-func testClientFromProfile(t *testing.T, profile string) (*sdk.Client, error) {
-	t.Helper()
-	config, err := sdk.ProfileConfig(profile)
-	if err != nil {
-		return nil, err
-	}
-	return sdk.NewClient(config)
-}
-
 func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
@@ -81,17 +71,17 @@ func createDatabase(t *testing.T, client *sdk.Client) (*sdk.Database, func()) {
 	return createDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
 }
 
-func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, _ *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
+func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
 	t.Helper()
 	ctx := context.Background()
-	err := client.Databases.Create(ctx, id, nil)
+	err := client.Databases.Create(ctx, id, opts)
 	require.NoError(t, err)
 	database, err := client.Databases.ShowByID(ctx, id)
 	require.NoError(t, err)
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
 		require.NoError(t, err)
-		err = client.Sessions.UseSchema(ctx, testSchema(t).ID())
+		err = client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName))
 		require.NoError(t, err)
 	}
 }
@@ -759,11 +749,15 @@ func createRowAccessPolicy(t *testing.T, client *sdk.Client, schema *sdk.Schema)
 	t.Helper()
 	ctx := context.Background()
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.String())
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE ROW ACCESS POLICY %s AS (A NUMBER) RETURNS BOOLEAN -> TRUE`, id.FullyQualifiedName()))
+
+	arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", sdk.DataTypeNumber)
+	body := "true"
+	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, body)
+	err := client.RowAccessPolicies.Create(ctx, createRequest)
 	require.NoError(t, err)
 
 	return id, func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP ROW ACCESS POLICY %s`, id.FullyQualifiedName()))
+		err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
 		require.NoError(t, err)
 	}
 }

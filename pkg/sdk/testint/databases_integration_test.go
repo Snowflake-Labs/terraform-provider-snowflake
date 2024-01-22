@@ -109,45 +109,52 @@ func TestInt_DatabasesCreate(t *testing.T) {
 }
 
 func TestInt_CreateShared(t *testing.T) {
-	t.Skipf("Snowflake secondary account is not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
 	client := testClient(t)
+	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
+
+	databaseTest, databaseCleanup := createDatabase(t, secondaryClient)
 	t.Cleanup(databaseCleanup)
-	shareTest, _ := createShare(t, client)
-	// t.Cleanup(shareCleanup)
-	err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
+
+	shareTest, shareCleanup := createShare(t, secondaryClient)
+	t.Cleanup(shareCleanup)
+
+	err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
 		Database: databaseTest.ID(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
+		err := secondaryClient.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
+		require.NoError(t, err)
 	})
-	require.NoError(t, err)
-	secondaryClient := testSecondaryClient(t)
+
 	accountsToSet := []sdk.AccountIdentifier{
-		getAccountIdentifier(t, secondaryClient),
+		getAccountIdentifier(t, client),
 	}
+
 	// first add the account.
-	err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
+	err = secondaryClient.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
 		IfExists: sdk.Bool(true),
 		Set: &sdk.ShareSet{
 			Accounts: accountsToSet,
 		},
 	})
+	require.NoError(t, err)
 
 	databaseID := sdk.RandomAccountObjectIdentifier()
-	err = secondaryClient.Databases.CreateShared(ctx, databaseID, shareTest.ExternalID(), nil)
+	err = client.Databases.CreateShared(ctx, databaseID, shareTest.ExternalID(), nil)
 	require.NoError(t, err)
-	database, err := secondaryClient.Databases.ShowByID(ctx, databaseID)
-	require.NoError(t, err)
-	assert.Equal(t, databaseID.Name(), database.Name)
 	t.Cleanup(func() {
-		err = secondaryClient.Databases.Drop(ctx, databaseID, nil)
+		err = client.Databases.Drop(ctx, databaseID, nil)
 		require.NoError(t, err)
 	})
+
+	database, err := client.Databases.ShowByID(ctx, databaseID)
+	require.NoError(t, err)
+
+	assert.Equal(t, databaseID.Name(), database.Name)
 }
 
 func TestInt_DatabasesCreateSecondary(t *testing.T) {
@@ -269,36 +276,38 @@ func TestInt_AlterReplication(t *testing.T) {
 
 func TestInt_AlterFailover(t *testing.T) {
 	client := testClient(t)
-	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
-	t.Cleanup(databaseCleanup)
 	secondaryClient := testSecondaryClient(t)
+	ctx := testContext(t)
+
+	databaseTest, databaseCleanup := createDatabase(t, secondaryClient)
+	t.Cleanup(databaseCleanup)
 
 	toAccounts := []sdk.AccountIdentifier{
-		getAccountIdentifier(t, secondaryClient),
+		getAccountIdentifier(t, client),
 	}
+
 	t.Run("enable and disable failover", func(t *testing.T) {
-		opts := &sdk.AlterDatabaseFailoverOptions{
+		err := secondaryClient.Databases.AlterFailover(ctx, databaseTest.ID(), &sdk.AlterDatabaseFailoverOptions{
 			EnableFailover: &sdk.EnableFailover{
 				ToAccounts: toAccounts,
 			},
-		}
-		err := client.Databases.AlterFailover(ctx, databaseTest.ID(), opts)
+		})
+		// TODO: has to be enabled by ORGADMIN (SNOW-1002025)
 		if strings.Contains(err.Error(), "Accounts enabled for failover must also be enabled for replication. Enable replication to account") {
 			t.Skip("Skipping test because secondary account not enabled for replication")
 		}
 		require.NoError(t, err)
-		opts = &sdk.AlterDatabaseFailoverOptions{
+
+		err = secondaryClient.Databases.AlterFailover(ctx, databaseTest.ID(), &sdk.AlterDatabaseFailoverOptions{
 			DisableFailover: &sdk.DisableFailover{
 				ToAccounts: toAccounts,
 			},
-		}
-		err = client.Databases.AlterFailover(ctx, databaseTest.ID(), opts)
+		})
 		require.NoError(t, err)
-		opts = &sdk.AlterDatabaseFailoverOptions{
+
+		err = secondaryClient.Databases.AlterFailover(ctx, databaseTest.ID(), &sdk.AlterDatabaseFailoverOptions{
 			Primary: sdk.Bool(true),
-		}
-		err = client.Databases.AlterFailover(ctx, databaseTest.ID(), opts)
+		})
 		require.NoError(t, err)
 	})
 }
