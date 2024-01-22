@@ -38,8 +38,8 @@ func (v *materializedViews) Show(ctx context.Context, request *ShowMaterializedV
 }
 
 func (v *materializedViews) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	materializedViews, err := v.Show(ctx, NewShowMaterializedViewRequest())
+	request := NewShowMaterializedViewRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&Like{String(id.Name())})
+	materializedViews, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
