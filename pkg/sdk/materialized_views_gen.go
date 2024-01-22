@@ -29,7 +29,7 @@ type CreateMaterializedViewOptions struct {
 	Comment                *string                               `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	RowAccessPolicy        *MaterializedViewRowAccessPolicy      `ddl:"keyword"`
 	Tag                    []TagAssociation                      `ddl:"keyword,parentheses" sql:"TAG"`
-	ClusterBy              []string                              `ddl:"keyword,parentheses" sql:"CLUSTER BY"`
+	ClusterBy              *MaterializedViewClusterBy            `ddl:"keyword"`
 	as                     bool                                  `ddl:"static" sql:"AS"`
 	sql                    string                                `ddl:"keyword,no_quotes"`
 }
@@ -49,6 +49,15 @@ type MaterializedViewColumnMaskingPolicy struct {
 type MaterializedViewRowAccessPolicy struct {
 	RowAccessPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"ROW ACCESS POLICY"`
 	On              []string               `ddl:"keyword,parentheses" sql:"ON"`
+}
+
+type MaterializedViewClusterBy struct {
+	clusterBy   bool                                  `ddl:"static" sql:"CLUSTER BY"`
+	Expressions []MaterializedViewClusterByExpression `ddl:"list,parentheses"`
+}
+
+type MaterializedViewClusterByExpression struct {
+	Name string `ddl:"keyword,double_quotes"`
 }
 
 // AlterMaterializedViewOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-materialized-view.

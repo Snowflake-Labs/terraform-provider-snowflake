@@ -17,7 +17,16 @@ var materializedViewColumnMaskingPolicy = g.NewQueryStruct("MaterializedViewColu
 var materializedViewRowAccessPolicy = g.NewQueryStruct("MaterializedViewRowAccessPolicy").
 	Identifier("RowAccessPolicy", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("ROW ACCESS POLICY").Required()).
 	NamedListWithParens("ON", g.KindOfT[string](), g.KeywordOptions().Required()). // TODO: double quotes here?
-	WithValidation(g.ValidIdentifier, "RowAccessPolicy")
+	WithValidation(g.ValidIdentifier, "RowAccessPolicy").
+	WithValidation(g.ValidateValueSet, "On")
+
+var materializedViewClusterByExpression = g.NewQueryStruct("MaterializedViewClusterByExpression").
+	Text("Name", g.KeywordOptions().DoubleQuotes().Required())
+
+var materializedViewClusterBy = g.NewQueryStruct("MaterializedViewClusterBy").
+	SQL("CLUSTER BY").
+	ListQueryStructField("Expressions", materializedViewClusterByExpression, g.ListOptions().Parentheses()).
+	WithValidation(g.ValidateValueSet, "Expressions")
 
 var materializedViewSet = g.NewQueryStruct("MaterializedViewSet").
 	OptionalSQL("SECURE").
@@ -121,11 +130,9 @@ var MaterializedViewsDef = g.NewInterface(
 			ListQueryStructField("Columns", materializedViewColumn, g.ListOptions().Parentheses()).
 			ListQueryStructField("ColumnsMaskingPolicies", materializedViewColumnMaskingPolicy, g.ListOptions().NoParentheses().NoEquals()).
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-			// In the current docs ROW ACCESS POLICY and TAG are specified twice.
-			// It is a mistake probably so here they are present only once.
 			OptionalQueryStructField("RowAccessPolicy", materializedViewRowAccessPolicy, g.KeywordOptions()).
 			OptionalTags().
-			NamedListWithParens("CLUSTER BY", g.KindOfT[string](), g.KeywordOptions()).
+			OptionalQueryStructField("ClusterBy", materializedViewClusterBy, g.KeywordOptions()).
 			SQL("AS").
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).
 			WithValidation(g.ValidIdentifier, "name").

@@ -40,13 +40,21 @@ func TestMaterializedViews_Create(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: empty columns for row access policy", func(t *testing.T) {
+	t.Run("validation: [opts.RowAccessPolicy.On] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RowAccessPolicy = &MaterializedViewRowAccessPolicy{
 			RowAccessPolicy: RandomSchemaObjectIdentifier(),
 			On:              []string{},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaterializedViewOptions.RowAccessPolicy", "On"))
+	})
+
+	t.Run("validation: [opts.ClusterBy.Expressions] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ClusterBy = &MaterializedViewClusterBy{
+			Expressions: []MaterializedViewClusterByExpression{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaterializedViewOptions.ClusterBy", "Expressions"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -84,7 +92,7 @@ func TestMaterializedViews_Create(t *testing.T) {
 				Name:  tag2Id,
 				Value: "v2",
 			}}).
-			WithClusterBy([]string{"column_without_comment", "column_with_comment"})
+			WithClusterBy(NewMaterializedViewClusterByRequest().WithExpressions([]MaterializedViewClusterByExpressionRequest{{"column_without_comment"}, {"column_with_comment"}}))
 
 		assertOptsValidAndSQLEquals(t, req.toOpts(), `CREATE OR REPLACE SECURE MATERIALIZED VIEW %s COPY GRANTS ("column_without_comment", "column_with_comment" COMMENT 'column 2 comment') column MASKING POLICY %s USING (a, b) TAG (%s = 'v1'), column 2 MASKING POLICY %s COMMENT = 'comment' ROW ACCESS POLICY %s ON (c, d) TAG (%s = 'v2') CLUSTER BY ("column_without_comment", "column_with_comment") AS %s`, id.FullyQualifiedName(), maskingPolicy1Id.FullyQualifiedName(), tag1Id.FullyQualifiedName(), maskingPolicy2Id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName(), tag2Id.FullyQualifiedName(), sql)
 	})

@@ -21,7 +21,7 @@ type CreateMaterializedViewRequest struct {
 	Comment                *string
 	RowAccessPolicy        *MaterializedViewRowAccessPolicyRequest
 	Tag                    []TagAssociation
-	ClusterBy              []string
+	ClusterBy              *MaterializedViewClusterByRequest
 	sql                    string // required
 }
 
@@ -40,6 +40,14 @@ type MaterializedViewColumnMaskingPolicyRequest struct {
 type MaterializedViewRowAccessPolicyRequest struct {
 	RowAccessPolicy SchemaObjectIdentifier // required
 	On              []string               // required
+}
+
+type MaterializedViewClusterByRequest struct {
+	Expressions []MaterializedViewClusterByExpressionRequest
+}
+
+type MaterializedViewClusterByExpressionRequest struct {
+	Name string // required
 }
 
 type AlterMaterializedViewRequest struct {

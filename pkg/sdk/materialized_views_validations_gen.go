@@ -27,6 +27,11 @@ func (opts *CreateMaterializedViewOptions) validate() error {
 			errs = append(errs, errNotSet("CreateMaterializedViewOptions.RowAccessPolicy", "On"))
 		}
 	}
+	if valueSet(opts.ClusterBy) {
+		if !valueSet(opts.ClusterBy.Expressions) {
+			errs = append(errs, errNotSet("CreateMaterializedViewOptions.ClusterBy", "Expressions"))
+		}
+	}
 	return JoinErrors(errs...)
 }
 

@@ -59,7 +59,7 @@ func (s *CreateMaterializedViewRequest) WithTag(Tag []TagAssociation) *CreateMat
 	return s
 }
 
-func (s *CreateMaterializedViewRequest) WithClusterBy(ClusterBy []string) *CreateMaterializedViewRequest {
+func (s *CreateMaterializedViewRequest) WithClusterBy(ClusterBy *MaterializedViewClusterByRequest) *CreateMaterializedViewRequest {
 	s.ClusterBy = ClusterBy
 	return s
 }
@@ -104,6 +104,23 @@ func NewMaterializedViewRowAccessPolicyRequest(
 	s := MaterializedViewRowAccessPolicyRequest{}
 	s.RowAccessPolicy = RowAccessPolicy
 	s.On = On
+	return &s
+}
+
+func NewMaterializedViewClusterByRequest() *MaterializedViewClusterByRequest {
+	return &MaterializedViewClusterByRequest{}
+}
+
+func (s *MaterializedViewClusterByRequest) WithExpressions(Expressions []MaterializedViewClusterByExpressionRequest) *MaterializedViewClusterByRequest {
+	s.Expressions = Expressions
+	return s
+}
+
+func NewMaterializedViewClusterByExpressionRequest(
+	Name string,
+) *MaterializedViewClusterByExpressionRequest {
+	s := MaterializedViewClusterByExpressionRequest{}
+	s.Name = Name
 	return &s
 }
 

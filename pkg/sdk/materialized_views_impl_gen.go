@@ -38,8 +38,8 @@ func (v *materializedViews) Show(ctx context.Context, request *ShowMaterializedV
 }
 
 func (v *materializedViews) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error) {
-	request := NewShowMaterializedViewRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&Like{String(id.Name())})
-	materializedViews, err := v.Show(ctx, request)
+	// TODO: adjust request if e.g. LIKE is supported for the resource
+	materializedViews, err := v.Show(ctx, NewShowMaterializedViewRequest())
 	if err != nil {
 		return nil, err
 	}
@@ -67,9 +67,9 @@ func (r *CreateMaterializedViewRequest) toOpts() *CreateMaterializedViewOptions 
 
 		Comment: r.Comment,
 
-		Tag:       r.Tag,
-		ClusterBy: r.ClusterBy,
-		sql:       r.sql,
+		Tag: r.Tag,
+
+		sql: r.sql,
 	}
 	if r.Columns != nil {
 		s := make([]MaterializedViewColumn, len(r.Columns))
@@ -97,6 +97,18 @@ func (r *CreateMaterializedViewRequest) toOpts() *CreateMaterializedViewOptions 
 		opts.RowAccessPolicy = &MaterializedViewRowAccessPolicy{
 			RowAccessPolicy: r.RowAccessPolicy.RowAccessPolicy,
 			On:              r.RowAccessPolicy.On,
+		}
+	}
+	if r.ClusterBy != nil {
+		opts.ClusterBy = &MaterializedViewClusterBy{}
+		if r.ClusterBy.Expressions != nil {
+			s := make([]MaterializedViewClusterByExpression, len(r.ClusterBy.Expressions))
+			for i, v := range r.ClusterBy.Expressions {
+				s[i] = MaterializedViewClusterByExpression{
+					Name: v.Name,
+				}
+			}
+			opts.ClusterBy.Expressions = s
 		}
 	}
 	return opts
