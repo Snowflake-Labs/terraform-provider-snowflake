@@ -115,38 +115,48 @@ func TestMaterializedViews_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.RenameTo opts.ClusterBy opts.DropClusteringKey opts.SuspendRecluster opts.ResumeRecluster opts.Suspend opts.Resume opts.Set opts.Unset] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaterializedViewOptions", "RenameTo", "ClusterBy", "DropClusteringKey", "SuspendRecluster", "ResumeRecluster", "Suspend", "Resume", "Set", "Unset"))
+	})
+
+	t.Run("validation: exactly one field from [opts.RenameTo opts.ClusterBy opts.DropClusteringKey opts.SuspendRecluster opts.ResumeRecluster opts.Suspend opts.Resume opts.Set opts.Unset] should be present - more present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SuspendRecluster = Bool(true)
+		opts.Suspend = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaterializedViewOptions", "RenameTo", "ClusterBy", "DropClusteringKey", "SuspendRecluster", "ResumeRecluster", "Suspend", "Resume", "Set", "Unset"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.Secure opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Set = &MaterializedViewSet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterMaterializedViewOptions.Set", "Secure", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.Secure opts.Unset.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Unset = &MaterializedViewUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterMaterializedViewOptions.Unset", "Secure", "Comment"))
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("rename", func(t *testing.T) {
+		newId := RandomSchemaObjectIdentifier()
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.RenameTo = &newId
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s RENAME TO %s", id.FullyQualifiedName(), newId.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("cluster by", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.ClusterBy = &MaterializedViewClusterBy{
+			Expressions: []MaterializedViewClusterByExpression{{"column"}},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER MATERIALIZED VIEW %s CLUSTER BY ("column")`, id.FullyQualifiedName())
 	})
 }
 
