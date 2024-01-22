@@ -1,11 +1,11 @@
 builds:
 - env:
   - >-
-    {{- if or (eq .Os "darwin") (eq .Os "windows") }}
+    {{- if or (eq .Os "darwin") (eq .Os "windows") -}}
       CGO_ENABLED=1
-    {{- else }}
+    {{- else -}}
       CGO_ENABLED=0
-    {{- end }}
+    {{- end -}}
   goos:
     - windows
     - linux
