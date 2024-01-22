@@ -55,7 +55,7 @@ jobs:
           fetch-depth: 0
         if: ${{ steps.release.outputs.release_created }}
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
         if: ${{ steps.release.outputs.release_created }}
