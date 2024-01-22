@@ -74,4 +74,13 @@ var MaterializedViewsDef = g.NewInterface(
 			OptionalQueryStructField("Unset", materializedViewUnset, g.KeywordOptions().SQL("UNSET")).
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ExactlyOneValueSet, "RenameTo", "ClusterBy", "DropClusteringKey", "SuspendRecluster", "ResumeRecluster", "Suspend", "Resume", "Set", "Unset"),
+	).
+	DropOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/drop-materialized-view",
+		g.NewQueryStruct("DropMaterializedView").
+			Drop().
+			SQL("MATERIALIZED VIEW").
+			IfExists().
+			Name().
+			WithValidation(g.ValidIdentifier, "name"),
 	)
