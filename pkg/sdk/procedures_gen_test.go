@@ -52,7 +52,6 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "Handler"))
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "RuntimeVersion"))
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "Packages"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -197,7 +196,6 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "Handler"))
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "RuntimeVersion"))
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "Packages"))
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -303,7 +301,6 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "Handler"))
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "RuntimeVersion"))
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "Packages"))
 	})
 
 	t.Run("all options", func(t *testing.T) {

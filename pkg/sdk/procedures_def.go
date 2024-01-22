@@ -92,7 +92,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Packages",
 			procedurePackage,
-			g.ParameterOptions().Parentheses().SQL("PACKAGES").Required(),
+			g.ParameterOptions().MustParentheses().SQL("PACKAGES").Required(),
 		).
 		ListQueryStructField(
 			"Imports",
@@ -109,7 +109,6 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
 		WithValidation(g.ValidateValueSet, "Handler").
-		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
 	"CreateForJavaScript",
@@ -160,7 +159,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Packages",
 			procedurePackage,
-			g.ParameterOptions().Parentheses().SQL("PACKAGES").Required(),
+			g.ParameterOptions().MustParentheses().SQL("PACKAGES").Required(),
 		).
 		ListQueryStructField(
 			"Imports",
@@ -176,7 +175,6 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
 		WithValidation(g.ValidateValueSet, "Handler").
-		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
 	"CreateForScala",
@@ -203,7 +201,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Packages",
 			procedurePackage,
-			g.ParameterOptions().Parentheses().SQL("PACKAGES").Required(),
+			g.ParameterOptions().MustParentheses().SQL("PACKAGES").Required(),
 		).
 		ListQueryStructField(
 			"Imports",
@@ -218,7 +216,6 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
 		WithValidation(g.ValidateValueSet, "Handler").
-		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
 	"CreateForSQL",
@@ -453,6 +450,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("CallArguments", "[]string", g.KeywordOptions().MustParentheses()).
 		PredefinedQueryStructField("ScriptingVariable", "*string", g.ParameterOptions().NoEquals().NoQuotes().SQL("INTO")).
 		WithValidation(g.ValidateValueSet, "ProcedureDefinition").
+		WithValidation(g.ValidateValueSet, "ResultDataType").
 		WithValidation(g.ValidIdentifier, "ProcedureName").
 		WithValidation(g.ValidIdentifier, "Name"),
 ).CustomOperation(
