@@ -23,6 +23,9 @@ func (opts *CreateMaterializedViewOptions) validate() error {
 		if !ValidObjectIdentifier(opts.RowAccessPolicy.RowAccessPolicy) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}
+		if !valueSet(opts.RowAccessPolicy.On) {
+			errs = append(errs, errNotSet("CreateMaterializedViewOptions.RowAccessPolicy", "On"))
+		}
 	}
 	return JoinErrors(errs...)
 }

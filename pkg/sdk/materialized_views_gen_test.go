@@ -4,11 +4,13 @@ import "testing"
 
 func TestMaterializedViews_Create(t *testing.T) {
 	id := RandomSchemaObjectIdentifier()
+	sql := "SELECT id FROM t"
 
 	// Minimal valid CreateMaterializedViewOptions
 	defaultOpts := func() *CreateMaterializedViewOptions {
 		return &CreateMaterializedViewOptions{
 			name: id,
+			sql:  sql,
 		}
 	}
 
@@ -19,32 +21,72 @@ func TestMaterializedViews_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.OrReplace = Bool(true)
+		opts.IfNotExists = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateMaterializedViewOptions", "OrReplace", "IfNotExists"))
 	})
 
 	t.Run("validation: valid identifier for [opts.RowAccessPolicy.RowAccessPolicy]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.RowAccessPolicy = &MaterializedViewRowAccessPolicy{
+			RowAccessPolicy: NewSchemaObjectIdentifier("", "", ""),
+		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: empty columns for row access policy", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.RowAccessPolicy = &MaterializedViewRowAccessPolicy{
+			RowAccessPolicy: RandomSchemaObjectIdentifier(),
+			On:              []string{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaterializedViewOptions.RowAccessPolicy", "On"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE MATERIALIZED VIEW %s AS %s", id.FullyQualifiedName(), sql)
 	})
 
 	t.Run("all options", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		rowAccessPolicyId := RandomSchemaObjectIdentifier()
+		tag1Id := RandomSchemaObjectIdentifier()
+		tag2Id := RandomSchemaObjectIdentifier()
+		maskingPolicy1Id := RandomSchemaObjectIdentifier()
+		maskingPolicy2Id := RandomSchemaObjectIdentifier()
+
+		req := NewCreateMaterializedViewRequest(id, sql).
+			WithOrReplace(Bool(true)).
+			WithSecure(Bool(true)).
+			WithColumns([]MaterializedViewColumnRequest{
+				*NewMaterializedViewColumnRequest("column_without_comment"),
+				*NewMaterializedViewColumnRequest("column_with_comment").WithComment(String("column 2 comment")),
+			}).
+			WithColumnsMaskingPolicies([]MaterializedViewColumnMaskingPolicyRequest{
+				*NewMaterializedViewColumnMaskingPolicyRequest("column", maskingPolicy1Id).
+					WithUsing([]string{"a", "b"}).
+					WithTag([]TagAssociation{{
+						Name:  tag1Id,
+						Value: "v1",
+					}}),
+				*NewMaterializedViewColumnMaskingPolicyRequest("column 2", maskingPolicy2Id),
+			}).
+			WithCopyGrants(Bool(true)).
+			WithComment(String("comment")).
+			WithRowAccessPolicy(NewMaterializedViewRowAccessPolicyRequest(rowAccessPolicyId, []string{"c", "d"})).
+			WithTag([]TagAssociation{{
+				Name:  tag2Id,
+				Value: "v2",
+			}}).
+			WithClusterBy([]string{"column_without_comment", "column_with_comment"})
+
+		assertOptsValidAndSQLEquals(t, req.toOpts(), `CREATE OR REPLACE SECURE MATERIALIZED VIEW %s COPY GRANTS ("column_without_comment", "column_with_comment" COMMENT 'column 2 comment') column MASKING POLICY %s USING (a, b) TAG (%s = 'v1'), column 2 MASKING POLICY %s COMMENT = 'comment' ROW ACCESS POLICY %s ON (c, d) TAG (%s = 'v2') CLUSTER BY ("column_without_comment", "column_with_comment") AS %s`, id.FullyQualifiedName(), maskingPolicy1Id.FullyQualifiedName(), tag1Id.FullyQualifiedName(), maskingPolicy2Id.FullyQualifiedName(), rowAccessPolicyId.FullyQualifiedName(), tag2Id.FullyQualifiedName(), sql)
 	})
 }
 
@@ -135,13 +177,9 @@ func TestMaterializedViews_Drop(t *testing.T) {
 }
 
 func TestMaterializedViews_Show(t *testing.T) {
-	id := RandomSchemaObjectIdentifier()
-
 	// Minimal valid ShowMaterializedViewOptions
 	defaultOpts := func() *ShowMaterializedViewOptions {
-		return &ShowMaterializedViewOptions{
-			name: id,
-		}
+		return &ShowMaterializedViewOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
