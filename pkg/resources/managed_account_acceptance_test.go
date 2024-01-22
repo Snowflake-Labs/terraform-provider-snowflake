@@ -16,8 +16,9 @@ const (
 )
 
 func TestAcc_ManagedAccount(t *testing.T) {
+	// TODO [SNOW-1011985]: unskip the tests
 	if _, ok := os.LookupEnv("SKIP_MANAGED_ACCOUNT_TEST"); ok {
-		t.Skip("Skipping TestAcc_ManagedAccount")
+		t.Skip("Skipping TestAcc_ManagedAccounts due to error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support.")
 	}
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
