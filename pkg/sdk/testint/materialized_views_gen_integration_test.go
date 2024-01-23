@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -78,11 +79,24 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("drop materialized view: existing", func(t *testing.T) {
-		// TODO: fill me
+		request := createMaterializedViewBasicRequest(t)
+		id := request.GetName()
+
+		err := client.MaterializedViews.Create(ctx, request)
+		require.NoError(t, err)
+
+		err = client.MaterializedViews.Drop(ctx, sdk.NewDropMaterializedViewRequest(id))
+		require.NoError(t, err)
+
+		_, err = client.MaterializedViews.ShowByID(ctx, id)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
 	t.Run("drop view: non-existing", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
+
+		err := client.MaterializedViews.Drop(ctx, sdk.NewDropMaterializedViewRequest(id))
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("alter materialized view: rename", func(t *testing.T) {
