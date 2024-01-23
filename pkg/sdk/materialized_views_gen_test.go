@@ -139,16 +139,34 @@ func TestMaterializedViews_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterMaterializedViewOptions.ClusterBy", "Expressions"))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Set.Secure opts.Set.Comment] should be set", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Set.Secure opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &MaterializedViewSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterMaterializedViewOptions.Set", "Secure", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaterializedViewOptions.Set", "Secure", "Comment"))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Unset.Secure opts.Unset.Comment] should be set", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Set.Secure opts.Set.Comment] should be set - more present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &MaterializedViewSet{
+			Secure:  Bool(true),
+			Comment: String("comment"),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaterializedViewOptions.Set", "Secure", "Comment"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Unset.Secure opts.Unset.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &MaterializedViewUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterMaterializedViewOptions.Unset", "Secure", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaterializedViewOptions.Unset", "Secure", "Comment"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Unset.Secure opts.Unset.Comment] should be set - more present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &MaterializedViewUnset{
+			Secure:  Bool(true),
+			Comment: Bool(true),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaterializedViewOptions.Unset", "Secure", "Comment"))
 	})
 
 	t.Run("rename", func(t *testing.T) {
@@ -205,30 +223,12 @@ func TestMaterializedViews_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s SET SECURE", id.FullyQualifiedName())
 	})
 
-	t.Run("set multiple", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Set = &MaterializedViewSet{
-			Secure:  Bool(true),
-			Comment: String("some comment"),
-		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s SET SECURE COMMENT = 'some comment'", id.FullyQualifiedName())
-	})
-
 	t.Run("unset single", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &MaterializedViewUnset{
 			Secure: Bool(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s UNSET SECURE", id.FullyQualifiedName())
-	})
-
-	t.Run("unset multiple", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Unset = &MaterializedViewUnset{
-			Secure:  Bool(true),
-			Comment: Bool(true),
-		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER MATERIALIZED VIEW %s UNSET SECURE, COMMENT", id.FullyQualifiedName())
 	})
 }
 

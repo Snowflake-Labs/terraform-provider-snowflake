@@ -31,12 +31,12 @@ var materializedViewClusterBy = g.NewQueryStruct("MaterializedViewClusterBy").
 var materializedViewSet = g.NewQueryStruct("MaterializedViewSet").
 	OptionalSQL("SECURE").
 	OptionalComment().
-	WithValidation(g.AtLeastOneValueSet, "Secure", "Comment")
+	WithValidation(g.ExactlyOneValueSet, "Secure", "Comment")
 
 var materializedViewUnset = g.NewQueryStruct("MaterializedViewUnset").
 	OptionalSQL("SECURE").
 	OptionalSQL("COMMENT").
-	WithValidation(g.AtLeastOneValueSet, "Secure", "Comment")
+	WithValidation(g.ExactlyOneValueSet, "Secure", "Comment")
 
 var materializedViewDbRow = g.DbStruct("materializedViewDBRow").
 	Text("created_on").
@@ -69,7 +69,7 @@ var materializedView = g.PlainStruct("MaterializedView").
 	OptionalText("Reserved").
 	Text("DatabaseName").
 	Text("SchemaName").
-	OptionalText("ClusterBy").
+	Text("ClusterBy").
 	Number("Rows").
 	Number("Bytes").
 	Text("SourceDatabaseName").
@@ -152,7 +152,7 @@ var MaterializedViewsDef = g.NewInterface(
 			OptionalSQL("SUSPEND").
 			OptionalSQL("RESUME").
 			OptionalQueryStructField("Set", materializedViewSet, g.KeywordOptions().SQL("SET")).
-			OptionalQueryStructField("Unset", materializedViewUnset, g.ListOptions().NoParentheses().SQL("UNSET")).
+			OptionalQueryStructField("Unset", materializedViewUnset, g.KeywordOptions().SQL("UNSET")).
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ExactlyOneValueSet, "RenameTo", "ClusterBy", "DropClusteringKey", "SuspendRecluster", "ResumeRecluster", "Suspend", "Resume", "Set", "Unset"),
 	).

@@ -28,7 +28,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 		assert.Empty(t, view.Reserved)
 		assert.Equal(t, testDb(t).Name, view.DatabaseName)
 		assert.Equal(t, testSchema(t).Name, view.SchemaName)
-		assert.Equal(t, clusterBy, *view.ClusterBy)
+		assert.Equal(t, clusterBy, view.ClusterBy)
 		assert.Equal(t, 0, view.Rows)
 		assert.Equal(t, 0, view.Bytes)
 		assert.Equal(t, testDb(t).Name, view.SourceDatabaseName)
@@ -169,11 +169,45 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("alter materialized view: rename", func(t *testing.T) {
-		// TODO: fill me
+		createRequest := createMaterializedViewBasicRequest(t)
+		id := createRequest.GetName()
+
+		err := client.MaterializedViews.Create(ctx, createRequest)
+		require.NoError(t, err)
+
+		newName := random.String()
+		newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, newName)
+		alterRequest := sdk.NewAlterMaterializedViewRequest(id).WithRenameTo(&newId)
+
+		err = client.MaterializedViews.Alter(ctx, alterRequest)
+		if err != nil {
+			t.Cleanup(cleanupMaterializedViewProvider(id))
+		} else {
+			t.Cleanup(cleanupMaterializedViewProvider(newId))
+		}
+		require.NoError(t, err)
+
+		_, err = client.MaterializedViews.ShowByID(ctx, id)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
+
+		view, err := client.MaterializedViews.ShowByID(ctx, newId)
+		require.NoError(t, err)
+
+		assertMaterializedView(t, view, newId)
 	})
 
 	t.Run("alter materialized view: set cluster by", func(t *testing.T) {
-		// TODO: fill me
+		view := createMaterializedView(t)
+		id := view.ID()
+
+		alterRequest := sdk.NewAlterMaterializedViewRequest(id).WithClusterBy(sdk.NewMaterializedViewClusterByRequest().WithExpressions([]sdk.MaterializedViewClusterByExpressionRequest{{"ID"}}))
+		err := client.MaterializedViews.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err := client.MaterializedViews.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, fmt.Sprintf(`LINEAR("%s")`, "ID"), alteredView.ClusterBy)
 	})
 
 	t.Run("alter materialized view: recluster suspend and resume", func(t *testing.T) {
@@ -185,7 +219,52 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("alter materialized view: set and unset values", func(t *testing.T) {
-		// TODO: fill me
+		view := createMaterializedView(t)
+		id := view.ID()
+
+		alterRequest := sdk.NewAlterMaterializedViewRequest(id).WithSet(
+			sdk.NewMaterializedViewSetRequest().WithSecure(sdk.Bool(true)),
+		)
+		err := client.MaterializedViews.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err := client.MaterializedViews.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, true, alteredView.IsSecure)
+
+		alterRequest = sdk.NewAlterMaterializedViewRequest(id).WithSet(
+			sdk.NewMaterializedViewSetRequest().WithComment(sdk.String("comment")),
+		)
+		err = client.MaterializedViews.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.MaterializedViews.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "comment", alteredView.Comment)
+
+		alterRequest = sdk.NewAlterMaterializedViewRequest(id).WithUnset(
+			sdk.NewMaterializedViewUnsetRequest().WithComment(sdk.Bool(true)),
+		)
+		err = client.MaterializedViews.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.MaterializedViews.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "", alteredView.Comment)
+
+		alterRequest = sdk.NewAlterMaterializedViewRequest(id).WithUnset(
+			sdk.NewMaterializedViewUnsetRequest().WithSecure(sdk.Bool(true)),
+		)
+		err = client.MaterializedViews.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.MaterializedViews.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, false, alteredView.IsSecure)
 	})
 
 	t.Run("show materialized view: default", func(t *testing.T) {

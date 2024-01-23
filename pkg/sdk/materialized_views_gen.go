@@ -73,7 +73,7 @@ type AlterMaterializedViewOptions struct {
 	Suspend           *bool                      `ddl:"keyword" sql:"SUSPEND"`
 	Resume            *bool                      `ddl:"keyword" sql:"RESUME"`
 	Set               *MaterializedViewSet       `ddl:"keyword" sql:"SET"`
-	Unset             *MaterializedViewUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
+	Unset             *MaterializedViewUnset     `ddl:"keyword" sql:"UNSET"`
 }
 
 type MaterializedViewSet struct {
@@ -134,7 +134,7 @@ type MaterializedView struct {
 	Reserved            *string
 	DatabaseName        string
 	SchemaName          string
-	ClusterBy           *string
+	ClusterBy           string
 	Rows                int
 	Bytes               int
 	SourceDatabaseName  string

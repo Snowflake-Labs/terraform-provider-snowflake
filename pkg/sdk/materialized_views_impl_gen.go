@@ -191,7 +191,7 @@ func (r materializedViewDBRow) convert() *MaterializedView {
 		materializedView.Reserved = &r.Reserved.String
 	}
 	if r.ClusterBy.Valid {
-		materializedView.ClusterBy = &r.ClusterBy.String
+		materializedView.ClusterBy = r.ClusterBy.String
 	}
 	if r.InvalidReason.Valid {
 		materializedView.InvalidReason = r.InvalidReason.String

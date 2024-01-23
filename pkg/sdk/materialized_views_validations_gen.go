@@ -52,13 +52,13 @@ func (opts *AlterMaterializedViewOptions) validate() error {
 		}
 	}
 	if valueSet(opts.Set) {
-		if !anyValueSet(opts.Set.Secure, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterMaterializedViewOptions.Set", "Secure", "Comment"))
+		if !exactlyOneValueSet(opts.Set.Secure, opts.Set.Comment) {
+			errs = append(errs, errExactlyOneOf("AlterMaterializedViewOptions.Set", "Secure", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
-		if !anyValueSet(opts.Unset.Secure, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterMaterializedViewOptions.Unset", "Secure", "Comment"))
+		if !exactlyOneValueSet(opts.Unset.Secure, opts.Unset.Comment) {
+			errs = append(errs, errExactlyOneOf("AlterMaterializedViewOptions.Unset", "Secure", "Comment"))
 		}
 	}
 	return JoinErrors(errs...)
