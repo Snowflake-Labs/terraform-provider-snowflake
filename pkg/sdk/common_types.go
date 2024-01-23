@@ -207,7 +207,7 @@ var (
 )
 
 func ValuesBehaviorPointer(v ValuesBehavior) *ValuesBehavior {
-  	return &v
+	return &v
 }
 
 type Distribution string

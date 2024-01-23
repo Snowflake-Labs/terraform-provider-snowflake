@@ -63,7 +63,7 @@ type Client struct {
 	Roles               Roles
 	RowAccessPolicies   RowAccessPolicies
 	Schemas             Schemas
-  Sequences           Sequences
+	Sequences           Sequences
 	SessionPolicies     SessionPolicies
 	Sessions            Sessions
 	Shares              Shares
