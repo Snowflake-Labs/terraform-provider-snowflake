@@ -60,4 +60,55 @@ var ApiIntegrationsDef = g.NewInterface(
 			WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace").
 			WithValidation(g.ExactlyOneValueSet, "S3ApiProviderParams", "AzureApiProviderParams", "GCSApiProviderParams"),
 		ApiIntegrationEndpointPrefixDef,
+	).
+	AlterOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-api-integration",
+		g.NewQueryStruct("AlterApiIntegration").
+			Alter().
+			SQL("API INTEGRATION").
+			IfExists().
+			Name().
+			OptionalQueryStructField(
+				"Set",
+				g.NewQueryStruct("ApiIntegrationSet").
+					OptionalQueryStructField(
+						"S3Params",
+						g.NewQueryStruct("SetS3ApiParams").
+							OptionalTextAssignment("API_AWS_ROLE_ARN", g.ParameterOptions().SingleQuotes()).
+							OptionalTextAssignment("API_KEY", g.ParameterOptions().SingleQuotes()).
+							WithValidation(g.AtLeastOneValueSet, "ApiAwsRoleArn", "ApiKey"),
+						g.KeywordOptions(),
+					).
+					OptionalQueryStructField(
+						"AzureParams",
+						g.NewQueryStruct("SetAzureApiParams").
+							TextAssignment("AZURE_AD_APPLICATION_ID", g.ParameterOptions().SingleQuotes().Required()).
+							OptionalTextAssignment("API_KEY", g.ParameterOptions().SingleQuotes()).
+							WithValidation(g.AtLeastOneValueSet, "AzureAdApplicationId", "ApiKey"),
+						g.KeywordOptions(),
+					).
+					OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+					ListAssignment("API_ALLOWED_PREFIXES", "ApiIntegrationEndpointPrefix", g.ParameterOptions().Parentheses()).
+					ListAssignment("API_BLOCKED_PREFIXES", "ApiIntegrationEndpointPrefix", g.ParameterOptions().Parentheses()).
+					OptionalComment().
+					WithValidation(g.ConflictingFields, "S3Params", "AzureParams").
+					WithValidation(g.AtLeastOneValueSet, "S3Params", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"),
+				g.KeywordOptions().SQL("SET"),
+			).
+			OptionalQueryStructField(
+				"Unset",
+				g.NewQueryStruct("ApiIntegrationUnset").
+					OptionalSQL("API_KEY").
+					OptionalSQL("ENABLED").
+					OptionalSQL("API_BLOCKED_PREFIXES").
+					OptionalSQL("COMMENT").
+					WithValidation(g.AtLeastOneValueSet, "ApiKey", "Enabled", "ApiBlockedPrefixes", "Comment"),
+				g.ListOptions().NoParentheses().SQL("UNSET"),
+			).
+			OptionalSetTags().
+			OptionalUnsetTags().
+			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ConflictingFields, "IfExists", "SetTags").
+			WithValidation(g.ConflictingFields, "IfExists", "UnsetTags").
+			WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags"),
 	)
