@@ -207,5 +207,16 @@ var (
 )
 
 func ValuesBehaviorPointer(v ValuesBehavior) *ValuesBehavior {
+  	return &v
+}
+
+type Distribution string
+
+var (
+	DistributionInternal Distribution = "INTERNAL"
+	DistributionExternal Distribution = "EXTERNAL"
+)
+
+func DistributionPointer(v Distribution) *Distribution {
 	return &v
 }

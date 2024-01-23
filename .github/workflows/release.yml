@@ -61,10 +61,10 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
-          args: release --rm-dist
+          args: release --rm-dist --verbose
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
