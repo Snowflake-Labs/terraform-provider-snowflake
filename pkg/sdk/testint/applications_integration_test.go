@@ -214,18 +214,14 @@ func TestInt_Applications(t *testing.T) {
 		_, e := createApplicationHandle(t, applicationPackageName, version, patch, false, true, false)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
-		// unset coment
-		unset := sdk.NewApplicationUnsetRequest().WithComment(sdk.Bool(true))
+		unset := sdk.NewApplicationUnsetRequest().WithComment(sdk.Bool(true)).WithDebugMode(sdk.Bool(true))
 		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnset(unset))
 		require.NoError(t, err)
+
 		o, err := client.Applications.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Empty(t, o.Comment)
 
-		// unset debug mode
-		unset = sdk.NewApplicationUnsetRequest().WithDebugMode(sdk.Bool(true))
-		err = client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnset(unset))
-		require.NoError(t, err)
 		details, err := client.Applications.Describe(ctx, id)
 		require.NoError(t, err)
 		pairs := make(map[string]string)

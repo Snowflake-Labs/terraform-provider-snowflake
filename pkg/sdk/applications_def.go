@@ -25,8 +25,7 @@ var applicationSet = g.NewQueryStruct("ApplicationSet").
 var applicationUnset = g.NewQueryStruct("ApplicationUnset").
 	OptionalSQL("COMMENT").
 	OptionalSQL("SHARE_EVENTS_WITH_PROVIDER").
-	OptionalSQL("DEBUG_MODE").
-	WithValidation(g.ExactlyOneValueSet, "Comment", "ShareEventsWithProvider", "DebugMode")
+	OptionalSQL("DEBUG_MODE")
 
 var applicationReferences = g.NewQueryStruct("ApplicationReferences").ListQueryStructField(
 	"References",
@@ -80,7 +79,7 @@ var ApplicationsDef = g.NewInterface(
 		OptionalQueryStructField(
 			"Unset",
 			applicationUnset,
-			g.KeywordOptions().SQL("UNSET"),
+			g.ListOptions().NoParentheses().SQL("UNSET"),
 		).
 		OptionalSQL("UPGRADE").
 		OptionalQueryStructField(

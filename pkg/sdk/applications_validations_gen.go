@@ -52,11 +52,6 @@ func (opts *AlterApplicationOptions) validate() error {
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.Upgrade, opts.UpgradeVersion, opts.UnsetReferences, opts.SetTags, opts.UnsetTags) {
 		errs = append(errs, errExactlyOneOf("AlterApplicationOptions", "Set", "Unset", "Upgrade", "UpgradeVersion", "UnsetReferences", "SetTags", "UnsetTags"))
 	}
-	if valueSet(opts.Unset) {
-		if !exactlyOneValueSet(opts.Unset.Comment, opts.Unset.ShareEventsWithProvider, opts.Unset.DebugMode) {
-			errs = append(errs, errExactlyOneOf("AlterApplicationOptions.Unset", "Comment", "ShareEventsWithProvider", "DebugMode"))
-		}
-	}
 	if valueSet(opts.UpgradeVersion) {
 		if !exactlyOneValueSet(opts.UpgradeVersion.VersionDirectory, opts.UpgradeVersion.VersionAndPatch) {
 			errs = append(errs, errExactlyOneOf("AlterApplicationOptions.UpgradeVersion", "VersionDirectory", "VersionAndPatch"))

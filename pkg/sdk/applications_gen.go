@@ -53,7 +53,7 @@ type AlterApplicationOptions struct {
 	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
 	Set             *ApplicationSet         `ddl:"keyword" sql:"SET"`
-	Unset           *ApplicationUnset       `ddl:"keyword" sql:"UNSET"`
+	Unset           *ApplicationUnset       `ddl:"list,no_parentheses" sql:"UNSET"`
 	Upgrade         *bool                   `ddl:"keyword" sql:"UPGRADE"`
 	UpgradeVersion  *ApplicationVersion     `ddl:"keyword" sql:"UPGRADE USING"`
 	UnsetReferences *ApplicationReferences  `ddl:"keyword" sql:"UNSET REFERENCES"`
