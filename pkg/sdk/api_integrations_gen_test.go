@@ -219,20 +219,14 @@ func TestApiIntegrations_Drop(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "DROP API INTEGRATION IF EXISTS %s", id.FullyQualifiedName())
 	})
 }
 
