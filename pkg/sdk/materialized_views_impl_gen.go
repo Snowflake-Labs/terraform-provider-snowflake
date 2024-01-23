@@ -181,6 +181,7 @@ func (r materializedViewDBRow) convert() *MaterializedView {
 		SourceTableName:    r.SourceTableName,
 		RefreshedOn:        r.RefreshedOn,
 		CompactedOn:        r.CompactedOn,
+		Owner:              r.Owner,
 		Invalid:            r.Invalid,
 		BehindBy:           r.BehindBy,
 		Text:               r.Text,
@@ -192,21 +193,18 @@ func (r materializedViewDBRow) convert() *MaterializedView {
 	if r.ClusterBy.Valid {
 		materializedView.ClusterBy = &r.ClusterBy.String
 	}
-	if r.Owner.Valid {
-		materializedView.Owner = &r.Owner.String
-	}
 	if r.InvalidReason.Valid {
-		materializedView.InvalidReason = &r.InvalidReason.String
+		materializedView.InvalidReason = r.InvalidReason.String
 	}
 	if r.Comment.Valid {
-		materializedView.Comment = &r.Comment.String
+		materializedView.Comment = r.Comment.String
 	}
 	materializedView.AutomaticClustering = r.AutomaticClustering == "ON"
 	if r.OwnerRoleType.Valid {
-		materializedView.OwnerRoleType = &r.OwnerRoleType.String
+		materializedView.OwnerRoleType = r.OwnerRoleType.String
 	}
 	if r.Budget.Valid {
-		materializedView.Budget = &r.Budget.String
+		materializedView.Budget = r.Budget.String
 	}
 	return &materializedView
 }

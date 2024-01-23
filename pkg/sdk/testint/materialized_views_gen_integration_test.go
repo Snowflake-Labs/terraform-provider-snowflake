@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [SNOW-1016430]: add tests for setting masking policy on creation
 func TestInt_MaterializedViews(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -19,6 +20,38 @@ func TestInt_MaterializedViews(t *testing.T) {
 	t.Cleanup(tableCleanup)
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
+
+	assertMaterializedViewWithOptions := func(t *testing.T, view *sdk.MaterializedView, id sdk.SchemaObjectIdentifier, isSecure bool, comment string, clusterBy string) {
+		t.Helper()
+		assert.NotEmpty(t, view.CreatedOn)
+		assert.Equal(t, id.Name(), view.Name)
+		assert.Empty(t, view.Reserved)
+		assert.Equal(t, testDb(t).Name, view.DatabaseName)
+		assert.Equal(t, testSchema(t).Name, view.SchemaName)
+		assert.Equal(t, clusterBy, *view.ClusterBy)
+		assert.Equal(t, 0, view.Rows)
+		assert.Equal(t, 0, view.Bytes)
+		assert.Equal(t, testDb(t).Name, view.SourceDatabaseName)
+		assert.Equal(t, testSchema(t).Name, view.SourceSchemaName)
+		assert.Equal(t, table.Name, view.SourceTableName)
+		assert.NotEmpty(t, view.RefreshedOn)
+		assert.NotEmpty(t, view.CompactedOn)
+		assert.Equal(t, "ACCOUNTADMIN", view.Owner)
+		assert.Equal(t, false, view.Invalid)
+		assert.Equal(t, "", view.InvalidReason)
+		assert.NotEmpty(t, view.BehindBy)
+		assert.Equal(t, comment, view.Comment)
+		assert.NotEmpty(t, view.Text)
+		assert.Equal(t, isSecure, view.IsSecure)
+		assert.Equal(t, clusterBy != "", view.AutomaticClustering)
+		assert.Equal(t, "ROLE", view.OwnerRoleType)
+		assert.Equal(t, "", view.Budget)
+	}
+
+	assertMaterializedView := func(t *testing.T, view *sdk.MaterializedView, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+		assertMaterializedViewWithOptions(t, view, id, false, "", "")
+	}
 
 	assertViewDetailsRow := func(t *testing.T, materializedViewDetails *sdk.MaterializedViewDetails) {
 		t.Helper()
@@ -71,11 +104,47 @@ func TestInt_MaterializedViews(t *testing.T) {
 	}
 
 	t.Run("create materialized view: no optionals", func(t *testing.T) {
-		// TODO: fill me
+		request := createMaterializedViewBasicRequest(t)
+
+		view := createMaterializedViewWithRequest(t, request)
+
+		assertMaterializedView(t, view, request.GetName())
 	})
 
-	t.Run("create materialized view: complete case", func(t *testing.T) {
-		// TODO: fill me
+	t.Run("create materialized view: almost complete case", func(t *testing.T) {
+		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
+		t.Cleanup(rowAccessPolicyCleanup)
+
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		t.Cleanup(tagCleanup)
+
+		request := createMaterializedViewBasicRequest(t).
+			WithOrReplace(sdk.Bool(true)).
+			WithSecure(sdk.Bool(true)).
+			WithColumns([]sdk.MaterializedViewColumnRequest{
+				*sdk.NewMaterializedViewColumnRequest("COLUMN_WITH_COMMENT").WithComment(sdk.String("column comment")),
+			}).
+			WithCopyGrants(sdk.Bool(true)).
+			WithComment(sdk.String("comment")).
+			WithRowAccessPolicy(sdk.NewMaterializedViewRowAccessPolicyRequest(rowAccessPolicyId, []string{"column_with_comment"})).
+			WithTag([]sdk.TagAssociation{{
+				Name:  tag.ID(),
+				Value: "v2",
+			}}).
+			WithClusterBy(sdk.NewMaterializedViewClusterByRequest().WithExpressions([]sdk.MaterializedViewClusterByExpressionRequest{{"COLUMN_WITH_COMMENT"}}))
+
+		id := request.GetName()
+
+		view := createMaterializedViewWithRequest(t, request)
+
+		assertMaterializedViewWithOptions(t, view, id, true, "comment", fmt.Sprintf(`LINEAR("%s")`, "COLUMN_WITH_COMMENT"))
+		rowAccessPolicyReference, err := getRowAccessPolicyFor(t, client, view.ID(), sdk.ObjectTypeView)
+		require.NoError(t, err)
+		assert.Equal(t, rowAccessPolicyId.Name(), rowAccessPolicyReference.PolicyName)
+		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
+		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
+		assert.Equal(t, "MATERIALIZED_VIEW", rowAccessPolicyReference.RefEntityDomain)
+		assert.Equal(t, "ACTIVE", rowAccessPolicyReference.PolicyStatus)
 	})
 
 	t.Run("drop materialized view: existing", func(t *testing.T) {

@@ -116,7 +116,7 @@ type materializedViewDBRow struct {
 	SourceTableName     string         `db:"source_table_name"`
 	RefreshedOn         time.Time      `db:"refreshed_on"`
 	CompactedOn         time.Time      `db:"compacted_on"`
-	Owner               sql.NullString `db:"owner"`
+	Owner               string         `db:"owner"`
 	Invalid             bool           `db:"invalid"`
 	InvalidReason       sql.NullString `db:"invalid_reason"`
 	BehindBy            string         `db:"behind_by"`
@@ -142,16 +142,16 @@ type MaterializedView struct {
 	SourceTableName     string
 	RefreshedOn         time.Time
 	CompactedOn         time.Time
-	Owner               *string
+	Owner               string
 	Invalid             bool
-	InvalidReason       *string
+	InvalidReason       string
 	BehindBy            string
-	Comment             *string
+	Comment             string
 	Text                string
 	IsSecure            bool
 	AutomaticClustering bool
-	OwnerRoleType       *string
-	Budget              *string
+	OwnerRoleType       string
+	Budget              string
 }
 
 func (v *MaterializedView) ID() SchemaObjectIdentifier {

@@ -52,7 +52,7 @@ var materializedViewDbRow = g.DbStruct("materializedViewDBRow").
 	Text("source_table_name").
 	Time("refreshed_on").
 	Time("compacted_on").
-	OptionalText("owner").
+	Text("owner").
 	Bool("invalid").
 	OptionalText("invalid_reason").
 	Text("behind_by").
@@ -77,16 +77,16 @@ var materializedView = g.PlainStruct("MaterializedView").
 	Text("SourceTableName").
 	Time("RefreshedOn").
 	Time("CompactedOn").
-	OptionalText("Owner").
+	Text("Owner").
 	Bool("Invalid").
-	OptionalText("InvalidReason").
+	Text("InvalidReason").
 	Text("BehindBy").
-	OptionalText("Comment").
+	Text("Comment").
 	Text("Text").
 	Bool("IsSecure").
 	Bool("AutomaticClustering").
-	OptionalText("OwnerRoleType").
-	OptionalText("Budget")
+	Text("OwnerRoleType").
+	Text("Budget")
 
 var materializedViewDetailsDbRow = g.DbStruct("materializedViewDetailsRow").
 	Text("name").
