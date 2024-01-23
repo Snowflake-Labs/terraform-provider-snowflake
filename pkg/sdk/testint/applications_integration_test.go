@@ -13,8 +13,8 @@ import (
 )
 
 /*
- * todo: add integration test for `ALTER APPLICATION <name> UPGRADE`
- * todo: ALTER APPLICATION [ IF EXISTS ] <name> SET [ SHARE_EVENTS_WITH_PROVIDER ]
+ * todo: (SNOW-1015095) add integration test for `ALTER APPLICATION <name> UPGRADE`
+ * todo: (SNOW-1016268) ALTER APPLICATION [ IF EXISTS ] <name> SET [ SHARE_EVENTS_WITH_PROVIDER ]
  *       attention: SHARE_EVENTS_WITH_PROVIDER can only be set/unset if the application is created in a different account from the application package
  */
 
