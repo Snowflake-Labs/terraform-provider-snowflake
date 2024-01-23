@@ -2,15 +2,57 @@ package sdk
 
 import "testing"
 
+const AwsAllowedPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
+const AzureAllowedPrefix = "https://apim-hello-world.azure-api.net/"
+const GoogleAllowedPrefix = "https://gateway-id-123456.uc.gateway.dev/"
+
+const ApiAwsRoleArn = "arn:aws:iam::000000000001:/role/test"
+const AzureTenantId = "00000000-0000-0000-0000-000000000000"
+const AzureAdApplicationId = "11111111-1111-1111-1111-111111111111"
+const GoogleAudience = "api-gateway-id-123456.apigateway.gcp-project.cloud.goog"
+
 func TestApiIntegrations_Create(t *testing.T) {
 	id := RandomAccountObjectIdentifier()
 
-	// Minimal valid CreateApiIntegrationOptions
-	defaultOpts := func() *CreateApiIntegrationOptions {
+	// Minimal valid CreateApiIntegrationOptions for AWS
+	defaultOptsAws := func() *CreateApiIntegrationOptions {
 		return &CreateApiIntegrationOptions{
 			name: id,
+			AwsApiProviderParams: &AwsApiParams{
+				ApiProvider:   ApiIntegrationAwsApiGateway,
+				ApiAwsRoleArn: ApiAwsRoleArn,
+			},
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}},
+			Enabled:            true,
 		}
 	}
+
+	// Minimal valid CreateApiIntegrationOptions for Azure
+	defaultOptsAzure := func() *CreateApiIntegrationOptions {
+		return &CreateApiIntegrationOptions{
+			name: id,
+			AzureApiProviderParams: &AzureApiParams{
+				AzureTenantId:        AzureTenantId,
+				AzureAdApplicationId: AzureAdApplicationId,
+			},
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AzureAllowedPrefix}},
+			Enabled:            true,
+		}
+	}
+
+	// Minimal valid CreateApiIntegrationOptions for Google
+	defaultOptsGoogle := func() *CreateApiIntegrationOptions {
+		return &CreateApiIntegrationOptions{
+			name: id,
+			GoogleApiProviderParams: &GoogleApiParams{
+				GoogleAudience: GoogleAudience,
+			},
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: GoogleAllowedPrefix}},
+			Enabled:            true,
+		}
+	}
+
+	defaultOpts := defaultOptsAws
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateApiIntegrationOptions = nil
@@ -19,32 +61,62 @@ func TestApiIntegrations_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateApiIntegrationOptions", "IfNotExists", "OrReplace"))
 	})
 
-	t.Run("validation: exactly one field from [opts.S3ApiProviderParams opts.AzureApiProviderParams opts.GCSApiProviderParams] should be present", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.AwsApiProviderParams opts.AzureApiProviderParams opts.GoogleApiProviderParams] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateApiIntegrationOptions", "S3ApiProviderParams", "AzureApiProviderParams", "GCSApiProviderParams"))
+		opts.AwsApiProviderParams = nil
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateApiIntegrationOptions", "AwsApiProviderParams", "AzureApiProviderParams", "GoogleApiProviderParams"))
+	})
+
+	t.Run("validation: exactly one field from [opts.AwsApiProviderParams opts.AzureApiProviderParams opts.GoogleApiProviderParams] should be present - more present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AzureApiProviderParams = new(AzureApiParams)
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateApiIntegrationOptions", "AwsApiProviderParams", "AzureApiProviderParams", "GoogleApiProviderParams"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION %s API_PROVIDER = aws_api_gateway API_AWS_ROLE_ARN = '%s' API_ALLOWED_PREFIXES = ('%s') ENABLED = true`, id.FullyQualifiedName(), ApiAwsRoleArn, AwsAllowedPrefix)
 	})
 
-	t.Run("all options", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	t.Run("all options - aws", func(t *testing.T) {
+		opts := defaultOptsAws()
+		opts.IfNotExists = Bool(true)
+		opts.AwsApiProviderParams.ApiProvider = ApiIntegrationAwsPrivateApiGateway
+		opts.AwsApiProviderParams.ApiKey = String("key")
+		opts.ApiBlockedPrefixes = []ApiIntegrationEndpointPrefix{{Path: GoogleAllowedPrefix}, {Path: AzureAllowedPrefix}}
+		opts.Enabled = false
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION IF NOT EXISTS %s API_PROVIDER = aws_private_api_gateway API_AWS_ROLE_ARN = '%s' API_KEY = 'key' API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') ENABLED = false COMMENT = 'some comment'`, id.FullyQualifiedName(), ApiAwsRoleArn, AwsAllowedPrefix, GoogleAllowedPrefix, AzureAllowedPrefix)
+	})
+
+	t.Run("all options - azure", func(t *testing.T) {
+		opts := defaultOptsAzure()
+		opts.IfNotExists = Bool(true)
+		opts.AzureApiProviderParams.ApiKey = String("key")
+		opts.ApiBlockedPrefixes = []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}, {Path: GoogleAllowedPrefix}}
+		opts.Enabled = false
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION IF NOT EXISTS %s API_PROVIDER = azure_api_management AZURE_TENANT_ID = '%s' AZURE_AD_APPLICATION_ID = '%s' API_KEY = 'key' API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') ENABLED = false COMMENT = 'some comment'`, id.FullyQualifiedName(), AzureTenantId, AzureAdApplicationId, AzureAllowedPrefix, AwsAllowedPrefix, GoogleAllowedPrefix)
+	})
+
+	t.Run("all options - google", func(t *testing.T) {
+		opts := defaultOptsGoogle()
+		opts.IfNotExists = Bool(true)
+		opts.ApiBlockedPrefixes = []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}, {Path: AzureAllowedPrefix}}
+		opts.Enabled = false
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION IF NOT EXISTS %s API_PROVIDER = google_api_gateway GOOGLE_AUDIENCE = '%s' API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') ENABLED = false COMMENT = 'some comment'`, id.FullyQualifiedName(), GoogleAudience, GoogleAllowedPrefix, AwsAllowedPrefix, AzureAllowedPrefix)
 	})
 }
 
@@ -165,13 +237,9 @@ func TestApiIntegrations_Drop(t *testing.T) {
 }
 
 func TestApiIntegrations_Show(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
-
 	// Minimal valid ShowApiIntegrationOptions
 	defaultOpts := func() *ShowApiIntegrationOptions {
-		return &ShowApiIntegrationOptions{
-			name: id,
-		}
+		return &ShowApiIntegrationOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
