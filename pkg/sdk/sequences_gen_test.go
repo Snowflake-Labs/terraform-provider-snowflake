@@ -36,12 +36,11 @@ func TestSequences_Create(t *testing.T) {
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
-		opts.With = Bool(true)
 		opts.Start = Int(1)
 		opts.Increment = Int(1)
 		opts.ValuesBehavior = ValuesBehaviorPointer(ValuesBehaviorOrder)
 		opts.Comment = String("comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SEQUENCE %s WITH START = 1 INCREMENT = 1 ORDER COMMENT = 'comment'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SEQUENCE %s START = 1 INCREMENT = 1 ORDER COMMENT = 'comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -187,6 +186,9 @@ func TestSequences_Drop(t *testing.T) {
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `DROP SEQUENCE IF EXISTS %s`, id.FullyQualifiedName())
+		opts.Constraint = &SequenceConstraint{
+			Cascade: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `DROP SEQUENCE IF EXISTS %s CASCADE`, id.FullyQualifiedName())
 	})
 }

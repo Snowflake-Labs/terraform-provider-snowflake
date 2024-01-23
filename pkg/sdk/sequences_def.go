@@ -8,6 +8,11 @@ var sequenceSet = g.NewQueryStruct("SequenceSet").
 	PredefinedQueryStructField("ValuesBehavior", "*ValuesBehavior", g.KeywordOptions()).
 	OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes())
 
+var sequenceConstraint = g.NewQueryStruct("SequenceConstraint").
+	OptionalSQL("CASCADE").
+	OptionalSQL("RESTRICT").
+	WithValidation(g.ExactlyOneValueSet, "Cascade", "Restrict")
+
 var SequencesDef = g.NewInterface(
 	"Sequences",
 	"Sequence",
@@ -20,7 +25,6 @@ var SequencesDef = g.NewInterface(
 		SQL("SEQUENCE").
 		IfNotExists().
 		Name().
-		OptionalSQL("WITH").
 		OptionalNumberAssignment("START", g.ParameterOptions().NoQuotes()).
 		OptionalNumberAssignment("INCREMENT", g.ParameterOptions().NoQuotes()).
 		PredefinedQueryStructField("ValuesBehavior", "*ValuesBehavior", g.KeywordOptions()).
@@ -111,5 +115,10 @@ var SequencesDef = g.NewInterface(
 		SQL("SEQUENCE").
 		IfExists().
 		Name().
+		OptionalQueryStructField(
+			"Constraint",
+			sequenceConstraint,
+			g.KeywordOptions(),
+		).
 		WithValidation(g.ValidIdentifier, "name"),
 )

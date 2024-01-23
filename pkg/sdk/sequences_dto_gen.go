@@ -14,7 +14,6 @@ type CreateSequenceRequest struct {
 	OrReplace      *bool
 	IfNotExists    *bool
 	name           SchemaObjectIdentifier // required
-	With           *bool
 	Start          *int
 	Increment      *int
 	ValuesBehavior *ValuesBehavior
@@ -45,6 +44,12 @@ type DescribeSequenceRequest struct {
 }
 
 type DropSequenceRequest struct {
-	IfExists *bool
-	name     SchemaObjectIdentifier // required
+	IfExists   *bool
+	name       SchemaObjectIdentifier // required
+	Constraint *SequenceConstraintRequest
+}
+
+type SequenceConstraintRequest struct {
+	Cascade  *bool
+	Restrict *bool
 }

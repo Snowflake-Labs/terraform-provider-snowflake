@@ -46,13 +46,29 @@ func TestInt_Sequences(t *testing.T) {
 		return s
 	}
 
+	assertSequence := func(t *testing.T, id sdk.SchemaObjectIdentifier, interval int, ordered bool, comment string) {
+		t.Helper()
+
+		e, err := client.Sequences.ShowByID(ctx, id)
+		require.NoError(t, err)
+		require.NotEmpty(t, e.CreatedOn)
+		require.Equal(t, id.Name(), e.Name)
+		require.Equal(t, id.DatabaseName(), e.DatabaseName)
+		require.Equal(t, id.SchemaName(), e.SchemaName)
+		require.Equal(t, 1, e.NextValue)
+		require.Equal(t, interval, e.Interval)
+		require.Equal(t, "ACCOUNTADMIN", e.Owner)
+		require.Equal(t, "ROLE", e.OwnerRoleType)
+		require.Equal(t, comment, e.Comment)
+		require.Equal(t, ordered, e.Ordered)
+	}
+
 	t.Run("create sequence", func(t *testing.T) {
 		name := random.StringN(4)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		comment := random.StringN(4)
 		request := sdk.NewCreateSequenceRequest(id).
-			WithWith(sdk.Bool(true)).
 			WithStart(sdk.Int(1)).
 			WithIncrement(sdk.Int(1)).
 			WithIfNotExists(sdk.Bool(true)).
@@ -61,6 +77,7 @@ func TestInt_Sequences(t *testing.T) {
 		err := client.Sequences.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupSequenceHandle(t, id))
+		assertSequence(t, id, 1, true, comment)
 	})
 
 	t.Run("show event table: without like", func(t *testing.T) {
@@ -69,9 +86,9 @@ func TestInt_Sequences(t *testing.T) {
 
 		sequences, err := client.Sequences.Show(ctx, sdk.NewShowSequenceRequest())
 		require.NoError(t, err)
-		assert.Equal(t, 2, len(sequences))
-		assert.Contains(t, sequences, *e1)
-		assert.Contains(t, sequences, *e2)
+		require.Equal(t, 2, len(sequences))
+		require.Contains(t, sequences, *e1)
+		require.Contains(t, sequences, *e2)
 	})
 
 	t.Run("show sequence: with like", func(t *testing.T) {
@@ -118,14 +135,7 @@ func TestInt_Sequences(t *testing.T) {
 		err := client.Sequences.Alter(ctx, sdk.NewAlterSequenceRequest(id).WithSet(set))
 		require.NoError(t, err)
 
-		et, err := client.Sequences.ShowByID(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, e.Name, et.Name)
-		require.Equal(t, e.SchemaName, et.SchemaName)
-		require.Equal(t, e.DatabaseName, et.DatabaseName)
-		require.Equal(t, comment, et.Comment)
-		require.Equal(t, true, e.Ordered)
-		require.Equal(t, false, et.Ordered)
+		assertSequence(t, id, 1, false, comment)
 	})
 
 	t.Run("alter sequence: set increment", func(t *testing.T) {
@@ -135,13 +145,7 @@ func TestInt_Sequences(t *testing.T) {
 		increment := 2
 		err := client.Sequences.Alter(ctx, sdk.NewAlterSequenceRequest(id).WithSetIncrement(&increment))
 		require.NoError(t, err)
-
-		et, err := client.Sequences.ShowByID(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, e.Name, et.Name)
-		require.Equal(t, e.SchemaName, et.SchemaName)
-		require.Equal(t, e.DatabaseName, et.DatabaseName)
-		require.Equal(t, increment, et.Interval)
+		assertSequence(t, id, 2, true, "")
 	})
 
 	t.Run("alter sequence: rename", func(t *testing.T) {

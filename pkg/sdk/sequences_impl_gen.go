@@ -33,7 +33,7 @@ func (v *sequences) Show(ctx context.Context, request *ShowSequenceRequest) ([]S
 }
 
 func (v *sequences) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Sequence, error) {
-	request := NewShowSequenceRequest().WithIn(&In{Database: NewAccountObjectIdentifier(id.DatabaseName())}).WithLike(&Like{String(id.Name())})
+	request := NewShowSequenceRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&Like{String(id.Name())})
 	sequences, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,6 @@ func (r *CreateSequenceRequest) toOpts() *CreateSequenceOptions {
 		OrReplace:      r.OrReplace,
 		IfNotExists:    r.IfNotExists,
 		name:           r.name,
-		With:           r.With,
 		Start:          r.Start,
 		Increment:      r.Increment,
 		ValuesBehavior: r.ValuesBehavior,
@@ -138,6 +137,12 @@ func (r *DropSequenceRequest) toOpts() *DropSequenceOptions {
 	opts := &DropSequenceOptions{
 		IfExists: r.IfExists,
 		name:     r.name,
+	}
+	if r.Constraint != nil {
+		opts.Constraint = &SequenceConstraint{
+			Cascade:  r.Constraint.Cascade,
+			Restrict: r.Constraint.Restrict,
+		}
 	}
 	return opts
 }

@@ -66,5 +66,10 @@ func (opts *DropSequenceOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if valueSet(opts.Constraint) {
+		if !exactlyOneValueSet(opts.Constraint.Cascade, opts.Constraint.Restrict) {
+			errs = append(errs, errExactlyOneOf("DropSequenceOptions.Constraint", "Cascade", "Restrict"))
+		}
+	}
 	return JoinErrors(errs...)
 }

@@ -22,11 +22,6 @@ func (s *CreateSequenceRequest) WithIfNotExists(IfNotExists *bool) *CreateSequen
 	return s
 }
 
-func (s *CreateSequenceRequest) WithWith(With *bool) *CreateSequenceRequest {
-	s.With = With
-	return s
-}
-
 func (s *CreateSequenceRequest) WithStart(Start *int) *CreateSequenceRequest {
 	s.Start = Start
 	return s
@@ -126,5 +121,24 @@ func NewDropSequenceRequest(
 
 func (s *DropSequenceRequest) WithIfExists(IfExists *bool) *DropSequenceRequest {
 	s.IfExists = IfExists
+	return s
+}
+
+func (s *DropSequenceRequest) WithConstraint(Constraint *SequenceConstraintRequest) *DropSequenceRequest {
+	s.Constraint = Constraint
+	return s
+}
+
+func NewSequenceConstraintRequest() *SequenceConstraintRequest {
+	return &SequenceConstraintRequest{}
+}
+
+func (s *SequenceConstraintRequest) WithCascade(Cascade *bool) *SequenceConstraintRequest {
+	s.Cascade = Cascade
+	return s
+}
+
+func (s *SequenceConstraintRequest) WithRestrict(Restrict *bool) *SequenceConstraintRequest {
+	s.Restrict = Restrict
 	return s
 }

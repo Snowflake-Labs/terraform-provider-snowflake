@@ -18,7 +18,6 @@ type CreateSequenceOptions struct {
 	sequence       bool                   `ddl:"static" sql:"SEQUENCE"`
 	IfNotExists    *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name           SchemaObjectIdentifier `ddl:"identifier"`
-	With           *bool                  `ddl:"keyword" sql:"WITH"`
 	Start          *int                   `ddl:"parameter,no_quotes" sql:"START"`
 	Increment      *int                   `ddl:"parameter,no_quotes" sql:"INCREMENT"`
 	ValuesBehavior *ValuesBehavior        `ddl:"keyword"`
@@ -111,8 +110,14 @@ type SequenceDetail struct {
 
 // DropSequenceOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-sequence.
 type DropSequenceOptions struct {
-	drop     bool                   `ddl:"static" sql:"DROP"`
-	sequence bool                   `ddl:"static" sql:"SEQUENCE"`
-	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name     SchemaObjectIdentifier `ddl:"identifier"`
+	drop       bool                   `ddl:"static" sql:"DROP"`
+	sequence   bool                   `ddl:"static" sql:"SEQUENCE"`
+	IfExists   *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name       SchemaObjectIdentifier `ddl:"identifier"`
+	Constraint *SequenceConstraint    `ddl:"keyword"`
+}
+
+type SequenceConstraint struct {
+	Cascade  *bool `ddl:"keyword" sql:"CASCADE"`
+	Restrict *bool `ddl:"keyword" sql:"RESTRICT"`
 }
