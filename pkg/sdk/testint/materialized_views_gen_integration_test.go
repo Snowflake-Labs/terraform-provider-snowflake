@@ -131,7 +131,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 				Name:  tag.ID(),
 				Value: "v2",
 			}}).
-			WithClusterBy(sdk.NewMaterializedViewClusterByRequest().WithExpressions([]sdk.MaterializedViewClusterByExpressionRequest{{"COLUMN_WITH_COMMENT"}}))
+			WithClusterBy(sdk.NewMaterializedViewClusterByRequest().WithExpressions([]sdk.MaterializedViewClusterByExpressionRequest{{Name: "COLUMN_WITH_COMMENT"}}))
 
 		id := request.GetName()
 
@@ -200,7 +200,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 		view := createMaterializedView(t)
 		id := view.ID()
 
-		alterRequest := sdk.NewAlterMaterializedViewRequest(id).WithClusterBy(sdk.NewMaterializedViewClusterByRequest().WithExpressions([]sdk.MaterializedViewClusterByExpressionRequest{{"ID"}}))
+		alterRequest := sdk.NewAlterMaterializedViewRequest(id).WithClusterBy(sdk.NewMaterializedViewClusterByRequest().WithExpressions([]sdk.MaterializedViewClusterByExpressionRequest{{Name: "ID"}}))
 		err := client.MaterializedViews.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -211,7 +211,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("alter materialized view: recluster suspend and resume", func(t *testing.T) {
-		request := createMaterializedViewBasicRequest(t).WithClusterBy(sdk.NewMaterializedViewClusterByRequest().WithExpressions([]sdk.MaterializedViewClusterByExpressionRequest{{"ID"}}))
+		request := createMaterializedViewBasicRequest(t).WithClusterBy(sdk.NewMaterializedViewClusterByRequest().WithExpressions([]sdk.MaterializedViewClusterByExpressionRequest{{Name: "ID"}}))
 		view := createMaterializedViewWithRequest(t, request)
 		id := view.ID()
 

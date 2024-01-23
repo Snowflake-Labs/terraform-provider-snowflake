@@ -64,32 +64,21 @@ func (r *CreateMaterializedViewRequest) toOpts() *CreateMaterializedViewOptions 
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
 		CopyGrants:  r.CopyGrants,
-
-		Comment: r.Comment,
-
-		Tag: r.Tag,
-
-		sql: r.sql,
+		Comment:     r.Comment,
+		Tag:         r.Tag,
+		sql:         r.sql,
 	}
 	if r.Columns != nil {
 		s := make([]MaterializedViewColumn, len(r.Columns))
 		for i, v := range r.Columns {
-			s[i] = MaterializedViewColumn{
-				Name:    v.Name,
-				Comment: v.Comment,
-			}
+			s[i] = MaterializedViewColumn(v)
 		}
 		opts.Columns = s
 	}
 	if r.ColumnsMaskingPolicies != nil {
 		s := make([]MaterializedViewColumnMaskingPolicy, len(r.ColumnsMaskingPolicies))
 		for i, v := range r.ColumnsMaskingPolicies {
-			s[i] = MaterializedViewColumnMaskingPolicy{
-				Name:          v.Name,
-				MaskingPolicy: v.MaskingPolicy,
-				Using:         v.Using,
-				Tag:           v.Tag,
-			}
+			s[i] = MaterializedViewColumnMaskingPolicy(v)
 		}
 		opts.ColumnsMaskingPolicies = s
 	}
@@ -104,9 +93,7 @@ func (r *CreateMaterializedViewRequest) toOpts() *CreateMaterializedViewOptions 
 		if r.ClusterBy.Expressions != nil {
 			s := make([]MaterializedViewClusterByExpression, len(r.ClusterBy.Expressions))
 			for i, v := range r.ClusterBy.Expressions {
-				s[i] = MaterializedViewClusterByExpression{
-					Name: v.Name,
-				}
+				s[i] = MaterializedViewClusterByExpression(v)
 			}
 			opts.ClusterBy.Expressions = s
 		}
@@ -116,9 +103,8 @@ func (r *CreateMaterializedViewRequest) toOpts() *CreateMaterializedViewOptions 
 
 func (r *AlterMaterializedViewRequest) toOpts() *AlterMaterializedViewOptions {
 	opts := &AlterMaterializedViewOptions{
-		name:     r.name,
-		RenameTo: r.RenameTo,
-
+		name:              r.name,
+		RenameTo:          r.RenameTo,
 		DropClusteringKey: r.DropClusteringKey,
 		SuspendRecluster:  r.SuspendRecluster,
 		ResumeRecluster:   r.ResumeRecluster,
@@ -130,9 +116,7 @@ func (r *AlterMaterializedViewRequest) toOpts() *AlterMaterializedViewOptions {
 		if r.ClusterBy.Expressions != nil {
 			s := make([]MaterializedViewClusterByExpression, len(r.ClusterBy.Expressions))
 			for i, v := range r.ClusterBy.Expressions {
-				s[i] = MaterializedViewClusterByExpression{
-					Name: v.Name,
-				}
+				s[i] = MaterializedViewClusterByExpression(v)
 			}
 			opts.ClusterBy.Expressions = s
 		}
