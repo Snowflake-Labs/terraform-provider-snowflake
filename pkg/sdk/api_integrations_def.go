@@ -48,7 +48,7 @@ var ApiIntegrationsDef = g.NewInterface(
 			OptionalQueryStructField(
 				"GCSApiProviderParams",
 				g.NewQueryStruct("GCSApiParams").
-					PredefinedQueryStructField("apiProvider", "string", g.StaticOptions().SQL("STORAGE_PROVIDER = google_api_gateway")).
+					PredefinedQueryStructField("apiProvider", "string", g.StaticOptions().SQL("API_PROVIDER = google_api_gateway")).
 					TextAssignment("GOOGLE_AUDIENCE", g.ParameterOptions().SingleQuotes().Required()),
 				g.KeywordOptions(),
 			).
@@ -111,4 +111,54 @@ var ApiIntegrationsDef = g.NewInterface(
 			WithValidation(g.ConflictingFields, "IfExists", "SetTags").
 			WithValidation(g.ConflictingFields, "IfExists", "UnsetTags").
 			WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags"),
+	).
+	DropOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/drop-integration",
+		g.NewQueryStruct("DropApiIntegration").
+			Drop().
+			SQL("API INTEGRATION").
+			IfExists().
+			Name().
+			WithValidation(g.ValidIdentifier, "name"),
+	).
+	ShowOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/show-integrations",
+		g.DbStruct("showApiIntegrationsDbRow").
+			Text("name").
+			Text("type").
+			Text("category").
+			Bool("enabled").
+			OptionalText("comment").
+			Time("created_on"),
+		g.PlainStruct("ApiIntegration").
+			Text("Name").
+			Text("ApiType").
+			Text("Category").
+			Bool("Enabled").
+			Text("Comment").
+			Time("CreatedOn"),
+		g.NewQueryStruct("ShowApiIntegrations").
+			Show().
+			SQL("API INTEGRATIONS").
+			OptionalLike(),
+	).
+	ShowByIdOperation().
+	DescribeOperation(
+		g.DescriptionMappingKindSlice,
+		"https://docs.snowflake.com/en/sql-reference/sql/desc-integration",
+		g.DbStruct("descApiIntegrationsDbRow").
+			Text("property").
+			Text("property_type").
+			Text("property_value").
+			Text("property_default"),
+		g.PlainStruct("ApiIntegrationProperty").
+			Text("Name").
+			Text("Type").
+			Text("Value").
+			Text("Default"),
+		g.NewQueryStruct("DescribeApiIntegration").
+			Describe().
+			SQL("API INTEGRATION").
+			Name().
+			WithValidation(g.ValidIdentifier, "name"),
 	)
