@@ -6,7 +6,7 @@ description: |-
   
 ---
 
-!> **Warning** This is a preview resource. It has more features and should cover more edge cases than its predecessor `snowflake_grant_privileges_to_role`, but it's not battle-tested yet. In case of any errors, please file an issue in our GitHub repository.
+~> **Note** This is a preview resource. It's ready for general use. In case of any errors, please file an issue in our GitHub repository.
 
 
 !> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).
@@ -267,7 +267,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 Required:
 
 - `object_name` (String) The fully qualified name of the object on which privileges will be granted.
-- `object_type` (String) The object type of the account object on which privileges will be granted. Valid values are: USER | RESOURCE MONITOR | WAREHOUSE | DATABASE | INTEGRATION | CONNECTION | FAILOVER GROUP | REPLICATION GROUP | EXTERNAL VOLUME
+- `object_type` (String) The object type of the account object on which privileges will be granted. Valid values are: USER | RESOURCE MONITOR | WAREHOUSE | COMPUTE POOL | DATABASE | INTEGRATION | FAILOVER GROUP | REPLICATION GROUP | EXTERNAL VOLUME
 
 
 <a id="nestedblock--on_schema"></a>

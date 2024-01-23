@@ -1,8 +1,16 @@
 package resources_test
 
 import (
+	"context"
+	"database/sql"
+	"fmt"
 	"os"
+	"slices"
 	"testing"
+
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/stretchr/testify/assert"
 
