@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -63,9 +64,9 @@ type AlterStorageIntegrationOptions struct {
 }
 
 type StorageIntegrationSet struct {
-	SetS3Params             *SetS3StorageParams    `ddl:"keyword"`
-	SetAzureParams          *SetAzureStorageParams `ddl:"keyword"`
-	Enabled                 bool                   `ddl:"parameter" sql:"ENABLED"`
+	S3Params                *SetS3StorageParams    `ddl:"keyword"`
+	AzureParams             *SetAzureStorageParams `ddl:"keyword"`
+	Enabled                 *bool                  `ddl:"parameter" sql:"ENABLED"`
 	StorageAllowedLocations []StorageLocation      `ddl:"parameter,parentheses" sql:"STORAGE_ALLOWED_LOCATIONS"`
 	StorageBlockedLocations []StorageLocation      `ddl:"parameter,parentheses" sql:"STORAGE_BLOCKED_LOCATIONS"`
 	Comment                 *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -81,6 +82,7 @@ type SetAzureStorageParams struct {
 }
 
 type StorageIntegrationUnset struct {
+	StorageAwsObjectAcl     *bool `ddl:"keyword" sql:"STORAGE_AWS_OBJECT_ACL"`
 	Enabled                 *bool `ddl:"keyword" sql:"ENABLED"`
 	StorageBlockedLocations *bool `ddl:"keyword" sql:"STORAGE_BLOCKED_LOCATIONS"`
 	Comment                 *bool `ddl:"keyword" sql:"COMMENT"`
@@ -102,12 +104,12 @@ type ShowStorageIntegrationOptions struct {
 }
 
 type showStorageIntegrationsDbRow struct {
-	Name      string    `db:"name"`
-	Type      string    `db:"type"`
-	Category  string    `db:"category"`
-	Enabled   bool      `db:"enabled"`
-	Comment   string    `db:"comment"`
-	CreatedOn time.Time `db:"created_on"`
+	Name      string         `db:"name"`
+	Type      string         `db:"type"`
+	Category  string         `db:"category"`
+	Enabled   bool           `db:"enabled"`
+	Comment   sql.NullString `db:"comment"`
+	CreatedOn time.Time      `db:"created_on"`
 }
 
 type StorageIntegration struct {
