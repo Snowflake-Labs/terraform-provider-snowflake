@@ -39,7 +39,7 @@ func TestInt_Applications(t *testing.T) {
 	createApplicationPackageHandle := func(t *testing.T, applicationPackageName, version string, patch int, defaultReleaseDirective bool) *sdk.Stage {
 		t.Helper()
 
-		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(12)))
+		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(12)))
 		t.Cleanup(cleanupStage)
 		putOnStageWithContent(t, client, stage.ID(), "manifest.yml", "")
 		putOnStageWithContent(t, client, stage.ID(), "setup.sql", "CREATE APPLICATION ROLE IF NOT EXISTS APP_HELLO_SNOWFLAKE;")
@@ -60,7 +60,7 @@ func TestInt_Applications(t *testing.T) {
 
 		stage := createApplicationPackageHandle(t, applicationPackageName, version, patch, false)
 
-		id := sdk.NewAccountObjectIdentifier(random.StringN(4))
+		id := sdk.NewAccountObjectIdentifier(random.AlphaN(4))
 		vr := sdk.NewApplicationVersionRequest().WithVersionAndPatch(sdk.NewVersionAndPatchRequest(version, &patch))
 		if versionDirectory {
 			vr = sdk.NewApplicationVersionRequest().WithVersionDirectory(sdk.String("@" + stage.ID().FullyQualifiedName()))
@@ -101,10 +101,10 @@ func TestInt_Applications(t *testing.T) {
 	}
 
 	t.Run("create application: without version", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		createApplicationPackageHandle(t, applicationPackageName, version, patch, true)
 
-		id := sdk.NewAccountObjectIdentifier(random.StringN(4))
+		id := sdk.NewAccountObjectIdentifier(random.AlphaN(4))
 		pid := sdk.NewAccountObjectIdentifier(applicationPackageName)
 		comment := random.StringN(4)
 		request := sdk.NewCreateApplicationRequest(id, pid).
@@ -131,10 +131,10 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("create application: version and patch", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		createApplicationPackageHandle(t, applicationPackageName, version, patch, false)
 
-		id := sdk.NewAccountObjectIdentifier(random.StringN(4))
+		id := sdk.RandomAccountObjectIdentifier()
 		pid := sdk.NewAccountObjectIdentifier(applicationPackageName)
 		vr := sdk.NewApplicationVersionRequest().WithVersionAndPatch(sdk.NewVersionAndPatchRequest(version, &patch))
 		comment := random.StringN(4)
@@ -150,10 +150,10 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("create application: version directory", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		stage := createApplicationPackageHandle(t, applicationPackageName, version, patch, false)
 
-		id := sdk.NewAccountObjectIdentifier(random.StringN(4))
+		id := sdk.RandomAccountObjectIdentifier()
 		pid := sdk.NewAccountObjectIdentifier(applicationPackageName)
 		vr := sdk.NewApplicationVersionRequest().WithVersionDirectory(sdk.String("@" + stage.ID().FullyQualifiedName()))
 		comment := random.StringN(4)
@@ -175,7 +175,7 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("show application: with like", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		_, e := createApplicationHandle(t, applicationPackageName, version, patch, false, true, false)
 		packages, err := client.Applications.Show(ctx, sdk.NewShowApplicationRequest().WithLike(&sdk.Like{Pattern: &e.Name}))
 		require.NoError(t, err)
@@ -184,7 +184,7 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("alter application: set", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		_, e := createApplicationHandle(t, applicationPackageName, version, patch, false, true, false)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
@@ -210,7 +210,7 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("alter application: unset", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		_, e := createApplicationHandle(t, applicationPackageName, version, patch, false, true, false)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
@@ -232,7 +232,7 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("alter application: set and unset tags", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		_, e := createApplicationHandle(t, applicationPackageName, version, patch, false, true, false)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
@@ -260,7 +260,7 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("alter application: upgrade with version and patch", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		_, e := createApplicationHandle(t, applicationPackageName, version, patch, false, true, true)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
@@ -272,7 +272,7 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("alter application: upgrade with version directory", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		s, e := createApplicationHandle(t, applicationPackageName, version, patch, true, true, false)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
@@ -283,7 +283,7 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("alter application: unset references", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		_, e := createApplicationHandle(t, applicationPackageName, version, patch, false, true, false)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
@@ -293,7 +293,7 @@ func TestInt_Applications(t *testing.T) {
 	})
 
 	t.Run("describe application", func(t *testing.T) {
-		applicationPackageName, version, patch := random.StringN(12), "V001", 0
+		applicationPackageName, version, patch := random.AlphaN(12), "V001", 0
 		_, e := createApplicationHandle(t, applicationPackageName, version, patch, false, true, false)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
