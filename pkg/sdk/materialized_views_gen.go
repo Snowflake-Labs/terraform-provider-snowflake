@@ -123,7 +123,7 @@ type materializedViewDBRow struct {
 	Comment             sql.NullString `db:"comment"`
 	Text                string         `db:"text"`
 	IsSecure            bool           `db:"is_secure"`
-	AutomaticClustering bool           `db:"automatic_clustering"`
+	AutomaticClustering string         `db:"automatic_clustering"`
 	OwnerRoleType       sql.NullString `db:"owner_role_type"`
 	Budget              sql.NullString `db:"budget"`
 }

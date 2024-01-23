@@ -38,8 +38,8 @@ func (v *materializedViews) Show(ctx context.Context, request *ShowMaterializedV
 }
 
 func (v *materializedViews) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	materializedViews, err := v.Show(ctx, NewShowMaterializedViewRequest())
+	request := NewShowMaterializedViewRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&Like{String(id.Name())})
+	materializedViews, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -169,8 +169,46 @@ func (r *ShowMaterializedViewRequest) toOpts() *ShowMaterializedViewOptions {
 }
 
 func (r materializedViewDBRow) convert() *MaterializedView {
-	// TODO: Mapping
-	return &MaterializedView{}
+	materializedView := MaterializedView{
+		CreatedOn:          r.CreatedOn,
+		Name:               r.Name,
+		DatabaseName:       r.DatabaseName,
+		SchemaName:         r.SchemaName,
+		Rows:               r.Rows,
+		Bytes:              r.Bytes,
+		SourceDatabaseName: r.SourceDatabaseName,
+		SourceSchemaName:   r.SourceSchemaName,
+		SourceTableName:    r.SourceTableName,
+		RefreshedOn:        r.RefreshedOn,
+		CompactedOn:        r.CompactedOn,
+		Invalid:            r.Invalid,
+		BehindBy:           r.BehindBy,
+		Text:               r.Text,
+		IsSecure:           r.IsSecure,
+	}
+	if r.Reserved.Valid {
+		materializedView.Reserved = &r.Reserved.String
+	}
+	if r.ClusterBy.Valid {
+		materializedView.ClusterBy = &r.ClusterBy.String
+	}
+	if r.Owner.Valid {
+		materializedView.Owner = &r.Owner.String
+	}
+	if r.InvalidReason.Valid {
+		materializedView.InvalidReason = &r.InvalidReason.String
+	}
+	if r.Comment.Valid {
+		materializedView.Comment = &r.Comment.String
+	}
+	materializedView.AutomaticClustering = r.AutomaticClustering == "ON"
+	if r.OwnerRoleType.Valid {
+		materializedView.OwnerRoleType = &r.OwnerRoleType.String
+	}
+	if r.Budget.Valid {
+		materializedView.Budget = &r.Budget.String
+	}
+	return &materializedView
 }
 
 func (r *DescribeMaterializedViewRequest) toOpts() *DescribeMaterializedViewOptions {

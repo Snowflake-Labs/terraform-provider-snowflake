@@ -59,7 +59,7 @@ var materializedViewDbRow = g.DbStruct("materializedViewDBRow").
 	OptionalText("comment").
 	Text("text").
 	Bool("is_secure").
-	Bool("automatic_clustering").
+	Text("automatic_clustering").
 	OptionalText("owner_role_type").
 	OptionalText("budget")
 
