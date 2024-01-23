@@ -38,8 +38,9 @@ func (v *apiIntegrations) Show(ctx context.Context, request *ShowApiIntegrationR
 }
 
 func (v *apiIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ApiIntegration, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	apiIntegrations, err := v.Show(ctx, NewShowApiIntegrationRequest())
+	apiIntegrations, err := v.Show(ctx, NewShowApiIntegrationRequest().WithLike(&Like{
+		Pattern: String(id.Name()),
+	}))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +147,17 @@ func (r *ShowApiIntegrationRequest) toOpts() *ShowApiIntegrationOptions {
 }
 
 func (r showApiIntegrationsDbRow) convert() *ApiIntegration {
-	// TODO: Mapping
-	return &ApiIntegration{}
+	s := &ApiIntegration{
+		Name:      r.Name,
+		ApiType:   r.Type,
+		Category:  r.Category,
+		Enabled:   r.Enabled,
+		CreatedOn: r.CreatedOn,
+	}
+	if r.Comment.Valid {
+		s.Comment = r.Comment.String
+	}
+	return s
 }
 
 func (r *DescribeApiIntegrationRequest) toOpts() *DescribeApiIntegrationOptions {
@@ -158,6 +168,10 @@ func (r *DescribeApiIntegrationRequest) toOpts() *DescribeApiIntegrationOptions 
 }
 
 func (r descApiIntegrationsDbRow) convert() *ApiIntegrationProperty {
-	// TODO: Mapping
-	return &ApiIntegrationProperty{}
+	return &ApiIntegrationProperty{
+		Name:    r.Property,
+		Type:    r.PropertyType,
+		Value:   r.PropertyValue,
+		Default: r.PropertyDefault,
+	}
 }
