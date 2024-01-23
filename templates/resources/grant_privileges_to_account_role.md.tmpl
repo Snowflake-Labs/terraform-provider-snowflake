@@ -6,7 +6,7 @@ description: |-
 {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
 ---
 
-!> **Warning** This is a preview resource. It has more features and should cover more edge cases than its predecessor `snowflake_grant_privileges_to_role`, but it's not battle-tested yet. In case of any errors, please file an issue in our GitHub repository.
+~> **Note** This is a preview resource. It's ready for general use. In case of any errors, please file an issue in our GitHub repository.
 
 {{/* SNOW-990811 */}}
 !> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).

@@ -95,14 +95,14 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Required:    true,
 					ForceNew:    true,
-					Description: "The object type of the account object on which privileges will be granted. Valid values are: USER | RESOURCE MONITOR | WAREHOUSE | DATABASE | INTEGRATION | CONNECTION | FAILOVER GROUP | REPLICATION GROUP | EXTERNAL VOLUME",
+					Description: "The object type of the account object on which privileges will be granted. Valid values are: USER | RESOURCE MONITOR | WAREHOUSE | COMPUTE POOL | DATABASE | INTEGRATION | FAILOVER GROUP | REPLICATION GROUP | EXTERNAL VOLUME",
 					ValidateFunc: validation.StringInSlice([]string{
 						"USER",
 						"RESOURCE MONITOR",
 						"WAREHOUSE",
+						"COMPUTE POOL",
 						"DATABASE",
 						"INTEGRATION",
-						"CONNECTION",
 						"FAILOVER GROUP",
 						"REPLICATION GROUP",
 						"EXTERNAL VOLUME",
@@ -959,6 +959,8 @@ func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
 			grantOnAccountObject.User = &objectIdentifier
 		case sdk.ObjectTypeWarehouse:
 			grantOnAccountObject.Warehouse = &objectIdentifier
+		case sdk.ObjectTypeComputePool:
+			grantOnAccountObject.ComputePool = &objectIdentifier
 		case sdk.ObjectTypeExternalVolume:
 			grantOnAccountObject.ExternalVolume = &objectIdentifier
 		}
