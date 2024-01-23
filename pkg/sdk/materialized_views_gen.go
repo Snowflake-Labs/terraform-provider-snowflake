@@ -154,6 +154,10 @@ type MaterializedView struct {
 	Budget              *string
 }
 
+func (v *MaterializedView) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
 // DescribeMaterializedViewOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-materialized-view.
 type DescribeMaterializedViewOptions struct {
 	describe         bool                   `ddl:"static" sql:"DESCRIBE"`

@@ -219,6 +219,25 @@ func (r *DescribeMaterializedViewRequest) toOpts() *DescribeMaterializedViewOpti
 }
 
 func (r materializedViewDetailsRow) convert() *MaterializedViewDetails {
-	// TODO: Mapping
-	return &MaterializedViewDetails{}
+	details := &MaterializedViewDetails{
+		Name:       r.Name,
+		Type:       r.Type,
+		Kind:       r.Kind,
+		IsNullable: r.Null == "Y",
+		IsPrimary:  r.PrimaryKey == "Y",
+		IsUnique:   r.UniqueKey == "Y",
+	}
+	if r.Default.Valid {
+		details.Default = String(r.Default.String)
+	}
+	if r.Check.Valid {
+		details.Check = Bool(r.Check.String == "Y")
+	}
+	if r.Expression.Valid {
+		details.Expression = String(r.Expression.String)
+	}
+	if r.Comment.Valid {
+		details.Comment = String(r.Comment.String)
+	}
+	return details
 }

@@ -19,6 +19,22 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
 
+	assertViewDetailsRow := func(t *testing.T, materializedViewDetails *sdk.MaterializedViewDetails) {
+		t.Helper()
+		assert.Equal(t, sdk.MaterializedViewDetails{
+			Name:       "ID",
+			Type:       "NUMBER(38,0)",
+			Kind:       "COLUMN",
+			IsNullable: true,
+			Default:    nil,
+			IsPrimary:  false,
+			IsUnique:   false,
+			Check:      nil,
+			Expression: nil,
+			Comment:    nil,
+		}, *materializedViewDetails)
+	}
+
 	cleanupMaterializedViewProvider := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
 			err := client.MaterializedViews.Drop(ctx, sdk.NewDropMaterializedViewRequest(id))
@@ -118,10 +134,19 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("describe materialized view", func(t *testing.T) {
-		// TODO: fill me
+		view := createMaterializedView(t)
+
+		returnedViewDetails, err := client.MaterializedViews.Describe(ctx, view.ID())
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, len(returnedViewDetails))
+		assertViewDetailsRow(t, &returnedViewDetails[0])
 	})
 
 	t.Run("describe materialized view: non-existing", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
+
+		_, err := client.MaterializedViews.Describe(ctx, id)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
