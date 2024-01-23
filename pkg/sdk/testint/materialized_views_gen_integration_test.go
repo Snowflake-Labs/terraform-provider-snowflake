@@ -211,11 +211,54 @@ func TestInt_MaterializedViews(t *testing.T) {
 	})
 
 	t.Run("alter materialized view: recluster suspend and resume", func(t *testing.T) {
-		// TODO: fill me
+		request := createMaterializedViewBasicRequest(t).WithClusterBy(sdk.NewMaterializedViewClusterByRequest().WithExpressions([]sdk.MaterializedViewClusterByExpressionRequest{{"ID"}}))
+		view := createMaterializedViewWithRequest(t, request)
+		id := view.ID()
+
+		assert.Equal(t, true, view.AutomaticClustering)
+
+		alterRequest := sdk.NewAlterMaterializedViewRequest(id).WithSuspendRecluster(sdk.Bool(true))
+		err := client.MaterializedViews.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err := client.MaterializedViews.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, false, alteredView.AutomaticClustering)
+
+		alterRequest = sdk.NewAlterMaterializedViewRequest(id).WithResumeRecluster(sdk.Bool(true))
+		err = client.MaterializedViews.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.MaterializedViews.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, true, alteredView.AutomaticClustering)
 	})
 
 	t.Run("alter materialized view: suspend and resume", func(t *testing.T) {
-		// TODO: fill me
+		view := createMaterializedView(t)
+		id := view.ID()
+
+		assert.Equal(t, false, view.Invalid)
+
+		alterRequest := sdk.NewAlterMaterializedViewRequest(id).WithSuspend(sdk.Bool(true))
+		err := client.MaterializedViews.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err := client.MaterializedViews.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, true, alteredView.Invalid)
+
+		alterRequest = sdk.NewAlterMaterializedViewRequest(id).WithResume(sdk.Bool(true))
+		err = client.MaterializedViews.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		alteredView, err = client.MaterializedViews.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, false, alteredView.Invalid)
 	})
 
 	t.Run("alter materialized view: set and unset values", func(t *testing.T) {
