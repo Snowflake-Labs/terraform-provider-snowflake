@@ -31,7 +31,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"storage_integration_def.go":  sdk.StorageIntegrationDef,
 	"managed_accounts_def.go":     sdk.ManagedAccountsDef,
 	"row_access_policies_def.go":  sdk.RowAccessPoliciesDef,
-  "applications_def.go":         sdk.ApplicationsDef,
+	"applications_def.go":         sdk.ApplicationsDef,
 }
 
 func main() {

@@ -42,7 +42,7 @@ type Client struct {
 	Alerts              Alerts
 	ApplicationPackages ApplicationPackages
 	ApplicationRoles    ApplicationRoles
-  Applications        Applications
+	Applications        Applications
 	Comments            Comments
 	DatabaseRoles       DatabaseRoles
 	Databases           Databases
