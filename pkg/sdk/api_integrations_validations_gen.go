@@ -19,8 +19,8 @@ func (opts *CreateApiIntegrationOptions) validate() error {
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
 		errs = append(errs, errOneOf("CreateApiIntegrationOptions", "IfNotExists", "OrReplace"))
 	}
-	if !exactlyOneValueSet(opts.S3ApiProviderParams, opts.AzureApiProviderParams, opts.GCSApiProviderParams) {
-		errs = append(errs, errExactlyOneOf("CreateApiIntegrationOptions", "S3ApiProviderParams", "AzureApiProviderParams", "GCSApiProviderParams"))
+	if !exactlyOneValueSet(opts.AwsApiProviderParams, opts.AzureApiProviderParams, opts.GoogleApiProviderParams) {
+		errs = append(errs, errExactlyOneOf("CreateApiIntegrationOptions", "AwsApiProviderParams", "AzureApiProviderParams", "GoogleApiProviderParams"))
 	}
 	return JoinErrors(errs...)
 }
@@ -43,15 +43,15 @@ func (opts *AlterApiIntegrationOptions) validate() error {
 		errs = append(errs, errExactlyOneOf("AlterApiIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
-		if everyValueSet(opts.Set.S3Params, opts.Set.AzureParams) {
-			errs = append(errs, errOneOf("AlterApiIntegrationOptions.Set", "S3Params", "AzureParams"))
+		if everyValueSet(opts.Set.AwsParams, opts.Set.AzureParams) {
+			errs = append(errs, errOneOf("AlterApiIntegrationOptions.Set", "AwsParams", "AzureParams"))
 		}
-		if !anyValueSet(opts.Set.S3Params, opts.Set.AzureParams, opts.Set.Enabled, opts.Set.ApiAllowedPrefixes, opts.Set.ApiBlockedPrefixes, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterApiIntegrationOptions.Set", "S3Params", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"))
+		if !anyValueSet(opts.Set.AwsParams, opts.Set.AzureParams, opts.Set.Enabled, opts.Set.ApiAllowedPrefixes, opts.Set.ApiBlockedPrefixes, opts.Set.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterApiIntegrationOptions.Set", "AwsParams", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"))
 		}
-		if valueSet(opts.Set.S3Params) {
-			if !anyValueSet(opts.Set.S3Params.ApiAwsRoleArn, opts.Set.S3Params.ApiKey) {
-				errs = append(errs, errAtLeastOneOf("AlterApiIntegrationOptions.Set.S3Params", "ApiAwsRoleArn", "ApiKey"))
+		if valueSet(opts.Set.AwsParams) {
+			if !anyValueSet(opts.Set.AwsParams.ApiAwsRoleArn, opts.Set.AwsParams.ApiKey) {
+				errs = append(errs, errAtLeastOneOf("AlterApiIntegrationOptions.Set.AwsParams", "ApiAwsRoleArn", "ApiKey"))
 			}
 		}
 		if valueSet(opts.Set.AzureParams) {

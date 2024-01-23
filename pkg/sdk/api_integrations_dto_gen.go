@@ -11,19 +11,19 @@ var (
 )
 
 type CreateApiIntegrationRequest struct {
-	OrReplace              *bool
-	IfNotExists            *bool
-	name                   AccountObjectIdentifier // required
-	S3ApiProviderParams    *S3ApiParamsRequest
-	AzureApiProviderParams *AzureApiParamsRequest
-	GCSApiProviderParams   *GCSApiParamsRequest
-	ApiAllowedPrefixes     []ApiIntegrationEndpointPrefix // required
-	ApiBlockedPrefixes     []ApiIntegrationEndpointPrefix
-	Enabled                bool // required
-	Comment                *string
+	OrReplace               *bool
+	IfNotExists             *bool
+	name                    AccountObjectIdentifier // required
+	AwsApiProviderParams    *AwsApiParamsRequest
+	AzureApiProviderParams  *AzureApiParamsRequest
+	GoogleApiProviderParams *GoogleApiParamsRequest
+	ApiAllowedPrefixes      []ApiIntegrationEndpointPrefix // required
+	ApiBlockedPrefixes      []ApiIntegrationEndpointPrefix
+	Enabled                 bool // required
+	Comment                 *string
 }
 
-type S3ApiParamsRequest struct {
+type AwsApiParamsRequest struct {
 	ApiProvider   ApiIntegrationAwsApiProviderType // required
 	ApiAwsRoleArn string                           // required
 	ApiKey        *string
@@ -35,7 +35,7 @@ type AzureApiParamsRequest struct {
 	ApiKey               *string
 }
 
-type GCSApiParamsRequest struct {
+type GoogleApiParamsRequest struct {
 	GoogleAudience string // required
 }
 
@@ -49,7 +49,7 @@ type AlterApiIntegrationRequest struct {
 }
 
 type ApiIntegrationSetRequest struct {
-	S3Params           *SetS3ApiParamsRequest
+	AwsParams          *SetAwsApiParamsRequest
 	AzureParams        *SetAzureApiParamsRequest
 	Enabled            *bool
 	ApiAllowedPrefixes []ApiIntegrationEndpointPrefix
@@ -57,7 +57,7 @@ type ApiIntegrationSetRequest struct {
 	Comment            *string
 }
 
-type SetS3ApiParamsRequest struct {
+type SetAwsApiParamsRequest struct {
 	ApiAwsRoleArn *string
 	ApiKey        *string
 }

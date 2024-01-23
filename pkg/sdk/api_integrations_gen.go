@@ -17,25 +17,25 @@ type ApiIntegrations interface {
 
 // CreateApiIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-api-integration.
 type CreateApiIntegrationOptions struct {
-	create                 bool                           `ddl:"static" sql:"CREATE"`
-	OrReplace              *bool                          `ddl:"keyword" sql:"OR REPLACE"`
-	apiIntegration         bool                           `ddl:"static" sql:"API INTEGRATION"`
-	IfNotExists            *bool                          `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                   AccountObjectIdentifier        `ddl:"identifier"`
-	S3ApiProviderParams    *S3ApiParams                   `ddl:"keyword"`
-	AzureApiProviderParams *AzureApiParams                `ddl:"keyword"`
-	GCSApiProviderParams   *GCSApiParams                  `ddl:"keyword"`
-	ApiAllowedPrefixes     []ApiIntegrationEndpointPrefix `ddl:"parameter,parentheses" sql:"API_ALLOWED_PREFIXES"`
-	ApiBlockedPrefixes     []ApiIntegrationEndpointPrefix `ddl:"parameter,parentheses" sql:"API_BLOCKED_PREFIXES"`
-	Enabled                bool                           `ddl:"parameter" sql:"ENABLED"`
-	Comment                *string                        `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                  bool                           `ddl:"static" sql:"CREATE"`
+	OrReplace               *bool                          `ddl:"keyword" sql:"OR REPLACE"`
+	apiIntegration          bool                           `ddl:"static" sql:"API INTEGRATION"`
+	IfNotExists             *bool                          `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                    AccountObjectIdentifier        `ddl:"identifier"`
+	AwsApiProviderParams    *AwsApiParams                  `ddl:"keyword"`
+	AzureApiProviderParams  *AzureApiParams                `ddl:"keyword"`
+	GoogleApiProviderParams *GoogleApiParams               `ddl:"keyword"`
+	ApiAllowedPrefixes      []ApiIntegrationEndpointPrefix `ddl:"parameter,parentheses" sql:"API_ALLOWED_PREFIXES"`
+	ApiBlockedPrefixes      []ApiIntegrationEndpointPrefix `ddl:"parameter,parentheses" sql:"API_BLOCKED_PREFIXES"`
+	Enabled                 bool                           `ddl:"parameter" sql:"ENABLED"`
+	Comment                 *string                        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type ApiIntegrationEndpointPrefix struct {
 	Path string `ddl:"keyword,single_quotes"`
 }
 
-type S3ApiParams struct {
+type AwsApiParams struct {
 	ApiProvider   ApiIntegrationAwsApiProviderType `ddl:"parameter,no_quotes" sql:"API_PROVIDER"`
 	ApiAwsRoleArn string                           `ddl:"parameter,single_quotes" sql:"API_AWS_ROLE_ARN"`
 	ApiKey        *string                          `ddl:"parameter,single_quotes" sql:"API_KEY"`
@@ -48,7 +48,7 @@ type AzureApiParams struct {
 	ApiKey               *string `ddl:"parameter,single_quotes" sql:"API_KEY"`
 }
 
-type GCSApiParams struct {
+type GoogleApiParams struct {
 	apiProvider    string `ddl:"static" sql:"API_PROVIDER = google_api_gateway"`
 	GoogleAudience string `ddl:"parameter,single_quotes" sql:"GOOGLE_AUDIENCE"`
 }
@@ -66,7 +66,7 @@ type AlterApiIntegrationOptions struct {
 }
 
 type ApiIntegrationSet struct {
-	S3Params           *SetS3ApiParams                `ddl:"keyword"`
+	AwsParams          *SetAwsApiParams               `ddl:"keyword"`
 	AzureParams        *SetAzureApiParams             `ddl:"keyword"`
 	Enabled            *bool                          `ddl:"parameter" sql:"ENABLED"`
 	ApiAllowedPrefixes []ApiIntegrationEndpointPrefix `ddl:"parameter,parentheses" sql:"API_ALLOWED_PREFIXES"`
@@ -74,7 +74,7 @@ type ApiIntegrationSet struct {
 	Comment            *string                        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-type SetS3ApiParams struct {
+type SetAwsApiParams struct {
 	ApiAwsRoleArn *string `ddl:"parameter,single_quotes" sql:"API_AWS_ROLE_ARN"`
 	ApiKey        *string `ddl:"parameter,single_quotes" sql:"API_KEY"`
 }

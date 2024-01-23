@@ -26,8 +26,8 @@ func (s *CreateApiIntegrationRequest) WithIfNotExists(IfNotExists *bool) *Create
 	return s
 }
 
-func (s *CreateApiIntegrationRequest) WithS3ApiProviderParams(S3ApiProviderParams *S3ApiParamsRequest) *CreateApiIntegrationRequest {
-	s.S3ApiProviderParams = S3ApiProviderParams
+func (s *CreateApiIntegrationRequest) WithAwsApiProviderParams(AwsApiProviderParams *AwsApiParamsRequest) *CreateApiIntegrationRequest {
+	s.AwsApiProviderParams = AwsApiProviderParams
 	return s
 }
 
@@ -36,8 +36,8 @@ func (s *CreateApiIntegrationRequest) WithAzureApiProviderParams(AzureApiProvide
 	return s
 }
 
-func (s *CreateApiIntegrationRequest) WithGCSApiProviderParams(GCSApiProviderParams *GCSApiParamsRequest) *CreateApiIntegrationRequest {
-	s.GCSApiProviderParams = GCSApiProviderParams
+func (s *CreateApiIntegrationRequest) WithGoogleApiProviderParams(GoogleApiProviderParams *GoogleApiParamsRequest) *CreateApiIntegrationRequest {
+	s.GoogleApiProviderParams = GoogleApiProviderParams
 	return s
 }
 
@@ -51,17 +51,17 @@ func (s *CreateApiIntegrationRequest) WithComment(Comment *string) *CreateApiInt
 	return s
 }
 
-func NewS3ApiParamsRequest(
+func NewAwsApiParamsRequest(
 	ApiProvider ApiIntegrationAwsApiProviderType,
 	ApiAwsRoleArn string,
-) *S3ApiParamsRequest {
-	s := S3ApiParamsRequest{}
+) *AwsApiParamsRequest {
+	s := AwsApiParamsRequest{}
 	s.ApiProvider = ApiProvider
 	s.ApiAwsRoleArn = ApiAwsRoleArn
 	return &s
 }
 
-func (s *S3ApiParamsRequest) WithApiKey(ApiKey *string) *S3ApiParamsRequest {
+func (s *AwsApiParamsRequest) WithApiKey(ApiKey *string) *AwsApiParamsRequest {
 	s.ApiKey = ApiKey
 	return s
 }
@@ -81,10 +81,10 @@ func (s *AzureApiParamsRequest) WithApiKey(ApiKey *string) *AzureApiParamsReques
 	return s
 }
 
-func NewGCSApiParamsRequest(
+func NewGoogleApiParamsRequest(
 	GoogleAudience string,
-) *GCSApiParamsRequest {
-	s := GCSApiParamsRequest{}
+) *GoogleApiParamsRequest {
+	s := GoogleApiParamsRequest{}
 	s.GoogleAudience = GoogleAudience
 	return &s
 }
@@ -126,8 +126,8 @@ func NewApiIntegrationSetRequest() *ApiIntegrationSetRequest {
 	return &ApiIntegrationSetRequest{}
 }
 
-func (s *ApiIntegrationSetRequest) WithS3Params(S3Params *SetS3ApiParamsRequest) *ApiIntegrationSetRequest {
-	s.S3Params = S3Params
+func (s *ApiIntegrationSetRequest) WithAwsParams(AwsParams *SetAwsApiParamsRequest) *ApiIntegrationSetRequest {
+	s.AwsParams = AwsParams
 	return s
 }
 
@@ -156,16 +156,16 @@ func (s *ApiIntegrationSetRequest) WithComment(Comment *string) *ApiIntegrationS
 	return s
 }
 
-func NewSetS3ApiParamsRequest() *SetS3ApiParamsRequest {
-	return &SetS3ApiParamsRequest{}
+func NewSetAwsApiParamsRequest() *SetAwsApiParamsRequest {
+	return &SetAwsApiParamsRequest{}
 }
 
-func (s *SetS3ApiParamsRequest) WithApiAwsRoleArn(ApiAwsRoleArn *string) *SetS3ApiParamsRequest {
+func (s *SetAwsApiParamsRequest) WithApiAwsRoleArn(ApiAwsRoleArn *string) *SetAwsApiParamsRequest {
 	s.ApiAwsRoleArn = ApiAwsRoleArn
 	return s
 }
 
-func (s *SetS3ApiParamsRequest) WithApiKey(ApiKey *string) *SetS3ApiParamsRequest {
+func (s *SetAwsApiParamsRequest) WithApiKey(ApiKey *string) *SetAwsApiParamsRequest {
 	s.ApiKey = ApiKey
 	return s
 }

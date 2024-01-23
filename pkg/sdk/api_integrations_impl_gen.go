@@ -69,11 +69,11 @@ func (r *CreateApiIntegrationRequest) toOpts() *CreateApiIntegrationOptions {
 		Enabled:            r.Enabled,
 		Comment:            r.Comment,
 	}
-	if r.S3ApiProviderParams != nil {
-		opts.S3ApiProviderParams = &S3ApiParams{
-			ApiProvider:   r.S3ApiProviderParams.ApiProvider,
-			ApiAwsRoleArn: r.S3ApiProviderParams.ApiAwsRoleArn,
-			ApiKey:        r.S3ApiProviderParams.ApiKey,
+	if r.AwsApiProviderParams != nil {
+		opts.AwsApiProviderParams = &AwsApiParams{
+			ApiProvider:   r.AwsApiProviderParams.ApiProvider,
+			ApiAwsRoleArn: r.AwsApiProviderParams.ApiAwsRoleArn,
+			ApiKey:        r.AwsApiProviderParams.ApiKey,
 		}
 	}
 	if r.AzureApiProviderParams != nil {
@@ -83,9 +83,9 @@ func (r *CreateApiIntegrationRequest) toOpts() *CreateApiIntegrationOptions {
 			ApiKey:               r.AzureApiProviderParams.ApiKey,
 		}
 	}
-	if r.GCSApiProviderParams != nil {
-		opts.GCSApiProviderParams = &GCSApiParams{
-			GoogleAudience: r.GCSApiProviderParams.GoogleAudience,
+	if r.GoogleApiProviderParams != nil {
+		opts.GoogleApiProviderParams = &GoogleApiParams{
+			GoogleAudience: r.GoogleApiProviderParams.GoogleAudience,
 		}
 	}
 	return opts
@@ -107,10 +107,10 @@ func (r *AlterApiIntegrationRequest) toOpts() *AlterApiIntegrationOptions {
 			ApiBlockedPrefixes: r.Set.ApiBlockedPrefixes,
 			Comment:            r.Set.Comment,
 		}
-		if r.Set.S3Params != nil {
-			opts.Set.S3Params = &SetS3ApiParams{
-				ApiAwsRoleArn: r.Set.S3Params.ApiAwsRoleArn,
-				ApiKey:        r.Set.S3Params.ApiKey,
+		if r.Set.AwsParams != nil {
+			opts.Set.AwsParams = &SetAwsApiParams{
+				ApiAwsRoleArn: r.Set.AwsParams.ApiAwsRoleArn,
+				ApiKey:        r.Set.AwsParams.ApiKey,
 			}
 		}
 		if r.Set.AzureParams != nil {

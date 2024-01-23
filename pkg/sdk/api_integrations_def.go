@@ -30,8 +30,8 @@ var ApiIntegrationsDef = g.NewInterface(
 			IfNotExists().
 			Name().
 			OptionalQueryStructField(
-				"S3ApiProviderParams",
-				g.NewQueryStruct("S3ApiParams").
+				"AwsApiProviderParams",
+				g.NewQueryStruct("AwsApiParams").
 					Assignment("API_PROVIDER", g.KindOfT[ApiIntegrationAwsApiProviderType](), g.ParameterOptions().NoQuotes().Required()).
 					TextAssignment("API_AWS_ROLE_ARN", g.ParameterOptions().SingleQuotes().Required()).
 					OptionalTextAssignment("API_KEY", g.ParameterOptions().SingleQuotes()),
@@ -47,8 +47,8 @@ var ApiIntegrationsDef = g.NewInterface(
 				g.KeywordOptions(),
 			).
 			OptionalQueryStructField(
-				"GCSApiProviderParams",
-				g.NewQueryStruct("GCSApiParams").
+				"GoogleApiProviderParams",
+				g.NewQueryStruct("GoogleApiParams").
 					PredefinedQueryStructField("apiProvider", "string", g.StaticOptions().SQL("API_PROVIDER = google_api_gateway")).
 					TextAssignment("GOOGLE_AUDIENCE", g.ParameterOptions().SingleQuotes().Required()),
 				g.KeywordOptions(),
@@ -59,7 +59,7 @@ var ApiIntegrationsDef = g.NewInterface(
 			OptionalComment().
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace").
-			WithValidation(g.ExactlyOneValueSet, "S3ApiProviderParams", "AzureApiProviderParams", "GCSApiProviderParams"),
+			WithValidation(g.ExactlyOneValueSet, "AwsApiProviderParams", "AzureApiProviderParams", "GoogleApiProviderParams"),
 		ApiIntegrationEndpointPrefixDef,
 	).
 	AlterOperation(
@@ -73,8 +73,8 @@ var ApiIntegrationsDef = g.NewInterface(
 				"Set",
 				g.NewQueryStruct("ApiIntegrationSet").
 					OptionalQueryStructField(
-						"S3Params",
-						g.NewQueryStruct("SetS3ApiParams").
+						"AwsParams",
+						g.NewQueryStruct("SetAwsApiParams").
 							OptionalTextAssignment("API_AWS_ROLE_ARN", g.ParameterOptions().SingleQuotes()).
 							OptionalTextAssignment("API_KEY", g.ParameterOptions().SingleQuotes()).
 							WithValidation(g.AtLeastOneValueSet, "ApiAwsRoleArn", "ApiKey"),
@@ -92,8 +92,8 @@ var ApiIntegrationsDef = g.NewInterface(
 					ListAssignment("API_ALLOWED_PREFIXES", "ApiIntegrationEndpointPrefix", g.ParameterOptions().Parentheses()).
 					ListAssignment("API_BLOCKED_PREFIXES", "ApiIntegrationEndpointPrefix", g.ParameterOptions().Parentheses()).
 					OptionalComment().
-					WithValidation(g.ConflictingFields, "S3Params", "AzureParams").
-					WithValidation(g.AtLeastOneValueSet, "S3Params", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"),
+					WithValidation(g.ConflictingFields, "AwsParams", "AzureParams").
+					WithValidation(g.AtLeastOneValueSet, "AwsParams", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"),
 				g.KeywordOptions().SQL("SET"),
 			).
 			OptionalQueryStructField(
