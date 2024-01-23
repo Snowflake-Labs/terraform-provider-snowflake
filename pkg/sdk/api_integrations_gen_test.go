@@ -237,6 +237,8 @@ func TestApiIntegrations_Drop(t *testing.T) {
 }
 
 func TestApiIntegrations_Show(t *testing.T) {
+	id := RandomAccountObjectIdentifier()
+
 	// Minimal valid ShowApiIntegrationOptions
 	defaultOpts := func() *ShowApiIntegrationOptions {
 		return &ShowApiIntegrationOptions{}
@@ -249,14 +251,15 @@ func TestApiIntegrations_Show(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "SHOW API INTEGRATIONS")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Like = &Like{
+			Pattern: String(id.Name()),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW API INTEGRATIONS LIKE '%s'", id.Name())
 	})
 }
 
