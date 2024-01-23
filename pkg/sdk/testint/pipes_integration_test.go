@@ -17,7 +17,9 @@ func createPipeCopyStatement(t *testing.T, table *sdk.Table, stage *sdk.Stage) s
 	return fmt.Sprintf("COPY INTO %s\nFROM @%s", table.ID().FullyQualifiedName(), stage.ID().FullyQualifiedName())
 }
 
-func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
+// TestInt_CreatePipeWithStrangeSchemaName documented previous bad behavior. It changed with Snowflake 8.3.1 release.
+// We leave the test for future reference.
+func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "tcK1>AJ+")
 
 	// creating a new schema on purpose
@@ -31,7 +33,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
 	t.Cleanup(stageCleanup)
 
-	t.Run("if we have special characters in db or schema name, create pipe returns error in copy <> from <> section", func(t *testing.T) {
+	t.Run("if we have special characters in db or schema name, create pipe succeeds", func(t *testing.T) {
 		err := itc.client.Pipes.Create(
 			itc.ctx,
 			sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphanumericN(20)),
@@ -39,12 +41,10 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 			&sdk.CreatePipeOptions{},
 		)
 
-		require.ErrorContains(t, err, "(42000): SQL compilation error:\nsyntax error line")
-		require.ErrorContains(t, err, "at position")
-		require.ErrorContains(t, err, "unexpected '>'")
+		require.NoError(t, err)
 	})
 
-	t.Run("the same works with using non fully qualified name for table", func(t *testing.T) {
+	t.Run("the same does not work when using non fully qualified name for table", func(t *testing.T) {
 		createCopyStatementWithoutQualifiersForStage := func(t *testing.T, table *sdk.Table, stage *sdk.Stage) string {
 			t.Helper()
 			require.NotNil(t, table, "table has to be created")
@@ -59,7 +59,8 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 			&sdk.CreatePipeOptions{},
 		)
 
-		require.NoError(t, err)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "object does not exist or not authorized")
 	})
 }
 
