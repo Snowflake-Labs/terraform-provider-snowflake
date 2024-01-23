@@ -123,20 +123,13 @@ func TestInt_ApplicationPackages(t *testing.T) {
 		e := createApplicationPackageHandle(t)
 		id := sdk.NewAccountObjectIdentifier(e.Name)
 
-		// unset comment
-		unset := sdk.NewApplicationPackageUnsetRequest().WithComment(sdk.Bool(true))
+		// unset comment and distribution
+		unset := sdk.NewApplicationPackageUnsetRequest().WithComment(sdk.Bool(true)).WithDistribution(sdk.Bool(true))
 		err := client.ApplicationPackages.Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithUnset(unset))
 		require.NoError(t, err)
 		o, err := client.ApplicationPackages.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Empty(t, o.Comment)
-
-		// unset distribution
-		unset = sdk.NewApplicationPackageUnsetRequest().WithDistribution(sdk.Bool(true))
-		err = client.ApplicationPackages.Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithUnset(unset))
-		require.NoError(t, err)
-		o, err = client.ApplicationPackages.ShowByID(ctx, id)
-		require.NoError(t, err)
 		require.Equal(t, sdk.DistributionInternal, sdk.Distribution(o.Distribution))
 	})
 
@@ -201,7 +194,7 @@ func TestInt_ApplicationPackagesVersionAndReleaseDirective(t *testing.T) {
 	createApplicationPackageHandle := func(t *testing.T) *sdk.ApplicationPackage {
 		t.Helper()
 
-		id := sdk.RandomAccountObjectIdentifier()
+		id := sdk.NewAccountObjectIdentifier("snowflake_package_test")
 		request := sdk.NewCreateApplicationPackageRequest(id).WithDistribution(sdk.DistributionPointer(sdk.DistributionInternal))
 		err := client.ApplicationPackages.Create(ctx, request)
 		require.NoError(t, err)

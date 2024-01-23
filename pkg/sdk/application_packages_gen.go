@@ -34,7 +34,7 @@ type AlterApplicationPackageOptions struct {
 	IfExists                   *bool                       `ddl:"keyword" sql:"IF EXISTS"`
 	name                       AccountObjectIdentifier     `ddl:"identifier"`
 	Set                        *ApplicationPackageSet      `ddl:"keyword" sql:"SET"`
-	Unset                      *ApplicationPackageUnset    `ddl:"keyword" sql:"UNSET"`
+	Unset                      *ApplicationPackageUnset    `ddl:"list,no_parentheses" sql:"UNSET"`
 	ModifyReleaseDirective     *ModifyReleaseDirective     `ddl:"keyword" sql:"MODIFY RELEASE DIRECTIVE"`
 	SetDefaultReleaseDirective *SetDefaultReleaseDirective `ddl:"keyword" sql:"SET DEFAULT RELEASE DIRECTIVE"`
 	SetReleaseDirective        *SetReleaseDirective        `ddl:"keyword" sql:"SET RELEASE DIRECTIVE"`

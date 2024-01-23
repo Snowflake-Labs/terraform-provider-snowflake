@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -13,37 +14,192 @@ func TestInt_Stages(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	t.Run("CreateInternal", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+	if !hasExternalEnvironmentVariablesSet {
+		t.Skip("Skipping TestInt_Stages (External env variables are not set)")
+	}
 
-		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))
-		require.NoError(t, err)
+	s3StorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, sdk.NewAccountObjectIdentifier("S3_STORAGE_INTEGRATION"))
+	require.NoError(t, err)
+	gcpStorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, sdk.NewAccountObjectIdentifier("GCP_STORAGE_INTEGRATION"))
+	require.NoError(t, err)
+	azureStorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, sdk.NewAccountObjectIdentifier("AZURE_STORAGE_INTEGRATION"))
+	require.NoError(t, err)
+
+	cleanupStage := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
 		t.Cleanup(func() {
 			err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
 			require.NoError(t, err)
 		})
+	}
 
-		stage, err := client.Stages.ShowByID(ctx, id)
+	createBasicS3Stage := func(t *testing.T, stageId sdk.SchemaObjectIdentifier) {
+		t.Helper()
+		s3Req := sdk.NewExternalS3StageParamsRequest(awsBucketUrl).
+			WithCredentials(sdk.NewExternalStageS3CredentialsRequest().
+				WithAwsKeyId(&awsKeyId).
+				WithAwsSecretKey(&awsSecretKey))
+		err := client.Stages.CreateOnS3(ctx, sdk.NewCreateOnS3StageRequest(stageId).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithExternalStageParams(s3Req))
 		require.NoError(t, err)
+		cleanupStage(t, stageId)
+	}
+
+	createBasicGcsStage := func(t *testing.T, stageId sdk.SchemaObjectIdentifier) {
+		t.Helper()
+		err := client.Stages.CreateOnGCS(ctx, sdk.NewCreateOnGCSStageRequest(stageId).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithExternalStageParams(sdk.NewExternalGCSStageParamsRequest(gcsBucketUrl).
+				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(gcpStorageIntegration.Name)))))
+		require.NoError(t, err)
+		cleanupStage(t, stageId)
+	}
+
+	createBasicAzureStage := func(t *testing.T, stageId sdk.SchemaObjectIdentifier) {
+		t.Helper()
+		err := client.Stages.CreateOnAzure(ctx, sdk.NewCreateOnAzureStageRequest(stageId).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithExternalStageParams(sdk.NewExternalAzureStageParamsRequest(azureBucketUrl).
+				WithCredentials(sdk.NewExternalStageAzureCredentialsRequest(azureSasToken))))
+		require.NoError(t, err)
+		cleanupStage(t, stageId)
+	}
+
+	assertStage := func(t *testing.T, stage *sdk.Stage, id sdk.SchemaObjectIdentifier, stageType string, comment string, cloud string, url string, storageIntegration string) {
+		t.Helper()
 		assert.Equal(t, id.DatabaseName(), stage.DatabaseName)
 		assert.Equal(t, id.SchemaName(), stage.SchemaName)
 		assert.Equal(t, id.Name(), stage.Name)
+		assert.Equal(t, comment, stage.Comment)
+		if len(url) > 0 {
+			assert.Equal(t, url, stage.Url)
+		}
+		assert.Equal(t, stageType, stage.Type)
+		if len(cloud) > 0 {
+			assert.Equal(t, cloud, *stage.Cloud)
+		}
+		if len(storageIntegration) > 0 {
+			assert.Equal(t, storageIntegration, *stage.StorageIntegration)
+		}
+	}
+
+	t.Run("CreateInternal", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+
+		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithComment(sdk.String("some comment")))
+		require.NoError(t, err)
+		cleanupStage(t, id)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "INTERNAL", "some comment", "", "", "")
 	})
 
-	t.Run("CreateOnS3", func(t *testing.T) {
-		// TODO: fill me
+	t.Run("CreateInternal - temporary", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+
+		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id).
+			WithTemporary(sdk.Bool(true)).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithComment(sdk.String("some comment")))
+		require.NoError(t, err)
+		cleanupStage(t, id)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "INTERNAL TEMPORARY", "some comment", "", "", "")
+	})
+
+	t.Run("CreateOnS3 - IAM User", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+
+		s3Req := sdk.NewExternalS3StageParamsRequest(awsBucketUrl).
+			WithCredentials(sdk.NewExternalStageS3CredentialsRequest().
+				WithAwsKeyId(&awsKeyId).
+				WithAwsSecretKey(&awsSecretKey))
+		err := client.Stages.CreateOnS3(ctx, sdk.NewCreateOnS3StageRequest(id).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithExternalStageParams(s3Req).
+			WithComment(sdk.String("some comment")))
+		require.NoError(t, err)
+		cleanupStage(t, id)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "EXTERNAL", "some comment", "AWS", awsBucketUrl, "")
+	})
+
+	t.Run("CreateOnS3 - temporary - Storage Integration", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+
+		s3Req := sdk.NewExternalS3StageParamsRequest(awsBucketUrl).
+			WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(s3StorageIntegration.Name)))
+		err := client.Stages.CreateOnS3(ctx, sdk.NewCreateOnS3StageRequest(id).
+			WithTemporary(sdk.Bool(true)).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithExternalStageParams(s3Req).
+			WithComment(sdk.String("some comment")))
+		require.NoError(t, err)
+		cleanupStage(t, id)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "EXTERNAL TEMPORARY", "some comment", "AWS", awsBucketUrl, s3StorageIntegration.Name)
 	})
 
 	t.Run("CreateOnGCS", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+
+		err := client.Stages.CreateOnGCS(ctx, sdk.NewCreateOnGCSStageRequest(id).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithExternalStageParams(sdk.NewExternalGCSStageParamsRequest(gcsBucketUrl).
+				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(gcpStorageIntegration.Name)))).
+			WithComment(sdk.String("some comment")))
+		require.NoError(t, err)
+		cleanupStage(t, id)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "EXTERNAL", "some comment", "GCP", gcsBucketUrl, gcpStorageIntegration.Name)
 	})
 
-	t.Run("CreateOnAzure", func(t *testing.T) {
-		// TODO: fill me
+	t.Run("CreateOnAzure - Storage Integration", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+
+		err := client.Stages.CreateOnAzure(ctx, sdk.NewCreateOnAzureStageRequest(id).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithExternalStageParams(sdk.NewExternalAzureStageParamsRequest(azureBucketUrl).
+				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(azureStorageIntegration.Name)))).
+			WithComment(sdk.String("some comment")))
+		require.NoError(t, err)
+		cleanupStage(t, id)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "EXTERNAL", "some comment", "AZURE", azureBucketUrl, azureStorageIntegration.Name)
+	})
+
+	t.Run("CreateOnAzure - Shared Access Signature", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+
+		err := client.Stages.CreateOnAzure(ctx, sdk.NewCreateOnAzureStageRequest(id).
+			WithFileFormat(sdk.NewStageFileFormatRequest().WithType(&sdk.FileFormatTypeJSON)).
+			WithExternalStageParams(sdk.NewExternalAzureStageParamsRequest(azureBucketUrl).
+				WithCredentials(sdk.NewExternalStageAzureCredentialsRequest(azureSasToken))).
+			WithComment(sdk.String("some comment")))
+		require.NoError(t, err)
+		cleanupStage(t, id)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "EXTERNAL", "some comment", "AZURE", azureBucketUrl, "")
 	})
 
 	t.Run("CreateOnS3Compatible", func(t *testing.T) {
-		// TODO: fill me
+		// TODO: (SNOW-1012064) create s3 compat service for tests
 	})
 
 	t.Run("Alter - rename", func(t *testing.T) {
@@ -174,19 +330,81 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("AlterExternalS3Stage", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		createBasicS3Stage(t, id)
+
+		err := client.Stages.AlterExternalS3Stage(ctx, sdk.NewAlterExternalS3StageStageRequest(id).
+			WithExternalStageParams(sdk.NewExternalS3StageParamsRequest(awsBucketUrl).
+				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(s3StorageIntegration.Name)))).
+			WithComment(sdk.String("Updated comment")))
+		require.NoError(t, err)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "EXTERNAL", "Updated comment", "AWS", awsBucketUrl, s3StorageIntegration.Name)
 	})
 
 	t.Run("AlterExternalGCSStage", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		createBasicGcsStage(t, id)
+
+		err := client.Stages.AlterExternalGCSStage(ctx, sdk.NewAlterExternalGCSStageStageRequest(id).
+			WithExternalStageParams(sdk.NewExternalGCSStageParamsRequest(gcsBucketUrl).
+				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(gcpStorageIntegration.Name)))).
+			WithComment(sdk.String("Updated comment")))
+		require.NoError(t, err)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "EXTERNAL", "Updated comment", "GCP", gcsBucketUrl, gcpStorageIntegration.Name)
 	})
 
 	t.Run("AlterExternalAzureStage", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		createBasicAzureStage(t, id)
+
+		err := client.Stages.AlterExternalAzureStage(ctx, sdk.NewAlterExternalAzureStageStageRequest(id).
+			WithExternalStageParams(sdk.NewExternalAzureStageParamsRequest(azureBucketUrl).
+				WithStorageIntegration(sdk.Pointer(sdk.NewAccountObjectIdentifier(azureStorageIntegration.Name)))).
+			WithComment(sdk.String("Updated comment")))
+		require.NoError(t, err)
+
+		stage, err := client.Stages.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertStage(t, stage, id, "EXTERNAL", "Updated comment", "AZURE", azureBucketUrl, azureStorageIntegration.Name)
 	})
 
 	t.Run("AlterDirectoryTable", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		createBasicS3Stage(t, id)
+
+		stageProperties, err := client.Stages.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Contains(t, stageProperties, sdk.StageProperty{
+			Parent:  "DIRECTORY",
+			Name:    "ENABLE",
+			Type:    "Boolean",
+			Value:   "false",
+			Default: "false",
+		})
+
+		err = client.Stages.AlterDirectoryTable(ctx, sdk.NewAlterDirectoryTableStageRequest(id).
+			WithSetDirectory(sdk.NewDirectoryTableSetRequest(true)))
+		require.NoError(t, err)
+
+		err = client.Stages.AlterDirectoryTable(ctx, sdk.NewAlterDirectoryTableStageRequest(id).
+			WithRefresh(sdk.NewDirectoryTableRefreshRequest().WithSubpath(sdk.String("/"))))
+		require.NoError(t, err)
+
+		stageProperties, err = client.Stages.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Contains(t, stageProperties, sdk.StageProperty{
+			Parent:  "DIRECTORY",
+			Name:    "ENABLE",
+			Type:    "Boolean",
+			Value:   "true",
+			Default: "false",
+		})
 	})
 
 	t.Run("Drop", func(t *testing.T) {
@@ -237,12 +455,65 @@ func TestInt_Stages(t *testing.T) {
 	})
 
 	t.Run("Describe external s3", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		createBasicS3Stage(t, id)
+
+		stageProperties, err := client.Stages.Describe(ctx, id)
+		require.NoError(t, err)
+		require.NotEmpty(t, stageProperties)
+		assert.Contains(t, stageProperties, sdk.StageProperty{
+			Parent:  "STAGE_CREDENTIALS",
+			Name:    "AWS_KEY_ID",
+			Type:    "String",
+			Value:   awsKeyId,
+			Default: "",
+		})
+		assert.Contains(t, stageProperties, sdk.StageProperty{
+			Parent:  "STAGE_LOCATION",
+			Name:    "URL",
+			Type:    "String",
+			Value:   fmt.Sprintf("[\"%s\"]", awsBucketUrl),
+			Default: "",
+		})
 	})
 
 	t.Run("Describe external gcs", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		createBasicGcsStage(t, id)
+
+		stageProperties, err := client.Stages.Describe(ctx, id)
+		require.NoError(t, err)
+		require.NotEmpty(t, stageProperties)
+		assert.Contains(t, stageProperties, sdk.StageProperty{
+			Parent:  "STAGE_LOCATION",
+			Name:    "URL",
+			Type:    "String",
+			Value:   fmt.Sprintf("[\"%s\"]", gcsBucketUrl),
+			Default: "",
+		})
 	})
 
 	t.Run("Describe external azure", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphanumericN(32))
+		createBasicAzureStage(t, id)
+
+		stageProperties, err := client.Stages.Describe(ctx, id)
+		require.NoError(t, err)
+		require.NotEmpty(t, stageProperties)
+		assert.Contains(t, stageProperties, sdk.StageProperty{
+			Parent:  "DIRECTORY",
+			Name:    "ENABLE",
+			Type:    "Boolean",
+			Value:   "false",
+			Default: "false",
+		})
+		assert.Contains(t, stageProperties, sdk.StageProperty{
+			Parent:  "STAGE_LOCATION",
+			Name:    "URL",
+			Type:    "String",
+			Value:   fmt.Sprintf("[\"%s\"]", azureBucketUrl),
+			Default: "",
+		})
 	})
 
 	t.Run("Show internal", func(t *testing.T) {
@@ -272,14 +543,5 @@ func TestInt_Stages(t *testing.T) {
 		assert.Nil(t, stage.StorageIntegration)
 		assert.Nil(t, stage.Endpoint)
 		assert.True(t, stage.DirectoryEnabled)
-	})
-
-	t.Run("Show external s3", func(t *testing.T) {
-	})
-
-	t.Run("Show external gcs", func(t *testing.T) {
-	})
-
-	t.Run("Show external azure", func(t *testing.T) {
 	})
 }

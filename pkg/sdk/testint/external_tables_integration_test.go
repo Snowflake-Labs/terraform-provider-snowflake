@@ -15,8 +15,8 @@ func TestInt_ExternalTables(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	stageID := sdk.NewAccountObjectIdentifier("EXTERNAL_TABLE_STAGE")
-	stageLocation := "@external_table_stage"
+	stageID := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, "EXTERNAL_TABLE_STAGE")
+	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
 	_, _ = createStageWithURL(t, client, stageID, nycWeatherDataURL)
 
 	tag, _ := createTag(t, client, testDb(t), testSchema(t))
