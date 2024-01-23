@@ -200,6 +200,21 @@ func TestFileFormatsAlter(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FILE FORMAT IF EXISTS "db"."schema"."fileformat" SET COMPRESSION = BROTLI TRIM_SPACE = true REPLACE_INVALID_CHARACTERS = true NULL_IF = ('nil')`)
 	})
+
+	t.Run("set comment", func(t *testing.T) {
+		opts := &AlterFileFormatOptions{
+			IfExists: Bool(true),
+			name:     NewSchemaObjectIdentifier("db", "schema", "fileformat"),
+			Set: &FileFormatTypeOptions{
+				AvroCompression:              &AvroCompressionBrotli,
+				AvroTrimSpace:                Bool(true),
+				AvroReplaceInvalidCharacters: Bool(true),
+				AvroNullIf:                   &[]NullString{{"nil"}},
+				Comment:                      String("some comment"),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FILE FORMAT IF EXISTS "db"."schema"."fileformat" SET COMMENT = 'some comment' COMPRESSION = BROTLI TRIM_SPACE = true REPLACE_INVALID_CHARACTERS = true NULL_IF = ('nil')`)
+	})
 }
 
 func TestFileFormatsDrop(t *testing.T) {

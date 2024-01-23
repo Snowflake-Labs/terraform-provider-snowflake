@@ -22,7 +22,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 	client := testClient(t)
 
 	stageName := "stage_name"
-	stage, cleanupStage := createStage(t, client, testDb(t), testSchema(t), stageName)
+	stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, stageName))
 	t.Cleanup(cleanupStage)
 
 	putOnStage(t, client, stage, "manifest.yml")

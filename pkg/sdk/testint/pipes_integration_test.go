@@ -28,7 +28,7 @@ func TestInt_IncorrectCreatePipeBehaviour(t *testing.T) {
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, testDb(t), schema, stageName)
+	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
 	t.Cleanup(stageCleanup)
 
 	t.Run("if we have special characters in db or schema name, create pipe returns error in copy <> from <> section", func(t *testing.T) {
@@ -71,7 +71,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 	t.Cleanup(table2Cleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, testDb(t), testSchema(t), stageName)
+	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
 	t.Cleanup(stageCleanup)
 
 	pipe1Name := random.AlphanumericN(20)
@@ -152,7 +152,7 @@ func TestInt_PipeCreate(t *testing.T) {
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, testDb(t), testSchema(t), stageName)
+	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
 	t.Cleanup(stageCleanup)
 
 	copyStatement := createPipeCopyStatement(t, table, stage)
@@ -224,7 +224,7 @@ func TestInt_PipeDrop(t *testing.T) {
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, testDb(t), testSchema(t), stageName)
+	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
 	t.Cleanup(stageCleanup)
 
 	t.Run("pipe exists", func(t *testing.T) {
@@ -252,7 +252,7 @@ func TestInt_PipeAlter(t *testing.T) {
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
-	stage, stageCleanup := createStage(t, itc.client, testDb(t), testSchema(t), stageName)
+	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, stageName))
 	t.Cleanup(stageCleanup)
 
 	pipeCopyStatement := createPipeCopyStatement(t, table, stage)
