@@ -189,6 +189,7 @@ func TestApiIntegrations_Alter(t *testing.T) {
 
 	t.Run("validation: at least one of the fields [opts.Set.AwsParams opts.Set.AzureParams opts.Set.Enabled opts.Set.ApiAllowedPrefixes opts.Set.ApiBlockedPrefixes opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
+		opts.Set = &ApiIntegrationSet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set", "AwsParams", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"))
 	})
 
@@ -276,7 +277,6 @@ func TestApiIntegrations_Alter(t *testing.T) {
 
 	t.Run("set tags", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.IfExists = Bool(true)
 		opts.SetTags = []TagAssociation{
 			{
 				Name:  NewAccountObjectIdentifier("name"),
@@ -287,7 +287,7 @@ func TestApiIntegrations_Alter(t *testing.T) {
 				Value: "second-value",
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER API INTEGRATION IF EXISTS %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER API INTEGRATION %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
 	})
 
 	t.Run("unset tags", func(t *testing.T) {
