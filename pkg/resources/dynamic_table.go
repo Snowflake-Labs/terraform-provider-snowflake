@@ -201,7 +201,7 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	// trim up to " ..AS" and remove whitespace
-	query := strings.TrimSpace(text[strings.Index(text, "AS")+3:])
+	query := strings.TrimSpace(text[strings.Index(text, " AS ")+3:])
 	if err := d.Set("query", query); err != nil {
 		return err
 	}
