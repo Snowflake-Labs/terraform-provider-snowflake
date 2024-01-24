@@ -160,15 +160,177 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	})
 
 	t.Run("alter api integration: aws", func(t *testing.T) {
-		// TODO: fill me
+		integration := createAwsApiIntegration(t)
+
+		otherRoleArn := "arn:aws:iam::000000000001:/role/other"
+		setRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
+			WithSet(
+				sdk.NewApiIntegrationSetRequest().
+					WithAwsParams(sdk.NewSetAwsApiParamsRequest().WithApiAwsRoleArn(sdk.String(otherRoleArn)).WithApiKey(sdk.String("key"))).
+					WithEnabled(sdk.Bool(true)).
+					WithApiAllowedPrefixes(prefixes(awsBlockedPrefix)).
+					WithApiBlockedPrefixes(prefixes(awsAllowedPrefix)).
+					WithComment(sdk.String("changed comment")),
+			)
+		err := client.ApiIntegrations.Alter(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "☺☺☺", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_AWS_ROLE_ARN", Type: "String", Value: otherRoleArn, Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: awsBlockedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: awsAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
+
+		unsetRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
+			WithUnset(
+				sdk.NewApiIntegrationUnsetRequest().
+					WithApiKey(sdk.Bool(true)).
+					WithEnabled(sdk.Bool(true)).
+					WithApiBlockedPrefixes(sdk.Bool(true)).
+					WithComment(sdk.Bool(true)),
+			)
+		err = client.ApiIntegrations.Alter(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_AWS_ROLE_ARN", Type: "String", Value: otherRoleArn, Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: awsBlockedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("alter api integration: azure", func(t *testing.T) {
-		// TODO: fill me
+		integration := createAzureApiIntegration(t)
+
+		otherAdApplicationId := "22222222-2222-2222-2222-222222222222"
+		setRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
+			WithSet(
+				sdk.NewApiIntegrationSetRequest().
+					WithAzureParams(sdk.NewSetAzureApiParamsRequest().WithAzureAdApplicationId(sdk.String(otherAdApplicationId)).WithApiKey(sdk.String("key"))).
+					WithEnabled(sdk.Bool(true)).
+					WithApiAllowedPrefixes(prefixes(azureBlockedPrefix)).
+					WithApiBlockedPrefixes(prefixes(azureAllowedPrefix)).
+					WithComment(sdk.String("changed comment")),
+			)
+		err := client.ApiIntegrations.Alter(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "☺☺☺", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "AZURE_AD_APPLICATION_ID", Type: "String", Value: otherAdApplicationId, Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: azureBlockedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: azureAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
+
+		unsetRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
+			WithUnset(
+				sdk.NewApiIntegrationUnsetRequest().
+					WithApiKey(sdk.Bool(true)).
+					WithEnabled(sdk.Bool(true)).
+					WithApiBlockedPrefixes(sdk.Bool(true)).
+					WithComment(sdk.Bool(true)),
+			)
+		err = client.ApiIntegrations.Alter(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "AZURE_AD_APPLICATION_ID", Type: "String", Value: otherAdApplicationId, Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: azureBlockedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("alter api integration: google", func(t *testing.T) {
-		// TODO: fill me
+		integration := createGoogleApiIntegration(t)
+
+		setRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
+			WithSet(
+				sdk.NewApiIntegrationSetRequest().
+					WithEnabled(sdk.Bool(true)).
+					WithApiAllowedPrefixes(prefixes(googleBlockedPrefix)).
+					WithApiBlockedPrefixes(prefixes(googleAllowedPrefix)).
+					WithComment(sdk.String("changed comment")),
+			)
+		err := client.ApiIntegrations.Alter(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googleBlockedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: googleAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
+
+		unsetRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
+			WithUnset(
+				sdk.NewApiIntegrationUnsetRequest().
+					WithApiKey(sdk.Bool(true)).
+					WithEnabled(sdk.Bool(true)).
+					WithApiBlockedPrefixes(sdk.Bool(true)).
+					WithComment(sdk.Bool(true)),
+			)
+		err = client.ApiIntegrations.Alter(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googleBlockedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+	})
+
+	t.Run("alter api integration: set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		t.Cleanup(tagCleanup)
+
+		integration := createAwsApiIntegration(t)
+		id := integration.ID()
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterApiIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.ApiIntegrations.Alter(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterApiIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.ApiIntegrations.Alter(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
 	})
 
 	t.Run("drop api integration: existing", func(t *testing.T) {
