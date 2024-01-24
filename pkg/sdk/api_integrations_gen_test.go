@@ -137,68 +137,166 @@ func TestApiIntegrations_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfExists opts.SetTags]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.IfExists = Bool(true)
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("name"),
+				Value: "value",
+			},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterApiIntegrationOptions", "IfExists", "SetTags"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfExists opts.UnsetTags]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.IfExists = Bool(true)
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("one"),
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterApiIntegrationOptions", "IfExists", "UnsetTags"))
 	})
 
 	t.Run("validation: exactly one field from [opts.Set opts.Unset opts.SetTags opts.UnsetTags] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
-	t.Run("validation: conflicting fields for [opts.Set.S3Params opts.Set.AzureParams]", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Set opts.Unset opts.SetTags opts.UnsetTags] should be present - more present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterApiIntegrationOptions.Set", "S3Params", "AzureParams"))
+		opts.Set = &ApiIntegrationSet{
+			Enabled: Bool(true),
+		}
+		opts.Unset = &ApiIntegrationUnset{
+			Enabled: Bool(true),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Set.S3Params opts.Set.AzureParams opts.Set.Enabled opts.Set.ApiAllowedPrefixes opts.Set.ApiBlockedPrefixes opts.Set.Comment] should be set", func(t *testing.T) {
+	t.Run("validation: conflicting fields for [opts.Set.AwsParams opts.Set.AzureParams]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set", "S3Params", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"))
+		opts.Set = &ApiIntegrationSet{
+			AwsParams:   &SetAwsApiParams{ApiKey: String("key")},
+			AzureParams: &SetAzureApiParams{ApiKey: String("key")},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterApiIntegrationOptions.Set", "AwsParams", "AzureParams"))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Set.S3Params.ApiAwsRoleArn opts.Set.S3Params.ApiKey] should be set", func(t *testing.T) {
+	t.Run("validation: at least one of the fields [opts.Set.AwsParams opts.Set.AzureParams opts.Set.Enabled opts.Set.ApiAllowedPrefixes opts.Set.ApiBlockedPrefixes opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set.S3Params", "ApiAwsRoleArn", "ApiKey"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set", "AwsParams", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Set.AwsParams.ApiAwsRoleArn opts.Set.AwsParams.ApiKey] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiIntegrationSet{
+			AwsParams: &SetAwsApiParams{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set.AwsParams", "ApiAwsRoleArn", "ApiKey"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.AzureParams.AzureAdApplicationId opts.Set.AzureParams.ApiKey] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Set = &ApiIntegrationSet{
+			AzureParams: &SetAzureApiParams{},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set.AzureParams", "AzureAdApplicationId", "ApiKey"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.ApiKey opts.Unset.Enabled opts.Unset.ApiBlockedPrefixes opts.Unset.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Unset = &ApiIntegrationUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Unset", "ApiKey", "Enabled", "ApiBlockedPrefixes", "Comment"))
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("set - aws", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Set = &ApiIntegrationSet{
+			AwsParams: &SetAwsApiParams{
+				ApiAwsRoleArn: String("new-aws-role-arn"),
+				ApiKey:        String("key"),
+			},
+			Enabled:            Bool(true),
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}},
+			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AzureAllowedPrefix}, {Path: GoogleAllowedPrefix}},
+			Comment:            String("comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET API_AWS_ROLE_ARN = 'new-aws-role-arn' API_KEY = 'key' ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), AwsAllowedPrefix, AzureAllowedPrefix, GoogleAllowedPrefix)
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("set - azure", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Set = &ApiIntegrationSet{
+			AzureParams: &SetAzureApiParams{
+				AzureAdApplicationId: String("new-azure-ad-application-id"),
+				ApiKey:               String("key"),
+			},
+			Enabled:            Bool(true),
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AzureAllowedPrefix}},
+			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}, {Path: GoogleAllowedPrefix}},
+			Comment:            String("comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET AZURE_AD_APPLICATION_ID = 'new-azure-ad-application-id' API_KEY = 'key' ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), AzureAllowedPrefix, AwsAllowedPrefix, GoogleAllowedPrefix)
+	})
+
+	t.Run("set - google", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApiIntegrationSet{
+			Enabled:            Bool(true),
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: GoogleAllowedPrefix}},
+			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}, {Path: AzureAllowedPrefix}},
+			Comment:            String("comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), GoogleAllowedPrefix, AwsAllowedPrefix, AzureAllowedPrefix)
+	})
+
+	t.Run("unset single", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ApiIntegrationUnset{
+			Comment: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s UNSET COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("unset multiple", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ApiIntegrationUnset{
+			ApiKey:             Bool(true),
+			Enabled:            Bool(true),
+			ApiBlockedPrefixes: Bool(true),
+			Comment:            Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s UNSET API_KEY, ENABLED, API_BLOCKED_PREFIXES, COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("name"),
+				Value: "value",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("second-name"),
+				Value: "second-value",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER API INTEGRATION IF EXISTS %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("name"),
+			NewAccountObjectIdentifier("second-name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER API INTEGRATION %s UNSET TAG "name", "second-name"`, id.FullyQualifiedName())
 	})
 }
 

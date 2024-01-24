@@ -80,7 +80,7 @@ type SetAwsApiParams struct {
 }
 
 type SetAzureApiParams struct {
-	AzureAdApplicationId string  `ddl:"parameter,single_quotes" sql:"AZURE_AD_APPLICATION_ID"`
+	AzureAdApplicationId *string `ddl:"parameter,single_quotes" sql:"AZURE_AD_APPLICATION_ID"`
 	ApiKey               *string `ddl:"parameter,single_quotes" sql:"API_KEY"`
 }
 
