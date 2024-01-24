@@ -9,6 +9,7 @@ import (
 )
 
 // TODO [SNOW-TODO]: create topics to perform integration tests
+// push amazon: https://docs.snowflake.com/en/user-guide/data-load-snowpipe-errors-sns#step-1-creating-an-amazon-sns-topic
 func TestInt_NotificationIntegrations(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -16,12 +17,14 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	const gcpPubsubSubscriptionName = "TODO"
 	const azureStorageQueuePrimaryUri = "TODO"
 	const azureTenantId = "00000000-0000-0000-0000-000000000000"
+	const awsSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:MyTopic"
+	const awsSnsRoleArn = "arn:aws:iam::000000000001:/role/test"
 
-	assertNotificationIntegration := func(t *testing.T, s *sdk.NotificationIntegration, name sdk.AccountObjectIdentifier, comment string) {
+	assertNotificationIntegration := func(t *testing.T, s *sdk.NotificationIntegration, name sdk.AccountObjectIdentifier, notificationType string, comment string) {
 		t.Helper()
 		assert.Equal(t, name.Name(), s.Name)
 		assert.Equal(t, true, s.Enabled)
-		assert.Equal(t, "EXTERNAL_API", s.NotificationType)
+		assert.Equal(t, notificationType, s.NotificationType)
 		assert.Equal(t, "NOTIFICATION", s.Category)
 		assert.Equal(t, comment, s.Comment)
 	}
@@ -49,6 +52,14 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().WithAzureAutomatedDataLoad(sdk.NewAzureAutomatedDataLoadRequest(azureStorageQueuePrimaryUri, azureTenantId)))
 	}
 
+	createNotificationIntegrationPushAmazonRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
+		t.Helper()
+		id := sdk.RandomAccountObjectIdentifier()
+
+		return sdk.NewCreateNotificationIntegrationRequest(id, true).
+			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithAmazonPush(sdk.NewAmazonPushRequest(awsSnsTopicArn, awsSnsRoleArn)))
+	}
+
 	createNotificationIntegrationWithRequest := func(t *testing.T, request *sdk.CreateNotificationIntegrationRequest) *sdk.NotificationIntegration {
 		t.Helper()
 		id := request.GetName()
@@ -70,7 +81,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 		integration := createNotificationIntegrationWithRequest(t, request)
 
-		assertNotificationIntegration(t, integration, request.GetName(), "")
+		assertNotificationIntegration(t, integration, request.GetName(), "", "")
 
 		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
 		require.NoError(t, err)
@@ -86,7 +97,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 		integration := createNotificationIntegrationWithRequest(t, request)
 
-		assertNotificationIntegration(t, integration, request.GetName(), "")
+		assertNotificationIntegration(t, integration, request.GetName(), "", "")
 
 		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
 		require.NoError(t, err)
@@ -96,7 +107,21 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("create and describe notification integration - push amazon", func(t *testing.T) {
-		// TODO: fill me
+		request := createNotificationIntegrationPushAmazonRequest(t)
+
+		integration := createNotificationIntegrationWithRequest(t, request)
+
+		assertNotificationIntegration(t, integration, request.GetName(), "QUEUE - AWS_SNS", "")
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "NOTIFICATION_PROVIDER", Type: "String", Value: "AWS_SNS", Default: ""})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "DIRECTION", Type: "String", Value: "OUTBOUND", Default: "INBOUND"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_TOPIC_ARN", Type: "String", Value: awsSnsTopicArn, Default: ""})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_ROLE_ARN", Type: "String", Value: awsSnsRoleArn, Default: ""})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("create and describe notification integration - push google", func(t *testing.T) {
