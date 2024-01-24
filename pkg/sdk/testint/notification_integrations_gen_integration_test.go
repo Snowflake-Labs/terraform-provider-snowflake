@@ -246,7 +246,40 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("alter notification integration: email", func(t *testing.T) {
-		// TODO: fill me
+		integration := createNotificationIntegrationEmail(t)
+
+		setRequest := sdk.NewAlterNotificationIntegrationRequest(integration.ID()).
+			WithSet(
+				sdk.NewNotificationIntegrationSetRequest().
+					WithEnabled(sdk.Bool(false)).
+					WithSetEmailParams(sdk.NewSetEmailParamsRequest([]sdk.NotificationIntegrationAllowedRecipient{{Email: "jan.cieslak@snowflake.com"}})).
+					WithComment(sdk.String("changed comment")),
+			)
+		err := client.NotificationIntegrations.Alter(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ALLOWED_RECIPIENTS", Type: "List", Value: "jan.cieslak@snowflake.com", Default: "[]"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
+
+		unsetRequest := sdk.NewAlterNotificationIntegrationRequest(integration.ID()).
+			WithUnset(
+				sdk.NewNotificationIntegrationUnsetRequest().
+					WithAllowedRecipients(sdk.Bool(true)).
+					WithComment(sdk.Bool(true)),
+			)
+		err = client.NotificationIntegrations.Alter(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		details, err = client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ALLOWED_RECIPIENTS", Type: "List", Value: "", Default: "[]"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("alter notification integration: set and unset tags", func(t *testing.T) {
