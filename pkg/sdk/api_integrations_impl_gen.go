@@ -101,7 +101,6 @@ func (r *AlterApiIntegrationRequest) toOpts() *AlterApiIntegrationOptions {
 	}
 	if r.Set != nil {
 		opts.Set = &ApiIntegrationSet{
-
 			Enabled:            r.Set.Enabled,
 			ApiAllowedPrefixes: r.Set.ApiAllowedPrefixes,
 			ApiBlockedPrefixes: r.Set.ApiBlockedPrefixes,

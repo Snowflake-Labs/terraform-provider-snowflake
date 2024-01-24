@@ -2,14 +2,16 @@ package sdk
 
 import "testing"
 
-const AwsAllowedPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
-const AzureAllowedPrefix = "https://apim-hello-world.azure-api.net/"
-const GoogleAllowedPrefix = "https://gateway-id-123456.uc.gateway.dev/"
+const (
+	awsAllowedPrefix    = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
+	azureAllowedPrefix  = "https://apim-hello-world.azure-api.net/"
+	googleAllowedPrefix = "https://gateway-id-123456.uc.gateway.dev/"
 
-const ApiAwsRoleArn = "arn:aws:iam::000000000001:/role/test"
-const AzureTenantId = "00000000-0000-0000-0000-000000000000"
-const AzureAdApplicationId = "11111111-1111-1111-1111-111111111111"
-const GoogleAudience = "api-gateway-id-123456.apigateway.gcp-project.cloud.goog"
+	apiAwsRoleArn        = "arn:aws:iam::000000000001:/role/test"
+	azureTenantId        = "00000000-0000-0000-0000-000000000000"
+	azureAdApplicationId = "11111111-1111-1111-1111-111111111111"
+	googleAudience       = "api-gateway-id-123456.apigateway.gcp-project.cloud.goog"
+)
 
 func TestApiIntegrations_Create(t *testing.T) {
 	id := RandomAccountObjectIdentifier()
@@ -20,9 +22,9 @@ func TestApiIntegrations_Create(t *testing.T) {
 			name: id,
 			AwsApiProviderParams: &AwsApiParams{
 				ApiProvider:   ApiIntegrationAwsApiGateway,
-				ApiAwsRoleArn: ApiAwsRoleArn,
+				ApiAwsRoleArn: apiAwsRoleArn,
 			},
-			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}},
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: awsAllowedPrefix}},
 			Enabled:            true,
 		}
 	}
@@ -32,10 +34,10 @@ func TestApiIntegrations_Create(t *testing.T) {
 		return &CreateApiIntegrationOptions{
 			name: id,
 			AzureApiProviderParams: &AzureApiParams{
-				AzureTenantId:        AzureTenantId,
-				AzureAdApplicationId: AzureAdApplicationId,
+				AzureTenantId:        azureTenantId,
+				AzureAdApplicationId: azureAdApplicationId,
 			},
-			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AzureAllowedPrefix}},
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: azureAllowedPrefix}},
 			Enabled:            true,
 		}
 	}
@@ -45,9 +47,9 @@ func TestApiIntegrations_Create(t *testing.T) {
 		return &CreateApiIntegrationOptions{
 			name: id,
 			GoogleApiProviderParams: &GoogleApiParams{
-				GoogleAudience: GoogleAudience,
+				GoogleAudience: googleAudience,
 			},
-			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: GoogleAllowedPrefix}},
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: googleAllowedPrefix}},
 			Enabled:            true,
 		}
 	}
@@ -86,7 +88,7 @@ func TestApiIntegrations_Create(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION %s API_PROVIDER = aws_api_gateway API_AWS_ROLE_ARN = '%s' API_ALLOWED_PREFIXES = ('%s') ENABLED = true`, id.FullyQualifiedName(), ApiAwsRoleArn, AwsAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION %s API_PROVIDER = aws_api_gateway API_AWS_ROLE_ARN = '%s' API_ALLOWED_PREFIXES = ('%s') ENABLED = true`, id.FullyQualifiedName(), apiAwsRoleArn, awsAllowedPrefix)
 	})
 
 	t.Run("all options - aws", func(t *testing.T) {
@@ -94,29 +96,29 @@ func TestApiIntegrations_Create(t *testing.T) {
 		opts.IfNotExists = Bool(true)
 		opts.AwsApiProviderParams.ApiProvider = ApiIntegrationAwsPrivateApiGateway
 		opts.AwsApiProviderParams.ApiKey = String("key")
-		opts.ApiBlockedPrefixes = []ApiIntegrationEndpointPrefix{{Path: GoogleAllowedPrefix}, {Path: AzureAllowedPrefix}}
+		opts.ApiBlockedPrefixes = []ApiIntegrationEndpointPrefix{{Path: googleAllowedPrefix}, {Path: azureAllowedPrefix}}
 		opts.Enabled = false
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION IF NOT EXISTS %s API_PROVIDER = aws_private_api_gateway API_AWS_ROLE_ARN = '%s' API_KEY = 'key' API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') ENABLED = false COMMENT = 'some comment'`, id.FullyQualifiedName(), ApiAwsRoleArn, AwsAllowedPrefix, GoogleAllowedPrefix, AzureAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION IF NOT EXISTS %s API_PROVIDER = aws_private_api_gateway API_AWS_ROLE_ARN = '%s' API_KEY = 'key' API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') ENABLED = false COMMENT = 'some comment'`, id.FullyQualifiedName(), apiAwsRoleArn, awsAllowedPrefix, googleAllowedPrefix, azureAllowedPrefix)
 	})
 
 	t.Run("all options - azure", func(t *testing.T) {
 		opts := defaultOptsAzure()
 		opts.IfNotExists = Bool(true)
 		opts.AzureApiProviderParams.ApiKey = String("key")
-		opts.ApiBlockedPrefixes = []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}, {Path: GoogleAllowedPrefix}}
+		opts.ApiBlockedPrefixes = []ApiIntegrationEndpointPrefix{{Path: awsAllowedPrefix}, {Path: googleAllowedPrefix}}
 		opts.Enabled = false
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION IF NOT EXISTS %s API_PROVIDER = azure_api_management AZURE_TENANT_ID = '%s' AZURE_AD_APPLICATION_ID = '%s' API_KEY = 'key' API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') ENABLED = false COMMENT = 'some comment'`, id.FullyQualifiedName(), AzureTenantId, AzureAdApplicationId, AzureAllowedPrefix, AwsAllowedPrefix, GoogleAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION IF NOT EXISTS %s API_PROVIDER = azure_api_management AZURE_TENANT_ID = '%s' AZURE_AD_APPLICATION_ID = '%s' API_KEY = 'key' API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') ENABLED = false COMMENT = 'some comment'`, id.FullyQualifiedName(), azureTenantId, azureAdApplicationId, azureAllowedPrefix, awsAllowedPrefix, googleAllowedPrefix)
 	})
 
 	t.Run("all options - google", func(t *testing.T) {
 		opts := defaultOptsGoogle()
 		opts.IfNotExists = Bool(true)
-		opts.ApiBlockedPrefixes = []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}, {Path: AzureAllowedPrefix}}
+		opts.ApiBlockedPrefixes = []ApiIntegrationEndpointPrefix{{Path: awsAllowedPrefix}, {Path: azureAllowedPrefix}}
 		opts.Enabled = false
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION IF NOT EXISTS %s API_PROVIDER = google_api_gateway GOOGLE_AUDIENCE = '%s' API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') ENABLED = false COMMENT = 'some comment'`, id.FullyQualifiedName(), GoogleAudience, GoogleAllowedPrefix, AwsAllowedPrefix, AzureAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE API INTEGRATION IF NOT EXISTS %s API_PROVIDER = google_api_gateway GOOGLE_AUDIENCE = '%s' API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') ENABLED = false COMMENT = 'some comment'`, id.FullyQualifiedName(), googleAudience, googleAllowedPrefix, awsAllowedPrefix, azureAllowedPrefix)
 	})
 }
 
@@ -223,11 +225,11 @@ func TestApiIntegrations_Alter(t *testing.T) {
 				ApiKey:        String("key"),
 			},
 			Enabled:            Bool(true),
-			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}},
-			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AzureAllowedPrefix}, {Path: GoogleAllowedPrefix}},
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: awsAllowedPrefix}},
+			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: azureAllowedPrefix}, {Path: googleAllowedPrefix}},
 			Comment:            String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET API_AWS_ROLE_ARN = 'new-aws-role-arn' API_KEY = 'key' ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), AwsAllowedPrefix, AzureAllowedPrefix, GoogleAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET API_AWS_ROLE_ARN = 'new-aws-role-arn' API_KEY = 'key' ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), awsAllowedPrefix, azureAllowedPrefix, googleAllowedPrefix)
 	})
 
 	t.Run("set - azure", func(t *testing.T) {
@@ -238,22 +240,22 @@ func TestApiIntegrations_Alter(t *testing.T) {
 				ApiKey:               String("key"),
 			},
 			Enabled:            Bool(true),
-			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AzureAllowedPrefix}},
-			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}, {Path: GoogleAllowedPrefix}},
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: azureAllowedPrefix}},
+			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: awsAllowedPrefix}, {Path: googleAllowedPrefix}},
 			Comment:            String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET AZURE_AD_APPLICATION_ID = 'new-azure-ad-application-id' API_KEY = 'key' ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), AzureAllowedPrefix, AwsAllowedPrefix, GoogleAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET AZURE_AD_APPLICATION_ID = 'new-azure-ad-application-id' API_KEY = 'key' ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), azureAllowedPrefix, awsAllowedPrefix, googleAllowedPrefix)
 	})
 
 	t.Run("set - google", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ApiIntegrationSet{
 			Enabled:            Bool(true),
-			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: GoogleAllowedPrefix}},
-			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: AwsAllowedPrefix}, {Path: AzureAllowedPrefix}},
+			ApiAllowedPrefixes: []ApiIntegrationEndpointPrefix{{Path: googleAllowedPrefix}},
+			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: awsAllowedPrefix}, {Path: azureAllowedPrefix}},
 			Comment:            String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), GoogleAllowedPrefix, AwsAllowedPrefix, AzureAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), googleAllowedPrefix, awsAllowedPrefix, azureAllowedPrefix)
 	})
 
 	t.Run("unset single", func(t *testing.T) {
