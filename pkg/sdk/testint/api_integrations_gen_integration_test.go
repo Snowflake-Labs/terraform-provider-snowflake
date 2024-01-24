@@ -13,9 +13,12 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	ctx := testContext(t)
 
 	// TODO [JIRA]: replace with real values?
-	const awsAllowedPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
-	const azureAllowedPrefix = "https://apim-hello-world.azure-api.net/"
-	const googleAllowedPrefix = "https://gateway-id-123456.uc.gateway.dev/"
+	const awsAllowedPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/dev/"
+	const awsBlockedPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
+	const azureAllowedPrefix = "https://apim-hello-world.azure-api.net/dev"
+	const azureBlockedPrefix = "https://apim-hello-world.azure-api.net/prod"
+	const googleAllowedPrefix = "https://gateway-id-123456.uc.gateway.dev/prod"
+	const googleBlockedPrefix = "https://gateway-id-123456.uc.gateway.dev/dev"
 	const apiAwsRoleArn = "arn:aws:iam::000000000001:/role/test"
 	const azureTenantId = "00000000-0000-0000-0000-000000000000"
 	const azureAdApplicationId = "11111111-1111-1111-1111-111111111111"
@@ -24,10 +27,6 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	prefixes := func(prefix string) []sdk.ApiIntegrationEndpointPrefix {
 		return []sdk.ApiIntegrationEndpointPrefix{{Path: prefix}}
 	}
-	awsAllowedPrefixes := prefixes(awsAllowedPrefix)
-	azureAllowedPrefixes := prefixes(azureAllowedPrefix)
-	googleAllowedPrefixes := prefixes(googleAllowedPrefix)
-
 	assertApiIntegration := func(t *testing.T, s *sdk.ApiIntegration, name sdk.AccountObjectIdentifier, comment string) {
 		t.Helper()
 		assert.Equal(t, name.Name(), s.Name)
@@ -48,7 +47,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		t.Helper()
 		id := sdk.RandomAccountObjectIdentifier()
 
-		return sdk.NewCreateApiIntegrationRequest(id, awsAllowedPrefixes, true).
+		return sdk.NewCreateApiIntegrationRequest(id, prefixes(awsAllowedPrefix), true).
 			WithAwsApiProviderParams(sdk.NewAwsApiParamsRequest(sdk.ApiIntegrationAwsApiGateway, apiAwsRoleArn))
 	}
 
@@ -56,7 +55,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		t.Helper()
 		id := sdk.RandomAccountObjectIdentifier()
 
-		return sdk.NewCreateApiIntegrationRequest(id, azureAllowedPrefixes, true).
+		return sdk.NewCreateApiIntegrationRequest(id, prefixes(azureAllowedPrefix), true).
 			WithAzureApiProviderParams(sdk.NewAzureApiParamsRequest(azureTenantId, azureAdApplicationId))
 	}
 
@@ -64,7 +63,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		t.Helper()
 		id := sdk.RandomAccountObjectIdentifier()
 
-		return sdk.NewCreateApiIntegrationRequest(id, googleAllowedPrefixes, true).
+		return sdk.NewCreateApiIntegrationRequest(id, prefixes(googleAllowedPrefix), true).
 			WithGoogleApiProviderParams(sdk.NewGoogleApiParamsRequest(googleAudience))
 	}
 
@@ -104,6 +103,42 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		integration := createApiIntegrationWithRequest(t, request)
 
 		assertApiIntegration(t, integration, request.GetName(), "")
+	})
+
+	t.Run("create api integration: aws more options", func(t *testing.T) {
+		request := createApiIntegrationAwsRequest(t)
+
+		request = request.
+			WithAwsApiProviderParams(request.AwsApiProviderParams.WithApiKey(sdk.String("key"))).
+			WithApiBlockedPrefixes(prefixes(awsBlockedPrefix)).
+			WithComment(sdk.String("comment"))
+
+		integration := createApiIntegrationWithRequest(t, request)
+
+		assertApiIntegration(t, integration, request.GetName(), "comment")
+	})
+
+	t.Run("create api integration: azure more options", func(t *testing.T) {
+		request := createApiIntegrationAzureRequest(t)
+
+		request = request.
+			WithAzureApiProviderParams(request.AzureApiProviderParams.WithApiKey(sdk.String("key"))).
+			WithApiBlockedPrefixes(prefixes(azureBlockedPrefix)).
+			WithComment(sdk.String("comment"))
+
+		integration := createApiIntegrationWithRequest(t, request)
+
+		assertApiIntegration(t, integration, request.GetName(), "comment")
+	})
+
+	t.Run("create api integration: google more options", func(t *testing.T) {
+		request := createApiIntegrationGoogleRequest(t).
+			WithApiBlockedPrefixes(prefixes(googleBlockedPrefix)).
+			WithComment(sdk.String("comment"))
+
+		integration := createApiIntegrationWithRequest(t, request)
+
+		assertApiIntegration(t, integration, request.GetName(), "comment")
 	})
 
 	t.Run("alter api integration: aws", func(t *testing.T) {
