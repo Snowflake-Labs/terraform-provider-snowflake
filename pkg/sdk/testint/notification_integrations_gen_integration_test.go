@@ -14,6 +14,8 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	ctx := testContext(t)
 
 	const gcpPubsubSubscriptionName = "TODO"
+	const azureStorageQueuePrimaryUri = "TODO"
+	const azureTenantId = "00000000-0000-0000-0000-000000000000"
 
 	assertNotificationIntegration := func(t *testing.T, s *sdk.NotificationIntegration, name sdk.AccountObjectIdentifier, comment string) {
 		t.Helper()
@@ -37,6 +39,14 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
 			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().WithGoogleAutomatedDataLoad(sdk.NewGoogleAutomatedDataLoadRequest(gcpPubsubSubscriptionName)))
+	}
+
+	createNotificationIntegrationAutoAzureRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
+		t.Helper()
+		id := sdk.RandomAccountObjectIdentifier()
+
+		return sdk.NewCreateNotificationIntegrationRequest(id, true).
+			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().WithAzureAutomatedDataLoad(sdk.NewAzureAutomatedDataLoadRequest(azureStorageQueuePrimaryUri, azureTenantId)))
 	}
 
 	createNotificationIntegrationWithRequest := func(t *testing.T, request *sdk.CreateNotificationIntegrationRequest) *sdk.NotificationIntegration {
@@ -64,7 +74,13 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("create and describe notification integration - auto azure", func(t *testing.T) {
-		// TODO: fill me
+		t.Skipf("Skip until we create storage queue (read more in %s; issue: SNOW-TODO)", "https://docs.snowflake.com/en/user-guide/data-load-snowpipe-auto-azure#create-a-storage-queue")
+
+		request := createNotificationIntegrationAutoAzureRequest(t)
+
+		integration := createNotificationIntegrationWithRequest(t, request)
+
+		assertNotificationIntegration(t, integration, request.GetName(), "")
 	})
 
 	t.Run("create and describe notification integration - push amazon", func(t *testing.T) {
