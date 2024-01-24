@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -101,6 +102,26 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		require.NoError(t, err)
 
 		return integration
+	}
+
+	createNotificationIntegrationAutoGoogle := func(t *testing.T) *sdk.NotificationIntegration {
+		t.Helper()
+		return createNotificationIntegrationWithRequest(t, createNotificationIntegrationAutoGoogleRequest(t))
+	}
+
+	createNotificationIntegrationAutoAzure := func(t *testing.T) *sdk.NotificationIntegration {
+		t.Helper()
+		return createNotificationIntegrationWithRequest(t, createNotificationIntegrationAutoAzureRequest(t))
+	}
+
+	createNotificationIntegrationPushAmazon := func(t *testing.T) *sdk.NotificationIntegration {
+		t.Helper()
+		return createNotificationIntegrationWithRequest(t, createNotificationIntegrationPushAmazonRequest(t))
+	}
+
+	createNotificationIntegrationEmail := func(t *testing.T) *sdk.NotificationIntegration {
+		t.Helper()
+		return createNotificationIntegrationWithRequest(t, createNotificationIntegrationEmailRequest(t))
 	}
 
 	t.Run("create and describe notification integration - auto google", func(t *testing.T) {
@@ -231,22 +252,60 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("drop notification integration: existing", func(t *testing.T) {
-		// TODO: fill me
+		request := createNotificationIntegrationEmailRequest(t)
+		id := request.GetName()
+
+		err := client.NotificationIntegrations.Create(ctx, request)
+		require.NoError(t, err)
+
+		err = client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(id))
+		require.NoError(t, err)
+
+		_, err = client.NotificationIntegrations.ShowByID(ctx, id)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
 	t.Run("drop notification integration: non-existing", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+
+		err := client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(id))
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
+	// TODO [SNOW-]: Add missing integrations
 	t.Run("show notification integration: default", func(t *testing.T) {
-		// TODO: fill me
+		notificationAutoGoogle := createNotificationIntegrationAutoGoogle(t)
+		notificationAutoAzure := createNotificationIntegrationAutoAzure(t)
+		notificationPushAmazon := createNotificationIntegrationPushAmazon(t)
+		notificationEmail := createNotificationIntegrationEmail(t)
+
+		showRequest := sdk.NewShowNotificationIntegrationRequest()
+		returnedIntegrations, err := client.NotificationIntegrations.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Contains(t, returnedIntegrations, *notificationAutoGoogle)
+		assert.Contains(t, returnedIntegrations, *notificationAutoAzure)
+		assert.Contains(t, returnedIntegrations, *notificationPushAmazon)
+		assert.Contains(t, returnedIntegrations, *notificationEmail)
 	})
 
 	t.Run("show notification integration: with options", func(t *testing.T) {
-		// TODO: fill me
+		notificationAutoGoogle := createNotificationIntegrationAutoGoogle(t)
+		notificationAutoAzure := createNotificationIntegrationAutoAzure(t)
+
+		showRequest := sdk.NewShowNotificationIntegrationRequest().
+			WithLike(&sdk.Like{Pattern: &notificationAutoGoogle.Name})
+		returnedIntegrations, err := client.NotificationIntegrations.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Contains(t, returnedIntegrations, *notificationAutoGoogle)
+		assert.NotContains(t, returnedIntegrations, *notificationAutoAzure)
 	})
 
 	t.Run("describe notification integration: non-existing", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+
+		_, err := client.NotificationIntegrations.Describe(ctx, id)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
