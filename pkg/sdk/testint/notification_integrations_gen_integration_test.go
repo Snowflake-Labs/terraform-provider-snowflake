@@ -23,7 +23,9 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	const azureTenantId = "00000000-0000-0000-0000-000000000000"
 	const azureEventGridTopicEndpoint = "https://apim-hello-world.azure-api.net/dev"
 	const awsSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:MyTopic"
+	const awsSnsOtherTopicArn = "arn:aws:sns:us-east-2:123456789012:MyOtherTopic"
 	const awsSnsRoleArn = "arn:aws:iam::000000000001:/role/test"
+	const awsSnsOtherRoleArn = "arn:aws:iam::000000000001:/role/other"
 
 	assertNotificationIntegration := func(t *testing.T, s *sdk.NotificationIntegration, name sdk.AccountObjectIdentifier, notificationType string, comment string) {
 		t.Helper()
@@ -228,11 +230,48 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("alter notification integration: auto", func(t *testing.T) {
-		// TODO: fill me
+		integration := createNotificationIntegrationAutoGoogle(t)
+
+		setRequest := sdk.NewAlterNotificationIntegrationRequest(integration.ID()).
+			WithSet(
+				sdk.NewNotificationIntegrationSetRequest().
+					WithEnabled(sdk.Bool(false)).
+					WithComment(sdk.String("changed comment")),
+			)
+		err := client.NotificationIntegrations.Alter(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
+
+		// only SET is tested because UNSET is unsupported: 000002 (0A000): Unsupported feature 'UNSET'
 	})
 
 	t.Run("alter notification integration: push amazon", func(t *testing.T) {
-		// TODO: fill me
+		integration := createNotificationIntegrationPushAmazon(t)
+
+		setRequest := sdk.NewAlterNotificationIntegrationRequest(integration.ID()).
+			WithSet(
+				sdk.NewNotificationIntegrationSetRequest().
+					WithEnabled(sdk.Bool(false)).
+					WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetAmazonPush(sdk.NewSetAmazonPushRequest(awsSnsOtherTopicArn, awsSnsOtherRoleArn))).
+					WithComment(sdk.String("changed comment")),
+			)
+		err := client.NotificationIntegrations.Alter(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_TOPIC_ARN", Type: "String", Value: awsSnsOtherTopicArn, Default: ""})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_ROLE_ARN", Type: "String", Value: awsSnsOtherRoleArn, Default: ""})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
+
+		// only SET is tested because UNSET is unsupported: 000002 (0A000): Unsupported feature 'UNSET'
 	})
 
 	// TODO [SNOW-]: implement after "create and describe notification integration - push google" succeeds
