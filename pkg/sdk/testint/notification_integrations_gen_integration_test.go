@@ -9,14 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-TODO]: create topics to perform integration tests
-// auto google: https://docs.snowflake.com/en/user-guide/data-load-snowpipe-auto-gcs#creating-the-pub-sub-topic
-// auto azure: https://docs.snowflake.com/en/user-guide/data-load-snowpipe-auto-azure#create-a-storage-queue
-// push amazon: https://docs.snowflake.com/en/user-guide/data-load-snowpipe-errors-sns#step-1-creating-an-amazon-sns-topic
 func TestInt_NotificationIntegrations(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	// TODO [SNOW-1017580]: replace with real values
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 	const gcpPubsubTopicName = "projects/project-1234/topics/top2"
 	const azureStorageQueuePrimaryUri = "azure://great-bucket/great-path/"
@@ -175,7 +172,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
-	// TODO [SNOW-]: check the error 001422 (22023): SQL compilation error: invalid value 'OUTBOUND' for property 'Direction'
+	// TODO [SNOW-1017802]: check the error 001422 (22023): SQL compilation error: invalid value 'OUTBOUND' for property 'Direction'
 	t.Run("create and describe notification integration - push google", func(t *testing.T) {
 		t.Skip("Skipping because of the error: 001422 (22023): SQL compilation error: invalid value 'OUTBOUND' for property 'Direction'")
 		request := createNotificationIntegrationPushGoogleRequest(t)
@@ -194,7 +191,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
-	// TODO [SNOW-]: check the error 001008 (22023): SQL compilation error: invalid value [QUEUE - AZURE_EVENT_GRID] for parameter 'Integration Type'
+	// TODO [SNOW-1017802]: check the error 001008 (22023): SQL compilation error: invalid value [QUEUE - AZURE_EVENT_GRID] for parameter 'Integration Type'
 	t.Run("create and describe notification integration - push azure", func(t *testing.T) {
 		t.Skip("Skipping because of the error: 001008 (22023): SQL compilation error: invalid value [QUEUE - AZURE_EVENT_GRID] for parameter 'Integration Type'")
 		request := createNotificationIntegrationPushAzureRequest(t)
@@ -274,12 +271,12 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		// only SET is tested because UNSET is unsupported: 000002 (0A000): Unsupported feature 'UNSET'
 	})
 
-	// TODO [SNOW-]: implement after "create and describe notification integration - push google" succeeds
+	// TODO [SNOW-1017802]: implement after "create and describe notification integration - push google" succeeds
 	t.Run("alter notification integration: push google", func(t *testing.T) {
 		t.Skip(`Skipping because "create and describe notification integration - push google" creation test is failing`)
 	})
 
-	// TODO [SNOW-]: implement after "create and describe notification integration - push azure" succeeds
+	// TODO [SNOW-1017802]: implement after "create and describe notification integration - push azure" succeeds
 	t.Run("alter notification integration: push azure", func(t *testing.T) {
 		t.Skip(`Skipping because "create and describe notification integration - push azure" creation test is failing`)
 	})
@@ -378,7 +375,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
-	// TODO [SNOW-]: Add missing integrations
+	// TODO [SNOW-1017802]: Add missing integrations
 	t.Run("show notification integration: default", func(t *testing.T) {
 		notificationAutoGoogle := createNotificationIntegrationAutoGoogle(t)
 		notificationAutoAzure := createNotificationIntegrationAutoAzure(t)

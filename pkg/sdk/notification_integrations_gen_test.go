@@ -2,12 +2,11 @@ package sdk
 
 import "testing"
 
-// TODO: extract
 const (
 	gcpPubsubSubscriptionName   = "projects/project-1234/subscriptions/sub2"
 	gcpPubsubTopicName          = "projects/project-1234/topics/top2"
 	azureStorageQueuePrimaryUri = "azure://great-bucket/great-path/"
-	azureEventGridTopicEndpoint = "TODO"
+	azureEventGridTopicEndpoint = "https://apim-hello-world.azure-api.net/dev"
 	awsSnsTopicArn              = "arn:aws:sns:us-east-2:123456789012:MyTopic"
 )
 
