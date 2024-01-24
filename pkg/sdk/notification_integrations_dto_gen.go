@@ -21,6 +21,10 @@ type CreateNotificationIntegrationRequest struct {
 	Comment                  *string
 }
 
+func (r *CreateNotificationIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
 type AutomatedDataLoadsParamsRequest struct {
 	GoogleAutomatedDataLoad *GoogleAutomatedDataLoadRequest
 	AzureAutomatedDataLoad  *AzureAutomatedDataLoadRequest
