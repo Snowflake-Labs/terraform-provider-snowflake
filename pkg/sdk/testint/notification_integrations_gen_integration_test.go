@@ -9,12 +9,13 @@ import (
 )
 
 // TODO [SNOW-TODO]: create topics to perform integration tests
+// auto google: https://docs.snowflake.com/en/user-guide/data-load-snowpipe-auto-gcs#creating-the-pub-sub-topic
 // push amazon: https://docs.snowflake.com/en/user-guide/data-load-snowpipe-errors-sns#step-1-creating-an-amazon-sns-topic
 func TestInt_NotificationIntegrations(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	const gcpPubsubSubscriptionName = "TODO"
+	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 	const azureStorageQueuePrimaryUri = "TODO"
 	const azureTenantId = "00000000-0000-0000-0000-000000000000"
 	const awsSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:MyTopic"
@@ -75,18 +76,18 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	}
 
 	t.Run("create and describe notification integration - auto google", func(t *testing.T) {
-		t.Skipf("Skip until we create pub/sub topic (read more in %s; issue: SNOW-TODO)", "https://docs.snowflake.com/en/user-guide/data-load-snowpipe-auto-gcs#creating-the-pub-sub-topic")
-
 		request := createNotificationIntegrationAutoGoogleRequest(t)
 
 		integration := createNotificationIntegrationWithRequest(t, request)
 
-		assertNotificationIntegration(t, integration, request.GetName(), "", "")
+		assertNotificationIntegration(t, integration, request.GetName(), "QUEUE - GCP_PUBSUB", "")
 
 		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
 		require.NoError(t, err)
 
-		// TODO [SNOW-TODO]: add more assertions after object is finally created
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "DIRECTION", Type: "String", Value: "INBOUND", Default: "INBOUND"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "GCP_PUBSUB_SUBSCRIPTION_NAME", Type: "String", Value: gcpPubsubSubscriptionName, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
