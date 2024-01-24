@@ -14,7 +14,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	// TODO [JIRA]: replace with real values?
+	// TODO [SNOW-1017580]: replace with real values when testing with external function invocation.
 	const awsAllowedPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/dev/"
 	const awsBlockedPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
 	const azureAllowedPrefix = "https://apim-hello-world.azure-api.net/dev"
