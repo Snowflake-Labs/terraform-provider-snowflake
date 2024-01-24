@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -153,12 +154,25 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("drop view: existing", func(t *testing.T) {
-		// TODO: fill me
+	t.Run("drop api integration: existing", func(t *testing.T) {
+		request := createApiIntegrationAwsRequest(t)
+		id := request.GetName()
+
+		err := client.ApiIntegrations.Create(ctx, request)
+		require.NoError(t, err)
+
+		err = client.ApiIntegrations.Drop(ctx, sdk.NewDropApiIntegrationRequest(id))
+		require.NoError(t, err)
+
+		_, err = client.ApiIntegrations.ShowByID(ctx, id)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
-	t.Run("drop view: non-existing", func(t *testing.T) {
-		// TODO: fill me
+	t.Run("drop api integration: non-existing", func(t *testing.T) {
+		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+
+		err := client.ApiIntegrations.Drop(ctx, sdk.NewDropApiIntegrationRequest(id))
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("show api integration: default", func(t *testing.T) {
