@@ -71,6 +71,12 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		integration := createNotificationIntegrationWithRequest(t, request)
 
 		assertNotificationIntegration(t, integration, request.GetName(), "")
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		// TODO [SNOW-TODO]: add more assertions after object is finally created
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("create and describe notification integration - auto azure", func(t *testing.T) {
@@ -81,6 +87,12 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		integration := createNotificationIntegrationWithRequest(t, request)
 
 		assertNotificationIntegration(t, integration, request.GetName(), "")
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		// TODO [SNOW-TODO]: add more assertions after object is finally created
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("create and describe notification integration - push amazon", func(t *testing.T) {

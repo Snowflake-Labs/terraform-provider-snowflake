@@ -161,6 +161,10 @@ type NotificationIntegration struct {
 	CreatedOn        time.Time
 }
 
+func (v *NotificationIntegration) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(v.Name)
+}
+
 // DescribeNotificationIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-integration.
 type DescribeNotificationIntegrationOptions struct {
 	describe                bool                    `ddl:"static" sql:"DESCRIBE"`
