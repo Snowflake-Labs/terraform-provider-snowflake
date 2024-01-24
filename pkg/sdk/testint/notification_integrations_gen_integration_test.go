@@ -248,7 +248,39 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("alter notification integration: set and unset tags", func(t *testing.T) {
-		// TODO: fill me
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		t.Cleanup(tagCleanup)
+
+		integration := createNotificationIntegrationEmail(t)
+		id := integration.ID()
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterNotificationIntegrationRequest(id).WithSetTags(tags)
+
+		err := client.NotificationIntegrations.Alter(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterNotificationIntegrationRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.NotificationIntegrations.Alter(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
+		require.Error(t, err)
 	})
 
 	t.Run("drop notification integration: existing", func(t *testing.T) {
