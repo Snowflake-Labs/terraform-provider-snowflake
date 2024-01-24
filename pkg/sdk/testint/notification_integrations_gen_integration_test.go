@@ -80,6 +80,15 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithAzurePush(sdk.NewAzurePushRequest(azureEventGridTopicEndpoint, azureTenantId)))
 	}
 
+	createNotificationIntegrationEmailRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
+		t.Helper()
+		id := sdk.RandomAccountObjectIdentifier()
+
+		// TODO [SNOW-1007539]: use email of our service user
+		return sdk.NewCreateNotificationIntegrationRequest(id, true).
+			WithEmailParams(sdk.NewEmailParamsRequest().WithAllowedRecipients([]sdk.NotificationIntegrationAllowedRecipient{{Email: "artur.sawicki@snowflake.com"}}))
+	}
+
 	createNotificationIntegrationWithRequest := func(t *testing.T, request *sdk.CreateNotificationIntegrationRequest) *sdk.NotificationIntegration {
 		t.Helper()
 		id := request.GetName()
@@ -183,7 +192,18 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	})
 
 	t.Run("create and describe notification integration - email", func(t *testing.T) {
-		// TODO: fill me
+		request := createNotificationIntegrationEmailRequest(t)
+
+		integration := createNotificationIntegrationWithRequest(t, request)
+
+		assertNotificationIntegration(t, integration, request.GetName(), "EMAIL", "")
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ALLOWED_RECIPIENTS", Type: "List", Value: "artur.sawicki@snowflake.com", Default: "[]"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("alter notification integration: auto", func(t *testing.T) {
