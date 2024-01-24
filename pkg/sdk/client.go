@@ -40,6 +40,7 @@ type Client struct {
 	// DDL Commands
 	Accounts            Accounts
 	Alerts              Alerts
+	ApiIntegrations     ApiIntegrations
 	ApplicationPackages ApplicationPackages
 	ApplicationRoles    ApplicationRoles
 	Applications        Applications
@@ -186,6 +187,7 @@ func NewClientFromDB(db *sql.DB) *Client {
 func (c *Client) initialize() {
 	c.Accounts = &accounts{client: c}
 	c.Alerts = &alerts{client: c}
+	c.ApiIntegrations = &apiIntegrations{client: c}
 	c.ApplicationPackages = &applicationPackages{client: c}
 	c.ApplicationRoles = &applicationRoles{client: c}
 	c.Applications = &applications{client: c}
