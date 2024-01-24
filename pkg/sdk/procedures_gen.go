@@ -36,7 +36,7 @@ type CreateForJavaProcedureOptions struct {
 	Returns                    ProcedureReturns          `ddl:"keyword" sql:"RETURNS"`
 	languageJava               bool                      `ddl:"static" sql:"LANGUAGE JAVA"`
 	RuntimeVersion             string                    `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Packages                   []ProcedurePackage        `ddl:"parameter,must_parentheses" sql:"PACKAGES"`
+	Packages                   []ProcedurePackage        `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports                    []ProcedureImport         `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
@@ -112,7 +112,7 @@ type CreateForPythonProcedureOptions struct {
 	Returns                    ProcedureReturns          `ddl:"keyword" sql:"RETURNS"`
 	languagePython             bool                      `ddl:"static" sql:"LANGUAGE PYTHON"`
 	RuntimeVersion             string                    `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Packages                   []ProcedurePackage        `ddl:"parameter,must_parentheses" sql:"PACKAGES"`
+	Packages                   []ProcedurePackage        `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports                    []ProcedureImport         `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
@@ -135,7 +135,7 @@ type CreateForScalaProcedureOptions struct {
 	Returns             ProcedureReturns       `ddl:"keyword" sql:"RETURNS"`
 	languageScala       bool                   `ddl:"static" sql:"LANGUAGE SCALA"`
 	RuntimeVersion      string                 `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Packages            []ProcedurePackage     `ddl:"parameter,must_parentheses" sql:"PACKAGES"`
+	Packages            []ProcedurePackage     `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports             []ProcedureImport      `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler             string                 `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	TargetPath          *string                `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
@@ -271,7 +271,7 @@ type CreateAndCallForJavaProcedureOptions struct {
 	Returns             ProcedureReturns        `ddl:"keyword" sql:"RETURNS"`
 	languageJava        bool                    `ddl:"static" sql:"LANGUAGE JAVA"`
 	RuntimeVersion      string                  `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Packages            []ProcedurePackage      `ddl:"parameter,must_parentheses" sql:"PACKAGES"`
+	Packages            []ProcedurePackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports             []ProcedureImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler             string                  `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`
@@ -299,7 +299,7 @@ type CreateAndCallForScalaProcedureOptions struct {
 	Returns             ProcedureReturns        `ddl:"keyword" sql:"RETURNS"`
 	languageScala       bool                    `ddl:"static" sql:"LANGUAGE SCALA"`
 	RuntimeVersion      string                  `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Packages            []ProcedurePackage      `ddl:"parameter,must_parentheses" sql:"PACKAGES"`
+	Packages            []ProcedurePackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports             []ProcedureImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler             string                  `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`
@@ -338,7 +338,7 @@ type CreateAndCallForPythonProcedureOptions struct {
 	Returns             ProcedureReturns        `ddl:"keyword" sql:"RETURNS"`
 	languagePython      bool                    `ddl:"static" sql:"LANGUAGE PYTHON"`
 	RuntimeVersion      string                  `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Packages            []ProcedurePackage      `ddl:"parameter,must_parentheses" sql:"PACKAGES"`
+	Packages            []ProcedurePackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports             []ProcedureImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler             string                  `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`

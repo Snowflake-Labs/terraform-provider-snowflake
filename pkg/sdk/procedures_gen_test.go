@@ -695,10 +695,14 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 			Table: &ProcedureReturnsTable{},
 		}
 		opts.RuntimeVersion = "1.8"
-		opts.Packages = []ProcedurePackage{}
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "com.snowflake:snowpark:latest",
+			},
+		}
 		opts.Handler = "TestFunc.echoVarchar"
 		opts.ProcedureName = id
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = () HANDLER = 'TestFunc.echoVarchar' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:latest') HANDLER = 'TestFunc.echoVarchar' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -812,10 +816,14 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 			Table: &ProcedureReturnsTable{},
 		}
 		opts.RuntimeVersion = "2.12"
-		opts.Packages = []ProcedurePackage{}
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "com.snowflake:snowpark:1.2.0",
+			},
+		}
 		opts.Handler = "TestFunc.echoVarchar"
 		opts.ProcedureName = id
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = () HANDLER = 'TestFunc.echoVarchar' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = ('com.snowflake:snowpark:1.2.0') HANDLER = 'TestFunc.echoVarchar' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -931,10 +939,14 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 			Table: &ProcedureReturnsTable{},
 		}
 		opts.RuntimeVersion = "3.8"
-		opts.Packages = []ProcedurePackage{}
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "snowflake-snowpark-python",
+			},
+		}
 		opts.Handler = "udf"
 		opts.ProcedureName = id
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = () HANDLER = 'udf' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('snowflake-snowpark-python') HANDLER = 'udf' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {

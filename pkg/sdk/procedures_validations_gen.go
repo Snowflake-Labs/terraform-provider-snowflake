@@ -26,6 +26,9 @@ func (opts *CreateForJavaProcedureOptions) validate() error {
 	if !valueSet(opts.RuntimeVersion) {
 		errs = append(errs, errNotSet("CreateForJavaProcedureOptions", "RuntimeVersion"))
 	}
+	if !valueSet(opts.Packages) {
+		errs = append(errs, errNotSet("CreateForJavaProcedureOptions", "Packages"))
+	}
 	if !valueSet(opts.Handler) {
 		errs = append(errs, errNotSet("CreateForJavaProcedureOptions", "Handler"))
 	}
@@ -65,6 +68,9 @@ func (opts *CreateForPythonProcedureOptions) validate() error {
 	if !valueSet(opts.RuntimeVersion) {
 		errs = append(errs, errNotSet("CreateForPythonProcedureOptions", "RuntimeVersion"))
 	}
+	if !valueSet(opts.Packages) {
+		errs = append(errs, errNotSet("CreateForPythonProcedureOptions", "Packages"))
+	}
 	if !valueSet(opts.Handler) {
 		errs = append(errs, errNotSet("CreateForPythonProcedureOptions", "Handler"))
 	}
@@ -86,6 +92,9 @@ func (opts *CreateForScalaProcedureOptions) validate() error {
 	var errs []error
 	if !valueSet(opts.RuntimeVersion) {
 		errs = append(errs, errNotSet("CreateForScalaProcedureOptions", "RuntimeVersion"))
+	}
+	if !valueSet(opts.Packages) {
+		errs = append(errs, errNotSet("CreateForScalaProcedureOptions", "Packages"))
 	}
 	if !valueSet(opts.Handler) {
 		errs = append(errs, errNotSet("CreateForScalaProcedureOptions", "Handler"))
@@ -189,6 +198,9 @@ func (opts *CreateAndCallForJavaProcedureOptions) validate() error {
 	if !valueSet(opts.RuntimeVersion) {
 		errs = append(errs, errNotSet("CreateAndCallForJavaProcedureOptions", "RuntimeVersion"))
 	}
+	if !valueSet(opts.Packages) {
+		errs = append(errs, errNotSet("CreateAndCallForJavaProcedureOptions", "Packages"))
+	}
 	if !valueSet(opts.Handler) {
 		errs = append(errs, errNotSet("CreateAndCallForJavaProcedureOptions", "Handler"))
 	}
@@ -213,6 +225,9 @@ func (opts *CreateAndCallForScalaProcedureOptions) validate() error {
 	var errs []error
 	if !valueSet(opts.RuntimeVersion) {
 		errs = append(errs, errNotSet("CreateAndCallForScalaProcedureOptions", "RuntimeVersion"))
+	}
+	if !valueSet(opts.Packages) {
+		errs = append(errs, errNotSet("CreateAndCallForScalaProcedureOptions", "Packages"))
 	}
 	if !valueSet(opts.Handler) {
 		errs = append(errs, errNotSet("CreateAndCallForScalaProcedureOptions", "Handler"))
@@ -258,6 +273,9 @@ func (opts *CreateAndCallForPythonProcedureOptions) validate() error {
 	var errs []error
 	if !valueSet(opts.RuntimeVersion) {
 		errs = append(errs, errNotSet("CreateAndCallForPythonProcedureOptions", "RuntimeVersion"))
+	}
+	if !valueSet(opts.Packages) {
+		errs = append(errs, errNotSet("CreateAndCallForPythonProcedureOptions", "Packages"))
 	}
 	if !valueSet(opts.Handler) {
 		errs = append(errs, errNotSet("CreateAndCallForPythonProcedureOptions", "Handler"))

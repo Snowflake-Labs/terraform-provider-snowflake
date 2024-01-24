@@ -92,7 +92,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Packages",
 			procedurePackage,
-			g.ParameterOptions().MustParentheses().SQL("PACKAGES").Required(),
+			g.ParameterOptions().Parentheses().SQL("PACKAGES").Required(),
 		).
 		ListQueryStructField(
 			"Imports",
@@ -108,6 +108,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
@@ -159,7 +160,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Packages",
 			procedurePackage,
-			g.ParameterOptions().MustParentheses().SQL("PACKAGES").Required(),
+			g.ParameterOptions().Parentheses().SQL("PACKAGES").Required(),
 		).
 		ListQueryStructField(
 			"Imports",
@@ -174,6 +175,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
@@ -201,7 +203,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Packages",
 			procedurePackage,
-			g.ParameterOptions().MustParentheses().SQL("PACKAGES").Required(),
+			g.ParameterOptions().Parentheses().SQL("PACKAGES").Required(),
 		).
 		ListQueryStructField(
 			"Imports",
@@ -215,6 +217,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
@@ -355,7 +358,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Packages",
 			procedurePackage,
-			g.ParameterOptions().MustParentheses().SQL("PACKAGES").Required(),
+			g.ParameterOptions().Parentheses().SQL("PACKAGES").Required(),
 		).
 		ListQueryStructField(
 			"Imports",
@@ -375,6 +378,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("CallArguments", "[]string", g.KeywordOptions().MustParentheses()).
 		PredefinedQueryStructField("ScriptingVariable", "*string", g.ParameterOptions().NoEquals().NoQuotes().SQL("INTO")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ValidIdentifier, "ProcedureName").
 		WithValidation(g.ValidIdentifier, "Name"),
@@ -400,7 +404,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Packages",
 			procedurePackage,
-			g.ParameterOptions().MustParentheses().SQL("PACKAGES").Required(),
+			g.ParameterOptions().Parentheses().SQL("PACKAGES").Required(),
 		).
 		ListQueryStructField(
 			"Imports",
@@ -420,6 +424,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("CallArguments", "[]string", g.KeywordOptions().MustParentheses()).
 		PredefinedQueryStructField("ScriptingVariable", "*string", g.ParameterOptions().NoEquals().NoQuotes().SQL("INTO")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ValidIdentifier, "ProcedureName").
 		WithValidation(g.ValidIdentifier, "Name"),
@@ -475,7 +480,7 @@ var ProceduresDef = g.NewInterface(
 		ListQueryStructField(
 			"Packages",
 			procedurePackage,
-			g.ParameterOptions().MustParentheses().SQL("PACKAGES").Required(),
+			g.ParameterOptions().Parentheses().SQL("PACKAGES").Required(),
 		).
 		ListQueryStructField(
 			"Imports",
@@ -495,6 +500,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("CallArguments", "[]string", g.KeywordOptions().MustParentheses()).
 		PredefinedQueryStructField("ScriptingVariable", "*string", g.ParameterOptions().NoEquals().NoQuotes().SQL("INTO")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
+		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ValidIdentifier, "ProcedureName").
 		WithValidation(g.ValidIdentifier, "Name"),
