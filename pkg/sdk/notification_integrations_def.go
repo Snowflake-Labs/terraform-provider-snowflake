@@ -86,4 +86,66 @@ var NotificationIntegrationsDef = g.NewInterface(
 			WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace").
 			WithValidation(g.ExactlyOneValueSet, "AutomatedDataLoadsParams", "PushNotificationParams", "EmailParams"),
 		NotificationIntegrationAllowedRecipientDef,
+	).
+	AlterOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/alter-notification-integration",
+		g.NewQueryStruct("AlterNotificationIntegration").
+			Alter().
+			SQL("NOTIFICATION INTEGRATION").
+			IfExists().
+			Name().
+			OptionalQueryStructField(
+				"Set",
+				g.NewQueryStruct("NotificationIntegrationSet").
+					OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
+					OptionalQueryStructField(
+						"SetPushParams",
+						g.NewQueryStruct("SetPushParams").
+							OptionalQueryStructField(
+								"SetAmazonPush",
+								g.NewQueryStruct("SetAmazonPush").
+									TextAssignment("AWS_SNS_TOPIC_ARN", g.ParameterOptions().SingleQuotes().Required()).
+									TextAssignment("AWS_SNS_ROLE_ARN", g.ParameterOptions().SingleQuotes().Required()),
+								g.KeywordOptions(),
+							).
+							OptionalQueryStructField(
+								"SetGooglePush",
+								g.NewQueryStruct("SetGooglePush").
+									TextAssignment("GCP_PUBSUB_SUBSCRIPTION_NAME", g.ParameterOptions().SingleQuotes().Required()),
+								g.KeywordOptions(),
+							).
+							OptionalQueryStructField(
+								"SetAzurePush",
+								g.NewQueryStruct("SetAzurePush").
+									TextAssignment("AZURE_STORAGE_QUEUE_PRIMARY_URI", g.ParameterOptions().SingleQuotes().Required()).
+									TextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes().Required()),
+								g.KeywordOptions(),
+							).
+							WithValidation(g.ExactlyOneValueSet, "SetAmazonPush", "SetGooglePush", "SetAzurePush"),
+						g.KeywordOptions(),
+					).
+					OptionalQueryStructField(
+						"SetEmailParams",
+						g.NewQueryStruct("SetEmailParams").
+							ListAssignment("ALLOWED_RECIPIENTS", "NotificationIntegrationAllowedRecipient", g.ParameterOptions().Parentheses().Required()).
+							WithValidation(g.ValidateValueSet, "AllowedRecipients"),
+						g.KeywordOptions(),
+					).
+					OptionalComment().
+					WithValidation(g.ConflictingFields, "SetPushParams", "SetEmailParams").
+					WithValidation(g.AtLeastOneValueSet, "Enabled", "SetPushParams", "SetEmailParams", "Comment"),
+				g.KeywordOptions().SQL("SET"),
+			).
+			OptionalQueryStructField(
+				"Unset",
+				g.NewQueryStruct("NotificationIntegrationUnset").
+					OptionalSQL("ALLOWED_RECIPIENTS").
+					OptionalSQL("COMMENT").
+					WithValidation(g.AtLeastOneValueSet, "AllowedRecipients", "Comment"),
+				g.ListOptions().NoParentheses().SQL("UNSET"),
+			).
+			OptionalSetTags().
+			OptionalUnsetTags().
+			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags"),
 	)
