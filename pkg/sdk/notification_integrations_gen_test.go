@@ -2,15 +2,55 @@ package sdk
 
 import "testing"
 
+// TODO: extract
+const (
+	gcpPubsubSubscriptionName   = "TODO"
+	gcpPubsubTopicName          = "TODO"
+	azureStorageQueuePrimaryUri = "TODO"
+	azureEventGridTopicEndpoint = "TODO"
+	awsSnsTopicArn              = "TODO"
+)
+
 func TestNotificationIntegrations_Create(t *testing.T) {
 	id := RandomAccountObjectIdentifier()
 
-	// Minimal valid CreateNotificationIntegrationOptions
-	defaultOpts := func() *CreateNotificationIntegrationOptions {
+	// Minimal valid CreateNotificationIntegrationOptions for AutomatedDataLoads
+	defaultOptsAutomatedDataLoads := func() *CreateNotificationIntegrationOptions {
 		return &CreateNotificationIntegrationOptions{
-			name: id,
+			name:    id,
+			Enabled: true,
+			AutomatedDataLoadsParams: &AutomatedDataLoadsParams{
+				GoogleAutomatedDataLoad: &GoogleAutomatedDataLoad{
+					GcpPubsubSubscriptionName: gcpPubsubSubscriptionName,
+				},
+			},
 		}
 	}
+
+	// Minimal valid CreateNotificationIntegrationOptions for Push
+	defaultOptsPush := func() *CreateNotificationIntegrationOptions {
+		return &CreateNotificationIntegrationOptions{
+			name:    id,
+			Enabled: true,
+			PushNotificationParams: &PushNotificationParams{
+				AmazonPush: &AmazonPush{
+					AwsSnsTopicArn: awsSnsTopicArn,
+					AwsSnsRoleArn:  apiAwsRoleArn,
+				},
+			},
+		}
+	}
+
+	// Minimal valid CreateNotificationIntegrationOptions for Email
+	defaultOptsEmail := func() *CreateNotificationIntegrationOptions {
+		return &CreateNotificationIntegrationOptions{
+			name:        id,
+			Enabled:     true,
+			EmailParams: &EmailParams{},
+		}
+	}
+
+	defaultOpts := defaultOptsEmail
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateNotificationIntegrationOptions = nil
@@ -19,44 +59,119 @@ func TestNotificationIntegrations_Create(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateNotificationIntegrationOptions", "IfNotExists", "OrReplace"))
 	})
 
 	t.Run("validation: exactly one field from [opts.AutomatedDataLoadsParams opts.PushNotificationParams opts.EmailParams] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.EmailParams = nil
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateNotificationIntegrationOptions", "AutomatedDataLoadsParams", "PushNotificationParams", "EmailParams"))
+	})
+
+	t.Run("validation: exactly one field from [opts.AutomatedDataLoadsParams opts.PushNotificationParams opts.EmailParams] should be present - more present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.PushNotificationParams = &PushNotificationParams{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateNotificationIntegrationOptions", "AutomatedDataLoadsParams", "PushNotificationParams", "EmailParams"))
 	})
 
 	t.Run("validation: exactly one field from [opts.AutomatedDataLoadsParams.GoogleAutomatedDataLoad opts.AutomatedDataLoadsParams.AzureAutomatedDataLoad] should be present", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
+		opts := defaultOptsAutomatedDataLoads()
+		opts.AutomatedDataLoadsParams.GoogleAutomatedDataLoad = nil
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateNotificationIntegrationOptions.AutomatedDataLoadsParams", "GoogleAutomatedDataLoad", "AzureAutomatedDataLoad"))
+	})
+
+	t.Run("validation: exactly one field from [opts.AutomatedDataLoadsParams.GoogleAutomatedDataLoad opts.AutomatedDataLoadsParams.AzureAutomatedDataLoad] should be present - more present", func(t *testing.T) {
+		opts := defaultOptsAutomatedDataLoads()
+		opts.AutomatedDataLoadsParams.AzureAutomatedDataLoad = &AzureAutomatedDataLoad{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateNotificationIntegrationOptions.AutomatedDataLoadsParams", "GoogleAutomatedDataLoad", "AzureAutomatedDataLoad"))
 	})
 
 	t.Run("validation: exactly one field from [opts.PushNotificationParams.AmazonPush opts.PushNotificationParams.GooglePush opts.PushNotificationParams.AzurePush] should be present", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
+		opts := defaultOptsPush()
+		opts.PushNotificationParams.AmazonPush = nil
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateNotificationIntegrationOptions.PushNotificationParams", "AmazonPush", "GooglePush", "AzurePush"))
+	})
+
+	t.Run("validation: exactly one field from [opts.PushNotificationParams.AmazonPush opts.PushNotificationParams.GooglePush opts.PushNotificationParams.AzurePush] should be present - more present", func(t *testing.T) {
+		opts := defaultOptsPush()
+		opts.PushNotificationParams.AzurePush = &AzurePush{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateNotificationIntegrationOptions.PushNotificationParams", "AmazonPush", "GooglePush", "AzurePush"))
 	})
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE NOTIFICATION INTEGRATION %s ENABLED = true TYPE = EMAIL`, id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	t.Run("all options - auto google", func(t *testing.T) {
+		opts := defaultOptsAutomatedDataLoads()
+		opts.IfNotExists = Bool(true)
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE NOTIFICATION INTEGRATION IF NOT EXISTS %s ENABLED = true TYPE = QUEUE NOTIFICATION_PROVIDER = GCP_PUBSUB GCP_PUBSUB_SUBSCRIPTION_NAME = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), gcpPubsubSubscriptionName)
+	})
+
+	t.Run("all options - auto azure", func(t *testing.T) {
+		opts := defaultOptsAutomatedDataLoads()
+		opts.AutomatedDataLoadsParams.GoogleAutomatedDataLoad = nil
+		opts.IfNotExists = Bool(true)
+		opts.Comment = String("some comment")
+		opts.AutomatedDataLoadsParams.AzureAutomatedDataLoad = &AzureAutomatedDataLoad{
+			AzureStorageQueuePrimaryUri: azureStorageQueuePrimaryUri,
+			AzureTenantId:               azureTenantId,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE NOTIFICATION INTEGRATION IF NOT EXISTS %s ENABLED = true TYPE = QUEUE NOTIFICATION_PROVIDER = AZURE_STORAGE_QUEUE AZURE_STORAGE_QUEUE_PRIMARY_URI = '%s' AZURE_TENANT_ID = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), azureStorageQueuePrimaryUri, azureTenantId)
+	})
+
+	t.Run("all options - push amazon", func(t *testing.T) {
+		opts := defaultOptsPush()
+		opts.IfNotExists = Bool(true)
+		opts.Comment = String("some comment")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE NOTIFICATION INTEGRATION IF NOT EXISTS %s ENABLED = true DIRECTION = OUTBOUND TYPE = QUEUE NOTIFICATION_PROVIDER = AWS_SNS AWS_SNS_TOPIC_ARN = '%s' AWS_SNS_ROLE_ARN = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), awsSnsTopicArn, apiAwsRoleArn)
+	})
+
+	t.Run("all options - push google", func(t *testing.T) {
+		opts := defaultOptsPush()
+		opts.PushNotificationParams.AmazonPush = nil
+		opts.IfNotExists = Bool(true)
+		opts.Comment = String("some comment")
+		opts.PushNotificationParams.GooglePush = &GooglePush{
+			GcpPubsubTopicName: gcpPubsubTopicName,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE NOTIFICATION INTEGRATION IF NOT EXISTS %s ENABLED = true DIRECTION = OUTBOUND TYPE = QUEUE NOTIFICATION_PROVIDER = GCP_PUBSUB GCP_PUBSUB_TOPIC_NAME = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), gcpPubsubTopicName)
+	})
+
+	t.Run("all options - push azure", func(t *testing.T) {
+		opts := defaultOptsPush()
+		opts.PushNotificationParams.AmazonPush = nil
+		opts.IfNotExists = Bool(true)
+		opts.Comment = String("some comment")
+		opts.PushNotificationParams.AzurePush = &AzurePush{
+			AzureEventGridTopicEndpoint: azureEventGridTopicEndpoint,
+			AzureTenantId:               azureTenantId,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE NOTIFICATION INTEGRATION IF NOT EXISTS %s ENABLED = true DIRECTION = OUTBOUND TYPE = QUEUE NOTIFICATION_PROVIDER = AZURE_EVENT_GRID AZURE_EVENT_GRID_TOPIC_ENDPOINT = '%s' AZURE_TENANT_ID = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), azureEventGridTopicEndpoint, azureTenantId)
+	})
+
+	t.Run("all options - email", func(t *testing.T) {
+		email := "some.email@some.com"
+		otherEmail := "some.other.email@some.com"
+
+		opts := defaultOptsEmail()
+		opts.IfNotExists = Bool(true)
+		opts.Comment = String("some comment")
+		opts.EmailParams.AllowedRecipients = []NotificationIntegrationAllowedRecipient{
+			{Email: email},
+			{Email: otherEmail},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE NOTIFICATION INTEGRATION IF NOT EXISTS %s ENABLED = true TYPE = EMAIL ALLOWED_RECIPIENTS = ('%s', '%s') COMMENT = 'some comment'", id.FullyQualifiedName(), email, otherEmail)
 	})
 }
 
@@ -165,13 +280,9 @@ func TestNotificationIntegrations_Drop(t *testing.T) {
 }
 
 func TestNotificationIntegrations_Show(t *testing.T) {
-	id := RandomAccountObjectIdentifier()
-
 	// Minimal valid ShowNotificationIntegrationOptions
 	defaultOpts := func() *ShowNotificationIntegrationOptions {
-		return &ShowNotificationIntegrationOptions{
-			name: id,
-		}
+		return &ShowNotificationIntegrationOptions{}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
