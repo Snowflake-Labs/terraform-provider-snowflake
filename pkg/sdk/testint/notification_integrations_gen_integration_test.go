@@ -302,8 +302,8 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
 
 		unsetRequest := sdk.NewAlterNotificationIntegrationRequest(integration.ID()).
-			WithUnset(
-				sdk.NewNotificationIntegrationUnsetRequest().
+			WithUnsetEmailParams(
+				sdk.NewNotificationIntegrationUnsetEmailParamsRequest().
 					WithAllowedRecipients(sdk.Bool(true)).
 					WithComment(sdk.Bool(true)),
 			)

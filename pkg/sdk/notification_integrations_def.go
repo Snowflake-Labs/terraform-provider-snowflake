@@ -137,9 +137,10 @@ var NotificationIntegrationsDef = g.NewInterface(
 					WithValidation(g.AtLeastOneValueSet, "Enabled", "SetPushParams", "SetEmailParams", "Comment"),
 				g.KeywordOptions().SQL("SET"),
 			).
+			// UNSET is supported only for the email notifications
 			OptionalQueryStructField(
-				"Unset",
-				g.NewQueryStruct("NotificationIntegrationUnset").
+				"UnsetEmailParams",
+				g.NewQueryStruct("NotificationIntegrationUnsetEmailParams").
 					OptionalSQL("ALLOWED_RECIPIENTS").
 					OptionalSQL("COMMENT").
 					WithValidation(g.AtLeastOneValueSet, "AllowedRecipients", "Comment"),
@@ -148,7 +149,7 @@ var NotificationIntegrationsDef = g.NewInterface(
 			OptionalSetTags().
 			OptionalUnsetTags().
 			WithValidation(g.ValidIdentifier, "name").
-			WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags"),
+			WithValidation(g.ExactlyOneValueSet, "Set", "UnsetEmailParams", "SetTags", "UnsetTags"),
 	).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-integration",

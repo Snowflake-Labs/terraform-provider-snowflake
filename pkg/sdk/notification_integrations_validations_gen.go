@@ -43,8 +43,8 @@ func (opts *AlterNotificationIntegrationOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterNotificationIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	if !exactlyOneValueSet(opts.Set, opts.UnsetEmailParams, opts.SetTags, opts.UnsetTags) {
+		errs = append(errs, errExactlyOneOf("AlterNotificationIntegrationOptions", "Set", "UnsetEmailParams", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Set) {
 		if everyValueSet(opts.Set.SetPushParams, opts.Set.SetEmailParams) {
@@ -64,9 +64,9 @@ func (opts *AlterNotificationIntegrationOptions) validate() error {
 			}
 		}
 	}
-	if valueSet(opts.Unset) {
-		if !anyValueSet(opts.Unset.AllowedRecipients, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterNotificationIntegrationOptions.Unset", "AllowedRecipients", "Comment"))
+	if valueSet(opts.UnsetEmailParams) {
+		if !anyValueSet(opts.UnsetEmailParams.AllowedRecipients, opts.UnsetEmailParams.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterNotificationIntegrationOptions.UnsetEmailParams", "AllowedRecipients", "Comment"))
 		}
 	}
 	return JoinErrors(errs...)

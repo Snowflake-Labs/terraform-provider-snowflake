@@ -149,10 +149,10 @@ func (r *AlterNotificationIntegrationRequest) toOpts() *AlterNotificationIntegra
 			}
 		}
 	}
-	if r.Unset != nil {
-		opts.Unset = &NotificationIntegrationUnset{
-			AllowedRecipients: r.Unset.AllowedRecipients,
-			Comment:           r.Unset.Comment,
+	if r.UnsetEmailParams != nil {
+		opts.UnsetEmailParams = &NotificationIntegrationUnsetEmailParams{
+			AllowedRecipients: r.UnsetEmailParams.AllowedRecipients,
+			Comment:           r.UnsetEmailParams.Comment,
 		}
 	}
 	return opts

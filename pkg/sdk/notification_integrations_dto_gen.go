@@ -64,12 +64,12 @@ type EmailParamsRequest struct {
 }
 
 type AlterNotificationIntegrationRequest struct {
-	IfExists  *bool
-	name      AccountObjectIdentifier // required
-	Set       *NotificationIntegrationSetRequest
-	Unset     *NotificationIntegrationUnsetRequest
-	SetTags   []TagAssociation
-	UnsetTags []ObjectIdentifier
+	IfExists         *bool
+	name             AccountObjectIdentifier // required
+	Set              *NotificationIntegrationSetRequest
+	UnsetEmailParams *NotificationIntegrationUnsetEmailParamsRequest
+	SetTags          []TagAssociation
+	UnsetTags        []ObjectIdentifier
 }
 
 type NotificationIntegrationSetRequest struct {
@@ -103,7 +103,7 @@ type SetEmailParamsRequest struct {
 	AllowedRecipients []NotificationIntegrationAllowedRecipient // required
 }
 
-type NotificationIntegrationUnsetRequest struct {
+type NotificationIntegrationUnsetEmailParamsRequest struct {
 	AllowedRecipients *bool
 	Comment           *bool
 }

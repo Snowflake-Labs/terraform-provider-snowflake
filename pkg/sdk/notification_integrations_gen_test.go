@@ -195,20 +195,20 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: exactly one field from [opts.Set opts.Unset opts.SetTags opts.UnsetTags] should be present", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Set opts.UnsetEmailParams opts.SetTags opts.UnsetTags] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNotificationIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNotificationIntegrationOptions", "Set", "UnsetEmailParams", "SetTags", "UnsetTags"))
 	})
 
-	t.Run("validation: exactly one field from [opts.Set opts.Unset opts.SetTags opts.UnsetTags] should be present - more present", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Set opts.UnsetEmailParams opts.SetTags opts.UnsetTags] should be present - more present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &NotificationIntegrationSet{
 			Enabled: Bool(true),
 		}
-		opts.Unset = &NotificationIntegrationUnset{
+		opts.UnsetEmailParams = &NotificationIntegrationUnsetEmailParams{
 			Comment: Bool(true),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNotificationIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNotificationIntegrationOptions", "Set", "UnsetEmailParams", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.Set.SetPushParams opts.Set.SetEmailParams]", func(t *testing.T) {
@@ -253,10 +253,10 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterNotificationIntegrationOptions.Set.SetEmailParams", "AllowedRecipients"))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Unset.AllowedRecipients opts.Unset.Comment] should be set", func(t *testing.T) {
+	t.Run("validation: at least one of the fields [opts.UnsetEmailParams.AllowedRecipients opts.UnsetEmailParams.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &NotificationIntegrationUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterNotificationIntegrationOptions.Unset", "AllowedRecipients", "Comment"))
+		opts.UnsetEmailParams = &NotificationIntegrationUnsetEmailParams{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterNotificationIntegrationOptions.UnsetEmailParams", "AllowedRecipients", "Comment"))
 	})
 
 	t.Run("set - auto", func(t *testing.T) {
@@ -332,7 +332,7 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 
 	t.Run("unset single", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &NotificationIntegrationUnset{
+		opts.UnsetEmailParams = &NotificationIntegrationUnsetEmailParams{
 			Comment: Bool(true),
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s UNSET COMMENT", id.FullyQualifiedName())
@@ -340,7 +340,7 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 
 	t.Run("unset multiple", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &NotificationIntegrationUnset{
+		opts.UnsetEmailParams = &NotificationIntegrationUnsetEmailParams{
 			AllowedRecipients: Bool(true),
 			Comment:           Bool(true),
 		}

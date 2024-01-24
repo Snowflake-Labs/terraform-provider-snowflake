@@ -150,8 +150,8 @@ func (s *AlterNotificationIntegrationRequest) WithSet(Set *NotificationIntegrati
 	return s
 }
 
-func (s *AlterNotificationIntegrationRequest) WithUnset(Unset *NotificationIntegrationUnsetRequest) *AlterNotificationIntegrationRequest {
-	s.Unset = Unset
+func (s *AlterNotificationIntegrationRequest) WithUnsetEmailParams(UnsetEmailParams *NotificationIntegrationUnsetEmailParamsRequest) *AlterNotificationIntegrationRequest {
+	s.UnsetEmailParams = UnsetEmailParams
 	return s
 }
 
@@ -244,16 +244,16 @@ func NewSetEmailParamsRequest(
 	return &s
 }
 
-func NewNotificationIntegrationUnsetRequest() *NotificationIntegrationUnsetRequest {
-	return &NotificationIntegrationUnsetRequest{}
+func NewNotificationIntegrationUnsetEmailParamsRequest() *NotificationIntegrationUnsetEmailParamsRequest {
+	return &NotificationIntegrationUnsetEmailParamsRequest{}
 }
 
-func (s *NotificationIntegrationUnsetRequest) WithAllowedRecipients(AllowedRecipients *bool) *NotificationIntegrationUnsetRequest {
+func (s *NotificationIntegrationUnsetEmailParamsRequest) WithAllowedRecipients(AllowedRecipients *bool) *NotificationIntegrationUnsetEmailParamsRequest {
 	s.AllowedRecipients = AllowedRecipients
 	return s
 }
 
-func (s *NotificationIntegrationUnsetRequest) WithComment(Comment *bool) *NotificationIntegrationUnsetRequest {
+func (s *NotificationIntegrationUnsetEmailParamsRequest) WithComment(Comment *bool) *NotificationIntegrationUnsetEmailParamsRequest {
 	s.Comment = Comment
 	return s
 }

@@ -82,14 +82,14 @@ type EmailParams struct {
 
 // AlterNotificationIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-notification-integration.
 type AlterNotificationIntegrationOptions struct {
-	alter                   bool                          `ddl:"static" sql:"ALTER"`
-	notificationIntegration bool                          `ddl:"static" sql:"NOTIFICATION INTEGRATION"`
-	IfExists                *bool                         `ddl:"keyword" sql:"IF EXISTS"`
-	name                    AccountObjectIdentifier       `ddl:"identifier"`
-	Set                     *NotificationIntegrationSet   `ddl:"keyword" sql:"SET"`
-	Unset                   *NotificationIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
-	SetTags                 []TagAssociation              `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags               []ObjectIdentifier            `ddl:"keyword" sql:"UNSET TAG"`
+	alter                   bool                                     `ddl:"static" sql:"ALTER"`
+	notificationIntegration bool                                     `ddl:"static" sql:"NOTIFICATION INTEGRATION"`
+	IfExists                *bool                                    `ddl:"keyword" sql:"IF EXISTS"`
+	name                    AccountObjectIdentifier                  `ddl:"identifier"`
+	Set                     *NotificationIntegrationSet              `ddl:"keyword" sql:"SET"`
+	UnsetEmailParams        *NotificationIntegrationUnsetEmailParams `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTags                 []TagAssociation                         `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags               []ObjectIdentifier                       `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 type NotificationIntegrationSet struct {
@@ -123,7 +123,7 @@ type SetEmailParams struct {
 	AllowedRecipients []NotificationIntegrationAllowedRecipient `ddl:"parameter,parentheses" sql:"ALLOWED_RECIPIENTS"`
 }
 
-type NotificationIntegrationUnset struct {
+type NotificationIntegrationUnsetEmailParams struct {
 	AllowedRecipients *bool `ddl:"keyword" sql:"ALLOWED_RECIPIENTS"`
 	Comment           *bool `ddl:"keyword" sql:"COMMENT"`
 }
