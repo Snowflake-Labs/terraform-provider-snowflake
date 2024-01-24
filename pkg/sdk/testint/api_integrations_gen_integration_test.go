@@ -15,12 +15,12 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	ctx := testContext(t)
 
 	// TODO [SNOW-1017580]: replace with real values when testing with external function invocation.
-	const awsAllowedPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/dev/"
-	const awsBlockedPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
-	const azureAllowedPrefix = "https://apim-hello-world.azure-api.net/dev"
-	const azureBlockedPrefix = "https://apim-hello-world.azure-api.net/prod"
-	const googleAllowedPrefix = "https://gateway-id-123456.uc.gateway.dev/prod"
-	const googleBlockedPrefix = "https://gateway-id-123456.uc.gateway.dev/dev"
+	const awsPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/dev/"
+	const awsOtherPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
+	const azurePrefix = "https://apim-hello-world.azure-api.net/dev"
+	const azureOtherPrefix = "https://apim-hello-world.azure-api.net/prod"
+	const googlePrefix = "https://gateway-id-123456.uc.gateway.dev/prod"
+	const googleOtherPrefix = "https://gateway-id-123456.uc.gateway.dev/dev"
 	const apiAwsRoleArn = "arn:aws:iam::000000000001:/role/test"
 	const azureTenantId = "00000000-0000-0000-0000-000000000000"
 	const azureAdApplicationId = "11111111-1111-1111-1111-111111111111"
@@ -50,7 +50,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		t.Helper()
 		id := sdk.RandomAccountObjectIdentifier()
 
-		return sdk.NewCreateApiIntegrationRequest(id, prefixes(awsAllowedPrefix), true).
+		return sdk.NewCreateApiIntegrationRequest(id, prefixes(awsPrefix), true).
 			WithAwsApiProviderParams(sdk.NewAwsApiParamsRequest(sdk.ApiIntegrationAwsApiGateway, apiAwsRoleArn))
 	}
 
@@ -58,7 +58,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		t.Helper()
 		id := sdk.RandomAccountObjectIdentifier()
 
-		return sdk.NewCreateApiIntegrationRequest(id, prefixes(azureAllowedPrefix), true).
+		return sdk.NewCreateApiIntegrationRequest(id, prefixes(azurePrefix), true).
 			WithAzureApiProviderParams(sdk.NewAzureApiParamsRequest(azureTenantId, azureAdApplicationId))
 	}
 
@@ -66,7 +66,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		t.Helper()
 		id := sdk.RandomAccountObjectIdentifier()
 
-		return sdk.NewCreateApiIntegrationRequest(id, prefixes(googleAllowedPrefix), true).
+		return sdk.NewCreateApiIntegrationRequest(id, prefixes(googlePrefix), true).
 			WithGoogleApiProviderParams(sdk.NewGoogleApiParamsRequest(googleAudience))
 	}
 
@@ -128,12 +128,19 @@ func TestInt_ApiIntegrations(t *testing.T) {
 
 		request = request.
 			WithAwsApiProviderParams(request.AwsApiProviderParams.WithApiKey(sdk.String("key"))).
-			WithApiBlockedPrefixes(prefixes(awsBlockedPrefix)).
+			WithApiBlockedPrefixes(prefixes(awsOtherPrefix)).
 			WithComment(sdk.String("comment"))
 
 		integration := createApiIntegrationWithRequest(t, request)
 
 		assertApiIntegration(t, integration, request.GetName(), "comment")
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "☺☺☺", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: awsOtherPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "comment", Default: ""})
 	})
 
 	t.Run("create api integration: azure more options", func(t *testing.T) {
@@ -141,22 +148,35 @@ func TestInt_ApiIntegrations(t *testing.T) {
 
 		request = request.
 			WithAzureApiProviderParams(request.AzureApiProviderParams.WithApiKey(sdk.String("key"))).
-			WithApiBlockedPrefixes(prefixes(azureBlockedPrefix)).
+			WithApiBlockedPrefixes(prefixes(azureOtherPrefix)).
 			WithComment(sdk.String("comment"))
 
 		integration := createApiIntegrationWithRequest(t, request)
 
 		assertApiIntegration(t, integration, request.GetName(), "comment")
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "☺☺☺", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: azureOtherPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "comment", Default: ""})
 	})
 
 	t.Run("create api integration: google more options", func(t *testing.T) {
 		request := createApiIntegrationGoogleRequest(t).
-			WithApiBlockedPrefixes(prefixes(googleBlockedPrefix)).
+			WithApiBlockedPrefixes(prefixes(googleOtherPrefix)).
 			WithComment(sdk.String("comment"))
 
 		integration := createApiIntegrationWithRequest(t, request)
 
 		assertApiIntegration(t, integration, request.GetName(), "comment")
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: googleOtherPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "comment", Default: ""})
 	})
 
 	t.Run("alter api integration: aws", func(t *testing.T) {
@@ -168,8 +188,8 @@ func TestInt_ApiIntegrations(t *testing.T) {
 				sdk.NewApiIntegrationSetRequest().
 					WithAwsParams(sdk.NewSetAwsApiParamsRequest().WithApiAwsRoleArn(sdk.String(otherRoleArn)).WithApiKey(sdk.String("key"))).
 					WithEnabled(sdk.Bool(true)).
-					WithApiAllowedPrefixes(prefixes(awsBlockedPrefix)).
-					WithApiBlockedPrefixes(prefixes(awsAllowedPrefix)).
+					WithApiAllowedPrefixes(prefixes(awsOtherPrefix)).
+					WithApiBlockedPrefixes(prefixes(awsPrefix)).
 					WithComment(sdk.String("changed comment")),
 			)
 		err := client.ApiIntegrations.Alter(ctx, setRequest)
@@ -181,8 +201,8 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "☺☺☺", Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_AWS_ROLE_ARN", Type: "String", Value: otherRoleArn, Default: ""})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: awsBlockedPrefix, Default: "[]"})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: awsAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: awsOtherPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: awsPrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
 
 		unsetRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
@@ -202,7 +222,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_AWS_ROLE_ARN", Type: "String", Value: otherRoleArn, Default: ""})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: awsBlockedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: awsOtherPrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
@@ -216,8 +236,8 @@ func TestInt_ApiIntegrations(t *testing.T) {
 				sdk.NewApiIntegrationSetRequest().
 					WithAzureParams(sdk.NewSetAzureApiParamsRequest().WithAzureAdApplicationId(sdk.String(otherAdApplicationId)).WithApiKey(sdk.String("key"))).
 					WithEnabled(sdk.Bool(true)).
-					WithApiAllowedPrefixes(prefixes(azureBlockedPrefix)).
-					WithApiBlockedPrefixes(prefixes(azureAllowedPrefix)).
+					WithApiAllowedPrefixes(prefixes(azureOtherPrefix)).
+					WithApiBlockedPrefixes(prefixes(azurePrefix)).
 					WithComment(sdk.String("changed comment")),
 			)
 		err := client.ApiIntegrations.Alter(ctx, setRequest)
@@ -229,8 +249,8 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "☺☺☺", Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "AZURE_AD_APPLICATION_ID", Type: "String", Value: otherAdApplicationId, Default: ""})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: azureBlockedPrefix, Default: "[]"})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: azureAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: azureOtherPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: azurePrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
 
 		unsetRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
@@ -250,7 +270,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "AZURE_AD_APPLICATION_ID", Type: "String", Value: otherAdApplicationId, Default: ""})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: azureBlockedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: azureOtherPrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
@@ -262,8 +282,8 @@ func TestInt_ApiIntegrations(t *testing.T) {
 			WithSet(
 				sdk.NewApiIntegrationSetRequest().
 					WithEnabled(sdk.Bool(true)).
-					WithApiAllowedPrefixes(prefixes(googleBlockedPrefix)).
-					WithApiBlockedPrefixes(prefixes(googleAllowedPrefix)).
+					WithApiAllowedPrefixes(prefixes(googleOtherPrefix)).
+					WithApiBlockedPrefixes(prefixes(googlePrefix)).
 					WithComment(sdk.String("changed comment")),
 			)
 		err := client.ApiIntegrations.Alter(ctx, setRequest)
@@ -273,8 +293,8 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googleBlockedPrefix, Default: "[]"})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: googleAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googleOtherPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: googlePrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "changed comment", Default: ""})
 
 		unsetRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
@@ -292,7 +312,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googleBlockedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googleOtherPrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
@@ -391,7 +411,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_PROVIDER", Type: "String", Value: strings.ToUpper(string(sdk.ApiIntegrationAwsApiGateway)), Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_AWS_ROLE_ARN", Type: "String", Value: apiAwsRoleArn, Default: ""})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: awsAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: awsPrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
@@ -407,7 +427,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "AZURE_AD_APPLICATION_ID", Type: "String", Value: azureAdApplicationId, Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_PROVIDER", Type: "String", Value: "AZURE_API_MANAGEMENT", Default: ""})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: azureAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: azurePrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
@@ -422,7 +442,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_PROVIDER", Type: "String", Value: "GOOGLE_API_GATEWAY", Default: ""})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "GOOGLE_AUDIENCE", Type: "String", Value: googleAudience, Default: ""})
-		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googleAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googlePrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
