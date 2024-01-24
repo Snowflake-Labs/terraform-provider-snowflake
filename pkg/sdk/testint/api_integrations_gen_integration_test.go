@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -28,6 +29,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	prefixes := func(prefix string) []sdk.ApiIntegrationEndpointPrefix {
 		return []sdk.ApiIntegrationEndpointPrefix{{Path: prefix}}
 	}
+
 	assertApiIntegration := func(t *testing.T, s *sdk.ApiIntegration, name sdk.AccountObjectIdentifier, comment string) {
 		t.Helper()
 		assert.Equal(t, name.Name(), s.Name)
@@ -218,14 +220,55 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	})
 
 	t.Run("describe api integration: aws", func(t *testing.T) {
-		// TODO: fill me
+		integration := createAwsApiIntegration(t)
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_PROVIDER", Type: "String", Value: strings.ToUpper(string(sdk.ApiIntegrationAwsApiGateway)), Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_AWS_ROLE_ARN", Type: "String", Value: apiAwsRoleArn, Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: awsAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("describe api integration: azure", func(t *testing.T) {
-		// TODO: fill me
+		integration := createAzureApiIntegration(t)
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "AZURE_TENANT_ID", Type: "String", Value: azureTenantId, Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "AZURE_AD_APPLICATION_ID", Type: "String", Value: azureAdApplicationId, Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_PROVIDER", Type: "String", Value: "AZURE_API_MANAGEMENT", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: azureAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("describe api integration: google", func(t *testing.T) {
-		// TODO: fill me
+		integration := createGoogleApiIntegration(t)
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_KEY", Type: "String", Value: "", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_PROVIDER", Type: "String", Value: "GOOGLE_API_GATEWAY", Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "GOOGLE_AUDIENCE", Type: "String", Value: googleAudience, Default: ""})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googleAllowedPrefix, Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+	})
+
+	t.Run("describe api integration: non-existing", func(t *testing.T) {
+		id := sdk.NewAccountObjectIdentifier("does_not_exist")
+
+		_, err := client.ApiIntegrations.Describe(ctx, id)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
