@@ -7,6 +7,7 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 var NotificationIntegrationAllowedRecipientDef = g.NewQueryStruct("NotificationIntegrationAllowedRecipient").
 	Text("Email", g.KeywordOptions().SingleQuotes().Required())
 
+// TODO [SNOW-1016561]: all integrations reuse almost the same show, drop, and describe. For now we are copying it. Consider reusing in linked issue.
 var NotificationIntegrationsDef = g.NewInterface(
 	"NotificationIntegrations",
 	"NotificationIntegration",
