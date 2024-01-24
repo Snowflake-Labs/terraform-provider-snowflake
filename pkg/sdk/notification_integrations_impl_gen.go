@@ -38,8 +38,9 @@ func (v *notificationIntegrations) Show(ctx context.Context, request *ShowNotifi
 }
 
 func (v *notificationIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*NotificationIntegration, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	notificationIntegrations, err := v.Show(ctx, NewShowNotificationIntegrationRequest())
+	notificationIntegrations, err := v.Show(ctx, NewShowNotificationIntegrationRequest().WithLike(&Like{
+		Pattern: String(id.Name()),
+	}))
 	if err != nil {
 		return nil, err
 	}
@@ -173,8 +174,17 @@ func (r *ShowNotificationIntegrationRequest) toOpts() *ShowNotificationIntegrati
 }
 
 func (r showNotificationIntegrationsDbRow) convert() *NotificationIntegration {
-	// TODO: Mapping
-	return &NotificationIntegration{}
+	s := &NotificationIntegration{
+		Name:             r.Name,
+		NotificationType: r.Type,
+		Category:         r.Category,
+		Enabled:          r.Enabled,
+		CreatedOn:        r.CreatedOn,
+	}
+	if r.Comment.Valid {
+		s.Comment = r.Comment.String
+	}
+	return s
 }
 
 func (r *DescribeNotificationIntegrationRequest) toOpts() *DescribeNotificationIntegrationOptions {
@@ -185,6 +195,10 @@ func (r *DescribeNotificationIntegrationRequest) toOpts() *DescribeNotificationI
 }
 
 func (r descNotificationIntegrationsDbRow) convert() *NotificationIntegrationProperty {
-	// TODO: Mapping
-	return &NotificationIntegrationProperty{}
+	return &NotificationIntegrationProperty{
+		Name:    r.Property,
+		Type:    r.PropertyType,
+		Value:   r.PropertyValue,
+		Default: r.PropertyDefault,
+	}
 }
