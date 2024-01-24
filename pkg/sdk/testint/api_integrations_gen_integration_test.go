@@ -82,6 +82,21 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		return integration
 	}
 
+	createAwsApiIntegration := func(t *testing.T) *sdk.ApiIntegration {
+		t.Helper()
+		return createApiIntegrationWithRequest(t, createApiIntegrationAwsRequest(t))
+	}
+
+	createAzureApiIntegration := func(t *testing.T) *sdk.ApiIntegration {
+		t.Helper()
+		return createApiIntegrationWithRequest(t, createApiIntegrationAzureRequest(t))
+	}
+
+	createGoogleApiIntegration := func(t *testing.T) *sdk.ApiIntegration {
+		t.Helper()
+		return createApiIntegrationWithRequest(t, createApiIntegrationGoogleRequest(t))
+	}
+
 	t.Run("create api integration: aws basic", func(t *testing.T) {
 		request := createApiIntegrationAwsRequest(t)
 
@@ -176,11 +191,30 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	})
 
 	t.Run("show api integration: default", func(t *testing.T) {
-		// TODO: fill me
+		integrationAws := createAwsApiIntegration(t)
+		integrationAzure := createAzureApiIntegration(t)
+		integrationGoogle := createGoogleApiIntegration(t)
+
+		showRequest := sdk.NewShowApiIntegrationRequest()
+		returnedIntegrations, err := client.ApiIntegrations.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Contains(t, returnedIntegrations, *integrationAws)
+		assert.Contains(t, returnedIntegrations, *integrationAzure)
+		assert.Contains(t, returnedIntegrations, *integrationGoogle)
 	})
 
 	t.Run("show api integration: with options", func(t *testing.T) {
-		// TODO: fill me
+		integrationAws := createAwsApiIntegration(t)
+		integrationAzure := createAzureApiIntegration(t)
+
+		showRequest := sdk.NewShowApiIntegrationRequest().
+			WithLike(&sdk.Like{Pattern: &integrationAws.Name})
+		returnedIntegrations, err := client.ApiIntegrations.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Contains(t, returnedIntegrations, *integrationAws)
+		assert.NotContains(t, returnedIntegrations, *integrationAzure)
 	})
 
 	t.Run("describe api integration: aws", func(t *testing.T) {
