@@ -235,12 +235,14 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		// TODO: fill me
 	})
 
+	// TODO [SNOW-]: implement after "create and describe notification integration - push google" succeeds
 	t.Run("alter notification integration: push google", func(t *testing.T) {
-		// TODO: fill me
+		t.Skip(`Skipping because "create and describe notification integration - push google" creation test is failing`)
 	})
 
+	// TODO [SNOW-]: implement after "create and describe notification integration - push azure" succeeds
 	t.Run("alter notification integration: push azure", func(t *testing.T) {
-		// TODO: fill me
+		t.Skip(`Skipping because "create and describe notification integration - push azure" creation test is failing`)
 	})
 
 	t.Run("alter notification integration: email", func(t *testing.T) {
