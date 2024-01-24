@@ -148,4 +148,54 @@ var NotificationIntegrationsDef = g.NewInterface(
 			OptionalUnsetTags().
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ExactlyOneValueSet, "Set", "Unset", "SetTags", "UnsetTags"),
+	).
+	DropOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/drop-integration",
+		g.NewQueryStruct("DropNotificationIntegration").
+			Drop().
+			SQL("NOTIFICATION INTEGRATION").
+			IfExists().
+			Name().
+			WithValidation(g.ValidIdentifier, "name"),
+	).
+	ShowOperation(
+		"https://docs.snowflake.com/en/sql-reference/sql/show-integrations",
+		g.DbStruct("showNotificationIntegrationsDbRow").
+			Text("name").
+			Text("type").
+			Text("category").
+			Bool("enabled").
+			OptionalText("comment").
+			Time("created_on"),
+		g.PlainStruct("NotificationIntegration").
+			Text("Name").
+			Text("NotificationType").
+			Text("Category").
+			Bool("Enabled").
+			Text("Comment").
+			Time("CreatedOn"),
+		g.NewQueryStruct("ShowNotificationIntegrations").
+			Show().
+			SQL("NOTIFICATION INTEGRATIONS").
+			OptionalLike(),
+	).
+	ShowByIdOperation().
+	DescribeOperation(
+		g.DescriptionMappingKindSlice,
+		"https://docs.snowflake.com/en/sql-reference/sql/desc-integration",
+		g.DbStruct("descNotificationIntegrationsDbRow").
+			Text("property").
+			Text("property_type").
+			Text("property_value").
+			Text("property_default"),
+		g.PlainStruct("NotificationIntegrationProperty").
+			Text("Name").
+			Text("Type").
+			Text("Value").
+			Text("Default"),
+		g.NewQueryStruct("DescribeNotificationIntegration").
+			Describe().
+			SQL("NOTIFICATION INTEGRATION").
+			Name().
+			WithValidation(g.ValidIdentifier, "name"),
 	)
