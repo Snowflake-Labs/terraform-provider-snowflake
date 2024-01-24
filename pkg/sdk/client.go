@@ -42,6 +42,7 @@ type Client struct {
 	Alerts              Alerts
 	ApplicationPackages ApplicationPackages
 	ApplicationRoles    ApplicationRoles
+	Applications        Applications
 	Comments            Comments
 	DatabaseRoles       DatabaseRoles
 	Databases           Databases
@@ -64,6 +65,7 @@ type Client struct {
 	Roles               Roles
 	RowAccessPolicies   RowAccessPolicies
 	Schemas             Schemas
+	Sequences           Sequences
 	SessionPolicies     SessionPolicies
 	Sessions            Sessions
 	Shares              Shares
@@ -186,6 +188,7 @@ func (c *Client) initialize() {
 	c.Alerts = &alerts{client: c}
 	c.ApplicationPackages = &applicationPackages{client: c}
 	c.ApplicationRoles = &applicationRoles{client: c}
+	c.Applications = &applications{client: c}
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
@@ -211,6 +214,7 @@ func (c *Client) initialize() {
 	c.Roles = &roles{client: c}
 	c.RowAccessPolicies = &rowAccessPolicies{client: c}
 	c.Schemas = &schemas{client: c}
+	c.Sequences = &sequences{client: c}
 	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}

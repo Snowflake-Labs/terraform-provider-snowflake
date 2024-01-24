@@ -120,6 +120,7 @@ func (itc *integrationTestContext) initialize() error {
 	if err != nil {
 		return err
 	}
+
 	secondaryClient, err := sdk.NewClient(config)
 	if err != nil {
 		return err
