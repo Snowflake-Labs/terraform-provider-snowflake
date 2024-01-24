@@ -4,11 +4,11 @@ import "testing"
 
 // TODO: extract
 const (
-	gcpPubsubSubscriptionName   = "TODO"
-	gcpPubsubTopicName          = "TODO"
-	azureStorageQueuePrimaryUri = "TODO"
+	gcpPubsubSubscriptionName   = "projects/project-1234/subscriptions/sub2"
+	gcpPubsubTopicName          = "projects/project-1234/topics/top2"
+	azureStorageQueuePrimaryUri = "azure://great-bucket/great-path/"
 	azureEventGridTopicEndpoint = "TODO"
-	awsSnsTopicArn              = "TODO"
+	awsSnsTopicArn              = "arn:aws:sns:us-east-2:123456789012:MyTopic"
 )
 
 func TestNotificationIntegrations_Create(t *testing.T) {
