@@ -17,6 +17,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 	ctx := testContext(t)
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
+	const gcpPubsubTopicName = "projects/project-1234/topics/top2"
 	const azureStorageQueuePrimaryUri = "azure://great-bucket/great-path/"
 	const azureTenantId = "00000000-0000-0000-0000-000000000000"
 	const awsSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:MyTopic"
@@ -60,6 +61,14 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
 			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithAmazonPush(sdk.NewAmazonPushRequest(awsSnsTopicArn, awsSnsRoleArn)))
+	}
+
+	createNotificationIntegrationPushGoogleRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
+		t.Helper()
+		id := sdk.RandomAccountObjectIdentifier()
+
+		return sdk.NewCreateNotificationIntegrationRequest(id, true).
+			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithGooglePush(sdk.NewGooglePushRequest(gcpPubsubTopicName)))
 	}
 
 	createNotificationIntegrationWithRequest := func(t *testing.T, request *sdk.CreateNotificationIntegrationRequest) *sdk.NotificationIntegration {
@@ -125,8 +134,23 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
+	// TODO [SNOW-]: check the error 001422 (22023): SQL compilation error: invalid value 'OUTBOUND' for property 'Direction'
 	t.Run("create and describe notification integration - push google", func(t *testing.T) {
-		// TODO: fill me
+		t.Skip("Skipping because of the error: 001422 (22023): SQL compilation error: invalid value 'OUTBOUND' for property 'Direction'")
+		request := createNotificationIntegrationPushGoogleRequest(t)
+
+		integration := createNotificationIntegrationWithRequest(t, request)
+
+		assertNotificationIntegration(t, integration, request.GetName(), "QUEUE - GCP_PUBSUB", "")
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "NOTIFICATION_PROVIDER", Type: "String", Value: "GCP_PUBSUB", Default: ""})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "DIRECTION", Type: "String", Value: "OUTBOUND", Default: "INBOUND"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "GCP_PUBSUB_TOPIC_NAME", Type: "String", Value: gcpPubsubTopicName, Default: ""})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
 	t.Run("create and describe notification integration - push azure", func(t *testing.T) {
