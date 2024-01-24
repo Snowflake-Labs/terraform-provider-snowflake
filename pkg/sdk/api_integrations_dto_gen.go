@@ -63,7 +63,7 @@ type SetAwsApiParamsRequest struct {
 }
 
 type SetAzureApiParamsRequest struct {
-	AzureAdApplicationId string // required
+	AzureAdApplicationId *string
 	ApiKey               *string
 }
 

@@ -170,12 +170,13 @@ func (s *SetAwsApiParamsRequest) WithApiKey(ApiKey *string) *SetAwsApiParamsRequ
 	return s
 }
 
-func NewSetAzureApiParamsRequest(
-	AzureAdApplicationId string,
-) *SetAzureApiParamsRequest {
-	s := SetAzureApiParamsRequest{}
+func NewSetAzureApiParamsRequest() *SetAzureApiParamsRequest {
+	return &SetAzureApiParamsRequest{}
+}
+
+func (s *SetAzureApiParamsRequest) WithAzureAdApplicationId(AzureAdApplicationId *string) *SetAzureApiParamsRequest {
 	s.AzureAdApplicationId = AzureAdApplicationId
-	return &s
+	return s
 }
 
 func (s *SetAzureApiParamsRequest) WithApiKey(ApiKey *string) *SetAzureApiParamsRequest {

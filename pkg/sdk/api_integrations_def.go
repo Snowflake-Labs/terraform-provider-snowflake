@@ -83,7 +83,7 @@ var ApiIntegrationsDef = g.NewInterface(
 					OptionalQueryStructField(
 						"AzureParams",
 						g.NewQueryStruct("SetAzureApiParams").
-							TextAssignment("AZURE_AD_APPLICATION_ID", g.ParameterOptions().SingleQuotes()).
+							OptionalTextAssignment("AZURE_AD_APPLICATION_ID", g.ParameterOptions().SingleQuotes()).
 							OptionalTextAssignment("API_KEY", g.ParameterOptions().SingleQuotes()).
 							WithValidation(g.AtLeastOneValueSet, "AzureAdApplicationId", "ApiKey"),
 						g.KeywordOptions(),
