@@ -192,56 +192,184 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = NewAccountObjectIdentifier("")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.Set opts.Unset opts.SetTags opts.UnsetTags] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNotificationIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Set opts.Unset opts.SetTags opts.UnsetTags] should be present - more present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &NotificationIntegrationSet{
+			Enabled: Bool(true),
+		}
+		opts.Unset = &NotificationIntegrationUnset{
+			Comment: Bool(true),
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNotificationIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: conflicting fields for [opts.Set.SetPushParams opts.Set.SetEmailParams]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Set = &NotificationIntegrationSet{
+			SetPushParams:  &SetPushParams{},
+			SetEmailParams: &SetEmailParams{},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterNotificationIntegrationOptions.Set", "SetPushParams", "SetEmailParams"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.Enabled opts.Set.SetPushParams opts.Set.SetEmailParams opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Set = &NotificationIntegrationSet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterNotificationIntegrationOptions.Set", "Enabled", "SetPushParams", "SetEmailParams", "Comment"))
 	})
 
 	t.Run("validation: exactly one field from [opts.Set.SetPushParams.SetAmazonPush opts.Set.SetPushParams.SetGooglePush opts.Set.SetPushParams.SetAzurePush] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Set = &NotificationIntegrationSet{
+			SetPushParams: &SetPushParams{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNotificationIntegrationOptions.Set.SetPushParams", "SetAmazonPush", "SetGooglePush", "SetAzurePush"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Set.SetPushParams.SetAmazonPush opts.Set.SetPushParams.SetGooglePush opts.Set.SetPushParams.SetAzurePush] should be present - more present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &NotificationIntegrationSet{
+			SetPushParams: &SetPushParams{
+				SetAmazonPush: &SetAmazonPush{},
+				SetGooglePush: &SetGooglePush{},
+			},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterNotificationIntegrationOptions.Set.SetPushParams", "SetAmazonPush", "SetGooglePush", "SetAzurePush"))
 	})
 
 	t.Run("validation: [opts.Set.SetEmailParams.AllowedRecipients] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Set = &NotificationIntegrationSet{
+			SetEmailParams: &SetEmailParams{},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("AlterNotificationIntegrationOptions.Set.SetEmailParams", "AllowedRecipients"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.AllowedRecipients opts.Unset.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.Unset = &NotificationIntegrationUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterNotificationIntegrationOptions.Unset", "AllowedRecipients", "Comment"))
 	})
 
-	t.Run("basic", func(t *testing.T) {
+	t.Run("set - auto", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Set = &NotificationIntegrationSet{
+			Enabled: Bool(true),
+			Comment: String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("set - push amazon", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Set = &NotificationIntegrationSet{
+			Enabled: Bool(true),
+			SetPushParams: &SetPushParams{
+				SetAmazonPush: &SetAmazonPush{
+					AwsSnsTopicArn: awsSnsTopicArn,
+					AwsSnsRoleArn:  apiAwsRoleArn,
+				},
+			},
+			Comment: String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true AWS_SNS_TOPIC_ARN = '%s' AWS_SNS_ROLE_ARN = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), awsSnsTopicArn, apiAwsRoleArn)
+	})
+
+	t.Run("set - push google", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &NotificationIntegrationSet{
+			Enabled: Bool(true),
+			SetPushParams: &SetPushParams{
+				SetGooglePush: &SetGooglePush{
+					GcpPubsubSubscriptionName: gcpPubsubSubscriptionName,
+				},
+			},
+			Comment: String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true GCP_PUBSUB_SUBSCRIPTION_NAME = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), gcpPubsubSubscriptionName)
+	})
+
+	t.Run("set - push azure", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &NotificationIntegrationSet{
+			Enabled: Bool(true),
+			SetPushParams: &SetPushParams{
+				SetAzurePush: &SetAzurePush{
+					AzureStorageQueuePrimaryUri: azureStorageQueuePrimaryUri,
+					AzureTenantId:               azureTenantId,
+				},
+			},
+			Comment: String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true AZURE_STORAGE_QUEUE_PRIMARY_URI = '%s' AZURE_TENANT_ID = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), azureStorageQueuePrimaryUri, azureTenantId)
+	})
+
+	t.Run("set - email", func(t *testing.T) {
+		email := "some.email@some.com"
+		otherEmail := "some.other.email@some.com"
+
+		opts := defaultOpts()
+		opts.Set = &NotificationIntegrationSet{
+			Enabled: Bool(true),
+			SetEmailParams: &SetEmailParams{
+				AllowedRecipients: []NotificationIntegrationAllowedRecipient{
+					{Email: email},
+					{Email: otherEmail},
+				},
+			},
+			Comment: String("some comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true ALLOWED_RECIPIENTS = ('%s', '%s') COMMENT = 'some comment'", id.FullyQualifiedName(), email, otherEmail)
+	})
+
+	t.Run("unset single", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &NotificationIntegrationUnset{
+			Comment: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s UNSET COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("unset multiple", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &NotificationIntegrationUnset{
+			AllowedRecipients: Bool(true),
+			Comment:           Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s UNSET ALLOWED_RECIPIENTS, COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("name"),
+				Value: "value",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("second-name"),
+				Value: "second-value",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER NOTIFICATION INTEGRATION %s SET TAG "name" = 'value', "second-name" = 'second-value'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("name"),
+			NewAccountObjectIdentifier("second-name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER NOTIFICATION INTEGRATION %s UNSET TAG "name", "second-name"`, id.FullyQualifiedName())
 	})
 }
 
