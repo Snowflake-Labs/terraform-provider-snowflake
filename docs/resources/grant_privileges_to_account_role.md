@@ -32,16 +32,16 @@ resource "snowflake_role" "db_role" {
 
 # list of privileges
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["CREATE DATABASE", "CREATE USER"]
-  role_name  = snowflake_role.db_role.name
-  on_account = true
+  privileges        = ["CREATE DATABASE", "CREATE USER"]
+  account_role_name = snowflake_role.db_role.name
+  on_account        = true
 }
 
 ## ID: "\"role_name\"|false|false|CREATE DATABASE,CREATE USER|OnAccount"
 
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  role_name         = snowflake_role.db_role.name
+  account_role_name = snowflake_role.db_role.name
   on_account        = true
   all_privileges    = true
   with_grant_option = true
@@ -51,7 +51,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  role_name         = snowflake_role.db_role.name
+  account_role_name = snowflake_role.db_role.name
   on_account        = true
   always_apply      = true
   all_privileges    = true
@@ -66,8 +66,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # list of privileges
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["CREATE SCHEMA", "CREATE DATABASE ROLE"]
-  role_name  = snowflake_role.db_role.name
+  privileges        = ["CREATE SCHEMA", "CREATE DATABASE ROLE"]
+  account_role_name = snowflake_role.db_role.name
   on_account_object {
     object_type = "DATABASE"
     object_name = snowflake_database.db.name
@@ -78,7 +78,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  role_name = snowflake_role.db_role.name
+  account_role_name = snowflake_role.db_role.name
   on_account_object {
     object_type = "DATABASE"
     object_name = snowflake_database.db.name
@@ -91,7 +91,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  role_name = snowflake_role.db_role.name
+  account_role_name = snowflake_role.db_role.name
   on_account_object {
     object_type = "DATABASE"
     object_name = snowflake_database.db.name
@@ -109,8 +109,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # list of privileges
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["MODIFY", "CREATE TABLE"]
-  role_name  = snowflake_role.db_role.name
+  privileges        = ["MODIFY", "CREATE TABLE"]
+  account_role_name = snowflake_role.db_role.name
   on_schema {
     schema_name = "\"${snowflake_database.db.name}\".\"my_schema\"" # note this is a fully qualified name!
   }
@@ -120,7 +120,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  role_name = snowflake_role.db_role.name
+  account_role_name = snowflake_role.db_role.name
   on_schema {
     schema_name = "\"${snowflake_database.db.name}\".\"my_schema\"" # note this is a fully qualified name!
   }
@@ -132,8 +132,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # all schemas in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["MODIFY", "CREATE TABLE"]
-  role_name  = snowflake_role.db_role.name
+  privileges        = ["MODIFY", "CREATE TABLE"]
+  account_role_name = snowflake_role.db_role.name
   on_schema {
     all_schemas_in_database = snowflake_database.db.name
   }
@@ -143,8 +143,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # future schemas in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["MODIFY", "CREATE TABLE"]
-  role_name  = snowflake_role.db_role.name
+  privileges        = ["MODIFY", "CREATE TABLE"]
+  account_role_name = snowflake_role.db_role.name
   on_schema {
     future_schemas_in_database = snowflake_database.db.name
   }
@@ -158,8 +158,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # list of privileges
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["SELECT", "REFERENCES"]
-  role_name  = snowflake_role.db_role.name
+  privileges        = ["SELECT", "REFERENCES"]
+  account_role_name = snowflake_role.db_role.name
   on_schema_object {
     object_type = "VIEW"
     object_name = "\"${snowflake_database.db.name}\".\"my_schema\".\"my_view\"" # note this is a fully qualified name!
@@ -170,7 +170,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  role_name = snowflake_role.db_role.name
+  account_role_name = snowflake_role.db_role.name
   on_schema_object {
     object_type = "VIEW"
     object_name = "\"${snowflake_database.db.name}\".\"my_schema\".\"my_view\"" # note this is a fully qualified name!
@@ -183,8 +183,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # all in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["SELECT", "INSERT"]
-  role_name  = snowflake_role.db_role.name
+  privileges        = ["SELECT", "INSERT"]
+  account_role_name = snowflake_role.db_role.name
   on_schema_object {
     all {
       object_type_plural = "TABLES"
@@ -197,8 +197,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # all in schema
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["SELECT", "INSERT"]
-  role_name  = snowflake_role.db_role.name
+  privileges        = ["SELECT", "INSERT"]
+  account_role_name = snowflake_role.db_role.name
   on_schema_object {
     all {
       object_type_plural = "TABLES"
@@ -211,8 +211,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # future in database
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["SELECT", "INSERT"]
-  role_name  = snowflake_role.db_role.name
+  privileges        = ["SELECT", "INSERT"]
+  account_role_name = snowflake_role.db_role.name
   on_schema_object {
     future {
       object_type_plural = "TABLES"
@@ -225,8 +225,8 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 # future in schema
 resource "snowflake_grant_privileges_to_account_role" "example" {
-  privileges = ["SELECT", "INSERT"]
-  role_name  = snowflake_role.db_role.name
+  privileges        = ["SELECT", "INSERT"]
+  account_role_name = snowflake_role.db_role.name
   on_schema_object {
     future {
       object_type_plural = "TABLES"
