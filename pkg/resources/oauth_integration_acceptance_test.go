@@ -21,7 +21,7 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: oauthIntegrationConfig(name, oauthClient, clientType),
+				Config: oauthIntegrationConfig(name, oauthClient, clientType, "SYSADMIN"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "oauth_client", oauthClient),
@@ -33,6 +33,15 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 				),
 			},
 			{
+				// role change proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2358 issue
+				Config: oauthIntegrationConfig(name, oauthClient, clientType, "USERADMIN"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "blocked_roles_list.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_oauth_integration.test", "blocked_roles_list.0", "USERADMIN"),
+				),
+			},
+			{
 				ResourceName:      "snowflake_oauth_integration.test",
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -41,7 +50,7 @@ func TestAcc_OAuthIntegration(t *testing.T) {
 	})
 }
 
-func oauthIntegrationConfig(name, oauthClient, clientType string) string {
+func oauthIntegrationConfig(name, oauthClient, clientType string, blockedRole string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_oauth_integration" "test" {
 		name                         = "%s"
@@ -51,9 +60,9 @@ func oauthIntegrationConfig(name, oauthClient, clientType string) string {
 		enabled                      = true
   		oauth_issue_refresh_tokens   = true
   		oauth_refresh_token_validity = 3600
-  		blocked_roles_list           = ["SYSADMIN"]
+  		blocked_roles_list           = ["%s"]
 	}
-	`, name, oauthClient, clientType)
+	`, name, oauthClient, clientType, blockedRole)
 }
 
 func TestAcc_OAuthIntegrationTableau(t *testing.T) {
