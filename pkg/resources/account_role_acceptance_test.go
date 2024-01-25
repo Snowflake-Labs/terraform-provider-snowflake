@@ -66,7 +66,7 @@ func TestAcc_AccountRole_updates(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	newName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	NewComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	NewComment := "updated comment with 'single' quotes"
 	resourceName := "snowflake_account_role.test"
 
 	resource.Test(t, resource.TestCase{
