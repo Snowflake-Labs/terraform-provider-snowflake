@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
@@ -124,16 +123,6 @@ func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	return ReadManagedAccount(d, meta)
 }
 
-// initialReadManagedAccount is used for the first read, since the locator takes
-// some time to appear. This is currently implemented as a sleep. @TODO actually
-// wait until the locator is generated.
-func initialReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
-	log.Println("[INFO] sleeping to give the locator a chance to be generated")
-	// lintignore:R018
-	time.Sleep(10 * time.Second)
-	return ReadManagedAccount(d, meta)
-}
-
 // ReadManagedAccount implements schema.ReadFunc.
 func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -142,12 +131,20 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	managedAccount, err := client.ManagedAccounts.ShowByID(ctx, objectIdentifier)
+	// We have to wait during the first read, since the locator takes some time to appear.
+	// This approach has a downside of not handling correctly the situation where managed account was removed externally.
+	// TODO [SNOW-1003380]: discuss it as a provider-wide topic during resources redesign.
+	var managedAccount *sdk.ManagedAccount
+	var err error
+	err = helpers.Retry(5, 3*time.Second, func() (error, bool) {
+		managedAccount, err = client.ManagedAccounts.ShowByID(ctx, objectIdentifier)
+		if err != nil {
+			return nil, false
+		}
+		return nil, true
+	})
 	if err != nil {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] managed account (%s) not found", d.Id())
-		d.SetId("")
-		return nil
+		return err
 	}
 
 	if err := d.Set("name", managedAccount.Name); err != nil {
