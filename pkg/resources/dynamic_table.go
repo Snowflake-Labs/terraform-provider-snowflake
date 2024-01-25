@@ -200,11 +200,6 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	// trim up to " ..AS" and remove whitespace
-	query := strings.TrimSpace(text[strings.Index(text, "AS")+3:])
-	if err := d.Set("query", query); err != nil {
-		return err
-	}
 	if err := d.Set("cluster_by", dynamicTable.ClusterBy); err != nil {
 		return err
 	}
