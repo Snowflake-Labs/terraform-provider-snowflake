@@ -1,14 +1,16 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -16,13 +18,6 @@ import (
 const (
 	SnowflakeReaderAccountType = "READER"
 )
-
-var managedAccountProperties = []string{
-	"admin_name",
-	"admin_password",
-	"type",
-	"comment",
-}
 
 var managedAccountSchema = map[string]*schema.Schema{
 	"name": {
@@ -102,13 +97,31 @@ func ManagedAccount() *schema.Resource {
 
 // CreateManagedAccount implements schema.CreateFunc.
 func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
-	return CreateResource(
-		"this does not seem to be used",
-		managedAccountProperties,
-		managedAccountSchema,
-		snowflake.NewManagedAccountBuilder,
-		initialReadManagedAccount,
-	)(d, meta)
+	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
+	name := d.Get("name").(string)
+	id := sdk.NewAccountObjectIdentifier(name)
+
+	adminName := d.Get("admin_name").(string)
+	adminPassword := d.Get("admin_password").(string)
+	createParams := sdk.NewCreateManagedAccountParamsRequest(adminName, adminPassword)
+
+	if v, ok := d.GetOk("comment"); ok {
+		createParams.WithComment(sdk.String(v.(string)))
+	}
+
+	createRequest := sdk.NewCreateManagedAccountRequest(id, *createParams)
+
+	err := client.ManagedAccounts.Create(ctx, createRequest)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(helpers.EncodeSnowflakeID(id))
+
+	return ReadManagedAccount(d, meta)
 }
 
 // initialReadManagedAccount is used for the first read, since the locator takes
@@ -124,47 +137,44 @@ func initialReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 // ReadManagedAccount implements schema.ReadFunc.
 func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
+	client := sdk.NewClientFromDB(db)
 
-	stmt := snowflake.NewManagedAccountBuilder(id).Show()
-	row := snowflake.QueryRow(db, stmt)
-	a, err := snowflake.ScanManagedAccount(row)
+	ctx := context.Background()
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, remove resource from
+	managedAccount, err := client.ManagedAccounts.ShowByID(ctx, objectIdentifier)
+	if err != nil {
+		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] managed account (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
+
+	if err := d.Set("name", managedAccount.Name); err != nil {
 		return err
 	}
 
-	if err := d.Set("name", a.Name.String); err != nil {
+	if err := d.Set("cloud", managedAccount.Cloud); err != nil {
 		return err
 	}
 
-	if err := d.Set("cloud", a.Cloud.String); err != nil {
+	if err := d.Set("region", managedAccount.Region); err != nil {
 		return err
 	}
 
-	if err := d.Set("region", a.Region.String); err != nil {
+	if err := d.Set("locator", managedAccount.Locator); err != nil {
 		return err
 	}
 
-	if err := d.Set("locator", a.Locator.String); err != nil {
+	if err := d.Set("created_on", managedAccount.CreatedOn); err != nil {
 		return err
 	}
 
-	if err := d.Set("created_on", a.CreatedOn.String); err != nil {
+	if err := d.Set("url", managedAccount.URL); err != nil {
 		return err
 	}
 
-	if err := d.Set("url", a.URL.String); err != nil {
-		return err
-	}
-
-	if a.IsReader {
+	if managedAccount.IsReader {
 		if err := d.Set("type", "READER"); err != nil {
 			return err
 		}
@@ -172,12 +182,26 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unable to determine the account type")
 	}
 
-	err = d.Set("comment", a.Comment.String)
+	if err := d.Set("comment", managedAccount.Comment); err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 // DeleteManagedAccount implements schema.DeleteFunc.
 func DeleteManagedAccount(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("this does not seem to be used", snowflake.NewManagedAccountBuilder)(d, meta)
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
+	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	err := client.ManagedAccounts.Drop(ctx, sdk.NewDropManagedAccountRequest(objectIdentifier))
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+	return nil
 }
