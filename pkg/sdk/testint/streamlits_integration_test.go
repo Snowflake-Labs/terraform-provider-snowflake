@@ -122,10 +122,20 @@ func TestInt_Streamlits(t *testing.T) {
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
-		streamlits, err := client.Streamlits.Show(ctx, sdk.NewShowStreamlitRequest().WithLike(&sdk.Like{Pattern: &e.Name}))
+		streamlits, err := client.Streamlits.Show(ctx, sdk.NewShowStreamlitRequest().WithTerse(sdk.Bool(true)).WithLike(&sdk.Like{Pattern: &e.Name}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(streamlits))
-		require.Equal(t, *e, streamlits[0])
+		sl := streamlits[0]
+		require.Equal(t, e.Name, sl.Name)
+		require.Equal(t, e.DatabaseName, sl.DatabaseName)
+		require.Equal(t, e.SchemaName, sl.SchemaName)
+		require.Equal(t, e.UrlId, sl.UrlId)
+		require.Equal(t, e.CreatedOn, sl.CreatedOn)
+		require.Empty(t, sl.Title)
+		require.Empty(t, sl.Owner)
+		require.Empty(t, sl.Comment)
+		require.Empty(t, sl.QueryWarehouse)
+		require.Empty(t, sl.OwnerRoleType)
 	})
 
 	t.Run("describe streamlit", func(t *testing.T) {
