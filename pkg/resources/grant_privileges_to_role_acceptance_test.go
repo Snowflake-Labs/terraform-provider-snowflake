@@ -59,7 +59,9 @@ func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
 // contains escaped identifier, it won't match in the comparison grant.GranteeName == role_name. This results in
 // setting privileges to an empty array, which causes infinite plan.
 func TestAcc_GrantPrivilegesToRole_OnSchema_InfinitePlan(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := []byte(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
+	name[3] = '.'
+	name[7] = '-'
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
@@ -88,7 +90,7 @@ func TestAcc_GrantPrivilegesToRole_OnSchema_InfinitePlan(t *testing.T) {
 						object_name = snowflake_database.db.name
 					  }
 				   }
-				 `, name, databaseName),
+				 `, string(name), databaseName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
