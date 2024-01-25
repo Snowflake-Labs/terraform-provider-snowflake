@@ -8,7 +8,8 @@ var streamlitSet = g.NewQueryStruct("StreamlitSet").
 	OptionalTextAssignment("ROOT_LOCATION", g.ParameterOptions().SingleQuotes().Required()).
 	OptionalTextAssignment("MAIN_FILE", g.ParameterOptions().SingleQuotes().Required()).
 	OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("QUERY_WAREHOUSE")).
-	OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes())
+	OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
+	WithValidation(g.ValidIdentifierIfSet, "Warehouse")
 
 var StreamlitsDef = g.NewInterface(
 	"Streamlits",
@@ -27,6 +28,7 @@ var StreamlitsDef = g.NewInterface(
 		OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("QUERY_WAREHOUSE")).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ValidIdentifierIfSet, "Warehouse").
 		WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace"),
 ).AlterOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-streamlit",
@@ -42,6 +44,7 @@ var StreamlitsDef = g.NewInterface(
 		).
 		Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
 		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ValidIdentifierIfSet, "RenameTo").
 		WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set"),
 ).DropOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/drop-streamlit",

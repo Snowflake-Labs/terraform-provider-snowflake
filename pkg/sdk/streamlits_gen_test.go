@@ -103,13 +103,16 @@ func TestStreamlits_Drop(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `DROP STREAMLIT %s`, id.FullyQualifiedName())
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, `DROP STREAMLIT IF EXISTS %s`, id.FullyQualifiedName())
 	})
 }
 
 func TestStreamlits_Show(t *testing.T) {
 	defaultOpts := func() *ShowStreamlitOptions {
-		return &ShowStreamlitOptions{}
+		return &ShowStreamlitOptions{
+			Terse: Bool(true),
+		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
@@ -119,7 +122,7 @@ func TestStreamlits_Show(t *testing.T) {
 
 	t.Run("show with empty options", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, `SHOW STREAMLITS`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE STREAMLITS`)
 	})
 
 	t.Run("show with like", func(t *testing.T) {
@@ -127,7 +130,7 @@ func TestStreamlits_Show(t *testing.T) {
 		opts.Like = &Like{
 			Pattern: String("pattern"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW STREAMLITS LIKE 'pattern'`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE STREAMLITS LIKE 'pattern'`)
 	})
 
 	t.Run("show with in", func(t *testing.T) {
@@ -135,7 +138,16 @@ func TestStreamlits_Show(t *testing.T) {
 		opts.In = &In{
 			Account: Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW STREAMLITS IN ACCOUNT`)
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE STREAMLITS IN ACCOUNT`)
+	})
+
+	t.Run("show with limit", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Limit = &LimitFrom{
+			Rows: Int(123),
+			From: String("from pattern"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE STREAMLITS LIMIT 123 FROM 'from pattern'`)
 	})
 }
 

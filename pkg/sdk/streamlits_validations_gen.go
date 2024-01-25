@@ -16,6 +16,9 @@ func (opts *CreateStreamlitOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if opts.Warehouse != nil && !ValidObjectIdentifier(opts.Warehouse) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
 		errs = append(errs, errOneOf("CreateStreamlitOptions", "IfNotExists", "OrReplace"))
 	}
@@ -30,8 +33,16 @@ func (opts *AlterStreamlitOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if opts.RenameTo != nil && !ValidObjectIdentifier(opts.RenameTo) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	if !exactlyOneValueSet(opts.RenameTo, opts.Set) {
 		errs = append(errs, errExactlyOneOf("AlterStreamlitOptions", "RenameTo", "Set"))
+	}
+	if valueSet(opts.Set) {
+		if opts.Set.Warehouse != nil && !ValidObjectIdentifier(opts.Set.Warehouse) {
+			errs = append(errs, ErrInvalidObjectIdentifier)
+		}
 	}
 	return JoinErrors(errs...)
 }
@@ -52,6 +63,9 @@ func (opts *ShowStreamlitOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	if valueSet(opts.Like) && !valueSet(opts.Like.Pattern) {
+		errs = append(errs, ErrPatternRequiredForLikeKeyword)
+	}
 	return JoinErrors(errs...)
 }
 

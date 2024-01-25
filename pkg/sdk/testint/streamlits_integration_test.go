@@ -1,7 +1,6 @@
 package testint
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -18,10 +17,7 @@ func TestInt_Streamlits(t *testing.T) {
 
 	cleanupStreamlitHandle := func(id sdk.SchemaObjectIdentifier) func() {
 		return func() {
-			err := client.Streamlits.Drop(ctx, sdk.NewDropStreamlitRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
+			err := client.Streamlits.Drop(ctx, sdk.NewDropStreamlitRequest(id).WithIfExists(sdk.Bool(true)))
 			require.NoError(t, err)
 		}
 	}
@@ -30,7 +26,7 @@ func TestInt_Streamlits(t *testing.T) {
 		t.Helper()
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
-		request := sdk.NewCreateStreamlitRequest(id, "@"+stage.ID().FullyQualifiedName(), mainFile)
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile)
 		err := client.Streamlits.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupStreamlitHandle(id))
@@ -59,13 +55,13 @@ func TestInt_Streamlits(t *testing.T) {
 	}
 
 	t.Run("create streamlit", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, "dev_stage_test")
+		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
 		t.Cleanup(cleanupStage)
 
 		comment := random.StringN(4)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
 		mainFile := "manifest.yml"
-		request := sdk.NewCreateStreamlitRequest(id, "@"+stage.ID().FullyQualifiedName(), mainFile).WithComment(&comment)
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
 		err := client.Streamlits.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupStreamlitHandle(id))
@@ -74,21 +70,21 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("alter streamlit: set", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, "dev_stage_test")
+		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
 		t.Cleanup(cleanupStage)
 		manifest := "manifest.yml"
 		e := createStreamlitHandle(t, stage, manifest)
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
 		comment := random.StringN(4)
-		set := sdk.NewStreamlitSetRequest(sdk.String("@"+stage.ID().FullyQualifiedName()), &manifest).WithComment(&comment)
+		set := sdk.NewStreamlitSetRequest(sdk.String(stage.Location()), &manifest).WithComment(&comment)
 		err := client.Streamlits.Alter(ctx, sdk.NewAlterStreamlitRequest(id).WithSet(set))
 		require.NoError(t, err)
 		assertStreamlit(t, id, comment, "")
 	})
 
 	t.Run("alter function: rename", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, "dev_stage_test")
+		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -110,8 +106,19 @@ func TestInt_Streamlits(t *testing.T) {
 		require.Equal(t, nid.Name(), o.Name)
 	})
 
-	t.Run("show streamliit: with like", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, "dev_stage_test")
+	t.Run("show streamlit: with like", func(t *testing.T) {
+		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
+		t.Cleanup(cleanupStage)
+		e := createStreamlitHandle(t, stage, "manifest.yml")
+
+		streamlits, err := client.Streamlits.Show(ctx, sdk.NewShowStreamlitRequest().WithLike(&sdk.Like{Pattern: &e.Name}))
+		require.NoError(t, err)
+		require.Equal(t, 1, len(streamlits))
+		require.Equal(t, *e, streamlits[0])
+	})
+
+	t.Run("show streamlit: terse with like", func(t *testing.T) {
+		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -122,7 +129,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("describe streamlit", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, "dev_stage_test")
+		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
 		t.Cleanup(cleanupStage)
 
 		mainFile := "manifest.yml"
@@ -134,7 +141,7 @@ func TestInt_Streamlits(t *testing.T) {
 		require.Equal(t, e.Name, detail.Name)
 		require.Equal(t, e.UrlId, detail.UrlId)
 		require.Equal(t, mainFile, detail.MainFile)
-		require.Equal(t, "@"+stage.ID().FullyQualifiedName(), detail.RootLocation)
+		require.Equal(t, stage.Location(), detail.RootLocation)
 		require.Empty(t, detail.Title)
 		require.Empty(t, detail.QueryWarehouse)
 	})
