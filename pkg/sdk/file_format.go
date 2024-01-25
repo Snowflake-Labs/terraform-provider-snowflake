@@ -375,9 +375,8 @@ type AlterFileFormatOptions struct {
 	IfExists   *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name       SchemaObjectIdentifier `ddl:"identifier"`
 
-	Rename     *AlterFileFormatRenameOptions
-	Set        *FileFormatTypeOptions `ddl:"list,no_comma" sql:"SET"`
-	SetComment *string                `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
+	Rename *AlterFileFormatRenameOptions
+	Set    *FileFormatTypeOptions `ddl:"list,no_comma" sql:"SET"`
 }
 
 func (opts *AlterFileFormatOptions) validate() error {
@@ -398,6 +397,8 @@ type AlterFileFormatRenameOptions struct {
 }
 
 type FileFormatTypeOptions struct {
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
+
 	// CSV type options
 	CSVCompression                *CSVCompression `ddl:"parameter" sql:"COMPRESSION"`
 	CSVRecordDelimiter            *string         `ddl:"parameter,single_quotes" sql:"RECORD_DELIMITER"`

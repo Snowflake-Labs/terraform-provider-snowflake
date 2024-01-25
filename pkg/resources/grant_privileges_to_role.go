@@ -834,7 +834,7 @@ func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, gra
 
 	withGrantOption := d.Get("with_grant_option").(bool)
 	privileges := []string{}
-	roleName := d.Get("role_name").(string)
+	roleName := sdk.NewAccountObjectIdentifier(d.Get("role_name").(string)).Name()
 
 	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {

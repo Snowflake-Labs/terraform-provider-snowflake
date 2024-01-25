@@ -40,8 +40,10 @@ type Client struct {
 	// DDL Commands
 	Accounts            Accounts
 	Alerts              Alerts
+	ApiIntegrations     ApiIntegrations
 	ApplicationPackages ApplicationPackages
 	ApplicationRoles    ApplicationRoles
+	Applications        Applications
 	Comments            Comments
 	DatabaseRoles       DatabaseRoles
 	Databases           Databases
@@ -54,6 +56,7 @@ type Client struct {
 	Grants              Grants
 	ManagedAccounts     ManagedAccounts
 	MaskingPolicies     MaskingPolicies
+	MaterializedViews   MaterializedViews
 	NetworkPolicies     NetworkPolicies
 	Parameters          Parameters
 	PasswordPolicies    PasswordPolicies
@@ -63,6 +66,7 @@ type Client struct {
 	Roles               Roles
 	RowAccessPolicies   RowAccessPolicies
 	Schemas             Schemas
+	Sequences           Sequences
 	SessionPolicies     SessionPolicies
 	Sessions            Sessions
 	Shares              Shares
@@ -183,8 +187,10 @@ func NewClientFromDB(db *sql.DB) *Client {
 func (c *Client) initialize() {
 	c.Accounts = &accounts{client: c}
 	c.Alerts = &alerts{client: c}
+	c.ApiIntegrations = &apiIntegrations{client: c}
 	c.ApplicationPackages = &applicationPackages{client: c}
 	c.ApplicationRoles = &applicationRoles{client: c}
+	c.Applications = &applications{client: c}
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
@@ -199,6 +205,7 @@ func (c *Client) initialize() {
 	c.Grants = &grants{client: c}
 	c.ManagedAccounts = &managedAccounts{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
+	c.MaterializedViews = &materializedViews{client: c}
 	c.NetworkPolicies = &networkPolicies{client: c}
 	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
@@ -209,6 +216,7 @@ func (c *Client) initialize() {
 	c.Roles = &roles{client: c}
 	c.RowAccessPolicies = &rowAccessPolicies{client: c}
 	c.Schemas = &schemas{client: c}
+	c.Sequences = &sequences{client: c}
 	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}

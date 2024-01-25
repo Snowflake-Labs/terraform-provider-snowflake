@@ -30,8 +30,8 @@ func (opts *AlterApplicationPackageOptions) validate() error {
 		errs = append(errs, errExactlyOneOf("AlterApplicationPackageOptions", "Set", "Unset", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"))
 	}
 	if valueSet(opts.Unset) {
-		if !exactlyOneValueSet(opts.Unset.DataRetentionTimeInDays, opts.Unset.MaxDataExtensionTimeInDays, opts.Unset.DefaultDdlCollation, opts.Unset.Comment, opts.Unset.Distribution) {
-			errs = append(errs, errExactlyOneOf("AlterApplicationPackageOptions.Unset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution"))
+		if !anyValueSet(opts.Unset.DataRetentionTimeInDays, opts.Unset.MaxDataExtensionTimeInDays, opts.Unset.DefaultDdlCollation, opts.Unset.Comment, opts.Unset.Distribution) {
+			errs = append(errs, errAtLeastOneOf("AlterApplicationPackageOptions.Unset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution"))
 		}
 	}
 	return JoinErrors(errs...)

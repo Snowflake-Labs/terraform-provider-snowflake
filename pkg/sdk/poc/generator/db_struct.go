@@ -45,6 +45,14 @@ func (v *dbStruct) OptionalBool(dbName string) *dbStruct {
 	return v.Field(dbName, "sql.NullBool")
 }
 
+func (v *dbStruct) Number(dbName string) *dbStruct {
+	return v.Field(dbName, "int")
+}
+
+func (v *dbStruct) OptionalNumber(dbName string) *dbStruct {
+	return v.Field(dbName, "sql.NullInt64")
+}
+
 func (v *dbStruct) IntoField() *Field {
 	f := NewField(v.name, v.name, nil, nil)
 	for _, field := range v.fields {

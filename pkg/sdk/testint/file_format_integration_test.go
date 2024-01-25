@@ -381,7 +381,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("set", func(t *testing.T) {
+	t.Run("set + set comment", func(t *testing.T) {
 		fileFormat, fileFormatCleanup := createFileFormatWithOptions(t, client, testSchema(t).ID(), &sdk.CreateFileFormatOptions{
 			Type: sdk.FileFormatTypeCSV,
 			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
@@ -393,6 +393,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 
 		err := client.FileFormats.Alter(ctx, fileFormat.ID(), &sdk.AlterFileFormatOptions{
 			Set: &sdk.FileFormatTypeOptions{
+				Comment:        sdk.String("some comment"),
 				CSVCompression: &sdk.CSVCompressionBz2,
 				CSVParseHeader: sdk.Bool(true),
 			},
@@ -403,6 +404,7 @@ func TestInt_FileFormatsAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, sdk.CSVCompressionBz2, *result.Options.CSVCompression)
 		assert.Equal(t, true, *result.Options.CSVParseHeader)
+		assert.Equal(t, "some comment", result.Comment)
 	})
 }
 

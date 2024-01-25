@@ -61,14 +61,14 @@ var StorageIntegrationDef = g.NewInterface(
 				"Set",
 				g.NewQueryStruct("StorageIntegrationSet").
 					OptionalQueryStructField(
-						"SetS3Params",
+						"S3Params",
 						g.NewQueryStruct("SetS3StorageParams").
 							TextAssignment("STORAGE_AWS_ROLE_ARN", g.ParameterOptions().SingleQuotes().Required()).
 							OptionalTextAssignment("STORAGE_AWS_OBJECT_ACL", g.ParameterOptions().SingleQuotes()),
 						g.KeywordOptions(),
 					).
 					OptionalQueryStructField(
-						"SetAzureParams",
+						"AzureParams",
 						g.NewQueryStruct("SetAzureStorageParams").
 							TextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes().Required()),
 						g.KeywordOptions(),
@@ -82,6 +82,7 @@ var StorageIntegrationDef = g.NewInterface(
 			OptionalQueryStructField(
 				"Unset",
 				g.NewQueryStruct("StorageIntegrationUnset").
+					OptionalSQL("STORAGE_AWS_OBJECT_ACL").
 					OptionalSQL("ENABLED").
 					OptionalSQL("STORAGE_BLOCKED_LOCATIONS").
 					OptionalSQL("COMMENT"),
@@ -109,7 +110,7 @@ var StorageIntegrationDef = g.NewInterface(
 			Text("type").
 			Text("category").
 			Bool("enabled").
-			Text("comment").
+			OptionalText("comment").
 			Time("created_on"),
 		g.PlainStruct("StorageIntegration").
 			Text("Name").

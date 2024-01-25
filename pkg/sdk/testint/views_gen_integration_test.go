@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: add tests for setting masking policy on creation
-// TODO: add tests for setting recursive on creation
+// TODO [SNOW-1016430]: add tests for setting masking policy on creation
+// TODO [SNOW-1016430]: add tests for setting recursive on creation
 func TestInt_Views(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
