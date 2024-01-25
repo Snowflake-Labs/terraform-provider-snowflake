@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"strings"
 )
 
 var stageSchema = map[string]*schema.Schema{
@@ -99,6 +100,8 @@ func Stage() *schema.Resource {
 	}
 }
 
+// TODO: Document why snowflake package is used here instead of sdk
+// TODO: Add acceptance tests
 func CreateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -107,7 +110,6 @@ func CreateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 
 	builder := snowflake.NewStageBuilder(name, database, schema)
 
-	// Set optionals
 	if v, ok := d.GetOk("url"); ok {
 		builder.WithURL(v.(string))
 	}
@@ -197,35 +199,53 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("url", stageDesc.URL); err != nil {
+	if err := d.Set("url", strings.Trim(findStagePropertyValue(properties, "URL"), "[\"]")); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("file_format", stageDesc.FileFormat); err != nil {
+	fileFormat := make([]string, 0)
+	for _, property := range properties {
+		if property.Parent == "STAGE_FILE_FORMAT" && property.Value != property.Default {
+			fileFormat = append(fileFormat, fmt.Sprintf("%s = %s", property.Name, property.Value))
+		}
+	}
+	if err := d.Set("file_format", fileFormat); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("copy_options", stageDesc.CopyOptions); err != nil {
+	copyOptions := make([]string, 0)
+	for _, property := range properties {
+		if property.Parent == "STAGE_COPY_OPTIONS" && property.Value != property.Default {
+			copyOptions = append(copyOptions, fmt.Sprintf("%s = %s", property.Name, property.Value))
+		}
+	}
+	if err := d.Set("copy_options", copyOptions); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("directory", stageDesc.Directory); err != nil {
+	directory := make([]string, 0)
+	for _, property := range properties {
+		if property.Parent == "DIRECTORY" && property.Value != property.Default && property.Name != "LAST_REFRESHED_ON" {
+			directory = append(directory, fmt.Sprintf("%s = %s", property.Name, property.Value))
+		}
+	}
+	if err := d.Set("directory", directory); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("storage_integration", s.StorageIntegration); err != nil {
+	if err := d.Set("storage_integration", stage.StorageIntegration); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("comment", s.Comment); err != nil {
+	if err := d.Set("comment", stage.Comment); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("aws_external_id", stageDesc.AwsExternalID); err != nil {
+	if err := d.Set("aws_external_id", findStagePropertyValue(properties, "AWS_EXTERNAL_ID")); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("snowflake_iam_user", stageDesc.SnowflakeIamUser); err != nil {
+	if err := d.Set("snowflake_iam_user", findStagePropertyValue(properties, "SNOWFLAKE_IAM_USER")); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -233,24 +253,18 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 }
 
 func UpdateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	stageID, err := stageIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
-
-	builder := snowflake.NewStageBuilder(stage, dbName, schema)
+	builder := snowflake.NewStageBuilder(id.Name(), id.DatabaseName(), id.SchemaName())
 
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 
 	if d.HasChange("credentials") {
 		credentials := d.Get("credentials")
 		q := builder.ChangeCredentials(credentials.(string))
 		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating stage credentials on %v", d.Id())
+			return diag.Errorf("error updating stage credentials on %v", d.Id())
 		}
 	}
 
@@ -259,14 +273,14 @@ func UpdateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 		url := d.Get("url")
 		q := builder.ChangeStorageIntegrationAndUrl(si.(string), url.(string))
 		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating stage storage integration and url on %v", d.Id())
+			return diag.Errorf("error updating stage storage integration and url on %v", d.Id())
 		}
 	} else {
 		if d.HasChange("storage_integration") {
 			si := d.Get("storage_integration")
 			q := builder.ChangeStorageIntegration(si.(string))
 			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error updating stage storage integration on %v", d.Id())
+				return diag.Errorf("error updating stage storage integration on %v", d.Id())
 			}
 		}
 
@@ -274,7 +288,7 @@ func UpdateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 			url := d.Get("url")
 			q := builder.ChangeURL(url.(string))
 			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error updating stage url on %v", d.Id())
+				return diag.Errorf("error updating stage url on %v", d.Id())
 			}
 		}
 	}
@@ -283,34 +297,50 @@ func UpdateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 		encryption := d.Get("encryption")
 		q := builder.ChangeEncryption(encryption.(string))
 		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating stage encryption on %v", d.Id())
+			return diag.Errorf("error updating stage encryption on %v", d.Id())
 		}
 	}
+
 	if d.HasChange("file_format") {
 		fileFormat := d.Get("file_format")
 		q := builder.ChangeFileFormat(fileFormat.(string))
 		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating stage file formaat on %v", d.Id())
+			return diag.Errorf("error updating stage file format on %v", d.Id())
 		}
 	}
+
 	if d.HasChange("copy_options") {
 		copyOptions := d.Get("copy_options")
 		q := builder.ChangeCopyOptions(copyOptions.(string))
 		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating stage copy options on %v", d.Id())
+			return diag.Errorf("error updating stage copy options on %v", d.Id())
 		}
 	}
+
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		q := builder.ChangeComment(comment.(string))
 		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating stage comment on %v", d.Id())
+			return diag.Errorf("error updating stage comment on %v", d.Id())
 		}
 	}
 
-	tagChangeErr := handleTagChanges(db, d, builder)
-	if tagChangeErr != nil {
-		return tagChangeErr
+	if d.HasChange("tag") {
+		unsetTags, setTags := GetTagsDiff(d, "tag")
+
+		if len(unsetTags) > 0 {
+			err := client.Stages.Alter(ctx, sdk.NewAlterStageRequest(id).WithUnsetTags(unsetTags))
+			if err != nil {
+				return diag.Errorf("error occurred when dropping tags on stage with id: %v, err = %s", d.Id(), err)
+			}
+		}
+
+		if len(setTags) > 0 {
+			err := client.Stages.Alter(ctx, sdk.NewAlterStageRequest(id).WithSetTags(setTags))
+			if err != nil {
+				return diag.Errorf("error occurred when setting tags on stage with id: %v, err = %s", d.Id(), err)
+			}
+		}
 	}
 
 	return ReadStage(ctx, d, meta)
@@ -338,6 +368,10 @@ func DeleteStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 }
 
 func findStagePropertyValue(properties []sdk.StageProperty, name string) string {
-
+	for _, property := range properties {
+		if property.Name == name {
+			return property.Value
+		}
+	}
 	return ""
 }
