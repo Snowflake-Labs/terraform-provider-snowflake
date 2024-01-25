@@ -62,7 +62,7 @@ func ResourceMonitorGrant() *TerraformGrantResource {
 			Read:               ReadResourceMonitorGrant,
 			Delete:             DeleteResourceMonitorGrant,
 			Update:             UpdateResourceMonitorGrant,
-			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_account_role instead.",
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)

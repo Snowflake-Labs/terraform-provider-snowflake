@@ -38,44 +38,49 @@ type Client struct {
 	ReplicationFunctions ReplicationFunctions
 
 	// DDL Commands
-	Accounts            Accounts
-	Alerts              Alerts
-	ApplicationPackages ApplicationPackages
-	ApplicationRoles    ApplicationRoles
-	Comments            Comments
-	DatabaseRoles       DatabaseRoles
-	Databases           Databases
-	DynamicTables       DynamicTables
-	ExternalTables      ExternalTables
-	EventTables         EventTables
-	FailoverGroups      FailoverGroups
-	FileFormats         FileFormats
-	Functions           Functions
-	Grants              Grants
-	ManagedAccounts     ManagedAccounts
-	MaskingPolicies     MaskingPolicies
-	NetworkPolicies     NetworkPolicies
-	Parameters          Parameters
-	PasswordPolicies    PasswordPolicies
-	Pipes               Pipes
-	Procedures          Procedures
-	ResourceMonitors    ResourceMonitors
-	Roles               Roles
-	RowAccessPolicies   RowAccessPolicies
-	Schemas             Schemas
-	SessionPolicies     SessionPolicies
-	Sessions            Sessions
-	Shares              Shares
-	Stages              Stages
-	StorageIntegrations StorageIntegrations
-	Streamlits          Streamlits
-	Streams             Streams
-	Tables              Tables
-	Tags                Tags
-	Tasks               Tasks
-	Users               Users
-	Views               Views
-	Warehouses          Warehouses
+	Accounts                 Accounts
+	Alerts                   Alerts
+	ApiIntegrations          ApiIntegrations
+	ApplicationPackages      ApplicationPackages
+	ApplicationRoles         ApplicationRoles
+	Applications             Applications
+	Comments                 Comments
+	DatabaseRoles            DatabaseRoles
+	Databases                Databases
+	DynamicTables            DynamicTables
+	ExternalTables           ExternalTables
+	EventTables              EventTables
+	FailoverGroups           FailoverGroups
+	FileFormats              FileFormats
+	Functions                Functions
+	Grants                   Grants
+	ManagedAccounts          ManagedAccounts
+	MaskingPolicies          MaskingPolicies
+	MaterializedViews        MaterializedViews
+	NetworkPolicies          NetworkPolicies
+	NotificationIntegrations NotificationIntegrations
+	Parameters               Parameters
+	PasswordPolicies         PasswordPolicies
+	Pipes                    Pipes
+	Procedures               Procedures
+	ResourceMonitors         ResourceMonitors
+	Roles                    Roles
+	RowAccessPolicies        RowAccessPolicies
+	Schemas                  Schemas
+	Sequences                Sequences
+	SessionPolicies          SessionPolicies
+	Sessions                 Sessions
+	Shares                   Shares
+	Stages                   Stages
+	StorageIntegrations      StorageIntegrations
+  Streamlits               Streamlits
+	Streams                  Streams
+	Tables                   Tables
+	Tags                     Tags
+	Tasks                    Tasks
+	Users                    Users
+	Views                    Views
+	Warehouses               Warehouses
 }
 
 func (c *Client) GetAccountLocator() string {
@@ -184,8 +189,10 @@ func NewClientFromDB(db *sql.DB) *Client {
 func (c *Client) initialize() {
 	c.Accounts = &accounts{client: c}
 	c.Alerts = &alerts{client: c}
+	c.ApiIntegrations = &apiIntegrations{client: c}
 	c.ApplicationPackages = &applicationPackages{client: c}
 	c.ApplicationRoles = &applicationRoles{client: c}
+	c.Applications = &applications{client: c}
 	c.Comments = &comments{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
@@ -200,7 +207,9 @@ func (c *Client) initialize() {
 	c.Grants = &grants{client: c}
 	c.ManagedAccounts = &managedAccounts{client: c}
 	c.MaskingPolicies = &maskingPolicies{client: c}
+	c.MaterializedViews = &materializedViews{client: c}
 	c.NetworkPolicies = &networkPolicies{client: c}
+	c.NotificationIntegrations = &notificationIntegrations{client: c}
 	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
 	c.Pipes = &pipes{client: c}
@@ -210,6 +219,7 @@ func (c *Client) initialize() {
 	c.Roles = &roles{client: c}
 	c.RowAccessPolicies = &rowAccessPolicies{client: c}
 	c.Schemas = &schemas{client: c}
+	c.Sequences = &sequences{client: c}
 	c.SessionPolicies = &sessionPolicies{client: c}
 	c.Sessions = &sessions{client: c}
 	c.Shares = &shares{client: c}

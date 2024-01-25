@@ -107,7 +107,8 @@ func ExternalTableGrant() *TerraformGrantResource {
 			Read:               ReadExternalTableGrant,
 			Delete:             DeleteExternalTableGrant,
 			Update:             UpdateExternalTableGrant,
-			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.", Schema: externalTableGrantSchema,
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_account_role instead.",
+			Schema:             externalTableGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 					parts := strings.Split(d.Id(), helpers.IDDelimiter)

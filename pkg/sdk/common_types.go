@@ -199,6 +199,17 @@ type Secret struct {
 	Name         string `ddl:"parameter,no_quotes"`
 }
 
+type ValuesBehavior string
+
+var (
+	ValuesBehaviorOrder   ValuesBehavior = "ORDER"
+	ValuesBehaviorNoOrder ValuesBehavior = "NOORDER"
+)
+
+func ValuesBehaviorPointer(v ValuesBehavior) *ValuesBehavior {
+	return &v
+}
+
 type Distribution string
 
 var (

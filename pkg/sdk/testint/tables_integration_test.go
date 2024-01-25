@@ -213,7 +213,7 @@ func TestInt_Table(t *testing.T) {
 	t.Run("create table using template", func(t *testing.T) {
 		fileFormat, fileFormatCleanup := createFileFormat(t, client, schema.ID())
 		t.Cleanup(fileFormatCleanup)
-		stage, stageCleanup := createStageWithName(t, client, "new_stage")
+		stage, stageCleanup := createStage(t, client, sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, "new_stage"))
 		t.Cleanup(stageCleanup)
 
 		f, err := os.CreateTemp("/tmp", "data.csv")
@@ -224,14 +224,14 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 		err = w.Flush()
 		require.NoError(t, err)
-		_, err = client.ExecForTests(ctx, fmt.Sprintf("PUT file://%s @%s", f.Name(), *stage))
+		_, err = client.ExecForTests(ctx, fmt.Sprintf("PUT file://%s @%s", f.Name(), stage.ID().FullyQualifiedName()))
 		require.NoError(t, err)
 		err = os.Remove(f.Name())
 		require.NoError(t, err)
 
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '@%s', FILE_FORMAT=>'%s', ignore_case => true))`, *stage, fileFormat.ID().FullyQualifiedName())
+		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '@%s', FILE_FORMAT=>'%s', ignore_case => true))`, stage.ID().FullyQualifiedName(), fileFormat.ID().FullyQualifiedName())
 		request := sdk.NewCreateTableUsingTemplateRequest(id, query)
 
 		err = client.Tables.CreateUsingTemplate(ctx, request)
