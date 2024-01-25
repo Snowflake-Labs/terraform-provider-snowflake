@@ -59,6 +59,9 @@ func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
 // contains escaped identifier, it won't match in the comparison grant.GranteeName == role_name. This results in
 // setting privileges to an empty array, which causes infinite plan.
 func TestAcc_GrantPrivilegesToRole_OnSchema_InfinitePlan(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -67,25 +70,25 @@ func TestAcc_GrantPrivilegesToRole_OnSchema_InfinitePlan(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: `
+				Config: fmt.Sprintf(`
 				 resource "snowflake_role" "r" {
-					  name = "some.role-123"
+					  name = "%s"
 				 }
 
 				 resource "snowflake_database" "db" {
-					  name = "infinite_plan_grants_db"
+					  name = "%s"
 				 }
 
 				 resource "snowflake_grant_privileges_to_role" "g" {
 					  depends_on = [snowflake_role.r, snowflake_database.db]
 					  privileges = ["CREATE SCHEMA"]
-					  role_name  = "\"some.role-123\""
+					  role_name  = "\"${snowflake_role.r.name}\""
 					  on_account_object {
 						object_type = "DATABASE"
 						object_name = snowflake_database.db.name
 					  }
 				   }
-				 `,
+				 `, name, databaseName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
