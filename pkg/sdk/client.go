@@ -73,6 +73,7 @@ type Client struct {
 	Shares                   Shares
 	Stages                   Stages
 	StorageIntegrations      StorageIntegrations
+  Streamlits               Streamlits
 	Streams                  Streams
 	Tables                   Tables
 	Tags                     Tags
@@ -224,6 +225,7 @@ func (c *Client) initialize() {
 	c.Shares = &shares{client: c}
 	c.Stages = &stages{client: c}
 	c.StorageIntegrations = &storageIntegrations{client: c}
+	c.Streamlits = &streamlits{client: c}
 	c.Streams = &streams{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
 	c.Tables = &tables{client: c}

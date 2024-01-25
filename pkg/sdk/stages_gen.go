@@ -374,3 +374,7 @@ func (s *Stage) ID() SchemaObjectIdentifier {
 func (s *Stage) ObjectType() ObjectType {
 	return ObjectTypeStage
 }
+
+func (s *Stage) Location() string {
+	return "@" + s.ID().FullyQualifiedName()
+}
