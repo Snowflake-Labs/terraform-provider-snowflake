@@ -221,12 +221,12 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		{
 			Name:       "validation: grant database role not enough parts",
 			Identifier: `"database-name"."role-name"|false|false`,
-			Error:      "database role identifier should hold at least 5 parts",
+			Error:      "database role identifier should hold at least 6 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnDatabase kind",
 			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase`,
-			Error:      "database role identifier should hold at least 5 parts",
+			Error:      "database role identifier should hold at least 6 parts",
 		},
 		{
 			Name:       "validation: grant database role not enough parts for OnSchema kind",
@@ -291,6 +291,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
+		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			id, err := ParseGrantPrivilegesToDatabaseRoleId(tt.Identifier)
 			if tt.Error == "" {
@@ -422,6 +423,7 @@ func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
+		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
 			assert.Equal(t, tt.Expected, tt.Identifier.String())
 		})

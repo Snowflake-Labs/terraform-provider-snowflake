@@ -17,22 +17,6 @@ const (
 	OnSchemaObjectDatabaseRoleGrantKind DatabaseRoleGrantKind = "OnSchemaObject"
 )
 
-type OnSchemaGrantKind string
-
-const (
-	OnSchemaSchemaGrantKind                  OnSchemaGrantKind = "OnSchema"
-	OnAllSchemasInDatabaseSchemaGrantKind    OnSchemaGrantKind = "OnAllSchemasInDatabase"
-	OnFutureSchemasInDatabaseSchemaGrantKind OnSchemaGrantKind = "OnFutureSchemasInDatabase"
-)
-
-type OnSchemaObjectGrantKind string
-
-const (
-	OnObjectSchemaObjectGrantKind OnSchemaObjectGrantKind = "OnObject"
-	OnAllSchemaObjectGrantKind    OnSchemaObjectGrantKind = "OnAll"
-	OnFutureSchemaObjectGrantKind OnSchemaObjectGrantKind = "OnFuture"
-)
-
 type GrantPrivilegesToDatabaseRoleId struct {
 	DatabaseRoleName sdk.DatabaseObjectIdentifier
 	WithGrantOption  bool
@@ -66,77 +50,20 @@ func (d *OnDatabaseGrantData) String() string {
 	return d.DatabaseName.FullyQualifiedName()
 }
 
-type OnSchemaGrantData struct {
-	Kind         OnSchemaGrantKind
-	SchemaName   *sdk.DatabaseObjectIdentifier
-	DatabaseName *sdk.AccountObjectIdentifier
-}
-
-func (d *OnSchemaGrantData) String() string {
-	var parts []string
-	parts = append(parts, string(d.Kind))
-	switch d.Kind {
-	case OnSchemaSchemaGrantKind:
-		parts = append(parts, d.SchemaName.FullyQualifiedName())
-	case OnAllSchemasInDatabaseSchemaGrantKind, OnFutureSchemasInDatabaseSchemaGrantKind:
-		parts = append(parts, d.DatabaseName.FullyQualifiedName())
-	}
-	return strings.Join(parts, helpers.IDDelimiter)
-}
-
-type OnSchemaObjectGrantData struct {
-	Kind          OnSchemaObjectGrantKind
-	Object        *sdk.Object
-	OnAllOrFuture *BulkOperationGrantData
-}
-
-func (d *OnSchemaObjectGrantData) String() string {
-	var parts []string
-	parts = append(parts, string(d.Kind))
-	switch d.Kind {
-	case OnObjectSchemaObjectGrantKind:
-		parts = append(parts, fmt.Sprintf("%s|%s", d.Object.ObjectType, d.Object.Name.FullyQualifiedName()))
-	case OnAllSchemaObjectGrantKind, OnFutureSchemaObjectGrantKind:
-		parts = append(parts, d.OnAllOrFuture.ObjectNamePlural.String())
-		parts = append(parts, string(d.OnAllOrFuture.Kind))
-		switch d.OnAllOrFuture.Kind {
-		case InDatabaseBulkOperationGrantKind:
-			parts = append(parts, d.OnAllOrFuture.Database.FullyQualifiedName())
-		case InSchemaBulkOperationGrantKind:
-			parts = append(parts, d.OnAllOrFuture.Schema.FullyQualifiedName())
-		}
-	}
-	return strings.Join(parts, helpers.IDDelimiter)
-}
-
-type BulkOperationGrantKind string
-
-const (
-	InDatabaseBulkOperationGrantKind BulkOperationGrantKind = "InDatabase"
-	InSchemaBulkOperationGrantKind   BulkOperationGrantKind = "InSchema"
-)
-
-type BulkOperationGrantData struct {
-	ObjectNamePlural sdk.PluralObjectType
-	Kind             BulkOperationGrantKind
-	Database         *sdk.AccountObjectIdentifier
-	Schema           *sdk.DatabaseObjectIdentifier
-}
-
 func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseRoleId, error) {
 	var databaseRoleId GrantPrivilegesToDatabaseRoleId
 
 	parts := strings.Split(id, helpers.IDDelimiter)
 	if len(parts) < 6 {
-		return databaseRoleId, sdk.NewError(`database role identifier should hold at least 5 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>"`)
+		return databaseRoleId, sdk.NewError(`database role identifier should hold at least 6 parts "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>"`)
 	}
 
 	// TODO: Identifier parsing should be replaced with better version introduced in SNOW-999049.
 	// Right now, it's same as sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName, but with error handling.
 	databaseRoleNameParts := strings.Split(parts[0], ".")
 	if len(databaseRoleNameParts) == 0 ||
-		(len(databaseRoleNameParts) == 1 && databaseRoleNameParts[0] == "") ||
-		(len(databaseRoleNameParts) == 2 && databaseRoleNameParts[1] == "") ||
+		(len(databaseRoleNameParts) == 1 && strings.Trim(databaseRoleNameParts[0], `"`) == "") ||
+		(len(databaseRoleNameParts) == 2 && strings.Trim(databaseRoleNameParts[1], `"`) == "") ||
 		len(databaseRoleNameParts) > 2 {
 		return databaseRoleId, sdk.NewError(fmt.Sprintf(`invalid DatabaseRoleName value: %s, should be a fully qualified name of database object <database_name>.<name>`, parts[0]))
 	}
@@ -164,6 +91,7 @@ func ParseGrantPrivilegesToDatabaseRoleId(id string) (GrantPrivilegesToDatabaseR
 	} else {
 		databaseRoleId.Privileges = privileges
 	}
+
 	databaseRoleId.Kind = DatabaseRoleGrantKind(parts[4])
 
 	switch databaseRoleId.Kind {
