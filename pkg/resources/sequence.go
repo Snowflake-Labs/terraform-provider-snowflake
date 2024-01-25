@@ -48,9 +48,8 @@ var sequenceSchema = map[string]*schema.Schema{
 	},
 	"ordering": {
 		Type:        schema.TypeString,
-		Description: "The ordering of the sequence. Either ORDER or NOORDER. Default is ORDER.",
+		Description: "The ordering of the sequence. Either ORDER or NOORDER. If not set, will use default value (ORDER)",
 		Optional:    true,
-		Default:     "ORDER",
 		ValidateDiagFunc: StringInSlice(
 			[]string{
 				string(sdk.ValuesBehaviorNoOrder),
@@ -141,16 +140,18 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("next_value", seq.NextValue); err != nil {
 		return err
 	}
-	if seq.Ordered {
-		if err := d.Set("ordering", "ORDER"); err != nil {
-			return err
-		}
-	} else {
-		if err := d.Set("ordering", "NOORDER"); err != nil {
-			return err
+	// only detect drift on ordering if it was already set, otherwise assume to use default value.
+	if _, ok := d.GetOk("ordering"); ok {
+		if seq.Ordered {
+			if err := d.Set("ordering", "ORDER"); err != nil {
+				return err
+			}
+		} else {
+			if err := d.Set("ordering", "NOORDER"); err != nil {
+				return err
+			}
 		}
 	}
-
 	if err := d.Set("fully_qualified_name", id.FullyQualifiedName()); err != nil {
 		return err
 	}
