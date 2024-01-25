@@ -23,13 +23,13 @@ func (opts *CreateNotificationIntegrationOptions) validate() error {
 		errs = append(errs, errExactlyOneOf("CreateNotificationIntegrationOptions", "AutomatedDataLoadsParams", "PushNotificationParams", "EmailParams"))
 	}
 	if valueSet(opts.AutomatedDataLoadsParams) {
-		if !exactlyOneValueSet(opts.AutomatedDataLoadsParams.GoogleAutomatedDataLoad, opts.AutomatedDataLoadsParams.AzureAutomatedDataLoad) {
-			errs = append(errs, errExactlyOneOf("CreateNotificationIntegrationOptions.AutomatedDataLoadsParams", "GoogleAutomatedDataLoad", "AzureAutomatedDataLoad"))
+		if !exactlyOneValueSet(opts.AutomatedDataLoadsParams.GoogleAutoParams, opts.AutomatedDataLoadsParams.AzureAutoParams) {
+			errs = append(errs, errExactlyOneOf("CreateNotificationIntegrationOptions.AutomatedDataLoadsParams", "GoogleAutoParams", "AzureAutoParams"))
 		}
 	}
 	if valueSet(opts.PushNotificationParams) {
-		if !exactlyOneValueSet(opts.PushNotificationParams.AmazonPush, opts.PushNotificationParams.GooglePush, opts.PushNotificationParams.AzurePush) {
-			errs = append(errs, errExactlyOneOf("CreateNotificationIntegrationOptions.PushNotificationParams", "AmazonPush", "GooglePush", "AzurePush"))
+		if !exactlyOneValueSet(opts.PushNotificationParams.AmazonPushParams, opts.PushNotificationParams.GooglePushParams, opts.PushNotificationParams.AzurePushParams) {
+			errs = append(errs, errExactlyOneOf("CreateNotificationIntegrationOptions.PushNotificationParams", "AmazonPushParams", "GooglePushParams", "AzurePushParams"))
 		}
 	}
 	return JoinErrors(errs...)

@@ -48,29 +48,29 @@ func NewAutomatedDataLoadsParamsRequest() *AutomatedDataLoadsParamsRequest {
 	return &AutomatedDataLoadsParamsRequest{}
 }
 
-func (s *AutomatedDataLoadsParamsRequest) WithGoogleAutomatedDataLoad(GoogleAutomatedDataLoad *GoogleAutomatedDataLoadRequest) *AutomatedDataLoadsParamsRequest {
-	s.GoogleAutomatedDataLoad = GoogleAutomatedDataLoad
+func (s *AutomatedDataLoadsParamsRequest) WithGoogleAutoParams(GoogleAutoParams *GoogleAutoParamsRequest) *AutomatedDataLoadsParamsRequest {
+	s.GoogleAutoParams = GoogleAutoParams
 	return s
 }
 
-func (s *AutomatedDataLoadsParamsRequest) WithAzureAutomatedDataLoad(AzureAutomatedDataLoad *AzureAutomatedDataLoadRequest) *AutomatedDataLoadsParamsRequest {
-	s.AzureAutomatedDataLoad = AzureAutomatedDataLoad
+func (s *AutomatedDataLoadsParamsRequest) WithAzureAutoParams(AzureAutoParams *AzureAutoParamsRequest) *AutomatedDataLoadsParamsRequest {
+	s.AzureAutoParams = AzureAutoParams
 	return s
 }
 
-func NewGoogleAutomatedDataLoadRequest(
+func NewGoogleAutoParamsRequest(
 	GcpPubsubSubscriptionName string,
-) *GoogleAutomatedDataLoadRequest {
-	s := GoogleAutomatedDataLoadRequest{}
+) *GoogleAutoParamsRequest {
+	s := GoogleAutoParamsRequest{}
 	s.GcpPubsubSubscriptionName = GcpPubsubSubscriptionName
 	return &s
 }
 
-func NewAzureAutomatedDataLoadRequest(
+func NewAzureAutoParamsRequest(
 	AzureStorageQueuePrimaryUri string,
 	AzureTenantId string,
-) *AzureAutomatedDataLoadRequest {
-	s := AzureAutomatedDataLoadRequest{}
+) *AzureAutoParamsRequest {
+	s := AzureAutoParamsRequest{}
 	s.AzureStorageQueuePrimaryUri = AzureStorageQueuePrimaryUri
 	s.AzureTenantId = AzureTenantId
 	return &s
@@ -80,44 +80,44 @@ func NewPushNotificationParamsRequest() *PushNotificationParamsRequest {
 	return &PushNotificationParamsRequest{}
 }
 
-func (s *PushNotificationParamsRequest) WithAmazonPush(AmazonPush *AmazonPushRequest) *PushNotificationParamsRequest {
-	s.AmazonPush = AmazonPush
+func (s *PushNotificationParamsRequest) WithAmazonPushParams(AmazonPushParams *AmazonPushParamsRequest) *PushNotificationParamsRequest {
+	s.AmazonPushParams = AmazonPushParams
 	return s
 }
 
-func (s *PushNotificationParamsRequest) WithGooglePush(GooglePush *GooglePushRequest) *PushNotificationParamsRequest {
-	s.GooglePush = GooglePush
+func (s *PushNotificationParamsRequest) WithGooglePushParams(GooglePushParams *GooglePushParamsRequest) *PushNotificationParamsRequest {
+	s.GooglePushParams = GooglePushParams
 	return s
 }
 
-func (s *PushNotificationParamsRequest) WithAzurePush(AzurePush *AzurePushRequest) *PushNotificationParamsRequest {
-	s.AzurePush = AzurePush
+func (s *PushNotificationParamsRequest) WithAzurePushParams(AzurePushParams *AzurePushParamsRequest) *PushNotificationParamsRequest {
+	s.AzurePushParams = AzurePushParams
 	return s
 }
 
-func NewAmazonPushRequest(
+func NewAmazonPushParamsRequest(
 	AwsSnsTopicArn string,
 	AwsSnsRoleArn string,
-) *AmazonPushRequest {
-	s := AmazonPushRequest{}
+) *AmazonPushParamsRequest {
+	s := AmazonPushParamsRequest{}
 	s.AwsSnsTopicArn = AwsSnsTopicArn
 	s.AwsSnsRoleArn = AwsSnsRoleArn
 	return &s
 }
 
-func NewGooglePushRequest(
+func NewGooglePushParamsRequest(
 	GcpPubsubTopicName string,
-) *GooglePushRequest {
-	s := GooglePushRequest{}
+) *GooglePushParamsRequest {
+	s := GooglePushParamsRequest{}
 	s.GcpPubsubTopicName = GcpPubsubTopicName
 	return &s
 }
 
-func NewAzurePushRequest(
+func NewAzurePushParamsRequest(
 	AzureEventGridTopicEndpoint string,
 	AzureTenantId string,
-) *AzurePushRequest {
-	s := AzurePushRequest{}
+) *AzurePushParamsRequest {
+	s := AzurePushParamsRequest{}
 	s.AzureEventGridTopicEndpoint = AzureEventGridTopicEndpoint
 	s.AzureTenantId = AzureTenantId
 	return &s

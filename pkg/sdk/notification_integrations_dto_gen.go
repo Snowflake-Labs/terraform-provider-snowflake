@@ -26,35 +26,35 @@ func (r *CreateNotificationIntegrationRequest) GetName() AccountObjectIdentifier
 }
 
 type AutomatedDataLoadsParamsRequest struct {
-	GoogleAutomatedDataLoad *GoogleAutomatedDataLoadRequest
-	AzureAutomatedDataLoad  *AzureAutomatedDataLoadRequest
+	GoogleAutoParams *GoogleAutoParamsRequest
+	AzureAutoParams  *AzureAutoParamsRequest
 }
 
-type GoogleAutomatedDataLoadRequest struct {
+type GoogleAutoParamsRequest struct {
 	GcpPubsubSubscriptionName string // required
 }
 
-type AzureAutomatedDataLoadRequest struct {
+type AzureAutoParamsRequest struct {
 	AzureStorageQueuePrimaryUri string // required
 	AzureTenantId               string // required
 }
 
 type PushNotificationParamsRequest struct {
-	AmazonPush *AmazonPushRequest
-	GooglePush *GooglePushRequest
-	AzurePush  *AzurePushRequest
+	AmazonPushParams *AmazonPushParamsRequest
+	GooglePushParams *GooglePushParamsRequest
+	AzurePushParams  *AzurePushParamsRequest
 }
 
-type AmazonPushRequest struct {
+type AmazonPushParamsRequest struct {
 	AwsSnsTopicArn string // required
 	AwsSnsRoleArn  string // required
 }
 
-type GooglePushRequest struct {
+type GooglePushParamsRequest struct {
 	GcpPubsubTopicName string // required
 }
 
-type AzurePushRequest struct {
+type AzurePushParamsRequest struct {
 	AzureEventGridTopicEndpoint string // required
 	AzureTenantId               string // required
 }

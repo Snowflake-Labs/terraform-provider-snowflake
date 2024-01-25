@@ -27,21 +27,21 @@ var NotificationIntegrationsDef = g.NewInterface(
 				g.NewQueryStruct("AutomatedDataLoadsParams").
 					PredefinedQueryStructField("notificationType", "string", g.StaticOptions().SQL("TYPE = QUEUE")).
 					OptionalQueryStructField(
-						"GoogleAutomatedDataLoad",
-						g.NewQueryStruct("GoogleAutomatedDataLoad").
+						"GoogleAutoParams",
+						g.NewQueryStruct("GoogleAutoParams").
 							PredefinedQueryStructField("notificationProvider", "string", g.StaticOptions().SQL("NOTIFICATION_PROVIDER = GCP_PUBSUB")).
 							TextAssignment("GCP_PUBSUB_SUBSCRIPTION_NAME", g.ParameterOptions().SingleQuotes().Required()),
 						g.KeywordOptions(),
 					).
 					OptionalQueryStructField(
-						"AzureAutomatedDataLoad",
-						g.NewQueryStruct("AzureAutomatedDataLoad").
+						"AzureAutoParams",
+						g.NewQueryStruct("AzureAutoParams").
 							PredefinedQueryStructField("notificationProvider", "string", g.StaticOptions().SQL("NOTIFICATION_PROVIDER = AZURE_STORAGE_QUEUE")).
 							TextAssignment("AZURE_STORAGE_QUEUE_PRIMARY_URI", g.ParameterOptions().SingleQuotes().Required()).
 							TextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes().Required()),
 						g.KeywordOptions(),
 					).
-					WithValidation(g.ExactlyOneValueSet, "GoogleAutomatedDataLoad", "AzureAutomatedDataLoad"),
+					WithValidation(g.ExactlyOneValueSet, "GoogleAutoParams", "AzureAutoParams"),
 				g.KeywordOptions(),
 			).
 			OptionalQueryStructField(
@@ -50,29 +50,29 @@ var NotificationIntegrationsDef = g.NewInterface(
 					PredefinedQueryStructField("direction", "string", g.StaticOptions().SQL("DIRECTION = OUTBOUND")).
 					PredefinedQueryStructField("notificationType", "string", g.StaticOptions().SQL("TYPE = QUEUE")).
 					OptionalQueryStructField(
-						"AmazonPush",
-						g.NewQueryStruct("AmazonPush").
+						"AmazonPushParams",
+						g.NewQueryStruct("AmazonPushParams").
 							PredefinedQueryStructField("notificationProvider", "string", g.StaticOptions().SQL("NOTIFICATION_PROVIDER = AWS_SNS")).
 							TextAssignment("AWS_SNS_TOPIC_ARN", g.ParameterOptions().SingleQuotes().Required()).
 							TextAssignment("AWS_SNS_ROLE_ARN", g.ParameterOptions().SingleQuotes().Required()),
 						g.KeywordOptions(),
 					).
 					OptionalQueryStructField(
-						"GooglePush",
-						g.NewQueryStruct("GooglePush").
+						"GooglePushParams",
+						g.NewQueryStruct("GooglePushParams").
 							PredefinedQueryStructField("notificationProvider", "string", g.StaticOptions().SQL("NOTIFICATION_PROVIDER = GCP_PUBSUB")).
 							TextAssignment("GCP_PUBSUB_TOPIC_NAME", g.ParameterOptions().SingleQuotes().Required()),
 						g.KeywordOptions(),
 					).
 					OptionalQueryStructField(
-						"AzurePush",
-						g.NewQueryStruct("AzurePush").
+						"AzurePushParams",
+						g.NewQueryStruct("AzurePushParams").
 							PredefinedQueryStructField("notificationProvider", "string", g.StaticOptions().SQL("NOTIFICATION_PROVIDER = AZURE_EVENT_GRID")).
 							TextAssignment("AZURE_EVENT_GRID_TOPIC_ENDPOINT", g.ParameterOptions().SingleQuotes().Required()).
 							TextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes().Required()),
 						g.KeywordOptions(),
 					).
-					WithValidation(g.ExactlyOneValueSet, "AmazonPush", "GooglePush", "AzurePush"),
+					WithValidation(g.ExactlyOneValueSet, "AmazonPushParams", "GooglePushParams", "AzurePushParams"),
 				g.KeywordOptions(),
 			).
 			OptionalQueryStructField(

@@ -69,35 +69,35 @@ func (r *CreateNotificationIntegrationRequest) toOpts() *CreateNotificationInteg
 	}
 	if r.AutomatedDataLoadsParams != nil {
 		opts.AutomatedDataLoadsParams = &AutomatedDataLoadsParams{}
-		if r.AutomatedDataLoadsParams.GoogleAutomatedDataLoad != nil {
-			opts.AutomatedDataLoadsParams.GoogleAutomatedDataLoad = &GoogleAutomatedDataLoad{
-				GcpPubsubSubscriptionName: r.AutomatedDataLoadsParams.GoogleAutomatedDataLoad.GcpPubsubSubscriptionName,
+		if r.AutomatedDataLoadsParams.GoogleAutoParams != nil {
+			opts.AutomatedDataLoadsParams.GoogleAutoParams = &GoogleAutoParams{
+				GcpPubsubSubscriptionName: r.AutomatedDataLoadsParams.GoogleAutoParams.GcpPubsubSubscriptionName,
 			}
 		}
-		if r.AutomatedDataLoadsParams.AzureAutomatedDataLoad != nil {
-			opts.AutomatedDataLoadsParams.AzureAutomatedDataLoad = &AzureAutomatedDataLoad{
-				AzureStorageQueuePrimaryUri: r.AutomatedDataLoadsParams.AzureAutomatedDataLoad.AzureStorageQueuePrimaryUri,
-				AzureTenantId:               r.AutomatedDataLoadsParams.AzureAutomatedDataLoad.AzureTenantId,
+		if r.AutomatedDataLoadsParams.AzureAutoParams != nil {
+			opts.AutomatedDataLoadsParams.AzureAutoParams = &AzureAutoParams{
+				AzureStorageQueuePrimaryUri: r.AutomatedDataLoadsParams.AzureAutoParams.AzureStorageQueuePrimaryUri,
+				AzureTenantId:               r.AutomatedDataLoadsParams.AzureAutoParams.AzureTenantId,
 			}
 		}
 	}
 	if r.PushNotificationParams != nil {
 		opts.PushNotificationParams = &PushNotificationParams{}
-		if r.PushNotificationParams.AmazonPush != nil {
-			opts.PushNotificationParams.AmazonPush = &AmazonPush{
-				AwsSnsTopicArn: r.PushNotificationParams.AmazonPush.AwsSnsTopicArn,
-				AwsSnsRoleArn:  r.PushNotificationParams.AmazonPush.AwsSnsRoleArn,
+		if r.PushNotificationParams.AmazonPushParams != nil {
+			opts.PushNotificationParams.AmazonPushParams = &AmazonPushParams{
+				AwsSnsTopicArn: r.PushNotificationParams.AmazonPushParams.AwsSnsTopicArn,
+				AwsSnsRoleArn:  r.PushNotificationParams.AmazonPushParams.AwsSnsRoleArn,
 			}
 		}
-		if r.PushNotificationParams.GooglePush != nil {
-			opts.PushNotificationParams.GooglePush = &GooglePush{
-				GcpPubsubTopicName: r.PushNotificationParams.GooglePush.GcpPubsubTopicName,
+		if r.PushNotificationParams.GooglePushParams != nil {
+			opts.PushNotificationParams.GooglePushParams = &GooglePushParams{
+				GcpPubsubTopicName: r.PushNotificationParams.GooglePushParams.GcpPubsubTopicName,
 			}
 		}
-		if r.PushNotificationParams.AzurePush != nil {
-			opts.PushNotificationParams.AzurePush = &AzurePush{
-				AzureEventGridTopicEndpoint: r.PushNotificationParams.AzurePush.AzureEventGridTopicEndpoint,
-				AzureTenantId:               r.PushNotificationParams.AzurePush.AzureTenantId,
+		if r.PushNotificationParams.AzurePushParams != nil {
+			opts.PushNotificationParams.AzurePushParams = &AzurePushParams{
+				AzureEventGridTopicEndpoint: r.PushNotificationParams.AzurePushParams.AzureEventGridTopicEndpoint,
+				AzureTenantId:               r.PushNotificationParams.AzurePushParams.AzureTenantId,
 			}
 		}
 	}

@@ -45,7 +45,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		id := sdk.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
-			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().WithGoogleAutomatedDataLoad(sdk.NewGoogleAutomatedDataLoadRequest(gcpPubsubSubscriptionName)))
+			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().WithGoogleAutoParams(sdk.NewGoogleAutoParamsRequest(gcpPubsubSubscriptionName)))
 	}
 
 	createNotificationIntegrationAutoAzureRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
@@ -53,7 +53,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		id := sdk.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
-			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().WithAzureAutomatedDataLoad(sdk.NewAzureAutomatedDataLoadRequest(azureStorageQueuePrimaryUri, azureTenantId)))
+			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().WithAzureAutoParams(sdk.NewAzureAutoParamsRequest(azureStorageQueuePrimaryUri, azureTenantId)))
 	}
 
 	createNotificationIntegrationPushAmazonRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
@@ -61,7 +61,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		id := sdk.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
-			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithAmazonPush(sdk.NewAmazonPushRequest(awsSnsTopicArn, awsSnsRoleArn)))
+			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithAmazonPushParams(sdk.NewAmazonPushParamsRequest(awsSnsTopicArn, awsSnsRoleArn)))
 	}
 
 	createNotificationIntegrationPushGoogleRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
@@ -69,7 +69,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		id := sdk.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
-			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithGooglePush(sdk.NewGooglePushRequest(gcpPubsubTopicName)))
+			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithGooglePushParams(sdk.NewGooglePushParamsRequest(gcpPubsubTopicName)))
 	}
 
 	createNotificationIntegrationPushAzureRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
@@ -77,7 +77,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		id := sdk.RandomAccountObjectIdentifier()
 
 		return sdk.NewCreateNotificationIntegrationRequest(id, true).
-			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithAzurePush(sdk.NewAzurePushRequest(azureEventGridTopicEndpoint, azureTenantId)))
+			WithPushNotificationParams(sdk.NewPushNotificationParamsRequest().WithAzurePushParams(sdk.NewAzurePushParamsRequest(azureEventGridTopicEndpoint, azureTenantId)))
 	}
 
 	createNotificationIntegrationEmailRequest := func(t *testing.T) *sdk.CreateNotificationIntegrationRequest {
