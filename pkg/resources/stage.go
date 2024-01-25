@@ -1,21 +1,14 @@
 package resources
 
 import (
-	"bytes"
+	"context"
 	"database/sql"
-	"encoding/csv"
-	"errors"
 	"fmt"
-	"log"
-	"strings"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/snowflakedb/gosnowflake"
-)
-
-const (
-	stageIDDelimiter = '|'
 )
 
 var stageSchema = map[string]*schema.Schema{
@@ -92,58 +85,12 @@ var stageSchema = map[string]*schema.Schema{
 	"tag": tagReferenceSchema,
 }
 
-type stageID struct {
-	DatabaseName string
-	SchemaName   string
-	StageName    string
-}
-
-// String() takes in a stageID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|StageName.
-func (si *stageID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = stageIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.StageName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strStageID := strings.TrimSpace(buf.String())
-	return strStageID, nil
-}
-
-// stageIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|StageName
-// and returns a stageID object.
-func stageIDFromString(stringID string) (*stageID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = stageIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per stage")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	stageResult := &stageID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		StageName:    lines[0][2],
-	}
-	return stageResult, nil
-}
-
-// Stage returns a pointer to the resource representing a stage.
 func Stage() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateStage,
-		Read:   ReadStage,
-		Update: UpdateStage,
-		Delete: DeleteStage,
+		CreateContext: CreateStage,
+		ReadContext:   ReadStage,
+		UpdateContext: UpdateStage,
+		DeleteContext: DeleteStage,
 
 		Schema: stageSchema,
 		Importer: &schema.ResourceImporter{
@@ -152,8 +99,7 @@ func Stage() *schema.Resource {
 	}
 }
 
-// CreateStage implements schema.CreateFunc.
-func CreateStage(d *schema.ResourceData, meta interface{}) error {
+func CreateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
 	database := d.Get("database").(string)
@@ -202,111 +148,91 @@ func CreateStage(d *schema.ResourceData, meta interface{}) error {
 	q := builder.Create()
 
 	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error creating stage %v", name)
+		return diag.Errorf("error creating stage %v", name)
 	}
 
-	stageID := &stageID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		StageName:    name,
-	}
-	dataIDInput, err := stageID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	d.SetId(helpers.EncodeSnowflakeID(database, schema, name))
 
-	return ReadStage(d, meta)
+	return ReadStage(ctx, d, meta)
 }
 
-// ReadStage implements schema.ReadFunc
-// credentials and encryption are omitted, they cannot be read via SHOW or DESCRIBE.
-func ReadStage(d *schema.ResourceData, meta interface{}) error {
+func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(d.Id())
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	client := sdk.NewClientFromDB(db)
+
+	properties, err := client.Stages.Describe(ctx, id)
 	if err != nil {
-		return err
-	}
-
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
-
-	q := snowflake.NewStageBuilder(stage, dbName, schema).Describe()
-	stageDesc, err := snowflake.DescStage(db, q)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] stage (%s) not found", d.Id())
 		d.SetId("")
-		return nil
-	}
-
-	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok { //nolint:errorlint // todo: should be fixed
-		// 002003 (02000): SQL compilation error:
-		// 'XXX' does not exist or not authorized.
-		if driverErr.Number == 2003 {
-			log.Printf("[DEBUG] stage (%s) not found", d.Id())
-			d.SetId("")
-			return nil
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to describe stage",
+				Detail:   fmt.Sprintf("Id: %s, Err: %s", d.Id(), err),
+			},
 		}
 	}
 
-	sq := snowflake.NewStageBuilder(stage, dbName, schema).Show()
-	row := snowflake.QueryRow(db, sq)
-
-	s, err := snowflake.ScanStageShow(row)
+	stage, err := client.Stages.ShowByID(ctx, id)
 	if err != nil {
-		return err
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to show stage by id",
+				Detail:   fmt.Sprintf("Id: %s, Err: %s", d.Id(), err),
+			},
+		}
 	}
 
-	if err := d.Set("name", s.Name); err != nil {
-		return err
+	if err := d.Set("name", stage.Name); err != nil {
+		return diag.FromErr(err)
 	}
 
-	if err := d.Set("database", s.DatabaseName); err != nil {
-		return err
+	if err := d.Set("database", stage.DatabaseName); err != nil {
+		return diag.FromErr(err)
 	}
 
-	if err := d.Set("schema", s.SchemaName); err != nil {
-		return err
+	if err := d.Set("schema", stage.SchemaName); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("url", stageDesc.URL); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("file_format", stageDesc.FileFormat); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("copy_options", stageDesc.CopyOptions); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("directory", stageDesc.Directory); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("storage_integration", s.StorageIntegration); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", s.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("aws_external_id", stageDesc.AwsExternalID); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("snowflake_iam_user", stageDesc.SnowflakeIamUser); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
+
 	return nil
 }
 
-// UpdateStage implements schema.UpdateFunc.
-func UpdateStage(d *schema.ResourceData, meta interface{}) error {
+func UpdateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	stageID, err := stageIDFromString(d.Id())
 	if err != nil {
 		return err
@@ -387,27 +313,31 @@ func UpdateStage(d *schema.ResourceData, meta interface{}) error {
 		return tagChangeErr
 	}
 
-	return ReadStage(d, meta)
+	return ReadStage(ctx, d, meta)
 }
 
-// DeleteStage implements schema.DeleteFunc.
-func DeleteStage(d *schema.ResourceData, meta interface{}) error {
+func DeleteStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	stageID, err := stageIDFromString(d.Id())
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	client := sdk.NewClientFromDB(db)
+
+	err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
 	if err != nil {
-		return err
-	}
-
-	dbName := stageID.DatabaseName
-	schema := stageID.SchemaName
-	stage := stageID.StageName
-
-	q := snowflake.NewStageBuilder(stage, dbName, schema).Drop()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting stage %v err = %w", d.Id(), err)
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to drop stage",
+				Detail:   fmt.Sprintf("Id: %s, Err: %s", d.Id(), err),
+			},
+		}
 	}
 
 	d.SetId("")
 
 	return nil
+}
+
+func findStagePropertyValue(properties []sdk.StageProperty, name string) string {
+
+	return ""
 }
