@@ -42,9 +42,20 @@ var sequenceSchema = map[string]*schema.Schema{
 	},
 	"next_value": {
 		Type:        schema.TypeInt,
-		Description: "The next value the sequence will provide.",
+		Description: "The increment sequence interval.",
 		Computed:    true,
 		ForceNew:    true,
+	},
+	"ordering": {
+		Type:        schema.TypeString,
+		Description: "The ordering of the sequence. Either ORDER or NOORDER. Default is ORDER.",
+		Optional:    true,
+		Default:     "ORDER",
+		ValidateDiagFunc: StringInSlice(
+			[]string{
+				string(sdk.ValuesBehaviorNoOrder),
+				string(sdk.ValuesBehaviorOrder),
+			}, false),
 	},
 	"fully_qualified_name": {
 		Type:        schema.TypeString,
@@ -84,7 +95,9 @@ func CreateSequence(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("comment"); ok {
 		req.WithComment(sdk.String(v.(string)))
 	}
-
+	if v, ok := d.GetOk("ordering"); ok {
+		req.WithValuesBehavior(sdk.ValuesBehaviorPointer(sdk.ValuesBehavior(v.(string))))
+	}
 	err := client.Sequences.Create(ctx, req)
 	if err != nil {
 		return err
@@ -128,6 +141,15 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("next_value", seq.NextValue); err != nil {
 		return err
 	}
+	if seq.Ordered {
+		if err := d.Set("ordering", "ORDER"); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("ordering", "NOORDER"); err != nil {
+			return err
+		}
+	}
 
 	if err := d.Set("fully_qualified_name", id.FullyQualifiedName()); err != nil {
 		return err
@@ -157,6 +179,13 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("ordering") {
+		req := sdk.NewAlterSequenceRequest(id)
+		req.WithSet(sdk.NewSequenceSetRequest().WithValuesBehavior(sdk.ValuesBehaviorPointer(sdk.ValuesBehavior(d.Get("ordering").(string)))))
+		if err := client.Sequences.Alter(ctx, req); err != nil {
+			return err
+		}
+	}
 	return ReadSequence(d, meta)
 }
 

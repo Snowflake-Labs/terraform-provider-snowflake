@@ -26,6 +26,7 @@ func TestAcc_Sequence(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "ordering", "ORDER"),
 				),
 			},
 			// Set comment and rename
@@ -46,6 +47,7 @@ func TestAcc_Sequence(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", ""),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "increment", "32"),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "ordering", "NOORDER"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
 				),
 			},
@@ -66,6 +68,7 @@ resource "snowflake_sequence" "test_sequence" {
 	database   = "%s"
 	schema     = "%s"
     increment = 32
+	ordering = "NOORDER"
 }
 `
 	return fmt.Sprintf(s, sequenceName, databaseName, schemaName)
