@@ -141,6 +141,7 @@ func TestAcc_ApiIntegration_azure(t *testing.T) {
 	}
 	m2 := m()
 	m2["azure_ad_application_id"] = config.StringVariable(dummyAzureOtherAdApplicationId)
+	m2["azure_tenant_id"] = config.StringVariable(dummyAzureOtherTenantId)
 	m2["api_key"] = config.StringVariable("other_key")
 	m2["api_blocked_prefixes"] = config.ListVariable()
 	m2["api_allowed_prefixes"] = config.ListVariable(
@@ -182,7 +183,7 @@ func TestAcc_ApiIntegration_azure(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "name", name),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "api_provider", "azure_api_management"),
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "azure_tenant_id", dummyAzureTenantId),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "azure_tenant_id", dummyAzureOtherTenantId),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "azure_ad_application_id", dummyAzureOtherAdApplicationId),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "api_allowed_prefixes.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "api_allowed_prefixes.0", dummyAzureOtherPrefix),
@@ -224,6 +225,7 @@ func TestAcc_ApiIntegration_google(t *testing.T) {
 		}
 	}
 	m2 := m()
+	m2["google_audience"] = config.StringVariable(dummyGoogleOtherAudience)
 	m2["api_blocked_prefixes"] = config.ListVariable()
 	m2["api_allowed_prefixes"] = config.ListVariable(
 		config.StringVariable(dummyGoogleOtherPrefix),
@@ -265,7 +267,7 @@ func TestAcc_ApiIntegration_google(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "name", name),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "api_provider", "google_api_gateway"),
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "google_audience", dummyGoogleAudience),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "google_audience", dummyGoogleOtherAudience),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "api_allowed_prefixes.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "api_allowed_prefixes.0", dummyGoogleOtherPrefix),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "api_blocked_prefixes.#", "0"),

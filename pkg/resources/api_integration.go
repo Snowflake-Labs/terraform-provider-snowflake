@@ -371,8 +371,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	case "azure_api_management":
 		azureParams := sdk.NewSetAzureApiParamsRequest()
 		if d.HasChange("azure_tenant_id") {
-			// TODO: there is no azure tenant id change in the docs
-			//azureParams.WithAzureTenantId(sdk.String(d.Get("azure_tenant_id").(string)))
+			azureParams.WithAzureTenantId(sdk.String(d.Get("azure_tenant_id").(string)))
 		}
 		if d.HasChange("azure_ad_application_id") {
 			azureParams.WithAzureAdApplicationId(sdk.String(d.Get("azure_ad_application_id").(string)))
@@ -386,10 +385,9 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 		}
 	case "google_api_gateway":
 		if d.HasChange("google_audience") {
-			// TODO: there is no google audience change in the docs
-			//runSetStatement = true
-			//googleParams := sdk.NewSetGoogleApiParamsRequest(d.Get("google_audience").(string))
-			//setRequest.WithGoogleParams(googleParams)
+			runSetStatement = true
+			googleParams := sdk.NewSetGoogleApiParamsRequest(d.Get("google_audience").(string))
+			setRequest.WithGoogleParams(googleParams)
 		}
 	default:
 		return fmt.Errorf("unexpected provider %v", apiProvider)
