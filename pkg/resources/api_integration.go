@@ -288,6 +288,14 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 			if err := d.Set("azure_multi_tenant_app_name", value); err != nil {
 				return err
 			}
+		case "AZURE_TENANT_ID":
+			if err := d.Set("azure_tenant_id", value); err != nil {
+				return err
+			}
+		case "AZURE_AD_APPLICATION_ID":
+			if err := d.Set("azure_ad_application_id", value); err != nil {
+				return err
+			}
 		case "GOOGLE_AUDIENCE":
 			if err := d.Set("google_audience", value); err != nil {
 				return err
@@ -363,10 +371,11 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	case "azure_api_management":
 		azureParams := sdk.NewSetAzureApiParamsRequest()
 		if d.HasChange("azure_tenant_id") {
-			azureParams.WithApiKey(sdk.String(d.Get("azure_tenant_id").(string)))
+			// TODO: there is no azure tenant id change in the docs
+			//azureParams.WithAzureTenantId(sdk.String(d.Get("azure_tenant_id").(string)))
 		}
 		if d.HasChange("azure_ad_application_id") {
-			azureParams.WithApiKey(sdk.String(d.Get("azure_ad_application_id").(string)))
+			azureParams.WithAzureAdApplicationId(sdk.String(d.Get("azure_ad_application_id").(string)))
 		}
 		if d.HasChange("api_key") {
 			azureParams.WithApiKey(sdk.String(d.Get("api_key").(string)))
