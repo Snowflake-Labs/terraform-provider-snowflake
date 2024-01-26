@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"strings"
 
@@ -190,8 +191,7 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	text := dynamicTable.Text
-	if strings.Contains(text, "OR REPLACE") {
+	if strings.Contains(dynamicTable.Text, "OR REPLACE") {
 		if err := d.Set("or_replace", true); err != nil {
 			return err
 		}
@@ -242,7 +242,43 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("data_timestamp", dynamicTable.DataTimestamp.Format("2006-01-02T16:04:05.000 -0700")); err != nil {
 		return err
 	}
+
+	query, err := getQueryFromDDL(dynamicTable.Text)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("query", query); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+/*
+ * Previous implementation tried to match query part from the whole dynamic table DDL statement by just using `AS`.
+ * It was failing for table names containing `AS` (like `REASON`). It was also failing for other parts containing `AS`.
+ * We cannot simply match by ` AS ` because this can still be part of COMMENT or SELECT query itself.
+ * We have considered not setting the query at all but it was not ideal because of:
+ * - possible external changes to dynamic table (drop and recreate externally with different query);
+ * - import not 100% correct.
+ * We did not want to complicate the implementation too much by introducing parsers.
+ * One more thing worth mentioning is the whitespace that can be introduced by the user that is still returned by SHOW.
+ * For now, we just normalize the DDL before extraction of query.
+ *
+ * The outcome implementation matches by ` AS SELECT ` and checks the number of matches.
+ * If more matches are found, the error is returned to inform user about possible cause of error.
+ *
+ * Refer to issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329.
+ */
+func getQueryFromDDL(text string) (string, error) {
+	normalizedDDL := normalizeQuery(text)
+	matchSubstring := " AS SELECT "
+	matches := strings.Count(strings.ToUpper(normalizedDDL), matchSubstring)
+	if matches != 1 {
+		return "", errors.New("too many matches found. There is no way of getting ONLY the 'query' used to create the dynamic table from Snowflake. We try to get it from the whole creation statement but there may be cases where it fails. Please submit the issue on Github (refer to #2329)")
+	}
+	idx := strings.Index(strings.ToUpper(normalizedDDL), " AS SELECT ")
+	return strings.TrimSpace(normalizedDDL[idx+4:]), nil
 }
 
 func parseTargetLag(v interface{}) sdk.TargetLag {
