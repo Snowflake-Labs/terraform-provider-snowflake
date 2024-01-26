@@ -180,19 +180,19 @@ func TestApiIntegrations_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApiIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
-	t.Run("validation: conflicting fields for [opts.Set.AwsParams opts.Set.AzureParams]", func(t *testing.T) {
+	t.Run("validation: conflicting fields for [opts.Set.AwsParams opts.Set.AzureParams opts.Set.GoogleParams]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ApiIntegrationSet{
 			AwsParams:   &SetAwsApiParams{ApiKey: String("key")},
 			AzureParams: &SetAzureApiParams{ApiKey: String("key")},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterApiIntegrationOptions.Set", "AwsParams", "AzureParams"))
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("AlterApiIntegrationOptions.Set", "AwsParams", "AzureParams", "GoogleParams"))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Set.AwsParams opts.Set.AzureParams opts.Set.Enabled opts.Set.ApiAllowedPrefixes opts.Set.ApiBlockedPrefixes opts.Set.Comment] should be set", func(t *testing.T) {
+	t.Run("validation: at least one of the fields [opts.Set.AwsParams opts.Set.AzureParams opts.Set.GoogleParams opts.Set.Enabled opts.Set.ApiAllowedPrefixes opts.Set.ApiBlockedPrefixes opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ApiIntegrationSet{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set", "AwsParams", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set", "AwsParams", "AzureParams", "GoogleParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.AwsParams.ApiAwsRoleArn opts.Set.AwsParams.ApiKey] should be set", func(t *testing.T) {
@@ -203,12 +203,12 @@ func TestApiIntegrations_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set.AwsParams", "ApiAwsRoleArn", "ApiKey"))
 	})
 
-	t.Run("validation: at least one of the fields [opts.Set.AzureParams.AzureAdApplicationId opts.Set.AzureParams.ApiKey] should be set", func(t *testing.T) {
+	t.Run("validation: at least one of the fields [opts.Set.AzureParams.AzureTenantId opts.Set.AzureParams.AzureAdApplicationId opts.Set.AzureParams.ApiKey] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ApiIntegrationSet{
 			AzureParams: &SetAzureApiParams{},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set.AzureParams", "AzureAdApplicationId", "ApiKey"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApiIntegrationOptions.Set.AzureParams", "AzureTenantId", "AzureAdApplicationId", "ApiKey"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.ApiKey opts.Unset.Enabled opts.Unset.ApiBlockedPrefixes opts.Unset.Comment] should be set", func(t *testing.T) {
