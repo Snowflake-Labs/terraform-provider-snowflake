@@ -2,9 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -145,23 +143,4 @@ func ScanRowAccessPolicies(row *sqlx.Row) (*RowAccessPolicyStruct, error) {
 	m := &RowAccessPolicyStruct{}
 	err := row.StructScan(m)
 	return m, err
-}
-
-func ListRowAccessPolicies(databaseName string, schemaName string, db *sql.DB) ([]RowAccessPolicyStruct, error) {
-	stmt := fmt.Sprintf(`SHOW ROW ACCESS POLICIES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
-	rows, err := Query(db, stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	dbs := []RowAccessPolicyStruct{}
-	if err := sqlx.StructScan(rows, &dbs); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Println("[DEBUG] no row access policies found")
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	return dbs, nil
 }

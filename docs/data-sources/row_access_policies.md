@@ -25,7 +25,7 @@ data "snowflake_row_access_policies" "current" {
 ### Required
 
 - `database` (String) The database from which to return the schemas from.
-- `schema` (String) The schema from which to return the row access policyfrom.
+- `schema` (String) The schema from which to return the row access policy from.
 
 ### Read-Only
 
