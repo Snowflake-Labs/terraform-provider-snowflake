@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -279,6 +280,88 @@ func TestAcc_DynamicTable_issue2276(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
 					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", newQuery),
 				),
+			},
+		},
+	})
+}
+
+// TestAcc_DynamicTable_issue2329 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329 issue.
+func TestAcc_DynamicTable_issue2329(t *testing.T) {
+	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha) + "AS" + acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	tableName := dynamicTableName + "_table"
+	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":      config.StringVariable(dynamicTableName),
+			"database":  config.StringVariable(acc.TestDatabaseName),
+			"schema":    config.StringVariable(acc.TestSchemaName),
+			"warehouse": config.StringVariable(acc.TestWarehouseName),
+			// spaces added on purpose
+			"query":      config.StringVariable("  " + query),
+			"comment":    config.StringVariable("Comment with AS on purpose"),
+			"table_name": config.StringVariable(tableName),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDynamicTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", query),
+				),
+			},
+			// No changes are expected
+			{
+				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", query),
+				),
+			},
+		},
+	})
+}
+
+// TestAcc_DynamicTable_issue2329_with_matching_comment proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329 issue.
+func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
+	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha) + "AS" + acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	tableName := dynamicTableName + "_table"
+	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":       config.StringVariable(dynamicTableName),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"warehouse":  config.StringVariable(acc.TestWarehouseName),
+			"query":      config.StringVariable(query),
+			"comment":    config.StringVariable("Comment with AS SELECT on purpose"),
+			"table_name": config.StringVariable(tableName),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDynamicTableDestroy,
+		Steps: []resource.TestStep{
+			// If we match more than one time (in this case in comment) we raise an explanation error.
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_DynamicTable_issue2329/1"),
+				ConfigVariables: m(),
+				ExpectError:     regexp.MustCompile(`too many matches found. There is no way of getting ONLY the 'query' used to create the dynamic table from Snowflake. We try to get it from the whole creation statement but there may be cases where it fails. Please submit the issue on Github \(refer to #2329\)`),
 			},
 		},
 	})
