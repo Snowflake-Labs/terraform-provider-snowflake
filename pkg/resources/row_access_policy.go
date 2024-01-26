@@ -1,18 +1,15 @@
 package resources
 
 import (
-	"bytes"
+	"context"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
+	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-)
-
-const (
-	rowAccessPolicyIDDelimiter = '|'
 )
 
 var rowAccessPolicySchema = map[string]*schema.Schema{
@@ -54,51 +51,6 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 	},
 }
 
-type rowAccessPolicyID struct {
-	DatabaseName        string
-	SchemaName          string
-	RowAccessPolicyName string
-}
-
-// String() takes in a rowAccessPolicyID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|RowAccessPolicyName.
-func (rapi *rowAccessPolicyID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = rowAccessPolicyIDDelimiter
-	dataIdentifiers := [][]string{{rapi.DatabaseName, rapi.SchemaName, rapi.RowAccessPolicyName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strRowAccessPolicyID := strings.TrimSpace(buf.String())
-	return strRowAccessPolicyID, nil
-}
-
-// / rowAccessPolicyIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|RowAccessPolicyName
-// and returns a rowAccessPolicyID object.
-func rowAccessPolicyIDFromString(stringID string) (*rowAccessPolicyID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = rowAccessPolicyIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per row access policy")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	rowAccessPolicyResult := &rowAccessPolicyID{
-		DatabaseName:        lines[0][0],
-		SchemaName:          lines[0][1],
-		RowAccessPolicyName: lines[0][2],
-	}
-	return rowAccessPolicyResult, nil
-}
-
 // RowAccessPolicy returns a pointer to the resource representing a row access policy.
 func RowAccessPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -117,37 +69,39 @@ func RowAccessPolicy() *schema.Resource {
 // CreateRowAccessPolicy implements schema.CreateFunc.
 func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
+	databaseName := d.Get("database").(string)
+	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	database := d.Get("database").(string)
-	schema := d.Get("schema").(string)
-	signature := d.Get("signature").(map[string]interface{})
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+
+	signature := d.Get("signature").(map[string]any)
 	rowAccessExpression := d.Get("row_access_expression").(string)
 
-	builder := snowflake.RowAccessPolicy(name, database, schema)
+	args := make([]sdk.CreateRowAccessPolicyArgsRequest, 0)
+	for k, v := range signature {
+		dataType, err := sdk.ToDataType(v.(string))
+		if err != nil {
+			return err
+		}
+		args = append(args, *sdk.NewCreateRowAccessPolicyArgsRequest(k, dataType))
+	}
 
-	builder.WithSignature(signature)
-	builder.WithRowAccessExpression(rowAccessExpression)
+	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, args, rowAccessExpression)
 
 	// Set optionals
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	stmt := builder.Create()
-	if err := snowflake.Exec(db, stmt); err != nil {
+	err := client.RowAccessPolicies.Create(ctx, createRequest)
+	if err != nil {
 		return fmt.Errorf("error creating row access policy %v err = %w", name, err)
 	}
 
-	rowAccessPolicyID := &rowAccessPolicyID{
-		DatabaseName:        database,
-		SchemaName:          schema,
-		RowAccessPolicyName: name,
-	}
-	dataIDInput, err := rowAccessPolicyID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadRowAccessPolicy(d, meta)
 }
@@ -155,66 +109,44 @@ func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 // ReadRowAccessPolicy implements schema.ReadFunc.
 func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	rowAccessPolicyID, err := rowAccessPolicyIDFromString(d.Id())
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	rowAccessPolicy, err := client.RowAccessPolicies.ShowByID(ctx, id)
+	if err != nil {
+		log.Printf("[DEBUG] row access policy (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err := d.Set("name", rowAccessPolicy.Name); err != nil {
+		return err
+	}
+
+	if err := d.Set("database", rowAccessPolicy.DatabaseName); err != nil {
+		return err
+	}
+
+	if err := d.Set("schema", rowAccessPolicy.SchemaName); err != nil {
+		return err
+	}
+
+	if err := d.Set("comment", rowAccessPolicy.Comment); err != nil {
+		return err
+	}
+
+	rowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	dbName := rowAccessPolicyID.DatabaseName
-	schema := rowAccessPolicyID.SchemaName
-	policyName := rowAccessPolicyID.RowAccessPolicyName
-
-	builder := snowflake.RowAccessPolicy(policyName, dbName, schema)
-
-	showSQL := builder.Show()
-
-	row := snowflake.QueryRow(db, showSQL)
-
-	s, err := snowflake.ScanRowAccessPolicies(row)
-	if err != nil {
+	if err := d.Set("row_access_expression", rowAccessPolicyDescription.Body); err != nil {
 		return err
 	}
 
-	if err := d.Set("name", s.Name.String); err != nil {
+	if err := d.Set("signature", ParseSignature(rowAccessPolicyDescription.Signature)); err != nil {
 		return err
-	}
-
-	if err := d.Set("database", s.DatabaseName.String); err != nil {
-		return err
-	}
-
-	if err := d.Set("schema", s.SchemaName.String); err != nil {
-		return err
-	}
-
-	if err := d.Set("comment", s.Comment.String); err != nil {
-		return err
-	}
-
-	descSQL := builder.Describe()
-	rows, err := snowflake.Query(db, descSQL)
-	if err != nil {
-		return err
-	}
-
-	var (
-		name       string
-		signature  string
-		returnType string
-		body       string
-	)
-	for rows.Next() {
-		if err := rows.Scan(&name, &signature, &returnType, &body); err != nil {
-			return err
-		}
-
-		if err := d.Set("row_access_expression", body); err != nil {
-			return err
-		}
-
-		if err := d.Set("signature", ParseSignature(signature)); err != nil {
-			return err
-		}
 	}
 
 	return err
@@ -223,37 +155,29 @@ func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 // UpdateRowAccessPolicy implements schema.UpdateFunc.
 func UpdateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-
-	rowAccessPolicyID, err := rowAccessPolicyIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := rowAccessPolicyID.DatabaseName
-	schema := rowAccessPolicyID.SchemaName
-	policyName := rowAccessPolicyID.RowAccessPolicyName
-
-	builder := snowflake.RowAccessPolicy(policyName, dbName, schema)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if c := comment.(string); c == "" {
-			q := builder.RemoveComment()
-			if err := snowflake.Exec(db, q); err != nil {
+			err := client.RowAccessPolicies.Alter(ctx, sdk.NewAlterRowAccessPolicyRequest(id).WithUnsetComment(sdk.Bool(true)))
+			if err != nil {
 				return fmt.Errorf("error unsetting comment for row access policy on %v err = %w", d.Id(), err)
 			}
 		} else {
-			q := builder.ChangeComment(c)
-			if err := snowflake.Exec(db, q); err != nil {
+			err := client.RowAccessPolicies.Alter(ctx, sdk.NewAlterRowAccessPolicyRequest(id).WithSetComment(sdk.String(c)))
+			if err != nil {
 				return fmt.Errorf("error updating comment for row access policy on %v err = %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("row_access_expression") {
-		rowAccessExpression := d.Get("row_access_expression")
-		q := builder.ChangeRowAccessExpression(rowAccessExpression.(string))
-		if err := snowflake.Exec(db, q); err != nil {
+		rowAccessExpression := d.Get("row_access_expression").(string)
+		err := client.RowAccessPolicies.Alter(ctx, sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.String(rowAccessExpression)))
+		if err != nil {
 			return fmt.Errorf("error updating row access policy expression on %v err = %w", d.Id(), err)
 		}
 	}
@@ -264,18 +188,13 @@ func UpdateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 // DeleteRowAccessPolicy implements schema.DeleteFunc.
 func DeleteRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	rowAccessPolicyID, err := rowAccessPolicyIDFromString(d.Id())
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
 	if err != nil {
 		return err
-	}
-
-	dbName := rowAccessPolicyID.DatabaseName
-	schema := rowAccessPolicyID.SchemaName
-	policyName := rowAccessPolicyID.RowAccessPolicyName
-
-	q := snowflake.RowAccessPolicy(policyName, dbName, schema).Drop()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting row access policy %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")
@@ -283,6 +202,7 @@ func DeleteRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+// TODO []: should we put signature parsing to the SDK?
 func ParseSignature(signature string) map[string]interface{} {
 	// Format in database is `(column <data_type>)`
 	plainSignature := strings.ReplaceAll(signature, "(", "")
