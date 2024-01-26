@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -12,10 +11,6 @@ import (
 )
 
 func TestAcc_ApiIntegration(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_API_INTEGRATION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_ApiIntegration")
-	}
-
 	apiIntNameAWS := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	apiIntNameAzure := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	apiIntNameGCP := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
