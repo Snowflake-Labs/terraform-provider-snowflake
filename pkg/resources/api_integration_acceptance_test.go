@@ -288,6 +288,93 @@ func TestAcc_ApiIntegration_google(t *testing.T) {
 	})
 }
 
+func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	comment := "acceptance test"
+	key := "12345"
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":             config.StringVariable(name),
+			"api_provider":     config.StringVariable("aws_api_gateway"),
+			"api_aws_role_arn": config.StringVariable(dummyAwsApiRoleArn),
+			"api_allowed_prefixes": config.ListVariable(
+				config.StringVariable(dummyAwsPrefix),
+			),
+			"api_blocked_prefixes": config.ListVariable(
+				config.StringVariable(dummyAwsOtherPrefix),
+			),
+			"api_key": config.StringVariable(key),
+			"comment": config.StringVariable(comment),
+			"enabled": config.BoolVariable(true),
+		}
+	}
+	m2 := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":                    config.StringVariable(name),
+			"azure_tenant_id":         config.StringVariable(dummyAzureTenantId),
+			"azure_ad_application_id": config.StringVariable(dummyAzureAdApplicationId),
+			"api_allowed_prefixes": config.ListVariable(
+				config.StringVariable(dummyAzurePrefix),
+			),
+			"api_blocked_prefixes": config.ListVariable(
+				config.StringVariable(dummyAzureOtherPrefix),
+			),
+			"api_key": config.StringVariable(key),
+			"comment": config.StringVariable(comment),
+			"enabled": config.BoolVariable(true),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckApiIntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_provider", "aws_api_gateway"),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_aws_role_arn", dummyAwsApiRoleArn),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_allowed_prefixes.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_allowed_prefixes.0", dummyAwsPrefix),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_blocked_prefixes.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_blocked_prefixes.0", dummyAwsOtherPrefix),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "comment", comment),
+					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_change", "created_on"),
+					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_change", "api_aws_iam_user_arn"),
+					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_change", "api_aws_external_id"),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_key", key),
+				),
+			},
+			// change parameters
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m2(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_provider", "azure_api_management"),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "azure_tenant_id", dummyAzureTenantId),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "azure_ad_application_id", dummyAzureAdApplicationId),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_allowed_prefixes.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_allowed_prefixes.0", dummyAzurePrefix),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_blocked_prefixes.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_blocked_prefixes.0", dummyAzureOtherPrefix),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "comment", comment),
+					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_change", "created_on"),
+					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_change", "azure_multi_tenant_app_name"),
+					resource.TestCheckResourceAttrSet("snowflake_api_integration.test_change", "azure_consent_url"),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_change", "api_key", key),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckApiIntegrationDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
 	client := sdk.NewClientFromDB(db)
