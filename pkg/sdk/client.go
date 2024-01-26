@@ -73,7 +73,7 @@ type Client struct {
 	Shares                   Shares
 	Stages                   Stages
 	StorageIntegrations      StorageIntegrations
-  Streamlits               Streamlits
+	Streamlits               Streamlits
 	Streams                  Streams
 	Tables                   Tables
 	Tags                     Tags

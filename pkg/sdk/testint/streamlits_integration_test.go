@@ -55,7 +55,7 @@ func TestInt_Streamlits(t *testing.T) {
 	}
 
 	t.Run("create streamlit", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
+		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
 		t.Cleanup(cleanupStage)
 
 		comment := random.StringN(4)
@@ -70,7 +70,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("alter streamlit: set", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
+		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
 		t.Cleanup(cleanupStage)
 		manifest := "manifest.yml"
 		e := createStreamlitHandle(t, stage, manifest)
@@ -84,7 +84,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("alter function: rename", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
+		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -107,7 +107,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("show streamlit: with like", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
+		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -118,7 +118,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("show streamlit: terse with like", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
+		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
 		t.Cleanup(cleanupStage)
 		e := createStreamlitHandle(t, stage, "manifest.yml")
 
@@ -139,7 +139,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	t.Run("describe streamlit", func(t *testing.T) {
-		stage, cleanupStage := createStage(t, client, databaseTest, schemaTest, random.AlphaN(4))
+		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
 		t.Cleanup(cleanupStage)
 
 		mainFile := "manifest.yml"
