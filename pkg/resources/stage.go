@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"strings"
 )
 
 var stageSchema = map[string]*schema.Schema{
@@ -100,8 +101,10 @@ func Stage() *schema.Resource {
 	}
 }
 
-// TODO: Document why snowflake package is used here instead of sdk
-// TODO: Add acceptance tests
+// TODO: Remove from snowflake package everything that is not used
+
+// TODO (SNOW-1019005): Remove snowflake package that is used in Create and Update operations
+
 func CreateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
 	name := d.Get("name").(string)
@@ -199,7 +202,7 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("url", strings.Trim(findStagePropertyValue(properties, "URL"), "[\"]")); err != nil {
+	if err := d.Set("url", strings.Trim(findStagePropertyValueByName(properties, "URL"), "[\"]")); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -209,7 +212,7 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 			fileFormat = append(fileFormat, fmt.Sprintf("%s = %s", property.Name, property.Value))
 		}
 	}
-	if err := d.Set("file_format", fileFormat); err != nil {
+	if err := d.Set("file_format", strings.Join(fileFormat, " ")); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -219,7 +222,7 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 			copyOptions = append(copyOptions, fmt.Sprintf("%s = %s", property.Name, property.Value))
 		}
 	}
-	if err := d.Set("copy_options", copyOptions); err != nil {
+	if err := d.Set("copy_options", strings.Join(copyOptions, " ")); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -229,7 +232,7 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 			directory = append(directory, fmt.Sprintf("%s = %s", property.Name, property.Value))
 		}
 	}
-	if err := d.Set("directory", directory); err != nil {
+	if err := d.Set("directory", strings.Join(directory, " ")); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -241,11 +244,11 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("aws_external_id", findStagePropertyValue(properties, "AWS_EXTERNAL_ID")); err != nil {
+	if err := d.Set("aws_external_id", findStagePropertyValueByName(properties, "AWS_EXTERNAL_ID")); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("snowflake_iam_user", findStagePropertyValue(properties, "SNOWFLAKE_IAM_USER")); err != nil {
+	if err := d.Set("snowflake_iam_user", findStagePropertyValueByName(properties, "SNOWFLAKE_IAM_USER")); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -367,7 +370,7 @@ func DeleteStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 	return nil
 }
 
-func findStagePropertyValue(properties []sdk.StageProperty, name string) string {
+func findStagePropertyValueByName(properties []sdk.StageProperty, name string) string {
 	for _, property := range properties {
 		if property.Name == name {
 			return property.Value
