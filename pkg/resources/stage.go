@@ -87,6 +87,7 @@ var stageSchema = map[string]*schema.Schema{
 	"tag": tagReferenceSchema,
 }
 
+// TODO (SNOW-1019005): Remove snowflake package that is used in Create and Update operations
 func Stage() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateStage,
@@ -100,10 +101,6 @@ func Stage() *schema.Resource {
 		},
 	}
 }
-
-// TODO: Remove from snowflake package everything that is not used
-
-// TODO (SNOW-1019005): Remove snowflake package that is used in Create and Update operations
 
 func CreateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)

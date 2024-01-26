@@ -52,13 +52,11 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 	storageIntegration := ""
 	credentials := fmt.Sprintf("AWS_KEY_ID = '%s' AWS_SECRET_KEY = '%s'", awsKeyId, awsSecretKey)
 	encryption := "TYPE = 'NONE'"
-	fileFormat := "TYPE = JSON NULL_IF = []"
 
-	changedUrl := "s3://bar/"
-	changedStorageIntegration := "s3_storage_integration"
-	changedCredentials := ""
+	changedUrl := awsBucketUrl + "/some-path"
+	changedStorageIntegration := "S3_STORAGE_INTEGRATION"
 	changedEncryption := "TYPE = 'AWS_SSE_S3'"
-	changedFileFormat := "TYPE = CSV"
+	changedFileFormat := "TYPE = JSON NULL_IF = []"
 	changedComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	configVariables := func(url string, storageIntegration string, credentials string, encryption string, fileFormat string, comment string) config.Variables {
@@ -85,7 +83,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(url, storageIntegration, credentials, encryption, fileFormat, comment),
+				ConfigVariables: configVariables(url, storageIntegration, credentials, encryption, "", comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
@@ -93,20 +91,20 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_integration", storageIntegration),
 					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "encryption", encryption),
-					resource.TestCheckResourceAttr(resourceName, "file_format", fileFormat),
+					resource.TestCheckResourceAttr(resourceName, "file_format", ""),
 					resource.TestCheckResourceAttr(resourceName, "url", url),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
 			},
 			{
 				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(changedUrl, changedStorageIntegration, changedCredentials, changedEncryption, changedFileFormat, changedComment),
+				ConfigVariables: configVariables(changedUrl, changedStorageIntegration, credentials, changedEncryption, changedFileFormat, changedComment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "storage_integration", changedStorageIntegration),
-					resource.TestCheckResourceAttr(resourceName, "credentials", changedCredentials),
+					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "encryption", changedEncryption),
 					resource.TestCheckResourceAttr(resourceName, "file_format", changedFileFormat),
 					resource.TestCheckResourceAttr(resourceName, "url", changedUrl),
