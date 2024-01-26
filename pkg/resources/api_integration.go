@@ -296,6 +296,10 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 			if err := d.Set("api_gcp_service_account", value); err != nil {
 				return err
 			}
+		case "API_PROVIDER":
+			if err := d.Set("api_provider", strings.ToLower(value)); err != nil {
+				return err
+			}
 		default:
 			log.Printf("[WARN] unexpected api integration property %v returned from Snowflake", name)
 		}
