@@ -276,6 +276,21 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", strings.ToUpper(argName), argType), body)
 	})
 
+	t.Run("describe row access policy: with data type normalization", func(t *testing.T) {
+		argName := random.AlphaN(5)
+		argType := sdk.DataTypeTimestamp
+		args := sdk.NewCreateRowAccessPolicyArgsRequest(argName, argType)
+		body := "true"
+
+		request := createRowAccessPolicyRequest(t, []sdk.CreateRowAccessPolicyArgsRequest{*args}, body)
+		rowAccessPolicy := createRowAccessPolicyWithRequest(t, request)
+
+		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
+		require.NoError(t, err)
+
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", strings.ToUpper(argName), sdk.DataTypeTimestampNTZ), body)
+	})
+
 	t.Run("describe row access policy: non-existing", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
 

@@ -31,13 +31,13 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 		Description: "The schema in which to create the row access policy.",
 		ForceNew:    true,
 	},
+	// TODO [SNOW-1020074]: Implement DiffSuppressFunc and test after https://github.com/hashicorp/terraform-plugin-sdk/issues/477 is solved.
 	"signature": {
 		Type:        schema.TypeMap,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Required:    true,
 		ForceNew:    true,
 		Description: "Specifies signature (arguments) for the row access policy (uppercase and sorted to avoid recreation of resource). A signature specifies a set of attributes that must be considered to determine whether the row is accessible. The attribute values come from the database object (e.g. table or view) to be protected by the row access policy.",
-		// Implement DiffSuppressFunc after https://github.com/hashicorp/terraform-plugin-sdk/issues/477 is solved
 	},
 	"row_access_expression": {
 		Type:        schema.TypeString,
@@ -145,7 +145,7 @@ func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("signature", ParseSignature(rowAccessPolicyDescription.Signature)); err != nil {
+	if err := d.Set("signature", parseSignature(rowAccessPolicyDescription.Signature)); err != nil {
 		return err
 	}
 
@@ -202,8 +202,8 @@ func DeleteRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// TODO []: should we put signature parsing to the SDK?
-func ParseSignature(signature string) map[string]interface{} {
+// TODO [SNOW-1020074]: should we put signature parsing to the SDK?
+func parseSignature(signature string) map[string]interface{} {
 	// Format in database is `(column <data_type>)`
 	plainSignature := strings.ReplaceAll(signature, "(", "")
 	plainSignature = strings.ReplaceAll(plainSignature, ")", "")
