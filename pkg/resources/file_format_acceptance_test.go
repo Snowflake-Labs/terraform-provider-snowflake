@@ -19,7 +19,7 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormatConfigCSV(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: fileFormatConfigCSV(accName, acc.TestDatabaseName, acc.TestSchemaName, ";"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "database", acc.TestDatabaseName),
@@ -49,6 +49,11 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "encoding", "UTF-16"),
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "comment", "Terraform acceptance test"),
 				),
+			},
+			// UPDATE
+			{
+				Config: fileFormatConfigCSV(accName, acc.TestDatabaseName, acc.TestSchemaName, ","),
+				Check:  resource.TestCheckResourceAttr("snowflake_file_format.test", "field_delimiter", ","),
 			},
 			// IMPORT
 			{
@@ -398,7 +403,7 @@ func TestAcc_FileFormat_issue1947(t *testing.T) {
 	})
 }
 
-func fileFormatConfigCSV(n string, databaseName string, schemaName string) string {
+func fileFormatConfigCSV(n string, databaseName string, schemaName string, fieldDelimiter string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
 	name = "%v"
@@ -407,7 +412,7 @@ resource "snowflake_file_format" "test" {
 	format_type = "CSV"
 	compression = "GZIP"
 	record_delimiter = "\r"
-	field_delimiter = ";"
+	field_delimiter = "%s"
 	file_extension = ".ssv"
 	parse_header = true
 	skip_blank_lines = true
@@ -427,7 +432,7 @@ resource "snowflake_file_format" "test" {
 	encoding = "UTF-16"
 	comment = "Terraform acceptance test"
 }
-`, n, databaseName, schemaName)
+`, n, databaseName, schemaName, fieldDelimiter)
 }
 
 func fileFormatConfigJSON(n string, databaseName string, schemaName string) string {

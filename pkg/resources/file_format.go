@@ -781,9 +781,9 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	runSet := false
-	opts := sdk.AlterFileFormatOptions{}
+	opts := sdk.AlterFileFormatOptions{Set: &sdk.FileFormatTypeOptions{}}
 
-	switch d.Get("format_type") {
+	switch sdk.FileFormatType(d.Get("format_type").(string)) {
 	case sdk.FileFormatTypeCSV:
 		if d.HasChange("compression") {
 			v := sdk.CSVCompression(d.Get("compression").(string))
