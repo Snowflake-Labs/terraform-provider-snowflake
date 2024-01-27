@@ -24,6 +24,10 @@ variable "comment" {
   type = string
 }
 
+variable "refresh_mode" {
+  type = string
+}
+
 variable "table_name" {
   type = string
 }

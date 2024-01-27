@@ -24,13 +24,14 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 	tableName := name + "_table"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":       config.StringVariable(name),
-			"database":   config.StringVariable(acc.TestDatabaseName),
-			"schema":     config.StringVariable(acc.TestSchemaName),
-			"warehouse":  config.StringVariable(acc.TestWarehouseName),
-			"query":      config.StringVariable(fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)),
-			"comment":    config.StringVariable("Terraform acceptance test"),
-			"table_name": config.StringVariable(tableName),
+			"name":         config.StringVariable(name),
+			"database":     config.StringVariable(acc.TestDatabaseName),
+			"schema":       config.StringVariable(acc.TestSchemaName),
+			"warehouse":    config.StringVariable(acc.TestWarehouseName),
+			"refresh_mode": config.StringVariable("FULL"),
+			"query":        config.StringVariable(fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)),
+			"comment":      config.StringVariable("Terraform acceptance test"),
+			"table_name":   config.StringVariable(tableName),
 		}
 	}
 	variableSet2 := m()
@@ -53,6 +54,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName),
+					resource.TestCheckResourceAttr(resourceName, "refresh_mode", "FULL"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.maximum_duration", "2 minutes"),
 					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
@@ -65,7 +67,6 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "rows"),
 					resource.TestCheckResourceAttrSet(resourceName, "bytes"),
 					resource.TestCheckResourceAttrSet(resourceName, "owner"),
-					resource.TestCheckResourceAttrSet(resourceName, "refresh_mode"),
 					// - not used at this time
 					// resource.TestCheckResourceAttrSet(resourceName, "automatic_clustering"),
 					resource.TestCheckResourceAttrSet(resourceName, "scheduling_state"),

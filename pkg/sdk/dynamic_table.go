@@ -22,6 +22,7 @@ type createDynamicTableOptions struct {
 	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
 	name         SchemaObjectIdentifier  `ddl:"identifier"`
 	targetLag    TargetLag               `ddl:"parameter,no_quotes" sql:"TARGET_LAG"`
+	RefreshMode  *string                 `ddl:"parameter,no_quotes" sql:"REFRESH_MODE"`
 	warehouse    AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
 	Comment      *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	query        string                  `ddl:"parameter,no_equals,no_quotes" sql:"AS"`

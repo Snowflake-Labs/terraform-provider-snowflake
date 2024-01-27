@@ -19,7 +19,8 @@ resource "snowflake_dynamic_table" "dt" {
   target_lag {
     maximum_duration = "2 minutes"
   }
-  warehouse = var.warehouse
-  query     = var.query
-  comment   = var.comment
+  warehouse    = var.warehouse
+  query        = var.query
+  comment      = var.comment
+  refresh_mode = var.refresh_mode
 }

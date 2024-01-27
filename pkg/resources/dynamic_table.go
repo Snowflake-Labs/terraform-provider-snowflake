@@ -74,6 +74,25 @@ var dynamicTableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the dynamic table.",
 	},
+	"refresh_mode": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "INCREMENTAL if the dynamic table will use incremental refreshes, or FULL if it will recompute the whole table on every refresh.",
+		ForceNew:    true,
+		DiffSuppressFunc: func(_, oldValue, newValue string, d *schema.ResourceData) bool {
+			switch {
+			case oldValue == "INCREMENTAL" && newValue == "FULL":
+				return false
+			case oldValue == "FULL" && newValue == "INCREMENTAL":
+				return false
+			case oldValue == "" && newValue != "":
+				return false
+			default:
+				return true
+			}
+		},
+		DiffSuppressOnRefresh: true,
+	},
 	"cluster_by": {
 		Type:        schema.TypeString,
 		Description: "The clustering key for the dynamic table.",
@@ -92,11 +111,6 @@ var dynamicTableSchema = map[string]*schema.Schema{
 	"owner": {
 		Type:        schema.TypeString,
 		Description: "Role that owns the dynamic table.",
-		Computed:    true,
-	},
-	"refresh_mode": {
-		Type:        schema.TypeString,
-		Description: "INCREMENTAL if the dynamic table will use incremental refreshes, or FULL if it will recompute the whole table on every refresh.",
 		Computed:    true,
 	},
 	"refresh_mode_reason": {
@@ -287,6 +301,9 @@ func CreateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
 		request.WithOrReplace(true)
+	}
+	if v, ok := d.GetOk("refresh_mode"); ok {
+		request.WithRefreshMode(sdk.String(v.(string)))
 	}
 	if err := client.DynamicTables.Create(context.Background(), request); err != nil {
 		return err

@@ -24,6 +24,11 @@ func (s *CreateDynamicTableRequest) WithComment(comment *string) *CreateDynamicT
 	return s
 }
 
+func (s *CreateDynamicTableRequest) WithRefreshMode(refreshMode *string) *CreateDynamicTableRequest {
+	s.refreshMode = refreshMode
+	return s
+}
+
 func NewAlterDynamicTableRequest(
 	name SchemaObjectIdentifier,
 ) *AlterDynamicTableRequest {
