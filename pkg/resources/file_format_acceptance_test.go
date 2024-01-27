@@ -52,8 +52,11 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 			},
 			// UPDATE
 			{
-				Config: fileFormatConfigCSV(accName, acc.TestDatabaseName, acc.TestSchemaName, ",", "Terraform acceptance test"),
-				Check:  resource.TestCheckResourceAttr("snowflake_file_format.test", "field_delimiter", ","),
+				Config: fileFormatConfigCSV(accName, acc.TestDatabaseName, acc.TestSchemaName, ",", "Terraform acceptance test 2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "field_delimiter", ","),
+					resource.TestCheckResourceAttr("snowflake_file_format.test", "comment", "Terraform acceptance test 2"),
+				),
 			},
 			// IMPORT
 			{
