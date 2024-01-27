@@ -61,7 +61,6 @@ var dynamicTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The warehouse in which to create the dynamic table.",
-		ForceNew:    true,
 	},
 	"query": {
 		Type:             schema.TypeString,
