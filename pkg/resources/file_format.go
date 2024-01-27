@@ -1092,6 +1092,12 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("comment") {
+		v := d.Get("comment").(string)
+		opts.Set.Comment = &v
+		runSet = true
+	}
+
 	if runSet {
 		err = client.FileFormats.Alter(ctx, id, &opts)
 		if err != nil {
