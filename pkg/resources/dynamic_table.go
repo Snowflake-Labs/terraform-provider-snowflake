@@ -93,6 +93,15 @@ var dynamicTableSchema = map[string]*schema.Schema{
 		},
 		DiffSuppressOnRefresh: true,
 	},
+	"initialize": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Initialize trigger for the dynamic table. Can only be set on creation.",
+		ForceNew:    true,
+		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			return oldValue == "ON_CREATE" && newValue == ""
+		},
+	},
 	"cluster_by": {
 		Type:        schema.TypeString,
 		Description: "The clustering key for the dynamic table.",
@@ -213,6 +222,15 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+	if strings.Contains(dynamicTable.Text, "initialize = 'ON_CREATE'") {
+		if err := d.Set("initialize", "ON_CREATE"); err != nil {
+			return err
+		}
+	} else if strings.Contains(dynamicTable.Text, "initialize = 'ON_SCHEDULE'") {
+		if err := d.Set("initialize", "ON_SCHEDULE"); err != nil {
+			return err
+		}
+	}
 	if err := d.Set("cluster_by", dynamicTable.ClusterBy); err != nil {
 		return err
 	}
@@ -304,6 +322,9 @@ func CreateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("refresh_mode"); ok {
 		request.WithRefreshMode(sdk.String(v.(string)))
+	}
+	if v, ok := d.GetOk("initialize"); ok {
+		request.WithInitialize(sdk.String(v.(string)))
 	}
 	if err := client.DynamicTables.Create(context.Background(), request); err != nil {
 		return err

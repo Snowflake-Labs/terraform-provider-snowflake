@@ -19,6 +19,7 @@ type CreateDynamicTableRequest struct {
 
 	comment     *string
 	refreshMode *string
+	initialize  *string
 }
 
 type AlterDynamicTableRequest struct {

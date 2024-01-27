@@ -22,6 +22,7 @@ type createDynamicTableOptions struct {
 	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
 	name         SchemaObjectIdentifier  `ddl:"identifier"`
 	targetLag    TargetLag               `ddl:"parameter,no_quotes" sql:"TARGET_LAG"`
+	Initialize   *string                 `ddl:"parameter,no_quotes" sql:"INITIALIZE"`
 	RefreshMode  *string                 `ddl:"parameter,no_quotes" sql:"REFRESH_MODE"`
 	warehouse    AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
 	Comment      *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -130,7 +131,7 @@ type dynamicTableRow struct {
 	LastSuspendedOn     sql.NullTime   `db:"last_suspended_on"`
 	IsClone             bool           `db:"is_clone"`
 	IsReplica           bool           `db:"is_replica"`
-	DataTimestamp       time.Time      `db:"data_timestamp"`
+	DataTimestamp       sql.NullTime   `db:"data_timestamp"`
 }
 
 func (dtr dynamicTableRow) convert() *DynamicTable {
@@ -153,10 +154,12 @@ func (dtr dynamicTableRow) convert() *DynamicTable {
 		SchedulingState:     DynamicTableSchedulingState(dtr.SchedulingState),
 		IsClone:             dtr.IsClone,
 		IsReplica:           dtr.IsReplica,
-		DataTimestamp:       dtr.DataTimestamp,
 	}
 	if dtr.RefreshModeReason.Valid {
 		dt.RefreshModeReason = dtr.RefreshModeReason.String
+	}
+	if dtr.DataTimestamp.Valid {
+		dt.DataTimestamp = dtr.DataTimestamp.Time
 	}
 	if dtr.LastSuspendedOn.Valid {
 		dt.LastSuspendedOn = dtr.LastSuspendedOn.Time

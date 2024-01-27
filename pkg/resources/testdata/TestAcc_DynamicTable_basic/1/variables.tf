@@ -28,6 +28,10 @@ variable "refresh_mode" {
   type = string
 }
 
+variable "initialize" {
+  type = string
+}
+
 variable "table_name" {
   type = string
 }

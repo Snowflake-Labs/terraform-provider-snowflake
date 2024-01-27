@@ -23,4 +23,5 @@ resource "snowflake_dynamic_table" "dt" {
   query        = var.query
   comment      = var.comment
   refresh_mode = var.refresh_mode
+  initialize   = var.initialize
 }

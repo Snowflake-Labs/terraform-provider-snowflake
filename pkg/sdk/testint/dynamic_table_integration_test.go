@@ -55,7 +55,8 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
 		comment := random.Comment()
 		refreshMode := "FULL"
-		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithRefreshMode(&refreshMode).WithComment(&comment))
+		initialize := "ON_SCHEDULE"
+		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithInitialize(&initialize).WithRefreshMode(&refreshMode).WithComment(&comment))
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(name))
@@ -70,6 +71,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
 		require.Equal(t, "DOWNSTREAM", entity.TargetLag)
 		require.Equal(t, "FULL", entity.RefreshMode)
+		require.Contains(t, entity.Text, "ON_SCHEDULE")
 	})
 }
 

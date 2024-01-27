@@ -64,6 +64,7 @@ func (s *CreateDynamicTableRequest) toOpts() *createDynamicTableOptions {
 		query:       s.query,
 		Comment:     s.comment,
 		RefreshMode: s.refreshMode,
+		Initialize:  s.initialize,
 	}
 }
 
