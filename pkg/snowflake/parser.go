@@ -87,6 +87,36 @@ func (e *ViewSelectStatementExtractor) ExtractMaterializedView() (string, error)
 	return string(e.input[e.pos:]), nil
 }
 
+func (e *ViewSelectStatementExtractor) ExtractDynamicTable() (string, error) {
+	fmt.Printf("[DEBUG] extracting dynamic table query %s\n", string(e.input))
+	e.consumeSpace()
+	e.consumeToken("create")
+	e.consumeSpace()
+	e.consumeToken("or replace")
+	e.consumeSpace()
+	e.consumeToken("dynamic table")
+	e.consumeSpace()
+	e.consumeID()
+	// TODO column list
+	e.consumeSpace()
+	e.consumeComment()
+	e.consumeSpace()
+	e.consumeQuotedParameter("lag")
+	e.consumeSpace()
+	e.consumeTokenParameter("warehouse")
+	e.consumeSpace()
+	e.consumeTokenParameter("refresh_mode")
+	e.consumeSpace()
+	e.consumeTokenParameter("initialize")
+	e.consumeSpace()
+	e.consumeTokenParameter("warehouse")
+	e.consumeSpace()
+	e.consumeToken("as")
+	e.consumeSpace()
+
+	return string(e.input[e.pos:]), nil
+}
+
 // consumeToken will move e.pos forward iff the token is the next part of the input. Comparison is
 // case-insensitive. Will return true if consumed.
 func (e *ViewSelectStatementExtractor) consumeToken(t string) bool {
@@ -134,7 +164,11 @@ func (e *ViewSelectStatementExtractor) consumeNonSpace() {
 }
 
 func (e *ViewSelectStatementExtractor) consumeComment() {
-	if c := e.consumeToken("comment"); !c {
+	e.consumeQuotedParameter("comment")
+}
+
+func (e *ViewSelectStatementExtractor) consumeQuotedParameter(param string) {
+	if c := e.consumeToken(param); !c {
 		return
 	}
 
@@ -171,6 +205,21 @@ func (e *ViewSelectStatementExtractor) consumeComment() {
 	if !e.consumeToken("'") {
 		return
 	}
+}
+
+func (e *ViewSelectStatementExtractor) consumeTokenParameter(param string) {
+	if c := e.consumeToken(param); !c {
+		return
+	}
+
+	e.consumeSpace()
+
+	if c := e.consumeToken("="); !c {
+		return
+	}
+
+	e.consumeSpace()
+	e.consumeNonSpace()
 }
 
 func (e *ViewSelectStatementExtractor) consumeClusterBy() {
