@@ -226,6 +226,21 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
+	t.Run("create and describe notification integration - email, with empty allowed recipients", func(t *testing.T) {
+		id := sdk.RandomAccountObjectIdentifier()
+		request := sdk.NewCreateNotificationIntegrationRequest(id, true).
+			WithEmailParams(sdk.NewEmailParamsRequest().WithAllowedRecipients([]sdk.NotificationIntegrationAllowedRecipient{}))
+
+		integration := createNotificationIntegrationWithRequest(t, request)
+
+		assertNotificationIntegration(t, integration, request.GetName(), "EMAIL", "")
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ALLOWED_RECIPIENTS", Type: "List", Value: "", Default: "[]"})
+	})
+
 	t.Run("alter notification integration: auto", func(t *testing.T) {
 		integration := createNotificationIntegrationAutoGoogle(t)
 
