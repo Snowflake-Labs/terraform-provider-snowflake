@@ -224,72 +224,81 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateMaterializedView implements schema.UpdateFunc.
 func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
-	mvid, err := materializedViewIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := mvid.DatabaseName
-	schema := mvid.SchemaName
-	view := mvid.ViewName
-
-	builder := snowflake.NewMaterializedViewBuilder(view).WithDB(dbName).WithSchema(schema)
-
 	db := meta.(*sql.DB)
-	if d.HasChange("name") {
-		name := d.Get("name")
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-		q := builder.Rename(name.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error renaming view %v err = %w", d.Id(), err)
-		}
-		materializedViewID := &materializedViewID{
-			DatabaseName: dbName,
-			SchemaName:   schema,
-			ViewName:     name.(string),
-		}
-		dataIDInput, err := materializedViewID.String()
+	if d.HasChange("name") {
+		newName := d.Get("name").(string)
+
+		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), newName)
+
+		err := client.MaterializedViews.Alter(ctx, sdk.NewAlterMaterializedViewRequest(id).WithRenameTo(&newId))
 		if err != nil {
-			return err
+			return fmt.Errorf("error renaming materialized view %v err = %w", d.Id(), err)
 		}
-		d.SetId(dataIDInput)
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
 	}
+
+	var runSetStatement bool
+	var runUnsetStatement bool
+	setRequest := sdk.NewMaterializedViewSetRequest()
+	unsetRequest := sdk.NewMaterializedViewUnsetRequest()
 
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
-
 		if c := comment.(string); c == "" {
-			q := builder.RemoveComment()
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error unsetting comment for view %v err = %w", d.Id(), err)
-			}
+			runUnsetStatement = true
+			unsetRequest.WithComment(sdk.Bool(true))
 		} else {
-			q := builder.ChangeComment(c)
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error updating comment for view %v err = %w", d.Id(), err)
-			}
+			runSetStatement = true
+			setRequest.WithComment(sdk.String(d.Get("comment").(string)))
 		}
 	}
 	if d.HasChange("is_secure") {
-		secure := d.Get("is_secure")
-
-		if secure.(bool) {
-			q := builder.Secure()
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error setting secure for view %v err = %w", d.Id(), err)
-			}
+		if d.Get("is_secure").(bool) {
+			runSetStatement = true
+			setRequest.WithSecure(sdk.Bool(true))
 		} else {
-			q := builder.Unsecure()
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error unsetting secure for materialized view %v err = %w", d.Id(), err)
-			}
+			runUnsetStatement = true
+			unsetRequest.WithSecure(sdk.Bool(true))
 		}
 	}
 
-	handleErr := handleTagChanges(db, d, builder)
-	if handleErr != nil {
-		return handleErr
+	if runSetStatement {
+		err := client.MaterializedViews.Alter(ctx, sdk.NewAlterMaterializedViewRequest(id).WithSet(setRequest))
+		if err != nil {
+			return fmt.Errorf("error updating materialized view: %w", err)
+		}
 	}
+
+	if runUnsetStatement {
+		err := client.MaterializedViews.Alter(ctx, sdk.NewAlterMaterializedViewRequest(id).WithUnset(unsetRequest))
+		if err != nil {
+			return fmt.Errorf("error updating materialized view: %w", err)
+		}
+	}
+
+	// TODO: support set/unset tags in the SDK if possible
+	//if d.HasChange("tag") {
+	//	unsetTags, setTags := GetTagsDiff(d, "tag")
+	//
+	//	if len(unsetTags) > 0 {
+	//		err := client.MaterializedViews.Alter(ctx, sdk.NewAlterMaterializedViewRequest(id).WithUnsetTag(unsetTags))
+	//		if err != nil {
+	//			return fmt.Errorf("error unsetting tags on %v, err = %w", d.Id(), err)
+	//		}
+	//	}
+	//
+	//	if len(setTags) > 0 {
+	//		err := client.MaterializedViews.Alter(ctx, sdk.NewAlterMaterializedViewRequest(id).WithSetTags(setTags))
+	//		if err != nil {
+	//			return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+	//		}
+	//	}
+	//}
 
 	return ReadMaterializedView(d, meta)
 }

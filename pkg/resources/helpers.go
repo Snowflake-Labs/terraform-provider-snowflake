@@ -74,18 +74,21 @@ func getTagObjectIdentifier(v map[string]any) sdk.ObjectIdentifier {
 
 func getPropertyTags(d *schema.ResourceData, key string) []sdk.TagAssociation {
 	if from, ok := d.GetOk(key); ok {
-		tags := from.([]any)
-		to := make([]sdk.TagAssociation, len(tags))
-		for i, t := range tags {
-			v := t.(map[string]any)
-			to[i] = sdk.TagAssociation{
-				Name:  getTagObjectIdentifier(v),
-				Value: v["value"].(string),
-			}
-		}
-		return to
+		return getTagsFromList(from.([]any))
 	}
 	return nil
+}
+
+func getTagsFromList(tags []any) []sdk.TagAssociation {
+	to := make([]sdk.TagAssociation, len(tags))
+	for i, t := range tags {
+		v := t.(map[string]any)
+		to[i] = sdk.TagAssociation{
+			Name:  getTagObjectIdentifier(v),
+			Value: v["value"].(string),
+		}
+	}
+	return to
 }
 
 func GetTagsDiff(d *schema.ResourceData, key string) (unsetTags []sdk.ObjectIdentifier, setTags []sdk.TagAssociation) {
