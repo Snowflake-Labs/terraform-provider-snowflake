@@ -4,6 +4,12 @@ This document is meant to help you migrate your Terraform config to new newest v
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behaviour
 across different versions.
 
+## v0.84.0 ➞ v0.85.0
+
+#### *(behavior change)* snowflake_notification_integration (notification_provider)
+`notification_provider` becomes required and has three possible values `AZURE_STORAGE_QUEUE`, `AWS_SNS`, and `GCP_PUBSUB`.
+It is still possible to set it to `AWS_SQS` but because there is no underlying SQL, so it will result in error.
+
 ## v0.73.0 ➞ v0.74.0
 ### Provider configuration changes
 

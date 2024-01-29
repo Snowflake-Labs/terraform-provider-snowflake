@@ -47,7 +47,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	// This part of the schema is the cloudProviderParams in the Snowflake documentation and differs between vendors
 	"notification_provider": {
 		Type:         schema.TypeString,
-		Optional:     true,
+		Required:     true,
 		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "AWS_SNS", "GCP_PUBSUB"}, true),
 		Description:  "The third-party cloud message queuing service (supported values: AZURE_STORAGE_QUEUE, AWS_SNS, GCP_PUBSUB; AWS_SQS is deprecated and will be removed in the future provider versions)",
 		ForceNew:     true,
@@ -55,22 +55,24 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	"azure_storage_queue_primary_uri": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The queue ID for the Azure Queue Storage queue created for Event Grid notifications",
+		Description: "The queue ID for the Azure Queue Storage queue created for Event Grid notifications. Required for AZURE_STORAGE_QUEUE provider",
 	},
 	"azure_tenant_id": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "The ID of the Azure Active Directory tenant used for identity management",
+		Description: "The ID of the Azure Active Directory tenant used for identity management. Required for AZURE_STORAGE_QUEUE provider",
 	},
 	"aws_sqs_external_id": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "The external ID that Snowflake will use when assuming the AWS role",
+		Deprecated:  "No longer supported notification method",
 	},
 	"aws_sqs_iam_user_arn": {
 		Type:        schema.TypeString,
 		Computed:    true,
 		Description: "The Snowflake user that will attempt to assume the AWS role.",
+		Deprecated:  "No longer supported notification method",
 	},
 	"aws_sqs_arn": {
 		Type:        schema.TypeString,
@@ -97,12 +99,12 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 	"aws_sns_topic_arn": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "AWS SNS Topic ARN for notification integration to connect to",
+		Description: "AWS SNS Topic ARN for notification integration to connect to. Required for AWS_SNS provider.",
 	},
 	"aws_sns_role_arn": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "AWS IAM role ARN for notification integration to assume",
+		Description: "AWS IAM role ARN for notification integration to assume. Required for AWS_SNS provider",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -162,35 +164,45 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	if uri, ok := d.GetOk("azure_storage_queue_primary_uri"); ok {
-		tenantId, ok := d.GetOk("azure_tenant_id")
+	notificationProvider := strings.ToUpper(d.Get("notification_provider").(string))
+	switch notificationProvider {
+	case "AWS_SNS":
+		topic, ok := d.GetOk("aws_sns_topic_arn")
 		if !ok {
-			return fmt.Errorf("if you use azure_storage_queue_primary_uri you must specify an azure_tenant_id")
+			return fmt.Errorf("if you use AWS_SNS provider you must specify an aws_sns_topic_arn")
 		}
-		createRequest.WithAutomatedDataLoadsParams(
-			sdk.NewAutomatedDataLoadsParamsRequest().WithAzureAutoParams(sdk.NewAzureAutoParamsRequest(uri.(string), tenantId.(string))),
-		)
-	}
-
-	if topic, ok := d.GetOk("aws_sns_topic_arn"); ok {
 		role, ok := d.GetOk("aws_sns_role_arn")
 		if !ok {
-			return fmt.Errorf("if you use aws_sns_topic_arn you must specify an aws_sns_role_arn")
+			return fmt.Errorf("if you use AWS_SNS provider you must specify an aws_sns_role_arn")
 		}
 		createRequest.WithPushNotificationParams(
 			sdk.NewPushNotificationParamsRequest().WithAmazonPushParams(sdk.NewAmazonPushParamsRequest(topic.(string), role.(string))),
 		)
-	}
-
-	if v, ok := d.GetOk("gcp_pubsub_subscription_name"); ok {
+	case "GCP_PUBSUB":
+		if v, ok := d.GetOk("gcp_pubsub_subscription_name"); ok {
+			createRequest.WithAutomatedDataLoadsParams(
+				sdk.NewAutomatedDataLoadsParamsRequest().WithGoogleAutoParams(sdk.NewGoogleAutoParamsRequest(v.(string))),
+			)
+		}
+		if v, ok := d.GetOk("gcp_pubsub_topic_name"); ok {
+			createRequest.WithPushNotificationParams(
+				sdk.NewPushNotificationParamsRequest().WithGooglePushParams(sdk.NewGooglePushParamsRequest(v.(string))),
+			)
+		}
+	case "AZURE_STORAGE_QUEUE":
+		uri, ok := d.GetOk("azure_storage_queue_primary_uri")
+		if !ok {
+			return fmt.Errorf("if you use AZURE_STORAGE_QUEUE provider you must specify an azure_storage_queue_primary_uri")
+		}
+		tenantId, ok := d.GetOk("azure_tenant_id")
+		if !ok {
+			return fmt.Errorf("if you use AZURE_STORAGE_QUEUE provider you must specify an azure_tenant_id")
+		}
 		createRequest.WithAutomatedDataLoadsParams(
-			sdk.NewAutomatedDataLoadsParamsRequest().WithGoogleAutoParams(sdk.NewGoogleAutoParamsRequest(v.(string))),
+			sdk.NewAutomatedDataLoadsParamsRequest().WithAzureAutoParams(sdk.NewAzureAutoParamsRequest(uri.(string), tenantId.(string))),
 		)
-	}
-	if v, ok := d.GetOk("gcp_pubsub_topic_name"); ok {
-		createRequest.WithPushNotificationParams(
-			sdk.NewPushNotificationParamsRequest().WithGooglePushParams(sdk.NewGooglePushParamsRequest(v.(string))),
-		)
+	default:
+		return fmt.Errorf("unexpected provider %v", notificationProvider)
 	}
 
 	err := client.NotificationIntegrations.Create(ctx, createRequest)
