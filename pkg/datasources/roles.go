@@ -1,15 +1,16 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"log"
+	"fmt"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var rolesSchema = map[string]*schema.Schema{
+var accountRolesSchema = map[string]*schema.Schema{
 	"pattern": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -41,47 +42,53 @@ var rolesSchema = map[string]*schema.Schema{
 	},
 }
 
-// Roles Snowflake Roles resource.
 func Roles() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadRoles,
-		Schema: rolesSchema,
+		ReadContext: ReadAccountRoles,
+		Schema:      accountRolesSchema,
 	}
 }
 
-// ReadRoles Reads the database metadata information.
-func ReadRoles(d *schema.ResourceData, meta interface{}) error {
+func ReadAccountRoles(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	d.SetId("roles_read")
-	rolePattern := d.Get("pattern").(string)
+	client := sdk.NewClientFromDB(db)
 
-	listRoles, err := snowflake.ListRoles(db, rolePattern)
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("[DEBUG] no roles found in account (%s)", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Println("[DEBUG] failed to list roles")
-		d.SetId("")
-		return nil
+	req := sdk.NewShowRoleRequest()
+	if pattern, ok := d.GetOk("pattern"); ok {
+		req.WithLike(sdk.NewLikeRequest(pattern.(string)))
 	}
 
-	log.Printf("[DEBUG] list roles: %v", listRoles)
-
-	roles := []map[string]interface{}{}
-	for _, role := range listRoles {
-		roleMap := map[string]interface{}{}
-		if !role.Name.Valid {
-			continue
+	roles, err := client.Roles.Show(ctx, req)
+	if err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to show account roles",
+				Detail:   fmt.Sprintf("Search pattern: %v, err: %s", d.Get("pattern").(string), err),
+			},
 		}
-		roleMap["name"] = role.Name.String
-		roleMap["comment"] = role.Comment.String
-		roleMap["owner"] = role.Owner.String
-		roles = append(roles, roleMap)
 	}
 
-	if err := d.Set("roles", roles); err != nil {
-		return err
+	mappedRoles := make([]map[string]any, len(roles))
+	for i, role := range roles {
+		mappedRoles[i] = map[string]any{
+			"name":    role.Name,
+			"comment": role.Comment,
+			"owner":   role.Owner,
+		}
 	}
+
+	if err := d.Set("roles", mappedRoles); err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to set roles",
+				Detail:   fmt.Sprintf("Search pattern: %v, err: %s", d.Get("pattern").(string), err),
+			},
+		}
+	}
+
+	d.SetId("roles_read")
+
 	return nil
 }
