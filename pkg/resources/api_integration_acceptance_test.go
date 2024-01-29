@@ -17,24 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-const (
-	dummyAwsPrefix                 = "https://123456.execute-api.us-west-2.amazonaws.com/dev/"
-	dummyAwsOtherPrefix            = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
-	dummyAzurePrefix               = "https://apim-hello-world.azure-api.net/dev"
-	dummyAzureOtherPrefix          = "https://apim-hello-world.azure-api.net/prod"
-	dummyGooglePrefix              = "https://gateway-id-123456.uc.gateway.dev/prod"
-	dummyGoogleOtherPrefix         = "https://gateway-id-123456.uc.gateway.dev/dev"
-	dummyAwsApiRoleArn             = "arn:aws:iam::000000000001:/role/test"
-	dummyAwsOtherApiRoleArn        = "arn:aws:iam::000000000001:/role/other"
-	dummyAzureTenantId             = "00000000-0000-0000-0000-000000000000"
-	dummyAzureOtherTenantId        = "11111111-1111-1111-1111-111111111111"
-	dummyAzureAdApplicationId      = "22222222-2222-2222-2222-222222222222"
-	dummyAzureOtherAdApplicationId = "33333333-3333-3333-3333-333333333333"
-	dummyGoogleAudience            = "api-gateway-id-123456.apigateway.gcp-project.cloud.goog"
-	dummyGoogleOtherAudience       = "api-gateway-id-666777.apigateway.gcp-project.cloud.goog"
-)
-
 func TestAcc_ApiIntegration_aws(t *testing.T) {
+	const dummyAwsPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/dev/"
+	const dummyAwsOtherPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
+	const dummyAwsApiRoleArn = "arn:aws:iam::000000000001:/role/test"
+	const dummyAwsOtherApiRoleArn = "arn:aws:iam::000000000001:/role/other"
+
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	comment := "acceptance test"
 	key := "12345"
@@ -120,6 +108,13 @@ func TestAcc_ApiIntegration_aws(t *testing.T) {
 }
 
 func TestAcc_ApiIntegration_azure(t *testing.T) {
+	const dummyAzurePrefix = "https://apim-hello-world.azure-api.net/dev"
+	const dummyAzureOtherPrefix = "https://apim-hello-world.azure-api.net/prod"
+	const dummyAzureTenantId = "00000000-0000-0000-0000-000000000000"
+	const dummyAzureOtherTenantId = "11111111-1111-1111-1111-111111111111"
+	const dummyAzureAdApplicationId = "22222222-2222-2222-2222-222222222222"
+	const dummyAzureOtherAdApplicationId = "33333333-3333-3333-3333-333333333333"
+
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	comment := "acceptance test"
 	key := "12345"
@@ -208,6 +203,11 @@ func TestAcc_ApiIntegration_azure(t *testing.T) {
 }
 
 func TestAcc_ApiIntegration_google(t *testing.T) {
+	const dummyGooglePrefix = "https://gateway-id-123456.uc.gateway.dev/prod"
+	const dummyGoogleOtherPrefix = "https://gateway-id-123456.uc.gateway.dev/dev"
+	const dummyGoogleAudience = "api-gateway-id-123456.apigateway.gcp-project.cloud.goog"
+	const dummyGoogleOtherAudience = "api-gateway-id-666777.apigateway.gcp-project.cloud.goog"
+
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	comment := "acceptance test"
 	m := func() map[string]config.Variable {
@@ -291,6 +291,14 @@ func TestAcc_ApiIntegration_google(t *testing.T) {
 }
 
 func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
+	const dummyAwsPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/dev/"
+	const dummyAwsOtherPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
+	const dummyAwsApiRoleArn = "arn:aws:iam::000000000001:/role/test"
+	const dummyAzurePrefix = "https://apim-hello-world.azure-api.net/dev"
+	const dummyAzureOtherPrefix = "https://apim-hello-world.azure-api.net/prod"
+	const dummyAzureTenantId = "00000000-0000-0000-0000-000000000000"
+	const dummyAzureAdApplicationId = "22222222-2222-2222-2222-222222222222"
+
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	comment := "acceptance test"
 	key := "12345"
