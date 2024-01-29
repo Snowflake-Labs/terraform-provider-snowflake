@@ -1,16 +1,22 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// TODO [SNOW-TODO]: split this resource into smaller ones as part of SNOW-867235
+// TODO [SNOW-TODO]: remove SQS entirely
+// TODO [SNOW-TODO]: support Azure push notifications
 var notificationIntegrationSchema = map[string]*schema.Schema{
 	// The first part of the schema is shared between all integration vendors
 	"name": {
@@ -43,7 +49,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		ValidateFunc: validation.StringInSlice([]string{"AZURE_STORAGE_QUEUE", "AWS_SQS", "AWS_SNS", "GCP_PUBSUB"}, true),
-		Description:  "The third-party cloud message queuing service (e.g. AZURE_STORAGE_QUEUE, AWS_SQS, AWS_SNS)",
+		Description:  "The third-party cloud message queuing service (supported values: AZURE_STORAGE_QUEUE, AWS_SNS, GCP_PUBSUB; AWS_SQS is deprecated and will be removed in the future provider versions)",
 		ForceNew:     true,
 	},
 	"azure_storage_queue_primary_uri": {
@@ -70,11 +76,13 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "AWS SQS queue ARN for notification integration to connect to",
+		Deprecated:  "No longer supported notification method",
 	},
 	"aws_sqs_role_arn": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "AWS IAM role ARN for notification integration to assume",
+		Deprecated:  "No longer supported notification method",
 	},
 	"aws_sns_external_id": {
 		Type:        schema.TypeString,
@@ -141,57 +149,56 @@ func NotificationIntegration() *schema.Resource {
 // CreateNotificationIntegration implements schema.CreateFunc.
 func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	name := d.Get("name").(string)
+	id := sdk.NewAccountObjectIdentifier(name)
+	enabled := d.Get("enabled").(bool)
 
-	stmt := snowflake.NewNotificationIntegrationBuilder(name).Create()
+	createRequest := sdk.NewCreateNotificationIntegrationRequest(id, enabled)
 
-	// Set required fields
-	stmt.SetString(`TYPE`, d.Get("type").(string))
-	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
-
-	// Set optional fields
 	if v, ok := d.GetOk("comment"); ok {
-		stmt.SetString(`COMMENT`, v.(string))
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
-	if v, ok := d.GetOk("direction"); ok {
-		stmt.SetString(`DIRECTION`, v.(string))
+
+	if uri, ok := d.GetOk("azure_storage_queue_primary_uri"); ok {
+		tenantId, ok := d.GetOk("azure_tenant_id")
+		if !ok {
+			return fmt.Errorf("if you use azure_storage_queue_primary_uri you must specify an azure_tenant_id")
+		}
+		createRequest.WithAutomatedDataLoadsParams(
+			sdk.NewAutomatedDataLoadsParamsRequest().WithAzureAutoParams(sdk.NewAzureAutoParamsRequest(uri.(string), tenantId.(string))),
+		)
 	}
-	if v, ok := d.GetOk("azure_tenant_id"); ok {
-		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
+
+	if topic, ok := d.GetOk("aws_sns_topic_arn"); ok {
+		role, ok := d.GetOk("aws_sns_role_arn")
+		if !ok {
+			return fmt.Errorf("if you use aws_sns_topic_arn you must specify an aws_sns_role_arn")
+		}
+		createRequest.WithPushNotificationParams(
+			sdk.NewPushNotificationParamsRequest().WithAmazonPushParams(sdk.NewAmazonPushParamsRequest(topic.(string), role.(string))),
+		)
 	}
-	if v, ok := d.GetOk("notification_provider"); ok {
-		stmt.SetString(`NOTIFICATION_PROVIDER`, v.(string))
-	}
-	if v, ok := d.GetOk("azure_storage_queue_primary_uri"); ok {
-		stmt.SetString(`AZURE_STORAGE_QUEUE_PRIMARY_URI`, v.(string))
-	}
-	if v, ok := d.GetOk("azure_tenant_id"); ok {
-		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
-	}
-	if v, ok := d.GetOk("aws_sqs_arn"); ok {
-		stmt.SetString(`AWS_SQS_ARN`, v.(string))
-	}
-	if v, ok := d.GetOk("aws_sqs_role_arn"); ok {
-		stmt.SetString(`AWS_SQS_ROLE_ARN`, v.(string))
-	}
-	if v, ok := d.GetOk("aws_sns_topic_arn"); ok {
-		stmt.SetString(`AWS_SNS_TOPIC_ARN`, v.(string))
-	}
-	if v, ok := d.GetOk("aws_sns_role_arn"); ok {
-		stmt.SetString(`AWS_SNS_ROLE_ARN`, v.(string))
-	}
+
 	if v, ok := d.GetOk("gcp_pubsub_subscription_name"); ok {
-		stmt.SetString(`GCP_PUBSUB_SUBSCRIPTION_NAME`, v.(string))
+		createRequest.WithAutomatedDataLoadsParams(
+			sdk.NewAutomatedDataLoadsParamsRequest().WithGoogleAutoParams(sdk.NewGoogleAutoParamsRequest(v.(string))),
+		)
 	}
 	if v, ok := d.GetOk("gcp_pubsub_topic_name"); ok {
-		stmt.SetString(`GCP_PUBSUB_TOPIC_NAME`, v.(string))
+		createRequest.WithPushNotificationParams(
+			sdk.NewPushNotificationParamsRequest().WithGooglePushParams(sdk.NewGooglePushParamsRequest(v.(string))),
+		)
 	}
 
-	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
+	err := client.NotificationIntegrations.Create(ctx, createRequest)
+	if err != nil {
 		return fmt.Errorf("error creating notification integration: %w", err)
 	}
 
-	d.SetId(name)
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadNotificationIntegration(d, meta)
 }
@@ -408,5 +415,17 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 
 // DeleteNotificationIntegration implements schema.DeleteFunc.
 func DeleteNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.NewNotificationIntegrationBuilder)(d, meta)
+	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	err := client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(id))
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+
+	return nil
 }
