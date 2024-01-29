@@ -13,6 +13,13 @@ It is still possible to set it to `AWS_SQS` but because there is no underlying S
 Attributes `aws_sqs_arn` and `aws_sqs_role_arn` will be ignored.
 Computed attributes `aws_sqs_external_id` and `aws_sqs_iam_user_arn` won't be updated.
 
+#### *(behavior change)* force new for multiple attributes
+Force new was added for the following attributes (because no usable SQL alter statements for them):
+- `azure_storage_queue_primary_uri`
+- `azure_tenant_id`
+- `gcp_pubsub_subscription_name`
+- `gcp_pubsub_topic_name`
+
 #### *(deprecation)* direction
 `direction` parameter is deprecated because it is added automatically on the SDK level.
 

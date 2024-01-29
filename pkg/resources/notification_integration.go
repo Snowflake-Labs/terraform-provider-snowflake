@@ -57,11 +57,15 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The queue ID for the Azure Queue Storage queue created for Event Grid notifications. Required for AZURE_STORAGE_QUEUE provider",
+		// There is no alter SQL for azure_storage_queue_primary_uri for automated data loads, therefore it has to be recreated.
+		ForceNew: true,
 	},
 	"azure_tenant_id": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The ID of the Azure Active Directory tenant used for identity management. Required for AZURE_STORAGE_QUEUE provider",
+		// There is no alter SQL for azure_tenant_id for automated data loads, therefore it has to be recreated.
+		ForceNew: true,
 	},
 	"aws_sqs_external_id": {
 		Type:        schema.TypeString,
@@ -121,6 +125,8 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.",
+		// There is no alter SQL for gcp_pubsub_subscription_name for automated data loads, therefore it has to be recreated.
+		ForceNew: true,
 	},
 	"gcp_pubsub_topic_name": {
 		Type:        schema.TypeString,
@@ -284,6 +290,10 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 			if err := d.Set("azure_storage_queue_primary_uri", value); err != nil {
 				return err
 			}
+			// NOTIFICATION_PROVIDER is not returned for azure automated data load, so we set it manually in such a case
+			if err := d.Set("notification_provider", "AZURE_STORAGE_QUEUE"); err != nil {
+				return err
+			}
 		case "AZURE_TENANT_ID":
 			if err := d.Set("azure_tenant_id", value); err != nil {
 				return err
@@ -308,8 +318,16 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 			if err := d.Set("gcp_pubsub_subscription_name", value); err != nil {
 				return err
 			}
+			// NOTIFICATION_PROVIDER is not returned for gcp, so we set it manually in such a case
+			if err := d.Set("notification_provider", "GCP_PUBSUB"); err != nil {
+				return err
+			}
 		case "GCP_PUBSUB_TOPIC_NAME":
 			if err := d.Set("gcp_pubsub_topic_name", value); err != nil {
+				return err
+			}
+			// NOTIFICATION_PROVIDER is not returned for gcp, so we set it manually in such a case
+			if err := d.Set("notification_provider", "GCP_PUBSUB"); err != nil {
 				return err
 			}
 		case "GCP_PUBSUB_SERVICE_ACCOUNT":
@@ -352,17 +370,9 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 			setRequest.WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetAmazonPush(setAmazonPush))
 		}
 	case "GCP_PUBSUB":
-		if d.HasChange("gcp_pubsub_subscription_name") {
-			runSetStatement = true
-			setGooglePush := sdk.NewSetGooglePushRequest(d.Get("gcp_pubsub_subscription_name").(string))
-			setRequest.WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetGooglePush(setGooglePush))
-		}
+		log.Printf("[WARN] all GCP_PUBSUB properties should recreate the resource")
 	case "AZURE_STORAGE_QUEUE":
-		if d.HasChange("azure_storage_queue_primary_uri") || d.HasChange("azure_tenant_id") {
-			runSetStatement = true
-			setAzurePush := sdk.NewSetAzurePushRequest(d.Get("azure_storage_queue_primary_uri").(string), d.Get("azure_tenant_id").(string))
-			setRequest.WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetAzurePush(setAzurePush))
-		}
+		log.Printf("[WARN] all AZURE_STORAGE_QUEUE properties should recreate the resource")
 	default:
 		return fmt.Errorf("unexpected provider %v", notificationProvider)
 	}

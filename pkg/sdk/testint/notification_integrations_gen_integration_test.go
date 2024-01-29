@@ -158,6 +158,18 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AZURE_STORAGE_QUEUE_PRIMARY_URI", Type: "String", Value: azureStorageQueuePrimaryUri, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+
+		prop, err := collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool {
+			return property.Name == "AZURE_CONSENT_URL"
+		})
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
+
+		prop, err = collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool {
+			return property.Name == "AZURE_MULTI_TENANT_APP_NAME"
+		})
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
 	})
 
 	t.Run("create and describe notification integration - push amazon", func(t *testing.T) {
