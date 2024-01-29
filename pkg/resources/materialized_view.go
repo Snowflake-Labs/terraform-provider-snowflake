@@ -2,6 +2,7 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
@@ -9,6 +10,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -308,18 +311,13 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 // DeleteMaterializedView implements schema.DeleteFunc.
 func DeleteMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	materializedViewID, err := materializedViewIDFromString(d.Id())
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	err := client.MaterializedViews.Drop(ctx, sdk.NewDropMaterializedViewRequest(id))
 	if err != nil {
 		return err
-	}
-
-	dbName := materializedViewID.DatabaseName
-	schema := materializedViewID.SchemaName
-	view := materializedViewID.ViewName
-
-	q := snowflake.NewMaterializedViewBuilder(view).WithDB(dbName).WithSchema(schema).Drop()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting materialized view %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

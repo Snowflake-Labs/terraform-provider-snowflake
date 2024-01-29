@@ -2,6 +2,7 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
@@ -10,6 +11,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -384,20 +387,13 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 // DeleteView implements schema.DeleteFunc.
 func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	viewID, err := viewIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-	dbName := viewID.DatabaseName
-	schema := viewID.SchemaName
-	view := viewID.ViewName
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	q, err := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema).Drop()
+	err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
 	if err != nil {
 		return err
-	}
-	if err = snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting view %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")
