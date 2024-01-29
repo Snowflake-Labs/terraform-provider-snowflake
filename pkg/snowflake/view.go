@@ -234,7 +234,3 @@ func ScanView(row *sqlx.Row) (*View, error) {
 	err := row.StructScan(r)
 	return r, err
 }
-
-func (v *View) HasCopyGrants() bool {
-	return strings.Contains(v.Text.String, " COPY GRANTS ")
-}

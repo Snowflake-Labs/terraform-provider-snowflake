@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -189,57 +188,52 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 // ReadView implements schema.ReadFunc.
 func ReadView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	viewID, err := viewIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-	dbName := viewID.DatabaseName
-	schema := viewID.SchemaName
-	view := viewID.ViewName
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	q := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema).Show()
-	row := snowflake.QueryRow(db, q)
-	v, err := snowflake.ScanView(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
+	view, err := client.Views.ShowByID(ctx, id)
+	if err != nil {
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
+
+	if err = d.Set("name", view.Name); err != nil {
 		return err
 	}
-	if err = d.Set("name", v.Name.String); err != nil {
+	if err = d.Set("is_secure", view.IsSecure); err != nil {
 		return err
 	}
-	if err = d.Set("is_secure", v.IsSecure); err != nil {
+	if err = d.Set("copy_grants", view.HasCopyGrants()); err != nil {
 		return err
 	}
-	if err = d.Set("copy_grants", v.HasCopyGrants()); err != nil {
+	if err = d.Set("comment", view.Comment); err != nil {
 		return err
 	}
-	if err = d.Set("comment", v.Comment.String); err != nil {
+	if err = d.Set("schema", view.SchemaName); err != nil {
 		return err
 	}
-	if err = d.Set("schema", v.SchemaName.String); err != nil {
+	if err = d.Set("database", view.DatabaseName); err != nil {
 		return err
 	}
-	if err = d.Set("created_on", v.CreatedOn.String()); err != nil {
+	if err = d.Set("created_on", view.CreatedOn); err != nil {
 		return err
 	}
 
-	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
-
-	extractor := snowflake.NewViewSelectStatementExtractor(v.Text.String)
+	// TODO [TODO]: what do we do with these extractors?
+	// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
+	extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
 	substringOfQuery, err := extractor.Extract()
 	if err != nil {
 		return err
 	}
+
 	if err = d.Set("statement", substringOfQuery); err != nil {
 		return err
 	}
-	err = d.Set("database", v.DatabaseName.String)
-	return err
+
+	return nil
 }
 
 // UpdateView implements schema.UpdateFunc.

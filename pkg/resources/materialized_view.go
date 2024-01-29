@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -177,47 +176,40 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 // ReadMaterializedView implements schema.ReadFunc.
 func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	materializedViewID, err := materializedViewIDFromString(d.Id())
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	materializedView, err := client.MaterializedViews.ShowByID(ctx, id)
 	if err != nil {
-		return err
-	}
-
-	dbName := materializedViewID.DatabaseName
-	schema := materializedViewID.SchemaName
-	view := materializedViewID.ViewName
-
-	q := snowflake.NewMaterializedViewBuilder(view).WithDB(dbName).WithSchema(schema).Show()
-	row := snowflake.QueryRow(db, q)
-	v, err := snowflake.ScanMaterializedView(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] view (%s) not found", d.Id())
+		log.Printf("[DEBUG] materialized view (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
+
+	if err := d.Set("name", materializedView.Name); err != nil {
 		return err
 	}
 
-	if err := d.Set("name", v.Name.String); err != nil {
+	if err := d.Set("is_secure", materializedView.IsSecure); err != nil {
 		return err
 	}
 
-	if err := d.Set("is_secure", v.IsSecure); err != nil {
+	if err := d.Set("comment", materializedView.Comment); err != nil {
 		return err
 	}
 
-	if err := d.Set("comment", v.Comment.String); err != nil {
+	if err := d.Set("schema", materializedView.SchemaName); err != nil {
 		return err
 	}
 
-	if err := d.Set("schema", v.SchemaName.String); err != nil {
+	if err := d.Set("database", materializedView.DatabaseName); err != nil {
 		return err
 	}
 
-	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
-
-	extractor := snowflake.NewViewSelectStatementExtractor(v.Text.String)
+	// TODO [TODO]: what do we do with these extractors?
+	// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
+	extractor := snowflake.NewViewSelectStatementExtractor(materializedView.Text)
 	substringOfQuery, err := extractor.ExtractMaterializedView()
 	if err != nil {
 		return err
@@ -227,7 +219,7 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return d.Set("database", v.DatabaseName.String)
+	return nil
 }
 
 // UpdateMaterializedView implements schema.UpdateFunc.
