@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -234,26 +233,6 @@ func ScanView(row *sqlx.Row) (*View, error) {
 	r := &View{}
 	err := row.StructScan(r)
 	return r, err
-}
-
-func ListViews(databaseName string, schemaName string, db *sql.DB) ([]View, error) {
-	stmt := fmt.Sprintf(`SHOW VIEWS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
-	rows, err := Query(db, stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	dbs := []View{}
-
-	if err := sqlx.StructScan(rows, &dbs); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Println("[DEBUG] no views found")
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	return dbs, nil
 }
 
 func (v *View) HasCopyGrants() bool {
