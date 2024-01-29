@@ -25,8 +25,9 @@ var roleSchema = map[string]*schema.Schema{
 // Role Snowflake Role resource.
 func Role() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadRole,
-		Schema: roleSchema,
+		Read:               ReadRole,
+		Schema:             roleSchema,
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_roles instead.",
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
