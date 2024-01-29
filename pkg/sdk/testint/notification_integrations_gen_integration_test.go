@@ -137,7 +137,12 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "DIRECTION", Type: "String", Value: "INBOUND", Default: "INBOUND"})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "GCP_PUBSUB_SUBSCRIPTION_NAME", Type: "String", Value: gcpPubsubSubscriptionName, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
-		// TODO: GCP_PUBSUB_SERVICE_ACCOUNT
+
+		prop, err := collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool {
+			return property.Name == "GCP_PUBSUB_SERVICE_ACCOUNT"
+		})
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
 	})
 
 	t.Run("create and describe notification integration - auto azure", func(t *testing.T) {
@@ -171,7 +176,13 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_TOPIC_ARN", Type: "String", Value: awsSnsTopicArn, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_ROLE_ARN", Type: "String", Value: awsSnsRoleArn, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
-		// TODO: SF_AWS_IAM_USER_ARN, SF_AWS_EXTERNAL_ID
+
+		prop, err := collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool { return property.Name == "SF_AWS_IAM_USER_ARN" })
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
+		prop, err = collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool { return property.Name == "SF_AWS_EXTERNAL_ID" })
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
 	})
 
 	// TODO [SNOW-1017802]: check the error 001422 (22023): SQL compilation error: invalid value 'OUTBOUND' for property 'Direction'
