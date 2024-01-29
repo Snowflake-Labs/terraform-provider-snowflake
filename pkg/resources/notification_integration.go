@@ -9,7 +9,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -36,6 +35,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice([]string{"QUEUE"}, true),
 		Description:  "A type of integration",
 		ForceNew:     true,
+		Deprecated:   "Will be removed - it is added automatically on the SDK level.",
 	},
 	"direction": {
 		Type:         schema.TypeString,
@@ -43,6 +43,7 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice([]string{"INBOUND", "OUTBOUND"}, true),
 		Description:  "Direction of the cloud messaging with respect to Snowflake (required only for error notifications)",
 		ForceNew:     true,
+		Deprecated:   "Will be removed - it is added automatically on the SDK level.",
 	},
 	// This part of the schema is the cloudProviderParams in the Snowflake documentation and differs between vendors
 	"notification_provider": {
@@ -218,122 +219,103 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 // ReadNotificationIntegration implements schema.ReadFunc.
 func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	stmt := snowflake.NewNotificationIntegrationBuilder(d.Id()).Show()
-	row := snowflake.QueryRow(db, stmt)
-
-	// Some properties can come from the SHOW INTEGRATION call
-
-	s, err := snowflake.ScanNotificationIntegration(row)
+	integration, err := client.NotificationIntegrations.ShowByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("could not show notification integration: %w", err)
+		log.Printf("[DEBUG] notification integration (%s) not found", d.Id())
+		d.SetId("")
+		return err
 	}
 
 	// Note: category must be NOTIFICATION or something is broken
-	if c := s.Category.String; c != "NOTIFICATION" {
+	if c := integration.Category; c != "NOTIFICATION" {
 		return fmt.Errorf("expected %v to be a NOTIFICATION integration, got %v", id, c)
 	}
 
-	if err := d.Set("name", s.Name.String); err != nil {
+	if err := d.Set("name", integration.Name); err != nil {
+		return err
+	}
+
+	if err := d.Set("comment", integration.Comment); err != nil {
+		return err
+	}
+
+	if err := d.Set("created_on", integration.CreatedOn.String()); err != nil {
+		return err
+	}
+
+	if err := d.Set("enabled", integration.Enabled); err != nil {
 		return err
 	}
 
 	// Snowflake returns "QUEUE - AZURE_STORAGE_QUEUE" instead of simple "QUEUE" as a type
-	// so it needs to be parsed in order to not show a diff in Terraform
-	typeParts := strings.Split(s.Type.String, "-")
+	// It needs to be parsed in order to not show a diff in Terraform.
+	typeParts := strings.Split(integration.NotificationType, "-")
 	parsedType := strings.TrimSpace(typeParts[0])
 	if err := d.Set("type", parsedType); err != nil {
 		return err
 	}
 
-	if err := d.Set("created_on", s.CreatedOn.String); err != nil {
-		return err
-	}
-
-	if err := d.Set("enabled", s.Enabled.Bool); err != nil {
-		return err
-	}
-
 	// Some properties come from the DESCRIBE INTEGRATION call
-	// We need to grab them in a loop
-	var k, pType string
-	var v, n interface{}
-	stmt = snowflake.NewNotificationIntegrationBuilder(d.Id()).Describe()
-	rows, err := db.Query(stmt)
+	integrationProperties, err := client.NotificationIntegrations.Describe(ctx, id)
 	if err != nil {
 		return fmt.Errorf("could not describe notification integration: %w", err)
 	}
-	defer rows.Close()
-	for rows.Next() {
-		if err := rows.Scan(&k, &pType, &v, &n); err != nil {
-			return err
-		}
-		switch k {
+	for _, property := range integrationProperties {
+		name := property.Name
+		value := property.Value
+		switch name {
 		case "ENABLED":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "DIRECTION":
-			if err := d.Set("direction", v.(string)); err != nil {
+			if err := d.Set("direction", value); err != nil {
 				return err
 			}
 		case "NOTIFICATION_PROVIDER":
-			if err := d.Set("notification_provider", v.(string)); err != nil {
+			if err := d.Set("notification_provider", value); err != nil {
 				return err
 			}
 		case "AZURE_STORAGE_QUEUE_PRIMARY_URI":
-			if err := d.Set("azure_storage_queue_primary_uri", v.(string)); err != nil {
+			if err := d.Set("azure_storage_queue_primary_uri", value); err != nil {
 				return err
 			}
 		case "AZURE_TENANT_ID":
-			if err := d.Set("azure_tenant_id", v.(string)); err != nil {
-				return err
-			}
-		case "AWS_SQS_ARN":
-			if err := d.Set("aws_sqs_arn", v.(string)); err != nil {
-				return err
-			}
-		case "AWS_SQS_ROLE_ARN":
-			if err := d.Set("aws_sqs_role_arn", v.(string)); err != nil {
-				return err
-			}
-		case "AWS_SQS_EXTERNAL_ID":
-			if err := d.Set("aws_sqs_external_id", v.(string)); err != nil {
-				return err
-			}
-		case "AWS_SQS_IAM_USER_ARN":
-			if err := d.Set("aws_sqs_iam_user_arn", v.(string)); err != nil {
+			if err := d.Set("azure_tenant_id", value); err != nil {
 				return err
 			}
 		case "AWS_SNS_TOPIC_ARN":
-			if err := d.Set("aws_sns_topic_arn", v.(string)); err != nil {
+			if err := d.Set("aws_sns_topic_arn", value); err != nil {
 				return err
 			}
 		case "AWS_SNS_ROLE_ARN":
-			if err := d.Set("aws_sns_role_arn", v.(string)); err != nil {
+			if err := d.Set("aws_sns_role_arn", value); err != nil {
 				return err
 			}
 		case "SF_AWS_EXTERNAL_ID":
-			if err := d.Set("aws_sns_external_id", v.(string)); err != nil {
+			if err := d.Set("aws_sns_external_id", value); err != nil {
 				return err
 			}
 		case "SF_AWS_IAM_USER_ARN":
-			if err := d.Set("aws_sns_iam_user_arn", v.(string)); err != nil {
+			if err := d.Set("aws_sns_iam_user_arn", value); err != nil {
 				return err
 			}
 		case "GCP_PUBSUB_SUBSCRIPTION_NAME":
-			if err := d.Set("gcp_pubsub_subscription_name", v.(string)); err != nil {
+			if err := d.Set("gcp_pubsub_subscription_name", value); err != nil {
 				return err
 			}
 		case "GCP_PUBSUB_TOPIC_NAME":
-			if err := d.Set("gcp_pubsub_topic_name", v.(string)); err != nil {
+			if err := d.Set("gcp_pubsub_topic_name", value); err != nil {
 				return err
 			}
 		case "GCP_PUBSUB_SERVICE_ACCOUNT":
-			if err := d.Set("gcp_pubsub_service_account", v.(string)); err != nil {
+			if err := d.Set("gcp_pubsub_service_account", value); err != nil {
 				return err
 			}
 		default:
-			log.Printf("[WARN] unexpected property %v returned from Snowflake", k)
+			log.Printf("[WARN] unexpected property %v returned from Snowflake", name)
 		}
 	}
 
@@ -343,81 +325,55 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 // UpdateNotificationIntegration implements schema.UpdateFunc.
 func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	stmt := snowflake.NewNotificationIntegrationBuilder(id).Alter()
-
-	// This is required in case the only change is to UNSET STORAGE_ALLOWED_LOCATIONS.
-	// Not sure if there is a more elegant way of determining this
 	var runSetStatement bool
-
+	setRequest := sdk.NewNotificationIntegrationSetRequest()
 	if d.HasChange("comment") {
 		runSetStatement = true
-		stmt.SetString("COMMENT", d.Get("comment").(string))
-	}
-
-	if d.HasChange("type") {
-		runSetStatement = true
-		stmt.SetString("TYPE", d.Get("type").(string))
+		setRequest.WithComment(sdk.String(d.Get("comment").(string)))
 	}
 
 	if d.HasChange("enabled") {
 		runSetStatement = true
-		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
+		setRequest.WithEnabled(sdk.Bool(d.Get("enabled").(bool)))
 	}
 
-	if d.HasChange("direction") {
-		runSetStatement = true
-		stmt.SetString("DIRECTION", d.Get("direction").(string))
-	}
-
-	if d.HasChange("notification_provider") {
-		runSetStatement = true
-		stmt.SetString("NOTIFICATION_PROVIDER", d.Get("notification_provider").(string))
-	}
-
-	if d.HasChange("azure_storage_queue_primary_uri") {
-		runSetStatement = true
-		stmt.SetString("AZURE_STORAGE_QUEUE_PRIMARY_URI", d.Get("azure_storage_queue_primary_uri").(string))
-	}
-
-	if d.HasChange("azure_tenant_id") {
-		runSetStatement = true
-		stmt.SetString("AZURE_TENANT_ID", d.Get("azure_tenant_id").(string))
-	}
-
-	if d.HasChange("aws_sqs_arn") {
-		runSetStatement = true
-		stmt.SetString("AWS_SQS_ARN", d.Get("aws_sqs_arn").(string))
-	}
-
-	if d.HasChange("aws_sqs_role_arn") {
-		runSetStatement = true
-		stmt.SetString("AWS_SQS_ROLE_ARN", d.Get("aws_sqs_role_arn").(string))
-	}
-
-	if d.HasChange("aws_sns_topic_arn") {
-		runSetStatement = true
-		stmt.SetString("AWS_SNS_TOPIC_ARN", d.Get("aws_sns_topic_arn").(string))
-	}
-
-	if d.HasChange("aws_sns_role_arn") {
-		runSetStatement = true
-		stmt.SetString("AWS_SNS_ROLE_ARN", d.Get("aws_sns_role_arn").(string))
-	}
-
-	if d.HasChange("gcp_pubsub_subscription_name") {
-		runSetStatement = true
-		stmt.SetString("GCP_PUBSUB_SUBSCRIPTION_NAME", d.Get("gcp_pubsub_subscription_name").(string))
-	}
-
-	if d.HasChange("gcp_pubsub_topic_name") {
-		runSetStatement = true
-		stmt.SetString("GCP_PUBSUB_TOPIC_NAME", d.Get("gcp_pubsub_topic_name").(string))
+	notificationProvider := strings.ToUpper(d.Get("notification_provider").(string))
+	switch notificationProvider {
+	case "AWS_SNS":
+		if d.HasChange("aws_sns_topic_arn") || d.HasChange("aws_sns_role_arn") {
+			runSetStatement = true
+			setAmazonPush := sdk.NewSetAmazonPushRequest(d.Get("aws_sns_topic_arn").(string), d.Get("aws_sns_role_arn").(string))
+			setRequest.WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetAmazonPush(setAmazonPush))
+		}
+	case "GCP_PUBSUB":
+		if d.HasChange("gcp_pubsub_subscription_name") {
+			runSetStatement = true
+			setGooglePush := sdk.NewSetGooglePushRequest(d.Get("gcp_pubsub_subscription_name").(string))
+			setRequest.WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetGooglePush(setGooglePush))
+		}
+		if d.HasChange("gcp_pubsub_topic_name") {
+			runSetStatement = true
+			// TODO: unsupported in the SDK
+			//setGooglePush := sdk.NewSetGooglePushRequest(d.Get("gcp_pubsub_topic_name").(string))
+			//setRequest.WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetGooglePush(setGooglePush))
+		}
+	case "AZURE_STORAGE_QUEUE":
+		if d.HasChange("azure_storage_queue_primary_uri") || d.HasChange("azure_tenant_id") {
+			runSetStatement = true
+			setAzurePush := sdk.NewSetAzurePushRequest(d.Get("azure_storage_queue_primary_uri").(string), d.Get("azure_tenant_id").(string))
+			setRequest.WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetAzurePush(setAzurePush))
+		}
+	default:
+		return fmt.Errorf("unexpected provider %v", notificationProvider)
 	}
 
 	if runSetStatement {
-		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
+		err := client.NotificationIntegrations.Alter(ctx, sdk.NewAlterNotificationIntegrationRequest(id).WithSet(setRequest))
+		if err != nil {
 			return fmt.Errorf("error updating notification integration: %w", err)
 		}
 	}
