@@ -13,9 +13,10 @@ import (
 
 var accountRoleSchema = map[string]*schema.Schema{
 	"name": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		Type:     schema.TypeString,
+		Required: true,
+		// TODO(SNOW-999049): Uncomment once better identifier validation will be implemented
+		// ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"comment": {
 		Type:     schema.TypeString,
