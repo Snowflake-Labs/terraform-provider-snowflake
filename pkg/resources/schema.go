@@ -231,18 +231,22 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tag") {
 		unsetTags, setTags := GetTagsDiff(d, "tag")
 
-		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			UnsetTag: unsetTags,
-		})
-		if err != nil {
-			return fmt.Errorf("error occurred when dropping tags on %v, err = %w", d.Id(), err)
+		if len(unsetTags) > 0 {
+			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+				UnsetTag: unsetTags,
+			})
+			if err != nil {
+				return fmt.Errorf("error occurred when dropping tags on %v, err = %w", d.Id(), err)
+			}
 		}
 
-		err = client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			SetTag: setTags,
-		})
-		if err != nil {
-			return fmt.Errorf("error occurred when setting tags on %v, err = %w", d.Id(), err)
+		if len(setTags) > 0 {
+			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+				SetTag: setTags,
+			})
+			if err != nil {
+				return fmt.Errorf("error occurred when setting tags on %v, err = %w", d.Id(), err)
+			}
 		}
 	}
 

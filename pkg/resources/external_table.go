@@ -285,18 +285,22 @@ func UpdateExternalTable(d *schema.ResourceData, meta any) error {
 	if d.HasChange("tag") {
 		unsetTags, setTags := GetTagsDiff(d, "tag")
 
-		err := client.ExternalTables.Alter(ctx, sdk.NewAlterExternalTableRequest(id).WithUnsetTag(unsetTags))
-		if err != nil {
-			return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+		if len(unsetTags) > 0 {
+			err := client.ExternalTables.Alter(ctx, sdk.NewAlterExternalTableRequest(id).WithUnsetTag(unsetTags))
+			if err != nil {
+				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+			}
 		}
 
-		tagAssociationRequests := make([]*sdk.TagAssociationRequest, len(setTags))
-		for i, t := range setTags {
-			tagAssociationRequests[i] = sdk.NewTagAssociationRequest(t.Name, t.Value)
-		}
-		err = client.ExternalTables.Alter(ctx, sdk.NewAlterExternalTableRequest(id).WithSetTag(tagAssociationRequests))
-		if err != nil {
-			return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+		if len(setTags) > 0 {
+			tagAssociationRequests := make([]*sdk.TagAssociationRequest, len(setTags))
+			for i, t := range setTags {
+				tagAssociationRequests[i] = sdk.NewTagAssociationRequest(t.Name, t.Value)
+			}
+			err := client.ExternalTables.Alter(ctx, sdk.NewAlterExternalTableRequest(id).WithSetTag(tagAssociationRequests))
+			if err != nil {
+				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+			}
 		}
 	}
 

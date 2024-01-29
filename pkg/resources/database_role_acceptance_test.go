@@ -10,14 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-var (
-	resourceName = "snowflake_database_role.test_db_role"
-	dbRoleName   = "db_role_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	comment      = "dummy"
-	comment2     = "test comment"
-)
-
 func TestAcc_DatabaseRole(t *testing.T) {
+	resourceName := "snowflake_database_role.test_db_role"
+	dbRoleName := "db_role_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	comment := "dummy"
+	comment2 := "test comment"
+
 	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
