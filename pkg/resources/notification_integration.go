@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO [SNOW-TODO]: split this resource into smaller ones as part of SNOW-867235
-// TODO [SNOW-TODO]: remove SQS entirely
-// TODO [SNOW-TODO]: support Azure push notifications
+// TODO [SNOW-1021713]: split this resource into smaller ones as part of SNOW-867235
+// TODO [SNOW-1021713]: remove SQS entirely
+// TODO [SNOW-1021713]: support Azure push notifications (AZURE_EVENT_GRID)
 var notificationIntegrationSchema = map[string]*schema.Schema{
 	// The first part of the schema is shared between all integration vendors
 	"name": {
@@ -126,6 +126,8 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The topic id that Snowflake will use to push notifications.",
+		// There is no alter SQL for gcp_pubsub_topic_name, therefore it has to be recreated.
+		ForceNew: true,
 	},
 	"gcp_pubsub_service_account": {
 		Type:        schema.TypeString,
@@ -354,12 +356,6 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 			runSetStatement = true
 			setGooglePush := sdk.NewSetGooglePushRequest(d.Get("gcp_pubsub_subscription_name").(string))
 			setRequest.WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetGooglePush(setGooglePush))
-		}
-		if d.HasChange("gcp_pubsub_topic_name") {
-			runSetStatement = true
-			// TODO: unsupported in the SDK
-			//setGooglePush := sdk.NewSetGooglePushRequest(d.Get("gcp_pubsub_topic_name").(string))
-			//setRequest.WithSetPushParams(sdk.NewSetPushParamsRequest().WithSetGooglePush(setGooglePush))
 		}
 	case "AZURE_STORAGE_QUEUE":
 		if d.HasChange("azure_storage_queue_primary_uri") || d.HasChange("azure_tenant_id") {
