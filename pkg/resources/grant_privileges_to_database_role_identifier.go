@@ -12,7 +12,7 @@ import (
 type DatabaseRoleGrantKind string
 
 const (
-	OnDatabaseDatabaseRoleGrantKind     DatabaseRoleGrantKind = "OnDatabase"
+	OnDatabaseDatabaseRoleGrantKind     DatabaseRoleGrantKind = "OnDatabaseShareGrantKind"
 	OnSchemaDatabaseRoleGrantKind       DatabaseRoleGrantKind = "OnSchema"
 	OnSchemaObjectDatabaseRoleGrantKind DatabaseRoleGrantKind = "OnSchemaObject"
 )

@@ -1,12 +1,11 @@
 package testint
 
 import (
-	"testing"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
@@ -409,39 +408,60 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	ctx := testContext(t)
 	shareTest, shareCleanup := createShare(t, client)
 	t.Cleanup(shareCleanup)
-	t.Run("without options", func(t *testing.T) {
-		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, nil, shareTest.ID())
-		require.Error(t, err)
-	})
-	t.Run("with options", func(t *testing.T) {
-		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
-			Database: testDb(t).ID(),
-		}, shareTest.ID())
-		require.NoError(t, err)
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			On: &sdk.ShowGrantsOn{
-				Object: &sdk.Object{
-					ObjectType: sdk.ObjectTypeDatabase,
-					Name:       testDb(t).ID(),
-				},
-			},
-		})
-		require.NoError(t, err)
-		assert.LessOrEqual(t, 2, len(grants))
+
+	assertGrant := func(t *testing.T, grants []sdk.Grant, onId sdk.ObjectIdentifier, privilege sdk.ObjectPrivilege) {
+		t.Helper()
 		var shareGrant *sdk.Grant
 		for i, grant := range grants {
-			if grant.GranteeName.Name() == shareTest.ID().Name() {
+			if grant.GranteeName.Name() == shareTest.ID().Name() && grant.Privilege == string(privilege) {
 				shareGrant = &grants[i]
 				break
 			}
 		}
 		assert.NotNil(t, shareGrant)
-		assert.Equal(t, string(sdk.ObjectPrivilegeUsage), shareGrant.Privilege)
-		assert.Equal(t, sdk.ObjectTypeDatabase, shareGrant.GrantedOn)
+		assert.Equal(t, sdk.ObjectTypeTable, shareGrant.GrantedOn)
 		assert.Equal(t, sdk.ObjectTypeShare, shareGrant.GrantedTo)
-		assert.Equal(t, testDb(t).ID().Name(), shareGrant.Name.Name())
-		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
+		assert.Equal(t, onId.FullyQualifiedName(), shareGrant.Name.FullyQualifiedName())
+	}
+
+	t.Run("with options - multiple privileges", func(t *testing.T) {
+		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 			Database: testDb(t).ID(),
+		}, shareTest.ID())
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			err := client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
+				Database: testDb(t).ID(),
+			}, shareTest.ID())
+			assert.NoError(t, err)
+		})
+
+		table, tableCleanup := createTable(t, client, testDb(t), testSchema(t))
+		t.Cleanup(tableCleanup)
+
+		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeEvolveSchema, sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
+			Table: &sdk.OnTable{
+				AllInSchema: testSchema(t).ID(),
+			},
+		}, shareTest.ID())
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeTable,
+					Name:       table.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect)
+
+		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeEvolveSchema, sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
+			Table: &sdk.OnTable{
+				AllInSchema: testSchema(t).ID(),
+			},
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
@@ -452,16 +472,16 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	ctx := testContext(t)
 	shareTest, shareCleanup := createShare(t, client)
 	t.Cleanup(shareCleanup)
-	err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
+	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: testDb(t).ID(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Run("without options", func(t *testing.T) {
-		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, nil, shareTest.ID())
+		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, nil, shareTest.ID())
 		require.Error(t, err)
 	})
 	t.Run("with options", func(t *testing.T) {
-		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
+		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -587,12 +607,12 @@ func TestInt_ShowGrants(t *testing.T) {
 	ctx := testContext(t)
 	shareTest, shareCleanup := createShare(t, client)
 	t.Cleanup(shareCleanup)
-	err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
+	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: testDb(t).ID(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		err = client.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
+		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 			Database: testDb(t).ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)
