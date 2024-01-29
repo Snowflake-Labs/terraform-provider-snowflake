@@ -12,23 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func IsDataType() schema.SchemaValidateFunc { //nolint:staticcheck
-	return func(value any, key string) (warnings []string, errors []error) {
-		stringValue, ok := value.(string)
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected type of %s to be string, got %T", key, value))
-			return warnings, errors
-		}
-
-		_, err := sdk.ToDataType(stringValue)
-		if err != nil {
-			errors = append(errors, fmt.Errorf("expected %s to be one of %T values, got %s", key, sdk.DataTypeString, stringValue))
-		}
-
-		return warnings, errors
-	}
-}
-
 // IsValidIdentifier is a validator that can be used for validating identifiers passed in resources and data sources.
 //
 // Typically, we expect passed identifiers to be a variation of sdk.ObjectIdentifier.

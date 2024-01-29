@@ -54,11 +54,10 @@ var externalTableSchema = map[string]*schema.Schema{
 					ForceNew:    true,
 				},
 				"type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					Description:  "Column type, e.g. VARIANT",
-					ForceNew:     true,
-					ValidateFunc: IsDataType(),
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Column type, e.g. VARIANT",
+					ForceNew:    true,
 				},
 				"as": {
 					Type:        schema.TypeString,
