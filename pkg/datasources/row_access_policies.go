@@ -3,9 +3,9 @@ package datasources
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -85,6 +85,6 @@ func ReadRowAccessPolicies(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
+	d.SetId(helpers.EncodeSnowflakeID(databaseName, schemaName))
 	return d.Set("row_access_policies", rowAccessPolicies)
 }

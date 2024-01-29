@@ -82,10 +82,7 @@ func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	args := make([]sdk.CreateRowAccessPolicyArgsRequest, 0)
 	for k, v := range signature {
-		dataType, err := sdk.ToDataType(v.(string))
-		if err != nil {
-			return err
-		}
+		dataType := sdk.DataType(v.(string))
 		args = append(args, *sdk.NewCreateRowAccessPolicyArgsRequest(k, dataType))
 	}
 
