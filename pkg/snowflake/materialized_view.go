@@ -2,9 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -214,23 +212,4 @@ func ScanMaterializedView(row *sqlx.Row) (*MaterializedView, error) {
 	r := &MaterializedView{}
 	err := row.StructScan(r)
 	return r, err
-}
-
-func ListMaterializedViews(databaseName string, schemaName string, db *sql.DB) ([]MaterializedView, error) {
-	stmt := fmt.Sprintf(`SHOW MATERIALIZED VIEWS IN SCHEMA "%s"."%v"`, databaseName, schemaName)
-	rows, err := Query(db, stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	dbs := []MaterializedView{}
-	if err := sqlx.StructScan(rows, &dbs); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Println("[DEBUG] no materialized views found")
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	return dbs, nil
 }
