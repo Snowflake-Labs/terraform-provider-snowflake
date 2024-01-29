@@ -134,48 +134,42 @@ func materializedViewIDFromString(stringID string) (*materializedViewID, error) 
 // CreateMaterializedView implements schema.CreateFunc.
 func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
+	databaseName := d.Get("database").(string)
+	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
-	database := d.Get("database").(string)
-	warehouse := d.Get("warehouse").(string)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+
 	s := d.Get("statement").(string)
+	createRequest := sdk.NewCreateMaterializedViewRequest(id, s)
 
-	builder := snowflake.NewMaterializedViewBuilder(name).WithDB(database).WithSchema(schema).WithWarehouse(warehouse).WithStatement(s)
+	// TODO: use warehouse?
+	//warehouse := d.Get("warehouse").(string)
 
-	// Set optionals
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
-		builder.WithReplace()
+		createRequest.WithOrReplace(sdk.Bool(true))
 	}
 
 	if v, ok := d.GetOk("is_secure"); ok && v.(bool) {
-		builder.WithSecure()
+		createRequest.WithSecure(sdk.Bool(true))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	if v, ok := d.GetOk("tag"); ok {
-		tags := getTags(v)
-		builder.WithTags(tags.toSnowflakeTagValues())
+	if _, ok := d.GetOk("tag"); ok {
+		createRequest.WithTag(getPropertyTags(d, "tag"))
 	}
 
-	q := builder.Create()
-	log.Print("[DEBUG] xxx ", q)
-	if err := snowflake.ExecMulti(db, q); err != nil {
-		return fmt.Errorf("error creating view %v err = %w", name, err)
-	}
-
-	materializedViewID := &materializedViewID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		ViewName:     name,
-	}
-	dataIDInput, err := materializedViewID.String()
+	err := client.MaterializedViews.Create(ctx, createRequest)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating materialized view %v err = %w", name, err)
 	}
-	d.SetId(dataIDInput)
+
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadMaterializedView(d, meta)
 }

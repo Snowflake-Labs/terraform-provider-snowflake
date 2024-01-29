@@ -145,54 +145,43 @@ func viewIDFromString(stringID string) (*ViewID, error) {
 // CreateView implements schema.CreateFunc.
 func CreateView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
+	databaseName := d.Get("database").(string)
+	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
-	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+
 	s := d.Get("statement").(string)
+	createRequest := sdk.NewCreateViewRequest(id, s)
 
-	builder := snowflake.NewViewBuilder(name).WithDB(database).WithSchema(schema).WithStatement(s)
-
-	// Set optionals
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
-		builder.WithReplace()
+		createRequest.WithOrReplace(sdk.Bool(true))
 	}
 
 	if v, ok := d.GetOk("is_secure"); ok && v.(bool) {
-		builder.WithSecure()
+		createRequest.WithSecure(sdk.Bool(true))
 	}
 
 	if v, ok := d.GetOk("copy_grants"); ok && v.(bool) {
-		builder.WithCopyGrants()
+		createRequest.WithCopyGrants(sdk.Bool(true))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	if v, ok := d.GetOk("tag"); ok {
-		tags := getTags(v)
-		builder.WithTags(tags.toSnowflakeTagValues())
+	if _, ok := d.GetOk("tag"); ok {
+		createRequest.WithTag(getPropertyTags(d, "tag"))
 	}
 
-	q, err := builder.Create()
+	err := client.Views.Create(ctx, createRequest)
 	if err != nil {
-		return err
-	}
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return fmt.Errorf("error creating view %v", name)
+		return fmt.Errorf("error creating view %v err = %w", name, err)
 	}
 
-	viewID := &ViewID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		ViewName:     name,
-	}
-	dataIDInput, err := viewID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadView(d, meta)
 }
