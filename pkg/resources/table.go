@@ -5,10 +5,10 @@ import (
 	"context"
 	"database/sql"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -475,10 +475,11 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 	c := from.(map[string]interface{})
 	_type := c["type"].(string)
 
-	// TODO: old implementation was quoting the column names - should we leave it?
+	// TODO [SNOW-884959]: old implementation was quoting the column names - should we leave it?
 	nameInQuotes := fmt.Sprintf(`"%v"`, snowflake.EscapeString(c["name"].(string)))
 	request := sdk.NewTableColumnRequest(nameInQuotes, sdk.DataType(_type))
 
+	// TODO [SNOW-884959]: move each default possibility logic to request builder/SDK
 	_default := c["default"].([]interface{})
 	var expression string
 	if len(_default) == 1 {
@@ -556,6 +557,99 @@ func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
 	return *snowPk.WithName(pk.name).WithKeys(pk.keys)
 }
 
+func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
+	var flattened []any
+	for _, td := range descriptions {
+		if td.Kind != "COLUMN" {
+			continue
+		}
+
+		flat := map[string]any{}
+		flat["name"] = td.Name
+		flat["type"] = string(td.Type)
+		flat["nullable"] = td.IsNullable
+
+		if td.Comment != nil {
+			flat["comment"] = *td.Comment
+		}
+
+		if td.PolicyName != nil {
+			flat["masking_policy"] = *td.PolicyName
+		}
+
+		def := toColumnDefaultConfig(td)
+		if def != nil {
+			flat["default"] = []any{def}
+		}
+
+		identity := toColumnIdentityConfig(td)
+		if identity != nil {
+			flat["identity"] = []any{identity}
+		}
+
+		flattened = append(flattened, flat)
+	}
+	return flattened
+}
+
+func toColumnDefaultConfig(td sdk.TableColumnDetails) map[string]any {
+	if td.Default == nil {
+		return nil
+	}
+
+	defaultRaw := *td.Default
+	def := map[string]any{}
+	if strings.HasSuffix(defaultRaw, ".NEXTVAL") {
+		def["sequence"] = strings.TrimSuffix(defaultRaw, ".NEXTVAL")
+		return def
+	}
+
+	if strings.Contains(defaultRaw, "(") && strings.Contains(defaultRaw, ")") {
+		def["expression"] = defaultRaw
+		return def
+	}
+
+	columnType := strings.ToUpper(string(td.Type))
+	if strings.Contains(columnType, "CHAR") || columnType == "STRING" || columnType == "TEXT" {
+		def["constant"] = snowflake.UnescapeSnowflakeString(defaultRaw)
+		return def
+	}
+
+	if toColumnIdentityConfig(td) != nil {
+		/*
+			Identity/autoincrement information is stored in the same column as default information. We want to handle the identity separate so will return nil
+			here if identity information is present. Default/identity are mutually exclusive
+		*/
+		return nil
+	}
+
+	def["constant"] = defaultRaw
+	return def
+}
+
+func toColumnIdentityConfig(td sdk.TableColumnDetails) map[string]any {
+	// if autoincrement is used this is reflected back IDENTITY START 1 INCREMENT 1
+	if td.Default == nil {
+		return nil
+	}
+
+	defaultRaw := *td.Default
+
+	if strings.Contains(defaultRaw, "IDENTITY") {
+		identity := map[string]any{}
+
+		split := strings.Split(defaultRaw, " ")
+		start, _ := strconv.Atoi(split[2])
+		step, _ := strconv.Atoi(split[4])
+
+		identity["start_num"] = start
+		identity["step_num"] = step
+
+		return identity
+	}
+	return nil
+}
+
 // CreateTable implements schema.CreateFunc.
 func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -576,13 +670,14 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("cluster_by"); ok {
-		// TODO: in old implementation LINEAR was wrapping the list. Is it needed?
+		// TODO [SNOW-884959]: in old implementation LINEAR was wrapping the list. Is it needed?
 		createRequest.WithClusterBy(expandStringList(v.([]interface{})))
 	}
 
 	if v, ok := d.GetOk("primary_key"); ok {
 		pk := getPrimaryKey(v.([]interface{}))
-		// TODO: do we need quoteStringList?
+		// TODO [SNOW-884959]: do we need quoteStringList?
+		// TODO [SNOW-884959]: change name to optional
 		sdk.NewOutOfLineConstraintRequest("TODO - optional", sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(pk.keys))
 	}
 
@@ -619,59 +714,35 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 // ReadTable implements schema.ReadFunc.
 func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tableID, err := tableIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-	builder := snowflake.NewTableBuilder(tableID.TableName, tableID.DatabaseName, tableID.SchemaName)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	row := snowflake.QueryRow(db, builder.Show())
-	table, err := snowflake.ScanTable(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
+	table, err := client.Tables.ShowByID(ctx, id)
+	if err != nil {
 		log.Printf("[DEBUG] table (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
+
+	tableDescription, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
 	if err != nil {
 		return err
 	}
-
-	// Describe the table to read the cols
-	tableDescriptionRows, err := snowflake.Query(db, builder.ShowColumns())
-	if err != nil {
-		return err
-	}
-
-	tableDescription, err := snowflake.ScanTableDescription(tableDescriptionRows)
-	if err != nil {
-		return err
-	}
-
-	/*
-		deprecated as it conflicts with the new table_constraint resource
-		showPkrows, err := snowflake.Query(db, builder.ShowPrimaryKeys())
-		if err != nil {
-			return err
-		}
-
-		pkDescription, err := snowflake.ScanPrimaryKeyDescription(showPkrows)
-		if err != nil {
-			return err
-		}*/
 
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":       table.TableName.String,
-		"owner":      table.Owner.String,
-		"database":   tableID.DatabaseName,
-		"schema":     tableID.SchemaName,
-		"comment":    table.Comment.String,
-		"column":     snowflake.NewColumns(tableDescription).Flatten(),
-		"cluster_by": snowflake.ClusterStatementToList(table.ClusterBy.String),
+		"name":       table.Name,
+		"owner":      table.Owner,
+		"database":   table.DatabaseName,
+		"schema":     table.SchemaName,
+		"comment":    table.Comment,
+		"column":     toColumnConfig(tableDescription),
+		"cluster_by": table.GetClusterByKeys(),
+		// TODO [SNOW-884959]: SHOW PRIMARY KEYS IN TABLE? It was deprecated when table_constraint resource was introduced; should it be set here or not?
 		// "primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
-		"change_tracking": (table.ChangeTracking.String == "ON"),
-		"qualified_name":  fmt.Sprintf(`"%s"."%s"."%s"`, tableID.DatabaseName, tableID.SchemaName, table.TableName.String),
+		"change_tracking": table.ChangeTracking,
+		"qualified_name":  id.FullyQualifiedName(),
 	}
 	var dataRetentionKey string
 	if _, ok := d.GetOk("data_retention_time_in_days"); ok {
@@ -680,7 +751,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		dataRetentionKey = "data_retention_days"
 	}
 	if dataRetentionKey != "" {
-		toSet[dataRetentionKey] = table.RetentionTime.Int32
+		toSet[dataRetentionKey] = table.RetentionTime
 	}
 
 	for key, val := range toSet {
@@ -741,7 +812,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		for _, cA := range added {
 			var q string
 
-			if cA.identity == nil && cA._default == nil { //nolint:gocritic  // todo: please fix this to pass gocritic
+			if cA.identity == nil && cA._default == nil { //nolint:gocritic
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment, cA.maskingPolicy)
 			} else if cA.identity != nil {
 				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment, cA.maskingPolicy)

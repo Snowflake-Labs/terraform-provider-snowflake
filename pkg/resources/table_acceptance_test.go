@@ -126,7 +126,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 	})
 }
 
-// TODO: will be removed
+// TODO [SNOW-884959]: will be removed
 func TestAcc_Table_Tmp(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 

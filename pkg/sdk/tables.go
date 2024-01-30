@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 var _ convertibleRow[Table] = new(tableDBRow)
@@ -551,6 +552,23 @@ type Table struct {
 	OwnerRoleType              string
 	IsEvent                    bool
 	Budget                     *string
+}
+
+// GetClusterByKeys converts the SHOW TABLES result for ClusterBy and converts it to list of keys.
+// TODO [SNOW-884959]: test
+func (v *Table) GetClusterByKeys() []string {
+	if v.ClusterBy == "" {
+		return nil
+	}
+
+	statementWithoutLinear := strings.TrimSuffix(strings.Replace(v.ClusterBy, "LINEAR(", "", 1), ")")
+	keysRaw := strings.Split(statementWithoutLinear, ",")
+	keysClean := make([]string, 0, len(keysRaw))
+	for _, key := range keysRaw {
+		keysClean = append(keysClean, strings.TrimSpace(key))
+	}
+
+	return keysClean
 }
 
 func (row tableDBRow) convert() *Table {

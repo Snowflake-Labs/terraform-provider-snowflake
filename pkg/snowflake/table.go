@@ -2,9 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -231,62 +229,6 @@ func FlattenTablePrimaryKey(pkds []PrimaryKeyDescription) []interface{} {
 
 type Columns []Column
 
-// NewColumns generates columns from a table description.
-func NewColumns(tds []TableDescription) Columns {
-	cs := []Column{}
-	for _, td := range tds {
-		if td.Kind.String != "COLUMN" {
-			continue
-		}
-
-		cs = append(cs, Column{
-			name:          td.Name.String,
-			_type:         td.Type.String,
-			nullable:      td.IsNullable(),
-			_default:      td.ColumnDefault(),
-			identity:      td.ColumnIdentity(),
-			comment:       td.Comment.String,
-			maskingPolicy: td.MaskingPolicy.String,
-		})
-	}
-	return Columns(cs)
-}
-
-func (c Columns) Flatten() []interface{} {
-	flattened := []interface{}{}
-	for _, col := range c {
-		flat := map[string]interface{}{}
-		flat["name"] = col.name
-		flat["type"] = col._type
-		flat["nullable"] = col.nullable
-		flat["comment"] = col.comment
-		flat["masking_policy"] = col.maskingPolicy
-
-		if col._default != nil {
-			def := map[string]interface{}{}
-			switch col._default._type {
-			case columnDefaultTypeConstant:
-				def["constant"] = col._default.UnescapeConstantSnowflakeString(col._type)
-			case columnDefaultTypeExpression:
-				def["expression"] = col._default.expression
-			case columnDefaultTypeSequence:
-				def["sequence"] = col._default.expression
-			}
-
-			flat["default"] = []interface{}{def}
-		}
-
-		if col.identity != nil {
-			id := map[string]interface{}{}
-			id["start_num"] = col.identity.startNum
-			id["step_num"] = col.identity.stepNum
-			flat["identity"] = []interface{}{id}
-		}
-		flattened = append(flattened, flat)
-	}
-	return flattened
-}
-
 func (c Columns) getColumnDefinitions(withInlineConstraints bool, withComments bool) string {
 	// TODO(el): verify Snowflake reflects column order back in desc table calls
 	columnDefinitions := []string{}
@@ -443,24 +385,6 @@ func (tb *TableBuilder) getCreateStatementBody() string {
 	}
 
 	return q.String()
-}
-
-// function to take the literal snowflake cluster statement returned from SHOW TABLES and convert it to a list of keys.
-func ClusterStatementToList(clusterStatement string) []string {
-	if clusterStatement == "" {
-		return nil
-	}
-
-	cleanStatement := strings.TrimSuffix(strings.Replace(clusterStatement, "LINEAR(", "", 1), ")")
-	// remove cluster statement and trailing parenthesis
-
-	spCleanStatement := strings.Split(cleanStatement, ",")
-	clean := make([]string, 0, len(spCleanStatement))
-	for _, s := range spCleanStatement {
-		clean = append(clean, strings.TrimSpace(s))
-	}
-
-	return clean
 }
 
 // Table returns a pointer to a Builder that abstracts the DDL operations for a table.
@@ -673,100 +597,8 @@ type TableDescription struct {
 	MaskingPolicy sql.NullString `db:"policy name"`
 }
 
-func (td *TableDescription) IsNullable() bool {
-	return td.Nullable.String == "Y"
-}
-
-func (td *TableDescription) ColumnDefault() *ColumnDefault {
-	if !td.Default.Valid {
-		return nil
-	}
-
-	if strings.HasSuffix(td.Default.String, ".NEXTVAL") {
-		return NewColumnDefaultWithSequence(strings.TrimSuffix(td.Default.String, ".NEXTVAL"))
-	}
-
-	if strings.Contains(td.Default.String, "(") && strings.Contains(td.Default.String, ")") {
-		return NewColumnDefaultWithExpression(td.Default.String)
-	}
-
-	if strings.Contains(td.Type.String, "CHAR") || td.Type.String == "STRING" || td.Type.String == "TEXT" {
-		return NewColumnDefaultWithConstant(UnescapeSnowflakeString(td.Default.String))
-	}
-
-	if td.ColumnIdentity() != nil {
-		/*
-			Identity/autoincrement information is stored in the same column as default information. We want to handle the identity separate so will return nil
-			here if identity information is present. Default/identity are mutually exclusive
-		*/
-		return nil
-	}
-
-	return NewColumnDefaultWithConstant(td.Default.String)
-}
-
-func (td *TableDescription) ColumnIdentity() *ColumnIdentity {
-	// if autoincrement is used this is reflected back IDENTITY START 1 INCREMENT 1
-	if !td.Default.Valid {
-		return nil
-	}
-	if strings.Contains(td.Default.String, "IDENTITY") {
-		split := strings.Split(td.Default.String, " ")
-		start, _ := strconv.Atoi(split[2])
-		step, _ := strconv.Atoi(split[4])
-
-		return &ColumnIdentity{start, step}
-	}
-	return nil
-}
-
 type PrimaryKeyDescription struct {
 	ColumnName     sql.NullString `db:"column_name"`
 	KeySequence    sql.NullString `db:"key_sequence"`
 	ConstraintName sql.NullString `db:"constraint_name"`
-}
-
-func ScanTableDescription(rows *sqlx.Rows) ([]TableDescription, error) {
-	tds := []TableDescription{}
-	for rows.Next() {
-		td := TableDescription{}
-		err := rows.StructScan(&td)
-		if err != nil {
-			return nil, err
-		}
-		tds = append(tds, td)
-	}
-	return tds, rows.Err()
-}
-
-func ScanPrimaryKeyDescription(rows *sqlx.Rows) ([]PrimaryKeyDescription, error) {
-	pkds := []PrimaryKeyDescription{}
-	for rows.Next() {
-		pk := PrimaryKeyDescription{}
-		err := rows.StructScan(&pk)
-		if err != nil {
-			return nil, err
-		}
-		pkds = append(pkds, pk)
-	}
-	return pkds, rows.Err()
-}
-
-func ListTables(databaseName string, schemaName string, db *sql.DB) ([]Table, error) {
-	stmt := fmt.Sprintf(`SHOW TABLES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
-	rows, err := Query(db, stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	dbs := []Table{}
-	if err := sqlx.StructScan(rows, &dbs); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Println("[DEBUG] no tables found")
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	return dbs, nil
 }
