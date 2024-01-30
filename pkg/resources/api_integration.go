@@ -245,8 +245,6 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
-	// We need to grab them in a loop
-
 	integrationProperties, err := client.ApiIntegrations.Describe(ctx, id)
 	if err != nil {
 		return fmt.Errorf("could not describe api integration: %w", err)
