@@ -2,10 +2,6 @@ variable "share_name" {
   type = string
 }
 
-variable "share_account_name" {
-  type = string
-}
-
 variable "privileges" {
   type = list(string)
 }

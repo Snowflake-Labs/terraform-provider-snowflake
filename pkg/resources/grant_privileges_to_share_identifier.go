@@ -22,7 +22,7 @@ const (
 )
 
 type GrantPrivilegesToShareId struct {
-	ShareName  sdk.ExternalObjectIdentifier
+	ShareName  sdk.AccountObjectIdentifier
 	Privileges []string
 	Kind       ShareGrantKind
 	Identifier sdk.ObjectIdentifier
@@ -42,10 +42,10 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 
 	parts := strings.Split(idString, helpers.IDDelimiter)
 	if len(parts) != 4 {
-		return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf(`snowflake_grant_privileges_to_share id is composed out of 4 parts "<account_name>.<share_name>|<privileges>|<grant_on_type>|<grant_on_identifier>", but got %d parts: %v`, len(parts), parts))
+		return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf(`snowflake_grant_privileges_to_share id is composed out of 4 parts "<share_name>|<privileges>|<grant_on_type>|<grant_on_identifier>", but got %d parts: %v`, len(parts), parts))
 	}
 
-	grantPrivilegesToShareId.ShareName = sdk.NewExternalObjectIdentifierFromFullyQualifiedName(parts[0])
+	grantPrivilegesToShareId.ShareName = sdk.NewAccountObjectIdentifier(parts[0])
 	privileges := strings.Split(parts[1], ",")
 	if len(privileges) == 0 || (len(privileges) == 1 && privileges[0] == "") {
 		return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf(`invalid Privileges value: %s, should be comma separated list of privileges`, privileges))

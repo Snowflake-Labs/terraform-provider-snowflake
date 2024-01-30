@@ -114,7 +114,7 @@ func ImportGrantPrivilegesToShare() func(ctx context.Context, d *schema.Resource
 		if err != nil {
 			return nil, err
 		}
-		if err := d.Set("share_name", id.ShareName.FullyQualifiedName()); err != nil {
+		if err := d.Set("share_name", id.ShareName.Name()); err != nil {
 			return nil, err
 		}
 		if err := d.Set("privileges", id.Privileges); err != nil {
@@ -355,7 +355,7 @@ func ReadGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, met
 
 func createGrantPrivilegesToShareIdFromSchema(d *schema.ResourceData) *GrantPrivilegesToShareId {
 	id := new(GrantPrivilegesToShareId)
-	id.ShareName = sdk.NewExternalObjectIdentifierFromFullyQualifiedName(d.Get("share_name").(string))
+	id.ShareName = sdk.NewAccountObjectIdentifier(d.Get("share_name").(string))
 	id.Privileges = expandStringList(d.Get("privileges").(*schema.Set).List())
 
 	databaseName, databaseNameOk := d.GetOk("database_name")

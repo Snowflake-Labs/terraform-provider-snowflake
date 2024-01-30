@@ -14,26 +14,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
 	databaseName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 	shareName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	currentAccount, err := client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-
-	shareAccountName := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s", currentAccount, shareName.Name()))
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
 			"share_name": config.StringVariable(shareName.Name()),
 			"database":   config.StringVariable(databaseName.Name()),
 		}
 		if withGrant {
-			variables["share_account_name"] = config.StringVariable(shareAccountName.FullyQualifiedName())
 			variables["privileges"] = config.ListVariable(
 				config.StringVariable(sdk.ObjectPrivilegeUsage.String()),
 			)
@@ -53,7 +45,7 @@ func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareAccountName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareName.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeUsage.String()),
 					resource.TestCheckResourceAttr(resourceName, "database_name", databaseName.Name()),
@@ -80,12 +72,6 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 	shareName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	currentAccount, err := client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-
-	shareAccountName := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s", currentAccount, shareName.Name()))
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
 			"share_name": config.StringVariable(shareName.Name()),
@@ -93,7 +79,6 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 			"schema":     config.StringVariable(schemaName.Name()),
 		}
 		if withGrant {
-			variables["share_account_name"] = config.StringVariable(shareAccountName.FullyQualifiedName())
 			variables["privileges"] = config.ListVariable(
 				config.StringVariable(sdk.ObjectPrivilegeUsage.String()),
 			)
@@ -113,7 +98,7 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnSchema"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareAccountName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareName.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeUsage.String()),
 					resource.TestCheckResourceAttr(resourceName, "schema_name", schemaName.FullyQualifiedName()),
@@ -141,12 +126,6 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 	tableName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 	shareName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	currentAccount, err := client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-
-	shareAccountName := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s", currentAccount, shareName.Name()))
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
 			"share_name": config.StringVariable(shareName.Name()),
@@ -155,7 +134,6 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 			"table_name": config.StringVariable(tableName.Name()),
 		}
 		if withGrant {
-			variables["share_account_name"] = config.StringVariable(shareAccountName.FullyQualifiedName())
 			variables["privileges"] = config.ListVariable(
 				config.StringVariable(sdk.ObjectPrivilegeSelect.String()),
 			)
@@ -175,7 +153,7 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTable"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareAccountName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareName.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
 					resource.TestCheckResourceAttr(resourceName, "table_name", tableName.FullyQualifiedName()),
@@ -202,12 +180,6 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 	schemaName := sdk.NewDatabaseObjectIdentifier(databaseName.Name(), strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 	shareName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	currentAccount, err := client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-
-	shareAccountName := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s", currentAccount, shareName.Name()))
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
 			"share_name": config.StringVariable(shareName.Name()),
@@ -215,7 +187,6 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 			"schema":     config.StringVariable(schemaName.Name()),
 		}
 		if withGrant {
-			variables["share_account_name"] = config.StringVariable(shareAccountName.FullyQualifiedName())
 			variables["privileges"] = config.ListVariable(
 				config.StringVariable(sdk.ObjectPrivilegeSelect.String()),
 			)
@@ -235,7 +206,7 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnAllTablesInSchema"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareAccountName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareName.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
 					resource.TestCheckResourceAttr(resourceName, "all_tables_in_schema", schemaName.FullyQualifiedName()),
@@ -264,12 +235,6 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 	viewName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 	shareName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	currentAccount, err := client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-
-	shareAccountName := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s", currentAccount, shareName.Name()))
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
 			"share_name": config.StringVariable(shareName.Name()),
@@ -279,7 +244,6 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 			"view_name":  config.StringVariable(viewName.Name()),
 		}
 		if withGrant {
-			variables["share_account_name"] = config.StringVariable(shareAccountName.FullyQualifiedName())
 			variables["privileges"] = config.ListVariable(
 				config.StringVariable(sdk.ObjectPrivilegeSelect.String()),
 			)
@@ -299,7 +263,7 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnView"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareAccountName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareName.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
 					resource.TestCheckResourceAttr(resourceName, "view_name", viewName.FullyQualifiedName()),
@@ -327,12 +291,6 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 	tagName := sdk.NewSchemaObjectIdentifier(databaseName.Name(), schemaName.Name(), strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 	shareName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	currentAccount, err := client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-
-	shareAccountName := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s", currentAccount, shareName.Name()))
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
 			"share_name": config.StringVariable(shareName.Name()),
@@ -341,7 +299,6 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 			"tag_name":   config.StringVariable(tagName.Name()),
 		}
 		if withGrant {
-			variables["share_account_name"] = config.StringVariable(shareAccountName.FullyQualifiedName())
 			variables["privileges"] = config.ListVariable(
 				config.StringVariable(sdk.ObjectPrivilegeRead.String()),
 			)
@@ -361,7 +318,7 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTag"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareAccountName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareName.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeRead.String()),
 					resource.TestCheckResourceAttr(resourceName, "tag_name", tagName.FullyQualifiedName()),
@@ -387,19 +344,12 @@ func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
 	databaseName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 	shareName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	currentAccount, err := client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-
-	shareAccountName := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s", currentAccount, shareName.Name()))
 	configVariables := func(withGrant bool, privileges []sdk.ObjectPrivilege) config.Variables {
 		variables := config.Variables{
 			"share_name": config.StringVariable(shareName.Name()),
 			"database":   config.StringVariable(databaseName.Name()),
 		}
 		if withGrant {
-			variables["share_account_name"] = config.StringVariable(shareAccountName.FullyQualifiedName())
 			if len(privileges) > 0 {
 				configPrivileges := make([]config.Variable, len(privileges))
 				for i, privilege := range privileges {
@@ -425,7 +375,7 @@ func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
 					sdk.ObjectPrivilegeReferenceUsage,
 				}),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareAccountName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareName.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeReferenceUsage.String()),
 					resource.TestCheckResourceAttr(resourceName, "database_name", databaseName.Name()),
@@ -437,7 +387,7 @@ func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
 					sdk.ObjectPrivilegeUsage,
 				}),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareAccountName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareName.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeUsage.String()),
 					resource.TestCheckResourceAttr(resourceName, "database_name", databaseName.Name()),
@@ -465,19 +415,12 @@ func TestAcc_GrantPrivilegesToShare_OnDatabaseWithReferenceUsagePrivilege(t *tes
 	databaseName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 	shareName := sdk.NewAccountObjectIdentifier(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	currentAccount, err := client.ContextFunctions.CurrentAccount(context.Background())
-	require.NoError(t, err)
-
-	shareAccountName := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s", currentAccount, shareName.Name()))
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
 			"share_name": config.StringVariable(shareName.Name()),
 			"database":   config.StringVariable(databaseName.Name()),
 		}
 		if withGrant {
-			variables["share_account_name"] = config.StringVariable(shareAccountName.FullyQualifiedName())
 			variables["privileges"] = config.ListVariable(
 				config.StringVariable(sdk.ObjectPrivilegeReferenceUsage.String()),
 			)
@@ -497,7 +440,7 @@ func TestAcc_GrantPrivilegesToShare_OnDatabaseWithReferenceUsagePrivilege(t *tes
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareAccountName.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "share_name", shareName.Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeReferenceUsage.String()),
 					resource.TestCheckResourceAttr(resourceName, "database_name", databaseName.Name()),
