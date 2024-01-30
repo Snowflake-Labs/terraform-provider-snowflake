@@ -200,13 +200,11 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		stageBuilder := snowflake.NewStageBuilder(stageId.Name(), stageId.DatabaseName(), stageId.SchemaName())
-		sq := stageBuilder.Describe()
-		stageDesc, err := snowflake.DescStage(db, sq)
+		stageProperties, err := client.Stages.Describe(ctx, stageId)
 		if err != nil {
 			return err
 		}
-		if !strings.Contains(stageDesc.Directory, "ENABLE = true") {
+		if findStagePropertyValueByName(stageProperties, "ENABLE") != "true" {
 			return fmt.Errorf("directory must be enabled on stage")
 		}
 		req := sdk.NewCreateStreamOnDirectoryTableRequest(id, stageId)
