@@ -2,6 +2,7 @@ package resources
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"errors"
@@ -10,6 +11,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -137,7 +140,7 @@ var tableSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
-					Description: "Masking policy to apply on column",
+					Description: "Masking policy to apply on column. It has to be a fully qualified name.",
 				},
 			},
 		},
@@ -468,6 +471,69 @@ func getColumns(from interface{}) (to columns) {
 	return to
 }
 
+func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
+	c := from.(map[string]interface{})
+	_type := c["type"].(string)
+
+	// TODO: old implementation was quoting the column names - should we leave it?
+	nameInQuotes := fmt.Sprintf(`"%v"`, snowflake.EscapeString(c["name"].(string)))
+	request := sdk.NewTableColumnRequest(nameInQuotes, sdk.DataType(_type))
+
+	_default := c["default"].([]interface{})
+	var expression string
+	if len(_default) == 1 {
+		if c, ok := _default[0].(map[string]interface{})["constant"]; ok {
+			if constant, ok := c.(string); ok && len(constant) > 0 {
+				if strings.Contains(_type, "CHAR") || _type == "STRING" || _type == "TEXT" {
+					expression = snowflake.EscapeSnowflakeString(constant)
+				} else {
+					expression = constant
+				}
+
+			}
+		}
+
+		if e, ok := _default[0].(map[string]interface{})["expression"]; ok {
+			if expr, ok := e.(string); ok && len(expr) > 0 {
+				expression = expr
+			}
+		}
+
+		if s, ok := _default[0].(map[string]interface{})["sequence"]; ok {
+			if seq := s.(string); ok && len(seq) > 0 {
+				expression = fmt.Sprintf(`%v.NEXTVAL`, seq)
+			}
+		}
+		request.WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithExpression(sdk.String(expression)))
+	}
+
+	identity := c["identity"].([]interface{})
+	if len(identity) == 1 {
+		identityProp := identity[0].(map[string]interface{})
+		startNum := identityProp["start_num"].(int)
+		stepNum := identityProp["step_num"].(int)
+		request.WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(startNum, stepNum)))
+	}
+
+	maskingPolicy := c["masking_policy"].(string)
+	if maskingPolicy != "" {
+		request.WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(maskingPolicy)))
+	}
+
+	return request.
+		WithNotNull(sdk.Bool(!c["nullable"].(bool))).
+		WithComment(sdk.String(c["comment"].(string)))
+}
+
+func getTableColumnRequests(from interface{}) []sdk.TableColumnRequest {
+	cols := from.([]interface{})
+	to := make([]sdk.TableColumnRequest, len(cols))
+	for i, c := range cols {
+		to[i] = *getTableColumnRequest(c)
+	}
+	return to
+}
+
 type primarykey struct {
 	name string
 	keys []string
@@ -493,58 +559,59 @@ func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
 // CreateTable implements schema.CreateFunc.
 func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	database := d.Get("database").(string)
-	schema := d.Get("schema").(string)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
+	databaseName := d.Get("database").(string)
+	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	columns := getColumns(d.Get("column").([]interface{}))
+	tableColumnRequests := getTableColumnRequests(d.Get("column").([]interface{}))
 
-	builder := snowflake.NewTableWithColumnDefinitionsBuilder(name, database, schema, columns.toSnowflakeColumns())
+	createRequest := sdk.NewCreateTableRequest(id, tableColumnRequests)
 
-	// Set optionals
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
 	if v, ok := d.GetOk("cluster_by"); ok {
-		builder.WithClustering(expandStringList(v.([]interface{})))
+		// TODO: in old implementation LINEAR was wrapping the list. Is it needed?
+		createRequest.WithClusterBy(expandStringList(v.([]interface{})))
 	}
 
 	if v, ok := d.GetOk("primary_key"); ok {
 		pk := getPrimaryKey(v.([]interface{}))
-		builder.WithPrimaryKey(pk.toSnowflakePrimaryKey())
+		// TODO: do we need quoteStringList?
+		sdk.NewOutOfLineConstraintRequest("TODO - optional", sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(pk.keys))
 	}
 
 	if v, ok := d.GetOk("data_retention_days"); ok {
-		builder.WithDataRetentionTimeInDays(v.(int))
+		createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
 	} else if v, ok := d.GetOk("data_retention_time_in_days"); ok {
-		builder.WithDataRetentionTimeInDays(v.(int))
+		createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
 	}
 
 	if v, ok := d.GetOk("change_tracking"); ok {
-		builder.WithChangeTracking(v.(bool))
+		createRequest.WithChangeTracking(sdk.Bool(v.(bool)))
 	}
 
-	if v, ok := d.GetOk("tag"); ok {
-		tags := getTags(v)
-		builder.WithTags(tags.toSnowflakeTagValues())
+	var tagAssociationRequests []sdk.TagAssociationRequest
+	if _, ok := d.GetOk("tag"); ok {
+		tagAssociations := getPropertyTags(d, "tag")
+		tagAssociationRequests = make([]sdk.TagAssociationRequest, len(tagAssociations))
+		for i, t := range tagAssociations {
+			tagAssociationRequests[i] = *sdk.NewTagAssociationRequest(t.Name, t.Value)
+		}
+		createRequest.WithTags(tagAssociationRequests)
 	}
 
-	stmt := builder.Create()
-	if err := snowflake.Exec(db, stmt); err != nil {
-		return fmt.Errorf("error creating table %v", name)
-	}
-
-	tableID := &tableID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		TableName:    name,
-	}
-	dataIDInput, err := tableID.String()
+	err := client.Tables.Create(ctx, createRequest)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating table %v err = %w", name, err)
 	}
-	d.SetId(dataIDInput)
+
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadTable(d, meta)
 }
@@ -797,19 +864,13 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 // DeleteTable implements schema.DeleteFunc.
 func DeleteTable(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	tableID, err := tableIDFromString(d.Id())
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
 	if err != nil {
 		return err
-	}
-
-	dbName := tableID.DatabaseName
-	schemaName := tableID.SchemaName
-	tableName := tableID.TableName
-
-	q := snowflake.NewTableBuilder(tableName, dbName, schemaName).Drop()
-
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting pipe %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

@@ -414,7 +414,7 @@ func JoinStringList(instrings []string, delimiter string) string {
 	return fmt.Sprint(strings.Join(instrings, delimiter))
 }
 
-func quoteStringList(instrings []string) []string {
+func QuoteStringList(instrings []string) []string {
 	clean := make([]string, 0, len(instrings))
 	for _, word := range instrings {
 		quoted := fmt.Sprintf(`"%s"`, word)
@@ -432,9 +432,9 @@ func (tb *TableBuilder) getCreateStatementBody() string {
 		colDef = strings.TrimSuffix(colDef, ")") // strip trailing
 		q.WriteString(colDef)
 		if tb.primaryKey.name != "" {
-			q.WriteString(fmt.Sprintf(` ,CONSTRAINT "%v" PRIMARY KEY(%v)`, tb.primaryKey.name, JoinStringList(quoteStringList(tb.primaryKey.keys), ",")))
+			q.WriteString(fmt.Sprintf(` ,CONSTRAINT "%v" PRIMARY KEY(%v)`, tb.primaryKey.name, JoinStringList(QuoteStringList(tb.primaryKey.keys), ",")))
 		} else {
-			q.WriteString(fmt.Sprintf(` ,PRIMARY KEY(%v)`, JoinStringList(quoteStringList(tb.primaryKey.keys), ",")))
+			q.WriteString(fmt.Sprintf(` ,PRIMARY KEY(%v)`, JoinStringList(QuoteStringList(tb.primaryKey.keys), ",")))
 		}
 
 		q.WriteString(")") // add closing
@@ -600,7 +600,7 @@ func (tb *TableBuilder) ChangeNullConstraint(name string, nullable bool) string 
 
 func (tb *TableBuilder) ChangePrimaryKey(newPk PrimaryKey) string {
 	tb.WithPrimaryKey(newPk)
-	pks := JoinStringList(quoteStringList(newPk.keys), ", ")
+	pks := JoinStringList(QuoteStringList(newPk.keys), ", ")
 	if tb.primaryKey.name != "" {
 		return fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT "%v" PRIMARY KEY(%v)`, tb.QualifiedName(), tb.primaryKey.name, pks)
 	}
