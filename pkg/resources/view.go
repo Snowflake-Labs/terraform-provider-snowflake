@@ -119,13 +119,18 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	if _, ok := d.GetOk("tag"); ok {
-		createRequest.WithTag(getPropertyTags(d, "tag"))
-	}
-
 	err := client.Views.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error creating view %v err = %w", name, err)
+	}
+
+	// TODO [SNOW-867235]: we have to set tags after creation because existing view extractor is not aware of TAG during CREATE
+	// Will be discussed with parser topic during resources redesign.
+	if _, ok := d.GetOk("tag"); ok {
+		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(getPropertyTags(d, "tag")))
+		if err != nil {
+			return fmt.Errorf("error setting tags on view %v, err = %w", id, err)
+		}
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))

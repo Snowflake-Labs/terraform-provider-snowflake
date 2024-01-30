@@ -122,6 +122,109 @@ func TestAcc_View(t *testing.T) {
 	})
 }
 
+func TestAcc_View_Tags(t *testing.T) {
+	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":      config.StringVariable(viewName),
+			"database":  config.StringVariable(acc.TestDatabaseName),
+			"schema":    config.StringVariable(acc.TestSchemaName),
+			"statement": config.StringVariable(query),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckViewDestroy,
+		Steps: []resource.TestStep{
+			// create tags
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "tag.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.name", "tag1"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.value", "some_value"),
+				),
+			},
+			// update tags
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "tag.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.name", "tag2"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.value", "some_value"),
+				),
+			},
+			// IMPORT
+			{
+				ConfigVariables:         m(),
+				ResourceName:            "snowflake_view.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"or_replace", "tag"},
+			},
+		},
+	})
+}
+
+func TestAcc_View_Rename(t *testing.T) {
+	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newViewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":        config.StringVariable(viewName),
+			"database":    config.StringVariable(acc.TestDatabaseName),
+			"schema":      config.StringVariable(acc.TestSchemaName),
+			"comment":     config.StringVariable("Terraform test resource"),
+			"is_secure":   config.BoolVariable(true),
+			"or_replace":  config.BoolVariable(false),
+			"copy_grants": config.BoolVariable(false),
+			"statement":   config.StringVariable(query),
+		}
+	}
+	m2 := m()
+	m2["name"] = config.StringVariable(newViewName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckViewDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", viewName),
+				),
+			},
+			// rename only
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", newViewName),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
