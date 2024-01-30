@@ -144,9 +144,6 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	s := d.Get("statement").(string)
 	createRequest := sdk.NewCreateMaterializedViewRequest(id, s)
 
-	// TODO: use warehouse?
-	//warehouse := d.Get("warehouse").(string)
-
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
 		createRequest.WithOrReplace(sdk.Bool(true))
 	}
@@ -163,7 +160,14 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		createRequest.WithTag(getPropertyTags(d, "tag"))
 	}
 
-	err := client.MaterializedViews.Create(ctx, createRequest)
+	warehouseName := d.Get("warehouse").(string)
+	// TODO [SNOW-]: this was the old implementation, it's left for now, we will address this with resources rework
+	err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(warehouseName))
+	if err != nil {
+		return fmt.Errorf("error setting warehouse %s while creating materialized view %v err = %w", warehouseName, name, err)
+	}
+
+	err = client.MaterializedViews.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error creating materialized view %v err = %w", name, err)
 	}
@@ -281,24 +285,25 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// TODO: support set/unset tags in the SDK if possible
-	//if d.HasChange("tag") {
-	//	unsetTags, setTags := GetTagsDiff(d, "tag")
-	//
-	//	if len(unsetTags) > 0 {
-	//		err := client.MaterializedViews.Alter(ctx, sdk.NewAlterMaterializedViewRequest(id).WithUnsetTag(unsetTags))
-	//		if err != nil {
-	//			return fmt.Errorf("error unsetting tags on %v, err = %w", d.Id(), err)
-	//		}
-	//	}
-	//
-	//	if len(setTags) > 0 {
-	//		err := client.MaterializedViews.Alter(ctx, sdk.NewAlterMaterializedViewRequest(id).WithSetTags(setTags))
-	//		if err != nil {
-	//			return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
-	//		}
-	//	}
-	//}
+	if d.HasChange("tag") {
+		unsetTags, setTags := GetTagsDiff(d, "tag")
+
+		if len(unsetTags) > 0 {
+			// TODO [SNOW-1022645]: view is used on purpose here; change after we have an agreement on situations like this in the SDK
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetTags(unsetTags))
+			if err != nil {
+				return fmt.Errorf("error unsetting tags on %v, err = %w", d.Id(), err)
+			}
+		}
+
+		if len(setTags) > 0 {
+			// TODO [SNOW-1022645]: view is used on purpose here; change after we have an agreement on situations like this in the SDK
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(setTags))
+			if err != nil {
+				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+			}
+		}
+	}
 
 	return ReadMaterializedView(d, meta)
 }
