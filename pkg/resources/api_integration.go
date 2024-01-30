@@ -1,12 +1,14 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -22,6 +24,7 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
 		ValidateFunc: validation.StringInSlice([]string{"aws_api_gateway", "aws_private_api_gateway", "azure_api_management", "aws_gov_api_gateway", "aws_gov_private_api_gateway", "google_api_gateway"}, false),
+		ForceNew:     true,
 		Description:  "Specifies the HTTPS proxy service type.",
 	},
 	"api_aws_role_arn": {
@@ -127,41 +130,81 @@ func APIIntegration() *schema.Resource {
 	}
 }
 
+func toApiIntegrationEndpointPrefix(paths []string) []sdk.ApiIntegrationEndpointPrefix {
+	allowedPrefixes := make([]sdk.ApiIntegrationEndpointPrefix, len(paths))
+	for i, prefix := range paths {
+		allowedPrefixes[i] = sdk.ApiIntegrationEndpointPrefix{Path: prefix}
+	}
+	return allowedPrefixes
+}
+
 // CreateAPIIntegration implements schema.CreateFunc.
 func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	name := d.Get("name").(string)
+	id := sdk.NewAccountObjectIdentifier(name)
+	enabled := d.Get("enabled").(bool)
 
-	stmt := snowflake.NewAPIIntegrationBuilder(name).Create()
+	allowedPrefixesRaw := expandStringList(d.Get("api_allowed_prefixes").([]interface{}))
+	allowedPrefixes := toApiIntegrationEndpointPrefix(allowedPrefixesRaw)
 
-	// Set required fields
-	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
+	createRequest := sdk.NewCreateApiIntegrationRequest(id, allowedPrefixes, enabled)
 
-	stmt.SetStringList("API_ALLOWED_PREFIXES", expandStringList(d.Get("api_allowed_prefixes").([]interface{})))
-
-	// Set optional fields
 	if _, ok := d.GetOk("api_blocked_prefixes"); ok {
-		stmt.SetStringList("API_BLOCKED_PREFIXES", expandStringList(d.Get("api_blocked_prefixes").([]interface{})))
+		blockedPrefixesRaw := expandStringList(d.Get("api_blocked_prefixes").([]interface{}))
+		createRequest.WithApiBlockedPrefixes(toApiIntegrationEndpointPrefix(blockedPrefixesRaw))
 	}
 
-	if _, ok := d.GetOk("api_key"); ok {
-		stmt.SetString("API_KEY", d.Get("api_key").(string))
+	if v, ok := d.GetOk("comment"); ok {
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	if _, ok := d.GetOk("comment"); ok {
-		stmt.SetString("COMMENT", d.Get("comment").(string))
+	apiProvider := d.Get("api_provider").(string)
+	switch apiProvider {
+	case "aws_api_gateway", "aws_private_api_gateway", "aws_gov_api_gateway", "aws_gov_private_api_gateway":
+		roleArn, ok := d.GetOk("api_aws_role_arn")
+		if !ok {
+			return fmt.Errorf("if you use AWS api provider you must specify an api_aws_role_arn")
+		}
+		awsParams := sdk.NewAwsApiParamsRequest(sdk.ApiIntegrationAwsApiProviderType(apiProvider), roleArn.(string))
+		if v, ok := d.GetOk("api_key"); ok {
+			awsParams.WithApiKey(sdk.String(v.(string)))
+		}
+		createRequest.WithAwsApiProviderParams(awsParams)
+	case "azure_api_management":
+		tenantId, ok := d.GetOk("azure_tenant_id")
+		if !ok {
+			return fmt.Errorf("if you use the Azure api provider you must specify an azure_tenant_id")
+		}
+		applicationId, ok := d.GetOk("azure_ad_application_id")
+		if !ok {
+			return fmt.Errorf("if you use the Azure api provider you must specify an azure_ad_application_id")
+		}
+		azureParams := sdk.NewAzureApiParamsRequest(tenantId.(string), applicationId.(string))
+		if v, ok := d.GetOk("api_key"); ok {
+			azureParams.WithApiKey(sdk.String(v.(string)))
+		}
+		createRequest.WithAzureApiProviderParams(azureParams)
+	case "google_api_gateway":
+		audience, ok := d.GetOk("google_audience")
+		if !ok {
+			return fmt.Errorf("if you use GCP api provider you must specify a google_audience")
+		}
+		googleParams := sdk.NewGoogleApiParamsRequest(audience.(string))
+		createRequest.WithGoogleApiProviderParams(googleParams)
+	default:
+		return fmt.Errorf("unexpected provider %v", apiProvider)
 	}
 
-	// Now, set the API provider
-	if err := setAPIProviderSettings(d, stmt); err != nil {
-		return err
-	}
-
-	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
+	err := client.ApiIntegrations.Create(ctx, createRequest)
+	if err != nil {
 		return fmt.Errorf("error creating api integration: %w", err)
 	}
 
-	d.SetId(name)
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadAPIIntegration(d, meta)
 }
@@ -169,101 +212,104 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 // ReadAPIIntegration implements schema.ReadFunc.
 func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	stmt := snowflake.NewAPIIntegrationBuilder(id).Show()
-	row := snowflake.QueryRow(db, stmt)
-
-	// Some properties can come from the SHOW INTEGRATION call
-
-	s, err := snowflake.ScanAPIIntegration(row)
+	integration, err := client.ApiIntegrations.ShowByID(ctx, id)
 	if err != nil {
-		// If no such resource exists, it is not an error but rather not exist
-		if err.Error() == snowflake.ErrNoRowInRS {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("could not show api integration: %w", err)
+		log.Printf("[DEBUG] api integration (%s) not found", d.Id())
+		d.SetId("")
+		return err
 	}
 
 	// Note: category must be API or something is broken
-	if c := s.Category.String; c != "API" {
+	if c := integration.Category; c != "API" {
 		return fmt.Errorf("expected %v to be an api integration, got %v", id, c)
 	}
 
-	if err := d.Set("name", s.Name.String); err != nil {
+	if err := d.Set("name", integration.Name); err != nil {
 		return err
 	}
 
-	if err := d.Set("comment", s.Comment.String); err != nil {
+	if err := d.Set("comment", integration.Comment); err != nil {
 		return err
 	}
 
-	if err := d.Set("created_on", s.CreatedOn.String); err != nil {
+	if err := d.Set("created_on", integration.CreatedOn.String()); err != nil {
 		return err
 	}
 
-	if err := d.Set("enabled", s.Enabled.Bool); err != nil {
+	if err := d.Set("enabled", integration.Enabled); err != nil {
 		return err
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
 	// We need to grab them in a loop
-	var k, pType string
-	var v, unused interface{}
-	stmt = snowflake.NewAPIIntegrationBuilder(id).Describe()
-	rows, err := db.Query(stmt)
+
+	integrationProperties, err := client.ApiIntegrations.Describe(ctx, id)
 	if err != nil {
 		return fmt.Errorf("could not describe api integration: %w", err)
 	}
-	defer rows.Close()
-	for rows.Next() {
-		if err := rows.Scan(&k, &pType, &v, &unused); err != nil {
-			return err
-		}
-		switch k {
+
+	for _, property := range integrationProperties {
+		name := property.Name
+		value := property.Value
+		switch name {
 		case "ENABLED":
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "API_ALLOWED_PREFIXES":
-			if err := d.Set("api_allowed_prefixes", strings.Split(v.(string), ",")); err != nil {
+			if err := d.Set("api_allowed_prefixes", strings.Split(value, ",")); err != nil {
 				return err
 			}
 		case "API_BLOCKED_PREFIXES":
-			if val := v.(string); val != "" {
+			if val := value; val != "" {
 				if err := d.Set("api_blocked_prefixes", strings.Split(val, ",")); err != nil {
 					return err
 				}
 			}
 		case "API_AWS_IAM_USER_ARN":
-			if err := d.Set("api_aws_iam_user_arn", v.(string)); err != nil {
+			if err := d.Set("api_aws_iam_user_arn", value); err != nil {
 				return err
 			}
 		case "API_AWS_ROLE_ARN":
-			if err := d.Set("api_aws_role_arn", v.(string)); err != nil {
+			if err := d.Set("api_aws_role_arn", value); err != nil {
 				return err
 			}
 		case "API_AWS_EXTERNAL_ID":
-			if err := d.Set("api_aws_external_id", v.(string)); err != nil {
+			if err := d.Set("api_aws_external_id", value); err != nil {
 				return err
 			}
 		case "AZURE_CONSENT_URL":
-			if err := d.Set("azure_consent_url", v.(string)); err != nil {
+			if err := d.Set("azure_consent_url", value); err != nil {
 				return err
 			}
 		case "AZURE_MULTI_TENANT_APP_NAME":
-			if err := d.Set("azure_multi_tenant_app_name", v.(string)); err != nil {
+			if err := d.Set("azure_multi_tenant_app_name", value); err != nil {
+				return err
+			}
+		case "AZURE_TENANT_ID":
+			if err := d.Set("azure_tenant_id", value); err != nil {
+				return err
+			}
+		case "AZURE_AD_APPLICATION_ID":
+			if err := d.Set("azure_ad_application_id", value); err != nil {
 				return err
 			}
 		case "GOOGLE_AUDIENCE":
-			if err := d.Set("google_audience", v.(string)); err != nil {
+			if err := d.Set("google_audience", value); err != nil {
 				return err
 			}
 		case "API_GCP_SERVICE_ACCOUNT":
-			if err := d.Set("api_gcp_service_account", v.(string)); err != nil {
+			if err := d.Set("api_gcp_service_account", value); err != nil {
+				return err
+			}
+		case "API_PROVIDER":
+			if err := d.Set("api_provider", strings.ToLower(value)); err != nil {
 				return err
 			}
 		default:
-			log.Printf("[WARN] unexpected api integration property %v returned from Snowflake", k)
+			log.Printf("[WARN] unexpected api integration property %v returned from Snowflake", name)
 		}
 	}
 
@@ -273,72 +319,83 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 // UpdateAPIIntegration implements schema.UpdateFunc.
 func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
-
-	stmt := snowflake.NewAPIIntegrationBuilder(id).Alter()
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	var runSetStatement bool
-
+	setRequest := sdk.NewApiIntegrationSetRequest()
 	if d.HasChange("enabled") {
 		runSetStatement = true
-		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
+		setRequest.WithEnabled(sdk.Bool(d.Get("enabled").(bool)))
 	}
 
 	if d.HasChange("api_allowed_prefixes") {
 		runSetStatement = true
-		stmt.SetStringList("API_ALLOWED_PREFIXES", expandStringList(d.Get("api_allowed_prefixes").([]interface{})))
-	}
-
-	if d.HasChange("api_key") {
-		runSetStatement = true
-		stmt.SetString("API_KEY", d.Get("api_key").(string))
+		setRequest.WithApiAllowedPrefixes(toApiIntegrationEndpointPrefix(expandStringList(d.Get("api_allowed_prefixes").([]interface{}))))
 	}
 
 	if d.HasChange("comment") {
 		runSetStatement = true
-		stmt.SetString("COMMENT", d.Get("comment").(string))
+		setRequest.WithComment(sdk.String(d.Get("comment").(string)))
 	}
 
 	// We need to UNSET this if we remove all api blocked prefixes.
 	if d.HasChange("api_blocked_prefixes") {
 		v := d.Get("api_blocked_prefixes").([]interface{})
 		if len(v) == 0 {
-			if err := snowflake.Exec(db, fmt.Sprintf(`ALTER API INTEGRATION %v UNSET API_BLOCKED_PREFIXES`, id)); err != nil {
+			err := client.ApiIntegrations.Alter(ctx, sdk.NewAlterApiIntegrationRequest(id).WithUnset(sdk.NewApiIntegrationUnsetRequest().WithApiBlockedPrefixes(sdk.Bool(true))))
+			if err != nil {
 				return fmt.Errorf("error unsetting api_blocked_prefixes: %w", err)
 			}
 		} else {
 			runSetStatement = true
-			stmt.SetStringList("API_BLOCKED_PREFIXES", expandStringList(v))
+			setRequest.WithApiBlockedPrefixes(toApiIntegrationEndpointPrefix(expandStringList(v)))
 		}
 	}
 
-	if d.HasChange("api_provider") {
-		runSetStatement = true
-		err := setAPIProviderSettings(d, stmt)
-		if err != nil {
-			return err
-		}
-	} else {
+	apiProvider := d.Get("api_provider").(string)
+	switch apiProvider {
+	case "aws_api_gateway", "aws_private_api_gateway", "aws_gov_api_gateway", "aws_gov_private_api_gateway":
+		awsParams := sdk.NewSetAwsApiParamsRequest()
 		if d.HasChange("api_aws_role_arn") {
-			runSetStatement = true
-			stmt.SetString("API_AWS_ROLE_ARN", d.Get("api_aws_role_arn").(string))
+			awsParams.WithApiAwsRoleArn(sdk.String(d.Get("api_aws_role_arn").(string)))
 		}
-		if d.HasChange("azure_tenant_id") {
+		if d.HasChange("api_key") {
+			awsParams.WithApiKey(sdk.String(d.Get("api_key").(string)))
+		}
+		if *awsParams != *sdk.NewSetAwsApiParamsRequest() {
 			runSetStatement = true
-			stmt.SetString("AZURE_TENANT_ID", d.Get("azure_tenant_id").(string))
+			setRequest.WithAwsParams(awsParams)
+		}
+	case "azure_api_management":
+		azureParams := sdk.NewSetAzureApiParamsRequest()
+		if d.HasChange("azure_tenant_id") {
+			azureParams.WithAzureTenantId(sdk.String(d.Get("azure_tenant_id").(string)))
 		}
 		if d.HasChange("azure_ad_application_id") {
-			runSetStatement = true
-			stmt.SetString("AZURE_AD_APPLICATION_ID", d.Get("azure_ad_application_id").(string))
+			azureParams.WithAzureAdApplicationId(sdk.String(d.Get("azure_ad_application_id").(string)))
 		}
+		if d.HasChange("api_key") {
+			azureParams.WithApiKey(sdk.String(d.Get("api_key").(string)))
+		}
+		if *azureParams != *sdk.NewSetAzureApiParamsRequest() {
+			runSetStatement = true
+			setRequest.WithAzureParams(azureParams)
+		}
+	case "google_api_gateway":
 		if d.HasChange("google_audience") {
 			runSetStatement = true
-			stmt.SetString("GOOGLE_AUDIENCE", d.Get("google_audience").(string))
+			googleParams := sdk.NewSetGoogleApiParamsRequest(d.Get("google_audience").(string))
+			setRequest.WithGoogleParams(googleParams)
 		}
+	default:
+		return fmt.Errorf("unexpected provider %v", apiProvider)
 	}
 
 	if runSetStatement {
-		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
+		err := client.ApiIntegrations.Alter(ctx, sdk.NewAlterApiIntegrationRequest(id).WithSet(setRequest))
+		if err != nil {
 			return fmt.Errorf("error updating api integration: %w", err)
 		}
 	}
@@ -348,41 +405,17 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteAPIIntegration implements schema.DeleteFunc.
 func DeleteAPIIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.NewAPIIntegrationBuilder)(d, meta)
-}
+	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-func setAPIProviderSettings(data *schema.ResourceData, stmt snowflake.SettingBuilder) error {
-	apiProvider := data.Get("api_provider").(string)
-	stmt.SetRaw("API_PROVIDER=" + apiProvider)
-
-	switch apiProvider {
-	case "aws_api_gateway", "aws_private_api_gateway", "aws_gov_api_gateway", "aws_gov_private_api_gateway":
-		v, ok := data.GetOk("api_aws_role_arn")
-		if !ok {
-			return fmt.Errorf("if you use AWS api provider you must specify an api_aws_role_arn")
-		}
-		stmt.SetString(`API_AWS_ROLE_ARN`, v.(string))
-	case "azure_api_management":
-		v, ok := data.GetOk("azure_tenant_id")
-		if !ok {
-			return fmt.Errorf("if you use the Azure api provider you must specify an azure_tenant_id")
-		}
-		stmt.SetString(`AZURE_TENANT_ID`, v.(string))
-
-		v, ok = data.GetOk("azure_ad_application_id")
-		if !ok {
-			return fmt.Errorf("if you use the Azure api provider you must specify an azure_ad_application_id")
-		}
-		stmt.SetString(`AZURE_AD_APPLICATION_ID`, v.(string))
-	case "google_api_gateway":
-		v, ok := data.GetOk("google_audience")
-		if !ok {
-			return fmt.Errorf("if you use GCP api provider you must specify a google_audience")
-		}
-		stmt.SetString(`GOOGLE_AUDIENCE`, v.(string))
-	default:
-		return fmt.Errorf("unexpected provider %v", apiProvider)
+	err := client.ApiIntegrations.Drop(ctx, sdk.NewDropApiIntegrationRequest(id))
+	if err != nil {
+		return err
 	}
+
+	d.SetId("")
 
 	return nil
 }

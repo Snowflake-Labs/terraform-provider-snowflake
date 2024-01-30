@@ -23,8 +23,10 @@ func TestInt_ApiIntegrations(t *testing.T) {
 	const googleOtherPrefix = "https://gateway-id-123456.uc.gateway.dev/dev"
 	const apiAwsRoleArn = "arn:aws:iam::000000000001:/role/test"
 	const azureTenantId = "00000000-0000-0000-0000-000000000000"
+	const azureOtherTenantId = "11111111-1111-1111-1111-111111111111"
 	const azureAdApplicationId = "11111111-1111-1111-1111-111111111111"
 	const googleAudience = "api-gateway-id-123456.apigateway.gcp-project.cloud.goog"
+	const googleOtherAudience = "api-gateway-id-666777.apigateway.gcp-project.cloud.goog"
 
 	prefixes := func(prefix string) []sdk.ApiIntegrationEndpointPrefix {
 		return []sdk.ApiIntegrationEndpointPrefix{{Path: prefix}}
@@ -275,6 +277,20 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
+	t.Run("alter api integration: azure - missing option", func(t *testing.T) {
+		integration := createAzureApiIntegration(t)
+
+		setRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
+			WithSet(sdk.NewApiIntegrationSetRequest().WithAzureParams(sdk.NewSetAzureApiParamsRequest().WithAzureTenantId(sdk.String(azureOtherTenantId))))
+		err := client.ApiIntegrations.Alter(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "AZURE_TENANT_ID", Type: "String", Value: azureOtherTenantId, Default: ""})
+	})
+
 	t.Run("alter api integration: google", func(t *testing.T) {
 		integration := createGoogleApiIntegration(t)
 
@@ -315,6 +331,20 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_ALLOWED_PREFIXES", Type: "List", Value: googleOtherPrefix, Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "API_BLOCKED_PREFIXES", Type: "List", Value: "", Default: "[]"})
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+	})
+
+	t.Run("alter api integration: google - missing option", func(t *testing.T) {
+		integration := createGoogleApiIntegration(t)
+
+		setRequest := sdk.NewAlterApiIntegrationRequest(integration.ID()).
+			WithSet(sdk.NewApiIntegrationSetRequest().WithGoogleParams(sdk.NewSetGoogleApiParamsRequest(googleOtherAudience)))
+		err := client.ApiIntegrations.Alter(ctx, setRequest)
+		require.NoError(t, err)
+
+		details, err := client.ApiIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "GOOGLE_AUDIENCE", Type: "String", Value: googleOtherAudience, Default: ""})
 	})
 
 	t.Run("alter api integration: set and unset tags", func(t *testing.T) {
