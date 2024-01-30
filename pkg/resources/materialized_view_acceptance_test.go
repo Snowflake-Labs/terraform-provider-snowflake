@@ -100,12 +100,56 @@ func TestAcc_MaterializedView(t *testing.T) {
 	})
 }
 
+func TestAcc_MaterializedView_Tags(t *testing.T) {
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	warehouseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	queryEscaped := fmt.Sprintf("SELECT ID FROM \\\"%s\\\"", tableName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckMaterializedViewDestroy,
+		Steps: []resource.TestStep{
+			// create tags
+			{
+				Config: materializedViewConfigWithTags(warehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "test_tag"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.0.name", "tag1"),
+				),
+			},
+			// update tags
+			{
+				Config: materializedViewConfigWithTags(warehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "test_tag_2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.0.name", "tag2"),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:            "snowflake_materialized_view.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"or_replace", "warehouse", "tag"},
+			},
+		},
+	})
+}
+
 func materializedViewConfig(warehouseName string, tableName string, viewName string, q string, databaseName string, schemaName string, comment string, isSecure bool, orReplace bool) string {
-	// convert the cluster from string slice to string
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "wh" {
 	name = "%s"
 }
+
 resource "snowflake_table" "test" {
 	name     = "%s"
 	database = "%s"
@@ -137,6 +181,52 @@ resource "snowflake_materialized_view" "test" {
   	]
 }
 `, warehouseName, tableName, databaseName, schemaName, viewName, comment, databaseName, schemaName, isSecure, orReplace, q)
+}
+
+func materializedViewConfigWithTags(warehouseName string, tableName string, viewName string, q string, databaseName string, schemaName string, tag string) string {
+	return fmt.Sprintf(`
+resource "snowflake_warehouse" "wh" {
+	name = "%s"
+}
+
+resource "snowflake_table" "test" {
+	name     = "%s"
+	database = "%s"
+	schema   = "%s"
+
+	column {
+		name = "ID"
+		type = "NUMBER(38,0)"
+	}
+}
+
+resource "snowflake_tag" "test_tag" {
+	name     = "tag1"
+	database = "%s"
+	schema   = "%s"
+}
+
+resource "snowflake_tag" "test_tag_2" {
+	name     = "tag2"
+	database = "%s"
+	schema   = "%s"
+}
+
+resource "snowflake_materialized_view" "test" {
+	name      = "%s"
+	database  = "%s"
+	schema    = "%s"
+	warehouse = snowflake_warehouse.wh.name
+	statement = "%s"
+
+	tag {
+		name = snowflake_tag.%s.name
+		schema = snowflake_tag.%s.schema
+		database = snowflake_tag.%s.database
+		value = "some_value"
+	}
+}
+`, warehouseName, tableName, databaseName, schemaName, databaseName, schemaName, databaseName, schemaName, viewName, databaseName, schemaName, q, tag, tag, tag)
 }
 
 func testAccCheckMaterializedViewDestroy(s *terraform.State) error {

@@ -63,7 +63,7 @@ var materializedViewSchema = map[string]*schema.Schema{
 	"tag": tagReferenceSchema,
 }
 
-// View returns a pointer to the resource representing a view.
+// MaterializedView returns a pointer to the resource representing a view.
 func MaterializedView() *schema.Resource {
 	return &schema.Resource{
 		Create: CreateMaterializedView,
@@ -76,12 +76,6 @@ func MaterializedView() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
-}
-
-type materializedViewID struct {
-	DatabaseName string
-	SchemaName   string
-	ViewName     string
 }
 
 // CreateMaterializedView implements schema.CreateFunc.
@@ -110,10 +104,6 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	if _, ok := d.GetOk("tag"); ok {
-		createRequest.WithTag(getPropertyTags(d, "tag"))
-	}
-
 	warehouseName := d.Get("warehouse").(string)
 	// TODO [SNOW-867235]: this was the old implementation, it's left for now, we will address this with resources rework discussions
 	err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(warehouseName))
@@ -124,6 +114,15 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	err = client.MaterializedViews.Create(ctx, createRequest)
 	if err != nil {
 		return fmt.Errorf("error creating materialized view %v err = %w", name, err)
+	}
+
+	// TODO [SNOW-867235]: we have to set tags after creation because existing materialized view extractor is not aware of TAG during CREATE
+	// Will be discussed with parser topic during resources redesign.
+	if _, ok := d.GetOk("tag"); ok {
+		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(getPropertyTags(d, "tag")))
+		if err != nil {
+			return fmt.Errorf("error setting tags on materialized view %v, err = %w", id, err)
+		}
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))

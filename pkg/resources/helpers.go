@@ -97,7 +97,7 @@ func GetTagsDiff(d *schema.ResourceData, key string) (unsetTags []sdk.ObjectIden
 
 	unsetTags = make([]sdk.ObjectIdentifier, len(removed))
 	for i, t := range removed {
-		unsetTags[i] = sdk.NewDatabaseObjectIdentifier(t.database, t.name)
+		unsetTags[i] = sdk.NewSchemaObjectIdentifier(t.database, t.schema, t.name)
 	}
 
 	setTags = make([]sdk.TagAssociation, len(added)+len(changed))
