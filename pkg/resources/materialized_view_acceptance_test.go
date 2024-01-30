@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_MaterializedView(t *testing.T) {
@@ -21,10 +22,10 @@ func TestAcc_MaterializedView(t *testing.T) {
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	warehouseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	query := fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\"", tableName)
-	expectedQuery := fmt.Sprintf(`SELECT ID, DATA FROM "%s"`, tableName)
-	otherQuery := fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\" WHERE ID LIKE 'foo%%'", tableName)
-	expectedOtherQuery := fmt.Sprintf(`SELECT ID, DATA FROM "%s" WHERE ID LIKE 'foo%%'`, tableName)
+	queryEscaped := fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\"", tableName)
+	query := fmt.Sprintf(`SELECT ID, DATA FROM "%s"`, tableName)
+	otherQueryEscaped := fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\" WHERE ID LIKE 'foo%%'", tableName)
+	otherQuery := fmt.Sprintf(`SELECT ID, DATA FROM "%s" WHERE ID LIKE 'foo%%'`, tableName)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -35,10 +36,10 @@ func TestAcc_MaterializedView(t *testing.T) {
 		CheckDestroy: testAccCheckMaterializedViewDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: materializedViewConfig(warehouseName, tableName, viewName, query, acc.TestDatabaseName, acc.TestSchemaName, "Terraform test resource", true, false),
+				Config: materializedViewConfig(warehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "Terraform test resource", true, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", expectedQuery),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", query),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", warehouseName),
@@ -48,10 +49,10 @@ func TestAcc_MaterializedView(t *testing.T) {
 			},
 			// update parameters
 			{
-				Config: materializedViewConfig(warehouseName, tableName, viewName, query, acc.TestDatabaseName, acc.TestSchemaName, "other comment", false, false),
+				Config: materializedViewConfig(warehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "other comment", false, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", expectedQuery),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", query),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", warehouseName),
@@ -61,10 +62,26 @@ func TestAcc_MaterializedView(t *testing.T) {
 			},
 			// change statement
 			{
-				Config: materializedViewConfig(warehouseName, tableName, viewName, otherQuery, acc.TestDatabaseName, acc.TestSchemaName, "other comment", false, false),
+				Config: materializedViewConfig(warehouseName, tableName, viewName, otherQueryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "other comment", false, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", expectedOtherQuery),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", otherQuery),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", warehouseName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "other comment"),
+					checkBool("snowflake_materialized_view.test", "is_secure", false),
+				),
+			},
+			// change statement externally
+			{
+				PreConfig: func() {
+					alterMaterializedViewQueryExternally(t, sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, viewName), query)
+				},
+				Config: materializedViewConfig(warehouseName, tableName, viewName, otherQueryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "other comment", false, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", otherQuery),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", warehouseName),
@@ -137,4 +154,15 @@ func testAccCheckMaterializedViewDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func alterMaterializedViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string) {
+	t.Helper()
+
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
+	ctx := context.Background()
+
+	err = client.MaterializedViews.Create(ctx, sdk.NewCreateMaterializedViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
+	require.NoError(t, err)
 }

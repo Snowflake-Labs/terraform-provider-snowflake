@@ -1,13 +1,10 @@
 package resources
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -85,49 +82,6 @@ type materializedViewID struct {
 	DatabaseName string
 	SchemaName   string
 	ViewName     string
-}
-
-const (
-	materializedViewDelimiter = '|'
-)
-
-// String() takes in a materializedViewID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|ExternalTableName.
-func (si *materializedViewID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = materializedViewDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.ViewName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strMeterilizedViewID := strings.TrimSpace(buf.String())
-	return strMeterilizedViewID, nil
-}
-
-// materializedViewIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|MaterializedViewName
-// and returns a externalTableID object.
-func materializedViewIDFromString(stringID string) (*materializedViewID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = materializedViewDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	materializedViewResult := &materializedViewID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		ViewName:     lines[0][2],
-	}
-	return materializedViewResult, nil
 }
 
 // CreateMaterializedView implements schema.CreateFunc.

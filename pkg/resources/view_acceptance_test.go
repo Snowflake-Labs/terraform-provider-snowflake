@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_View(t *testing.T) {
@@ -88,6 +89,23 @@ func TestAcc_View(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "different comment"),
 					// copy grants is currently set to true for recreation
+					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
+					checkBool("snowflake_view.test", "is_secure", false),
+				),
+			},
+			// change statement externally
+			{
+				PreConfig: func() {
+					alterViewQueryExternally(t, sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, accName), query)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m3,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "statement", otherQuery),
+					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "different comment"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
 					checkBool("snowflake_view.test", "is_secure", false),
 				),
@@ -318,4 +336,15 @@ func testAccCheckViewDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func alterViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string) {
+	t.Helper()
+
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
+	ctx := context.Background()
+
+	err = client.Views.Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
+	require.NoError(t, err)
 }
