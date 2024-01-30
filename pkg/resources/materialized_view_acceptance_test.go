@@ -144,6 +144,39 @@ func TestAcc_MaterializedView_Tags(t *testing.T) {
 	})
 }
 
+func TestAcc_MaterializedView_Rename(t *testing.T) {
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newViewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	warehouseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	queryEscaped := fmt.Sprintf("SELECT ID FROM \\\"%s\\\"", tableName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckMaterializedViewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: materializedViewConfig(warehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "Terraform test resource", true, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
+				),
+			},
+			// rename only
+			{
+				Config: materializedViewConfig(warehouseName, tableName, newViewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "Terraform test resource", true, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", newViewName),
+				),
+			},
+		},
+	})
+}
+
 func materializedViewConfig(warehouseName string, tableName string, viewName string, q string, databaseName string, schemaName string, comment string, isSecure bool, orReplace bool) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "wh" {
