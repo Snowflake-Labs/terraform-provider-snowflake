@@ -26,7 +26,7 @@ func TestAcc_Sequence(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
-					resource.TestCheckNoResourceAttr("snowflake_sequence.test_sequence", "ordering"),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "ordering", "ORDER"),
 				),
 			},
 			// Set comment and rename
@@ -56,9 +56,6 @@ func TestAcc_Sequence(t *testing.T) {
 				ResourceName:      "snowflake_sequence.test_sequence",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"ordering", // this doesn't get set on import
-				},
 			},
 		},
 	})
