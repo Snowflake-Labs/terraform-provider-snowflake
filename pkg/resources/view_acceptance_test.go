@@ -10,6 +10,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,6 +19,28 @@ import (
 
 func TestAcc_View(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	otherQuery := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%'"
+
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":        config.StringVariable(accName),
+			"database":    config.StringVariable(acc.TestDatabaseName),
+			"schema":      config.StringVariable(acc.TestSchemaName),
+			"comment":     config.StringVariable("Terraform test resource"),
+			"is_secure":   config.BoolVariable(true),
+			"or_replace":  config.BoolVariable(false),
+			"copy_grants": config.BoolVariable(false),
+			"statement":   config.StringVariable(query),
+		}
+	}
+	m2 := m()
+	m2["comment"] = config.StringVariable("different comment")
+	m2["is_secure"] = config.BoolVariable(false)
+	m3 := m()
+	m3["comment"] = config.StringVariable("different comment")
+	m3["is_secure"] = config.BoolVariable(false)
+	m3["statement"] = config.StringVariable(otherQuery)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -28,72 +51,77 @@ func TestAcc_View(t *testing.T) {
 		CheckDestroy: testAccCheckViewDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "statement", query),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "Terraform test resource"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "false"),
-					checkBool("snowflake_view.test", "is_secure", true), // this is from user_acceptance_test.go
+					checkBool("snowflake_view.test", "is_secure", true),
 				),
 			},
-		},
-	})
-}
-
-func TestAcc_View2(t *testing.T) {
-	accName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: testAccCheckViewDestroy,
-		Steps: []resource.TestStep{
+			// update parameters
 			{
-				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES where ROLE_OWNER like 'foo%%';", acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m2,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "statement", query),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "Terraform test resource"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "different comment"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "false"),
-					checkBool("snowflake_view.test", "is_secure", true), // this is from user_acceptance_test.go
+					checkBool("snowflake_view.test", "is_secure", false),
 				),
 			},
-		},
-	})
-}
-
-func TestAcc_ViewWithCopyGrants(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
-	resource.ParallelTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: testAccCheckViewDestroy,
-		Steps: []resource.TestStep{
+			// change statement
 			{
-				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m3,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "statement", otherQuery),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "Terraform test resource"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "different comment"),
+					// copy grants is currently set to true for recreation
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
-					checkBool("snowflake_view.test", "is_secure", true), // this is from user_acceptance_test.go
+					checkBool("snowflake_view.test", "is_secure", false),
 				),
+			},
+			// IMPORT
+			{
+				ConfigVariables:         m3,
+				ResourceName:            "snowflake_view.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"or_replace"},
 			},
 		},
 	})
 }
 
-// Checks that copy_grants changes don't trigger a drop
 func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":        config.StringVariable(accName),
+			"database":    config.StringVariable(acc.TestDatabaseName),
+			"schema":      config.StringVariable(acc.TestSchemaName),
+			"comment":     config.StringVariable("Terraform test resource"),
+			"is_secure":   config.BoolVariable(true),
+			"or_replace":  config.BoolVariable(false),
+			"copy_grants": config.BoolVariable(false),
+			"statement":   config.StringVariable("SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+		}
+	}
+	m2 := m()
+	m2["copy_grants"] = config.BoolVariable(true)
+	m2["or_replace"] = config.BoolVariable(true)
 
 	var createdOn string
 
@@ -106,22 +134,28 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 		CheckDestroy: testAccCheckViewDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "Terraform test resource"),
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "false"),
+					checkBool("snowflake_view.test", "is_secure", true),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
 						createdOn = value
 						return nil
 					}),
-					checkBool("snowflake_view.test", "is_secure", true),
 				),
 			},
+			// Checks that copy_grants changes don't trigger a drop
 			{
-				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m2,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
 						if value != createdOn {
-							return fmt.Errorf("View was recreated")
+							return fmt.Errorf("view was recreated")
 						}
 						return nil
 					}),
@@ -135,6 +169,21 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":        config.StringVariable(accName),
+			"database":    config.StringVariable(acc.TestDatabaseName),
+			"schema":      config.StringVariable(acc.TestSchemaName),
+			"comment":     config.StringVariable("Terraform test resource"),
+			"is_secure":   config.BoolVariable(true),
+			"or_replace":  config.BoolVariable(true),
+			"copy_grants": config.BoolVariable(true),
+			"statement":   config.StringVariable("SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"),
+		}
+	}
+	m2 := m()
+	m2["copy_grants"] = config.BoolVariable(false)
+
 	var createdOn string
 
 	resource.Test(t, resource.TestCase{
@@ -146,7 +195,8 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 		CheckDestroy: testAccCheckViewDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfig(accName, true, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "copy_grants", "true"),
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
@@ -157,11 +207,12 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 				),
 			},
 			{
-				Config: viewConfig(accName, false, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
+				ConfigVariables: m2,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith("snowflake_view.test", "created_on", func(value string) error {
 						if value != createdOn {
-							return fmt.Errorf("View was recreated")
+							return fmt.Errorf("view was recreated")
 						}
 						return nil
 					}),
@@ -198,21 +249,6 @@ func TestAcc_ViewStatementUpdate(t *testing.T) {
 			},
 		},
 	})
-}
-
-func viewConfig(n string, copyGrants bool, q string, databaseName string, schemaName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_view" "test" {
-	name        = "%v"
-	comment     = "Terraform test resource"
-	database    = "%s"
-	schema      = "%s"
-	is_secure   = true
-	or_replace  = %t
-	copy_grants = %t
-	statement   = "%s"
-}
-`, n, databaseName, schemaName, copyGrants, copyGrants, q)
 }
 
 func viewConfigWithGrants(databaseName string, schemaName string, selectStatement string) string {

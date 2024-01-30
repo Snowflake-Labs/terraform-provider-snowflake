@@ -39,6 +39,7 @@ var viewSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Overwrites the View if it exists.",
 	},
+	// TODO [SNOW-867235]: this is used only during or_replace, we would like to change the behavior before v1
 	"copy_grants": {
 		Type:        schema.TypeBool,
 		Optional:    true,
