@@ -161,7 +161,7 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	warehouseName := d.Get("warehouse").(string)
-	// TODO [SNOW-]: this was the old implementation, it's left for now, we will address this with resources rework
+	// TODO [SNOW-867235]: this was the old implementation, it's left for now, we will address this with resources rework discussions
 	err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(warehouseName))
 	if err != nil {
 		return fmt.Errorf("error setting warehouse %s while creating materialized view %v err = %w", warehouseName, name, err)
@@ -211,7 +211,7 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// TODO [TODO]: what do we do with these extractors?
+	// TODO [SNOW-867235]: what do we do with these extractors (added as discussion topic)?
 	// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
 	extractor := snowflake.NewViewSelectStatementExtractor(materializedView.Text)
 	substringOfQuery, err := extractor.ExtractMaterializedView()

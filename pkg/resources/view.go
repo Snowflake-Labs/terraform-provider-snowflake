@@ -168,7 +168,7 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// TODO [TODO]: what do we do with these extractors?
+	// TODO [SNOW-867235]: what do we do with these extractors (added as discussion topic)?
 	// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
 	extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
 	substringOfQuery, err := extractor.Extract()
