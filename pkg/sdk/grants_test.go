@@ -868,7 +868,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	})
 
 	// TODO: This one throws an error
-	//t.Run("on all views", func(t *testing.T) {
+	// t.Run("on all views", func(t *testing.T) {
 	//	otherID := RandomDatabaseObjectIdentifier()
 	//	opts := &revokePrivilegeFromShareOptions{
 	//		privilege: ObjectPrivilegeUsage,
@@ -880,7 +880,7 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 	//		from: id,
 	//	}
 	//	assertOptsValidAndSQLEquals(t, opts, "REVOKE USAGE ON ALL VIEWS IN SCHEMA %s FROM SHARE %s", otherID.FullyQualifiedName(), id.FullyQualifiedName())
-	//})
+	// })
 }
 
 func TestGrants_GrantOwnership(t *testing.T) {

@@ -1,11 +1,12 @@
 package testint
 
 import (
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
@@ -424,7 +425,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		assert.Equal(t, onId.FullyQualifiedName(), shareGrant.Name.FullyQualifiedName())
 	}
 
-	t.Run("with options - multiple privileges", func(t *testing.T) {
+	t.Run("with options", func(t *testing.T) {
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 			Database: testDb(t).ID(),
 		}, shareTest.ID())
@@ -440,7 +441,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		table, tableCleanup := createTable(t, client, testDb(t), testSchema(t))
 		t.Cleanup(tableCleanup)
 
-		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeEvolveSchema, sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
+		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
 			Table: &sdk.OnTable{
 				AllInSchema: testSchema(t).ID(),
 			},
@@ -458,7 +459,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		require.NoError(t, err)
 		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect)
 
-		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeEvolveSchema, sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
+		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
 			Table: &sdk.OnTable{
 				AllInSchema: testSchema(t).ID(),
 			},

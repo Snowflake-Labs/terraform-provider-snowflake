@@ -4,17 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"slices"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
-	"slices"
 )
 
 var grantPrivilegesToShareGrantExactlyOneOfValidation = []string{
 	"database_name",
 	"schema_name",
-	//"function_name",
+	// "function_name",
 	"table_name",
 	"all_tables_in_schema",
 	"tag_name",
@@ -51,14 +52,14 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
 	//	TODO(SNOW-1021686): Because function identifier contains arguments which are not supported right now
-	//"function_name": {
+	// "function_name": {
 	//	Type:        schema.TypeString,
 	//	Optional:    true,
 	//	ForceNew:    true,
 	//	Description: "The fully qualified name of the function on which privileges will be granted.",
 	//	ValidateDiagFunc: IsValidIdentifier[sdk.FunctionIdentifier](),
 	//	ExactlyOneOf: grantPrivilegesToShareGrantExactlyOneOfValidation,
-	//},
+	// },
 	"table_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -129,7 +130,7 @@ func ImportGrantPrivilegesToShare() func(ctx context.Context, d *schema.Resource
 			if err := d.Set("schema_name", id.Identifier.FullyQualifiedName()); err != nil {
 				return nil, err
 			}
-		//case OnFunctionShareGrantKind:
+		// case OnFunctionShareGrantKind:
 		//	if err := d.Set("function_name", id.Identifier.FullyQualifiedName()); err != nil {
 		//		return nil, err
 		//	}
@@ -359,7 +360,7 @@ func createGrantPrivilegesToShareIdFromSchema(d *schema.ResourceData) *GrantPriv
 
 	databaseName, databaseNameOk := d.GetOk("database_name")
 	schemaName, schemaNameOk := d.GetOk("schema_name")
-	//functionName, functionNameOk := d.GetOk("function_name")
+	// functionName, functionNameOk := d.GetOk("function_name")
 	tableName, tableNameOk := d.GetOk("table_name")
 	allTablesInSchema, allTablesInSchemaOk := d.GetOk("all_tables_in_schema")
 	tagName, tagNameOk := d.GetOk("tag_name")
@@ -372,7 +373,7 @@ func createGrantPrivilegesToShareIdFromSchema(d *schema.ResourceData) *GrantPriv
 	case schemaNameOk:
 		id.Kind = OnSchemaShareGrantKind
 		id.Identifier = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schemaName.(string))
-	//case functionNameOk:
+	// case functionNameOk:
 	//	id.Kind = OnFunctionShareGrantKind
 	//	id.Identifier = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(functionName.(string))
 	case tableNameOk:
@@ -406,7 +407,7 @@ func getShareGrantOn(d *schema.ResourceData) *sdk.ShareGrantOn {
 
 	databaseName, databaseNameOk := d.GetOk("database_name")
 	schemaName, schemaNameOk := d.GetOk("schema_name")
-	//functionName, functionNameOk := d.GetOk("table_name")
+	// functionName, functionNameOk := d.GetOk("table_name")
 	tableName, tableNameOk := d.GetOk("table_name")
 	allTablesInSchema, allTablesInSchemaOk := d.GetOk("all_tables_in_schema")
 	tagName, tagNameOk := d.GetOk("tag_name")
@@ -417,7 +418,7 @@ func getShareGrantOn(d *schema.ResourceData) *sdk.ShareGrantOn {
 		grantOn.Database = sdk.NewAccountObjectIdentifierFromFullyQualifiedName(databaseName.(string))
 	case len(schemaName.(string)) > 0 && schemaNameOk:
 		grantOn.Schema = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schemaName.(string))
-	//case len(functionName.(string)) > 0 && functionNameOk:
+	// case len(functionName.(string)) > 0 && functionNameOk:
 	//	grantOn.Function = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(functionName.(string))
 	case len(tableName.(string)) > 0 && tableNameOk:
 		grantOn.Table = &sdk.OnTable{

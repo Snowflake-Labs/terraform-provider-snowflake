@@ -1,9 +1,10 @@
 package resources
 
 import (
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestParseGrantPrivilegesToShareId(t *testing.T) {
@@ -43,7 +44,7 @@ func TestParseGrantPrivilegesToShareId(t *testing.T) {
 		//		Kind:       OnFunctionShareGrantKind,
 		//		Identifier: sdk.NewSchemaObjectIdentifier("on-database-name", "on-schema-name", "on-function-name(INT, VARCHAR)"),
 		//	},
-		//},
+		// },
 		{
 			Name:       "grant privileges on table to share",
 			Identifier: `account-name."share-name"|EVOLVE SCHEMA|OnTable|"on-database-name"."on-schema-name"."on-table-name"`,
@@ -172,7 +173,7 @@ func TestGrantPrivilegesToShareIdString(t *testing.T) {
 		//		Identifier: sdk.NewSchemaObjectIdentifier("database-name", "schema-name", "function-name(INT, VARCHAR)"),
 		//	},
 		//	Expected: `account-name."share-name"|USAGE|OnFunction|"database-name"."schema-name".\"function-name(INT, VARCHAR)\"`,
-		//},
+		// },
 		{
 			Name: "grant privileges on table to share",
 			Identifier: GrantPrivilegesToShareId{

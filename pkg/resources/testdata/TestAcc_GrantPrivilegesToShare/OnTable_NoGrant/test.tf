@@ -3,14 +3,14 @@ resource "snowflake_database" "test" {
 }
 
 resource "snowflake_schema" "test" {
-  name = var.schema
+  name     = var.schema
   database = snowflake_database.test.name
 }
 
 resource "snowflake_table" "test" {
-  name = var.table_name
+  name     = var.table_name
   database = snowflake_database.test.name
-  schema = snowflake_schema.test.name
+  schema   = snowflake_schema.test.name
   column {
     name = "id"
     type = "NUMBER(38,0)"

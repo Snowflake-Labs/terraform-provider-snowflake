@@ -3,7 +3,7 @@ resource "snowflake_database" "test" {
 }
 
 resource "snowflake_schema" "test" {
-  name = var.schema
+  name     = var.schema
   database = snowflake_database.test.name
 }
 
