@@ -165,6 +165,50 @@ func TestAcc_NotificationIntegration_PushAmazon(t *testing.T) {
 	})
 }
 
+func TestAcc_NotificationIntegration_changeNotificationProvider(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
+	const awsSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:MyTopic"
+	const awsSnsRoleArn = "arn:aws:iam::000000000001:/role/test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckNotificationIntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: googleAutoConfig(accName, gcpPubsubSubscriptionName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "GCP_PUBSUB"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "gcp_pubsub_subscription_name", gcpPubsubSubscriptionName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),
+					resource.TestCheckResourceAttrSet("snowflake_notification_integration.test", "gcp_pubsub_service_account"),
+				),
+			},
+			// change provider to AWS
+			{
+				Config: amazonPushConfig(accName, awsSnsTopicArn, awsSnsRoleArn),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "AWS_SNS"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "aws_sns_topic_arn", awsSnsTopicArn),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "aws_sns_role_arn", awsSnsRoleArn),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "OUTBOUND"),
+					resource.TestCheckResourceAttrSet("snowflake_notification_integration.test", "aws_sns_iam_user_arn"),
+					resource.TestCheckResourceAttrSet("snowflake_notification_integration.test", "aws_sns_external_id"),
+				),
+			},
+		},
+	})
+}
+
 // TODO [SNOW-1017802]: handle after "create and describe notification integration - push google" test passes
 func TestAcc_NotificationIntegration_PushGoogle(t *testing.T) {
 	t.Skip("Skipping because can't be currently created. Check 'create and describe notification integration - push google' test in the SDK.")
