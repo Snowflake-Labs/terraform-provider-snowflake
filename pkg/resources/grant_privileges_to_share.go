@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,7 +27,6 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		Required:    true,
 		ForceNew:    true,
 		Description: "The fully qualified name of the share on which privileges will be granted.",
-		//ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"privileges": {
 		Type:        schema.TypeSet,
@@ -40,7 +38,7 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "TODO",
+		Description:      "The fully qualified name of the database on which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
@@ -48,7 +46,7 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "TODO",
+		Description:      "The fully qualified name of the schema on which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
@@ -57,7 +55,7 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 	//	Type:        schema.TypeString,
 	//	Optional:    true,
 	//	ForceNew:    true,
-	//	Description: "TODO",
+	//	Description: "The fully qualified name of the function on which privileges will be granted.",
 	//	ValidateDiagFunc: IsValidIdentifier[sdk.FunctionIdentifier](),
 	//	ExactlyOneOf: grantPrivilegesToShareGrantExactlyOneOfValidation,
 	//},
@@ -65,7 +63,7 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "TODO",
+		Description:      "The fully qualified name of the table on which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
@@ -73,7 +71,7 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "TODO",
+		Description:      "The fully qualified identifier for the schema for which the specified privilege will be granted for all tables.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
@@ -81,7 +79,7 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "TODO",
+		Description:      "The fully qualified name of the tag on which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
@@ -89,7 +87,7 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "TODO",
+		Description:      "The fully qualified name of the view on which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
@@ -234,7 +232,6 @@ func UpdateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if len(privilegesToRemove) > 0 {
-			logging.DebugLogger.Printf("[DEBUG] Revoking privileges: %v", privilegesToRemove)
 			err = client.Grants.RevokePrivilegeFromShare(
 				ctx,
 				privilegesToRemove,

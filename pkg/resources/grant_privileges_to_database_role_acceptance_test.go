@@ -46,7 +46,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabaseShareGrantKind"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -56,11 +56,11 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.2", string(sdk.AccountObjectPrivilegeUsage)),
 					resource.TestCheckResourceAttr(resourceName, "on_database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|CREATE SCHEMA,MODIFY,USAGE|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|CREATE SCHEMA,MODIFY,USAGE|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 			},
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabaseShareGrantKind"),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -97,7 +97,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabaseShareGrantKind"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
@@ -107,11 +107,11 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 					resource.TestCheckResourceAttr(resourceName, "privileges.2", string(sdk.AccountObjectPrivilegeUsage)),
 					resource.TestCheckResourceAttr(resourceName, "on_database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|CREATE SCHEMA,MODIFY,USAGE|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|CREATE SCHEMA,MODIFY,USAGE|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 			},
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabaseShareGrantKind"),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -524,7 +524,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeCreateSchema)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeModify)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SCHEMA,MODIFY|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SCHEMA,MODIFY|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 			},
 			{
@@ -540,7 +540,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeCreateSchema)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeMonitor)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.2", string(sdk.AccountObjectPrivilegeUsage)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 			},
 			{
@@ -549,7 +549,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "all_privileges", "true"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 			},
 			{
@@ -563,7 +563,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeModify)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeMonitor)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|MODIFY,MONITOR|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|MODIFY,MONITOR|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 			},
 		},
@@ -691,7 +691,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 			},
 			{
@@ -699,21 +699,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
-				ConfigVariables: configVariables(true),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectNonEmptyPlan(),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -727,7 +713,21 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
+				ConfigVariables: configVariables(true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -741,7 +741,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabaseShareGrantKind|%s", databaseRoleName, databaseName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
 				),
 			},
 		},

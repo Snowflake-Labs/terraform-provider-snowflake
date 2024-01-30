@@ -16,7 +16,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 	}{
 		{
 			Name:       "grant database role on database",
-			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabaseShareGrantKind|"on-database-name"`,
+			Identifier: `"database-name"."database-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase|"on-database-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -29,7 +29,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on database - always apply with grant option",
-			Identifier: `"database-name"."database-role"|true|true|CREATE SCHEMA,USAGE,MONITOR|OnDatabaseShareGrantKind|"on-database-name"`,
+			Identifier: `"database-name"."database-role"|true|true|CREATE SCHEMA,USAGE,MONITOR|OnDatabase|"on-database-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  true,
@@ -43,7 +43,7 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "grant database role on database - all privileges",
-			Identifier: `"database-name"."database-role"|false|false|ALL|OnDatabaseShareGrantKind|"on-database-name"`,
+			Identifier: `"database-name"."database-role"|false|false|ALL|OnDatabase|"on-database-name"`,
 			Expected: GrantPrivilegesToDatabaseRoleId{
 				DatabaseRoleName: sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
 				WithGrantOption:  false,
@@ -224,8 +224,8 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 			Error:      "database role identifier should hold at least 6 parts",
 		},
 		{
-			Name:       "validation: grant database role not enough parts for OnDatabaseShareGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabaseShareGrantKind`,
+			Name:       "validation: grant database role not enough parts for OnDatabase kind",
+			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase`,
 			Error:      "database role identifier should hold at least 6 parts",
 		},
 		{
@@ -265,22 +265,22 @@ func TestParseGrantPrivilegesToDatabaseRoleId(t *testing.T) {
 		},
 		{
 			Name:       "validation: grant database role empty privileges",
-			Identifier: `"database-name"."database-role"|false|false||OnDatabaseShareGrantKind|"on-database-name"`,
+			Identifier: `"database-name"."database-role"|false|false||OnDatabase|"on-database-name"`,
 			Error:      `invalid Privileges value: , should be either a comma separated list of privileges or "ALL" / "ALL PRIVILEGES" for all privileges`,
 		},
 		{
 			Name:       "validation: grant database role empty with grant option",
-			Identifier: `"database-name"."database-role"||false|ALL PRIVILEGES|OnDatabaseShareGrantKind|"on-database-name"`,
+			Identifier: `"database-name"."database-role"||false|ALL PRIVILEGES|OnDatabase|"on-database-name"`,
 			Error:      `invalid WithGrantOption value: , should be either "true" or "false"`,
 		},
 		{
 			Name:       "validation: grant database role empty always apply",
-			Identifier: `"database-name"."database-role"|false||ALL PRIVILEGES|OnDatabaseShareGrantKind|"on-database-name"`,
+			Identifier: `"database-name"."database-role"|false||ALL PRIVILEGES|OnDatabase|"on-database-name"`,
 			Error:      `invalid AlwaysApply value: , should be either "true" or "false"`,
 		},
 		{
 			Name:       "validation: grant database role empty database role name",
-			Identifier: `|false|false|ALL PRIVILEGES|OnDatabaseShareGrantKind|"on-database-name"`,
+			Identifier: `|false|false|ALL PRIVILEGES|OnDatabase|"on-database-name"`,
 			Error:      "invalid DatabaseRoleName value: , should be a fully qualified name of database object <database_name>.<name>",
 		},
 		{
@@ -323,7 +323,7 @@ func TestGrantPrivilegesToDatabaseRoleIdString(t *testing.T) {
 					DatabaseName: sdk.NewAccountObjectIdentifier("database-name"),
 				},
 			},
-			Expected: `"database-name"."role-name"|true|true|ALL|OnDatabaseShareGrantKind|"database-name"`,
+			Expected: `"database-name"."role-name"|true|true|ALL|OnDatabase|"database-name"`,
 		},
 		{
 			Name: "grant database role on schema on schema",
