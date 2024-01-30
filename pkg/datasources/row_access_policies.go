@@ -1,12 +1,12 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,7 +19,7 @@ var rowAccessPoliciesSchema = map[string]*schema.Schema{
 	"schema": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The schema from which to return the row access policyfrom.",
+		Description: "The schema from which to return the row access policy from.",
 	},
 	"row_access_policies": {
 		Type:        schema.TypeList,
@@ -58,34 +58,33 @@ func RowAccessPolicies() *schema.Resource {
 
 func ReadRowAccessPolicies(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
+
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentRowAccessPolicies, err := snowflake.ListRowAccessPolicies(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] row access policy in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse row access policy in schema (%s)", d.Id())
+	schemaId := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
+	extractedRowAccessPolicies, err := client.RowAccessPolicies.Show(ctx, sdk.NewShowRowAccessPolicyRequest().WithIn(
+		&sdk.In{Schema: schemaId},
+	))
+	if err != nil {
+		log.Printf("[DEBUG] failed when searching row access policies in schema (%s), err = %s", schemaId.FullyQualifiedName(), err.Error())
 		d.SetId("")
 		return nil
 	}
 
-	rowAccessPolicies := []map[string]interface{}{}
+	rowAccessPolicies := make([]map[string]any, len(extractedRowAccessPolicies))
 
-	for _, rowAccessPolicy := range currentRowAccessPolicies {
-		rowAccessPolicyMap := map[string]interface{}{}
-
-		rowAccessPolicyMap["name"] = rowAccessPolicy.Name.String
-		rowAccessPolicyMap["database"] = rowAccessPolicy.DatabaseName.String
-		rowAccessPolicyMap["schema"] = rowAccessPolicy.SchemaName.String
-		rowAccessPolicyMap["comment"] = rowAccessPolicy.Comment.String
-
-		rowAccessPolicies = append(rowAccessPolicies, rowAccessPolicyMap)
+	for i, rowAccessPolicy := range extractedRowAccessPolicies {
+		rowAccessPolicies[i] = map[string]any{
+			"name":     rowAccessPolicy.Name,
+			"database": rowAccessPolicy.DatabaseName,
+			"schema":   rowAccessPolicy.SchemaName,
+			"comment":  rowAccessPolicy.Comment,
+		}
 	}
 
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
+	d.SetId(helpers.EncodeSnowflakeID(databaseName, schemaName))
 	return d.Set("row_access_policies", rowAccessPolicies)
 }

@@ -136,6 +136,11 @@ func (s *ApiIntegrationSetRequest) WithAzureParams(AzureParams *SetAzureApiParam
 	return s
 }
 
+func (s *ApiIntegrationSetRequest) WithGoogleParams(GoogleParams *SetGoogleApiParamsRequest) *ApiIntegrationSetRequest {
+	s.GoogleParams = GoogleParams
+	return s
+}
+
 func (s *ApiIntegrationSetRequest) WithEnabled(Enabled *bool) *ApiIntegrationSetRequest {
 	s.Enabled = Enabled
 	return s
@@ -174,6 +179,11 @@ func NewSetAzureApiParamsRequest() *SetAzureApiParamsRequest {
 	return &SetAzureApiParamsRequest{}
 }
 
+func (s *SetAzureApiParamsRequest) WithAzureTenantId(AzureTenantId *string) *SetAzureApiParamsRequest {
+	s.AzureTenantId = AzureTenantId
+	return s
+}
+
 func (s *SetAzureApiParamsRequest) WithAzureAdApplicationId(AzureAdApplicationId *string) *SetAzureApiParamsRequest {
 	s.AzureAdApplicationId = AzureAdApplicationId
 	return s
@@ -182,6 +192,14 @@ func (s *SetAzureApiParamsRequest) WithAzureAdApplicationId(AzureAdApplicationId
 func (s *SetAzureApiParamsRequest) WithApiKey(ApiKey *string) *SetAzureApiParamsRequest {
 	s.ApiKey = ApiKey
 	return s
+}
+
+func NewSetGoogleApiParamsRequest(
+	GoogleAudience string,
+) *SetGoogleApiParamsRequest {
+	s := SetGoogleApiParamsRequest{}
+	s.GoogleAudience = GoogleAudience
+	return &s
 }
 
 func NewApiIntegrationUnsetRequest() *ApiIntegrationUnsetRequest {

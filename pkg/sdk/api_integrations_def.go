@@ -83,17 +83,25 @@ var ApiIntegrationsDef = g.NewInterface(
 					OptionalQueryStructField(
 						"AzureParams",
 						g.NewQueryStruct("SetAzureApiParams").
+							OptionalTextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes()).
 							OptionalTextAssignment("AZURE_AD_APPLICATION_ID", g.ParameterOptions().SingleQuotes()).
 							OptionalTextAssignment("API_KEY", g.ParameterOptions().SingleQuotes()).
-							WithValidation(g.AtLeastOneValueSet, "AzureAdApplicationId", "ApiKey"),
+							WithValidation(g.AtLeastOneValueSet, "AzureTenantId", "AzureAdApplicationId", "ApiKey"),
+						g.KeywordOptions(),
+					).
+					OptionalQueryStructField(
+						"GoogleParams",
+						g.NewQueryStruct("SetGoogleApiParams").
+							TextAssignment("GOOGLE_AUDIENCE", g.ParameterOptions().SingleQuotes().Required()),
 						g.KeywordOptions(),
 					).
 					OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 					ListAssignment("API_ALLOWED_PREFIXES", "ApiIntegrationEndpointPrefix", g.ParameterOptions().Parentheses()).
 					ListAssignment("API_BLOCKED_PREFIXES", "ApiIntegrationEndpointPrefix", g.ParameterOptions().Parentheses()).
 					OptionalComment().
-					WithValidation(g.ConflictingFields, "AwsParams", "AzureParams").
-					WithValidation(g.AtLeastOneValueSet, "AwsParams", "AzureParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"),
+					// resulting validation changed to moreThanOneValueSet (not yet supported in the generator)
+					WithValidation(g.ConflictingFields, "AwsParams", "AzureParams", "GoogleParams").
+					WithValidation(g.AtLeastOneValueSet, "AwsParams", "AzureParams", "GoogleParams", "Enabled", "ApiAllowedPrefixes", "ApiBlockedPrefixes", "Comment"),
 				g.KeywordOptions().SQL("SET"),
 			).
 			OptionalQueryStructField(

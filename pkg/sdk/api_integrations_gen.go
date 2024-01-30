@@ -68,6 +68,7 @@ type AlterApiIntegrationOptions struct {
 type ApiIntegrationSet struct {
 	AwsParams          *SetAwsApiParams               `ddl:"keyword"`
 	AzureParams        *SetAzureApiParams             `ddl:"keyword"`
+	GoogleParams       *SetGoogleApiParams            `ddl:"keyword"`
 	Enabled            *bool                          `ddl:"parameter" sql:"ENABLED"`
 	ApiAllowedPrefixes []ApiIntegrationEndpointPrefix `ddl:"parameter,parentheses" sql:"API_ALLOWED_PREFIXES"`
 	ApiBlockedPrefixes []ApiIntegrationEndpointPrefix `ddl:"parameter,parentheses" sql:"API_BLOCKED_PREFIXES"`
@@ -80,8 +81,13 @@ type SetAwsApiParams struct {
 }
 
 type SetAzureApiParams struct {
+	AzureTenantId        *string `ddl:"parameter,single_quotes" sql:"AZURE_TENANT_ID"`
 	AzureAdApplicationId *string `ddl:"parameter,single_quotes" sql:"AZURE_AD_APPLICATION_ID"`
 	ApiKey               *string `ddl:"parameter,single_quotes" sql:"API_KEY"`
+}
+
+type SetGoogleApiParams struct {
+	GoogleAudience string `ddl:"parameter,single_quotes" sql:"GOOGLE_AUDIENCE"`
 }
 
 type ApiIntegrationUnset struct {
