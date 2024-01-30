@@ -76,7 +76,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 			// change statement externally
 			{
 				PreConfig: func() {
-					alterMaterializedViewQueryExternally(t, sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, viewName), query)
+					alterMaterializedViewQueryExternally(t, sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, viewName), query, warehouseName)
 				},
 				Config: materializedViewConfig(warehouseName, tableName, viewName, otherQueryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "other comment", false, false),
 				Check: resource.ComposeTestCheckFunc(
@@ -279,12 +279,15 @@ func testAccCheckMaterializedViewDestroy(s *terraform.State) error {
 	return nil
 }
 
-func alterMaterializedViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string) {
+func alterMaterializedViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string, warehouse string) {
 	t.Helper()
 
 	client, err := sdk.NewDefaultClient()
 	require.NoError(t, err)
 	ctx := context.Background()
+
+	err = client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(warehouse))
+	require.NoError(t, err)
 
 	err = client.MaterializedViews.Create(ctx, sdk.NewCreateMaterializedViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
 	require.NoError(t, err)
