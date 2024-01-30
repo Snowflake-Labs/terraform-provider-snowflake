@@ -21,6 +21,11 @@ func TestAcc_MaterializedView(t *testing.T) {
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	warehouseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
+	query := fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\"", tableName)
+	expectedQuery := fmt.Sprintf(`SELECT ID, DATA FROM "%s"`, tableName)
+	otherQuery := fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\" WHERE ID LIKE 'foo%%'", tableName)
+	expectedOtherQuery := fmt.Sprintf(`SELECT ID, DATA FROM "%s" WHERE ID LIKE 'foo%%'`, tableName)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -30,9 +35,10 @@ func TestAcc_MaterializedView(t *testing.T) {
 		CheckDestroy: testAccCheckMaterializedViewDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: materializedViewConfig(warehouseName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\";", tableName), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: materializedViewConfig(warehouseName, tableName, viewName, query, acc.TestDatabaseName, acc.TestSchemaName, "Terraform test resource", true, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", expectedQuery),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", warehouseName),
@@ -40,12 +46,44 @@ func TestAcc_MaterializedView(t *testing.T) {
 					checkBool("snowflake_materialized_view.test", "is_secure", true),
 				),
 			},
-			// fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\" WHERE ID LIKE 'foo%%';", tableName)
+			// update parameters
+			{
+				Config: materializedViewConfig(warehouseName, tableName, viewName, query, acc.TestDatabaseName, acc.TestSchemaName, "other comment", false, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", expectedQuery),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", warehouseName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "other comment"),
+					checkBool("snowflake_materialized_view.test", "is_secure", false),
+				),
+			},
+			// change statement
+			{
+				Config: materializedViewConfig(warehouseName, tableName, viewName, otherQuery, acc.TestDatabaseName, acc.TestSchemaName, "other comment", false, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "statement", expectedOtherQuery),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", warehouseName),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "other comment"),
+					checkBool("snowflake_materialized_view.test", "is_secure", false),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:            "snowflake_materialized_view.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"or_replace", "warehouse"},
+			},
 		},
 	})
 }
 
-func materializedViewConfig(warehouseName string, tableName string, viewName string, q string, databaseName string, schemaName string) string {
+func materializedViewConfig(warehouseName string, tableName string, viewName string, q string, databaseName string, schemaName string, comment string, isSecure bool, orReplace bool) string {
 	// convert the cluster from string slice to string
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "wh" {
@@ -69,19 +107,19 @@ resource "snowflake_table" "test" {
 
 resource "snowflake_materialized_view" "test" {
 	name      = "%s"
-	comment   = "Terraform test resource"
+	comment   = "%s"
 	database  = "%s"
 	schema    = "%s"
 	warehouse = snowflake_warehouse.wh.name
-	is_secure = true
-	or_replace = false
+	is_secure = %t
+	or_replace = %t
 	statement = "%s"
 
 	depends_on = [
   		snowflake_table.test
   	]
 }
-`, warehouseName, tableName, databaseName, schemaName, viewName, databaseName, schemaName, q)
+`, warehouseName, tableName, databaseName, schemaName, viewName, comment, databaseName, schemaName, isSecure, orReplace, q)
 }
 
 func testAccCheckMaterializedViewDestroy(s *terraform.State) error {
