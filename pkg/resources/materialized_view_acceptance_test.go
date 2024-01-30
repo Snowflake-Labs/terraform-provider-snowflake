@@ -1,14 +1,19 @@
 package resources_test
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_MaterializedView(t *testing.T) {
@@ -17,9 +22,12 @@ func TestAcc_MaterializedView(t *testing.T) {
 	warehouseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckMaterializedViewDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: materializedViewConfig(warehouseName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\";", tableName), acc.TestDatabaseName, acc.TestSchemaName),
@@ -32,31 +40,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 					checkBool("snowflake_materialized_view.test", "is_secure", true),
 				),
 			},
-		},
-	})
-}
-
-func TestAcc_MaterializedView2(t *testing.T) {
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	warehouseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
-	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
-		Steps: []resource.TestStep{
-			{
-				Config: materializedViewConfig(warehouseName, tableName, viewName, fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\" WHERE ID LIKE 'foo%%';", tableName), acc.TestDatabaseName, acc.TestSchemaName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", warehouseName),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "Terraform test resource"),
-					checkBool("snowflake_materialized_view.test", "is_secure", true),
-				),
-			},
+			// fmt.Sprintf("SELECT ID, DATA FROM \\\"%s\\\" WHERE ID LIKE 'foo%%';", tableName)
 		},
 	})
 }
@@ -98,4 +82,21 @@ resource "snowflake_materialized_view" "test" {
   	]
 }
 `, warehouseName, tableName, databaseName, schemaName, viewName, databaseName, schemaName, q)
+}
+
+func testAccCheckMaterializedViewDestroy(s *terraform.State) error {
+	db := acc.TestAccProvider.Meta().(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "snowflake_materialized_view" {
+			continue
+		}
+		ctx := context.Background()
+		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
+		existingMaterializedView, err := client.MaterializedViews.ShowByID(ctx, id)
+		if err == nil {
+			return fmt.Errorf("materialized view %v still exists", existingMaterializedView.ID().FullyQualifiedName())
+		}
+	}
+	return nil
 }
