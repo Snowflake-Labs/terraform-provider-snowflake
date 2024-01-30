@@ -245,7 +245,6 @@ type ObjectPrivilege string
 const (
 	ObjectPrivilegeReferenceUsage ObjectPrivilege = "REFERENCE_USAGE"
 	ObjectPrivilegeUsage          ObjectPrivilege = "USAGE"
-	ObjectPrivilegeEvolveSchema   ObjectPrivilege = "EVOLVE SCHEMA"
 	ObjectPrivilegeSelect         ObjectPrivilege = "SELECT"
 	ObjectPrivilegeRead           ObjectPrivilege = "READ"
 )

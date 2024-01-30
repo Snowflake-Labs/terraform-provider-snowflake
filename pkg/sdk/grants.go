@@ -131,7 +131,7 @@ type ShareGrantOn struct {
 	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
 	Function SchemaObjectIdentifier   `ddl:"identifier" sql:"FUNCTION"`
 	Table    *OnTable                 `ddl:"-"`
-	Tag      AccountObjectIdentifier  `ddl:"identifier" sql:"TAG"`
+	Tag      SchemaObjectIdentifier   `ddl:"identifier" sql:"TAG"`
 	View     SchemaObjectIdentifier   `ddl:"identifier" sql:"VIEW"`
 }
 

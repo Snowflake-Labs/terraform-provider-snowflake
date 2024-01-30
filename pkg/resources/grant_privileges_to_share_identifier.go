@@ -10,9 +10,10 @@ import (
 type ShareGrantKind string
 
 const (
-	OnDatabaseShareGrantKind          ShareGrantKind = "OnDatabase"
-	OnSchemaShareGrantKind            ShareGrantKind = "OnSchema"
-	OnFunctionShareGrantKind          ShareGrantKind = "OnFunction"
+	OnDatabaseShareGrantKind ShareGrantKind = "OnDatabase"
+	OnSchemaShareGrantKind   ShareGrantKind = "OnSchema"
+	//	TODO(SNOW-1021686): Because function identifier contains arguments which are not supported right now
+	// OnFunctionShareGrantKind          ShareGrantKind = "OnFunction"
 	OnTableShareGrantKind             ShareGrantKind = "OnTable"
 	OnAllTablesInSchemaShareGrantKind ShareGrantKind = "OnAllTablesInSchema"
 	OnTagShareGrantKind               ShareGrantKind = "OnTag"
@@ -20,7 +21,7 @@ const (
 )
 
 type GrantPrivilegesToShareId struct {
-	ShareName  sdk.AccountObjectIdentifier
+	ShareName  sdk.ExternalObjectIdentifier
 	Privileges []string
 	Kind       ShareGrantKind
 	Identifier sdk.ObjectIdentifier
@@ -40,10 +41,10 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 
 	parts := strings.Split(idString, helpers.IDDelimiter)
 	if len(parts) != 4 {
-		return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf(`snowflake_grant_privileges_to_share id is composed out of 4 parts "<share_name>|<privileges>|<grant_on_type>|<grant_on_identifier>", but got %d parts: %v`, len(parts), parts))
+		return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf(`snowflake_grant_privileges_to_share id is composed out of 4 parts "<account_name>.<share_name>|<privileges>|<grant_on_type>|<grant_on_identifier>", but got %d parts: %v`, len(parts), parts))
 	}
 
-	grantPrivilegesToShareId.ShareName = sdk.NewAccountObjectIdentifier(parts[0])
+	grantPrivilegesToShareId.ShareName = sdk.NewExternalObjectIdentifierFromFullyQualifiedName(parts[0])
 	privileges := strings.Split(parts[1], ",")
 	if len(privileges) == 0 || (len(privileges) == 1 && privileges[0] == "") {
 		return grantPrivilegesToShareId, sdk.NewError(fmt.Sprintf(`invalid Privileges value: %s, should be comma separated list of privileges`, privileges))
@@ -57,7 +58,7 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 	}
 
 	switch grantPrivilegesToShareId.Kind {
-	case OnDatabaseShareGrantKind, OnTagShareGrantKind:
+	case OnDatabaseShareGrantKind:
 		if typedIdentifier, ok := id.(sdk.AccountObjectIdentifier); ok {
 			grantPrivilegesToShareId.Identifier = typedIdentifier
 		} else {
@@ -77,7 +78,7 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 				getExpectedIdentifierRepresentationFromParam(id),
 			)
 		}
-	case OnTableShareGrantKind, OnViewShareGrantKind:
+	case OnTableShareGrantKind, OnViewShareGrantKind, OnTagShareGrantKind: // , OnFunctionShareGrantKind:
 		if typedIdentifier, ok := id.(sdk.SchemaObjectIdentifier); ok {
 			grantPrivilegesToShareId.Identifier = typedIdentifier
 		} else {
@@ -87,8 +88,6 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 				getExpectedIdentifierRepresentationFromParam(id),
 			)
 		}
-	case OnFunctionShareGrantKind:
-	//	TODO(SNOW-1021686): Because function identifier contains arguments which are not supported right now
 	default:
 		return grantPrivilegesToShareId, fmt.Errorf("unexpected share grant kind: %v", grantPrivilegesToShareId.Kind)
 	}

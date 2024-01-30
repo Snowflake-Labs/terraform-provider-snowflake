@@ -860,11 +860,11 @@ func TestRevokePrivilegeFromShare(t *testing.T) {
 		opts := &revokePrivilegeFromShareOptions{
 			privileges: []ObjectPrivilege{ObjectPrivilegeRead},
 			On: &ShareGrantOn{
-				Tag: NewAccountObjectIdentifier("tag-name"),
+				Tag: NewSchemaObjectIdentifier("database-name", "schema-name", "tag-name"),
 			},
 			from: id,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "REVOKE READ ON TAG \"tag-name\" FROM SHARE %s", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "REVOKE READ ON TAG  \"database-name\".\"schema-name\".\"tag-name\" FROM SHARE %s", id.FullyQualifiedName())
 	})
 
 	// TODO: This one throws an error
