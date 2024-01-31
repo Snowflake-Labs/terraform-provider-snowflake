@@ -856,7 +856,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			// drop our pk if there was an old primary key, or pk has been removed
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithConstraintAction(
 				sdk.NewTableConstraintActionRequest().
-					WithDrop(sdk.NewTableConstraintDropActionRequest([]string{}).WithPrimaryKey(sdk.Bool(true))),
+					WithDrop(sdk.NewTableConstraintDropActionRequest().WithPrimaryKey(sdk.Bool(true))),
 			))
 			if err != nil {
 				return fmt.Errorf("error updating table: %w", err)

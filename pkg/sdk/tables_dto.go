@@ -447,8 +447,8 @@ type TableConstraintAlterActionRequest struct {
 	Unique         *bool
 	ForeignKey     *bool
 
-	Columns []string // required
 	// Optional
+	Columns     []string
 	Enforced    *bool
 	NotEnforced *bool
 	Validate    *bool
@@ -464,9 +464,8 @@ type TableConstraintDropActionRequest struct {
 	Unique         *bool
 	ForeignKey     *bool
 
-	Columns []string // required
-
 	// Optional
+	Columns  []string
 	Cascade  *bool
 	Restrict *bool
 }

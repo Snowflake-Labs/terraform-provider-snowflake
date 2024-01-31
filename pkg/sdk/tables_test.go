@@ -813,16 +813,17 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintAlterAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 	})
 
-	t.Run("validation: constraint alter action - no columns", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.ConstraintAction = &TableConstraintAction{
-			Alter: &TableConstraintAlterAction{
-				ConstraintName: String("constraint"),
-				Columns:        []string{},
-			},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("TableConstraintAlterAction", "Columns"))
-	})
+	// TODO [SNOW-884959]: when should it be validated?
+	//t.Run("validation: constraint alter action - no columns", func(t *testing.T) {
+	//	opts := defaultOpts()
+	//	opts.ConstraintAction = &TableConstraintAction{
+	//		Alter: &TableConstraintAlterAction{
+	//			ConstraintName: String("constraint"),
+	//			Columns:        []string{},
+	//		},
+	//	}
+	//	assertOptsInvalidJoinedErrors(t, opts, errNotSet("TableConstraintAlterAction", "Columns"))
+	//})
 
 	t.Run("validation: constraint alter action - two options present", func(t *testing.T) {
 		opts := defaultOpts()

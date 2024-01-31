@@ -372,15 +372,14 @@ type TableConstraintAlterAction struct {
 	Unique         *bool   `ddl:"keyword" sql:"UNIQUE"`
 	ForeignKey     *bool   `ddl:"keyword" sql:"FOREIGN KEY"`
 
-	Columns []string `ddl:"keyword,parentheses"`
-
 	// Optional
-	Enforced    *bool `ddl:"keyword" sql:"ENFORCED"`
-	NotEnforced *bool `ddl:"keyword" sql:"NOT ENFORCED"`
-	Validate    *bool `ddl:"keyword" sql:"VALIDATE"`
-	NoValidate  *bool `ddl:"keyword" sql:"NOVALIDATE"`
-	Rely        *bool `ddl:"keyword" sql:"RELY"`
-	NoRely      *bool `ddl:"keyword" sql:"NORELY"`
+	Columns     []string `ddl:"keyword,parentheses"`
+	Enforced    *bool    `ddl:"keyword" sql:"ENFORCED"`
+	NotEnforced *bool    `ddl:"keyword" sql:"NOT ENFORCED"`
+	Validate    *bool    `ddl:"keyword" sql:"VALIDATE"`
+	NoValidate  *bool    `ddl:"keyword" sql:"NOVALIDATE"`
+	Rely        *bool    `ddl:"keyword" sql:"RELY"`
+	NoRely      *bool    `ddl:"keyword" sql:"NORELY"`
 }
 
 type TableConstraintDropAction struct {
@@ -390,11 +389,10 @@ type TableConstraintDropAction struct {
 	Unique         *bool   `ddl:"keyword" sql:"UNIQUE"`
 	ForeignKey     *bool   `ddl:"keyword" sql:"FOREIGN KEY"`
 
-	Columns []string `ddl:"keyword,parentheses"`
-
 	// Optional
-	Cascade  *bool `ddl:"keyword" sql:"CASCADE"`
-	Restrict *bool `ddl:"keyword" sql:"RESTRICT"`
+	Columns  []string `ddl:"keyword,parentheses"`
+	Cascade  *bool    `ddl:"keyword" sql:"CASCADE"`
+	Restrict *bool    `ddl:"keyword" sql:"RESTRICT"`
 }
 
 type TableUnsetTags struct {
