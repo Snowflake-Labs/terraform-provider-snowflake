@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// TODO [SNOW-867235]: old implementation was quoting every column, SDK is not quoting them, therefore they are quoted here: decide if we quote columns or not
+// TODO [SNOW-1031688]: move data manipulation logic to the SDK - SQL generation or builders part (e.g. different default types/identity)
 var tableSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -76,6 +78,7 @@ var tableSchema = map[string]*schema.Schema{
 					MinItems:    1,
 					MaxItems:    1,
 					Elem: &schema.Resource{
+						// TODO [SNOW-867235]: there is no such separation on SDK level. Should we keep it in V1?
 						Schema: map[string]*schema.Schema{
 							"constant": {
 								Type:        schema.TypeString,
@@ -377,11 +380,9 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 	c := from.(map[string]interface{})
 	_type := c["type"].(string)
 
-	// TODO [SNOW-884959]: old implementation was quoting the column names - should we leave it?
 	nameInQuotes := fmt.Sprintf(`"%v"`, snowflake.EscapeString(c["name"].(string)))
 	request := sdk.NewTableColumnRequest(nameInQuotes, sdk.DataType(_type))
 
-	// TODO [SNOW-884959]: move each default possibility logic to request builder/SDK
 	_default := c["default"].([]interface{})
 	var expression string
 	if len(_default) == 1 {
@@ -436,7 +437,6 @@ func getTableColumnRequests(from interface{}) []sdk.TableColumnRequest {
 	return to
 }
 
-// TODO [SNOW-884959]: remove?
 type primarykey struct {
 	name string
 	keys []string
@@ -569,16 +569,19 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("cluster_by"); ok {
-		// TODO [SNOW-884959]: in old implementation LINEAR was wrapping the list. Is it needed?
 		createRequest.WithClusterBy(expandStringList(v.([]interface{})))
 	}
 
 	if v, ok := d.GetOk("primary_key"); ok {
-		pk := getPrimaryKey(v.([]interface{}))
-		// TODO [SNOW-884959]: do we need quoteStringList?
-		constraintRequest := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(pk.keys))
-		if pk.name != "" {
-			constraintRequest.WithName(sdk.String(pk.name))
+		keysList := v.([]any)
+		if len(keysList) > 0 {
+			keyName := keysList[0].(map[string]any)["name"].(string)
+			keys := expandStringList(keysList[0].(map[string]any)["keys"].([]interface{}))
+
+			constraintRequest := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(keys))
+			if keyName != "" {
+				constraintRequest.WithName(sdk.String(keyName))
+			}
 		}
 	}
 
@@ -633,15 +636,13 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 	// Set the relevant data in the state
 	toSet := map[string]interface{}{
-		"name":       table.Name,
-		"owner":      table.Owner,
-		"database":   table.DatabaseName,
-		"schema":     table.SchemaName,
-		"comment":    table.Comment,
-		"column":     toColumnConfig(tableDescription),
-		"cluster_by": table.GetClusterByKeys(),
-		// TODO [SNOW-884959]: SHOW PRIMARY KEYS IN TABLE? It was deprecated when table_constraint resource was introduced; should it be set here or not?
-		// "primary_key":         snowflake.FlattenTablePrimaryKey(pkDescription),
+		"name":            table.Name,
+		"owner":           table.Owner,
+		"database":        table.DatabaseName,
+		"schema":          table.SchemaName,
+		"comment":         table.Comment,
+		"column":          toColumnConfig(tableDescription),
+		"cluster_by":      table.GetClusterByKeys(),
 		"change_tracking": table.ChangeTracking,
 		"qualified_name":  id.FullyQualifiedName(),
 	}
@@ -866,7 +867,6 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(newKey.keys) > 0 {
-			// TODO [SNOW-884959]: do we need quoteStringList?
 			constraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(newKey.keys))
 			if newKey.name != "" {
 				constraint.WithName(sdk.String(newKey.name))
