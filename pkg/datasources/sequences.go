@@ -1,12 +1,11 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -58,30 +57,25 @@ func Sequences() *schema.Resource {
 
 func ReadSequences(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentSequences, err := snowflake.ListSequences(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] sequences in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse sequences in schema (%s)", d.Id())
-		d.SetId("")
-		return nil
+	req := sdk.NewShowSequenceRequest().WithIn(&sdk.In{
+		Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
+	})
+	seqs, err := client.Sequences.Show(ctx, req)
+	if err != nil {
+		return err
 	}
-
 	sequences := []map[string]interface{}{}
-
-	for _, sequence := range currentSequences {
+	for _, seq := range seqs {
 		sequenceMap := map[string]interface{}{}
-
-		sequenceMap["name"] = sequence.Name.String
-		sequenceMap["database"] = sequence.DBName.String
-		sequenceMap["schema"] = sequence.SchemaName.String
-		sequenceMap["comment"] = sequence.Comment.String
+		sequenceMap["name"] = seq.Name
+		sequenceMap["database"] = seq.DatabaseName
+		sequenceMap["schema"] = seq.SchemaName
+		sequenceMap["comment"] = seq.Comment
 
 		sequences = append(sequences, sequenceMap)
 	}

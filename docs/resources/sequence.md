@@ -42,12 +42,13 @@ resource "snowflake_sequence" "test_sequence" {
 
 - `comment` (String) Specifies a comment for the sequence.
 - `increment` (Number) The amount the sequence will increase by each time it is used
+- `ordering` (String) The ordering of the sequence. Either ORDER or NOORDER. Default is ORDER.
 
 ### Read-Only
 
 - `fully_qualified_name` (String) The fully qualified name of the sequence.
 - `id` (String) The ID of this resource.
-- `next_value` (Number) The next value the sequence will provide.
+- `next_value` (Number) The increment sequence interval.
 
 ## Import
 
