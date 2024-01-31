@@ -455,7 +455,7 @@ func getPrimaryKey(from interface{}) (to primarykey) {
 }
 
 func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
-	var flattened []any
+	flattened := make([]any, 0)
 	for _, td := range descriptions {
 		if td.Kind != "COLUMN" {
 			continue
