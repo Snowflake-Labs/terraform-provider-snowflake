@@ -48,7 +48,6 @@ func TestAcc_Procedure(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "arguments.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "arguments.1.name", "ARG2"),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "arguments.1.type", "DATE"),
-					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "return_behavior", "IMMUTABLE"),
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_complex", "null_input_behavior", "RETURNS NULL ON NULL INPUT"),
 
 					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_sql", "name", procName+"_sql"),
@@ -108,7 +107,6 @@ func procedureConfig(name string, databaseName string, schemaName string) string
 		comment = "Proc with 2 args"
 		return_type = "VARCHAR"
 		execute_as = "CALLER"
-		return_behavior = "IMMUTABLE"
 		null_input_behavior = "RETURNS NULL ON NULL INPUT"
 		language = "javascript"
 		statement = <<-EOF
@@ -124,7 +122,6 @@ func procedureConfig(name string, databaseName string, schemaName string) string
 		language = "SQL"
 		return_type         = "INTEGER"
 		execute_as          = "CALLER"
-		return_behavior     = "IMMUTABLE"
 		null_input_behavior = "RETURNS NULL ON NULL INPUT"
 		statement           = <<EOT
 	  declare

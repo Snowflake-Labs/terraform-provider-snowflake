@@ -70,8 +70,9 @@ EOT
 - `language` (String) Specifies the language of the stored procedure code.
 - `null_input_behavior` (String) Specifies the behavior of the procedure when called with null inputs.
 - `packages` (List of String) List of package imports to use for Java / Python procedures. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').
-- `return_behavior` (String) Specifies the behavior of the function when returning results
+- `return_behavior` (String, Deprecated) Specifies the behavior of the function when returning results
 - `runtime_version` (String) Required for Python procedures. Specifies Python runtime version.
+- `secure` (Boolean) Specifies that the procedure is secure. For more information about secure procedures, see Protecting Sensitive Information with Secure UDFs and Stored Procedures.
 
 ### Read-Only
 

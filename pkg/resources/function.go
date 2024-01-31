@@ -41,15 +41,19 @@ var functionSchema = map[string]*schema.Schema{
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
-					Description:      "The argument name",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					Description: "The argument name",
 				},
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
-					Description:      "The argument type",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					Description: "The argument type",
 				},
 			},
 		},
@@ -61,9 +65,11 @@ var functionSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Description: "The return type of the function",
 		// Suppress the diff shown if the values are equal when both compared in lower case.
-		DiffSuppressFunc: DiffTypes,
-		Required:         true,
-		ForceNew:         true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.EqualFold(old, new)
+		},
+		Required: true,
+		ForceNew: true,
 	},
 	"statement": {
 		Type:             schema.TypeString,

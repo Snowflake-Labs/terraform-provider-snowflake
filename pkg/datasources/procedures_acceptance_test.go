@@ -1,83 +1,48 @@
 package datasources_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Procedures(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	procedureName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	procedureWithArgumentsName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+	procNameOne := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	procNameTwo := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dataSourceName := "data.snowflake_procedures.procedures"
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"database":      config.StringVariable(acc.TestDatabaseName),
+			"schema":        config.StringVariable(acc.TestSchemaName),
+			"proc_name_one": config.StringVariable(procNameOne),
+			"proc_name_two": config.StringVariable(procNameTwo),
+		}
+	}
+	configVariables := m()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: procedures(databaseName, schemaName, procedureName, procedureWithArgumentsName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Procedures/complete"),
+				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_procedures.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_procedures.t", "schema", schemaName),
-					resource.TestCheckResourceAttrSet("data.snowflake_procedures.t", "procedures.#"),
-					// resource.TestCheckResourceAttr("data.snowflake_procedures.t", "procedures.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(dataSourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttrSet(dataSourceName, "procedures.#"),
+					// resource.TestCheckResourceAttr(dataSourceName, "procedures.#", "3"),
 					// Extra 1 in procedure count above due to ASSOCIATE_SEMANTIC_CATEGORY_TAGS appearing in all "SHOW PROCEDURES IN ..." commands
 				),
 			},
 		},
 	})
-}
-
-func procedures(databaseName string, schemaName string, procedureName string, procedureWithArgumentsName string) string {
-	s := `
-resource "snowflake_database" "test_database" {
-  name 	  = "%v"
-  comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test_schema" {
-  name 	   = "%v"
-  database = snowflake_database.test_database.name
-  comment  = "Terraform acceptance test"
-}
-
-resource "snowflake_procedure" "test_proc_simple" {
-	name = "%v"
-	database = snowflake_database.test_database.name
-	schema   = snowflake_schema.test_schema.name
-	return_type = "VARCHAR"
-	language = "JAVASCRIPT"
-	statement = <<-EOF
-		return "Hi"
-	EOF
-}
-
-resource "snowflake_procedure" "test_proc" {
-	name = "%v"
-	database = snowflake_database.test_database.name
-	schema   = snowflake_schema.test_schema.name
-	arguments {
-		name = "arg1"
-		type = "varchar"
-	}
-	comment = "Terraform acceptance test"
-	return_type = "varchar"
-	language = "JAVASCRIPT"
-	statement = <<-EOF
-		var X=1
-		return X
-	EOF
-}
-
-data snowflake_procedures "t" {
-	database = snowflake_database.test_database.name
-	schema = snowflake_schema.test_schema.name
-	depends_on = [snowflake_procedure.test_proc_simple, snowflake_procedure.test_proc]
-}
-`
-	return fmt.Sprintf(s, databaseName, schemaName, procedureName, procedureWithArgumentsName)
 }
