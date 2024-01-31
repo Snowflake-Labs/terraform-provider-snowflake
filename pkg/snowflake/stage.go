@@ -1,13 +1,8 @@
 package snowflake
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"strings"
-
-	"github.com/jmoiron/sqlx"
 )
 
 func fixFileFormat(inputFileFormat string) string {
@@ -215,121 +210,4 @@ func (sb *StageBuilder) ChangeFileFormat(f string) string {
 // ChangeCopyOptions returns the SQL query that will update the copy options on the stage.
 func (sb *StageBuilder) ChangeCopyOptions(c string) string {
 	return fmt.Sprintf(`ALTER STAGE %v SET COPY_OPTIONS = (%v)`, sb.QualifiedName(), c)
-}
-
-// Drop returns the SQL query that will drop a stage.
-func (sb *StageBuilder) Drop() string {
-	return fmt.Sprintf(`DROP STAGE %v`, sb.QualifiedName())
-}
-
-// Undrop returns the SQL query that will undrop a stage.
-func (sb *StageBuilder) Undrop() string {
-	return fmt.Sprintf(`UNDROP STAGE %v`, sb.QualifiedName())
-}
-
-// Describe returns the SQL query that will describe a stage.
-func (sb *StageBuilder) Describe() string {
-	return fmt.Sprintf(`DESCRIBE STAGE %v`, sb.QualifiedName())
-}
-
-// Show returns the SQL query that will show a stage.
-func (sb *StageBuilder) Show() string {
-	return fmt.Sprintf(`SHOW STAGES LIKE '%v' IN SCHEMA "%v"."%v"`, sb.name, sb.db, sb.schema)
-}
-
-type Stage struct {
-	Name               *string `db:"name"`
-	DatabaseName       *string `db:"database_name"`
-	SchemaName         *string `db:"schema_name"`
-	Comment            *string `db:"comment"`
-	StorageIntegration *string `db:"storage_integration"`
-}
-
-func ScanStageShow(row *sqlx.Row) (*Stage, error) {
-	r := &Stage{}
-	err := row.StructScan(r)
-	return r, err
-}
-
-type DescStageResult struct {
-	URL              string
-	AwsExternalID    string
-	SnowflakeIamUser string
-	FileFormat       string
-	CopyOptions      string
-	Directory        string
-}
-
-type descStageRow struct {
-	ParentProperty  string `db:"parent_property"`
-	Property        string `db:"property"`
-	PropertyValue   string `db:"property_value"`
-	PropertyDefault string `db:"property_default"`
-}
-
-func DescStage(db *sql.DB, query string) (*DescStageResult, error) {
-	r := &DescStageResult{}
-	var ff []string
-	var co []string
-	var dir []string
-	rows, err := Query(db, query)
-	if err != nil {
-		return r, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		row := &descStageRow{}
-		if err := rows.StructScan(row); err != nil {
-			return r, err
-		}
-
-		switch row.Property {
-		case "URL":
-			r.URL = strings.Trim(row.PropertyValue, "[\"]")
-		case "AWS_EXTERNAL_ID":
-			r.AwsExternalID = row.PropertyValue
-		case "SNOWFLAKE_IAM_USER":
-			r.SnowflakeIamUser = row.PropertyValue
-		}
-
-		switch row.ParentProperty {
-		case "STAGE_FILE_FORMAT":
-			if row.PropertyValue != row.PropertyDefault {
-				ff = append(ff, fmt.Sprintf("%s = %s", row.Property, row.PropertyValue))
-			}
-		case "STAGE_COPY_OPTIONS":
-			if row.PropertyValue != row.PropertyDefault {
-				co = append(co, fmt.Sprintf("%s = %s", row.Property, row.PropertyValue))
-			}
-		case "DIRECTORY":
-			if row.PropertyValue != row.PropertyDefault && row.Property != "LAST_REFRESHED_ON" {
-				dir = append(dir, fmt.Sprintf("%s = %s", row.Property, row.PropertyValue))
-			}
-		}
-	}
-
-	r.FileFormat = strings.Join(ff, " ")
-	r.CopyOptions = strings.Join(co, " ")
-	r.Directory = strings.Join(dir, " ")
-	return r, nil
-}
-
-func ListStages(databaseName string, schemaName string, db *sql.DB) ([]Stage, error) {
-	stmt := fmt.Sprintf(`SHOW STAGES IN SCHEMA "%s"."%v"`, databaseName, schemaName)
-	rows, err := Query(db, stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	dbs := []Stage{}
-	if err := sqlx.StructScan(rows, &dbs); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Println("[DEBUG] no stages found")
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	return dbs, nil
 }

@@ -844,7 +844,7 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 		if !slices.Contains(id.Privileges, grant.Privilege) {
 			continue
 		}
-		if grant.GrantOption == withGrantOption && grant.GranteeName.Name() == roleName {
+		if grant.GrantOption == withGrantOption && grant.GranteeName.Name() == sdk.NewAccountObjectIdentifier(roleName).Name() {
 			// future grants do not have grantedBy, only current grants do. If grantedby
 			// is an empty string it means the grant could not have been created by terraform
 			if !id.Future && grant.GrantedBy.Name() == "" {

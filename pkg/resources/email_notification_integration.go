@@ -1,13 +1,14 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -50,30 +51,42 @@ func EmailNotificationIntegration() *schema.Resource {
 	}
 }
 
+func toAllowedRecipients(emails []string) []sdk.NotificationIntegrationAllowedRecipient {
+	allowedRecipients := make([]sdk.NotificationIntegrationAllowedRecipient, len(emails))
+	for i, prefix := range emails {
+		allowedRecipients[i] = sdk.NotificationIntegrationAllowedRecipient{Email: prefix}
+	}
+	return allowedRecipients
+}
+
 // CreateEmailNotificationIntegration implements schema.CreateFunc.
 func CreateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	name := d.Get("name").(string)
+	id := sdk.NewAccountObjectIdentifier(name)
+	enabled := d.Get("enabled").(bool)
 
-	stmt := snowflake.NewNotificationIntegrationBuilder(name).Create()
-
-	stmt.SetString("TYPE", "EMAIL")
-	stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
-
-	if v, ok := d.GetOk("allowed_recipients"); ok {
-		stmt.SetStringList(`ALLOWED_RECIPIENTS`, expandStringList(v.(*schema.Set).List()))
-	}
+	createRequest := sdk.NewCreateNotificationIntegrationRequest(id, enabled)
 
 	if v, ok := d.GetOk("comment"); ok {
-		stmt.SetString(`COMMENT`, v.(string))
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	qry := stmt.Statement()
-	if err := snowflake.Exec(db, qry); err != nil {
+	emailParamsRequest := sdk.NewEmailParamsRequest()
+	if v, ok := d.GetOk("allowed_recipients"); ok {
+		emailParamsRequest.WithAllowedRecipients(toAllowedRecipients(expandStringList(v.(*schema.Set).List())))
+	}
+	createRequest.WithEmailParams(emailParamsRequest)
+
+	err := client.NotificationIntegrations.Create(ctx, createRequest)
+	if err != nil {
 		return fmt.Errorf("error creating notification integration: %w", err)
 	}
 
-	d.SetId(name)
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadEmailNotificationIntegration(d, meta)
 }
@@ -81,59 +94,51 @@ func CreateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}
 // ReadEmailNotificationIntegration implements schema.ReadFunc.
 func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	stmt := snowflake.NewEmailNotificationIntegrationBuilder(d.Id()).Show()
-	row := snowflake.QueryRow(db, stmt)
-
-	// Some properties can come from the SHOW INTEGRATION call
-	s, err := snowflake.ScanEmailNotificationIntegration(row)
+	integration, err := client.NotificationIntegrations.ShowByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("could not show notification integration: %w", err)
-	}
-
-	if err := d.Set("name", s.Name.String); err != nil {
+		log.Printf("[DEBUG] notification integration (%s) not found", d.Id())
+		d.SetId("")
 		return err
 	}
 
-	if err := d.Set("enabled", s.Enabled.Bool); err != nil {
+	if err := d.Set("name", integration.Name); err != nil {
 		return err
 	}
 
-	if err := d.Set("comment", s.Comment.String); err != nil {
+	if err := d.Set("enabled", integration.Enabled); err != nil {
+		return err
+	}
+
+	if err := d.Set("comment", integration.Comment); err != nil {
 		return err
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
-	// We need to grab them in a loop
-	var k, pType string
-	var v, n interface{}
-	stmt = snowflake.NewNotificationIntegrationBuilder(d.Id()).Describe()
-	rows, err := db.Query(stmt)
+	integrationProperties, err := client.NotificationIntegrations.Describe(ctx, id)
 	if err != nil {
 		return fmt.Errorf("could not describe notification integration: %w", err)
 	}
-	defer rows.Close()
-	for rows.Next() {
-		if err := rows.Scan(&k, &pType, &v, &n); err != nil {
-			return err
-		}
-		switch k {
+	for _, property := range integrationProperties {
+		name := property.Name
+		value := property.Value
+
+		switch name {
 		case "ALLOWED_RECIPIENTS":
-			// Empty list returns strange string (it's empty on worksheet level).
-			// This is a quick workaround, should be fixed with moving the email integration to SDK.
-			r := regexp.MustCompile(`[[:print:]]`)
-			if r.MatchString(v.(string)) {
-				if err := d.Set("allowed_recipients", strings.Split(v.(string), ",")); err != nil {
+			if value == "" {
+				if err := d.Set("allowed_recipients", make([]string, 0)); err != nil {
 					return err
 				}
 			} else {
-				empty := make([]string, 0)
-				if err := d.Set("allowed_recipients", empty); err != nil {
+				if err := d.Set("allowed_recipients", strings.Split(value, ",")); err != nil {
 					return err
 				}
 			}
 		default:
-			log.Printf("[WARN] unexpected property %v returned from Snowflake", k)
+			log.Printf("[WARN] unexpected notification integration property %v returned from Snowflake", name)
 		}
 	}
 
@@ -143,33 +148,53 @@ func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) 
 // UpdateEmailNotificationIntegration implements schema.UpdateFunc.
 func UpdateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	id := d.Id()
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	stmt := snowflake.NewEmailNotificationIntegrationBuilder(id).Alter()
-
+	var runSetStatement bool
+	var runUnsetStatement bool
+	setRequest := sdk.NewNotificationIntegrationSetRequest()
+	unsetRequest := sdk.NewNotificationIntegrationUnsetEmailParamsRequest()
 	if d.HasChange("comment") {
-		stmt.SetString("COMMENT", d.Get("comment").(string))
-	}
-
-	if d.HasChange("enabled") {
-		stmt.SetBool(`ENABLED`, d.Get("enabled").(bool))
-	}
-
-	if d.HasChange("allowed_recipients") {
-		if v, ok := d.GetOk("allowed_recipients"); ok {
-			stmt.SetStringList(`ALLOWED_RECIPIENTS`, expandStringList(v.(*schema.Set).List()))
+		v := d.Get("comment").(string)
+		if v == "" {
+			runUnsetStatement = true
+			unsetRequest.WithComment(sdk.Bool(true))
 		} else {
-			// raw sql for now; will be updated with SDK rewrite
-			// https://docs.snowflake.com/en/sql-reference/sql/alter-notification-integration#syntax
-			unset := fmt.Sprintf(`ALTER NOTIFICATION INTEGRATION "%s" UNSET ALLOWED_RECIPIENTS`, id)
-			if err := snowflake.Exec(db, unset); err != nil {
-				return fmt.Errorf("error unsetting allowed recipients on email notification integration %v err = %w", id, err)
-			}
+			runSetStatement = true
+			setRequest.WithComment(sdk.String(d.Get("comment").(string)))
 		}
 	}
 
-	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-		return fmt.Errorf("error updating notification integration: %w", err)
+	if d.HasChange("enabled") {
+		runSetStatement = true
+		setRequest.WithEnabled(sdk.Bool(d.Get("enabled").(bool)))
+	}
+
+	if d.HasChange("allowed_recipients") {
+		v := d.Get("allowed_recipients").(*schema.Set).List()
+		if len(v) == 0 {
+			runUnsetStatement = true
+			unsetRequest.WithAllowedRecipients(sdk.Bool(true))
+		} else {
+			runSetStatement = true
+			setRequest.WithSetEmailParams(sdk.NewSetEmailParamsRequest(toAllowedRecipients(expandStringList(v))))
+		}
+	}
+
+	if runSetStatement {
+		err := client.NotificationIntegrations.Alter(ctx, sdk.NewAlterNotificationIntegrationRequest(id).WithSet(setRequest))
+		if err != nil {
+			return fmt.Errorf("error updating notification integration: %w", err)
+		}
+	}
+
+	if runUnsetStatement {
+		err := client.NotificationIntegrations.Alter(ctx, sdk.NewAlterNotificationIntegrationRequest(id).WithUnsetEmailParams(unsetRequest))
+		if err != nil {
+			return fmt.Errorf("error updating notification integration: %w", err)
+		}
 	}
 
 	return ReadEmailNotificationIntegration(d, meta)
@@ -177,5 +202,17 @@ func UpdateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}
 
 // DeleteEmailNotificationIntegration implements schema.DeleteFunc.
 func DeleteEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.NewEmailNotificationIntegrationBuilder)(d, meta)
+	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	err := client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(id))
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
+
+	return nil
 }

@@ -137,6 +137,12 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "DIRECTION", Type: "String", Value: "INBOUND", Default: "INBOUND"})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "GCP_PUBSUB_SUBSCRIPTION_NAME", Type: "String", Value: gcpPubsubSubscriptionName, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+
+		prop, err := collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool {
+			return property.Name == "GCP_PUBSUB_SERVICE_ACCOUNT"
+		})
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
 	})
 
 	t.Run("create and describe notification integration - auto azure", func(t *testing.T) {
@@ -152,6 +158,18 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AZURE_STORAGE_QUEUE_PRIMARY_URI", Type: "String", Value: azureStorageQueuePrimaryUri, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+
+		prop, err := collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool {
+			return property.Name == "AZURE_CONSENT_URL"
+		})
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
+
+		prop, err = collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool {
+			return property.Name == "AZURE_MULTI_TENANT_APP_NAME"
+		})
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
 	})
 
 	t.Run("create and describe notification integration - push amazon", func(t *testing.T) {
@@ -170,6 +188,13 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_TOPIC_ARN", Type: "String", Value: awsSnsTopicArn, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_ROLE_ARN", Type: "String", Value: awsSnsRoleArn, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+
+		prop, err := collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool { return property.Name == "SF_AWS_IAM_USER_ARN" })
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
+		prop, err = collections.FindOne(details, func(property sdk.NotificationIntegrationProperty) bool { return property.Name == "SF_AWS_EXTERNAL_ID" })
+		assert.NoError(t, err)
+		assert.NotEmpty(t, prop.Value)
 	})
 
 	// TODO [SNOW-1017802]: check the error 001422 (22023): SQL compilation error: invalid value 'OUTBOUND' for property 'Direction'
@@ -224,6 +249,21 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ALLOWED_RECIPIENTS", Type: "List", Value: "artur.sawicki@snowflake.com", Default: "[]"})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
+	})
+
+	t.Run("create and describe notification integration - email, with empty allowed recipients", func(t *testing.T) {
+		id := sdk.RandomAccountObjectIdentifier()
+		request := sdk.NewCreateNotificationIntegrationRequest(id, true).
+			WithEmailParams(sdk.NewEmailParamsRequest().WithAllowedRecipients([]sdk.NotificationIntegrationAllowedRecipient{}))
+
+		integration := createNotificationIntegrationWithRequest(t, request)
+
+		assertNotificationIntegration(t, integration, request.GetName(), "EMAIL", "")
+
+		details, err := client.NotificationIntegrations.Describe(ctx, integration.ID())
+		require.NoError(t, err)
+
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ALLOWED_RECIPIENTS", Type: "List", Value: "", Default: "[]"})
 	})
 
 	t.Run("alter notification integration: auto", func(t *testing.T) {

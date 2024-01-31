@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var dynamicTableShema = map[string]*schema.Schema{
+var dynamicTableSchema = map[string]*schema.Schema{
 	"or_replace": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -145,7 +145,7 @@ func DynamicTable() *schema.Resource {
 		Update: UpdateDynamicTable,
 		Delete: DeleteDynamicTable,
 
-		Schema: dynamicTableShema,
+		Schema: dynamicTableSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

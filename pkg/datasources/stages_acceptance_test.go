@@ -5,6 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -12,47 +15,65 @@ import (
 func TestAcc_Stages(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	storageIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	stageName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
-		CheckDestroy: nil,
+	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: stages(databaseName, schemaName, stageName),
+				Config: stages(databaseName, schemaName, storageIntegrationName, stageName, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_stages.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_stages.t", "schema", schemaName),
-					resource.TestCheckResourceAttrSet("data.snowflake_stages.t", "stages.#"),
-					resource.TestCheckResourceAttr("data.snowflake_stages.t", "stages.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_stages.t", "stages.0.name", stageName),
+					resource.TestCheckResourceAttr("data.snowflake_stages.test", "database", databaseName),
+					resource.TestCheckResourceAttr("data.snowflake_stages.test", "schema", schemaName),
+					resource.TestCheckResourceAttr("data.snowflake_stages.test", "stages.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_stages.test", "stages.0.name", stageName),
+					resource.TestCheckResourceAttr("data.snowflake_stages.test", "stages.0.storage_integration", storageIntegrationName),
+					resource.TestCheckResourceAttr("data.snowflake_stages.test", "stages.0.comment", comment),
 				),
 			},
 		},
 	})
 }
 
-func stages(databaseName string, schemaName string, stageName string) string {
+func stages(databaseName string, schemaName string, storageIntegrationName string, stageName string, comment string) string {
 	return fmt.Sprintf(`
-
-	resource snowflake_database "d" {
-		name = "%v"
+	resource "snowflake_database" "test" {
+		name = "%s"
 	}
 
-	resource snowflake_schema "s"{
-		name 	 = "%v"
-		database = snowflake_database.d.name
+	resource "snowflake_schema" "test"{
+		name 	 = "%s"
+		database = snowflake_database.test.name
 	}
 
-	resource snowflake_stage "t"{
-		name 	 = "%v"
-		database = snowflake_schema.s.database
-		schema 	 = snowflake_schema.s.name
+	resource "snowflake_storage_integration" "test" {
+		name = "%s"
+		storage_allowed_locations = ["s3://foo/"]
+		storage_provider = "S3"
+
+		storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 	}
 
-	data snowflake_stages "t" {
-		database = snowflake_stage.t.database
-		schema = snowflake_stage.t.schema
-		depends_on = [snowflake_stage.t]
+	resource "snowflake_stage" "test"{
+		name 	 				= "%s"
+		database 				= snowflake_schema.test.database
+		schema 	 				= snowflake_schema.test.name
+		url 					= "s3://foo/"
+		storage_integration 	= snowflake_storage_integration.test.name
+		comment  				= "%s"
 	}
-	`, databaseName, schemaName, stageName)
+
+	data "snowflake_stages" "test" {
+		depends_on = [snowflake_storage_integration.test, snowflake_stage.test]
+
+		database = snowflake_stage.test.database
+		schema = snowflake_stage.test.schema
+	}
+	`, databaseName, schemaName, storageIntegrationName, stageName, comment)
 }
