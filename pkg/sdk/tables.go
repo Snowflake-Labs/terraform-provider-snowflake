@@ -172,7 +172,7 @@ type ColumnMaskingPolicy struct {
 
 // OutOfLineConstraint is based on https://docs.snowflake.com/en/sql-reference/sql/create-table-constraint#out-of-line-unique-primary-foreign-key.
 type OutOfLineConstraint struct {
-	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	Name       *string              `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
 	Type       ColumnConstraintType `ddl:"keyword"`
 	Columns    []string             `ddl:"keyword,parentheses"`
 	ForeignKey *OutOfLineForeignKey `ddl:"keyword"`

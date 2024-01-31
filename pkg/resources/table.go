@@ -576,8 +576,10 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("primary_key"); ok {
 		pk := getPrimaryKey(v.([]interface{}))
 		// TODO [SNOW-884959]: do we need quoteStringList?
-		// TODO [SNOW-884959]: change name to optional
-		sdk.NewOutOfLineConstraintRequest("TODO - optional", sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(pk.keys))
+		constraintRequest := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(pk.keys))
+		if pk.name != "" {
+			constraintRequest.WithName(sdk.String(pk.name))
+		}
 	}
 
 	if v, ok := d.GetOk("data_retention_days"); ok {
@@ -864,12 +866,10 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if len(newKey.keys) > 0 {
-			// add our new pk
 			// TODO [SNOW-884959]: do we need quoteStringList?
-			// TODO [SNOW-884959]: change name to optional
-			constraint := sdk.NewOutOfLineConstraintRequest("TODO", sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(newKey.keys))
+			constraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(newKey.keys))
 			if newKey.name != "" {
-				//constraint.WithName(sdk.String(newKey.name))
+				constraint.WithName(sdk.String(newKey.name))
 			}
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithConstraintAction(
 				sdk.NewTableConstraintActionRequest().WithAdd(constraint),

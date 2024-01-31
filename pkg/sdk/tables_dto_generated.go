@@ -425,13 +425,16 @@ func (s *ColumnInlineConstraintRequest) WithNoRely(noRely *bool) *ColumnInlineCo
 }
 
 func NewOutOfLineConstraintRequest(
-	name string,
 	constraintType ColumnConstraintType,
 ) *OutOfLineConstraintRequest {
 	s := OutOfLineConstraintRequest{}
-	s.Name = name
 	s.Type = constraintType
 	return &s
+}
+
+func (s *OutOfLineConstraintRequest) WithName(name *string) *OutOfLineConstraintRequest {
+	s.Name = name
+	return s
 }
 
 func (s *OutOfLineConstraintRequest) WithColumns(columns []string) *OutOfLineConstraintRequest {

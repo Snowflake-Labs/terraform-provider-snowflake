@@ -132,7 +132,7 @@ type ColumnInlineConstraintRequest struct {
 }
 
 type OutOfLineConstraintRequest struct {
-	Name       string               // required
+	Name       *string
 	Type       ColumnConstraintType // required
 	Columns    []string
 	ForeignKey *OutOfLineForeignKeyRequest
