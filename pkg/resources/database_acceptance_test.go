@@ -49,6 +49,8 @@ func TestAcc_Database(t *testing.T) {
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
+	secondaryAccountName := getSecondaryAccount(t)
+
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -80,11 +82,25 @@ func TestAcc_Database(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", "3"),
 				),
 			},
+			// ADD REPLICATION
+			// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2369 error
+			{
+				Config: dbConfigWithReplication(prefix2, secondaryAccountName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix2),
+					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment 2"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", "3"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.0.accounts.0", secondaryAccountName),
+				),
+			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_database.db",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "snowflake_database.db",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replication_configuration"},
 			},
 		},
 	})
@@ -155,6 +171,22 @@ resource "snowflake_database" "db" {
 	return fmt.Sprintf(s, prefix)
 }
 
+func dbConfigWithReplication(prefix string, secondaryAccountName string) string {
+	s := `
+resource "snowflake_database" "db" {
+	name = "%s"
+	comment = "test comment 2"
+	data_retention_time_in_days = 3
+	replication_configuration {
+		accounts = [
+			"%s"
+		]
+	}
+}
+`
+	return fmt.Sprintf(s, prefix, secondaryAccountName)
+}
+
 func dropDatabaseOutsideTerraform(t *testing.T, id string) {
 	t.Helper()
 
@@ -164,6 +196,23 @@ func dropDatabaseOutsideTerraform(t *testing.T, id string) {
 
 	err = client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(id), &sdk.DropDatabaseOptions{})
 	require.NoError(t, err)
+}
+
+func getSecondaryAccount(t *testing.T) string {
+	t.Helper()
+
+	secondaryConfig, err := sdk.ProfileConfig("secondary_test_account")
+	require.NoError(t, err)
+
+	secondaryClient, err := sdk.NewClient(secondaryConfig)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	account, err := secondaryClient.ContextFunctions.CurrentAccount(ctx)
+	require.NoError(t, err)
+
+	return account
 }
 
 func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {

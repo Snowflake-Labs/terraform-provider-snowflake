@@ -38,47 +38,49 @@ type Client struct {
 	ReplicationFunctions ReplicationFunctions
 
 	// DDL Commands
-	Accounts            Accounts
-	Alerts              Alerts
-	ApiIntegrations     ApiIntegrations
-	ApplicationPackages ApplicationPackages
-	ApplicationRoles    ApplicationRoles
-	Applications        Applications
-	Comments            Comments
-	DatabaseRoles       DatabaseRoles
-	Databases           Databases
-	DynamicTables       DynamicTables
-	ExternalTables      ExternalTables
-	EventTables         EventTables
-	FailoverGroups      FailoverGroups
-	FileFormats         FileFormats
-	Functions           Functions
-	Grants              Grants
-	ManagedAccounts     ManagedAccounts
-	MaskingPolicies     MaskingPolicies
-	MaterializedViews   MaterializedViews
-	NetworkPolicies     NetworkPolicies
-	Parameters          Parameters
-	PasswordPolicies    PasswordPolicies
-	Pipes               Pipes
-	Procedures          Procedures
-	ResourceMonitors    ResourceMonitors
-	Roles               Roles
-	RowAccessPolicies   RowAccessPolicies
-	Schemas             Schemas
-	Sequences           Sequences
-	SessionPolicies     SessionPolicies
-	Sessions            Sessions
-	Shares              Shares
-	Stages              Stages
-	StorageIntegrations StorageIntegrations
-	Streams             Streams
-	Tables              Tables
-	Tags                Tags
-	Tasks               Tasks
-	Users               Users
-	Views               Views
-	Warehouses          Warehouses
+	Accounts                 Accounts
+	Alerts                   Alerts
+	ApiIntegrations          ApiIntegrations
+	ApplicationPackages      ApplicationPackages
+	ApplicationRoles         ApplicationRoles
+	Applications             Applications
+	Comments                 Comments
+	DatabaseRoles            DatabaseRoles
+	Databases                Databases
+	DynamicTables            DynamicTables
+	ExternalTables           ExternalTables
+	EventTables              EventTables
+	FailoverGroups           FailoverGroups
+	FileFormats              FileFormats
+	Functions                Functions
+	Grants                   Grants
+	ManagedAccounts          ManagedAccounts
+	MaskingPolicies          MaskingPolicies
+	MaterializedViews        MaterializedViews
+	NetworkPolicies          NetworkPolicies
+	NotificationIntegrations NotificationIntegrations
+	Parameters               Parameters
+	PasswordPolicies         PasswordPolicies
+	Pipes                    Pipes
+	Procedures               Procedures
+	ResourceMonitors         ResourceMonitors
+	Roles                    Roles
+	RowAccessPolicies        RowAccessPolicies
+	Schemas                  Schemas
+	Sequences                Sequences
+	SessionPolicies          SessionPolicies
+	Sessions                 Sessions
+	Shares                   Shares
+	Stages                   Stages
+	StorageIntegrations      StorageIntegrations
+	Streamlits               Streamlits
+	Streams                  Streams
+	Tables                   Tables
+	Tags                     Tags
+	Tasks                    Tasks
+	Users                    Users
+	Views                    Views
+	Warehouses               Warehouses
 }
 
 func (c *Client) GetAccountLocator() string {
@@ -207,6 +209,7 @@ func (c *Client) initialize() {
 	c.MaskingPolicies = &maskingPolicies{client: c}
 	c.MaterializedViews = &materializedViews{client: c}
 	c.NetworkPolicies = &networkPolicies{client: c}
+	c.NotificationIntegrations = &notificationIntegrations{client: c}
 	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}
 	c.Pipes = &pipes{client: c}
@@ -222,6 +225,7 @@ func (c *Client) initialize() {
 	c.Shares = &shares{client: c}
 	c.Stages = &stages{client: c}
 	c.StorageIntegrations = &storageIntegrations{client: c}
+	c.Streamlits = &streamlits{client: c}
 	c.Streams = &streams{client: c}
 	c.SystemFunctions = &systemFunctions{client: c}
 	c.Tables = &tables{client: c}

@@ -1,154 +1,244 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"log"
+	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var roleSchema = map[string]*schema.Schema{
+var accountRoleSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
 		Required: true,
-		ValidateFunc: func(val interface{}, key string) ([]string, []error) {
-			additionalCharsToIgnoreValidation := []string{".", " ", ":", "(", ")"}
-			return sdk.ValidateIdentifier(val, additionalCharsToIgnoreValidation)
-		},
+		// TODO(SNOW-999049): Uncomment once better identifier validation will be implemented
+		// ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
-		// TODO validation
 	},
 	"tag": tagReferenceSchema,
 }
 
 func Role() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateRole,
-		Read:   ReadRole,
-		Delete: DeleteRole,
-		Update: UpdateRole,
+		CreateContext: CreateAccountRole,
+		ReadContext:   ReadAccountRole,
+		DeleteContext: DeleteAccountRole,
+		UpdateContext: UpdateAccountRole,
 
-		Schema: roleSchema,
+		Schema: accountRoleSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func CreateRole(d *schema.ResourceData, meta interface{}) error {
-	name := d.Get("name").(string)
+func CreateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	builder := snowflake.NewRoleBuilder(db, name)
+	client := sdk.NewClientFromDB(db)
+
+	name := d.Get("name").(string)
+	id := sdk.NewAccountObjectIdentifier(name)
+	req := sdk.NewCreateRoleRequest(id)
+
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		req.WithComment(v.(string))
 	}
-	if v, ok := d.GetOk("tag"); ok {
-		tags := getTags(v)
-		builder.WithTags(tags.toSnowflakeTagValues())
+
+	if _, ok := d.GetOk("tag"); ok {
+		req.WithTag(getPropertyTags(d, "tag"))
 	}
-	err := builder.Create()
+
+	err := client.Roles.Create(ctx, req)
 	if err != nil {
-		return err
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to create account role",
+				Detail:   fmt.Sprintf("Account role name: %s, err: %s", name, err),
+			},
+		}
 	}
-	d.SetId(name)
-	return ReadRole(d, meta)
+
+	d.SetId(helpers.EncodeSnowflakeID(id))
+
+	return ReadAccountRole(ctx, d, meta)
 }
 
-func ReadRole(d *schema.ResourceData, meta interface{}) error {
+func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	id := d.Id()
-	// If the name is not set (such as during import) then use the id
-	name := d.Get("name").(string)
-	if name == "" {
-		name = id
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	accountRole, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(id))
+	if err != nil {
+		if err.Error() == "object does not exist" {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Account role not found; marking it as removed",
+					Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to show account role by id",
+				Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.FullyQualifiedName(), err),
+			},
+		}
 	}
 
-	builder := snowflake.NewRoleBuilder(db, name)
-	role, err := builder.Show()
-	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("[WARN] role (%s) not found", name)
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		return err
+	if err := d.Set("name", accountRole.Name); err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to set account role name",
+				Detail:   fmt.Sprintf("Account role name: %s, err: %s", accountRole.Name, err),
+			},
+		}
 	}
-	if err := d.Set("name", role.Name.String); err != nil {
-		return err
+
+	if err := d.Set("comment", accountRole.Comment); err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to set account role comment",
+				Detail:   fmt.Sprintf("Account role name: %s, comment: %s, err: %s", accountRole.Name, accountRole.Comment, err),
+			},
+		}
 	}
-	if err := d.Set("comment", role.Comment.String); err != nil {
-		return err
-	}
+
+	d.SetId(helpers.EncodeSnowflakeID(id))
+
 	return nil
 }
 
-func UpdateRole(d *schema.ResourceData, meta interface{}) error {
+func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	name := d.Get("name").(string)
-	builder := snowflake.NewRoleBuilder(db, name)
-
-	if d.HasChange("name") {
-		o, n := d.GetChange("name")
-		builder.WithName(o.(string))
-		err := builder.Rename(n.(string))
-		if err != nil {
-			return err
-		}
-		builder.WithName(n.(string))
-	}
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	if d.HasChange("comment") {
-		o, n := d.GetChange("comment")
-		if n == nil || n.(string) == "" {
-			builder.WithComment(o.(string))
-			err := builder.UnsetComment()
+		if v, ok := d.GetOk("comment"); ok {
+			err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithSetComment(v.(string)))
 			if err != nil {
-				return err
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "Failed to set account role comment",
+						Detail:   fmt.Sprintf("Account role name: %s, comment: %s, err: %s", id.FullyQualifiedName(), v, err),
+					},
+				}
 			}
 		} else {
-			err := builder.SetComment(n.(string))
+			err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithUnsetComment(true))
 			if err != nil {
-				return err
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "Failed to unset account role comment",
+						Detail:   fmt.Sprintf("Account role name: %s, err: %s", id.FullyQualifiedName(), err),
+					},
+				}
 			}
 		}
 	}
 
 	if d.HasChange("tag") {
-		o, n := d.GetChange("tag")
-		removed, added, changed := getTags(o).diffs(getTags(n))
-		for _, tA := range removed {
-			err := builder.UnsetTag(tA.toSnowflakeTagValue())
+		unsetTags, setTags := GetTagsDiff(d, "tag")
+
+		if len(unsetTags) > 0 {
+			err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithUnsetTags(unsetTags))
 			if err != nil {
-				return err
+				tagNames := make([]string, len(unsetTags))
+				for i, v := range unsetTags {
+					tagNames[i] = v.FullyQualifiedName()
+				}
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "Failed to unset account role tags",
+						Detail:   fmt.Sprintf("Account role name: %s, tags to unset: %v, err: %s", id.FullyQualifiedName(), tagNames, err),
+					},
+				}
 			}
 		}
-		for _, tA := range added {
-			err := builder.SetTag(tA.toSnowflakeTagValue())
+
+		if len(setTags) > 0 {
+			err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithSetTags(setTags))
 			if err != nil {
-				return err
+				tagNames := make([]string, len(unsetTags))
+				for i, v := range unsetTags {
+					tagNames[i] = v.FullyQualifiedName()
+				}
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  "Failed to set account role tags",
+						Detail:   fmt.Sprintf("Account role name: %s, tags to set: %v, err: %s", id.FullyQualifiedName(), tagNames, err),
+					},
+				}
 			}
 		}
-		for _, tA := range changed {
-			err := builder.ChangeTag(tA.toSnowflakeTagValue())
-			if err != nil {
-				return err
+	}
+
+	if d.HasChange("name") {
+		_, newName := d.GetChange("name")
+
+		newId, err := helpers.DecodeSnowflakeParameterID(newName.(string))
+		if err != nil {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Failed to parse account role name",
+					Detail:   fmt.Sprintf("Account role name: %s, err: %s", newName, err),
+				},
 			}
 		}
+
+		err = client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithRenameTo(newId.(sdk.AccountObjectIdentifier)))
+		if err != nil {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Failed to rename account role name",
+					Detail:   fmt.Sprintf("Previous account role name: %s, new account role name: %s, err: %s", id, newName, err),
+				},
+			}
+		}
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
 	}
 
 	return nil
 }
 
-func DeleteRole(d *schema.ResourceData, meta interface{}) error {
+func DeleteAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	name := d.Get("name").(string)
-	builder := snowflake.NewRoleBuilder(db, name)
-	err := builder.Drop()
-	return err
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+
+	err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(id))
+	if err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to drop account role",
+				Detail:   fmt.Sprintf("Account role name: %s, err: %s", d.Id(), err),
+			},
+		}
+	}
+
+	d.SetId("")
+
+	return nil
 }

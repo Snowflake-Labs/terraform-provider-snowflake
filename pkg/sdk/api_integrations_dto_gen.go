@@ -55,6 +55,7 @@ type AlterApiIntegrationRequest struct {
 type ApiIntegrationSetRequest struct {
 	AwsParams          *SetAwsApiParamsRequest
 	AzureParams        *SetAzureApiParamsRequest
+	GoogleParams       *SetGoogleApiParamsRequest
 	Enabled            *bool
 	ApiAllowedPrefixes []ApiIntegrationEndpointPrefix
 	ApiBlockedPrefixes []ApiIntegrationEndpointPrefix
@@ -67,8 +68,13 @@ type SetAwsApiParamsRequest struct {
 }
 
 type SetAzureApiParamsRequest struct {
+	AzureTenantId        *string
 	AzureAdApplicationId *string
 	ApiKey               *string
+}
+
+type SetGoogleApiParamsRequest struct {
+	GoogleAudience string // required
 }
 
 type ApiIntegrationUnsetRequest struct {

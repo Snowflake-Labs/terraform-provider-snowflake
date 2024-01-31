@@ -103,7 +103,7 @@ func SequenceGrant() *TerraformGrantResource {
 			Read:               ReadSequenceGrant,
 			Delete:             DeleteSequenceGrant,
 			Update:             UpdateSequenceGrant,
-			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_role instead.",
+			DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_account_role instead.",
 			Schema:             sequenceGrantSchema,
 			Importer: &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {

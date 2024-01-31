@@ -129,7 +129,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 					RequiredWith:     []string{"on_schema_object.0.object_name"},
 					ConflictsWith:    []string{"on_schema_object.0.all", "on_schema_object.0.future"},
 					ForceNew:         true,
-					ValidateDiagFunc: ValidObjectType(),
+					ValidateDiagFunc: ValidGrantedObjectType(),
 				},
 				"object_name": {
 					Type:             schema.TypeString,
@@ -153,7 +153,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 								Required:         true,
 								Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:         true,
-								ValidateDiagFunc: ValidPluralObjectType(),
+								ValidateDiagFunc: ValidGrantedPluralObjectType(),
 							},
 							"in_database": {
 								Type:             schema.TypeString,
@@ -187,7 +187,7 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 								Required:         true,
 								Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
 								ForceNew:         true,
-								ValidateDiagFunc: ValidPluralObjectType(),
+								ValidateDiagFunc: ValidGrantedPluralObjectType(),
 							},
 							"in_database": {
 								Type:             schema.TypeString,
@@ -229,15 +229,16 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 
 func GrantPrivilegesToRole() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateGrantPrivilegesToRole,
-		Read:   ReadGrantPrivilegesToRole,
-		Delete: DeleteGrantPrivilegesToRole,
-		Update: UpdateGrantPrivilegesToRole,
+		Create:             CreateGrantPrivilegesToRole,
+		Read:               ReadGrantPrivilegesToRole,
+		Delete:             DeleteGrantPrivilegesToRole,
+		Update:             UpdateGrantPrivilegesToRole,
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_account_role instead.",
 
 		Schema: grantPrivilegesToRoleSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				resourceID := NewGrantPrivilegesToAccountRoleID(d.Id())
+				resourceID := NewGrantPrivilegesToRoleID(d.Id())
 				if err := d.Set("role_name", resourceID.RoleName); err != nil {
 					return nil, err
 				}
@@ -336,7 +337,7 @@ func GrantPrivilegesToRole() *schema.Resource {
 }
 
 // we need to keep track of literally everything to construct a unique identifier that can be imported
-type GrantPrivilegesToAccountRoleID struct {
+type GrantPrivilegesToRoleID struct {
 	RoleName         string
 	Privileges       []string
 	AllPrivileges    bool
@@ -356,13 +357,13 @@ type GrantPrivilegesToAccountRoleID struct {
 	DatabaseName     string
 }
 
-func NewGrantPrivilegesToAccountRoleID(id string) GrantPrivilegesToAccountRoleID {
+func NewGrantPrivilegesToRoleID(id string) GrantPrivilegesToRoleID {
 	parts := strings.Split(id, "|")
 	privileges := strings.Split(parts[1], ",")
 	if len(privileges) == 1 && privileges[0] == "" {
 		privileges = []string{}
 	}
-	return GrantPrivilegesToAccountRoleID{
+	return GrantPrivilegesToRoleID{
 		RoleName:         parts[0],
 		Privileges:       privileges,
 		AllPrivileges:    parts[2] == "true",
@@ -383,7 +384,7 @@ func NewGrantPrivilegesToAccountRoleID(id string) GrantPrivilegesToAccountRoleID
 	}
 }
 
-func (v GrantPrivilegesToAccountRoleID) String() string {
+func (v GrantPrivilegesToRoleID) String() string {
 	return helpers.EncodeSnowflakeID(v.RoleName, v.Privileges, v.AllPrivileges, v.WithGrantOption, v.OnAccount, v.OnAccountObject, v.OnSchema, v.OnSchemaObject, v.All, v.Future, v.ObjectType, v.ObjectName, v.ObjectTypePlural, v.InSchema, v.SchemaName, v.InDatabase, v.DatabaseName)
 }
 
@@ -393,7 +394,7 @@ func CreateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	resourceID := &GrantPrivilegesToAccountRoleID{}
+	resourceID := &GrantPrivilegesToRoleID{}
 	var privileges []string
 	if p, ok := d.GetOk("privileges"); ok {
 		logging.DebugLogger.Printf("[DEBUG] Building privileges list based on config")
@@ -402,7 +403,7 @@ func CreateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 	}
 	allPrivileges := d.Get("all_privileges").(bool)
 	resourceID.AllPrivileges = allPrivileges
-	privilegesToGrant, on, err := configureAccountRoleGrantPrivilegeOptions(d, privileges, allPrivileges, resourceID)
+	privilegesToGrant, on, err := configureRoleGrantPrivilegeOptions(d, privileges, allPrivileges, resourceID)
 	if err != nil {
 		return fmt.Errorf("error configuring account role grant privilege options: %w", err)
 	}
@@ -432,7 +433,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	resourceID := NewGrantPrivilegesToAccountRoleID(d.Id())
+	resourceID := NewGrantPrivilegesToRoleID(d.Id())
 	roleName := resourceID.RoleName
 	allPrivileges := resourceID.AllPrivileges
 	if allPrivileges {
@@ -532,7 +533,7 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err := readAccountRoleGrantPrivileges(ctx, client, grantOn, resourceID, &opts, d)
+	err := readRoleGrantPrivileges(ctx, client, grantOn, resourceID, &opts, d)
 	if err != nil {
 		return err
 	}
@@ -574,7 +575,7 @@ func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 		// first add new privileges
 		if len(addPrivileges) > 0 {
 			logging.DebugLogger.Printf("[DEBUG] Adding new privileges")
-			privilegesToGrant, on, err := configureAccountRoleGrantPrivilegeOptions(d, addPrivileges, false, &GrantPrivilegesToAccountRoleID{})
+			privilegesToGrant, on, err := configureRoleGrantPrivilegeOptions(d, addPrivileges, false, &GrantPrivilegesToRoleID{})
 			if err != nil {
 				return fmt.Errorf("error configuring account role grant privilege options: %w", err)
 			}
@@ -589,7 +590,7 @@ func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 		// then remove old privileges
 		if len(removePrivileges) > 0 {
 			logging.DebugLogger.Printf("[DEBUG] Removing old privileges")
-			privilegesToRevoke, on, err := configureAccountRoleGrantPrivilegeOptions(d, removePrivileges, false, &GrantPrivilegesToAccountRoleID{})
+			privilegesToRevoke, on, err := configureRoleGrantPrivilegeOptions(d, removePrivileges, false, &GrantPrivilegesToRoleID{})
 			if err != nil {
 				return fmt.Errorf("error configuring account role grant privilege options: %w", err)
 			}
@@ -601,7 +602,7 @@ func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 		logging.DebugLogger.Printf("[DEBUG] Setting new values")
-		resourceID := NewGrantPrivilegesToAccountRoleID(d.Id())
+		resourceID := NewGrantPrivilegesToRoleID(d.Id())
 		resourceID.Privileges = newPrivileges
 		d.SetId(resourceID.String())
 	}
@@ -623,7 +624,7 @@ func DeleteGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 		privileges = expandStringList(p.(*schema.Set).List())
 	}
 	allPrivileges := d.Get("all_privileges").(bool)
-	privilegesToRevoke, on, err := configureAccountRoleGrantPrivilegeOptions(d, privileges, allPrivileges, &GrantPrivilegesToAccountRoleID{})
+	privilegesToRevoke, on, err := configureRoleGrantPrivilegeOptions(d, privileges, allPrivileges, &GrantPrivilegesToRoleID{})
 	if err != nil {
 		return fmt.Errorf("error configuring account role grant privilege options: %w", err)
 	}
@@ -638,7 +639,7 @@ func DeleteGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privileges []string, allPrivileges bool, resourceID *GrantPrivilegesToAccountRoleID) (*sdk.AccountRoleGrantPrivileges, *sdk.AccountRoleGrantOn, error) {
+func configureRoleGrantPrivilegeOptions(d *schema.ResourceData, privileges []string, allPrivileges bool, resourceID *GrantPrivilegesToRoleID) (*sdk.AccountRoleGrantPrivileges, *sdk.AccountRoleGrantOn, error) {
 	logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options")
 	var privilegesToGrant *sdk.AccountRoleGrantPrivileges
 	on := sdk.AccountRoleGrantOn{}
@@ -646,7 +647,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 		logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: on account")
 		on.Account = sdk.Bool(true)
 		resourceID.OnAccount = true
-		privilegesToGrant = setAccountRolePrivilegeOptions(privileges, allPrivileges, true, false, false, false)
+		privilegesToGrant = setRolePrivilegeOptions(privileges, allPrivileges, true, false, false, false)
 		return privilegesToGrant, &on, nil
 	}
 
@@ -680,7 +681,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 		default:
 			return nil, nil, fmt.Errorf("invalid object type %s", objectType)
 		}
-		privilegesToGrant = setAccountRolePrivilegeOptions(privileges, allPrivileges, false, true, false, false)
+		privilegesToGrant = setRolePrivilegeOptions(privileges, allPrivileges, false, true, false, false)
 		return privilegesToGrant, &on, nil
 	}
 
@@ -709,7 +710,7 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			resourceID.DatabaseName = v.(string)
 			on.Schema.FutureSchemasInDatabase = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(v.(string)))
 		}
-		privilegesToGrant = setAccountRolePrivilegeOptions(privileges, allPrivileges, false, false, true, false)
+		privilegesToGrant = setRolePrivilegeOptions(privileges, allPrivileges, false, false, true, false)
 		return privilegesToGrant, &on, nil
 	}
 
@@ -774,14 +775,14 @@ func configureAccountRoleGrantPrivilegeOptions(d *schema.ResourceData, privilege
 			}
 		}
 
-		privilegesToGrant = setAccountRolePrivilegeOptions(privileges, allPrivileges, false, false, false, true)
+		privilegesToGrant = setRolePrivilegeOptions(privileges, allPrivileges, false, false, false, true)
 		return privilegesToGrant, &on, nil
 	}
 	logging.DebugLogger.Printf("[DEBUG] Configuring account role grant privileges options: invalid")
 	return nil, nil, fmt.Errorf("invalid grant options")
 }
 
-func setAccountRolePrivilegeOptions(privileges []string, allPrivileges bool, onAccount bool, onAccountObject bool, onSchema bool, onSchemaObject bool) *sdk.AccountRoleGrantPrivileges {
+func setRolePrivilegeOptions(privileges []string, allPrivileges bool, onAccount bool, onAccountObject bool, onSchema bool, onSchemaObject bool) *sdk.AccountRoleGrantPrivileges {
 	privilegesToGrant := &sdk.AccountRoleGrantPrivileges{}
 	if allPrivileges {
 		logging.DebugLogger.Printf("[DEBUG] Setting all privileges on privileges to grant")
@@ -824,7 +825,7 @@ func setAccountRolePrivilegeOptions(privileges []string, allPrivileges bool, onA
 	return nil
 }
 
-func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn sdk.ObjectType, id GrantPrivilegesToAccountRoleID, opts *sdk.ShowGrantOptions, d *schema.ResourceData) error {
+func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn sdk.ObjectType, id GrantPrivilegesToRoleID, opts *sdk.ShowGrantOptions, d *schema.ResourceData) error {
 	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)
 	logging.DebugLogger.Printf("[DEBUG] After showing grants: err = %v", err)
@@ -834,7 +835,7 @@ func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, gra
 
 	withGrantOption := d.Get("with_grant_option").(bool)
 	privileges := []string{}
-	roleName := sdk.NewAccountObjectIdentifier(d.Get("role_name").(string)).Name()
+	roleName := d.Get("role_name").(string)
 
 	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {
@@ -843,7 +844,7 @@ func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, gra
 		if !slices.Contains(id.Privileges, grant.Privilege) {
 			continue
 		}
-		if grant.GrantOption == withGrantOption && grant.GranteeName.Name() == roleName {
+		if grant.GrantOption == withGrantOption && grant.GranteeName.Name() == sdk.NewAccountObjectIdentifier(roleName).Name() {
 			// future grants do not have grantedBy, only current grants do. If grantedby
 			// is an empty string it means the grant could not have been created by terraform
 			if !id.Future && grant.GrantedBy.Name() == "" {
@@ -855,6 +856,7 @@ func readAccountRoleGrantPrivileges(ctx context.Context, client *sdk.Client, gra
 			}
 		}
 	}
+
 	logging.DebugLogger.Printf("[DEBUG] Setting privileges on account")
 	if err := d.Set("privileges", privileges); err != nil {
 		logging.DebugLogger.Printf("[DEBUG] Error setting privileges for account role: err = %v", err)

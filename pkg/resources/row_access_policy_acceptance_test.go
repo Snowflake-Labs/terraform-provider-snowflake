@@ -1,32 +1,45 @@
 package resources_test
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_RowAccessPolicy(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_ROW_ACCESS_POLICY_TESTS"); ok {
-		t.Skip("Skipping TestAcc_RowAccessPolicy")
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":     config.StringVariable(name),
+			"database": config.StringVariable(acc.TestDatabaseName),
+			"schema":   config.StringVariable(acc.TestSchemaName),
+		}
 	}
 
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckRowAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: rowAccessPolicyConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "comment", "Terraform acceptance test"),
@@ -35,22 +48,58 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "signature.V", "VARCHAR"),
 				),
 			},
+			// change comment and expression
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "comment", "Terraform acceptance test - changed comment"),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "row_access_expression", "case when current_role() in ('ANALYST') then false else true end"),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "signature.N", "VARCHAR"),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "signature.V", "VARCHAR"),
+				),
+			},
+			// change signature
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "comment", "Terraform acceptance test - changed comment"),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "row_access_expression", "case when current_role() in ('ANALYST') then false else true end"),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "signature.V", "BOOLEAN"),
+					resource.TestCheckResourceAttr("snowflake_row_access_policy.test", "signature.X", "TIMESTAMP_NTZ"),
+				),
+			},
+			// IMPORT
+			{
+				ConfigVariables:   m(),
+				ResourceName:      "snowflake_row_access_policy.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func rowAccessPolicyConfig(n string, databaseName string, schemaName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_row_access_policy" "test" {
-	name = "%v"
-	database = "%s"
-	schema = "%s"
-	signature = {
-		N = "VARCHAR"
-		V = "VARCHAR",
+func testAccCheckRowAccessPolicyDestroy(s *terraform.State) error {
+	db := acc.TestAccProvider.Meta().(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "snowflake_row_access_policy" {
+			continue
+		}
+		ctx := context.Background()
+		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
+		existingRowAccessPolicy, err := client.RowAccessPolicies.ShowByID(ctx, id)
+		if err == nil {
+			return fmt.Errorf("row access policy %v still exists", existingRowAccessPolicy.ID().FullyQualifiedName())
+		}
 	}
-	row_access_expression = "case when current_role() in ('ANALYST') then true else false end"
-	comment = "Terraform acceptance test"
-}
-`, n, databaseName, schemaName)
+	return nil
 }

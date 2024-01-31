@@ -223,14 +223,15 @@ type AlterStageOptions struct {
 
 // AlterInternalStageStageOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-stage.
 type AlterInternalStageStageOptions struct {
-	alter       bool                   `ddl:"static" sql:"ALTER"`
-	stage       bool                   `ddl:"static" sql:"STAGE"`
-	IfExists    *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name        SchemaObjectIdentifier `ddl:"identifier"`
-	set         bool                   `ddl:"static" sql:"SET"`
-	FileFormat  *StageFileFormat       `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
-	CopyOptions *StageCopyOptions      `ddl:"list,parentheses,no_comma" sql:"COPY_OPTIONS ="`
-	Comment     *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	alter    bool                   `ddl:"static" sql:"ALTER"`
+	stage    bool                   `ddl:"static" sql:"STAGE"`
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
+	set      bool                   `ddl:"static" sql:"SET"`
+	// TODO (SNOW-1019005): Move parameters below to the AlterStageOptions as they're common across stage types (+ remove from other alter option structs)
+	FileFormat  *StageFileFormat  `ddl:"list,parentheses" sql:"FILE_FORMAT ="`
+	CopyOptions *StageCopyOptions `ddl:"list,parentheses,no_comma" sql:"COPY_OPTIONS ="`
+	Comment     *string           `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // AlterExternalS3StageStageOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-stage.
@@ -373,4 +374,8 @@ func (s *Stage) ID() SchemaObjectIdentifier {
 
 func (s *Stage) ObjectType() ObjectType {
 	return ObjectTypeStage
+}
+
+func (s *Stage) Location() string {
+	return "@" + s.ID().FullyQualifiedName()
 }
