@@ -226,10 +226,6 @@ func (opts *alterTableOptions) validate() error {
 			); !ok {
 				errs = append(errs, errExactlyOneOf("TableConstraintAlterAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 			}
-			// TODO [SNOW-884959]: when should it be validated?
-			//if len(alterAction.Columns) == 0 {
-			//	errs = append(errs, errNotSet("TableConstraintAlterAction", "Columns"))
-			//}
 		}
 		if dropAction := constraintAction.Drop; valueSet(dropAction) {
 			if ok := exactlyOneValueSet(
@@ -240,10 +236,6 @@ func (opts *alterTableOptions) validate() error {
 			); !ok {
 				errs = append(errs, errExactlyOneOf("TableConstraintDropAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 			}
-			// TODO [SNOW-884959]: when should it be validated?
-			//if len(dropAction.Columns) == 0 {
-			//	errs = append(errs, errNotSet("TableConstraintDropAction", "Columns"))
-			//}
 		}
 		if addAction := constraintAction.Add; valueSet(addAction) {
 			if err := addAction.validate(); err != nil {

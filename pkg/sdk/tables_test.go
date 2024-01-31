@@ -406,7 +406,7 @@ func TestTableCreate(t *testing.T) {
 		}
 		require.NoError(t, err)
 		outOfLineConstraint1 := OutOfLineConstraint{
-			Name:    "OUT_OF_LINE_CONSTRAINT",
+			Name:    String("OUT_OF_LINE_CONSTRAINT"),
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},
 			ForeignKey: &OutOfLineForeignKey{
@@ -475,7 +475,7 @@ func TestTableCreate(t *testing.T) {
 			Comment:                    &tableComment,
 		}
 		assertOptsValidAndSQLEquals(t, opts,
-			`CREATE TABLE %s (%s %s CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY NOT NULL COLLATE 'de' IDENTITY START 10 INCREMENT 1 ORDER MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') COMMENT '%s', CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT, CONSTRAINT UNIQUE (COLUMN_1) ENFORCED DEFERRABLE INITIALLY DEFERRED ENABLE RELY) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
+			`CREATE TABLE %s (%s %s CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY NOT NULL COLLATE 'de' IDENTITY START 10 INCREMENT 1 ORDER MASKING POLICY %s USING (FOO, BAR) TAG ("db"."schema"."column_tag1" = 'v1', "db"."schema"."column_tag2" = 'v2') COMMENT '%s', CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT, UNIQUE (COLUMN_1) ENFORCED DEFERRABLE INITIALLY DEFERRED ENABLE RELY) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' COPY GRANTS ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG ("db"."schema"."table_tag1" = 'v1', "db"."schema"."table_tag2" = 'v2') COMMENT = '%s'`,
 			id.FullyQualifiedName(),
 			columnName,
 			columnType,
@@ -813,18 +813,6 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintAlterAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 	})
 
-	// TODO [SNOW-884959]: when should it be validated?
-	//t.Run("validation: constraint alter action - no columns", func(t *testing.T) {
-	//	opts := defaultOpts()
-	//	opts.ConstraintAction = &TableConstraintAction{
-	//		Alter: &TableConstraintAlterAction{
-	//			ConstraintName: String("constraint"),
-	//			Columns:        []string{},
-	//		},
-	//	}
-	//	assertOptsInvalidJoinedErrors(t, opts, errNotSet("TableConstraintAlterAction", "Columns"))
-	//})
-
 	t.Run("validation: constraint alter action - two options present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.ConstraintAction = &TableConstraintAction{
@@ -843,18 +831,6 @@ func TestTableAlter(t *testing.T) {
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintDropAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 	})
-
-	// TODO [SNOW-884959]: when should it be validated?
-	//t.Run("validation: constraint drop action - no columns", func(t *testing.T) {
-	//	opts := defaultOpts()
-	//	opts.ConstraintAction = &TableConstraintAction{
-	//		Drop: &TableConstraintDropAction{
-	//			ConstraintName: String("constraint"),
-	//			Columns:        []string{},
-	//		},
-	//	}
-	//	assertOptsInvalidJoinedErrors(t, opts, errNotSet("TableConstraintDropAction", "Columns"))
-	//})
 
 	t.Run("validation: constraint drop action - two options present", func(t *testing.T) {
 		opts := defaultOpts()
@@ -1193,7 +1169,7 @@ func TestTableAlter(t *testing.T) {
 
 	t.Run("alter constraint: add", func(t *testing.T) {
 		outOfLineConstraint := OutOfLineConstraint{
-			Name:    "OUT_OF_LINE_CONSTRAINT",
+			Name:    String("OUT_OF_LINE_CONSTRAINT"),
 			Type:    ColumnConstraintTypeForeignKey,
 			Columns: []string{"COLUMN_1", "COLUMN_2"},
 			ForeignKey: &OutOfLineForeignKey{
