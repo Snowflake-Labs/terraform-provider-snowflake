@@ -46,6 +46,11 @@ func (opts *AlterExternalFunctionOptions) validate() error {
 			errs = append(errs, errExactlyOneOf("AlterExternalFunctionOptions.Set", "ApiIntegration", "Headers", "ContextHeaders", "MaxBatchRows", "Compression", "RequestTranslator", "ResponseTranslator"))
 		}
 	}
+	if valueSet(opts.Unset) {
+		if !anyValueSet(opts.Unset.Comment, opts.Unset.Headers, opts.Unset.ContextHeaders, opts.Unset.MaxBatchRows, opts.Unset.Compression, opts.Unset.Secure, opts.Unset.RequestTranslator, opts.Unset.ResponseTranslator) {
+			errs = append(errs, errAtLeastOneOf("AlterExternalFunctionOptions.Unset", "Comment", "Headers", "ContextHeaders", "MaxBatchRows", "Compression", "Secure", "RequestTranslator", "ResponseTranslator"))
+		}
+	}
 	return JoinErrors(errs...)
 }
 

@@ -115,6 +115,12 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: at least one of the fields [opts.Unset.Comment opts.Unset.Headers opts.Unset.ContextHeaders opts.Unset.MaxBatchRows opts.Unset.Compression opts.Unset.Secure opts.Unset.RequestTranslator opts.Unset.ResponseTranslator] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ExternalFunctionUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterExternalFunctionOptions.Unset", "Comment", "Headers", "ContextHeaders", "MaxBatchRows", "Compression", "Secure", "RequestTranslator", "ResponseTranslator"))
+	})
+
 	t.Run("validation: exactly one field from [opts.Set opts.Unset] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ExternalFunctionSet{
