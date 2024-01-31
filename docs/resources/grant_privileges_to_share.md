@@ -18,7 +18,7 @@ description: |-
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name  = snowflake_share.example.name
+  to_share    = snowflake_share.example.name
   privileges  = ["USAGE"]
   on_database = snowflake_database.example.name
 }
@@ -30,7 +30,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name = snowflake_share.example.name
+  to_share   = snowflake_share.example.name
   privileges = ["USAGE"]
   on_schema  = "${snowflake_database.example.name}.${snowflake_schema.example.name}"
 }
@@ -42,7 +42,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name = snowflake_share.example.name
+  to_share   = snowflake_share.example.name
   privileges = ["SELECT"]
   on_table   = "${snowflake_database.example.name}.${snowflake_schema.example.name}.${snowflake_table.example.name}"
 }
@@ -54,7 +54,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name              = snowflake_share.example.name
+  to_share                = snowflake_share.example.name
   privileges              = ["SELECT"]
   on_all_tables_in_schema = "${snowflake_database.example.name}.${snowflake_schema.example.name}"
 }
@@ -66,7 +66,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name = snowflake_share.example.name
+  to_share   = snowflake_share.example.name
   privileges = ["READ"]
   on_tag     = "${snowflake_database.example.name}.${snowflake_schema.example.name}.${snowflake_tag.example.name}"
 }
@@ -78,7 +78,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name = snowflake_share.example.name
+  to_share   = snowflake_share.example.name
   privileges = ["SELECT"]
   on_view    = "${snowflake_database.example.name}.${snowflake_schema.example.name}.${snowflake_view.example.name}"
 }
@@ -91,17 +91,17 @@ resource "snowflake_grant_privileges_to_share" "example" {
 
 ### Required
 
-- `privileges` (Set of String) The privileges to grant on the share.
-- `share_name` (String) The fully qualified name of the share on which privileges will be granted.
+- `privileges` (Set of String) The privileges to grant on the share. See available list of privileges: https://docs.snowflake.com/en/sql-reference/sql/grant-privilege-share#syntax
+- `to_share` (String) The fully qualified name of the share on which privileges will be granted.
 
 ### Optional
 
-- `all_tables_in_schema` (String) The fully qualified identifier for the schema for which the specified privilege will be granted for all tables.
-- `database_name` (String) The fully qualified name of the database on which privileges will be granted.
-- `schema_name` (String) The fully qualified name of the schema on which privileges will be granted.
-- `table_name` (String) The fully qualified name of the table on which privileges will be granted.
-- `tag_name` (String) The fully qualified name of the tag on which privileges will be granted.
-- `view_name` (String) The fully qualified name of the view on which privileges will be granted.
+- `on_all_tables_in_schema` (String) The fully qualified identifier for the schema for which the specified privilege will be granted for all tables.
+- `on_database` (String) The fully qualified name of the database on which privileges will be granted.
+- `on_schema` (String) The fully qualified name of the schema on which privileges will be granted.
+- `on_table` (String) The fully qualified name of the table on which privileges will be granted.
+- `on_tag` (String) The fully qualified name of the tag on which privileges will be granted.
+- `on_view` (String) The fully qualified name of the view on which privileges will be granted.
 
 ### Read-Only
 

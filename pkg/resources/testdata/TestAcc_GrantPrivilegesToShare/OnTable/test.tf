@@ -8,7 +8,7 @@ resource "snowflake_schema" "test" {
 }
 
 resource "snowflake_table" "test" {
-  name     = var.table_name
+  name     = var.on_table
   database = snowflake_database.test.name
   schema   = snowflake_schema.test.name
   column {
@@ -18,17 +18,17 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_share" "test" {
-  name = var.share_name
+  name = var.to_share
 }
 
 resource "snowflake_grant_privileges_to_share" "test_setup" {
-  share_name    = snowflake_share.test.name
-  privileges    = ["USAGE"]
-  database_name = snowflake_database.test.name
+  to_share    = snowflake_share.test.name
+  privileges  = ["USAGE"]
+  on_database = snowflake_database.test.name
 }
 
 resource "snowflake_grant_privileges_to_share" "test" {
-  share_name = snowflake_share.test.name
+  to_share   = snowflake_share.test.name
   privileges = var.privileges
-  table_name = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\".\"${snowflake_table.test.name}\""
+  on_table   = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\".\"${snowflake_table.test.name}\""
 }

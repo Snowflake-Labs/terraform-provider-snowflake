@@ -8,7 +8,7 @@ resource "snowflake_schema" "test" {
 }
 
 resource "snowflake_table" "test" {
-  name     = var.table_name
+  name     = var.on_table
   database = snowflake_database.test.name
   schema   = snowflake_schema.test.name
   column {
@@ -18,5 +18,5 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_share" "test" {
-  name = var.share_name
+  name = var.to_share
 }

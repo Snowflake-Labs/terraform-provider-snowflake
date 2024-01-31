@@ -8,7 +8,7 @@ resource "snowflake_schema" "test" {
 }
 
 resource "snowflake_table" "test" {
-  name     = var.table_name
+  name     = var.on_table
   database = snowflake_database.test.name
   schema   = snowflake_schema.test.name
   column {
@@ -18,7 +18,7 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_view" "test" {
-  name      = var.view_name
+  name      = var.on_view
   database  = snowflake_database.test.name
   schema    = snowflake_schema.test.name
   is_secure = true

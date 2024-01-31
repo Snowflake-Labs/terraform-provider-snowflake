@@ -8,5 +8,5 @@ resource "snowflake_schema" "test" {
 }
 
 resource "snowflake_share" "test" {
-  name = var.share_name
+  name = var.to_share
 }

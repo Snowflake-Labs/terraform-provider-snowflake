@@ -79,7 +79,7 @@ func ParseGrantPrivilegesToShareId(idString string) (GrantPrivilegesToShareId, e
 				getExpectedIdentifierRepresentationFromParam(id),
 			)
 		}
-	case OnTableShareGrantKind, OnViewShareGrantKind, OnTagShareGrantKind: // , OnFunctionShareGrantKind:
+	case OnTableShareGrantKind, OnViewShareGrantKind, OnTagShareGrantKind: // TODO(SNOW-1021686) , OnFunctionShareGrantKind:
 		if typedIdentifier, ok := id.(sdk.SchemaObjectIdentifier); ok {
 			grantPrivilegesToShareId.Identifier = typedIdentifier
 		} else {

@@ -8,11 +8,11 @@ resource "snowflake_schema" "test" {
 }
 
 resource "snowflake_tag" "test" {
-  name     = var.tag_name
+  name     = var.on_tag
   database = snowflake_database.test.name
   schema   = snowflake_schema.test.name
 }
 
 resource "snowflake_share" "test" {
-  name = var.share_name
+  name = var.to_share
 }

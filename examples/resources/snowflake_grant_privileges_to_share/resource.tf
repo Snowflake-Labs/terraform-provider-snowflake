@@ -3,7 +3,7 @@
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name  = snowflake_share.example.name
+  to_share    = snowflake_share.example.name
   privileges  = ["USAGE"]
   on_database = snowflake_database.example.name
 }
@@ -15,7 +15,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name = snowflake_share.example.name
+  to_share   = snowflake_share.example.name
   privileges = ["USAGE"]
   on_schema  = "${snowflake_database.example.name}.${snowflake_schema.example.name}"
 }
@@ -27,7 +27,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name = snowflake_share.example.name
+  to_share   = snowflake_share.example.name
   privileges = ["SELECT"]
   on_table   = "${snowflake_database.example.name}.${snowflake_schema.example.name}.${snowflake_table.example.name}"
 }
@@ -39,7 +39,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name              = snowflake_share.example.name
+  to_share                = snowflake_share.example.name
   privileges              = ["SELECT"]
   on_all_tables_in_schema = "${snowflake_database.example.name}.${snowflake_schema.example.name}"
 }
@@ -51,7 +51,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name = snowflake_share.example.name
+  to_share   = snowflake_share.example.name
   privileges = ["READ"]
   on_tag     = "${snowflake_database.example.name}.${snowflake_schema.example.name}.${snowflake_tag.example.name}"
 }
@@ -63,7 +63,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ##################################
 
 resource "snowflake_grant_privileges_to_share" "example" {
-  share_name = snowflake_share.example.name
+  to_share   = snowflake_share.example.name
   privileges = ["SELECT"]
   on_view    = "${snowflake_database.example.name}.${snowflake_schema.example.name}.${snowflake_view.example.name}"
 }

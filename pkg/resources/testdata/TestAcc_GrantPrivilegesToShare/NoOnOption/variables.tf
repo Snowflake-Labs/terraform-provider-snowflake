@@ -5,7 +5,3 @@ variable "to_share" {
 variable "privileges" {
   type = list(string)
 }
-
-variable "database" {
-  type = string
-}

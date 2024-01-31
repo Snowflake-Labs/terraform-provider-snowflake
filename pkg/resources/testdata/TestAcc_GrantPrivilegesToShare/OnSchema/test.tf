@@ -8,17 +8,17 @@ resource "snowflake_schema" "test" {
 }
 
 resource "snowflake_share" "test" {
-  name = var.share_name
+  name = var.to_share
 }
 
 resource "snowflake_grant_privileges_to_share" "test_setup" {
-  share_name    = snowflake_share.test.name
-  privileges    = ["USAGE"]
-  database_name = snowflake_database.test.name
+  to_share    = snowflake_share.test.name
+  privileges  = ["USAGE"]
+  on_database = snowflake_database.test.name
 }
 
 resource "snowflake_grant_privileges_to_share" "test" {
-  share_name  = snowflake_share.test.name
-  privileges  = var.privileges
-  schema_name = "\"${snowflake_schema.test.database}\".\"${snowflake_schema.test.name}\""
+  to_share   = snowflake_share.test.name
+  privileges = var.privileges
+  on_schema  = "\"${snowflake_schema.test.database}\".\"${snowflake_schema.test.name}\""
 }

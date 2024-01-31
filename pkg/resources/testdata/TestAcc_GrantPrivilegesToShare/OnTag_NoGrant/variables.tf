@@ -1,4 +1,4 @@
-variable "share_name" {
+variable "to_share" {
   type = string
 }
 
@@ -10,6 +10,6 @@ variable "schema" {
   type = string
 }
 
-variable "tag_name" {
+variable "on_tag" {
   type = string
 }

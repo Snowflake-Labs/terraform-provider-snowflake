@@ -1,4 +1,4 @@
-variable "share_name" {
+variable "to_share" {
   type = string
 }
 
