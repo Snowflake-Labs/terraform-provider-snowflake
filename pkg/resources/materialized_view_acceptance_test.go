@@ -166,9 +166,9 @@ func TestAcc_MaterializedView_Rename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
 				),
 			},
-			// rename only
+			// rename with one param change
 			{
-				Config: materializedViewConfig(warehouseName, tableName, newViewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "Terraform test resource", true, false),
+				Config: materializedViewConfig(warehouseName, tableName, newViewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "Terraform test resource", false, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", newViewName),
 				),

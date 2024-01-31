@@ -231,6 +231,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
 	}
 
 	if d.HasChange("comment") {

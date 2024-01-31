@@ -197,6 +197,7 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
 	}
 
 	var runSetStatement bool

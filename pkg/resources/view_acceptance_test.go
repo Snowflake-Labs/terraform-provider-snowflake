@@ -197,6 +197,7 @@ func TestAcc_View_Rename(t *testing.T) {
 	}
 	m2 := m()
 	m2["name"] = config.StringVariable(newViewName)
+	m2["comment"] = config.StringVariable("new comment")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -213,12 +214,13 @@ func TestAcc_View_Rename(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", viewName),
 				),
 			},
-			// rename only
+			// rename with one param changed
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
 				ConfigVariables: m2,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", newViewName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "new comment"),
 				),
 			},
 		},
@@ -428,7 +430,7 @@ func testAccCheckViewDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_materialized_view" {
+		if rs.Type != "snowflake_view" {
 			continue
 		}
 		ctx := context.Background()
