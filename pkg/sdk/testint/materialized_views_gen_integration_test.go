@@ -361,6 +361,22 @@ func TestInt_MaterializedViews(t *testing.T) {
 		assert.Contains(t, returnedViews, *view2)
 	})
 
+	t.Run("show materialized view: no existing view", func(t *testing.T) {
+		showRequest := sdk.NewShowMaterializedViewRequest().
+			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)})
+		returnedViews, err := client.MaterializedViews.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Equal(t, 0, len(returnedViews))
+	})
+
+	t.Run("show materialized view: schema not existing", func(t *testing.T) {
+		showRequest := sdk.NewShowMaterializedViewRequest().
+			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "made-up-name")})
+		_, err := client.MaterializedViews.Show(ctx, showRequest)
+		require.Error(t, err)
+	})
+
 	t.Run("show materialized view: with options", func(t *testing.T) {
 		view1 := createMaterializedView(t)
 		view2 := createMaterializedView(t)
