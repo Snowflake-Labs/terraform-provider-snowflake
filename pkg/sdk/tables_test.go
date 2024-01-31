@@ -843,16 +843,17 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableConstraintDropAction", "ConstraintName", "PrimaryKey", "Unique", "ForeignKey", "Columns"))
 	})
 
-	t.Run("validation: constraint drop action - no columns", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.ConstraintAction = &TableConstraintAction{
-			Drop: &TableConstraintDropAction{
-				ConstraintName: String("constraint"),
-				Columns:        []string{},
-			},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("TableConstraintDropAction", "Columns"))
-	})
+	// TODO [SNOW-884959]: when should it be validated?
+	//t.Run("validation: constraint drop action - no columns", func(t *testing.T) {
+	//	opts := defaultOpts()
+	//	opts.ConstraintAction = &TableConstraintAction{
+	//		Drop: &TableConstraintDropAction{
+	//			ConstraintName: String("constraint"),
+	//			Columns:        []string{},
+	//		},
+	//	}
+	//	assertOptsInvalidJoinedErrors(t, opts, errNotSet("TableConstraintDropAction", "Columns"))
+	//})
 
 	t.Run("validation: constraint drop action - two options present", func(t *testing.T) {
 		opts := defaultOpts()

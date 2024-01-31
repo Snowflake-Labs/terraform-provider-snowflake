@@ -270,11 +270,12 @@ type TableColumnAddAction struct {
 	InlineConstraint *TableColumnAddInlineConstraint `ddl:"keyword"`
 	MaskingPolicy    *ColumnMaskingPolicy            `ddl:"keyword"`
 	Tags             []TagAssociation                `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment          *string                         `ddl:"parameter,no_equals,single_quotes" sql:"COMMENT"`
 }
 
 type TableColumnAddInlineConstraint struct {
 	NotNull    *bool                `ddl:"keyword" sql:"NOT NULL"`
-	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	Name       *string              `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
 	Type       ColumnConstraintType `ddl:"keyword"`
 	ForeignKey *ColumnAddForeignKey `ddl:"keyword"`
 }
@@ -413,6 +414,7 @@ type TableExternalTableColumnAddAction struct {
 	Name        string   `ddl:"keyword"`
 	Type        DataType `ddl:"keyword"`
 	Expression  []string `ddl:"parameter,no_equals,parentheses" sql:"AS"`
+	Comment     *string  `ddl:"parameter,no_equals,single_quotes" sql:"COMMENT"`
 }
 
 type TableExternalTableColumnRenameAction struct {

@@ -1,10 +1,8 @@
 package resources
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"log"
 	"slices"
@@ -16,10 +14,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-)
-
-const (
-	tableIDDelimiter = '|'
 )
 
 var tableSchema = map[string]*schema.Schema{
@@ -223,71 +217,10 @@ func Table() *schema.Resource {
 	}
 }
 
-type tableID struct {
-	DatabaseName string
-	SchemaName   string
-	TableName    string
-}
-
-// String() takes in a tableID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|TableName.
-func (si *tableID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = tableIDDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.TableName}}
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strTableID := strings.TrimSpace(buf.String())
-	return strTableID, nil
-}
-
-// tableIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|TableName
-// and returns a tableID object.
-func tableIDFromString(stringID string) (*tableID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = tableIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	tableResult := &tableID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		TableName:    lines[0][2],
-	}
-	return tableResult, nil
-}
-
 type columnDefault struct {
 	constant   *string
 	expression *string
 	sequence   *string
-}
-
-func (cd *columnDefault) toSnowflakeColumnDefault() *snowflake.ColumnDefault {
-	if cd.constant != nil {
-		return snowflake.NewColumnDefaultWithConstant(*cd.constant)
-	}
-
-	if cd.expression != nil {
-		return snowflake.NewColumnDefaultWithExpression(*cd.expression)
-	}
-
-	if cd.sequence != nil {
-		return snowflake.NewColumnDefaultWithSequence(*cd.sequence)
-	}
-
-	return nil
 }
 
 func (cd *columnDefault) _type() string {
@@ -311,11 +244,6 @@ type columnIdentity struct {
 	stepNum  int
 }
 
-func (identity *columnIdentity) toSnowflakeColumnIdentity() *snowflake.ColumnIdentity {
-	snowIdentity := snowflake.ColumnIdentity{}
-	return snowIdentity.WithStartNum(identity.startNum).WithStep(identity.stepNum)
-}
-
 type column struct {
 	name          string
 	dataType      string
@@ -326,33 +254,7 @@ type column struct {
 	maskingPolicy string
 }
 
-func (c column) toSnowflakeColumn() snowflake.Column {
-	sC := &snowflake.Column{}
-
-	if c._default != nil {
-		sC = sC.WithDefault(c._default.toSnowflakeColumnDefault())
-	}
-
-	if c.identity != nil {
-		sC = sC.WithIdentity(c.identity.toSnowflakeColumnIdentity())
-	}
-
-	return *sC.WithName(c.name).
-		WithType(c.dataType).
-		WithNullable(c.nullable).
-		WithComment(c.comment).
-		WithMaskingPolicy(c.maskingPolicy)
-}
-
 type columns []column
-
-func (c columns) toSnowflakeColumns() []snowflake.Column {
-	sC := make([]snowflake.Column, len(c))
-	for i, col := range c {
-		sC[i] = col.toSnowflakeColumn()
-	}
-	return sC
-}
 
 type changedColumns []changedColumn
 
@@ -490,7 +392,6 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 				} else {
 					expression = constant
 				}
-
 			}
 		}
 
@@ -535,6 +436,7 @@ func getTableColumnRequests(from interface{}) []sdk.TableColumnRequest {
 	return to
 }
 
+// TODO [SNOW-884959]: remove?
 type primarykey struct {
 	name string
 	keys []string
@@ -550,11 +452,6 @@ func getPrimaryKey(from interface{}) (to primarykey) {
 		return to
 	}
 	return to
-}
-
-func (pk primarykey) toSnowflakePrimaryKey() snowflake.PrimaryKey {
-	snowPk := snowflake.PrimaryKey{}
-	return *snowPk.WithName(pk.name).WithKeys(pk.keys)
 }
 
 func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
@@ -600,7 +497,9 @@ func toColumnDefaultConfig(td sdk.TableColumnDetails) map[string]any {
 	defaultRaw := *td.Default
 	def := map[string]any{}
 	if strings.HasSuffix(defaultRaw, ".NEXTVAL") {
-		def["sequence"] = strings.TrimSuffix(defaultRaw, ".NEXTVAL")
+		// TODO [SNOW-867240]: SHOW TABLE returns last part of id without double quotes... we have to quote it again. Move it to SDK.
+		sequenceIdRaw := strings.TrimSuffix(defaultRaw, ".NEXTVAL")
+		def["sequence"] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(sequenceIdRaw).FullyQualifiedName()
 		return def
 	}
 
@@ -764,169 +663,243 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateTable implements schema.UpdateFunc.
 func UpdateTable(d *schema.ResourceData, meta interface{}) error {
-	tid, err := tableIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := tid.DatabaseName
-	schema := tid.SchemaName
-	tableName := tid.TableName
-
-	builder := snowflake.NewTableBuilder(tableName, dbName, schema)
-
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
 	if d.HasChange("name") {
-		name := d.Get("name")
-		q := builder.Rename(name.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating table name on %v", d.Id())
-		}
-		tableID := &tableID{
-			DatabaseName: dbName,
-			SchemaName:   schema,
-			TableName:    name.(string),
-		}
-		dataIDInput, err := tableID.String()
+		newName := d.Get("name").(string)
+
+		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), newName)
+
+		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithNewName(&newId))
 		if err != nil {
-			return err
+			return fmt.Errorf("error renaming table %v err = %w", d.Id(), err)
 		}
-		d.SetId(dataIDInput)
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
 	}
+
+	var runSetStatement bool
+	var runUnsetStatement bool
+	setRequest := sdk.NewTableSetRequest()
+	unsetRequest := sdk.NewTableUnsetRequest()
+
 	if d.HasChange("comment") {
-		comment := d.Get("comment")
-		q := builder.ChangeComment(comment.(string))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating table comment on %v", d.Id())
+		comment := d.Get("comment").(string)
+		if comment == "" {
+			runUnsetStatement = true
+			unsetRequest.WithComment(true)
+		} else {
+			runSetStatement = true
+			setRequest.WithComment(sdk.String(comment))
 		}
 	}
+
+	if d.HasChange("change_tracking") {
+		changeTracking := d.Get("change_tracking").(bool)
+		runSetStatement = true
+		setRequest.WithChangeTracking(sdk.Bool(changeTracking))
+	}
+
+	checkChangeForDataRetention := func(key string) {
+		if d.HasChange(key) {
+			dataRetentionDays := d.Get(key).(int)
+			runSetStatement = true
+			setRequest.WithDataRetentionTimeInDays(sdk.Int(dataRetentionDays))
+		}
+	}
+	checkChangeForDataRetention("data_retention_days")
+	checkChangeForDataRetention("data_retention_time_in_days")
+
+	if runSetStatement {
+		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(setRequest))
+		if err != nil {
+			return fmt.Errorf("error updating table: %w", err)
+		}
+	}
+
+	if runUnsetStatement {
+		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithUnset(unsetRequest))
+		if err != nil {
+			return fmt.Errorf("error updating table: %w", err)
+		}
+	}
+
+	if d.HasChange("cluster_by") {
+		cb := expandStringList(d.Get("cluster_by").([]interface{}))
+
+		if len(cb) != 0 {
+			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithClusteringAction(sdk.NewTableClusteringActionRequest().WithClusterBy(cb)))
+			if err != nil {
+				return fmt.Errorf("error updating table: %w", err)
+			}
+		} else {
+			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithClusteringAction(sdk.NewTableClusteringActionRequest().WithDropClusteringKey(sdk.Bool(true))))
+			if err != nil {
+				return fmt.Errorf("error updating table: %w", err)
+			}
+		}
+	}
+
 	if d.HasChange("column") {
 		t, n := d.GetChange("column")
 		removed, added, changed := getColumns(t).diffs(getColumns(n))
-		for _, cA := range removed {
-			q := builder.DropColumn(cA.name)
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error dropping column on %v", d.Id())
+
+		if len(removed) > 0 {
+			removedColumnNames := make([]string, len(removed))
+			for i, r := range removed {
+				removedColumnNames[i] = r.name
+			}
+			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithDropColumns(snowflake.QuoteStringList(removedColumnNames))))
+			if err != nil {
+				return fmt.Errorf("error updating table: %w", err)
 			}
 		}
-		for _, cA := range added {
-			var q string
 
-			if cA.identity == nil && cA._default == nil { //nolint:gocritic
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, nil, cA.comment, cA.maskingPolicy)
-			} else if cA.identity != nil {
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, nil, cA.identity.toSnowflakeColumnIdentity(), cA.comment, cA.maskingPolicy)
-			} else {
+		for _, cA := range added {
+			addRequest := sdk.NewTableColumnAddActionRequest(fmt.Sprintf("\"%s\"", cA.name), sdk.DataType(cA.dataType)).
+				WithInlineConstraint(sdk.NewTableColumnAddInlineConstraintRequest().WithNotNull(sdk.Bool(!cA.nullable)))
+
+			if cA._default != nil {
 				if cA._default._type() != "constant" {
 					return fmt.Errorf("failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
 				}
-
-				q = builder.AddColumn(cA.name, cA.dataType, cA.nullable, cA._default.toSnowflakeColumnDefault(), nil, cA.comment, cA.maskingPolicy)
+				var expression string
+				if strings.Contains(cA.dataType, "CHAR") || cA.dataType == "STRING" || cA.dataType == "TEXT" {
+					expression = snowflake.EscapeSnowflakeString(*cA._default.constant)
+				} else {
+					expression = *cA._default.constant
+				}
+				addRequest.WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithExpression(sdk.String(expression)))
 			}
 
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error adding column on %v", d.Id())
+			if cA.identity != nil {
+				addRequest.WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(cA.identity.startNum, cA.identity.stepNum)))
+			}
+
+			if cA.maskingPolicy != "" {
+				addRequest.WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(cA.maskingPolicy)))
+			}
+
+			if cA.comment != "" {
+				addRequest.WithComment(sdk.String(cA.comment))
+			}
+
+			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAdd(addRequest)))
+			if err != nil {
+				return fmt.Errorf("error adding column: %w", err)
 			}
 		}
 		for _, cA := range changed {
 			if cA.changedDataType {
-				q := builder.ChangeColumnType(cA.newColumn.name, cA.newColumn.dataType)
-				if err := snowflake.Exec(db, q); err != nil {
-					return fmt.Errorf("error changing property on %v", d.Id())
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType)))})))
+				if err != nil {
+					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
 			}
 			if cA.changedNullConstraint {
-				q := builder.ChangeNullConstraint(cA.newColumn.name, cA.newColumn.nullable)
-				if err := snowflake.Exec(db, q); err != nil {
-					return fmt.Errorf("error changing property on %v", d.Id())
+				nullabilityRequest := sdk.NewTableColumnNotNullConstraintRequest()
+				if !cA.newColumn.nullable {
+					nullabilityRequest.WithSet(sdk.Bool(true))
+				} else {
+					nullabilityRequest.WithDrop(sdk.Bool(true))
+				}
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithNotNullConstraint(nullabilityRequest)})))
+				if err != nil {
+					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
 			}
 			if cA.dropedDefault {
-				q := builder.DropColumnDefault(cA.newColumn.name)
-				if err := snowflake.Exec(db, q); err != nil {
-					return fmt.Errorf("error changing property on %v", d.Id())
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithDropDefault(sdk.Bool(true))})))
+				if err != nil {
+					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
 			}
 			if cA.changedComment {
-				q := builder.ChangeColumnComment(cA.newColumn.name, cA.newColumn.comment)
-				if err := snowflake.Exec(db, q); err != nil {
-					return fmt.Errorf("error changing property on %v", d.Id())
+				columnAlterActionRequest := sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name))
+				if cA.newColumn.comment == "" {
+					columnAlterActionRequest.WithUnsetComment(sdk.Bool(true))
+				} else {
+					columnAlterActionRequest.WithComment(sdk.String(cA.newColumn.comment))
+				}
+
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*columnAlterActionRequest})))
+				if err != nil {
+					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
 			}
 			if cA.changedMaskingPolicy {
-				q := builder.ChangeColumnMaskingPolicy(cA.newColumn.name, cA.newColumn.maskingPolicy)
-				if err := snowflake.Exec(db, q); err != nil {
-					return fmt.Errorf("error changing property on %v", d.Id())
+				columnAction := sdk.NewTableColumnActionRequest()
+				if strings.TrimSpace(cA.newColumn.maskingPolicy) == "" {
+					columnAction.WithUnsetMaskingPolicy(sdk.NewTableColumnAlterUnsetMaskingPolicyActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)))
+				} else {
+					columnAction.WithSetMaskingPolicy(sdk.NewTableColumnAlterSetMaskingPolicyActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(cA.newColumn.maskingPolicy), []string{}))
+				}
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(columnAction))
+				if err != nil {
+					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
 			}
 		}
 	}
-	if d.HasChange("cluster_by") {
-		cb := expandStringList(d.Get("cluster_by").([]interface{}))
 
-		var q string
-		if len(cb) != 0 {
-			builder.WithClustering(cb)
-			q = builder.ChangeClusterBy(builder.GetClusterKeyString())
-		} else {
-			q = builder.DropClustering()
-		}
-
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating table clustering on %v", d.Id())
-		}
-	}
 	if d.HasChange("primary_key") {
-		opk, npk := d.GetChange("primary_key")
+		o, n := d.GetChange("primary_key")
 
-		newpk := getPrimaryKey(npk)
-		oldpk := getPrimaryKey(opk)
+		newKey := getPrimaryKey(n)
+		oldKey := getPrimaryKey(o)
 
-		if len(oldpk.keys) > 0 || len(newpk.keys) == 0 {
+		if len(oldKey.keys) > 0 || len(newKey.keys) == 0 {
 			// drop our pk if there was an old primary key, or pk has been removed
-			q := builder.DropPrimaryKey()
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error changing primary key first on %v", d.Id())
+			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithConstraintAction(
+				sdk.NewTableConstraintActionRequest().
+					WithDrop(sdk.NewTableConstraintDropActionRequest([]string{}).WithPrimaryKey(sdk.Bool(true))),
+			))
+			if err != nil {
+				return fmt.Errorf("error updating table: %w", err)
 			}
 		}
 
-		if len(newpk.keys) > 0 {
+		if len(newKey.keys) > 0 {
 			// add our new pk
-			q := builder.ChangePrimaryKey(newpk.toSnowflakePrimaryKey())
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error changing property on %v", d.Id())
+			// TODO [SNOW-884959]: do we need quoteStringList?
+			// TODO [SNOW-884959]: change name to optional
+			constraint := sdk.NewOutOfLineConstraintRequest("TODO", sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(newKey.keys))
+			if newKey.name != "" {
+				//constraint.WithName(sdk.String(newKey.name))
+			}
+			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithConstraintAction(
+				sdk.NewTableConstraintActionRequest().WithAdd(constraint),
+			))
+			if err != nil {
+				return fmt.Errorf("error updating table: %w", err)
 			}
 		}
 	}
-	updateDataRetention := func(key string) error {
-		if d.HasChange(key) {
-			ndr := d.Get(key)
-			q := builder.ChangeDataRetention(ndr.(int))
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error changing property on %v", d.Id())
-			}
-		}
-		return nil
-	}
-	err = updateDataRetention("data_retention_days")
-	if err != nil {
-		return err
-	}
-	err = updateDataRetention("data_retention_time_in_days")
-	if err != nil {
-		return err
-	}
-	if d.HasChange("change_tracking") {
-		nct := d.Get("change_tracking")
 
-		q := builder.ChangeChangeTracking(nct.(bool))
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error changing property on %v", d.Id())
+	if d.HasChange("tag") {
+		unsetTags, setTags := GetTagsDiff(d, "tag")
+
+		if len(unsetTags) > 0 {
+			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithUnsetTags(unsetTags))
+			if err != nil {
+				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+			}
 		}
-	}
-	tagChangeErr := handleTagChanges(db, d, builder)
-	if tagChangeErr != nil {
-		return tagChangeErr
+
+		if len(setTags) > 0 {
+			tagAssociationRequests := make([]sdk.TagAssociationRequest, len(setTags))
+			for i, t := range setTags {
+				tagAssociationRequests[i] = *sdk.NewTagAssociationRequest(t.Name, t.Value)
+			}
+			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSetTags(tagAssociationRequests))
+			if err != nil {
+				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+			}
+		}
 	}
 
 	return ReadTable(d, meta)

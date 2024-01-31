@@ -254,6 +254,7 @@ func (r *TableExternalTableActionRequest) toOpts() *TableExternalTableAction {
 				Name:        r.Add.Name,
 				Type:        r.Add.Type,
 				Expression:  []string{r.Add.Expression},
+				Comment:     r.Add.Comment,
 			},
 		}
 	}
@@ -392,6 +393,7 @@ func (r *TableColumnActionRequest) toOpts() *TableColumnAction {
 				Type:             r.Add.Type,
 				DefaultValue:     defaultValue,
 				InlineConstraint: inlineConstraint,
+				Comment:          r.Add.Comment,
 			},
 		}
 	}

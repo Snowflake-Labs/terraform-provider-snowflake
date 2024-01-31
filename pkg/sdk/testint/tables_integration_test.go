@@ -476,7 +476,7 @@ func TestInt_Table(t *testing.T) {
 
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithColumnAction(sdk.NewTableColumnActionRequest().
-				WithAdd(sdk.NewTableColumnAddActionRequest("COLUMN_3", sdk.DataTypeVARCHAR)))
+				WithAdd(sdk.NewTableColumnAddActionRequest("COLUMN_3", sdk.DataTypeVARCHAR).WithComment(sdk.String("some comment"))))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -745,7 +745,26 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("external table: add", func(t *testing.T) {
+	t.Run("alter constraint: drop primary key", func(t *testing.T) {
+		name := random.String()
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		columns := []sdk.TableColumnRequest{
+			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
+		}
+		constraintName := "OUT_OF_LINE_CONSTRAINT"
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(*outOfLineConstraint))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
+		alterRequest := sdk.NewAlterTableRequest(id).
+			WithConstraintAction(sdk.NewTableConstraintActionRequest().WithDrop(sdk.NewTableConstraintDropActionRequest([]string{}).WithPrimaryKey(sdk.Bool(true))))
+		err = client.Tables.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+	})
+
+	t.Run("external table: add column", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		columns := []sdk.TableColumnRequest{
@@ -758,7 +777,12 @@ func TestInt_Table(t *testing.T) {
 		t.Cleanup(cleanupTableProvider(id))
 
 		alterRequest := sdk.NewAlterTableRequest(id).
-			WithExternalTableAction(sdk.NewTableExternalTableActionRequest().WithAdd(sdk.NewTableExternalTableColumnAddActionRequest().WithName("COLUMN_3").WithType(sdk.DataTypeNumber).WithExpression("1 + 1")))
+			WithExternalTableAction(sdk.NewTableExternalTableActionRequest().WithAdd(sdk.NewTableExternalTableColumnAddActionRequest().
+				WithName("COLUMN_3").
+				WithType(sdk.DataTypeNumber).
+				WithExpression("1 + 1").
+				WithComment(sdk.String("some comment")),
+			))
 
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
