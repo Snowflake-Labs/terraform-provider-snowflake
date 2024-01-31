@@ -9,7 +9,8 @@ type ExternalFunctions interface {
 	Create(ctx context.Context, request *CreateExternalFunctionRequest) error
 	Alter(ctx context.Context, request *AlterExternalFunctionRequest) error
 	Show(ctx context.Context, request *ShowExternalFunctionRequest) ([]ExternalFunction, error)
-	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalFunction, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier, arguments []DataType) (*ExternalFunction, error)
+	Describe(ctx context.Context, request *DescribeExternalFunctionRequest) ([]ExternalFunctionProperty, error)
 }
 
 // CreateExternalFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-external-function.
@@ -128,4 +129,22 @@ type ExternalFunction struct {
 	Language           string
 	IsMemoizable       bool
 	IsDataMetric       bool
+}
+
+// DescribeExternalFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.
+type DescribeExternalFunctionOptions struct {
+	describe          bool                   `ddl:"static" sql:"DESCRIBE"`
+	function          bool                   `ddl:"static" sql:"FUNCTION"`
+	name              SchemaObjectIdentifier `ddl:"identifier"`
+	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
+}
+
+type externalFunctionPropertyRow struct {
+	Property string `db:"property"`
+	Value    string `db:"value"`
+}
+
+type ExternalFunctionProperty struct {
+	Property string
+	Value    string
 }

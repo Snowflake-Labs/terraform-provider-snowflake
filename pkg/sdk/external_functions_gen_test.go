@@ -1,6 +1,8 @@
 package sdk
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestExternalFunctions_Create(t *testing.T) {
 	id := RandomSchemaObjectIdentifier()
@@ -36,7 +38,7 @@ func TestExternalFunctions_Create(t *testing.T) {
 		opts.RequestTranslator = &rt
 		st := NewSchemaObjectIdentifier("", "", "")
 		opts.ResponseTranslator = &st
-		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("CreateExternalFunctionOptions", "ApiIntegration"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateExternalFunctionOptions", "ApiIntegration"))
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("CreateExternalFunctionOptions", "RequestTranslator"))
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("CreateExternalFunctionOptions", "ResponseTranslator"))
 	})
@@ -113,12 +115,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: exactly one field should be present", func(t *testing.T) {
-		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalFunctionOptions", "Set", "Unset"))
-	})
-
-	t.Run("validation: exactly one field should be present", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Set opts.Unset] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ExternalFunctionSet{
 			MaxBatchRows: Int(100),
@@ -129,15 +126,35 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalFunctionOptions", "Set", "Unset"))
 	})
 
-	t.Run("alter: set", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Set.ApiIntegration opts.Set.Headers opts.Set.ContextHeaders opts.Set.MaxBatchRows opts.Set.Compression opts.Set.RequestTranslator opts.Set.ResponseTranslator] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalFunctionSet{
+			MaxBatchRows: Int(100),
+			Headers: []ExternalFunctionHeader{
+				{
+					Name:  "header1",
+					Value: "value1",
+				},
+				{
+					Name:  "header2",
+					Value: "value2",
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalFunctionOptions.Set", "ApiIntegration", "Headers", "ContextHeaders", "MaxBatchRows", "Compression", "RequestTranslator", "ResponseTranslator"))
+	})
+
+	t.Run("alter: set api integration", func(t *testing.T) {
 		opts := defaultOpts()
 		integration := NewAccountObjectIdentifier("api_integration")
 		opts.Set = &ExternalFunctionSet{
 			ApiIntegration: &integration,
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET API_INTEGRATION = "api_integration"`, id.FullyQualifiedName())
+	})
 
-		opts = defaultOpts()
+	t.Run("alter: set headers", func(t *testing.T) {
+		opts := defaultOpts()
 		opts.Set = &ExternalFunctionSet{
 			Headers: []ExternalFunctionHeader{
 				{
@@ -151,20 +168,26 @@ func TestExternalFunctions_Alter(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET HEADERS = ('header1' = 'value1', 'header2' = 'value2')`, id.FullyQualifiedName())
+	})
 
-		opts = defaultOpts()
+	t.Run("alter: set max batch rows", func(t *testing.T) {
+		opts := defaultOpts()
 		opts.Set = &ExternalFunctionSet{
 			MaxBatchRows: Int(100),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET MAX_BATCH_ROWS = 100`, id.FullyQualifiedName())
+	})
 
-		opts = defaultOpts()
+	t.Run("alter: set compression", func(t *testing.T) {
+		opts := defaultOpts()
 		opts.Set = &ExternalFunctionSet{
 			Compression: String("GZIP"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET COMPRESSION = GZIP`, id.FullyQualifiedName())
+	})
 
-		opts = defaultOpts()
+	t.Run("alter: set context headers", func(t *testing.T) {
+		opts := defaultOpts()
 		opts.Set = &ExternalFunctionSet{
 			ContextHeaders: []ExternalFunctionContextHeader{
 				{
@@ -176,15 +199,19 @@ func TestExternalFunctions_Alter(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET CONTEXT_HEADERS = (CURRENT_ACCOUNT, CURRENT_USER)`, id.FullyQualifiedName())
+	})
 
-		opts = defaultOpts()
+	t.Run("alter: set request translator", func(t *testing.T) {
+		opts := defaultOpts()
 		rt := RandomSchemaObjectIdentifier()
 		opts.Set = &ExternalFunctionSet{
 			RequestTranslator: &rt,
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET REQUEST_TRANSLATOR = %s`, id.FullyQualifiedName(), rt.FullyQualifiedName())
+	})
 
-		opts = defaultOpts()
+	t.Run("alter: set response translator", func(t *testing.T) {
+		opts := defaultOpts()
 		st := RandomSchemaObjectIdentifier()
 		opts.Set = &ExternalFunctionSet{
 			ResponseTranslator: &st,
@@ -246,5 +273,37 @@ func TestExternalFunctions_Show(t *testing.T) {
 			Pattern: String("pattern"),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW EXTERNAL FUNCTIONS LIKE 'pattern'`)
+	})
+}
+
+func TestExternalFunctions_Describe(t *testing.T) {
+	id := RandomSchemaObjectIdentifier()
+
+	defaultOpts := func() *DescribeExternalFunctionOptions {
+		return &DescribeExternalFunctionOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		opts := (*DescribeExternalFunctionOptions)(nil)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("no arguments", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s ()`, id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ArgumentDataTypes = []DataType{DataTypeVARCHAR, DataTypeNumber}
+		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE FUNCTION %s (VARCHAR, NUMBER)`, id.FullyQualifiedName())
 	})
 }

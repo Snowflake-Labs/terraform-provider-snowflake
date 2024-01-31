@@ -3,9 +3,10 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateExternalFunctionOptions] = new(CreateExternalFunctionRequest)
-	_ optionsProvider[AlterExternalFunctionOptions]  = new(AlterExternalFunctionRequest)
-	_ optionsProvider[ShowExternalFunctionOptions]   = new(ShowExternalFunctionRequest)
+	_ optionsProvider[CreateExternalFunctionOptions]   = new(CreateExternalFunctionRequest)
+	_ optionsProvider[AlterExternalFunctionOptions]    = new(AlterExternalFunctionRequest)
+	_ optionsProvider[ShowExternalFunctionOptions]     = new(ShowExternalFunctionRequest)
+	_ optionsProvider[DescribeExternalFunctionOptions] = new(DescribeExternalFunctionRequest)
 )
 
 type CreateExternalFunctionRequest struct {
@@ -39,7 +40,7 @@ type ExternalFunctionHeaderRequest struct {
 }
 
 type ExternalFunctionContextHeaderRequest struct {
-	ContextFunction string
+	ContextFunction string // required
 }
 
 type AlterExternalFunctionRequest struct {
@@ -73,4 +74,9 @@ type ExternalFunctionUnsetRequest struct {
 
 type ShowExternalFunctionRequest struct {
 	Like *Like
+}
+
+type DescribeExternalFunctionRequest struct {
+	name              SchemaObjectIdentifier // required
+	ArgumentDataTypes []DataType             // required
 }

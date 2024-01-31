@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
@@ -32,12 +33,37 @@ func (v *externalFunctions) Show(ctx context.Context, request *ShowExternalFunct
 	return resultList, nil
 }
 
-func (v *externalFunctions) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalFunction, error) {
+func (v *externalFunctions) ShowByID(ctx context.Context, id SchemaObjectIdentifier, arguments []DataType) (*ExternalFunction, error) {
 	externalFunctions, err := v.Show(ctx, NewShowExternalFunctionRequest().WithLike(&Like{Pattern: String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(externalFunctions, func(r ExternalFunction) bool { return r.Name == id.Name() })
+	return collections.FindOne(externalFunctions, func(r ExternalFunction) bool {
+		database := strings.Trim(r.CatalogName, `"`)
+		schema := strings.Trim(r.SchemaName, `"`)
+		if r.Name != id.Name() || database != id.DatabaseName() || schema != id.SchemaName() {
+			return false
+		}
+		var sb strings.Builder
+		sb.WriteString("(")
+		for i, argument := range arguments {
+			sb.WriteString(string(argument))
+			if i < len(arguments)-1 {
+				sb.WriteString(", ")
+			}
+		}
+		sb.WriteString(")")
+		return strings.Contains(r.Arguments, sb.String())
+	})
+}
+
+func (v *externalFunctions) Describe(ctx context.Context, request *DescribeExternalFunctionRequest) ([]ExternalFunctionProperty, error) {
+	opts := request.toOpts()
+	rows, err := validateAndQuery[externalFunctionPropertyRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return convertRows[externalFunctionPropertyRow, ExternalFunctionProperty](rows), nil
 }
 
 func (r *CreateExternalFunctionRequest) toOpts() *CreateExternalFunctionOptions {
@@ -163,4 +189,19 @@ func (r externalFunctionRow) convert() *ExternalFunction {
 		e.IsDataMetric = r.IsDataMetric.String == "Y"
 	}
 	return e
+}
+
+func (r *DescribeExternalFunctionRequest) toOpts() *DescribeExternalFunctionOptions {
+	opts := &DescribeExternalFunctionOptions{
+		name:              r.name,
+		ArgumentDataTypes: r.ArgumentDataTypes,
+	}
+	return opts
+}
+
+func (r externalFunctionPropertyRow) convert() *ExternalFunctionProperty {
+	return &ExternalFunctionProperty{
+		Property: r.Property,
+		Value:    r.Value,
+	}
 }

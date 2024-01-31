@@ -4,6 +4,7 @@ var (
 	_ validatable = new(CreateExternalFunctionOptions)
 	_ validatable = new(AlterExternalFunctionOptions)
 	_ validatable = new(ShowExternalFunctionOptions)
+	_ validatable = new(DescribeExternalFunctionOptions)
 )
 
 func (opts *CreateExternalFunctionOptions) validate() error {
@@ -16,9 +17,6 @@ func (opts *CreateExternalFunctionOptions) validate() error {
 	}
 	if !valueSet(opts.ApiIntegration) {
 		errs = append(errs, errNotSet("CreateExternalFunctionOptions", "ApiIntegration"))
-	}
-	if opts.ApiIntegration != nil && !ValidObjectIdentifier(opts.ApiIntegration) {
-		errs = append(errs, errInvalidIdentifier("CreateExternalFunctionOptions", "ApiIntegration"))
 	}
 	if opts.RequestTranslator != nil && !ValidObjectIdentifier(opts.RequestTranslator) {
 		errs = append(errs, errInvalidIdentifier("CreateExternalFunctionOptions", "RequestTranslator"))
@@ -56,5 +54,16 @@ func (opts *ShowExternalFunctionOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
+	return JoinErrors(errs...)
+}
+
+func (opts *DescribeExternalFunctionOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
 	return JoinErrors(errs...)
 }

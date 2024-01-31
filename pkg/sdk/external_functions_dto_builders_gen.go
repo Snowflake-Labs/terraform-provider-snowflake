@@ -103,13 +103,12 @@ func NewExternalFunctionHeaderRequest(
 	return &s
 }
 
-func NewExternalFunctionContextHeaderRequest() *ExternalFunctionContextHeaderRequest {
-	return &ExternalFunctionContextHeaderRequest{}
-}
-
-func (s *ExternalFunctionContextHeaderRequest) WithContextFunction(ContextFunction string) *ExternalFunctionContextHeaderRequest {
+func NewExternalFunctionContextHeaderRequest(
+	ContextFunction string,
+) *ExternalFunctionContextHeaderRequest {
+	s := ExternalFunctionContextHeaderRequest{}
 	s.ContextFunction = ContextFunction
-	return s
+	return &s
 }
 
 func NewAlterExternalFunctionRequest(
@@ -227,4 +226,14 @@ func NewShowExternalFunctionRequest() *ShowExternalFunctionRequest {
 func (s *ShowExternalFunctionRequest) WithLike(Like *Like) *ShowExternalFunctionRequest {
 	s.Like = Like
 	return s
+}
+
+func NewDescribeExternalFunctionRequest(
+	name SchemaObjectIdentifier,
+	ArgumentDataTypes []DataType,
+) *DescribeExternalFunctionRequest {
+	s := DescribeExternalFunctionRequest{}
+	s.name = name
+	s.ArgumentDataTypes = ArgumentDataTypes
+	return &s
 }
