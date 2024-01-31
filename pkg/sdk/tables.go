@@ -555,7 +555,6 @@ type Table struct {
 }
 
 // GetClusterByKeys converts the SHOW TABLES result for ClusterBy and converts it to list of keys.
-// TODO [SNOW-884959]: test
 func (v *Table) GetClusterByKeys() []string {
 	if v.ClusterBy == "" {
 		return nil

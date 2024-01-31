@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1547,5 +1548,31 @@ func TestTableDescribeStage(t *testing.T) {
 	t.Run("describe", func(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE TABLE %s TYPE = STAGE`, id.FullyQualifiedName())
+	})
+}
+
+func TestTable_GetClusterByKeys(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		table := Table{ClusterBy: ""}
+
+		assert.Nil(t, table.GetClusterByKeys())
+	})
+
+	t.Run("one param", func(t *testing.T) {
+		table := Table{ClusterBy: "LINEAR(abc)"}
+
+		assert.Equal(t, []string{"abc"}, table.GetClusterByKeys())
+	})
+
+	t.Run("more params", func(t *testing.T) {
+		table := Table{ClusterBy: "LINEAR(abc,def)"}
+
+		assert.Equal(t, []string{"abc", "def"}, table.GetClusterByKeys())
+	})
+
+	t.Run("white space", func(t *testing.T) {
+		table := Table{ClusterBy: "   LINEAR(  abc  , def )"}
+
+		assert.Equal(t, []string{"abc", "def"}, table.GetClusterByKeys())
 	})
 }
