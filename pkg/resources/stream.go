@@ -9,8 +9,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -131,14 +129,12 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 		tableId := tableObjectIdentifier.(sdk.SchemaObjectIdentifier)
 
-		tq := snowflake.NewTableBuilder(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()).Show()
-		tableRow := snowflake.QueryRow(db, tq)
-		t, err := snowflake.ScanTable(tableRow)
+		table, err := client.Tables.ShowByID(ctx, tableId)
 		if err != nil {
 			return err
 		}
 
-		if t.IsExternal.String == "Y" {
+		if table.IsExternal {
 			req := sdk.NewCreateStreamOnExternalTableRequest(id, tableId)
 			if insertOnly {
 				req.WithInsertOnly(sdk.Bool(true))
