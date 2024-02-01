@@ -61,7 +61,8 @@ Write `terraform import` command with the ID that the resource will be able to p
 You can find import syntax in the documentation for given resource, [here](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role)
 is the one for `snowflake_grant_privileges_to_account_role`. In our case, the command will look like this:
 ```shell 
-terraform import snowflake_grant_privileges_to_account_role.new_resource ""
+terraform import 'snowflake_grant_privileges_to_account_role.new_resource["role_a_name"]' 'role_a_name|USAGE|false|false|OnAccountObject|DATABASE|database_name'
+terraform import 'snowflake_grant_privileges_to_account_role.new_resource["role_b_name"]' 'role_b_name|USAGE|false|false|OnAccountObject|DATABASE|database_name'
 ```
 
 #### 3.2.1. Write import block
