@@ -165,7 +165,6 @@ func (r externalFunctionRow) convert() *ExternalFunction {
 	e := &ExternalFunction{
 		CreatedOn:          r.CreatedOn,
 		Name:               r.Name,
-		SchemaName:         r.SchemaName,
 		IsBuiltin:          r.IsBuiltin == "Y",
 		IsAggregate:        r.IsAggregate == "Y",
 		IsAnsi:             r.IsAnsi == "Y",
@@ -173,11 +172,16 @@ func (r externalFunctionRow) convert() *ExternalFunction {
 		MaxNumArguments:    r.MaxNumArguments,
 		Arguments:          r.Arguments,
 		Description:        r.Description,
-		CatalogName:        r.CatalogName,
 		IsTableFunction:    r.IsTableFunction == "Y",
 		ValidForClustering: r.ValidForClustering == "Y",
 		IsExternalFunction: r.IsExternalFunction == "Y",
 		Language:           r.Language,
+	}
+	if r.SchemaName.Valid {
+		e.SchemaName = r.SchemaName.String
+	}
+	if r.CatalogName.Valid {
+		e.CatalogName = r.CatalogName.String
 	}
 	if r.IsSecure.Valid {
 		e.IsSecure = r.IsSecure.String == "Y"

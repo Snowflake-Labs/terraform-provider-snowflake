@@ -254,6 +254,8 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, *e, *es)
 
+		e2 := createExternalFunction(t, sdk.DataTypeVARCHAR)
+
 		_, err = client.ExternalFunctions.ShowByID(ctx, id, nil)
 		require.Error(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})

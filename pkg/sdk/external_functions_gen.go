@@ -92,7 +92,7 @@ type ShowExternalFunctionOptions struct {
 type externalFunctionRow struct {
 	CreatedOn          string         `db:"created_on"`
 	Name               string         `db:"name"`
-	SchemaName         string         `db:"schema_name"`
+	SchemaName         sql.NullString `db:"schema_name"`
 	IsBuiltin          string         `db:"is_builtin"`
 	IsAggregate        string         `db:"is_aggregate"`
 	IsAnsi             string         `db:"is_ansi"`
@@ -100,7 +100,7 @@ type externalFunctionRow struct {
 	MaxNumArguments    int            `db:"max_num_arguments"`
 	Arguments          string         `db:"arguments"`
 	Description        string         `db:"description"`
-	CatalogName        string         `db:"catalog_name"`
+	CatalogName        sql.NullString `db:"catalog_name"`
 	IsTableFunction    string         `db:"is_table_function"`
 	ValidForClustering string         `db:"valid_for_clustering"`
 	IsSecure           sql.NullString `db:"is_secure"`

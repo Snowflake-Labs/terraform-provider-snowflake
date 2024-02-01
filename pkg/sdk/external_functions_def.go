@@ -110,7 +110,7 @@ var ExternalFunctionsDef = g.NewInterface(
 	g.DbStruct("externalFunctionRow").
 		Field("created_on", "string").
 		Field("name", "string").
-		Field("schema_name", "string").
+		Field("schema_name", "sql.NullString").
 		Field("is_builtin", "string").
 		Field("is_aggregate", "string").
 		Field("is_ansi", "string").
@@ -118,7 +118,7 @@ var ExternalFunctionsDef = g.NewInterface(
 		Field("max_num_arguments", "int").
 		Field("arguments", "string").
 		Field("description", "string").
-		Field("catalog_name", "string").
+		Field("schema_name", "sql.NullString").
 		Field("is_table_function", "string").
 		Field("valid_for_clustering", "string").
 		Field("is_secure", "sql.NullString").
