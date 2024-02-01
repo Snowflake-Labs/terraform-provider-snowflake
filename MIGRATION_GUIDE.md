@@ -4,6 +4,24 @@ This document is meant to help you migrate your Terraform config to new newest v
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behaviour
 across different versions.
 
+## vX.XX.X -> vX.XX.X (TODO)
+
+- Write a migration guide for the new resource as well as guidance on how to migrate from old grant resources and how to specify identifiers in the new ones. Why new resource (name conv + new internal identifier).
+
+### Migration from old grant resources to new ones
+
+In recent changes, we introduced new grant resources indented to replace old grant solutions. Here's some of the useful 
+information that may help during migration of the grant resources. 
+
+manual migration
+-generate-config-out
+automate with a Snowflake client + templating language
+
+TODO (mention import tool)
+
+
+
+
 ## v0.84.0 ➞ v0.85.0
 
 ### snowflake_notification_integration resource changes
