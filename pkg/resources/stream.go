@@ -173,9 +173,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		tq := snowflake.NewViewBuilder(viewId.Name()).WithDB(viewId.DatabaseName()).WithSchema(viewId.SchemaName()).Show()
-		viewRow := snowflake.QueryRow(db, tq)
-		_, err = snowflake.ScanView(viewRow)
+		_, err = client.Views.ShowByID(ctx, viewId)
 		if err != nil {
 			return err
 		}

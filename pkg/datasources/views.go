@@ -1,12 +1,12 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -58,34 +58,32 @@ func Views() *schema.Resource {
 
 func ReadViews(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentViews, err := snowflake.ListViews(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] views in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse views in schema (%s)", d.Id())
+	schemaId := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
+	extractedViews, err := client.Views.Show(ctx, sdk.NewShowViewRequest().WithIn(
+		&sdk.In{Schema: schemaId},
+	))
+	if err != nil {
+		log.Printf("[DEBUG] failed when searching views in schema (%s), err = %s", schemaId.FullyQualifiedName(), err.Error())
 		d.SetId("")
 		return nil
 	}
 
-	views := []map[string]interface{}{}
+	views := make([]map[string]any, len(extractedViews))
 
-	for _, view := range currentViews {
-		viewMap := map[string]interface{}{}
-
-		viewMap["name"] = view.Name.String
-		viewMap["database"] = view.DatabaseName.String
-		viewMap["schema"] = view.SchemaName.String
-		viewMap["comment"] = view.Comment.String
-
-		views = append(views, viewMap)
+	for i, view := range extractedViews {
+		views[i] = map[string]any{
+			"name":     view.Name,
+			"database": view.DatabaseName,
+			"schema":   view.SchemaName,
+			"comment":  view.Comment,
+		}
 	}
 
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
+	d.SetId(helpers.EncodeSnowflakeID(databaseName, schemaName))
 	return d.Set("views", views)
 }

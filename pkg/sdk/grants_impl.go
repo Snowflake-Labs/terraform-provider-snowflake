@@ -56,20 +56,20 @@ func (v *grants) RevokePrivilegesFromDatabaseRole(ctx context.Context, privilege
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *grants) GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error {
+func (v *grants) GrantPrivilegeToShare(ctx context.Context, privileges []ObjectPrivilege, on *ShareGrantOn, to AccountObjectIdentifier) error {
 	opts := &grantPrivilegeToShareOptions{
-		privilege: privilege,
-		On:        on,
-		to:        to,
+		privileges: privileges,
+		On:         on,
+		to:         to,
 	}
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *grants) RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, id AccountObjectIdentifier) error {
+func (v *grants) RevokePrivilegeFromShare(ctx context.Context, privileges []ObjectPrivilege, on *ShareGrantOn, id AccountObjectIdentifier) error {
 	opts := &revokePrivilegeFromShareOptions{
-		privilege: privilege,
-		On:        on,
-		from:      id,
+		privileges: privileges,
+		On:         on,
+		from:       id,
 	}
 	return validateAndExec(v.client, ctx, opts)
 }
