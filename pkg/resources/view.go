@@ -1,15 +1,14 @@
 package resources
 
 import (
-	"bytes"
+	"context"
 	"database/sql"
-	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -40,6 +39,7 @@ var viewSchema = map[string]*schema.Schema{
 		Default:     false,
 		Description: "Overwrites the View if it exists.",
 	},
+	// TODO [SNOW-867235]: this is used only during or_replace, we would like to change the behavior before v1
 	"copy_grants": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -89,107 +89,51 @@ func View() *schema.Resource {
 	}
 }
 
-type ViewID struct {
-	DatabaseName string
-	SchemaName   string
-	ViewName     string
-}
-
-const (
-	viewDelimiter = '|'
-)
-
-// String() takes in a viewID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|viewName.
-func (si *ViewID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = viewDelimiter
-	dataIdentifiers := [][]string{{si.DatabaseName, si.SchemaName, si.ViewName}}
-	err := csvWriter.WriteAll(dataIdentifiers)
-	if err != nil {
-		return "", err
-	}
-	strViewID := strings.TrimSpace(buf.String())
-	return strViewID, nil
-}
-
-// viewIDFromString() takes in a pipe-delimited string: DatabaseName|SchemaName|viewName
-// and returns a externalTableID object.
-func viewIDFromString(stringID string) (*ViewID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = viewDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	viewResult := &ViewID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		ViewName:     lines[0][2],
-	}
-	return viewResult, nil
-}
-
 // CreateView implements schema.CreateFunc.
 func CreateView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
+	databaseName := d.Get("database").(string)
+	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
-	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+
 	s := d.Get("statement").(string)
+	createRequest := sdk.NewCreateViewRequest(id, s)
 
-	builder := snowflake.NewViewBuilder(name).WithDB(database).WithSchema(schema).WithStatement(s)
-
-	// Set optionals
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
-		builder.WithReplace()
+		createRequest.WithOrReplace(sdk.Bool(true))
 	}
 
 	if v, ok := d.GetOk("is_secure"); ok && v.(bool) {
-		builder.WithSecure()
+		createRequest.WithSecure(sdk.Bool(true))
 	}
 
 	if v, ok := d.GetOk("copy_grants"); ok && v.(bool) {
-		builder.WithCopyGrants()
+		createRequest.WithCopyGrants(sdk.Bool(true))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		createRequest.WithComment(sdk.String(v.(string)))
 	}
 
-	if v, ok := d.GetOk("tag"); ok {
-		tags := getTags(v)
-		builder.WithTags(tags.toSnowflakeTagValues())
+	err := client.Views.Create(ctx, createRequest)
+	if err != nil {
+		return fmt.Errorf("error creating view %v err = %w", name, err)
 	}
 
-	q, err := builder.Create()
-	if err != nil {
-		return err
-	}
-	err = snowflake.Exec(db, q)
-	if err != nil {
-		return fmt.Errorf("error creating view %v", name)
+	// TODO [SNOW-867235]: we have to set tags after creation because existing view extractor is not aware of TAG during CREATE
+	// Will be discussed with parser topic during resources redesign.
+	if _, ok := d.GetOk("tag"); ok {
+		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(getPropertyTags(d, "tag")))
+		if err != nil {
+			return fmt.Errorf("error setting tags on view %v, err = %w", id, err)
+		}
 	}
 
-	viewID := &ViewID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		ViewName:     name,
-	}
-	dataIDInput, err := viewID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
+	d.SetId(helpers.EncodeSnowflakeID(id))
 
 	return ReadView(d, meta)
 }
@@ -197,135 +141,108 @@ func CreateView(d *schema.ResourceData, meta interface{}) error {
 // ReadView implements schema.ReadFunc.
 func ReadView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	viewID, err := viewIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-	dbName := viewID.DatabaseName
-	schema := viewID.SchemaName
-	view := viewID.ViewName
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	q := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema).Show()
-	row := snowflake.QueryRow(db, q)
-	v, err := snowflake.ScanView(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
+	view, err := client.Views.ShowByID(ctx, id)
+	if err != nil {
 		log.Printf("[DEBUG] view (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
+
+	if err = d.Set("name", view.Name); err != nil {
 		return err
 	}
-	if err = d.Set("name", v.Name.String); err != nil {
+	if err = d.Set("is_secure", view.IsSecure); err != nil {
 		return err
 	}
-	if err = d.Set("is_secure", v.IsSecure); err != nil {
+	if err = d.Set("copy_grants", view.HasCopyGrants()); err != nil {
 		return err
 	}
-	if err = d.Set("copy_grants", v.HasCopyGrants()); err != nil {
+	if err = d.Set("comment", view.Comment); err != nil {
 		return err
 	}
-	if err = d.Set("comment", v.Comment.String); err != nil {
+	if err = d.Set("schema", view.SchemaName); err != nil {
 		return err
 	}
-	if err = d.Set("schema", v.SchemaName.String); err != nil {
+	if err = d.Set("database", view.DatabaseName); err != nil {
 		return err
 	}
-	if err = d.Set("created_on", v.CreatedOn.String()); err != nil {
+	if err = d.Set("created_on", view.CreatedOn); err != nil {
 		return err
 	}
 
-	// Want to only capture the Select part of the query because before that is the Create part of the view which we no longer care about
-
-	extractor := snowflake.NewViewSelectStatementExtractor(v.Text.String)
+	// TODO [SNOW-867235]: what do we do with these extractors (added as discussion topic)?
+	// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
+	extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
 	substringOfQuery, err := extractor.Extract()
 	if err != nil {
 		return err
 	}
+
 	if err = d.Set("statement", substringOfQuery); err != nil {
 		return err
 	}
-	err = d.Set("database", v.DatabaseName.String)
-	return err
+
+	return nil
 }
 
 // UpdateView implements schema.UpdateFunc.
 func UpdateView(d *schema.ResourceData, meta interface{}) error {
-	viewID, err := viewIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-	dbName := viewID.DatabaseName
-	schema := viewID.SchemaName
-	view := viewID.ViewName
-	builder := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema)
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	// The only way to update the statement field in a view is to perform create or replace with the new statement.
 	// In case of any statement change, create or replace will be performed with all the old parameters, except statement
 	// and copy grants (which is always set to true to keep the permissions from the previous state).
 	if d.HasChange("statement") {
-		isSecureOld, _ := d.GetChange("is_secure")
-		commentOld, _ := d.GetChange("comment")
-		tagsOld, _ := d.GetChange("tag")
+		oldIsSecure, _ := d.GetChange("is_secure")
+		oldComment, _ := d.GetChange("comment")
+		oldTags, _ := d.GetChange("tag")
 
-		if isSecureOld.(bool) {
-			builder.WithSecure()
+		createRequest := sdk.NewCreateViewRequest(id, d.Get("statement").(string)).
+			WithOrReplace(sdk.Bool(true)).
+			WithCopyGrants(sdk.Bool(true)).
+			WithComment(sdk.String(oldComment.(string))).
+			WithTag(getTagsFromList(oldTags.([]any)))
+
+		if oldIsSecure.(bool) {
+			createRequest.WithSecure(sdk.Bool(true))
 		}
 
-		query, err := builder.
-			WithReplace().
-			WithStatement(d.Get("statement").(string)).
-			WithCopyGrants().
-			WithComment(commentOld.(string)).
-			WithTags(getTags(tagsOld).toSnowflakeTagValues()).
-			Create()
+		err := client.Views.Create(ctx, createRequest)
 		if err != nil {
-			return fmt.Errorf("error when building sql query on %v, err = %w", d.Id(), err)
-		}
-
-		if err := snowflake.Exec(db, query); err != nil {
 			return fmt.Errorf("error when changing property on %v and performing create or replace to update view statements, err = %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("name") {
-		name := d.Get("name")
-		q, err := builder.Rename(name.(string))
+		newName := d.Get("name").(string)
+
+		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), newName)
+
+		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithRenameTo(&newId))
 		if err != nil {
-			return err
+			return fmt.Errorf("error renaming view %v err = %w", d.Id(), err)
 		}
-		if err = snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error renaming view %v", d.Id())
-		}
-		viewID := &ViewID{
-			DatabaseName: dbName,
-			SchemaName:   schema,
-			ViewName:     name.(string),
-		}
-		dataIDInput, err := viewID.String()
-		if err != nil {
-			return err
-		}
-		d.SetId(dataIDInput)
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
 	}
 
 	if d.HasChange("comment") {
 		if comment := d.Get("comment").(string); comment == "" {
-			q, err := builder.RemoveComment()
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetComment(sdk.Bool(true)))
 			if err != nil {
-				return err
-			}
-			if err = snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error unsetting comment for view %v", d.Id())
 			}
 		} else {
-			q, err := builder.ChangeComment(comment)
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetComment(sdk.String(comment)))
 			if err != nil {
-				return err
-			}
-			if err = snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error updating comment for view %v", d.Id())
 			}
 		}
@@ -333,47 +250,32 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("is_secure") {
 		if d.Get("is_secure").(bool) {
-			q, err := builder.Secure()
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetSecure(sdk.Bool(true)))
 			if err != nil {
-				return err
-			}
-			if err = snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error setting secure for view %v", d.Id())
 			}
 		} else {
-			q, err := builder.Unsecure()
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetSecure(sdk.Bool(true)))
 			if err != nil {
-				return err
-			}
-			if err = snowflake.Exec(db, q); err != nil {
 				return fmt.Errorf("error unsetting secure for view %v", d.Id())
 			}
 		}
 	}
 
-	tagChangeErr := handleTagChanges(db, d, builder)
-	if tagChangeErr != nil {
-		return tagChangeErr
-	}
 	if d.HasChange("tag") {
-		o, n := d.GetChange("tag")
-		removed, added, changed := getTags(o).diffs(getTags(n))
-		for _, tA := range removed {
-			q := builder.UnsetTag(tA.toSnowflakeTagValue())
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error dropping tag on %v", d.Id())
+		unsetTags, setTags := GetTagsDiff(d, "tag")
+
+		if len(unsetTags) > 0 {
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetTags(unsetTags))
+			if err != nil {
+				return fmt.Errorf("error unsetting tags on %v, err = %w", d.Id(), err)
 			}
 		}
-		for _, tA := range added {
-			q := builder.AddTag(tA.toSnowflakeTagValue())
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error adding column on %v", d.Id())
-			}
-		}
-		for _, tA := range changed {
-			q := builder.ChangeTag(tA.toSnowflakeTagValue())
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error changing property on %v", d.Id())
+
+		if len(setTags) > 0 {
+			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(setTags))
+			if err != nil {
+				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
 			}
 		}
 	}
@@ -384,20 +286,13 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 // DeleteView implements schema.DeleteFunc.
 func DeleteView(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	viewID, err := viewIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-	dbName := viewID.DatabaseName
-	schema := viewID.SchemaName
-	view := viewID.ViewName
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	q, err := snowflake.NewViewBuilder(view).WithDB(dbName).WithSchema(schema).Drop()
+	err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
 	if err != nil {
 		return err
-	}
-	if err = snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting view %v err = %w", d.Id(), err)
 	}
 
 	d.SetId("")

@@ -126,14 +126,16 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.",
 		// There is no alter SQL for gcp_pubsub_subscription_name for automated data loads, therefore it has to be recreated.
-		ForceNew: true,
+		ForceNew:      true,
+		ConflictsWith: []string{"gcp_pubsub_topic_name"},
 	},
 	"gcp_pubsub_topic_name": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The topic id that Snowflake will use to push notifications.",
 		// There is no alter SQL for gcp_pubsub_topic_name, therefore it has to be recreated.
-		ForceNew: true,
+		ForceNew:      true,
+		ConflictsWith: []string{"gcp_pubsub_subscription_name"},
 	},
 	"gcp_pubsub_service_account": {
 		Type:        schema.TypeString,

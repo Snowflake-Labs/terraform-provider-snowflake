@@ -48,6 +48,7 @@ type Client struct {
 	DatabaseRoles            DatabaseRoles
 	Databases                Databases
 	DynamicTables            DynamicTables
+	ExternalFunctions        ExternalFunctions
 	ExternalTables           ExternalTables
 	EventTables              EventTables
 	FailoverGroups           FailoverGroups
@@ -199,6 +200,7 @@ func (c *Client) initialize() {
 	c.DatabaseRoles = &databaseRoles{client: c}
 	c.Databases = &databases{client: c}
 	c.DynamicTables = &dynamicTables{client: c}
+	c.ExternalFunctions = &externalFunctions{client: c}
 	c.ExternalTables = &externalTables{client: c}
 	c.EventTables = &eventTables{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}

@@ -13,8 +13,8 @@ type Grants interface {
 	RevokePrivilegesFromAccountRole(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, role AccountObjectIdentifier, opts *RevokePrivilegesFromAccountRoleOptions) error
 	GrantPrivilegesToDatabaseRole(ctx context.Context, privileges *DatabaseRoleGrantPrivileges, on *DatabaseRoleGrantOn, role DatabaseObjectIdentifier, opts *GrantPrivilegesToDatabaseRoleOptions) error
 	RevokePrivilegesFromDatabaseRole(ctx context.Context, privileges *DatabaseRoleGrantPrivileges, on *DatabaseRoleGrantOn, role DatabaseObjectIdentifier, opts *RevokePrivilegesFromDatabaseRoleOptions) error
-	GrantPrivilegeToShare(ctx context.Context, privilege ObjectPrivilege, on *GrantPrivilegeToShareOn, to AccountObjectIdentifier) error
-	RevokePrivilegeFromShare(ctx context.Context, privilege ObjectPrivilege, on *RevokePrivilegeFromShareOn, from AccountObjectIdentifier) error
+	GrantPrivilegeToShare(ctx context.Context, privileges []ObjectPrivilege, on *ShareGrantOn, to AccountObjectIdentifier) error
+	RevokePrivilegeFromShare(ctx context.Context, privileges []ObjectPrivilege, on *ShareGrantOn, from AccountObjectIdentifier) error
 	GrantOwnership(ctx context.Context, on OwnershipGrantOn, to OwnershipGrantTo, opts *GrantOwnershipOptions) error
 
 	Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, error)
@@ -120,17 +120,18 @@ type RevokePrivilegesFromDatabaseRoleOptions struct {
 
 // grantPrivilegeToShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege-share.
 type grantPrivilegeToShareOptions struct {
-	grant     bool                     `ddl:"static" sql:"GRANT"`
-	privilege ObjectPrivilege          `ddl:"keyword"`
-	On        *GrantPrivilegeToShareOn `ddl:"keyword" sql:"ON"`
-	to        AccountObjectIdentifier  `ddl:"identifier" sql:"TO SHARE"`
+	grant      bool                    `ddl:"static" sql:"GRANT"`
+	privileges []ObjectPrivilege       `ddl:"-"`
+	On         *ShareGrantOn           `ddl:"keyword" sql:"ON"`
+	to         AccountObjectIdentifier `ddl:"identifier" sql:"TO SHARE"`
 }
 
-type GrantPrivilegeToShareOn struct {
+type ShareGrantOn struct {
 	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
 	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
 	Function SchemaObjectIdentifier   `ddl:"identifier" sql:"FUNCTION"`
 	Table    *OnTable                 `ddl:"-"`
+	Tag      SchemaObjectIdentifier   `ddl:"identifier" sql:"TAG"`
 	View     SchemaObjectIdentifier   `ddl:"identifier" sql:"VIEW"`
 }
 
@@ -141,17 +142,10 @@ type OnTable struct {
 
 // revokePrivilegeFromShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/revoke-privilege-share.
 type revokePrivilegeFromShareOptions struct {
-	revoke    bool                        `ddl:"static" sql:"REVOKE"`
-	privilege ObjectPrivilege             `ddl:"keyword"`
-	On        *RevokePrivilegeFromShareOn `ddl:"keyword" sql:"ON"`
-	from      AccountObjectIdentifier     `ddl:"identifier" sql:"FROM SHARE"`
-}
-
-type RevokePrivilegeFromShareOn struct {
-	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
-	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
-	Table    *OnTable                 `ddl:"-"`
-	View     *OnView                  `ddl:"-"`
+	revoke     bool                    `ddl:"static" sql:"REVOKE"`
+	privileges []ObjectPrivilege       `ddl:"-"`
+	On         *ShareGrantOn           `ddl:"keyword" sql:"ON"`
+	from       AccountObjectIdentifier `ddl:"identifier" sql:"FROM SHARE"`
 }
 
 type OnView struct {
