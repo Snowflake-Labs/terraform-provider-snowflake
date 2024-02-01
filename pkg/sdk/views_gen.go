@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 type Views interface {
@@ -176,6 +177,10 @@ type View struct {
 
 func (v *View) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
+func (v *View) HasCopyGrants() bool {
+	return strings.Contains(v.Text, " COPY GRANTS ")
 }
 
 // DescribeViewOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-view.

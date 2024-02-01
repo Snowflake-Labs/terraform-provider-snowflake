@@ -123,6 +123,17 @@ func TestInt_Views(t *testing.T) {
 		assertView(t, view, request.GetName())
 	})
 
+	// source https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2085
+	t.Run("create view: no table reference", func(t *testing.T) {
+		name := random.String()
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		request := sdk.NewCreateViewRequest(id, "SELECT NULL AS TYPE")
+
+		view := createViewWithRequest(t, request)
+
+		assertView(t, view, request.GetName())
+	})
+
 	t.Run("create view: almost complete case", func(t *testing.T) {
 		rowAccessPolicyId, rowAccessPolicyCleanup := createRowAccessPolicy(t, client, testSchema(t))
 		t.Cleanup(rowAccessPolicyCleanup)
