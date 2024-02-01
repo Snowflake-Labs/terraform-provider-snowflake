@@ -471,7 +471,8 @@ func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
 		}
 
 		if td.PolicyName != nil {
-			flat["masking_policy"] = *td.PolicyName
+			// TODO [SNOW-867240]: SHOW TABLE returns last part of id without double quotes... we have to quote it again. Move it to SDK.
+			flat["masking_policy"] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*td.PolicyName).FullyQualifiedName()
 		}
 
 		def := toColumnDefaultConfig(td)
@@ -839,7 +840,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				if strings.TrimSpace(cA.newColumn.maskingPolicy) == "" {
 					columnAction.WithUnsetMaskingPolicy(sdk.NewTableColumnAlterUnsetMaskingPolicyActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)))
 				} else {
-					columnAction.WithSetMaskingPolicy(sdk.NewTableColumnAlterSetMaskingPolicyActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(cA.newColumn.maskingPolicy), []string{}))
+					columnAction.WithSetMaskingPolicy(sdk.NewTableColumnAlterSetMaskingPolicyActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(cA.newColumn.maskingPolicy), []string{}).WithForce(sdk.Bool(true)))
 				}
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(columnAction))
 				if err != nil {

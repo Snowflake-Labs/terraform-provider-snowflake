@@ -1286,6 +1286,82 @@ resource "snowflake_table" "test_table" {
 	return fmt.Sprintf(s, tableName, databaseName, schemaName)
 }
 
+func TestAcc_Table_MaskingPolicy(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, fmt.Sprintf("%s1", accName)).FullyQualifiedName()),
+				),
+			},
+			// this step proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2186
+			{
+				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, fmt.Sprintf("%s2", accName)).FullyQualifiedName()),
+				),
+			},
+		},
+	})
+}
+
+func tableWithMaskingPolicy(name string, databaseName string, schemaName string, policy string) string {
+	s := `
+resource "snowflake_masking_policy" "policy1" {
+	name 	 		   = "%[1]s1"
+	database 	       = "%[2]s"
+	schema   		   = "%[3]s"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
+	}
+	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+	return_data_type   = "VARCHAR(16777216)"
+}
+
+resource "snowflake_masking_policy" "policy2" {
+	name 	 		   = "%[1]s2"
+	database 	       = "%[2]s"
+	schema   		   = "%[3]s"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
+	}
+	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+	return_data_type   = "VARCHAR(16777216)"
+}
+
+resource "snowflake_table" "test_table" {
+	name     = "%[1]s"
+	database = "%[2]s"
+	schema   = "%[3]s"
+	comment  = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(16)"
+		masking_policy = snowflake_masking_policy.%[4]s.qualified_name
+	}
+}
+`
+	return fmt.Sprintf(s, name, databaseName, schemaName, policy)
+}
+
 func testAccCheckTableDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
 	client := sdk.NewClientFromDB(db)
