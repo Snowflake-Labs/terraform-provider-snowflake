@@ -1,9 +1,11 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"strings"
 
@@ -60,10 +62,12 @@ func UserPublicKeys() *schema.Resource {
 }
 
 func checkUserExists(db *sql.DB, name string) (bool, error) {
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	// First check if user exists
-	stmt := snowflake.NewUserBuilder(name).Describe()
-	_, err := snowflake.Query(db, stmt)
-	if errors.Is(err, sql.ErrNoRows) {
+	_, err := client.Users.Describe(ctx, sdk.NewAccountObjectIdentifier(name))
+	if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 		log.Printf("[DEBUG] user (%s) not found", name)
 		return false, nil
 	}

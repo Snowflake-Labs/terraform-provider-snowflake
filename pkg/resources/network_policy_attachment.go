@@ -1,9 +1,11 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"log"
 	"strings"
 
@@ -275,9 +277,12 @@ func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error
 // ensureUserAlterPrivileges ensures the executing Snowflake user can alter each user in the set of users.
 func ensureUserAlterPrivileges(users []string, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	for _, user := range users {
-		userDescSQL := snowflake.NewUserBuilder(user).Describe()
-		if err := snowflake.Exec(db, userDescSQL); err != nil {
+		_, err := client.Users.Describe(ctx, sdk.NewAccountObjectIdentifier(user))
+		if err != nil {
 			return fmt.Errorf("error altering network policy of user %v", user)
 		}
 	}
