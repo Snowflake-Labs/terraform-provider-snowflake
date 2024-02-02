@@ -132,7 +132,7 @@ type ColumnInlineConstraintRequest struct {
 }
 
 type OutOfLineConstraintRequest struct {
-	Name       string               // required
+	Name       *string
 	Type       ColumnConstraintType // required
 	Columns    []string
 	ForeignKey *OutOfLineForeignKeyRequest
@@ -370,11 +370,12 @@ type TableColumnAddActionRequest struct {
 	MaskingPolicy    *ColumnMaskingPolicyRequest
 	With             *bool
 	Tags             []TagAssociation
+	Comment          *string
 }
 
 type TableColumnAddInlineConstraintRequest struct {
 	NotNull    *bool
-	Name       string
+	Name       *string
 	Type       ColumnConstraintType
 	ForeignKey *ColumnAddForeignKey
 }
@@ -390,8 +391,7 @@ type TableColumnRenameActionRequest struct {
 }
 
 type TableColumnAlterActionRequest struct {
-	Column bool   // required
-	Name   string // required
+	Name string // required
 
 	// One of
 	DropDefault       *bool
@@ -447,8 +447,8 @@ type TableConstraintAlterActionRequest struct {
 	Unique         *bool
 	ForeignKey     *bool
 
-	Columns []string // required
 	// Optional
+	Columns     []string
 	Enforced    *bool
 	NotEnforced *bool
 	Validate    *bool
@@ -464,9 +464,8 @@ type TableConstraintDropActionRequest struct {
 	Unique         *bool
 	ForeignKey     *bool
 
-	Columns []string // required
-
 	// Optional
+	Columns  []string
 	Cascade  *bool
 	Restrict *bool
 }
@@ -500,6 +499,7 @@ type TableExternalTableColumnAddActionRequest struct {
 	Name        string
 	Type        DataType
 	Expression  string
+	Comment     *string
 }
 
 type TableExternalTableColumnRenameActionRequest struct {

@@ -206,13 +206,13 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 	unsetRequest := sdk.NewMaterializedViewUnsetRequest()
 
 	if d.HasChange("comment") {
-		comment := d.Get("comment")
-		if c := comment.(string); c == "" {
+		comment := d.Get("comment").(string)
+		if comment == "" {
 			runUnsetStatement = true
 			unsetRequest.WithComment(sdk.Bool(true))
 		} else {
 			runSetStatement = true
-			setRequest.WithComment(sdk.String(d.Get("comment").(string)))
+			setRequest.WithComment(sdk.String(comment))
 		}
 	}
 	if d.HasChange("is_secure") {
