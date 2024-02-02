@@ -34,11 +34,6 @@ func (b *RoleBuilder) WithComment(comment string) *RoleBuilder {
 	return b
 }
 
-func (b *RoleBuilder) WithTags(tags []TagValue) *RoleBuilder {
-	b.tags = tags
-	return b
-}
-
 func (b *RoleBuilder) Create() error {
 	q := strings.Builder{}
 	q.WriteString(fmt.Sprintf(`CREATE ROLE "%v"`, b.name))
@@ -79,12 +74,6 @@ func (b *RoleBuilder) UnsetTag(tag TagValue) error {
 
 func (b *RoleBuilder) SetTag(tag TagValue) error {
 	q := fmt.Sprintf(`ALTER ROLE %s SET TAG  "%v"."%v"."%v" = "%v"`, b.name, tag.Database, tag.Schema, tag.Name, tag.Value)
-	_, err := b.db.Exec(q)
-	return err
-}
-
-func (b *RoleBuilder) ChangeTag(tag TagValue) error {
-	q := fmt.Sprintf(`ALTER ROLE "%s" SET TAG "%v"."%v"."%v" = "%v"`, b.name, tag.Database, tag.Schema, tag.Name, tag.Value)
 	_, err := b.db.Exec(q)
 	return err
 }
