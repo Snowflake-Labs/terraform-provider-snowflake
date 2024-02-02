@@ -4,17 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"strings"
 
-	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// TODO [SNOW-867235]: refine this resource during redesign:
+// - read (from the existing comment it seems that active warehouse is needed (it should be probably added to the resource as required)
+// - drop (in tests it's not dropped correctly, probably also because missing warehouse)
+// - do we need it?
 var tableConstraintSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -204,6 +206,18 @@ func (v *tableConstraintID) parse(s string) {
 	v.tableID = parts[2]
 }
 
+func getTableIdentifier(s string) (*sdk.SchemaObjectIdentifier, error) {
+	objectIdentifier, err := helpers.DecodeSnowflakeParameterID(s)
+	if err != nil {
+		return nil, fmt.Errorf("table id is incorrect: %s, err: %s", objectIdentifier, err)
+	}
+	tableIdentifier, ok := objectIdentifier.(sdk.SchemaObjectIdentifier)
+	if !ok {
+		return nil, fmt.Errorf("table id is incorrect: %s", objectIdentifier)
+	}
+	return &tableIdentifier, nil
+}
+
 // CreateTableConstraint implements schema.CreateFunc.
 func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
@@ -214,27 +228,23 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	cType := d.Get("type").(string)
 	tableID := d.Get("table_id").(string)
 
-	objectIdentifier, err := helpers.DecodeSnowflakeParameterID(tableID)
+	tableIdentifier, err := getTableIdentifier(tableID)
 	if err != nil {
-		return fmt.Errorf("table id is incorrect: %s, err: %s", objectIdentifier, err)
-	}
-	tableIdentifier, ok := objectIdentifier.(sdk.SchemaObjectIdentifier)
-	if !ok {
-		return fmt.Errorf("table id is incorrect: %s", objectIdentifier)
+		return err
 	}
 
 	constraintType, err := sdk.ToColumnConstraintType(cType)
 	if err != nil {
 		return err
 	}
-	constraintRequest := sdk.NewOutOfLineConstraintRequest(constraintType)
+	constraintRequest := sdk.NewOutOfLineConstraintRequest(constraintType).WithName(&name)
 
 	cc := d.Get("columns").([]interface{})
 	columns := make([]string, 0, len(cc))
 	for _, c := range cc {
 		columns = append(columns, c.(string))
 	}
-	constraintRequest.WithColumns(columns)
+	constraintRequest.WithColumns(snowflake.QuoteStringList(columns))
 
 	if v, ok := d.GetOk("enforced"); ok {
 		constraintRequest.WithEnforced(sdk.Bool(v.(bool)))
@@ -271,11 +281,11 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		fkTableID := references["table_id"].(string)
 		fkId, err := helpers.DecodeSnowflakeParameterID(fkTableID)
 		if err != nil {
-			return fmt.Errorf("table id is incorrect: %s, err: %s", objectIdentifier, err)
+			return fmt.Errorf("table id is incorrect: %s, err: %s", fkTableID, err)
 		}
 		referencedTableIdentifier, ok := fkId.(sdk.SchemaObjectIdentifier)
 		if !ok {
-			return fmt.Errorf("table id is incorrect: %s", objectIdentifier)
+			return fmt.Errorf("table id is incorrect: %s", fkId)
 		}
 
 		cols := references["columns"].([]interface{})
@@ -283,7 +293,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		for _, c := range cols {
 			fkColumns = append(fkColumns, c.(string))
 		}
-		foreignKeyRequest := sdk.NewOutOfLineForeignKeyRequest(referencedTableIdentifier, fkColumns)
+		foreignKeyRequest := sdk.NewOutOfLineForeignKeyRequest(referencedTableIdentifier, snowflake.QuoteStringList(fkColumns))
 
 		matchType, err := sdk.ToMatchType(foreignKeyProperties["match"].(string))
 		if err != nil {
@@ -306,7 +316,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		constraintRequest.WithForeignKey(foreignKeyRequest)
 	}
 
-	alterStatement := sdk.NewAlterTableRequest(tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithAdd(constraintRequest))
+	alterStatement := sdk.NewAlterTableRequest(*tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithAdd(constraintRequest))
 	err = client.Tables.Alter(ctx, alterStatement)
 	if err != nil {
 		return fmt.Errorf("error creating table constraint %v err = %w", name, err)
@@ -345,26 +355,24 @@ func ReadTableConstraint(_ *schema.ResourceData, _ interface{}) error {
 // UpdateTableConstraint implements schema.UpdateFunc.
 func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	tc := tableConstraintID{}
 	tc.parse(d.Id())
-	formattedTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(tc.tableID)
 
-	builder := snowflake.NewTableConstraintBuilder(tc.name, tc.constraintType, formattedTableID)
-
-	/* "unsupported feature comment error message"
-	if d.HasChange("comment") {
-		_, new := d.GetChange("comment")
-		_, err := db.Exec(builder.SetComment(new.(string)))
-		if err != nil {
-			return fmt.Errorf("error setting comment for table constraint %v", tc.name)
-		}
-	}*/
+	tableIdentifier, err := getTableIdentifier(tc.tableID)
+	if err != nil {
+		return err
+	}
 
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
-		_, err := db.Exec(builder.Rename(n.(string)))
+		constraintRequest := sdk.NewTableConstraintRenameActionRequest().WithOldName(tc.name).WithNewName(n.(string))
+		alterStatement := sdk.NewAlterTableRequest(*tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithRename(constraintRequest))
+		err = client.Tables.Alter(ctx, alterStatement)
 		if err != nil {
-			return fmt.Errorf("error renaming table constraint %v err = %w", tc.name, err)
+			return fmt.Errorf("error renaming table constraint %v err = %w", &tc.name, err)
 		}
 	}
 
@@ -374,28 +382,30 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 // DeleteTableConstraint implements schema.DeleteFunc.
 func DeleteTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	tc := tableConstraintID{}
 	tc.parse(d.Id())
-	formattedTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(tc.tableID)
-	builder := snowflake.NewTableConstraintBuilder(tc.name, tc.constraintType, formattedTableID)
-	cc := d.Get("columns").([]interface{})
-	columns := make([]string, 0, len(cc))
-	for _, c := range cc {
-		columns = append(columns, c.(string))
-	}
-	builder.WithColumns(columns)
 
-	stmt := builder.Drop()
-	_, err := db.Exec(stmt)
+	tableIdentifier, err := getTableIdentifier(tc.tableID)
+	if err != nil {
+		return err
+	}
+
+	dropRequest := sdk.NewTableConstraintDropActionRequest().WithConstraintName(&tc.name)
+	alterStatement := sdk.NewAlterTableRequest(*tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithDrop(dropRequest))
+	err = client.Tables.Alter(ctx, alterStatement)
 	if err != nil {
 		// if the table constraint does not exist, then remove from state file
 		if strings.Contains(err.Error(), "does not exist") {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error deleting table constraint %v err = %w", tc.name, err)
+		return fmt.Errorf("error dropping table constraint %v err = %w", tc.name, err)
 	}
 
 	d.SetId("")
+
 	return nil
 }
