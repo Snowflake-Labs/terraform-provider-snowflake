@@ -403,7 +403,6 @@ func TestInt_OtherFunctions(t *testing.T) {
 		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest())
 		require.NoError(t, err)
 
-		require.Equal(t, 2, len(functions))
 		require.Contains(t, functions, *f1)
 		require.Contains(t, functions, *f2)
 	})

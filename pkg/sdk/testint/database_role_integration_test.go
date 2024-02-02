@@ -262,7 +262,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		share, shareCleanup := createShare(t, client)
 		t.Cleanup(shareCleanup)
 
-		err := client.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{Database: testDb(t).ID()}, share.ID())
+		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{Database: testDb(t).ID()}, share.ID())
 		require.NoError(t, err)
 
 		grantRequest := sdk.NewGrantDatabaseRoleToShareRequest(roleId, share.ID())

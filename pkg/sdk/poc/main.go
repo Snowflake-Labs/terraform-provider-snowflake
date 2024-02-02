@@ -36,6 +36,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"materialized_views_def.go":        sdk.MaterializedViewsDef,
 	"api_integrations_def.go":          sdk.ApiIntegrationsDef,
 	"notification_integrations_def.go": sdk.NotificationIntegrationsDef,
+	"external_functions_def.go":        sdk.ExternalFunctionsDef,
 	"streamlits_def.go":                sdk.StreamlitsDef,
 }
 
