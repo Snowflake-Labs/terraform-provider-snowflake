@@ -678,7 +678,6 @@ resource "snowflake_table" "test_table" {
 		nullable = false
 	}
 	primary_key {
-		name = ""
 		keys = ["column2"]
 	}
 }

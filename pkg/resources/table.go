@@ -475,16 +475,15 @@ func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
 			flat["masking_policy"] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*td.PolicyName).FullyQualifiedName()
 		}
 
-		def := toColumnDefaultConfig(td)
-		if def != nil {
-			flat["default"] = []any{def}
-		}
-
 		identity := toColumnIdentityConfig(td)
 		if identity != nil {
 			flat["identity"] = []any{identity}
+		} else {
+			def := toColumnDefaultConfig(td)
+			if def != nil {
+				flat["default"] = []any{def}
+			}
 		}
-
 		flattened = append(flattened, flat)
 	}
 	return flattened
@@ -515,14 +514,6 @@ func toColumnDefaultConfig(td sdk.TableColumnDetails) map[string]any {
 		return def
 	}
 
-	if toColumnIdentityConfig(td) != nil {
-		/*
-			Identity/autoincrement information is stored in the same column as default information. We want to handle the identity separate so will return nil
-			here if identity information is present. Default/identity are mutually exclusive
-		*/
-		return nil
-	}
-
 	def["constant"] = defaultRaw
 	return def
 }
@@ -539,11 +530,14 @@ func toColumnIdentityConfig(td sdk.TableColumnDetails) map[string]any {
 		identity := map[string]any{}
 
 		split := strings.Split(defaultRaw, " ")
-		start, _ := strconv.Atoi(split[2])
-		step, _ := strconv.Atoi(split[4])
-
-		identity["start_num"] = start
-		identity["step_num"] = step
+		start, err := strconv.Atoi(split[2])
+		if err == nil {
+			identity["start_num"] = start
+		}
+		step, err := strconv.Atoi(split[4])
+		if err == nil {
+			identity["step_num"] = step
+		}
 
 		return identity
 	}
@@ -576,12 +570,12 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("primary_key"); ok {
 		keysList := v.([]any)
 		if len(keysList) > 0 {
-			keyName := keysList[0].(map[string]any)["name"].(string)
 			keys := expandStringList(keysList[0].(map[string]any)["keys"].([]interface{}))
-
 			constraintRequest := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(keys))
-			if keyName != "" {
-				constraintRequest.WithName(sdk.String(keyName))
+
+			keyName, isPresent := keysList[0].(map[string]any)["name"]
+			if isPresent && keyName != "" {
+				constraintRequest.WithName(sdk.String(keyName.(string)))
 			}
 		}
 	}
