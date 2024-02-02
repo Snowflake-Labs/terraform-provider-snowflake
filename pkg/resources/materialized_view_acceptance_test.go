@@ -249,6 +249,10 @@ resource "snowflake_materialized_view" "test" {
 		database = snowflake_tag.%[7]s.database
 		value = "some_value"
 	}
+
+	depends_on = [
+		snowflake_table.test
+	]
 }
 `, tableName, databaseName, schemaName, viewName, warehouseName, q, tag, tag1Name, tag2Name)
 }
