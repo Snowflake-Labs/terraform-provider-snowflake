@@ -3,7 +3,6 @@ package datasources
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -37,7 +36,7 @@ func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.SetId(fmt.Sprintf(role))
+	d.SetId(role)
 	err = d.Set("name", role)
 	if err != nil {
 		return err

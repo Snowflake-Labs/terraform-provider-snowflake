@@ -123,7 +123,6 @@ func ReadUsers(d *schema.ResourceData, meta interface{}) error {
 	extractedUsers, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
 		Like: &sdk.Like{Pattern: sdk.String(userPattern)},
 	})
-
 	if err != nil {
 		log.Printf("[DEBUG] no users found in account (%s)", d.Id())
 		d.SetId("")
