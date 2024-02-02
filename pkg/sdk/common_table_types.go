@@ -80,6 +80,8 @@ const (
 	ColumnConstraintTypeForeignKey ColumnConstraintType = "FOREIGN KEY"
 )
 
+var AllColumnConstraintTypes = []ColumnConstraintType{ColumnConstraintTypeUnique, ColumnConstraintTypePrimaryKey, ColumnConstraintTypeForeignKey}
+
 func ToColumnConstraintType(s string) (ColumnConstraintType, error) {
 	cType := strings.ToUpper(s)
 
@@ -118,6 +120,8 @@ var (
 	PartialMatchType MatchType = "PARTIAL"
 )
 
+var AllMatchTypes = []MatchType{FullMatchType, SimpleMatchType, PartialMatchType}
+
 func ToMatchType(s string) (MatchType, error) {
 	cType := strings.ToUpper(s)
 
@@ -148,6 +152,8 @@ const (
 	ForeignKeyNoAction         ForeignKeyAction = "NO ACTION"
 )
 
+var AllForeignKeyActions = []ForeignKeyAction{ForeignKeyCascadeAction, ForeignKeySetNullAction, ForeignKeySetDefaultAction, ForeignKeyRestrictAction, ForeignKeyNoAction}
+
 func ToForeignKeyAction(s string) (ForeignKeyAction, error) {
 	cType := strings.ToUpper(s)
 
@@ -165,4 +171,12 @@ func ToForeignKeyAction(s string) (ForeignKeyAction, error) {
 	}
 
 	return "", fmt.Errorf("invalid column constraint type: %s", s)
+}
+
+func AsStringList[T ~string](input []T) []string {
+	output := make([]string, len(input))
+	for i, element := range input {
+		output[i] = string(element)
+	}
+	return output
 }

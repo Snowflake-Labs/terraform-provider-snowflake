@@ -26,7 +26,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 		Required:     true,
 		Description:  "Type of constraint, one of 'UNIQUE', 'PRIMARY KEY', or 'FOREIGN KEY'",
 		ForceNew:     true,
-		ValidateFunc: validation.StringInSlice([]string{"UNIQUE", "PRIMARY KEY", "FOREIGN KEY"}, false),
+		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllColumnConstraintTypes), false),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			return strings.EqualFold(old, new)
 		},
@@ -137,7 +137,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 					Optional:     true,
 					ForceNew:     true,
 					Default:      "FULL",
-					ValidateFunc: validation.StringInSlice([]string{"FULL", "PARTIAL", "SIMPLE"}, true),
+					ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllMatchTypes), true),
 					Description:  "The match type for the foreign key. Not applicable for primary/unique keys",
 				},
 				"on_update": {
@@ -145,7 +145,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 					Optional:     true,
 					ForceNew:     true,
 					Default:      "NO ACTION",
-					ValidateFunc: validation.StringInSlice([]string{"NO ACTION", "CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT"}, true),
+					ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllForeignKeyActions), true),
 					Description:  "Specifies the action performed when the primary/unique key for the foreign key is updated. Not applicable for primary/unique keys",
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return strings.EqualFold(old, new)
@@ -159,7 +159,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 					Optional:     true,
 					ForceNew:     true,
 					Default:      "NO ACTION",
-					ValidateFunc: validation.StringInSlice([]string{"NO ACTION", "CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT"}, true),
+					ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllForeignKeyActions), true),
 					Description:  "Specifies the action performed when the primary/unique key for the foreign key is deleted. Not applicable for primary/unique keys",
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return strings.EqualFold(old, new)
