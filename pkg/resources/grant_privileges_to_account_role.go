@@ -656,7 +656,7 @@ func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "An error occurred when revoking privileges from account role",
-				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", d.Id(), id.RoleName, err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", d.Id(), id.RoleName.FullyQualifiedName(), err.Error()),
 			},
 		}
 	}

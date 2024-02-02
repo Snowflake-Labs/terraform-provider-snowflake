@@ -114,8 +114,14 @@ func (r *AlterApiIntegrationRequest) toOpts() *AlterApiIntegrationOptions {
 		}
 		if r.Set.AzureParams != nil {
 			opts.Set.AzureParams = &SetAzureApiParams{
+				AzureTenantId:        r.Set.AzureParams.AzureTenantId,
 				AzureAdApplicationId: r.Set.AzureParams.AzureAdApplicationId,
 				ApiKey:               r.Set.AzureParams.ApiKey,
+			}
+		}
+		if r.Set.GoogleParams != nil {
+			opts.Set.GoogleParams = &SetGoogleApiParams{
+				GoogleAudience: r.Set.GoogleParams.GoogleAudience,
 			}
 		}
 	}

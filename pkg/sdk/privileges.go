@@ -243,9 +243,10 @@ func (p SchemaObjectPrivilege) String() string {
 type ObjectPrivilege string
 
 const (
+	ObjectPrivilegeReferenceUsage ObjectPrivilege = "REFERENCE_USAGE"
 	ObjectPrivilegeUsage          ObjectPrivilege = "USAGE"
 	ObjectPrivilegeSelect         ObjectPrivilege = "SELECT"
-	ObjectPrivilegeReferenceUsage ObjectPrivilege = "REFERENCE_USAGE"
+	ObjectPrivilegeRead           ObjectPrivilege = "READ"
 )
 
 func (p ObjectPrivilege) String() string {

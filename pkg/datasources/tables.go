@@ -1,12 +1,12 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
-	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -58,38 +58,38 @@ func Tables() *schema.Resource {
 
 func ReadTables(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentTables, err := snowflake.ListTables(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] tables in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse tables in schema (%s)", d.Id())
+	schemaId := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
+	extractedTables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithIn(
+		&sdk.In{Schema: schemaId},
+	))
+	if err != nil {
+		log.Printf("[DEBUG] failed when searching tables in schema (%s), err = %s", schemaId.FullyQualifiedName(), err.Error())
 		d.SetId("")
 		return nil
 	}
 
-	tables := []map[string]interface{}{}
+	tables := make([]map[string]any, 0)
 
-	for _, table := range currentTables {
-		tableMap := map[string]interface{}{}
-
-		if table.IsExternal.String == "Y" {
+	for _, extractedTable := range extractedTables {
+		if extractedTable.IsExternal {
 			continue
 		}
 
-		tableMap["name"] = table.TableName.String
-		tableMap["database"] = table.DatabaseName.String
-		tableMap["schema"] = table.SchemaName.String
-		tableMap["comment"] = table.Comment.String
+		table := map[string]any{
+			"name":     extractedTable.Name,
+			"database": extractedTable.DatabaseName,
+			"schema":   extractedTable.SchemaName,
+			"comment":  extractedTable.Comment,
+		}
 
-		tables = append(tables, tableMap)
+		tables = append(tables, table)
 	}
 
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
+	d.SetId(helpers.EncodeSnowflakeID(databaseName, schemaName))
 	return d.Set("tables", tables)
 }
