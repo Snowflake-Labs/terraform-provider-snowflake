@@ -1,6 +1,10 @@
 package sdk
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 type TableRowAccessPolicy struct {
 	rowAccessPolicy bool                   `ddl:"static" sql:"ROW ACCESS POLICY"`
@@ -76,6 +80,21 @@ const (
 	ColumnConstraintTypeForeignKey ColumnConstraintType = "FOREIGN KEY"
 )
 
+func ToColumnConstraintType(s string) (ColumnConstraintType, error) {
+	cType := strings.ToUpper(s)
+
+	switch cType {
+	case string(ColumnConstraintTypeUnique):
+		return ColumnConstraintTypeUnique, nil
+	case string(ColumnConstraintTypePrimaryKey):
+		return ColumnConstraintTypePrimaryKey, nil
+	case string(ColumnConstraintTypeForeignKey):
+		return ColumnConstraintTypeForeignKey, nil
+	}
+
+	return "", fmt.Errorf("invalid column constraint type: %s", s)
+}
+
 type InlineForeignKey struct {
 	TableName  string              `ddl:"keyword" sql:"REFERENCES"`
 	ColumnName []string            `ddl:"keyword,parentheses"`
@@ -99,6 +118,21 @@ var (
 	PartialMatchType MatchType = "PARTIAL"
 )
 
+func ToMatchType(s string) (MatchType, error) {
+	cType := strings.ToUpper(s)
+
+	switch cType {
+	case string(FullMatchType):
+		return FullMatchType, nil
+	case string(SimpleMatchType):
+		return SimpleMatchType, nil
+	case string(PartialMatchType):
+		return PartialMatchType, nil
+	}
+
+	return "", fmt.Errorf("invalid match type: %s", s)
+}
+
 type ForeignKeyOnAction struct {
 	OnUpdate *ForeignKeyAction `ddl:"parameter,no_equals" sql:"ON UPDATE"`
 	OnDelete *ForeignKeyAction `ddl:"parameter,no_equals" sql:"ON DELETE"`
@@ -113,3 +147,22 @@ const (
 	ForeignKeyRestrictAction   ForeignKeyAction = "RESTRICT"
 	ForeignKeyNoAction         ForeignKeyAction = "NO ACTION"
 )
+
+func ToForeignKeyAction(s string) (ForeignKeyAction, error) {
+	cType := strings.ToUpper(s)
+
+	switch cType {
+	case string(ForeignKeyCascadeAction):
+		return ForeignKeyCascadeAction, nil
+	case string(ForeignKeySetNullAction):
+		return ForeignKeySetNullAction, nil
+	case string(ForeignKeySetDefaultAction):
+		return ForeignKeySetDefaultAction, nil
+	case string(ForeignKeyRestrictAction):
+		return ForeignKeyRestrictAction, nil
+	case string(ForeignKeyNoAction):
+		return ForeignKeyNoAction, nil
+	}
+
+	return "", fmt.Errorf("invalid column constraint type: %s", s)
+}

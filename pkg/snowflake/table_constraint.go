@@ -4,10 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
-	"strings"
-
 	"github.com/jmoiron/sqlx"
+	"log"
 )
 
 // TableConstraintBuilder abstracts the creation of SQL queries for a Snowflake table constraint.
@@ -130,59 +128,6 @@ func (b *TableConstraintBuilder) formattedColumns() []string {
 		formattedColumns[i] = fmt.Sprintf(`"%v"`, EscapeString(c))
 	}
 	return formattedColumns
-}
-
-// Create returns the SQL query that will create a new table constraint.
-func (b *TableConstraintBuilder) Create() string {
-	q := strings.Builder{}
-	q.WriteString(fmt.Sprintf(`ALTER TABLE %v ADD CONSTRAINT %v %v`, b.tableID, b.name, b.constraintType))
-	if b.columns != nil {
-		q.WriteString(fmt.Sprintf(` (%v)`, strings.Join(b.formattedColumns(), ", ")))
-	}
-
-	if b.constraintType == "FOREIGN KEY" {
-		q.WriteString(fmt.Sprintf(` REFERENCES %v (%v)`, b.referenceTableID, strings.Join(b.formattedReferenceColumns(), ", ")))
-
-		if b.match != "" {
-			q.WriteString(fmt.Sprintf(` MATCH %v`, b.match))
-		}
-		if b.update != "" {
-			q.WriteString(fmt.Sprintf(` ON UPDATE %v`, b.update))
-		}
-		if b.delete != "" {
-			q.WriteString(fmt.Sprintf(` ON DELETE %v`, b.delete))
-		}
-	}
-
-	if b.enforced {
-		q.WriteString(` ENFORCED`)
-	}
-
-	if !b.deferrable {
-		q.WriteString(` NOT DEFERRABLE`)
-	}
-
-	if b.initially != "DEFERRED" {
-		q.WriteString(fmt.Sprintf(` INITIALLY %v`, b.initially))
-	}
-
-	if !b.enable {
-		q.WriteString(` DISABLE`)
-	}
-
-	if b.validate {
-		q.WriteString(` VALIDATE`)
-	}
-
-	if !b.rely {
-		q.WriteString(` NORELY`)
-	}
-
-	if b.comment != "" {
-		q.WriteString(fmt.Sprintf(` COMMENT '%v'`, EscapeString(b.comment)))
-	}
-
-	return q.String()
 }
 
 // Rename returns the SQL query that will rename the table constraint.

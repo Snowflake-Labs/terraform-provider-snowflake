@@ -29,15 +29,6 @@ func ListToSnowflakeString(list []string) string {
 	return fmt.Sprintf("%v", strings.Join(list, ", "))
 }
 
-// IPListToString formats a list of IPs into a Snowflake-DDL friendly string, e.g. ('192.168.1.0', '192.168.1.100').
-func IPListToSnowflakeString(ips []string) string {
-	for index, element := range ips {
-		ips[index] = fmt.Sprintf(`'%v'`, element)
-	}
-
-	return fmt.Sprintf("(%v)", strings.Join(ips, ", "))
-}
-
 // ListContentToString strips list elements of double quotes or brackets.
 func ListContentToString(listString string) string {
 	re := regexp.MustCompile(`[\"\[\]]`)

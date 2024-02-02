@@ -1,13 +1,16 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"log"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -21,9 +24,9 @@ var tableConstraintSchema = map[string]*schema.Schema{
 	"type": {
 		Type:         schema.TypeString,
 		Required:     true,
-		Description:  "Type of constraint, one of 'UNIQUE', 'PRIMARY KEY', 'FOREIGN KEY', or 'NOT NULL'",
+		Description:  "Type of constraint, one of 'UNIQUE', 'PRIMARY KEY', or 'FOREIGN KEY'",
 		ForceNew:     true,
-		ValidateFunc: validation.StringInSlice([]string{"UNIQUE", "PRIMARY KEY", "FOREIGN KEY", "NOT NULL"}, false),
+		ValidateFunc: validation.StringInSlice([]string{"UNIQUE", "PRIMARY KEY", "FOREIGN KEY"}, false),
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			return strings.EqualFold(old, new)
 		},
@@ -35,7 +38,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Idenfifier for table to create constraint on. Must be of the form Note: format must follow: \"<db_name>\".\"<schema_name>\".\"<table_name>\" or \"<db_name>.<schema_name>.<table_name>\" or \"<db_name>|<schema_name>.<table_name>\" (snowflake_table.my_table.id)",
+		Description: "Identifier for table to create constraint on. Format must follow: \"\"<db_name>\".\"<schema_name>\".\"<table_name>\"\" or \"<db_name>.<schema_name>.<table_name>\" (snowflake_table.my_table.id)",
 	},
 	"columns": {
 		Type:     schema.TypeList,
@@ -93,8 +96,8 @@ var tableConstraintSchema = map[string]*schema.Schema{
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		ForceNew:    true,
 		Description: "Comment for the table constraint",
+		Deprecated:  "Not used. Will be removed.",
 	},
 	"foreign_key_properties": {
 		Type:        schema.TypeList,
@@ -204,79 +207,114 @@ func (v *tableConstraintID) parse(s string) {
 // CreateTableConstraint implements schema.CreateFunc.
 func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	name := d.Get("name").(string)
-	constraintType := d.Get("type").(string)
+	cType := d.Get("type").(string)
 	tableID := d.Get("table_id").(string)
 
-	formattedTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(tableID)
-	builder := snowflake.NewTableConstraintBuilder(name, constraintType, formattedTableID)
+	objectIdentifier, err := helpers.DecodeSnowflakeParameterID(tableID)
+	if err != nil {
+		return fmt.Errorf("table id is incorrect: %s, err: %s", objectIdentifier, err)
+	}
+	tableIdentifier, ok := objectIdentifier.(sdk.SchemaObjectIdentifier)
+	if !ok {
+		return fmt.Errorf("table id is incorrect: %s", objectIdentifier)
+	}
+
+	constraintType, err := sdk.ToColumnConstraintType(cType)
+	if err != nil {
+		return err
+	}
+	constraintRequest := sdk.NewOutOfLineConstraintRequest(constraintType)
 
 	cc := d.Get("columns").([]interface{})
 	columns := make([]string, 0, len(cc))
 	for _, c := range cc {
 		columns = append(columns, c.(string))
 	}
-	builder.WithColumns(columns)
+	constraintRequest.WithColumns(columns)
 
-	// set optionals
 	if v, ok := d.GetOk("enforced"); ok {
-		builder.WithEnforced(v.(bool))
+		constraintRequest.WithEnforced(sdk.Bool(v.(bool)))
 	}
 
 	if v, ok := d.GetOk("deferrable"); ok {
-		builder.WithDeferrable(v.(bool))
+		constraintRequest.WithDeferrable(sdk.Bool(v.(bool)))
 	}
 
 	if v, ok := d.GetOk("initially"); ok {
-		builder.WithInitially(v.(string))
+		if v.(string) == "DEFERRED" {
+			constraintRequest.WithInitiallyDeferred(sdk.Bool(true))
+		} else {
+			constraintRequest.WithInitiallyImmediate(sdk.Bool(true))
+		}
 	}
 
 	if v, ok := d.GetOk("enable"); ok {
-		builder.WithEnable(v.(bool))
+		constraintRequest.WithEnable(sdk.Bool(v.(bool)))
 	}
 
 	if v, ok := d.GetOk("validate"); ok {
-		builder.WithValidate(v.(bool))
+		constraintRequest.WithValidate(sdk.Bool(v.(bool)))
 	}
 
 	if v, ok := d.GetOk("rely"); ok {
-		builder.WithRely(v.(bool))
-	}
-
-	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		constraintRequest.WithRely(sdk.Bool(v.(bool)))
 	}
 
 	// set foreign key specific settings
 	if v, ok := d.GetOk("foreign_key_properties"); ok {
 		foreignKeyProperties := v.([]interface{})[0].(map[string]interface{})
-		builder.WithMatch(foreignKeyProperties["match"].(string))
-		builder.WithUpdate(foreignKeyProperties["on_update"].(string))
-		builder.WithDelete(foreignKeyProperties["on_delete"].(string))
 		references := foreignKeyProperties["references"].([]interface{})[0].(map[string]interface{})
 		fkTableID := references["table_id"].(string)
-		formattedFkTableID := snowflakeValidation.ParseAndFormatFullyQualifiedObectID(fkTableID)
-		builder.WithReferenceTableID(formattedFkTableID)
-		log.Printf("reference table id : %s", formattedFkTableID)
+		fkId, err := helpers.DecodeSnowflakeParameterID(fkTableID)
+		if err != nil {
+			return fmt.Errorf("table id is incorrect: %s, err: %s", objectIdentifier, err)
+		}
+		referencedTableIdentifier, ok := fkId.(sdk.SchemaObjectIdentifier)
+		if !ok {
+			return fmt.Errorf("table id is incorrect: %s", objectIdentifier)
+		}
+
 		cols := references["columns"].([]interface{})
 		var fkColumns []string
 		for _, c := range cols {
 			fkColumns = append(fkColumns, c.(string))
 		}
-		builder.WithReferenceColumns(fkColumns)
+		foreignKeyRequest := sdk.NewOutOfLineForeignKeyRequest(referencedTableIdentifier, fkColumns)
+
+		matchType, err := sdk.ToMatchType(foreignKeyProperties["match"].(string))
+		if err != nil {
+			return err
+		}
+		foreignKeyRequest.WithMatch(&matchType)
+
+		onUpdate, err := sdk.ToForeignKeyAction(foreignKeyProperties["on_update"].(string))
+		if err != nil {
+			return err
+		}
+		onDelete, err := sdk.ToForeignKeyAction(foreignKeyProperties["on_delete"].(string))
+		if err != nil {
+			return err
+		}
+		foreignKeyRequest.WithOn(sdk.NewForeignKeyOnAction().
+			WithOnDelete(&onDelete).
+			WithOnUpdate(&onUpdate),
+		)
+		constraintRequest.WithForeignKey(foreignKeyRequest)
 	}
 
-	stmt := builder.Create()
-	log.Printf("[DEBUG] create table constraint statement: %v\n", stmt)
-	result, err := db.Exec(stmt)
+	alterStatement := sdk.NewAlterTableRequest(tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithAdd(constraintRequest))
+	err = client.Tables.Alter(ctx, alterStatement)
 	if err != nil {
 		return fmt.Errorf("error creating table constraint %v err = %w", name, err)
 	}
-	log.Printf("[DEBUG] result: %v\n", result)
 
 	tc := tableConstraintID{
 		name,
-		constraintType,
+		cType,
 		tableID,
 	}
 	d.SetId(tc.String())
