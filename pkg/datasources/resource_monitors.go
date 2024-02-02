@@ -1,12 +1,12 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -49,8 +49,10 @@ func ResourceMonitors() *schema.Resource {
 
 func ReadResourceMonitors(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	account, err := snowflake.ReadCurrentAccount(db)
+	account, err := client.ContextFunctions.Current(ctx)
 	if err != nil {
 		log.Print("[DEBUG] unable to retrieve current account")
 		d.SetId("")
@@ -59,29 +61,22 @@ func ReadResourceMonitors(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(fmt.Sprintf("%s.%s", account.Account, account.Region))
 
-	currentResourceMonitors, err := snowflake.ListResourceMonitors(db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] no resource monitors found in account (%s)", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
+	extractedResourceMonitors, err := client.ResourceMonitors.Show(ctx, &sdk.ShowResourceMonitorOptions{})
+	if err != nil {
 		log.Printf("[DEBUG] unable to parse resource monitors in account (%s)", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	resourceMonitors := []map[string]interface{}{}
+	resourceMonitors := make([]map[string]any, len(extractedResourceMonitors))
 
-	for _, resourceMonitor := range currentResourceMonitors {
-		resourceMonitorMap := map[string]interface{}{}
-
-		resourceMonitorMap["name"] = resourceMonitor.Name.String
-		resourceMonitorMap["frequency"] = resourceMonitor.Frequency.String
-		resourceMonitorMap["credit_quota"] = resourceMonitor.CreditQuota.String
-		resourceMonitorMap["comment"] = resourceMonitor.Comment.String
-
-		resourceMonitors = append(resourceMonitors, resourceMonitorMap)
+	for i, resourceMonitor := range extractedResourceMonitors {
+		resourceMonitors[i] = map[string]any{
+			"name":         resourceMonitor.Name,
+			"frequency":    resourceMonitor.Frequency,
+			"credit_quota": fmt.Sprintf("%f", resourceMonitor.CreditQuota),
+			"comment":      resourceMonitor.Comment,
+		}
 	}
 
 	return d.Set("resource_monitors", resourceMonitors)
