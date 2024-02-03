@@ -40,7 +40,7 @@ var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 
 func UserPasswordPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "Specifies the password policy to use for the current account. To set the password policy of a different account, use a provider alias.",
+		Description: "Specifies the password policy to use for a certain user.",
 
 		Create: CreateUserPasswordPolicyAttachment,
 		Read:   ReadUserPasswordPolicyAttachment,
