@@ -61,8 +61,8 @@ func testAccCheckUserPasswordPolicyAttachmentDestroy(s *terraform.State) error {
 		}
 		userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"])
 		policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
-			RefEntityName:   sdk.String(userName.FullyQualifiedName()),
-			RefEntityDomain: sdk.String("user"),
+			RefEntityName:   userName.FullyQualifiedName(),
+			RefEntityDomain: "user",
 		})
 		if err != nil {
 			if strings.Contains(err.Error(), "does not exist or not authorized") {

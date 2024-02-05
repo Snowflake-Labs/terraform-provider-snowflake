@@ -108,8 +108,8 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
 	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
 		// Note: I cannot insert both single and double quotes in the SDK, so for now I need to do this
-		RefEntityName:   sdk.String(userName.FullyQualifiedName()),
-		RefEntityDomain: sdk.String("user"),
+		RefEntityName:   userName.FullyQualifiedName(),
+		RefEntityDomain: "user",
 	})
 	if err != nil {
 		return err

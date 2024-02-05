@@ -28,8 +28,8 @@ func (request *GetForEntityPolicyReferenceRequest) toOpts() *getForEntityPolicyR
 			policyReferenceFunction: &policyReferenceFunction{
 				functionFullyQualifiedName: Bool(true),
 				arguments: &policyReferenceFunctionArguments{
-					refEntityName:   request.RefEntityName,
-					refEntityDomain: request.RefEntityDomain,
+					refEntityName:   String(request.RefEntityName),
+					refEntityDomain: String(request.RefEntityDomain),
 				},
 			},
 		},
