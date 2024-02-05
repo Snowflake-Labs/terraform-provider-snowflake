@@ -13,7 +13,7 @@ var regionMapping = map[string]string{
 	"aws_us_west_2":          "", // left black as this is the default
 	"aws_us_east_2":          "us-east-2.aws",
 	"aws_us_east_1":          "us-east-1",
-	"aws_us_east_1_gov":      "us-east-1-gov.aws",
+	"aws_us_gov_east_1":      "us-east-1-gov.aws",
 	"aws_ca_central_1":       "ca-central-1.aws",
 	"aws_sa_east_1":          "sa-east-1.aws",
 	"aws_eu_west_1":          "eu-west-1",
@@ -48,13 +48,16 @@ var regionMapping = map[string]string{
 	"azure_australiaeast":    "australia-east.azure",
 }
 
+// SelectCurrentAccount returns the query that will return the current account, region_group, and region
+// the CURRENT_REGION() function returns the format region_group.region (e.g. PUBLIC.AWS_US_WEST_2) only when organizations have accounts in multiple region groups. Otherwise, this function returns the snowflake region without the region_group.
 func SelectCurrentAccount() string {
-	return `SELECT CURRENT_ACCOUNT() AS "account", CURRENT_REGION() AS "region";`
+	return `SELECT current_account AS "account", CASE WHEN CONTAINS(current_region, '.') THEN LEFT(current_region, POSITION('.' IN current_region) - 1) ELSE 'PUBLIC' END AS "region_group", CASE WHEN CONTAINS(current_region, '.') THEN RIGHT(current_region, LENGTH(current_region) - POSITION('.' IN current_region)) ELSE current_region END AS "region" FROM (SELECT CURRENT_ACCOUNT() AS current_account, CURRENT_REGION() AS current_region);`
 }
 
 type CurrentAccount struct {
-	Account string `db:"account"`
-	Region  string `db:"region"`
+	Account     string `db:"account"`
+	RegionGroup string `db:"region_group"`
+	Region      string `db:"region"`
 }
 
 func ScanCurrentAccount(row *sqlx.Row) (*CurrentAccount, error) {
