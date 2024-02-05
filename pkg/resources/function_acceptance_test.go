@@ -31,39 +31,39 @@ func TestAcc_Function(t *testing.T) {
 			{
 				Config: functionConfig(functName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "name", functName),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "comment", "Terraform acceptance test"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "statement", expBody2),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "arguments.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "arguments.0.name", "ARG1"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "arguments.0.type", "VARCHAR"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function", "name", functName),
+					resource.TestCheckResourceAttr("snowflake_function.test_function", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function", "statement", expBody2),
+					resource.TestCheckResourceAttr("snowflake_function.test_function", "arguments.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function", "arguments.0.name", "ARG1"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function", "arguments.0.type", "VARCHAR"),
 
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_simple", "name", functName),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_simple", "comment", "user-defined function"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_simple", "statement", expBody1),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_simple", "name", functName),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_simple", "comment", "user-defined function"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_simple", "statement", expBody1),
 
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "name", functName),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "comment", "Table func with 2 args"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "statement", expBody3),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "arguments.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "arguments.1.name", "ARG2"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "arguments.1.type", "DATE"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_complex", "name", functName),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_complex", "comment", "Table func with 2 args"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_complex", "statement", expBody3),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_complex", "arguments.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_complex", "arguments.1.name", "ARG2"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_complex", "arguments.1.type", "DATE"),
 
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "name", functName),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "comment", "Terraform acceptance test for java"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "statement", expBody4),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.name", "ARG1"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.type", "NUMBER"),
-					checkBool("snowflake_function.test_funct_java", "is_secure", false), // this is from user_acceptance_test.go
+					resource.TestCheckResourceAttr("snowflake_function.test_function_java", "name", functName),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_java", "comment", "Terraform acceptance test for java"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_java", "statement", expBody4),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_java", "arguments.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_java", "arguments.0.name", "ARG1"),
+					resource.TestCheckResourceAttr("snowflake_function.test_function_java", "arguments.0.type", "NUMBER"),
+					checkBool("snowflake_function.test_function_java", "is_secure", false), // this is from user_acceptance_test.go
 
 					// TODO: temporarily remove unit tests to allow for urgent release
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "name", functName),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "comment", "Terraform acceptance test for python"),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "statement", expBody5),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.#", "2"),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.name", "ARG1"),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.type", "NUMBER"),
+					// resource.TestCheckResourceAttr("snowflake_function.test_function_python", "name", functName),
+					// resource.TestCheckResourceAttr("snowflake_function.test_function_python", "comment", "Terraform acceptance test for python"),
+					// resource.TestCheckResourceAttr("snowflake_function.test_function_python", "statement", expBody5),
+					// resource.TestCheckResourceAttr("snowflake_function.test_function_python", "arguments.#", "2"),
+					// resource.TestCheckResourceAttr("snowflake_function.test_function_python", "arguments.0.name", "ARG1"),
+					// resource.TestCheckResourceAttr("snowflake_function.test_function_python", "arguments.0.type", "NUMBER"),
 				),
 			},
 		},
@@ -72,7 +72,7 @@ func TestAcc_Function(t *testing.T) {
 
 func functionConfig(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
-	resource "snowflake_function" "test_funct_simple" {
+	resource "snowflake_function" "test_function_simple" {
 		name = "%s"
 		database = "%s"
 		schema   = "%s"
@@ -80,7 +80,7 @@ func functionConfig(name string, databaseName string, schemaName string) string 
 		statement = "3.141592654::FLOAT"
 	}
 
-	resource "snowflake_function" "test_funct" {
+	resource "snowflake_function" "test_function" {
 		name = "%s"
 		database = "%s"
 		schema   = "%s"
@@ -94,7 +94,7 @@ func functionConfig(name string, databaseName string, schemaName string) string 
 		statement = "var X=3\nreturn X"
 	}
 
-	resource "snowflake_function" "test_funct_java" {
+	resource "snowflake_function" "test_function_java" {
 		name = "%s"
 		database = "%s"
 		schema   = "%s"
@@ -109,7 +109,7 @@ func functionConfig(name string, databaseName string, schemaName string) string 
 		statement = "class CoolFunc {public static String test(int n) {return \"hello!\";}}"
 	}
 
-	resource "snowflake_function" "test_funct_complex" {
+	resource "snowflake_function" "test_function_complex" {
 		name = "%s"
 		database = "%s"
 		schema   = "%s"
