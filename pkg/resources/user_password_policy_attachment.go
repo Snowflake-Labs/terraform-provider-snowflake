@@ -95,18 +95,6 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	if err := d.Set("password_policy_database", passwordPolicyDatabase.Name()); err != nil {
-		return err
-	}
-	if err := d.Set("password_policy_schema", passwordPolicySchema.Name()); err != nil {
-		return err
-	}
-	if err := d.Set("password_policy_name", passwordPolicyName.Name()); err != nil {
-		return err
-	}
-	if err := d.Set("user_name", helpers.EncodeSnowflakeID(userName)); err != nil {
-		return err
-	}
 	d.SetId(fmt.Sprintf(`%s|%s`, helpers.EncodeSnowflakeID(passwordPolicy), helpers.EncodeSnowflakeID(userName)))
 
 	return ReadUserPasswordPolicyAttachment(d, meta)
@@ -143,6 +131,9 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 	if err := d.Set("password_policy_name", sdk.NewAccountIdentifierFromFullyQualifiedName(policyReferences[0].PolicyName).Name()); err != nil {
+		return err
+	}
+	if err := d.Set("user_name", helpers.EncodeSnowflakeID(userName)); err != nil {
 		return err
 	}
 	return err
