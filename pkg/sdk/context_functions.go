@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// TODO [SNOW-]: add generic select
+// TODO [SNOW-1042951]: add generic select
 type ContextFunctions interface {
 	// Session functions.
 	CurrentAccount(ctx context.Context) (string, error)
