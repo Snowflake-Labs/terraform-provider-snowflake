@@ -3,13 +3,11 @@ package resources
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -78,8 +76,9 @@ func CreateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 // ReadNetworkPolicyAttachment implements schema.ReadFunc.
 func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 	policyName := strings.Replace(d.Id(), "_attachment", "", 1)
-	builder := snowflake.NetworkPolicy(policyName)
 
 	var currentUsers []string
 	if err := d.Set("network_policy_name", policyName); err != nil {
@@ -89,14 +88,13 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 	if u, ok := d.GetOk("users"); ok {
 		users := expandStringList(u.(*schema.Set).List())
 		for _, user := range users {
-			row := snowflake.QueryRow(db, builder.ShowOnUser(user))
-			attachment, err := snowflake.ScanNetworkPolicyAttachment(row)
-			if errors.Is(err, sql.ErrNoRows) {
+			parameter, err := client.Parameters.ShowUserParameter(ctx, sdk.UserParameterNetworkPolicy, sdk.NewAccountObjectIdentifier(user))
+			if err != nil {
 				log.Printf("[DEBUG] network policy (%s) not found on user (%s)", d.Id(), user)
 				continue
 			}
 
-			if attachment.Level.String == "USER" && attachment.Key.String == "NETWORK_POLICY" && attachment.Value.String == policyName {
+			if parameter.Level == "USER" && parameter.Key == "NETWORK_POLICY" && parameter.Value == policyName {
 				currentUsers = append(currentUsers, user)
 			}
 		}
@@ -107,14 +105,14 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 	}
 
 	isSetOnAccount := false
-	row := snowflake.QueryRow(db, builder.ShowOnAccount())
-	attachment, err := snowflake.ScanNetworkPolicyAttachment(row)
-	if errors.Is(err, sql.ErrNoRows) {
+
+	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterNetworkPolicy)
+	if err != nil {
 		log.Printf("[DEBUG] network policy (%s) not found on account", d.Id())
 		isSetOnAccount = false
 	}
 
-	if err == nil && attachment.Level.String == "ACCOUNT" && attachment.Key.String == "NETWORK_POLICY" && attachment.Value.String == policyName {
+	if err == nil && parameter.Level == "ACCOUNT" && parameter.Key == "NETWORK_POLICY" && parameter.Value == policyName {
 		isSetOnAccount = true
 	}
 
@@ -201,11 +199,12 @@ func DeleteNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 // Note: the ip address of the session executing this SQL must be allowed by the network policy being set.
 func setOnAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 	policyName := d.Get("network_policy_name").(string)
 
-	acctSQL := snowflake.NetworkPolicy(policyName).SetOnAccount()
-
-	if err := snowflake.Exec(db, acctSQL); err != nil {
+	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{Set: &sdk.AccountSet{Parameters: &sdk.AccountLevelParameters{ObjectParameters: &sdk.ObjectParameters{NetworkPolicy: sdk.String(policyName)}}}})
+	if err != nil {
 		return fmt.Errorf("error setting network policy %v on account err = %w", policyName, err)
 	}
 
@@ -215,11 +214,12 @@ func setOnAccount(d *schema.ResourceData, meta interface{}) error {
 // setOnAccount unsets the network policy globally for the Snowflake account.
 func unsetOnAccount(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 	policyName := d.Get("network_policy_name").(string)
 
-	acctSQL := snowflake.NetworkPolicy(policyName).UnsetOnAccount()
-
-	if err := snowflake.Exec(db, acctSQL); err != nil {
+	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{Unset: &sdk.AccountUnset{Parameters: &sdk.AccountLevelParametersUnset{ObjectParameters: &sdk.ObjectParametersUnset{NetworkPolicy: sdk.Bool(true)}}}})
+	if err != nil {
 		return fmt.Errorf("error unsetting network policy %v on account err = %w", policyName, err)
 	}
 
@@ -241,9 +241,12 @@ func setOnUsers(users []string, data *schema.ResourceData, meta interface{}) err
 // setOnUser sets the network policy for a given user.
 func setOnUser(user string, data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 	policyName := data.Get("network_policy_name").(string)
-	userSQL := snowflake.NetworkPolicy(policyName).SetOnUser(user)
-	if err := snowflake.Exec(db, userSQL); err != nil {
+
+	err := client.Users.Alter(ctx, sdk.NewAccountObjectIdentifier(user), &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectParameters: &sdk.UserObjectParameters{NetworkPolicy: sdk.String(policyName)}}})
+	if err != nil {
 		return fmt.Errorf("error setting network policy %v on user %v err = %w", policyName, user, err)
 	}
 
@@ -265,9 +268,12 @@ func unsetOnUsers(users []string, data *schema.ResourceData, meta interface{}) e
 // unsetOnUser sets the network policy for a given user.
 func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
 	policyName := data.Get("network_policy_name").(string)
-	userSQL := snowflake.NetworkPolicy(policyName).UnsetOnUser(user)
-	if err := snowflake.Exec(db, userSQL); err != nil {
+
+	err := client.Users.Alter(ctx, sdk.NewAccountObjectIdentifier(user), &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectParameters: &sdk.UserObjectParametersUnset{NetworkPolicy: sdk.Bool(true)}}})
+	if err != nil {
 		return fmt.Errorf("error unsetting network policy %v on user %v", policyName, user)
 	}
 

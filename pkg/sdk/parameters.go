@@ -474,6 +474,7 @@ const (
 	UserParameterJsonIndent                            UserParameter = "JSON_INDENT"
 	UserParameterLockTimeout                           UserParameter = "LOCK_TIMEOUT"
 	UserParameterMultiStatementCount                   UserParameter = "MULTI_STATEMENT_COUNT"
+	UserParameterNetworkPolicy                         UserParameter = "NETWORK_POLICY"
 	UserParameterQueryTag                              UserParameter = "QUERY_TAG"
 	UserParameterQuotedIdentifiersIgnoreCase           UserParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
 	UserParameterRowsPerResultset                      UserParameter = "ROWS_PER_RESULTSET"
