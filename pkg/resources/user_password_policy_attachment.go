@@ -82,10 +82,11 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 	ctx := context.Background()
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
-	passwordPolicyDatabase := sdk.NewAccountIdentifierFromFullyQualifiedName(d.Get("password_policy_database").(string))
-	passwordPolicySchema := sdk.NewAccountIdentifierFromFullyQualifiedName(d.Get("password_policy_schema").(string))
-	passwordPolicyName := sdk.NewAccountIdentifierFromFullyQualifiedName(d.Get("password_policy_name").(string))
-	passwordPolicy := sdk.NewSchemaObjectIdentifier(passwordPolicyDatabase.Name(), passwordPolicySchema.Name(), passwordPolicyName.Name())
+	passwordPolicy := sdk.NewSchemaObjectIdentifier(
+		d.Get("password_policy_database").(string),
+		d.Get("password_policy_schema").(string),
+		d.Get("password_policy_name").(string),
+	)
 
 	err := client.Users.Alter(ctx, userName, &sdk.AlterUserOptions{
 		Set: &sdk.UserSet{
