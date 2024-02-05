@@ -25,14 +25,19 @@ resource "snowflake_database_grant" "old_resource" {
 
 #### 1. terraform list
 
-Run `terraform state list` to search the grants you're looking for (for larger configurations it's best to filter the results), 
-for example, `terraform state list | grep "snowflake_database_grant"`.
+First, we need to list all the grant resources that will need to be migrated. 
+We can do that by running the `terraform state list` command.
+
+> **Tip:** for larger configurations, it's best to filter the results using the grep command. For example: `terraform state list | grep "snowflake_database_grant"`.
 
 #### 2. terraform rm
 
-Now choose which one you would to migrate next and remove it from the state with `terraform state rm <resource_address>`. 
+Now choose which one you would to migrate next and remove it from the state, so when you remove the old resource,
+no grant will be revoked. More specifically, the Terraform Delete operation won't be run for removed resource.
+It will detach the resource block in your configuration from the actual Snowflake resource.
+You can remove resources from the state with the `terraform state rm <resource_address>` command. 
 In our example, `terraform state rm snowflake_database_grant.old_resource`. After running the command, you can remove the resource from the configuration 
-(removing the state will "detach" it from the resource block, so after removing it, the Terraform won't try to revoke USAGE from our roles).
+(again, removing the state will "detach" the resource block from the Snowflake resource. That's why after removing it, the Terraform won't try to revoke USAGE from our roles).
 
 #### 3. Two options from here
 
@@ -152,7 +157,7 @@ resource "snowflake_grant_privileges_to_account_role" "new_resource_role_a" {
 After running `terraform plan` you'll see if there are any changes we have to do before applying our generated configuration.
 If no errors are appearing you can run `terraform apply` to import state into generated configurations. 
 
-#### 3.3.4. Thoughts on configuration generation
+#### 3.3.4. Limitations of Generating Configurations
 
 Config generation may be a good solution for a few reasons, but it also comes with limitations:
 - Manual review/fixing
@@ -163,7 +168,7 @@ Config generation may be a good solution for a few reasons, but it also comes wi
 - No resource reference
     - As you can see `account_role_name` and `object_name` are plain values, but the values most likely should be referenced by other resources' names.
 
-[Hashicorp documentation reference on generating configuration limitations](https://developer.hashicorp.com/terraform/language/import/generating-configuration)
+[Hashicorp documentation reference on limitations of generating configurations](https://developer.hashicorp.com/terraform/language/import/generating-configuration)
 
 ## v0.84.0 ➞ v0.85.0
 
