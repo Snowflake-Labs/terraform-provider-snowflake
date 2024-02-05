@@ -67,7 +67,7 @@ func TestUserAlter(t *testing.T) {
 		opts := &AlterUserOptions{
 			name: id,
 			Set: &UserSet{
-				PasswordPolicy: passwordPolicy,
+				PasswordPolicy: &passwordPolicy,
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD POLICY %s", id.FullyQualifiedName(), passwordPolicy.FullyQualifiedName())

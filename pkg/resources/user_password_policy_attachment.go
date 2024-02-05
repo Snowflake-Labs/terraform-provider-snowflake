@@ -90,7 +90,7 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 
 	err := client.Users.Alter(ctx, userName, &sdk.AlterUserOptions{
 		Set: &sdk.UserSet{
-			PasswordPolicy: passwordPolicy,
+			PasswordPolicy: &passwordPolicy,
 		},
 	})
 	if err != nil {
