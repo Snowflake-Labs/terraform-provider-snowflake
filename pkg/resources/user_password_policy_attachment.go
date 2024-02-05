@@ -52,7 +52,7 @@ func UserPasswordPolicyAttachment() *schema.Resource {
 			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				parts := strings.Split(d.Id(), helpers.IDDelimiter)
 				if len(parts) != 4 {
-					return nil, fmt.Errorf("id should be in the format 'database|schema|password_policy|user_name|roles', but I got '%s'", d.Id())
+					return nil, fmt.Errorf("id should be in the format 'database|schema|password_policy|user_name', but I got '%s'", d.Id())
 				}
 				passwordPolicyDatabase := sdk.NewAccountIdentifierFromFullyQualifiedName(parts[0])
 				passwordPolicySchema := sdk.NewAccountIdentifierFromFullyQualifiedName(parts[1])
