@@ -145,6 +145,12 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		sessionParameters.TimeInputFormat = &value
 	case SessionParameterTimeOutputFormat:
 		sessionParameters.TimeOutputFormat = &value
+	case SessionParameterTransactionAbortOnError:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
+		}
+		sessionParameters.TransactionAbortOnError = b
 	case SessionParameterTransactionDefaultIsolationLevel:
 		sessionParameters.TransactionDefaultIsolationLevel = Pointer(TransactionDefaultIsolationLevel(value))
 	case SessionParameterTwoDigitCenturyStart:
