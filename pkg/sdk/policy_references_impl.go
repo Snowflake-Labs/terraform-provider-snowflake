@@ -20,9 +20,6 @@ func (v *policyReference) GetForEntity(ctx context.Context, request *GetForEntit
 
 func (request *GetForEntityPolicyReferenceRequest) toOpts() *getForEntityPolicyReferenceOptions {
 	return &getForEntityPolicyReferenceOptions{
-		select_:  true,
-		asterisk: true,
-		from:     true,
 		tableFunction: &tableFunction{
 			table: Bool(true),
 			policyReferenceFunction: &policyReferenceFunction{
