@@ -22,7 +22,7 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		CheckDestroy:             testAccCheckYourResourceDestroy,
+		CheckDestroy:             testAccCheckUserPasswordPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			// CREATE
 			{
@@ -50,7 +50,7 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 	})
 }
 
-func testAccCheckYourResourceDestroy(s *terraform.State) error {
+func testAccCheckUserPasswordPolicyAttachmentDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
