@@ -153,6 +153,9 @@ func DeleteUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 			PasswordPolicy: sdk.Bool(true),
 		},
 	})
+
+	d.SetId("")
+
 	if err != nil {
 		return err
 	}
