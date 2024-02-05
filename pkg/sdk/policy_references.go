@@ -26,8 +26,8 @@ type policyReferenceFunction struct {
 	arguments                  *policyReferenceFunctionArguments `ddl:"list,parentheses"`
 }
 type policyReferenceFunctionArguments struct {
-	refEntityName   *string `ddl:"parameter,single_quotes,arrow_equals" sql:"ref_entity_name"`
-	refEntityDomain *string `ddl:"parameter,single_quotes,arrow_equals" sql:"ref_entity_domain"`
+	refEntityName   []ObjectIdentifier `ddl:"parameter,single_quotes,arrow_equals" sql:"ref_entity_name"`
+	refEntityDomain *string            `ddl:"parameter,single_quotes,arrow_equals" sql:"ref_entity_domain"`
 }
 
 type PolicyReference struct {

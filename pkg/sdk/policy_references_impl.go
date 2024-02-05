@@ -25,7 +25,7 @@ func (request *GetForEntityPolicyReferenceRequest) toOpts() *getForEntityPolicyR
 			policyReferenceFunction: &policyReferenceFunction{
 				functionFullyQualifiedName: Bool(true),
 				arguments: &policyReferenceFunctionArguments{
-					refEntityName:   String(request.RefEntityName),
+					refEntityName:   []ObjectIdentifier{NewObjectIdentifierFromFullyQualifiedName(request.RefEntityName)},
 					refEntityDomain: String(request.RefEntityDomain),
 				},
 			},
