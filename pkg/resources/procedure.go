@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -463,16 +464,29 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
 	schemaObjectId := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	returns := sdk.NewProcedureReturnsRequest()
+
 	returnType := d.Get("return_type").(string)
-	returnDataType, diags := convertProcedureDataType(returnType)
-	if diags != nil {
-		return diags
+	if strings.HasPrefix(strings.ToLower(returnType), "table") {
+		columns, diags := convertProcedureColumns(returnType)
+		if diags != nil {
+			return diags
+		}
+		var cr []sdk.ProcedureColumnRequest
+		for _, item := range columns {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, item.ColumnDataType))
+		}
+		returns.WithTable(sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	} else {
+		returnDataType, diags := convertProcedureDataType(returnType)
+		if diags != nil {
+			return diags
+		}
+		returns.WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
 	}
+
 	procedureDefinition := d.Get("statement").(string)
-
-	returns := sdk.NewProcedureReturnsRequest().WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
 	runtimeVersion := d.Get("runtime_version").(string)
-
 	packages := []sdk.ProcedurePackageRequest{}
 	pkgs := d.Get("packages").([]interface{})
 	for _, pkg := range pkgs {
@@ -497,9 +511,12 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsCaller))
 		}
 	}
-	if v, ok := d.GetOk("null_input_behavior"); ok {
-		req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
-	}
+
+	// TODO: [ { CALLED ON NULL INPUT | { RETURNS NULL ON NULL INPUT | STRICT } } ] not works for python
+	// if v, ok := d.GetOk("null_input_behavior"); ok {
+	// 	req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+	// }
+
 	if v, ok := d.GetOk("comment"); ok {
 		req.WithComment(sdk.String(v.(string)))
 	}
@@ -552,7 +569,14 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	if err != nil {
 		// if procedure is not found then mark resource to be removed from state file during apply or refresh
 		d.SetId("")
-		return nil
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Describe procedure failed.",
+				// TODO: link to the design decisions doc
+				Detail: "See our document on design decisions for procedures: <LINK (coming soon)>",
+			},
+		}
 	}
 	for _, desc := range procedureDetails {
 		switch desc.Property {
@@ -634,7 +658,7 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	request := sdk.NewShowProcedureRequest().WithIn(&sdk.In{Database: sdk.NewAccountObjectIdentifier(id.DatabaseName())}).WithLike(&sdk.Like{Pattern: sdk.String(id.name.Name())})
+	request := sdk.NewShowProcedureRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&sdk.Like{Pattern: sdk.String(id.name.Name())})
 
 	procedures, err := client.Procedures.Show(ctx, request)
 	if err != nil {
@@ -796,4 +820,23 @@ func convertProcedureDataType(s string) (sdk.DataType, diag.Diagnostics) {
 		return dataType, diag.FromErr(err)
 	}
 	return dataType, nil
+}
+
+func convertProcedureColumns(s string) ([]sdk.ProcedureColumn, diag.Diagnostics) {
+	pattern := regexp.MustCompile(`(\w+)\s+(\w+)`)
+	matches := pattern.FindAllStringSubmatch(s, -1)
+	var columns []sdk.ProcedureColumn
+	for _, match := range matches {
+		if len(match) == 3 {
+			dataType, err := sdk.ToDataType(match[2])
+			if err != nil {
+				return nil, diag.FromErr(err)
+			}
+			columns = append(columns, sdk.ProcedureColumn{
+				ColumnName:     match[1],
+				ColumnDataType: dataType,
+			})
+		}
+	}
+	return columns, nil
 }

@@ -84,10 +84,18 @@ func ReadContextProcedures(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	procedures, err := client.Procedures.Show(ctx, req)
 	if err != nil {
-		return diag.FromErr(err)
-	}
+		id := d.Id()
 
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Unable to parse procedures in schema (%s)", id),
+				// TODO: link to the design decisions doc
+				Detail: "See our document on design decisions for procedures: <LINK (coming soon)>",
+			},
+		}
+	}
 	proceduresList := []map[string]interface{}{}
 
 	for _, procedure := range procedures {

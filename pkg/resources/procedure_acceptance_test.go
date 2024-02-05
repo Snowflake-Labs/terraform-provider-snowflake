@@ -62,6 +62,27 @@ func TestAcc_Procedure(t *testing.T) {
 	})
 }
 
+func TestAcc_ProcedureForPython(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_PROCEDURE_TESTS"); ok {
+		t.Skip("Skipping TestAcc_ProcedureForPython")
+	}
+
+	procName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resource.Test(t, resource.TestCase{
+		Providers:    acc.TestAccProviders(),
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: procedureConfigForPython(procName, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_procedure.test_proc_python", "name", procName+"_python"),
+				),
+			},
+		},
+	})
+}
+
 func procedureConfig(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 	resource "snowflake_procedure" "test_proc_simple" {
@@ -124,15 +145,47 @@ func procedureConfig(name string, databaseName string, schemaName string) string
 		execute_as          = "CALLER"
 		null_input_behavior = "RETURNS NULL ON NULL INPUT"
 		statement           = <<EOT
-	  declare
-		x integer;
-		y integer;
-	  begin
-		x := 3;
-		y := x * x;
-		return y;
-	  end;
-	  EOT
+			declare
+				x integer;
+				y integer;
+			begin
+				x := 3;
+				y := x * x;
+				return y;
+			end;
+		EOT
 	  }
-	`, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName)
+	`, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName,
+	)
+}
+
+func procedureConfigForPython(name string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+	resource "snowflake_procedure" "test_proc_python" {
+		name = "%s_python"
+		database = "%s"
+		schema   = "%s"
+		arguments {
+			name = "table_name"
+			type = "VARCHAR"
+		}
+		arguments {
+			name = "role"
+			type = "VARCHAR"
+		}
+		language = "PYTHON"
+		return_type         = "TABLE(id NUMBER, name VARCHAR, role VARCHAR)"
+		runtime_version 	= "3.8"
+		packages 			= ["snowflake-snowpark-python"]
+		handler             = "filter_by_role"
+		comment 			= "Procedure for python"
+		execute_as          = "CALLER"
+		statement           = <<EOT
+from snowflake.snowpark.functions import col
+def filter_by_role(session, table_name, role):
+  df = session.table(table_name)
+  return df.filter(col("role") == role)
+EOT
+	}
+	`, name, databaseName, schemaName)
 }
