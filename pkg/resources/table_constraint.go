@@ -209,7 +209,7 @@ func (v *tableConstraintID) parse(s string) {
 func getTableIdentifier(s string) (*sdk.SchemaObjectIdentifier, error) {
 	objectIdentifier, err := helpers.DecodeSnowflakeParameterID(s)
 	if err != nil {
-		return nil, fmt.Errorf("table id is incorrect: %s, err: %s", objectIdentifier, err)
+		return nil, fmt.Errorf("table id is incorrect: %s, err: %w", objectIdentifier, err)
 	}
 	tableIdentifier, ok := objectIdentifier.(sdk.SchemaObjectIdentifier)
 	if !ok {
@@ -281,7 +281,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		fkTableID := references["table_id"].(string)
 		fkId, err := helpers.DecodeSnowflakeParameterID(fkTableID)
 		if err != nil {
-			return fmt.Errorf("table id is incorrect: %s, err: %s", fkTableID, err)
+			return fmt.Errorf("table id is incorrect: %s, err: %w", fkTableID, err)
 		}
 		referencedTableIdentifier, ok := fkId.(sdk.SchemaObjectIdentifier)
 		if !ok {
