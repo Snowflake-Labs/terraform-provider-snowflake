@@ -105,7 +105,7 @@ resource "snowflake_table_constraint" "unique" {
 
 - `columns` (List of String) Columns to use in constraint key
 - `name` (String) Name of constraint
-- `table_id` (String) Identifier for table to create constraint on. Format must follow: ""<db_name>"."<schema_name>"."<table_name>"" or "<db_name>.<schema_name>.<table_name>" (snowflake_table.my_table.id)
+- `table_id` (String) Identifier for table to create constraint on. Format must follow: "\"<db_name>\".\"<schema_name>\".\"<table_name>\"" or "<db_name>.<schema_name>.<table_name>" (snowflake_table.my_table.id)
 - `type` (String) Type of constraint, one of 'UNIQUE', 'PRIMARY KEY', or 'FOREIGN KEY'
 
 ### Optional
