@@ -95,33 +95,6 @@ type TagBuilder interface {
 	ChangeTag(snowflake.TagValue) string
 }
 
-func handleTagChanges(db *sql.DB, d *schema.ResourceData, builder TagBuilder) error {
-	if d.HasChange("tag") {
-		o, n := d.GetChange("tag")
-		removed, added, changed := getTags(o).diffs(getTags(n))
-		for _, tA := range removed {
-			q := builder.UnsetTag(tA.toSnowflakeTagValue())
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error dropping tag on %v", d.Id())
-			}
-		}
-		for _, tA := range added {
-			q := builder.AddTag(tA.toSnowflakeTagValue())
-
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error adding column on %v", d.Id())
-			}
-		}
-		for _, tA := range changed {
-			q := builder.ChangeTag(tA.toSnowflakeTagValue())
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error changing property on %v", d.Id())
-			}
-		}
-	}
-	return nil
-}
-
 // String() takes in a schemaID object and returns a pipe-delimited string:
 // DatabaseName|SchemaName|TagName.
 func (ti *TagID) String() (string, error) {

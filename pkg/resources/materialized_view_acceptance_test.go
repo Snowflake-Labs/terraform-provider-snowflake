@@ -102,6 +102,8 @@ func TestAcc_MaterializedView(t *testing.T) {
 func TestAcc_MaterializedView_Tags(t *testing.T) {
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tag1Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	queryEscaped := fmt.Sprintf("SELECT ID FROM \\\"%s\\\"", tableName)
 
@@ -115,20 +117,20 @@ func TestAcc_MaterializedView_Tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create tags
 			{
-				Config: materializedViewConfigWithTags(acc.TestWarehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "test_tag"),
+				Config: materializedViewConfigWithTags(acc.TestWarehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "test_tag", tag1Name, tag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.0.name", "tag1"),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.0.name", tag1Name),
 				),
 			},
 			// update tags
 			{
-				Config: materializedViewConfigWithTags(acc.TestWarehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "test_tag_2"),
+				Config: materializedViewConfigWithTags(acc.TestWarehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "test_tag_2", tag1Name, tag2Name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.0.name", "tag2"),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "tag.0.name", tag2Name),
 				),
 			},
 			// IMPORT
@@ -209,12 +211,12 @@ resource "snowflake_materialized_view" "test" {
 `, tableName, databaseName, schemaName, viewName, comment, databaseName, schemaName, warehouseName, isSecure, orReplace, q)
 }
 
-func materializedViewConfigWithTags(warehouseName string, tableName string, viewName string, q string, databaseName string, schemaName string, tag string) string {
+func materializedViewConfigWithTags(warehouseName string, tableName string, viewName string, q string, databaseName string, schemaName string, tag string, tag1Name string, tag2Name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "test" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	name     = "%[1]s"
+	database = "%[2]s"
+	schema   = "%[3]s"
 
 	column {
 		name = "ID"
@@ -223,32 +225,36 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_tag" "test_tag" {
-	name     = "tag1"
-	database = "%s"
-	schema   = "%s"
+	name     = "%[8]s"
+	database = "%[2]s"
+	schema   = "%[3]s"
 }
 
 resource "snowflake_tag" "test_tag_2" {
-	name     = "tag2"
-	database = "%s"
-	schema   = "%s"
+	name     = "%[9]s"
+	database = "%[2]s"
+	schema   = "%[3]s"
 }
 
 resource "snowflake_materialized_view" "test" {
-	name      = "%s"
-	database  = "%s"
-	schema    = "%s"
-	warehouse = "%s"
-	statement = "%s"
+	name      = "%[4]s"
+	database  = "%[2]s"
+	schema    = "%[3]s"
+	warehouse = "%[5]s"
+	statement = "%[6]s"
 
 	tag {
-		name = snowflake_tag.%s.name
-		schema = snowflake_tag.%s.schema
-		database = snowflake_tag.%s.database
+		name = snowflake_tag.%[7]s.name
+		schema = snowflake_tag.%[7]s.schema
+		database = snowflake_tag.%[7]s.database
 		value = "some_value"
 	}
+
+	depends_on = [
+		snowflake_table.test
+	]
 }
-`, tableName, databaseName, schemaName, databaseName, schemaName, databaseName, schemaName, viewName, databaseName, schemaName, warehouseName, q, tag, tag, tag)
+`, tableName, databaseName, schemaName, viewName, warehouseName, q, tag, tag1Name, tag2Name)
 }
 
 func testAccCheckMaterializedViewDestroy(s *terraform.State) error {

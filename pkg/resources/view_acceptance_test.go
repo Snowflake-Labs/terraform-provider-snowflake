@@ -124,6 +124,8 @@ func TestAcc_View(t *testing.T) {
 
 func TestAcc_View_Tags(t *testing.T) {
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tag1Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 
@@ -133,6 +135,8 @@ func TestAcc_View_Tags(t *testing.T) {
 			"database":  config.StringVariable(acc.TestDatabaseName),
 			"schema":    config.StringVariable(acc.TestSchemaName),
 			"statement": config.StringVariable(query),
+			"tag1Name":  config.StringVariable(tag1Name),
+			"tag2Name":  config.StringVariable(tag2Name),
 		}
 	}
 
@@ -151,7 +155,7 @@ func TestAcc_View_Tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", viewName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "tag.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.name", "tag1"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.name", tag1Name),
 					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.value", "some_value"),
 				),
 			},
@@ -162,7 +166,7 @@ func TestAcc_View_Tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", viewName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "tag.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.name", "tag2"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.name", tag2Name),
 					resource.TestCheckResourceAttr("snowflake_view.test", "tag.0.value", "some_value"),
 				),
 			},

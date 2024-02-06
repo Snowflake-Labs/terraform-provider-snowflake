@@ -1,11 +1,11 @@
 resource "snowflake_tag" "test_tag" {
-  name     = "tag1"
+  name     = var.tag1Name
   database = var.database
   schema   = var.schema
 }
 
 resource "snowflake_tag" "test_tag_2" {
-  name     = "tag2"
+  name     = var.tag2Name
   database = var.database
   schema   = var.schema
 }
