@@ -1,8 +1,16 @@
 # Migration guide
 
-This document is meant to help you migrate your Terraform config to new newest version. In migration guides we will only 
-describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behaviour
+This document is meant to help you migrate your Terraform config to the new newest version. In migration guides, we will only 
+describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
+
+## vX.XX.X -> v0.85.0
+
+### Migration from old (grant) resources to new ones
+
+In recent changes, we introduced a new grant resources to replace the old ones.
+To aid with the migration, we wrote a guide to show one of the possible ways to migrate deprecated resources to their new counter-parts.
+As the guide is more general and applies to every version (and provider), we moved it [here](./docs/technical-documentation/resource_migration.md).
 
 ## v0.84.0 ➞ v0.85.0
 
