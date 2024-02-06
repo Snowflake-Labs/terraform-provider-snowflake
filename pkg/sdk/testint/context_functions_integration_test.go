@@ -49,11 +49,11 @@ func TestInt_CurrentUser(t *testing.T) {
 	assert.NotEmpty(t, user)
 }
 
-func TestInt_Current(t *testing.T) {
+func TestInt_CurrentSessionDetails(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	account, err := client.ContextFunctions.Current(ctx)
+	account, err := client.ContextFunctions.CurrentSessionDetails(ctx)
 	require.NoError(t, err)
 	assert.NotNil(t, account)
 	assert.NotEmpty(t, account.Account)

@@ -17,7 +17,7 @@ type ContextFunctions interface {
 	CurrentRegion(ctx context.Context) (string, error)
 	CurrentSession(ctx context.Context) (string, error)
 	CurrentUser(ctx context.Context) (string, error)
-	Current(ctx context.Context) (*CurrentDetails, error)
+	CurrentSessionDetails(ctx context.Context) (*CurrentSessionDetails, error)
 
 	// Session Object functions.
 	CurrentDatabase(ctx context.Context) (string, error)
@@ -32,7 +32,7 @@ type contextFunctions struct {
 	client *Client
 }
 
-type currentDetailsDBRow struct {
+type currentSessionDetailsDBRow struct {
 	CurrentAccount string `db:"CURRENT_ACCOUNT"`
 	CurrentRole    string `db:"CURRENT_ROLE"`
 	CurrentRegion  string `db:"CURRENT_REGION"`
@@ -40,7 +40,7 @@ type currentDetailsDBRow struct {
 	CurrentUser    string `db:"CURRENT_USER"`
 }
 
-type CurrentDetails struct {
+type CurrentSessionDetails struct {
 	Account string `db:"CURRENT_ACCOUNT"`
 	Role    string `db:"CURRENT_ROLE"`
 	Region  string `db:"CURRENT_REGION"`
@@ -48,7 +48,7 @@ type CurrentDetails struct {
 	User    string `db:"CURRENT_USER"`
 }
 
-func (acc *CurrentDetails) AccountURL() (string, error) {
+func (acc *CurrentSessionDetails) AccountURL() (string, error) {
 	if regionID, ok := regionMapping[strings.ToLower(acc.Region)]; ok {
 		accountID := acc.Account
 		if len(regionID) > 0 {
@@ -159,13 +159,13 @@ func (c *contextFunctions) CurrentUser(ctx context.Context) (string, error) {
 	return s.CurrentUser, nil
 }
 
-func (c *contextFunctions) Current(ctx context.Context) (*CurrentDetails, error) {
-	s := &currentDetailsDBRow{}
+func (c *contextFunctions) CurrentSessionDetails(ctx context.Context) (*CurrentSessionDetails, error) {
+	s := &currentSessionDetailsDBRow{}
 	err := c.client.queryOne(ctx, s, "SELECT CURRENT_ACCOUNT() as CURRENT_ACCOUNT, CURRENT_ROLE() as CURRENT_ROLE, CURRENT_REGION() AS CURRENT_REGION, CURRENT_SESSION() as CURRENT_SESSION, CURRENT_USER() as CURRENT_USER")
 	if err != nil {
 		return nil, err
 	}
-	return &CurrentDetails{
+	return &CurrentSessionDetails{
 		Account: s.CurrentAccount,
 		Role:    s.CurrentRole,
 		Region:  s.CurrentRegion,

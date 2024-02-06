@@ -44,7 +44,7 @@ func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	client := sdk.NewClientFromDB(db)
 
-	current, err := client.ContextFunctions.Current(ctx)
+	current, err := client.ContextFunctions.CurrentSessionDetails(ctx)
 	if err != nil {
 		log.Println("[DEBUG] current_account failed to decode")
 		d.SetId("")

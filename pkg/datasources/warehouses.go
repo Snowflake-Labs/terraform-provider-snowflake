@@ -61,7 +61,7 @@ func ReadWarehouses(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
-	account, err := client.ContextFunctions.Current(ctx)
+	account, err := client.ContextFunctions.CurrentSessionDetails(ctx)
 	if err != nil {
 		d.SetId("")
 		return nil

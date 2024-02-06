@@ -52,7 +52,7 @@ func ReadResourceMonitors(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
-	account, err := client.ContextFunctions.Current(ctx)
+	account, err := client.ContextFunctions.CurrentSessionDetails(ctx)
 	if err != nil {
 		log.Print("[DEBUG] unable to retrieve current account")
 		d.SetId("")
