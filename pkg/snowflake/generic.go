@@ -10,18 +10,7 @@ import (
 type EntityType string
 
 const (
-	APIIntegrationType          EntityType = "API INTEGRATION"
-	DatabaseType                EntityType = "DATABASE"
-	ManagedAccountType          EntityType = "MANAGED ACCOUNT"
-	ResourceMonitorType         EntityType = "RESOURCE MONITOR"
-	RoleType                    EntityType = "ROLE"
-	ShareType                   EntityType = "SHARE"
-	ReplicationType             EntityType = "REPLICATION"
-	StorageIntegrationType      EntityType = "STORAGE INTEGRATION"
-	NotificationIntegrationType EntityType = "NOTIFICATION INTEGRATION"
-	SecurityIntegrationType     EntityType = "SECURITY INTEGRATION"
-	UserType                    EntityType = "USER"
-	WarehouseType               EntityType = "WAREHOUSE"
+	SecurityIntegrationType EntityType = "SECURITY INTEGRATION"
 )
 
 type Builder struct {

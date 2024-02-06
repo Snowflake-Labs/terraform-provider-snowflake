@@ -1,12 +1,4 @@
-package snowflake
-
-import (
-	"database/sql"
-	"fmt"
-	"strings"
-
-	"github.com/jmoiron/sqlx"
-)
+package sdk
 
 // taken from https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#snowflake-region-ids
 var regionMapping = map[string]string{
@@ -46,35 +38,4 @@ var regionMapping = map[string]string{
 	"azure_centralindia":     "central-india.azure",
 	"azure_japaneast":        "japan-east.azure",
 	"azure_australiaeast":    "australia-east.azure",
-}
-
-func SelectCurrentAccount() string {
-	return `SELECT CURRENT_ACCOUNT() AS "account", CURRENT_REGION() AS "region";`
-}
-
-type CurrentAccount struct {
-	Account string `db:"account"`
-	Region  string `db:"region"`
-}
-
-func ScanCurrentAccount(row *sqlx.Row) (*CurrentAccount, error) {
-	acc := &CurrentAccount{}
-	err := row.StructScan(acc)
-	return acc, err
-}
-
-func ReadCurrentAccount(db *sql.DB) (*CurrentAccount, error) {
-	row := QueryRow(db, SelectCurrentAccount())
-	return ScanCurrentAccount(row)
-}
-
-func (acc *CurrentAccount) AccountURL() (string, error) {
-	if regionID, ok := regionMapping[strings.ToLower(acc.Region)]; ok {
-		accountID := acc.Account
-		if len(regionID) > 0 {
-			accountID = fmt.Sprintf("%s.%s", accountID, regionID)
-		}
-		return fmt.Sprintf("https://%s.snowflakecomputing.com", accountID), nil
-	}
-	return "", fmt.Errorf("failed to map Snowflake account region %s to a region_id", acc.Region)
 }

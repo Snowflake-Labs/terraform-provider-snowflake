@@ -1,11 +1,13 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,10 +37,12 @@ func SystemGetSnowflakePlatformInfo() *schema.Resource {
 // ReadSystemGetSnowflakePlatformInfo implements schema.ReadFunc.
 func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+
 	sel := snowflake.SystemGetSnowflakePlatformInfoQuery()
 	row := snowflake.QueryRow(db, sel)
 
-	acc, err := snowflake.ReadCurrentAccount(db)
+	acc, err := client.ContextFunctions.CurrentSessionDetails(context.Background())
 	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		d.SetId("")
