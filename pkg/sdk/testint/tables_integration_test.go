@@ -301,7 +301,7 @@ func TestInt_Table(t *testing.T) {
 
 		// ensure that time travel is allowed (and revert if needed after the test)
 		revertParameter := updateAccountParameterTemporarily(t, client, sdk.AccountParameterDataRetentionTimeInDays, "1")
-		defer revertParameter()
+		t.Cleanup(revertParameter)
 
 		err := client.Tables.CreateClone(ctx, request)
 		require.NoError(t, err)
