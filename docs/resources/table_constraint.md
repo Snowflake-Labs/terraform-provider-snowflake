@@ -67,7 +67,7 @@ resource "snowflake_table" "fk_t" {
 resource "snowflake_table_constraint" "primary_key" {
   name     = "myconstraint"
   type     = "PRIMARY KEY"
-  table_id = snowflake_table.t.id
+  table_id = snowflake_table.t.qualified_name
   columns  = ["col1"]
   comment  = "hello world"
 }
@@ -75,11 +75,11 @@ resource "snowflake_table_constraint" "primary_key" {
 resource "snowflake_table_constraint" "foreign_key" {
   name     = "myconstraintfk"
   type     = "FOREIGN KEY"
-  table_id = snowflake_table.t.id
+  table_id = snowflake_table.t.qualified_name
   columns  = ["col2"]
   foreign_key_properties {
     references {
-      table_id = snowflake_table.fk_t.id
+      table_id = snowflake_table.fk_t.qualified_name
       columns  = ["fk_col1"]
     }
   }
@@ -92,7 +92,7 @@ resource "snowflake_table_constraint" "foreign_key" {
 resource "snowflake_table_constraint" "unique" {
   name     = "unique"
   type     = "UNIQUE"
-  table_id = snowflake_table.t.id
+  table_id = snowflake_table.t.qualified_name
   columns  = ["col3"]
   comment  = "hello unique"
 }
@@ -105,12 +105,12 @@ resource "snowflake_table_constraint" "unique" {
 
 - `columns` (List of String) Columns to use in constraint key
 - `name` (String) Name of constraint
-- `table_id` (String) Idenfifier for table to create constraint on. Must be of the form Note: format must follow: "<db_name>"."<schema_name>"."<table_name>" or "<db_name>.<schema_name>.<table_name>" or "<db_name>|<schema_name>.<table_name>" (snowflake_table.my_table.id)
-- `type` (String) Type of constraint, one of 'UNIQUE', 'PRIMARY KEY', 'FOREIGN KEY', or 'NOT NULL'
+- `table_id` (String) Identifier for table to create constraint on. Format must follow: ""<db_name>"."<schema_name>"."<table_name>"" or "<db_name>.<schema_name>.<table_name>" (snowflake_table.my_table.id)
+- `type` (String) Type of constraint, one of 'UNIQUE', 'PRIMARY KEY', or 'FOREIGN KEY'
 
 ### Optional
 
-- `comment` (String) Comment for the table constraint
+- `comment` (String, Deprecated) Comment for the table constraint
 - `deferrable` (Boolean) Whether the constraint is deferrable
 - `enable` (Boolean) Specifies whether the constraint is enabled or disabled. These properties are provided for compatibility with Oracle.
 - `enforced` (Boolean) Whether the constraint is enforced
