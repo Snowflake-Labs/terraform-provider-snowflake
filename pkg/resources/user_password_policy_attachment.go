@@ -49,29 +49,7 @@ func UserPasswordPolicyAttachment() *schema.Resource {
 		Schema: userPasswordPolicyAttachmentSchema,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				parts := strings.Split(d.Id(), helpers.IDDelimiter)
-				if len(parts) != 4 {
-					return nil, fmt.Errorf("id should be in the format 'database|schema|password_policy|user_name', but I got '%s'", d.Id())
-				}
-				passwordPolicyDatabase := sdk.NewAccountIdentifierFromFullyQualifiedName(parts[0])
-				passwordPolicySchema := sdk.NewAccountIdentifierFromFullyQualifiedName(parts[1])
-				passwordPolicyName := sdk.NewAccountIdentifierFromFullyQualifiedName(parts[2])
-				userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[3])
-				if err := d.Set("password_policy_database", passwordPolicyDatabase.Name()); err != nil {
-					return nil, err
-				}
-				if err := d.Set("password_policy_schema", passwordPolicySchema.Name()); err != nil {
-					return nil, err
-				}
-				if err := d.Set("password_policy_name", passwordPolicyName.Name()); err != nil {
-					return nil, err
-				}
-				if err := d.Set("user_name", userName.Name()); err != nil {
-					return nil, err
-				}
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
@@ -102,10 +80,16 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}
 }
 
 func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+	parts := strings.Split(d.Id(), helpers.IDDelimiter)
+	if len(parts) != 4 {
+		// Note: this exception handling is particularly useful when importing
+		return fmt.Errorf("id should be in the format 'database|schema|password_policy|user_name', but I got '%s'", d.Id())
+	}
+	// Note: there is no alphanumeric id for an attachment, so we retrieve the password policies attached to a certain user.
+	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[3])
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
-	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
 	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
 		// Note: I cannot insert both single and double quotes in the SDK, so for now I need to do this
 		RefEntityName:   userName.FullyQualifiedName(),
