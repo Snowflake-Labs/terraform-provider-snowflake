@@ -317,7 +317,7 @@ var ProceduresDef = g.NewInterface(
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-procedure",
 	g.DbStruct("procedureDetailRow").
 		Field("property", "string").
-		Field("value", "string"),
+		Field("value", "sql.NullString"),
 	g.PlainStruct("ProcedureDetail").
 		Field("Property", "string").
 		Field("Value", "string"),

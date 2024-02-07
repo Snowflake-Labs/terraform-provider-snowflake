@@ -216,24 +216,20 @@ func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta inter
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	schemaObjectId := sdk.NewSchemaObjectIdentifier(database, schema, name)
-	returnType := d.Get("return_type").(string)
-	returnDataType, diags := convertProcedureDataType(returnType)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
+	returns, diags := parseProcedureReturnsRequest(d.Get("return_type").(string))
 	if diags != nil {
 		return diags
 	}
 	procedureDefinition := d.Get("statement").(string)
-
-	returns := sdk.NewProcedureReturnsRequest().WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
 	runtimeVersion := d.Get("runtime_version").(string)
-
 	packages := []sdk.ProcedurePackageRequest{}
-	pkgs := d.Get("packages").([]interface{})
-	for _, pkg := range pkgs {
-		packages = append(packages, *sdk.NewProcedurePackageRequest(pkg.(string)))
+	for _, item := range d.Get("packages").([]interface{}) {
+		packages = append(packages, *sdk.NewProcedurePackageRequest(item.(string)))
 	}
 	handler := d.Get("handler").(string)
-	req := sdk.NewCreateForJavaProcedureRequest(schemaObjectId, *returns, runtimeVersion, packages, handler)
+	req := sdk.NewCreateForJavaProcedureRequest(id, *returns, runtimeVersion, packages, handler)
 	req.WithProcedureDefinition(sdk.String(procedureDefinition))
 	args, diags := getProcedureArguments(d)
 	if diags != nil {
@@ -251,9 +247,6 @@ func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta inter
 			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsCaller))
 		}
 	}
-	if v, ok := d.GetOk("null_input_behavior"); ok {
-		req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
-	}
 	if v, ok := d.GetOk("comment"); ok {
 		req.WithComment(sdk.String(v.(string)))
 	}
@@ -262,8 +255,8 @@ func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []sdk.ProcedureImportRequest{}
-		for _, imp := range d.Get("imports").([]interface{}) {
-			imports = append(imports, *sdk.NewProcedureImportRequest(imp.(string)))
+		for _, item := range d.Get("imports").([]interface{}) {
+			imports = append(imports, *sdk.NewProcedureImportRequest(item.(string)))
 		}
 		req.WithImports(imports)
 	}
@@ -271,12 +264,12 @@ func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := client.Procedures.CreateForJava(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}
-	argTypes := make([]string, len(args))
-	for i, arg := range args {
-		argTypes[i] = string(arg.ArgDataType)
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
 	}
-	id := NewProcedureID(database, schema, name, argTypes)
-	d.SetId(id.String())
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
 
@@ -286,15 +279,15 @@ func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	schemaObjectId := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
 	returnType := d.Get("return_type").(string)
 	returnDataType, diags := convertProcedureDataType(returnType)
 	if diags != nil {
 		return diags
 	}
 	procedureDefinition := d.Get("statement").(string)
-
-	req := sdk.NewCreateForJavaScriptProcedureRequest(schemaObjectId, returnDataType, procedureDefinition)
+	req := sdk.NewCreateForJavaScriptProcedureRequest(id, returnDataType, procedureDefinition)
 	args, diags := getProcedureArguments(d)
 	if diags != nil {
 		return diags
@@ -324,12 +317,12 @@ func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta
 	if err := client.Procedures.CreateForJavaScript(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}
-	argTypes := make([]string, len(args))
-	for i, arg := range args {
-		argTypes[i] = string(arg.ArgDataType)
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
 	}
-	id := NewProcedureID(database, schema, name, argTypes)
-	d.SetId(id.String())
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
 
@@ -339,24 +332,20 @@ func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	schemaObjectId := sdk.NewSchemaObjectIdentifier(database, schema, name)
-	returnType := d.Get("return_type").(string)
-	returnDataType, diags := convertProcedureDataType(returnType)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
+	returns, diags := parseProcedureReturnsRequest(d.Get("return_type").(string))
 	if diags != nil {
 		return diags
 	}
 	procedureDefinition := d.Get("statement").(string)
-
-	returns := sdk.NewProcedureReturnsRequest().WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
 	runtimeVersion := d.Get("runtime_version").(string)
-
 	packages := []sdk.ProcedurePackageRequest{}
-	pkgs := d.Get("packages").([]interface{})
-	for _, pkg := range pkgs {
-		packages = append(packages, *sdk.NewProcedurePackageRequest(pkg.(string)))
+	for _, item := range d.Get("packages").([]interface{}) {
+		packages = append(packages, *sdk.NewProcedurePackageRequest(item.(string)))
 	}
 	handler := d.Get("handler").(string)
-	req := sdk.NewCreateForScalaProcedureRequest(schemaObjectId, *returns, runtimeVersion, packages, handler)
+	req := sdk.NewCreateForScalaProcedureRequest(id, *returns, runtimeVersion, packages, handler)
 	req.WithProcedureDefinition(sdk.String(procedureDefinition))
 	args, diags := getProcedureArguments(d)
 	if diags != nil {
@@ -374,9 +363,6 @@ func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsCaller))
 		}
 	}
-	if v, ok := d.GetOk("null_input_behavior"); ok {
-		req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
-	}
 	if v, ok := d.GetOk("comment"); ok {
 		req.WithComment(sdk.String(v.(string)))
 	}
@@ -385,8 +371,8 @@ func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []sdk.ProcedureImportRequest{}
-		for _, imp := range d.Get("imports").([]interface{}) {
-			imports = append(imports, *sdk.NewProcedureImportRequest(imp.(string)))
+		for _, item := range d.Get("imports").([]interface{}) {
+			imports = append(imports, *sdk.NewProcedureImportRequest(item.(string)))
 		}
 		req.WithImports(imports)
 	}
@@ -394,12 +380,12 @@ func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := client.Procedures.CreateForScala(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}
-	argTypes := make([]string, len(args))
-	for i, arg := range args {
-		argTypes[i] = string(arg.ArgDataType)
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
 	}
-	id := NewProcedureID(database, schema, name, argTypes)
-	d.SetId(id.String())
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
 
@@ -409,16 +395,14 @@ func createSQLProcedure(ctx context.Context, d *schema.ResourceData, meta interf
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	schemaObjectId := sdk.NewSchemaObjectIdentifier(database, schema, name)
-	returnType := d.Get("return_type").(string)
-	returnDataType, diags := convertProcedureDataType(returnType)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
+	returns, diags := parseProcedureSQLReturnsRequest(d.Get("return_type").(string))
 	if diags != nil {
 		return diags
 	}
 	procedureDefinition := d.Get("statement").(string)
-
-	returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
-	req := sdk.NewCreateForSQLProcedureRequest(schemaObjectId, *returns, procedureDefinition)
+	req := sdk.NewCreateForSQLProcedureRequest(id, *returns, procedureDefinition)
 	args, diags := getProcedureArguments(d)
 	if diags != nil {
 		return diags
@@ -448,12 +432,12 @@ func createSQLProcedure(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := client.Procedures.CreateForSQL(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}
-	argTypes := make([]string, len(args))
-	for i, arg := range args {
-		argTypes[i] = string(arg.ArgDataType)
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
 	}
-	id := NewProcedureID(database, schema, name, argTypes)
-	d.SetId(id.String())
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
 
@@ -463,37 +447,20 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	schemaObjectId := sdk.NewSchemaObjectIdentifier(database, schema, name)
-	returns := sdk.NewProcedureReturnsRequest()
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
 
-	returnType := d.Get("return_type").(string)
-	if strings.HasPrefix(strings.ToLower(returnType), "table") {
-		columns, diags := convertProcedureColumns(returnType)
-		if diags != nil {
-			return diags
-		}
-		var cr []sdk.ProcedureColumnRequest
-		for _, item := range columns {
-			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, item.ColumnDataType))
-		}
-		returns.WithTable(sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
-	} else {
-		returnDataType, diags := convertProcedureDataType(returnType)
-		if diags != nil {
-			return diags
-		}
-		returns.WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
+	returns, diags := parseProcedureReturnsRequest(d.Get("return_type").(string))
+	if diags != nil {
+		return diags
 	}
-
 	procedureDefinition := d.Get("statement").(string)
 	runtimeVersion := d.Get("runtime_version").(string)
 	packages := []sdk.ProcedurePackageRequest{}
-	pkgs := d.Get("packages").([]interface{})
-	for _, pkg := range pkgs {
-		packages = append(packages, *sdk.NewProcedurePackageRequest(pkg.(string)))
+	for _, item := range d.Get("packages").([]interface{}) {
+		packages = append(packages, *sdk.NewProcedurePackageRequest(item.(string)))
 	}
 	handler := d.Get("handler").(string)
-	req := sdk.NewCreateForPythonProcedureRequest(schemaObjectId, *returns, runtimeVersion, packages, handler)
+	req := sdk.NewCreateForPythonProcedureRequest(id, *returns, runtimeVersion, packages, handler)
 	req.WithProcedureDefinition(sdk.String(procedureDefinition))
 	args, diags := getProcedureArguments(d)
 	if diags != nil {
@@ -512,7 +479,7 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	// TODO: [ { CALLED ON NULL INPUT | { RETURNS NULL ON NULL INPUT | STRICT } } ] not works for python
+	// TODO: [ { CALLED ON NULL INPUT | { RETURNS NULL ON NULL INPUT | STRICT } } ] does not work for java, scala or python
 	// if v, ok := d.GetOk("null_input_behavior"); ok {
 	// 	req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
 	// }
@@ -525,8 +492,8 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if _, ok := d.GetOk("imports"); ok {
 		imports := []sdk.ProcedureImportRequest{}
-		for _, imp := range d.Get("imports").([]interface{}) {
-			imports = append(imports, *sdk.NewProcedureImportRequest(imp.(string)))
+		for _, item := range d.Get("imports").([]interface{}) {
+			imports = append(imports, *sdk.NewProcedureImportRequest(item.(string)))
 		}
 		req.WithImports(imports)
 	}
@@ -534,12 +501,12 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 	if err := client.Procedures.CreateForPython(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}
-	argTypes := make([]string, len(args))
-	for i, arg := range args {
-		argTypes[i] = string(arg.ArgDataType)
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
 	}
-	id := NewProcedureID(database, schema, name, argTypes)
-	d.SetId(id.String())
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
 	return ReadContextProcedure(ctx, d, meta)
 }
 
@@ -547,11 +514,9 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	diags := diag.Diagnostics{}
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
-	id, err := DecodeProcedureID(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name", id.name.Name()); err != nil {
+
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	if err := d.Set("name", id.Name()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("database", id.DatabaseName()); err != nil {
@@ -565,7 +530,7 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	for i, arg := range args {
 		argTypes[i] = arg.(map[string]interface{})["type"].(string)
 	}
-	procedureDetails, err := client.Procedures.Describe(ctx, sdk.NewDescribeProcedureRequest(id.name, id.argTypes))
+	procedureDetails, err := client.Procedures.Describe(ctx, sdk.NewDescribeProcedureRequest(id.WithoutArguments(), id.Arguments()))
 	if err != nil {
 		// if procedure is not found then mark resource to be removed from state file during apply or refresh
 		d.SetId("")
@@ -603,10 +568,6 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		case "null handling":
 			if err := d.Set("null_input_behavior", desc.Value); err != nil {
-				return diag.FromErr(err)
-			}
-		case "volatility":
-			if err := d.Set("return_behavior", desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "body":
@@ -658,7 +619,7 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	request := sdk.NewShowProcedureRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&sdk.Like{Pattern: sdk.String(id.name.Name())})
+	request := sdk.NewShowProcedureRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&sdk.Like{Pattern: sdk.String(id.Name())})
 
 	procedures, err := client.Procedures.Show(ctx, request)
 	if err != nil {
@@ -669,7 +630,7 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	for _, procedure := range procedures {
 		argumentSignature := strings.Split(procedure.Arguments, " RETURN ")[0]
 		argumentSignature = strings.ReplaceAll(argumentSignature, " ", "")
-		if argumentSignature == id.ArgumentSignature() {
+		if argumentSignature == id.ArgumentsSignature() {
 			if err := d.Set("secure", procedure.IsSecure); err != nil {
 				return diag.FromErr(err)
 			}
@@ -685,117 +646,50 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
-	id, err := DecodeProcedureID(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
+
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
-		_, newName := d.GetChange("name")
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.name, id.argTypes).WithRenameTo(sdk.Pointer(sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), newName.(string)))))
+		name := d.Get("name")
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name.(string)))))
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		id.name = sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), newName.(string))
-		if err := d.Set("name", newName); err != nil {
+		id = sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name.(string), id.Arguments())
+		if err := d.Set("name", name); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 	if d.HasChange("comment") {
-		_, newComment := d.GetChange("comment")
-		if newComment != "" {
-			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.name, id.argTypes).WithSetComment(sdk.String(newComment.(string))))
-			if err != nil {
+		comment := d.Get("comment")
+		if comment != "" {
+			if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithSetComment(sdk.String(comment.(string)))); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
-			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.name, id.argTypes).WithUnsetComment(sdk.Bool(true)))
-			if err != nil {
+			if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithUnsetComment(sdk.Bool(true))); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 	}
-
 	if d.HasChange("execute_as") {
-		_, newExecuteAs := d.GetChange("execute_as")
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.name, id.argTypes).WithExecuteAs(sdk.Pointer(sdk.ExecuteAs(newExecuteAs.(string)))))
-		if err != nil {
+		executeAs := d.Get("execute_as")
+		if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithExecuteAs(sdk.Pointer(sdk.ExecuteAs(executeAs.(string))))); err != nil {
 			return diag.FromErr(err)
 		}
 	}
-
 	return ReadContextProcedure(ctx, d, meta)
 }
 
 func DeleteContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
-	id, err := DecodeProcedureID(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id.name, id.argTypes))
-	if err != nil {
+
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	if err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id.WithoutArguments(), id.Arguments())); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")
 	return nil
-}
-
-func NewProcedureID(database, schema, name string, argTypes []string) *procedureID {
-	argDataTypes := make([]sdk.DataType, len(argTypes))
-	for i, argType := range argTypes {
-		argDataTypes[i], _ = sdk.ToDataType(argType)
-	}
-	return &procedureID{
-		name:     sdk.NewSchemaObjectIdentifier(database, schema, name),
-		argTypes: argDataTypes,
-	}
-}
-
-func DecodeProcedureID(id string) (*procedureID, error) {
-	parts := strings.Split(id, "|")
-	if len(parts) != 4 {
-		return nil, fmt.Errorf("invalid procedure id %v", id)
-	}
-	argTypes := strings.Split(parts[3], ",")
-	return NewProcedureID(parts[0], parts[1], parts[2], argTypes), nil
-}
-
-type procedureID struct {
-	name     sdk.SchemaObjectIdentifier
-	argTypes []sdk.DataType
-}
-
-func (i procedureID) DatabaseName() string {
-	return i.name.DatabaseName()
-}
-
-func (i procedureID) SchemaName() string {
-	return i.name.SchemaName()
-}
-
-func (i procedureID) ProcedureName() string {
-	return i.name.Name()
-}
-
-func (i procedureID) ArgTypes() []sdk.DataType {
-	return i.argTypes
-}
-
-func (i procedureID) ArgumentSignature() string {
-	argTypes := make([]string, len(i.argTypes))
-	for i, argType := range i.argTypes {
-		argTypes[i] = string(argType)
-	}
-	return fmt.Sprintf("%v(%v)", i.name.Name(), strings.Join(argTypes, ","))
-}
-
-func (i procedureID) String() string {
-	argTypes := make([]string, len(i.argTypes))
-	for i, argType := range i.argTypes {
-		argTypes[i] = string(argType)
-	}
-	return fmt.Sprintf("%v|%v|%v|%v", i.DatabaseName(), i.SchemaName(), i.ProcedureName(), strings.Join(argTypes, ","))
 }
 
 func getProcedureArguments(d *schema.ResourceData) ([]sdk.ProcedureArgumentRequest, diag.Diagnostics) {
@@ -839,4 +733,48 @@ func convertProcedureColumns(s string) ([]sdk.ProcedureColumn, diag.Diagnostics)
 		}
 	}
 	return columns, nil
+}
+
+func parseProcedureReturnsRequest(s string) (*sdk.ProcedureReturnsRequest, diag.Diagnostics) {
+	returns := sdk.NewProcedureReturnsRequest()
+	if strings.HasPrefix(strings.ToLower(s), "table") {
+		columns, diags := convertProcedureColumns(s)
+		if diags != nil {
+			return nil, diags
+		}
+		var cr []sdk.ProcedureColumnRequest
+		for _, item := range columns {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, item.ColumnDataType))
+		}
+		returns.WithTable(sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	} else {
+		returnDataType, diags := convertProcedureDataType(s)
+		if diags != nil {
+			return nil, diags
+		}
+		returns.WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
+	}
+	return returns, nil
+}
+
+func parseProcedureSQLReturnsRequest(s string) (*sdk.ProcedureSQLReturnsRequest, diag.Diagnostics) {
+	returns := sdk.NewProcedureSQLReturnsRequest()
+	if strings.HasPrefix(strings.ToLower(s), "table") {
+		columns, diags := convertProcedureColumns(s)
+		if diags != nil {
+			return nil, diags
+		}
+		var cr []sdk.ProcedureColumnRequest
+		for _, item := range columns {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, item.ColumnDataType))
+		}
+		returns.WithTable(sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	} else {
+		returnDataType, diags := convertProcedureDataType(s)
+		if diags != nil {
+			return nil, diags
+		}
+		returns.WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
+	}
+	return returns, nil
 }

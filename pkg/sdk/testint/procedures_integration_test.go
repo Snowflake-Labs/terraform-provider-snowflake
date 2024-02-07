@@ -37,17 +37,17 @@ func TestInt_CreateProcedures(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		definition := `
-		import java.io.InputStream;
-		import java.io.IOException;
-		import java.nio.charset.StandardCharsets;
-		import com.snowflake.snowpark_java.types.SnowflakeFile;
-		import com.snowflake.snowpark_java.Session;
-		class FileReader {
-			public String execute(Session session, String fileName) throws IOException {
-				InputStream input = SnowflakeFile.newInstance(fileName).getInputStream();
-				return new String(input.readAllBytes(), StandardCharsets.UTF_8);
-			}
-		}`
+			import java.io.InputStream;
+			import java.io.IOException;
+			import java.nio.charset.StandardCharsets;
+			import com.snowflake.snowpark_java.types.SnowflakeFile;
+			import com.snowflake.snowpark_java.Session;
+			class FileReader {
+				public String execute(Session session, String fileName) throws IOException {
+					InputStream input = SnowflakeFile.newInstance(fileName).getInputStream();
+					return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+				}
+			}`
 
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(dt)
@@ -72,14 +72,14 @@ func TestInt_CreateProcedures(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		definition := `
-		import com.snowflake.snowpark_java.*;
-		public class Filter {
-			public DataFrame filterByRole(Session session, String tableName, String role) {
-				DataFrame table = session.table(tableName);
-				DataFrame filteredRows = table.filter(Functions.col("role").equal_to(Functions.lit(role)));
-				return filteredRows;
-			}
-		}`
+			import com.snowflake.snowpark_java.*;
+			public class Filter {
+				public DataFrame filterByRole(Session session, String tableName, String role) {
+					DataFrame table = session.table(tableName);
+					DataFrame filteredRows = table.filter(Functions.col("role").equal_to(Functions.lit(role)));
+					return filteredRows;
+				}
+			}`
 		column1 := sdk.NewProcedureColumnRequest("id", sdk.DataTypeNumber)
 		column2 := sdk.NewProcedureColumnRequest("name", sdk.DataTypeVARCHAR)
 		column3 := sdk.NewProcedureColumnRequest("role", sdk.DataTypeVARCHAR)
@@ -107,16 +107,16 @@ func TestInt_CreateProcedures(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		definition := `
-			var sql_command = "INSERT INTO stproc_test_table1 (num_col1) VALUES (" + FLOAT_PARAM1 + ")";
-			try {
-				snowflake.execute (
-					{sqlText: sql_command}
-				);
-				return "Succeeded."; // Return a success/error indicator.
-			}
-			catch (err)  {
-				return "Failed: " + err; // Return a success/error indicator.
-			}`
+				var sql_command = "INSERT INTO stproc_test_table1 (num_col1) VALUES (" + FLOAT_PARAM1 + ")";
+				try {
+					snowflake.execute (
+						{sqlText: sql_command}
+					);
+					return "Succeeded."; // Return a success/error indicator.
+				}
+				catch (err)  {
+					return "Failed: " + err; // Return a success/error indicator.
+				}`
 		argument := sdk.NewProcedureArgumentRequest("FLOAT_PARAM1", sdk.DataTypeFloat)
 		request := sdk.NewCreateForJavaScriptProcedureRequest(id, sdk.DataTypeString, definition).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
@@ -153,16 +153,16 @@ func TestInt_CreateProcedures(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		definition := `
-		import java.io.InputStream
-		import java.nio.charset.StandardCharsets
-		import com.snowflake.snowpark_java.types.SnowflakeFile
-		import com.snowflake.snowpark_java.Session
-		object FileReader {
-			def execute(session: Session, fileName: String): String = {
-				var input: InputStream = SnowflakeFile.newInstance(fileName).getInputStream()
-				return new String(input.readAllBytes(), StandardCharsets.UTF_8)
-			}
-		}`
+			import java.io.InputStream
+			import java.nio.charset.StandardCharsets
+			import com.snowflake.snowpark_java.types.SnowflakeFile
+			import com.snowflake.snowpark_java.Session
+			object FileReader {
+				def execute(session: Session, fileName: String): String = {
+					var input: InputStream = SnowflakeFile.newInstance(fileName).getInputStream()
+					return new String(input.readAllBytes(), StandardCharsets.UTF_8)
+				}
+			}`
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(dt)
 		argument := sdk.NewProcedureArgumentRequest("input", sdk.DataTypeVARCHAR)
@@ -186,15 +186,15 @@ func TestInt_CreateProcedures(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
 
 		definition := `
-		import com.snowflake.snowpark.functions._
-		import com.snowflake.snowpark._
-		object Filter {
-			def filterByRole(session: Session, tableName: String, role: String): DataFrame = {
-				val table = session.table(tableName)
-				val filteredRows = table.filter(col("role") === role)
-				return filteredRows
-			}
-		}`
+			import com.snowflake.snowpark.functions._
+			import com.snowflake.snowpark._
+			object Filter {
+				def filterByRole(session: Session, tableName: String, role: String): DataFrame = {
+					val table = session.table(tableName)
+					val filteredRows = table.filter(col("role") === role)
+					return filteredRows
+				}
+			}`
 		column1 := sdk.NewProcedureColumnRequest("id", sdk.DataTypeNumber)
 		column2 := sdk.NewProcedureColumnRequest("name", sdk.DataTypeVARCHAR)
 		column3 := sdk.NewProcedureColumnRequest("role", sdk.DataTypeVARCHAR)
@@ -294,6 +294,7 @@ def filter_by_role(session, table_name, role):
 		argument := sdk.NewProcedureArgumentRequest("message", sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForSQLProcedureRequest(id, *returns, definition).
 			WithOrReplace(sdk.Bool(true)).
+			WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
 		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
@@ -321,6 +322,7 @@ def filter_by_role(session, table_name, role):
 		argument := sdk.NewProcedureArgumentRequest("id", sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForSQLProcedureRequest(id, *returns, definition).
 			WithOrReplace(sdk.Bool(true)).
+			WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
 		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
