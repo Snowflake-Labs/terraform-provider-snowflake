@@ -299,6 +299,10 @@ func TestInt_Table(t *testing.T) {
 			WithAt(*sdk.NewTimeTravelRequest().WithOffset(sdk.Pointer(0))).
 			WithMoment(sdk.CloneMomentAt))
 
+		// ensure that time travel is allowed (and revert if needed after the test)
+		revertParameter := updateAccountParameterTemporarily(t, client, sdk.AccountParameterDataRetentionTimeInDays, "1")
+		t.Cleanup(revertParameter)
+
 		err := client.Tables.CreateClone(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
@@ -673,6 +677,26 @@ func TestInt_Table(t *testing.T) {
 			WithConstraintAction(sdk.NewTableConstraintActionRequest().
 				WithAdd(sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypeForeignKey).WithName(sdk.String("OUT_OF_LINE_CONSTRAINT")).WithColumns([]string{"COLUMN_1"}).
 					WithForeignKey(sdk.NewOutOfLineForeignKeyRequest(sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, secondTableName), []string{"COLUMN_3"}))))
+		err = client.Tables.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+	})
+
+	t.Run("add constraint: not null", func(t *testing.T) {
+		name := random.String()
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		columns := []sdk.TableColumnRequest{
+			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
+		}
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
+		alterRequest := sdk.NewAlterTableRequest(id).
+			WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{
+				*sdk.NewTableColumnAlterActionRequest("COLUMN_1").
+					WithNotNullConstraint(sdk.NewTableColumnNotNullConstraintRequest().WithSet(sdk.Bool(true))),
+			}))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 	})

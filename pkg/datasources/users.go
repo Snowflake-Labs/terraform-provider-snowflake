@@ -1,15 +1,14 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -107,49 +106,47 @@ func Users() *schema.Resource {
 
 func ReadUsers(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	userPattern := d.Get("pattern").(string)
 
-	account, err := snowflake.ReadCurrentAccount(db)
-	if err != nil {
+	account, err1 := client.ContextFunctions.CurrentAccount(ctx)
+	region, err2 := client.ContextFunctions.CurrentRegion(ctx)
+	if err1 != nil || err2 != nil {
 		log.Print("[DEBUG] unable to retrieve current account")
 		d.SetId("")
 		return nil
 	}
 
-	d.SetId(fmt.Sprintf("%s.%s", account.Account, account.Region))
-
-	currentUsers, err := snowflake.ListUsers(userPattern, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
+	d.SetId(fmt.Sprintf("%s.%s", account, region))
+	extractedUsers, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
+		Like: &sdk.Like{Pattern: sdk.String(userPattern)},
+	})
+	if err != nil {
 		log.Printf("[DEBUG] no users found in account (%s)", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse users in account (%s)", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	users := []map[string]interface{}{}
+	users := make([]map[string]any, len(extractedUsers))
 
-	for _, user := range currentUsers {
-		userMap := map[string]interface{}{}
-		userMap["name"] = user.Name.String
-		userMap["login_name"] = user.LoginName.String
-		userMap["comment"] = user.Comment.String
-		userMap["disabled"] = user.Disabled
-		userMap["default_warehouse"] = user.DefaultWarehouse.String
-		userMap["default_namespace"] = user.DefaultNamespace.String
-		userMap["default_role"] = user.DefaultRole.String
-		userMap["default_secondary_roles"] = strings.Split(
-			helpers.ListContentToString(user.DefaultSecondaryRoles.String), ",")
-		userMap["has_rsa_public_key"] = user.HasRsaPublicKey
-		userMap["email"] = user.Email.String
-		userMap["display_name"] = user.DisplayName.String
-		userMap["first_name"] = user.FirstName.String
-		userMap["last_name"] = user.LastName.String
-
-		users = append(users, userMap)
+	for i, user := range extractedUsers {
+		users[i] = map[string]any{
+			"name":                    user.Name,
+			"login_name":              user.LoginName,
+			"comment":                 user.Comment,
+			"disabled":                user.Disabled,
+			"default_warehouse":       user.DefaultWarehouse,
+			"default_namespace":       user.DefaultNamespace,
+			"default_role":            user.DefaultRole,
+			"default_secondary_roles": strings.Split(helpers.ListContentToString(user.DefaultSecondaryRoles), ","),
+			"has_rsa_public_key":      user.HasRsaPublicKey,
+			"email":                   user.Email,
+			"display_name":            user.DisplayName,
+			"first_name":              user.FirstName,
+			"last_name":               user.LastName,
+		}
 	}
 
 	return d.Set("users", users)

@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -62,7 +61,7 @@ func ReadWarehouses(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
-	account, err := snowflake.ReadCurrentAccount(db)
+	account, err := client.ContextFunctions.CurrentSessionDetails(ctx)
 	if err != nil {
 		d.SetId("")
 		return nil

@@ -850,3 +850,20 @@ type informationSchemaColumns struct {
 	IdentityOrdered        sql.NullString `db:"IDENTITY_ORDERED"`
 	Comment                sql.NullString `db:"COMMENT"`
 }
+
+func updateAccountParameterTemporarily(t *testing.T, client *sdk.Client, parameter sdk.AccountParameter, newValue string) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	param, err := client.Parameters.ShowAccountParameter(ctx, parameter)
+	require.NoError(t, err)
+	oldValue := param.Value
+
+	err = client.Parameters.SetAccountParameter(ctx, parameter, newValue)
+	require.NoError(t, err)
+
+	return func() {
+		err = client.Parameters.SetAccountParameter(ctx, parameter, oldValue)
+		require.NoError(t, err)
+	}
+}

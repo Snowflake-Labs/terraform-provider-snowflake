@@ -362,6 +362,7 @@ const (
 	AccountParameterTimestampTypeMapping                  AccountParameter = "TIMESTAMP_TYPE_MAPPING"
 	AccountParameterTimestampTzOutputFormat               AccountParameter = "TIMESTAMP_TZ_OUTPUT_FORMAT"
 	AccountParameterTimezone                              AccountParameter = "TIMEZONE"
+	AccountParameterTransactionAbortOnError               AccountParameter = "TRANSACTION_ABORT_ON_ERROR"
 	AccountParameterTransactionDefaultIsolationLevel      AccountParameter = "TRANSACTION_DEFAULT_ISOLATION_LEVEL"
 	AccountParameterTwoDigitCenturyStart                  AccountParameter = "TWO_DIGIT_CENTURY_START"
 	AccountParameterUnsupportedDdlAction                  AccountParameter = "UNSUPPORTED_DDL_ACTION"
@@ -421,6 +422,7 @@ const (
 	SessionParameterTimestampTypeMapping                  SessionParameter = "TIMESTAMP_TYPE_MAPPING"
 	SessionParameterTimestampTZOutputFormat               SessionParameter = "TIMESTAMP_TZ_OUTPUT_FORMAT"
 	SessionParameterTimezone                              SessionParameter = "TIMEZONE"
+	SessionParameterTransactionAbortOnError               SessionParameter = "TRANSACTION_ABORT_ON_ERROR"
 	SessionParameterTransactionDefaultIsolationLevel      SessionParameter = "TRANSACTION_DEFAULT_ISOLATION_LEVEL"
 	SessionParameterTwoDigitCenturyStart                  SessionParameter = "TWO_DIGIT_CENTURY_START"
 	SessionParameterUnsupportedDDLAction                  SessionParameter = "UNSUPPORTED_DDL_ACTION"
@@ -474,6 +476,7 @@ const (
 	UserParameterJsonIndent                            UserParameter = "JSON_INDENT"
 	UserParameterLockTimeout                           UserParameter = "LOCK_TIMEOUT"
 	UserParameterMultiStatementCount                   UserParameter = "MULTI_STATEMENT_COUNT"
+	UserParameterNetworkPolicy                         UserParameter = "NETWORK_POLICY"
 	UserParameterQueryTag                              UserParameter = "QUERY_TAG"
 	UserParameterQuotedIdentifiersIgnoreCase           UserParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
 	UserParameterRowsPerResultset                      UserParameter = "ROWS_PER_RESULTSET"
@@ -614,7 +617,7 @@ type SessionParameters struct {
 	LockTimeout                           *int                              `ddl:"parameter" sql:"LOCK_TIMEOUT"`
 	MultiStatementCount                   *int                              `ddl:"parameter" sql:"MULTI_STATEMENT_COUNT"`
 	QueryTag                              *string                           `ddl:"parameter,single_quotes" sql:"QUERY_TAG"`
-	QuotedIdentifiersIgnoreCase           *bool                             `ddl:"parameter,single_quotes" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	QuotedIdentifiersIgnoreCase           *bool                             `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
 	RowsPerResultset                      *int                              `ddl:"parameter" sql:"ROWS_PER_RESULTSET"`
 	SimulatedDataSharingConsumer          *string                           `ddl:"parameter,single_quotes" sql:"SIMULATED_DATA_SHARING_CONSUMER"`
 	StatementTimeoutInSeconds             *int                              `ddl:"parameter" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
@@ -629,6 +632,7 @@ type SessionParameters struct {
 	Timezone                              *string                           `ddl:"parameter,single_quotes" sql:"TIMEZONE"`
 	TimeInputFormat                       *string                           `ddl:"parameter,single_quotes" sql:"TIME_INPUT_FORMAT"`
 	TimeOutputFormat                      *string                           `ddl:"parameter,single_quotes" sql:"TIME_OUTPUT_FORMAT"`
+	TransactionAbortOnError               *bool                             `ddl:"parameter" sql:"TRANSACTION_ABORT_ON_ERROR"`
 	TransactionDefaultIsolationLevel      *TransactionDefaultIsolationLevel `ddl:"parameter,single_quotes" sql:"TRANSACTION_DEFAULT_ISOLATION_LEVEL"`
 	TwoDigitCenturyStart                  *int                              `ddl:"parameter" sql:"TWO_DIGIT_CENTURY_START"`
 	UnsupportedDDLAction                  *UnsupportedDDLAction             `ddl:"parameter,single_quotes" sql:"UNSUPPORTED_DDL_ACTION"`
