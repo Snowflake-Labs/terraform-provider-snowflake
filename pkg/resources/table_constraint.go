@@ -17,6 +17,7 @@ import (
 // - read (from the existing comment it seems that active warehouse is needed (it should be probably added to the resource as required)
 // - drop (in tests it's not dropped correctly, probably also because missing warehouse)
 // - do we need it?
+// - not null cannot be set as a named constraint but it can be set by alter column statement - should it be added back here?
 var tableConstraintSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
