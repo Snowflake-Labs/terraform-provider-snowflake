@@ -3,7 +3,6 @@ package sdk
 import (
 	"strings"
 	"testing"
-	// "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 )
 
 func TestPolicyReferencesGetForEntity(t *testing.T) {
@@ -89,5 +88,56 @@ func TestPolicyReferencesGetForEntity(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'account'))", strings.ReplaceAll(accountName.FullyQualifiedName(), `"`, `\"`))
+	})
+
+	integrationName := NewAccountObjectIdentifier("integration")
+	t.Run("validation: domain: integration", func(t *testing.T) {
+		opts := &getForEntityPolicyReferenceOptions{
+			tableFunction: &tableFunction{
+				table: Bool(true),
+				policyReferenceFunction: &policyReferenceFunction{
+					functionFullyQualifiedName: Bool(true),
+					arguments: &policyReferenceFunctionArguments{
+						refEntityName:   []ObjectIdentifier{integrationName},
+						refEntityDomain: String("integration"),
+					},
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'integration'))", strings.ReplaceAll(integrationName.FullyQualifiedName(), `"`, `\"`))
+	})
+
+	tagName := NewSchemaObjectIdentifier("db", "schema", "tag")
+	t.Run("validation: domain: tag", func(t *testing.T) {
+		opts := &getForEntityPolicyReferenceOptions{
+			tableFunction: &tableFunction{
+				table: Bool(true),
+				policyReferenceFunction: &policyReferenceFunction{
+					functionFullyQualifiedName: Bool(true),
+					arguments: &policyReferenceFunctionArguments{
+						refEntityName:   []ObjectIdentifier{tagName},
+						refEntityDomain: String("tag"),
+					},
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'tag'))", strings.ReplaceAll(tagName.FullyQualifiedName(), `"`, `\"`))
+	})
+
+	viewName := NewSchemaObjectIdentifier("db", "schema", "view")
+	t.Run("validation: domain: integration", func(t *testing.T) {
+		opts := &getForEntityPolicyReferenceOptions{
+			tableFunction: &tableFunction{
+				table: Bool(true),
+				policyReferenceFunction: &policyReferenceFunction{
+					functionFullyQualifiedName: Bool(true),
+					arguments: &policyReferenceFunctionArguments{
+						refEntityName:   []ObjectIdentifier{viewName},
+						refEntityDomain: String("view"),
+					},
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'view'))", strings.ReplaceAll(viewName.FullyQualifiedName(), `"`, `\"`))
 	})
 }
