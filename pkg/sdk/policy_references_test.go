@@ -9,7 +9,37 @@ import (
 func TestPolicyReferencesGetForEntity(t *testing.T) {
 	userName := NewAccountObjectIdentifierFromFullyQualifiedName("USER")
 
-	// TODO: VALidation empty options
+	t.Run("validation: missing refEntityName", func(t *testing.T) {
+		opts := &getForEntityPolicyReferenceOptions{
+			tableFunction: &tableFunction{
+				table: Bool(true),
+				policyReferenceFunction: &policyReferenceFunction{
+					functionFullyQualifiedName: Bool(true),
+					arguments: &policyReferenceFunctionArguments{
+						refEntityName:   nil,
+						refEntityDomain: String("user"),
+					},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("getForEntityPolicyReferenceOptions", "refEntityName"))
+	})
+
+	t.Run("validation: missing refEntityDomain", func(t *testing.T) {
+		opts := &getForEntityPolicyReferenceOptions{
+			tableFunction: &tableFunction{
+				table: Bool(true),
+				policyReferenceFunction: &policyReferenceFunction{
+					functionFullyQualifiedName: Bool(true),
+					arguments: &policyReferenceFunctionArguments{
+						refEntityName:   []ObjectIdentifier{userName},
+						refEntityDomain: nil,
+					},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("getForEntityPolicyReferenceOptions", "refEntityDomain"))
+	})
 
 	t.Run("validation: domain: user", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
