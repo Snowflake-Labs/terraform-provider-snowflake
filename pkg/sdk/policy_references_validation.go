@@ -11,8 +11,11 @@ func (opts *getForEntityPolicyReferenceOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if opts.tableFunction == nil {
-		errs = append(errs, errors.New("tableFunction must not be nil"))
+	if opts.tableFunction.policyReferenceFunction.arguments.refEntityDomain == nil {
+		errs = append(errs, errNotSet("getForEntityPolicyReferenceOptions", "refEntityDomain"))
+	}
+	if opts.tableFunction.policyReferenceFunction.arguments.refEntityName == nil {
+		errs = append(errs, errNotSet("getForEntityPolicyReferenceOptions", "refEntityName"))
 	}
 	return errors.Join(errs...)
 }
