@@ -75,7 +75,7 @@ func TestPolicyReferencesGetForEntity(t *testing.T) {
 	})
 
 	accountName := NewAccountObjectIdentifier("account")
-	t.Run("validation: domain: table", func(t *testing.T) {
+	t.Run("validation: domain: account", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
 			tableFunction: &tableFunction{
 				table: Bool(true),
