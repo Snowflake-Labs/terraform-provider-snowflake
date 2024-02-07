@@ -31,7 +31,8 @@ jobs:
                 "labels": ["${{ secrets.JIRA_LABEL }}"],
                 "customfield_11401": {"id": "${{ secrets.JIRA_AREA }}"},
                 "customfield_10008": "${{ secrets.JIRA_EPIC }}",
-                "assignee": {"id": "${{ secrets.JIRA_ASSIGNEE }}"}
+                "assignee": {"id": "${{ secrets.JIRA_ASSIGNEE }}"},
+                "reporter": {"id": "${{ secrets.JIRA_ASSIGNEE }}"}
               }
             }
           }'
