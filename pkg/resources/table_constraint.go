@@ -373,7 +373,7 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		alterStatement := sdk.NewAlterTableRequest(*tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithRename(constraintRequest))
 		err = client.Tables.Alter(ctx, alterStatement)
 		if err != nil {
-			return fmt.Errorf("error renaming table constraint %v err = %w", &tc.name, err)
+			return fmt.Errorf("error renaming table constraint %s err = %w", tc.name, err)
 		}
 	}
 
