@@ -1,4 +1,9 @@
+resource "snowflake_share" "test" {
+  name = var.to_share
+}
+
 resource "snowflake_database" "test" {
+  depends_on = [snowflake_share.test]
   name = var.database
 }
 
@@ -15,10 +20,6 @@ resource "snowflake_table" "test" {
     name = "id"
     type = "NUMBER(38,0)"
   }
-}
-
-resource "snowflake_share" "test" {
-  name = var.to_share
 }
 
 resource "snowflake_grant_privileges_to_share" "test_setup" {
