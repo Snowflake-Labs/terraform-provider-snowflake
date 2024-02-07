@@ -256,6 +256,9 @@ func revokeRoleFromRole(db *sql.DB, role1, role2 string) error {
 }
 
 func revokeRoleFromUser(db *sql.DB, role1, user string) error {
+	ctx := context.Background()
+	client := sdk.NewClientFromDB(db)
+
 	rg := snowflake.RoleGrant(role1).User(user)
 	err := snowflake.Exec(db, rg.Revoke())
 	if driverErr, ok := err.(*gosnowflake.SnowflakeError); ok { //nolint:errorlint // todo: should be fixed
@@ -263,10 +266,12 @@ func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 		// 002003 (02000): SQL compilation error:
 		// User 'XXX' does not exist or not authorized.
 		if driverErr.Number == 2003 {
-			users, _ := snowflake.ListUsers(user, db)
+			users, _ := client.Users.Show(ctx, &sdk.ShowUserOptions{
+				Like: &sdk.Like{Pattern: sdk.String(user)},
+			})
 			logins := make([]string, len(users))
 			for i, u := range users {
-				logins[i] = u.LoginName.String
+				logins[i] = u.LoginName
 			}
 			if !snowflake.Contains(logins, user) {
 				log.Printf("[WARN] User %s does not exist. No need to revoke role %s", user, role1)

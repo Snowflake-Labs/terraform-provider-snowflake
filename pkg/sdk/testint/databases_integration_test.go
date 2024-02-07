@@ -119,12 +119,12 @@ func TestInt_CreateShared(t *testing.T) {
 	shareTest, shareCleanup := createShare(t, secondaryClient)
 	t.Cleanup(shareCleanup)
 
-	err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.GrantPrivilegeToShareOn{
+	err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: databaseTest.ID(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		err := secondaryClient.Grants.RevokePrivilegeFromShare(ctx, sdk.ObjectPrivilegeUsage, &sdk.RevokePrivilegeFromShareOn{
+		err := secondaryClient.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 			Database: databaseTest.ID(),
 		}, shareTest.ID())
 		require.NoError(t, err)

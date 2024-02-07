@@ -1,26 +1,31 @@
 package resources_test
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_TABLE_DATA_RETENTION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle")
-	}
-
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -61,15 +66,15 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 }
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_TABLE_DATA_RETENTION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle")
-	}
-
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -131,10 +136,13 @@ func TestAcc_Table(t *testing.T) {
 	table2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	table3Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -670,7 +678,6 @@ resource "snowflake_table" "test_table" {
 		nullable = false
 	}
 	primary_key {
-		name = ""
 		keys = ["column2"]
 	}
 }
@@ -868,10 +875,13 @@ resource "snowflake_table" "test_table" {
 func TestAcc_TableDefaults(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: tableColumnWithDefaults(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -896,7 +906,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.type", "NUMBER(38,0)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf(`"%v"."%v".%v`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
@@ -919,7 +929,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.type", "NUMBER(38,0)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf(`"%v"."%v".%v`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
@@ -1005,10 +1015,14 @@ func TestAcc_TableTags(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tagName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tag2Name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: tableWithTags(accName, tagName, tag2Name, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1080,10 +1094,13 @@ resource "snowflake_table" "test_table" {
 func TestAcc_TableIdentity(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: tableColumnWithIdentityDefault(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1214,10 +1231,14 @@ resource "snowflake_table" "test_table" {
 func TestAcc_TableRename(t *testing.T) {
 	oldTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	newTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfigWithName(oldTableName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1262,4 +1283,97 @@ resource "snowflake_table" "test_table" {
 }
 `
 	return fmt.Sprintf(s, tableName, databaseName, schemaName)
+}
+
+func TestAcc_Table_MaskingPolicy(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, fmt.Sprintf("%s1", accName)).FullyQualifiedName()),
+				),
+			},
+			// this step proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2186
+			{
+				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, fmt.Sprintf("%s2", accName)).FullyQualifiedName()),
+				),
+			},
+		},
+	})
+}
+
+func tableWithMaskingPolicy(name string, databaseName string, schemaName string, policy string) string {
+	s := `
+resource "snowflake_masking_policy" "policy1" {
+	name 	 		   = "%[1]s1"
+	database 	       = "%[2]s"
+	schema   		   = "%[3]s"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
+	}
+	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+	return_data_type   = "VARCHAR(16777216)"
+}
+
+resource "snowflake_masking_policy" "policy2" {
+	name 	 		   = "%[1]s2"
+	database 	       = "%[2]s"
+	schema   		   = "%[3]s"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
+	}
+	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+	return_data_type   = "VARCHAR(16777216)"
+}
+
+resource "snowflake_table" "test_table" {
+	name     = "%[1]s"
+	database = "%[2]s"
+	schema   = "%[3]s"
+	comment  = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(16)"
+		masking_policy = snowflake_masking_policy.%[4]s.qualified_name
+	}
+}
+`
+	return fmt.Sprintf(s, name, databaseName, schemaName, policy)
+}
+
+func testAccCheckTableDestroy(s *terraform.State) error {
+	db := acc.TestAccProvider.Meta().(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "snowflake_table" {
+			continue
+		}
+		ctx := context.Background()
+		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
+		existingTable, err := client.Tables.ShowByID(ctx, id)
+		if err == nil {
+			return fmt.Errorf("table %v still exists", existingTable.ID().FullyQualifiedName())
+		}
+	}
+	return nil
 }

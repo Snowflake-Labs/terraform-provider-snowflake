@@ -310,6 +310,44 @@ func TestInt_MaterializedViews(t *testing.T) {
 		assert.Equal(t, false, alteredView.IsSecure)
 	})
 
+	// Based on usage notes, set/unset tags is done through VIEW (https://docs.snowflake.com/en/sql-reference/sql/alter-materialized-view#usage-notes).
+	// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
+	t.Run("alter materialized view: set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := createTag(t, client, testDb(t), testSchema(t))
+		t.Cleanup(tagCleanup)
+
+		materializedView := createMaterializedView(t)
+		id := materializedView.ID()
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+		alterRequestSetTags := sdk.NewAlterViewRequest(id).WithSetTags(tags)
+
+		err := client.Views.Alter(ctx, alterRequestSetTags)
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTable)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		alterRequestUnsetTags := sdk.NewAlterViewRequest(id).WithUnsetTags(unsetTags)
+
+		err = client.Views.Alter(ctx, alterRequestUnsetTags)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTable)
+		require.Error(t, err)
+	})
+
 	t.Run("show materialized view: default", func(t *testing.T) {
 		view1 := createMaterializedView(t)
 		view2 := createMaterializedView(t)
@@ -321,6 +359,22 @@ func TestInt_MaterializedViews(t *testing.T) {
 		assert.Equal(t, 2, len(returnedViews))
 		assert.Contains(t, returnedViews, *view1)
 		assert.Contains(t, returnedViews, *view2)
+	})
+
+	t.Run("show materialized view: no existing view", func(t *testing.T) {
+		showRequest := sdk.NewShowMaterializedViewRequest().
+			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, testSchema(t).Name)})
+		returnedViews, err := client.MaterializedViews.Show(ctx, showRequest)
+		require.NoError(t, err)
+
+		assert.Equal(t, 0, len(returnedViews))
+	})
+
+	t.Run("show materialized view: schema not existing", func(t *testing.T) {
+		showRequest := sdk.NewShowMaterializedViewRequest().
+			WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "made-up-name")})
+		_, err := client.MaterializedViews.Show(ctx, showRequest)
+		require.Error(t, err)
 	})
 
 	t.Run("show materialized view: with options", func(t *testing.T) {

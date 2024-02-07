@@ -425,13 +425,16 @@ func (s *ColumnInlineConstraintRequest) WithNoRely(noRely *bool) *ColumnInlineCo
 }
 
 func NewOutOfLineConstraintRequest(
-	name string,
 	constraintType ColumnConstraintType,
 ) *OutOfLineConstraintRequest {
 	s := OutOfLineConstraintRequest{}
-	s.Name = name
 	s.Type = constraintType
 	return &s
+}
+
+func (s *OutOfLineConstraintRequest) WithName(name *string) *OutOfLineConstraintRequest {
+	s.Name = name
+	return s
 }
 
 func (s *OutOfLineConstraintRequest) WithColumns(columns []string) *OutOfLineConstraintRequest {
@@ -1184,6 +1187,11 @@ func (s *TableColumnAddActionRequest) WithTags(tags []TagAssociation) *TableColu
 	return s
 }
 
+func (s *TableColumnAddActionRequest) WithComment(comment *string) *TableColumnAddActionRequest {
+	s.Comment = comment
+	return s
+}
+
 func NewTableColumnAddInlineConstraintRequest() *TableColumnAddInlineConstraintRequest {
 	return &TableColumnAddInlineConstraintRequest{}
 }
@@ -1193,7 +1201,7 @@ func (s *TableColumnAddInlineConstraintRequest) WithNotNull(notNull *bool) *Tabl
 	return s
 }
 
-func (s *TableColumnAddInlineConstraintRequest) WithName(name string) *TableColumnAddInlineConstraintRequest {
+func (s *TableColumnAddInlineConstraintRequest) WithName(name *string) *TableColumnAddInlineConstraintRequest {
 	s.Name = name
 	return s
 }
@@ -1233,11 +1241,9 @@ func NewTableColumnRenameActionRequest(
 }
 
 func NewTableColumnAlterActionRequest(
-	column bool,
 	name string,
 ) *TableColumnAlterActionRequest {
 	s := TableColumnAlterActionRequest{}
-	s.Column = column
 	s.Name = name
 	return &s
 }
@@ -1369,10 +1375,8 @@ func (s *TableConstraintRenameActionRequest) WithNewName(newName string) *TableC
 	return s
 }
 
-func NewTableConstraintAlterActionRequest(columns []string) *TableConstraintAlterActionRequest {
-	return &TableConstraintAlterActionRequest{
-		Columns: columns,
-	}
+func NewTableConstraintAlterActionRequest() *TableConstraintAlterActionRequest {
+	return &TableConstraintAlterActionRequest{}
 }
 
 func (s *TableConstraintAlterActionRequest) WithConstraintName(constraintName *string) *TableConstraintAlterActionRequest {
@@ -1392,6 +1396,11 @@ func (s *TableConstraintAlterActionRequest) WithUnique(unique *bool) *TableConst
 
 func (s *TableConstraintAlterActionRequest) WithForeignKey(foreignKey *bool) *TableConstraintAlterActionRequest {
 	s.ForeignKey = foreignKey
+	return s
+}
+
+func (s *TableConstraintAlterActionRequest) WithColumns(columns []string) *TableConstraintAlterActionRequest {
+	s.Columns = columns
 	return s
 }
 
@@ -1425,10 +1434,8 @@ func (s *TableConstraintAlterActionRequest) WithNoRely(noRely *bool) *TableConst
 	return s
 }
 
-func NewTableConstraintDropActionRequest(columns []string) *TableConstraintDropActionRequest {
-	return &TableConstraintDropActionRequest{
-		Columns: columns,
-	}
+func NewTableConstraintDropActionRequest() *TableConstraintDropActionRequest {
+	return &TableConstraintDropActionRequest{}
 }
 
 func (s *TableConstraintDropActionRequest) WithConstraintName(constraintName *string) *TableConstraintDropActionRequest {
@@ -1448,6 +1455,11 @@ func (s *TableConstraintDropActionRequest) WithUnique(unique *bool) *TableConstr
 
 func (s *TableConstraintDropActionRequest) WithForeignKey(foreignKey *bool) *TableConstraintDropActionRequest {
 	s.ForeignKey = foreignKey
+	return s
+}
+
+func (s *TableConstraintDropActionRequest) WithColumns(columns []string) *TableConstraintDropActionRequest {
+	s.Columns = columns
 	return s
 }
 
@@ -1559,6 +1571,11 @@ func (s *TableExternalTableColumnAddActionRequest) WithType(dataType DataType) *
 
 func (s *TableExternalTableColumnAddActionRequest) WithExpression(expression string) *TableExternalTableColumnAddActionRequest {
 	s.Expression = expression
+	return s
+}
+
+func (s *TableExternalTableColumnAddActionRequest) WithComment(comment *string) *TableExternalTableColumnAddActionRequest {
+	s.Comment = comment
 	return s
 }
 

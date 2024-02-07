@@ -2,9 +2,7 @@ package snowflake
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -147,7 +145,7 @@ func (tb *TagBuilder) AddMaskingPolicy() string {
 	return fmt.Sprintf(`ALTER TAG %v SET MASKING POLICY %v`, tb.QualifiedName(), tb.maskingPolicyBuilder.QualifiedName())
 }
 
-// ReamoveMaskingPolicy returns the SQL query that will remove a masking policy from a tag.
+// RemoveMaskingPolicy returns the SQL query that will remove a masking policy from a tag.
 func (tb *TagBuilder) RemoveMaskingPolicy() string {
 	return fmt.Sprintf(`ALTER TAG %v UNSET MASKING POLICY %v`, tb.QualifiedName(), tb.maskingPolicyBuilder.QualifiedName())
 }
@@ -211,24 +209,4 @@ func ScanTagPolicy(row *sqlx.Row) (*TagPolicyAttachment, error) {
 	r := &TagPolicyAttachment{}
 	err := row.StructScan(r)
 	return r, err
-}
-
-// ListTags returns a list of tags in a database or schema.
-func ListTags(databaseName, schemaName string, db *sql.DB) ([]Tag, error) {
-	stmt := fmt.Sprintf(`SHOW TAGS IN SCHEMA "%v"."%v"`, databaseName, schemaName)
-	rows, err := Query(db, stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	tags := []Tag{}
-	if err := sqlx.StructScan(rows, &tags); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Println("[DEBUG] no tags found")
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to scan row for %s err = %w", stmt, err)
-	}
-	return tags, nil
 }

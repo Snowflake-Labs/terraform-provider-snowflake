@@ -124,7 +124,8 @@ func TestInt_Table(t *testing.T) {
 				WithNotNull(sdk.Bool(true)),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
 		}
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest("OUT_OF_LINE_CONSTRAINT", sdk.ColumnConstraintTypeForeignKey).
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypeForeignKey).
+			WithName(sdk.String("OUT_OF_LINE_CONSTRAINT")).
 			WithColumns([]string{"COLUMN_1"}).
 			WithForeignKey(sdk.NewOutOfLineForeignKeyRequest(sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, table2.Name), []string{"id"}).
 				WithMatch(sdk.Pointer(sdk.FullMatchType)).
@@ -297,6 +298,10 @@ func TestInt_Table(t *testing.T) {
 			WithCopyGrants(sdk.Bool(true)).WithClonePoint(sdk.NewClonePointRequest().
 			WithAt(*sdk.NewTimeTravelRequest().WithOffset(sdk.Pointer(0))).
 			WithMoment(sdk.CloneMomentAt))
+
+		// ensure that time travel is allowed (and revert if needed after the test)
+		revertParameter := updateAccountParameterTemporarily(t, client, sdk.AccountParameterDataRetentionTimeInDays, "1")
+		t.Cleanup(revertParameter)
 
 		err := client.Tables.CreateClone(ctx, request)
 		require.NoError(t, err)
@@ -476,7 +481,7 @@ func TestInt_Table(t *testing.T) {
 
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithColumnAction(sdk.NewTableColumnActionRequest().
-				WithAdd(sdk.NewTableColumnAddActionRequest("COLUMN_3", sdk.DataTypeVARCHAR)))
+				WithAdd(sdk.NewTableColumnAddActionRequest("COLUMN_3", sdk.DataTypeVARCHAR).WithComment(sdk.String("some comment"))))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -670,7 +675,7 @@ func TestInt_Table(t *testing.T) {
 
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithConstraintAction(sdk.NewTableConstraintActionRequest().
-				WithAdd(sdk.NewOutOfLineConstraintRequest("OUT_OF_LINE_CONSTRAINT", sdk.ColumnConstraintTypeForeignKey).WithColumns([]string{"COLUMN_1"}).
+				WithAdd(sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypeForeignKey).WithName(sdk.String("OUT_OF_LINE_CONSTRAINT")).WithColumns([]string{"COLUMN_1"}).
 					WithForeignKey(sdk.NewOutOfLineForeignKeyRequest(sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, secondTableName), []string{"COLUMN_3"}))))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -685,7 +690,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 		oldConstraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(oldConstraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithName(sdk.String(oldConstraintName)).WithColumns([]string{"COLUMN_1"})
 
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(*outOfLineConstraint))
 		require.NoError(t, err)
@@ -703,7 +708,6 @@ func TestInt_Table(t *testing.T) {
 
 	// TODO [SNOW-1007542]: check altered constraint
 	t.Run("alter constraint: alter", func(t *testing.T) {
-		t.Skip("Test is failing: generated statement is not compiling but it is aligned with Snowflake docs https://docs.snowflake.com/en/sql-reference/sql/alter-table#syntax. Requires further investigation.")
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		columns := []sdk.TableColumnRequest{
@@ -711,21 +715,20 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithName(sdk.String(constraintName)).WithColumns([]string{"COLUMN_1"})
 
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(*outOfLineConstraint))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 
 		alterRequest := sdk.NewAlterTableRequest(id).
-			WithConstraintAction(sdk.NewTableConstraintActionRequest().WithAlter(sdk.NewTableConstraintAlterActionRequest([]string{"COLUMN_1"}).WithConstraintName(sdk.String(constraintName)).WithEnforced(sdk.Bool(true))))
+			WithConstraintAction(sdk.NewTableConstraintActionRequest().WithAlter(sdk.NewTableConstraintAlterActionRequest().WithConstraintName(sdk.String(constraintName)).WithEnforced(sdk.Bool(true))))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 	})
 
 	// TODO [SNOW-1007542]: check dropped constraint
-	t.Run("alter constraint: drop", func(t *testing.T) {
-		t.Skip("Test is failing: generated statement is not compiling but it is aligned with Snowflake docs https://docs.snowflake.com/en/sql-reference/sql/alter-table#syntax. Requires further investigation.")
+	t.Run("alter constraint: drop constraint with name", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		columns := []sdk.TableColumnRequest{
@@ -733,19 +736,37 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(constraintName, sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithName(sdk.String(constraintName)).WithColumns([]string{"COLUMN_1"})
 
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(*outOfLineConstraint))
 		require.NoError(t, err)
 		t.Cleanup(cleanupTableProvider(id))
 
 		alterRequest := sdk.NewAlterTableRequest(id).
-			WithConstraintAction(sdk.NewTableConstraintActionRequest().WithDrop(sdk.NewTableConstraintDropActionRequest([]string{"COLUMN_1"}).WithConstraintName(sdk.String(constraintName))))
+			WithConstraintAction(sdk.NewTableConstraintActionRequest().WithDrop(sdk.NewTableConstraintDropActionRequest().WithConstraintName(sdk.String(constraintName))))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 	})
 
-	t.Run("external table: add", func(t *testing.T) {
+	t.Run("alter constraint: drop primary key without constraint name", func(t *testing.T) {
+		name := random.String()
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		columns := []sdk.TableColumnRequest{
+			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
+		}
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns).WithOutOfLineConstraint(*outOfLineConstraint))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
+		alterRequest := sdk.NewAlterTableRequest(id).
+			WithConstraintAction(sdk.NewTableConstraintActionRequest().WithDrop(sdk.NewTableConstraintDropActionRequest().WithPrimaryKey(sdk.Bool(true))))
+		err = client.Tables.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+	})
+
+	t.Run("external table: add column", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		columns := []sdk.TableColumnRequest{
@@ -758,7 +779,12 @@ func TestInt_Table(t *testing.T) {
 		t.Cleanup(cleanupTableProvider(id))
 
 		alterRequest := sdk.NewAlterTableRequest(id).
-			WithExternalTableAction(sdk.NewTableExternalTableActionRequest().WithAdd(sdk.NewTableExternalTableColumnAddActionRequest().WithName("COLUMN_3").WithType(sdk.DataTypeNumber).WithExpression("1 + 1")))
+			WithExternalTableAction(sdk.NewTableExternalTableActionRequest().WithAdd(sdk.NewTableExternalTableColumnAddActionRequest().
+				WithName("COLUMN_3").
+				WithType(sdk.DataTypeNumber).
+				WithExpression("1 + 1").
+				WithComment(sdk.String("some comment")),
+			))
 
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)

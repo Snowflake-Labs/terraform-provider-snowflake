@@ -263,16 +263,25 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 	// If replication configuration changes, need to update accounts that have permission to replicate database
 	if d.HasChange("replication_configuration") {
 		oldConfig, newConfig := d.GetChange("replication_configuration")
-		newAccounts := newConfig.([]interface{})[0].(map[string]interface{})["accounts"].([]interface{})
-		newAccountIDs := make([]sdk.AccountIdentifier, len(newAccounts))
-		for i, account := range newAccounts {
-			newAccountIDs[i] = sdk.NewAccountIdentifierFromAccountLocator(account.(string))
+
+		newAccountIDs := make([]sdk.AccountIdentifier, 0)
+		ignoreEditionCheck := false
+		if len(newConfig.([]interface{})) != 0 {
+			newAccounts := newConfig.([]interface{})[0].(map[string]interface{})["accounts"].([]interface{})
+			for _, account := range newAccounts {
+				newAccountIDs = append(newAccountIDs, sdk.NewAccountIdentifierFromAccountLocator(account.(string)))
+			}
+			ignoreEditionCheck = newConfig.([]interface{})[0].(map[string]interface{})["ignore_edition_check"].(bool)
 		}
-		oldAccounts := oldConfig.([]interface{})[0].(map[string]interface{})["accounts"].([]interface{})
-		oldAccountIDs := make([]sdk.AccountIdentifier, len(oldAccounts))
-		for i, account := range oldAccounts {
-			oldAccountIDs[i] = sdk.NewAccountIdentifierFromAccountLocator(account.(string))
+
+		oldAccountIDs := make([]sdk.AccountIdentifier, 0)
+		if len(oldConfig.([]interface{})) != 0 {
+			oldAccounts := oldConfig.([]interface{})[0].(map[string]interface{})["accounts"].([]interface{})
+			for _, account := range oldAccounts {
+				oldAccountIDs = append(oldAccountIDs, sdk.NewAccountIdentifierFromAccountLocator(account.(string)))
+			}
 		}
+
 		accountsToRemove := make([]sdk.AccountIdentifier, 0)
 		accountsToAdd := make([]sdk.AccountIdentifier, 0)
 		// Find accounts to remove
@@ -294,7 +303,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 					ToAccounts: accountsToAdd,
 				},
 			}
-			if ignoreEditionCheck := d.Get("ignore_edition_check").(bool); ignoreEditionCheck {
+			if ignoreEditionCheck {
 				opts.EnableReplication.IgnoreEditionCheck = sdk.Bool(ignoreEditionCheck)
 			}
 			err := client.Databases.AlterReplication(ctx, id, opts)

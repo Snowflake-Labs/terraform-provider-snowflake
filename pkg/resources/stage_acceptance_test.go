@@ -2,7 +2,11 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -12,7 +16,7 @@ import (
 func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
@@ -23,13 +27,88 @@ func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://foo/"),
 				),
-				Destroy: false,
 			},
 			{
 				Config: stageIntegrationConfig(name, "changed", "s3://changed/", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://changed/"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Stage_CreateAndAlter(t *testing.T) {
+	if !hasExternalEnvironmentVariablesSet {
+		t.Skip("Skipping TestAcc_Stages_CreateOnS3 because external environment variables are not set")
+	}
+
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	url := "s3://foo/"
+	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	storageIntegration := ""
+	credentials := fmt.Sprintf("AWS_KEY_ID = '%s' AWS_SECRET_KEY = '%s'", awsKeyId, awsSecretKey)
+	encryption := "TYPE = 'NONE'"
+
+	changedUrl := awsBucketUrl + "/some-path"
+	changedStorageIntegration := "S3_STORAGE_INTEGRATION"
+	changedEncryption := "TYPE = 'AWS_SSE_S3'"
+	changedFileFormat := "TYPE = JSON NULL_IF = []"
+	changedComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	configVariables := func(url string, storageIntegration string, credentials string, encryption string, fileFormat string, comment string) config.Variables {
+		return config.Variables{
+			"database":            config.StringVariable(databaseName),
+			"schema":              config.StringVariable(schemaName),
+			"name":                config.StringVariable(name),
+			"url":                 config.StringVariable(url),
+			"storage_integration": config.StringVariable(storageIntegration),
+			"credentials":         config.StringVariable(credentials),
+			"encryption":          config.StringVariable(encryption),
+			"file_format":         config.StringVariable(fileFormat),
+			"comment":             config.StringVariable(comment),
+		}
+	}
+
+	resourceName := "snowflake_stage.test"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: configVariables(url, storageIntegration, credentials, encryption, "", comment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "storage_integration", storageIntegration),
+					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
+					resource.TestCheckResourceAttr(resourceName, "encryption", encryption),
+					resource.TestCheckResourceAttr(resourceName, "file_format", ""),
+					resource.TestCheckResourceAttr(resourceName, "url", url),
+					resource.TestCheckResourceAttr(resourceName, "comment", comment),
+				),
+			},
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: configVariables(changedUrl, changedStorageIntegration, credentials, changedEncryption, changedFileFormat, changedComment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "storage_integration", changedStorageIntegration),
+					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
+					resource.TestCheckResourceAttr(resourceName, "encryption", changedEncryption),
+					resource.TestCheckResourceAttr(resourceName, "file_format", changedFileFormat),
+					resource.TestCheckResourceAttr(resourceName, "url", changedUrl),
+					resource.TestCheckResourceAttr(resourceName, "comment", changedComment),
 				),
 			},
 		},

@@ -83,6 +83,12 @@ func TestInt_Applications(t *testing.T) {
 	assertApplication := func(t *testing.T, id sdk.AccountObjectIdentifier, applicationPackageName, version string, patch int, comment string) {
 		t.Helper()
 
+		param, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
+		require.NoError(t, err)
+
+		defaultDataRetentionTimeInDays, err := strconv.Atoi(param.Value)
+		require.NoError(t, err)
+
 		e, err := client.Applications.ShowByID(ctx, id)
 		require.NoError(t, err)
 
@@ -96,7 +102,7 @@ func TestInt_Applications(t *testing.T) {
 		assert.Equal(t, patch, e.Patch)
 		assert.Equal(t, "ACCOUNTADMIN", e.Owner)
 		assert.Equal(t, comment, e.Comment)
-		assert.Equal(t, 1, e.RetentionTime)
+		assert.Equal(t, defaultDataRetentionTimeInDays, e.RetentionTime)
 		assert.Empty(t, e.Options)
 	}
 
