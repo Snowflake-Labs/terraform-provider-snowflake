@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -746,7 +747,16 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	var privileges []string
+	actualPrivileges := make([]string, 0)
+	expectedPrivileges := make([]string, 0)
+	expectedPrivileges = append(expectedPrivileges, id.Privileges...)
+
+	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
+	// will be returned as USAGE in SHOW GRANTS command. That's why when IMPORTED PRIVILEGES privilege is set in the ID,
+	// we expect USAGE to be found in the result grants of SHOW GRANTS command.
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool { return strings.ToUpper(s) == "IMPORTED PRIVILEGES" }) {
+		expectedPrivileges = append(expectedPrivileges, "USAGE")
+	}
 
 	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {
@@ -756,7 +766,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		}
 		// Only consider privileges that are already present in the ID, so we
 		// don't delete privileges managed by other resources.
-		if !slices.Contains(id.Privileges, grant.Privilege) {
+		if !slices.Contains(expectedPrivileges, grant.Privilege) {
 			continue
 		}
 		if grant.GrantOption == id.WithGrantOption && grant.GranteeName.Name() == id.RoleName.Name() {
@@ -768,18 +778,27 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 			// grant_on is for future grants, granted_on is for current grants.
 			// They function the same way though in a test for matching the object type
 			if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
-				privileges = append(privileges, grant.Privilege)
+				actualPrivileges = append(actualPrivileges, grant.Privilege)
 			}
 		}
 	}
 
-	logging.DebugLogger.Printf("[DEBUG] Setting privileges: %v", privileges)
-	if err := d.Set("privileges", privileges); err != nil {
+	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
+	// will be returned as USAGE in SHOW GRANTS command. That's why when IMPORTED PRIVILEGES privilege is set in the ID
+	// and USAGE was found in the returned grants, we have to replace USAGE with IMPORTED PRIVILEGES. The check has to be made
+	// because in some cases USAGE itself is a valid privilege, so we shouldn't replace it every time.
+	usageIndex := slices.IndexFunc(actualPrivileges, func(s string) bool { return strings.ToUpper(s) == "USAGE" })
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool { return strings.ToUpper(s) == "IMPORTED PRIVILEGES" }) && usageIndex >= 0 {
+		actualPrivileges[usageIndex] = "IMPORTED PRIVILEGES"
+	}
+
+	logging.DebugLogger.Printf("[DEBUG] Setting privileges: %v", actualPrivileges)
+	if err := d.Set("privileges", actualPrivileges); err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Error setting privileges for account role",
-				Detail:   fmt.Sprintf("Id: %s\nPrivileges: %v\nError: %s", d.Id(), privileges, err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nPrivileges: %v\nError: %s", d.Id(), actualPrivileges, err.Error()),
 			},
 		}
 	}

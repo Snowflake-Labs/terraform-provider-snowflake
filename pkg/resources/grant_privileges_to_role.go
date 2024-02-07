@@ -834,14 +834,24 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 	}
 
 	withGrantOption := d.Get("with_grant_option").(bool)
-	privileges := []string{}
 	roleName := d.Get("role_name").(string)
+
+	actualPrivileges := make([]string, 0)
+	expectedPrivileges := make([]string, 0)
+	expectedPrivileges = append(expectedPrivileges, id.Privileges...)
+
+	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
+	// will be returned as USAGE in SHOW GRANTS command. That's why when IMPORTED PRIVILEGES privilege is set in the ID,
+	// we expect USAGE to be found in the result grants of SHOW GRANTS command.
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool { return strings.ToUpper(s) == "IMPORTED PRIVILEGES" }) {
+		expectedPrivileges = append(expectedPrivileges, "USAGE")
+	}
 
 	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {
 		// Only consider privileges that are already present in the ID so we
 		// don't delete privileges managed by other resources.
-		if !slices.Contains(id.Privileges, grant.Privilege) {
+		if !slices.Contains(expectedPrivileges, grant.Privilege) {
 			continue
 		}
 		if grant.GrantOption == withGrantOption && grant.GranteeName.Name() == sdk.NewAccountObjectIdentifier(roleName).Name() {
@@ -852,13 +862,22 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 			}
 			// grant_on is for future grants, granted_on is for current grants. They function the same way though in a test for matching the object type
 			if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
-				privileges = append(privileges, grant.Privilege)
+				actualPrivileges = append(actualPrivileges, grant.Privilege)
 			}
 		}
 	}
 
+	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
+	// will be returned as USAGE in SHOW GRANTS command. That's why when IMPORTED PRIVILEGES privilege is set in the ID
+	// and USAGE was found in the returned grants, we have to replace USAGE with IMPORTED PRIVILEGES. The check has to be made
+	// because in some cases USAGE itself is a valid privilege, so we shouldn't replace it every time.
+	usageIndex := slices.IndexFunc(actualPrivileges, func(s string) bool { return strings.ToUpper(s) == "USAGE" })
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool { return strings.ToUpper(s) == "IMPORTED PRIVILEGES" }) && usageIndex >= 0 {
+		actualPrivileges[usageIndex] = "IMPORTED PRIVILEGES"
+	}
+
 	logging.DebugLogger.Printf("[DEBUG] Setting privileges on account")
-	if err := d.Set("privileges", privileges); err != nil {
+	if err := d.Set("privileges", actualPrivileges); err != nil {
 		logging.DebugLogger.Printf("[DEBUG] Error setting privileges for account role: err = %v", err)
 		return fmt.Errorf("error setting privileges for account role: %w", err)
 	}
