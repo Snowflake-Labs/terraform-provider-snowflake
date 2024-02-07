@@ -1,6 +1,6 @@
 # Migration guide
 
-This document is meant to help you migrate your Terraform config to the new newest version. In migration guides, we will only 
+This document is meant to help you migrate your Terraform config to the new newest version. In migration guides, we will only
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
@@ -11,6 +11,16 @@ across different versions.
 In recent changes, we introduced a new grant resources to replace the old ones.
 To aid with the migration, we wrote a guide to show one of the possible ways to migrate deprecated resources to their new counter-parts.
 As the guide is more general and applies to every version (and provider), we moved it [here](./docs/technical-documentation/resource_migration.md).
+
+## v0.85.0 ➞ v0.86.0
+
+### snowflake_procedure resource changes
+#### *(deprecation)* return_behavior
+`return_behavior` parameter is deprecated because it is also deprecated in the Snowflake API.
+
+### snowflake_function resource changes
+#### *(behavior change)* return_type
+`return_type` has become force new because there is no way to alter it without dropping and recreating the function.
 
 ## v0.84.0 ➞ v0.85.0
 
@@ -37,7 +47,7 @@ Force new was added for the following attributes (because no usable SQL alter st
 ## v0.73.0 ➞ v0.74.0
 ### Provider configuration changes
 
-In this change we have done a provider refactor to make it more complete and customizable by supporting more options that 
+In this change we have done a provider refactor to make it more complete and customizable by supporting more options that
 were already available in Golang Snowflake driver. This lead to several attributes being added and a few deprecated.
 We will focus on the deprecated ones and show you how to adapt your current configuration to the new changes.
 
@@ -47,7 +57,7 @@ We will focus on the deprecated ones and show you how to adapt your current conf
 provider "snowflake" {
   # before
   username = "username"
-  
+
   # after
   user = "username"
 }
@@ -113,7 +123,7 @@ provider "snowflake" {
 provider "snowflake" {
   # before
   session_params = {}
-  
+
   # after
   params = {}
 }
