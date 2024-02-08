@@ -85,8 +85,7 @@ func ReadContextFunctions(ctx context.Context, d *schema.ResourceData, meta inte
 			diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  fmt.Sprintf("Unable to parse functions in schema (%s)", id),
-				// TODO: link to the design decisions doc
-				Detail: "See our document on design decisions for functions: <LINK (coming soon)>",
+				Detail:   "See our document on design decisions for functions: <LINK (coming soon)>",
 			},
 		}
 	}

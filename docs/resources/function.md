@@ -97,7 +97,7 @@ resource "snowflake_function" "sql_test" {
 - `name` (String) Specifies the identifier for the function; does not have to be unique for the schema in which the function is created. Don't use the | character.
 - `return_type` (String) The return type of the function
 - `schema` (String) The schema in which to create the function. Don't use the | character.
-- `statement` (String) Specifies the javascript / java / sql / python code used to create the function.
+- `statement` (String) Specifies the javascript / java / scala / sql / python code used to create the function.
 
 ### Optional
 
@@ -106,7 +106,7 @@ resource "snowflake_function" "sql_test" {
 - `handler` (String) The handler method for Java / Python function.
 - `imports` (List of String) Imports for Java / Python functions. For Java this a list of jar files, for Python this is a list of Python files.
 - `is_secure` (Boolean) Specifies that the function is secure.
-- `language` (String) The language of the statement
+- `language` (String) Specifies the language of the stored function code.
 - `null_input_behavior` (String) Specifies the behavior of the function when called with null inputs.
 - `packages` (List of String) List of package imports to use for Java / Python functions. For Java, package imports should be of the form: package_name:version_number, where package_name is snowflake_domain:package. For Python use it should be: ('numpy','pandas','xgboost==1.5.0').
 - `return_behavior` (String) Specifies the behavior of the function when returning results

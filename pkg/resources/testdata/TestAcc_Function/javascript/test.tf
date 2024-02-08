@@ -1,7 +1,7 @@
 resource "snowflake_function" "f" {
-  database            = var.database
-  schema              = var.schema
-  name                = var.name
+  database = var.database
+  schema   = var.schema
+  name     = var.name
   arguments {
     name = "d"
     type = "FLOAT"

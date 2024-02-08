@@ -534,8 +534,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 			diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "Describe function failed.",
-				// TODO: link to the design decisions doc
-				Detail: "See our document on design decisions for functions: <LINK (coming soon)>",
+				Detail:   "See our document on design decisions for functions: <LINK (coming soon)>",
 			},
 		}
 	}
