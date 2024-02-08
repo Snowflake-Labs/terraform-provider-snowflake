@@ -724,3 +724,54 @@ func TestAcc_Task_issue2207(t *testing.T) {
 		},
 	})
 }
+
+func TestAcc_Task_issue2036(t *testing.T) {
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":      config.StringVariable(name),
+			"database":  config.StringVariable(acc.TestDatabaseName),
+			"schema":    config.StringVariable(acc.TestSchemaName),
+			"warehouse": config.StringVariable(acc.TestWarehouseName),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// create without when
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", ""),
+				),
+			},
+			// add when
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", "TRUE"),
+				),
+			},
+			// remove when
+			{
+				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", ""),
+				),
+			},
+		},
+	})
+}

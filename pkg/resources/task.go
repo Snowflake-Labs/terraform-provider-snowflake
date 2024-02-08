@@ -11,6 +11,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -149,6 +150,9 @@ func Task() *schema.Resource {
 		Read:   ReadTask,
 		Update: UpdateTask,
 		Delete: DeleteTask,
+		CustomizeDiff: customdiff.ForceNewIfChange("when", func(ctx context.Context, old, new, meta any) bool {
+			return old.(string) != "" && new.(string) == ""
+		}),
 
 		Schema: taskSchema,
 		Importer: &schema.ResourceImporter{
