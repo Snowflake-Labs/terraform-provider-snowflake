@@ -97,8 +97,9 @@ func Test_getPredecessors(t *testing.T) {
 		{predecessorsRaw: "[\n  \"\\\"qgb)Z1KcNWJ(\\\".\\\"glN@JtR=7dzP$7\\\".Ls.T7-(bt{.lWd@DRWkyA6<6hNdh\"\n]", expectedPredecessors: []string{"Ls.T7-(bt{.lWd@DRWkyA6<6hNdh"}},
 		{predecessorsRaw: fmt.Sprintf("[\n  \"\\\"a\\\".\\\"b\\\".\\\"%s\\\"\"\n]", special), expectedPredecessors: []string{special}},
 		{predecessorsRaw: "[\n  \"\\\"a\\\".\\\"b\\\".\\\"c\\\"\",\"\\\"a\\\".\\\"b\\\".\\\"d\\\"\",\"\\\"a\\\".\\\"b\\\".\\\"e\\\"\"\n]", expectedPredecessors: []string{"c", "d", "e"}},
-		{predecessorsRaw: "[\"\\\"a\\\".\\\"b\\\".\\\".PHo,k:%Sz8tdx,9?23xTsgHLYxe\\\"\"]", expectedPredecessors: []string{".PHo,k:%Sz8tdx,9?23xTsgHLYxe"}},
-		{predecessorsRaw: "[\"MY_DB.MY_SCH.MY_PARENT_TASK\"]", expectedPredecessors: []string{"MY_PARENT_TASK"}},
+		{predecessorsRaw: `["\"a\".\"b\".\".PHo,k:%Sz8tdx,9?23xTsgHLYxe\""]`, expectedPredecessors: []string{".PHo,k:%Sz8tdx,9?23xTsgHLYxe"}},
+		{predecessorsRaw: `["MY_DB.MY_SCH.MY_PARENT_TASK"]`, expectedPredecessors: []string{"MY_PARENT_TASK"}},
+		{predecessorsRaw: `["CTG_DEV_PLK.INGESTION.COPY_FROM_KINESIS_S3_DELIVERY"]`, expectedPredecessors: []string{"COPY_FROM_KINESIS_S3_DELIVERY"}},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test number %d for input: [%s]", i, tt.predecessorsRaw), func(t *testing.T) {
