@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var languages = []string{"javascript", "java", "sql", "python"}
+var languages = []string{"javascript", "scala", "java", "sql", "python"}
 
 var functionSchema = map[string]*schema.Schema{
 	"name": {
@@ -75,16 +75,19 @@ var functionSchema = map[string]*schema.Schema{
 	"statement": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the javascript / java / sql / python code used to create the function.",
+		Description:      "Specifies the javascript / java / scala / sql / python code used to create the function.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
 	"language": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ForceNew:     true,
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "SQL",
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.EqualFold(old, new)
+		},
 		ValidateFunc: validation.StringInSlice(languages, true),
-		Description:  "The language of the statement",
+		Description:  "Specifies the language of the stored function code.",
 	},
 	"null_input_behavior": {
 		Type:     schema.TypeString,
@@ -179,7 +182,7 @@ func CreateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 		return createPythonFunction(ctx, d, meta)
 	case "SCALA":
 		return createScalaFunction(ctx, d, meta)
-	case "": // SQL if language is not set
+	case "", "SQL": // SQL if language is not set
 		return createSQLFunction(ctx, d, meta)
 	default:
 		return diag.Diagnostics{
@@ -255,12 +258,12 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := client.Functions.CreateForJava(ctx, request); err != nil {
 		return diag.FromErr(err)
 	}
-	argumentTypes := make([]string, len(arguments))
-	for i, item := range arguments {
-		argumentTypes[i] = string(item.ArgDataType)
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := NewFunctionID(database, schema, name, argumentTypes)
-	d.SetId(nid.String())
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
 
@@ -328,12 +331,12 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := client.Functions.CreateForScala(ctx, request); err != nil {
 		return diag.FromErr(err)
 	}
-	argumentTypes := make([]string, len(arguments))
-	for i, item := range arguments {
-		argumentTypes[i] = string(item.ArgDataType)
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := NewFunctionID(database, schema, name, argumentTypes)
-	d.SetId(nid.String())
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
 
@@ -375,12 +378,12 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := client.Functions.CreateForSQL(ctx, request); err != nil {
 		return diag.FromErr(err)
 	}
-	argumentTypes := make([]string, len(arguments))
-	for i, item := range arguments {
-		argumentTypes[i] = string(item.ArgDataType)
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := NewFunctionID(database, schema, name, argumentTypes)
-	d.SetId(nid.String())
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
 
@@ -443,12 +446,12 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := client.Functions.CreateForPython(ctx, request); err != nil {
 		return diag.FromErr(err)
 	}
-	argumentTypes := make([]string, len(arguments))
-	for i, item := range arguments {
-		argumentTypes[i] = string(item.ArgDataType)
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := NewFunctionID(database, schema, name, argumentTypes)
-	d.SetId(nid.String())
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
 
@@ -493,12 +496,12 @@ func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta 
 	if err := client.Functions.CreateForJavascript(ctx, request); err != nil {
 		return diag.FromErr(err)
 	}
-	argumentTypes := make([]string, len(arguments))
-	for i, item := range arguments {
-		argumentTypes[i] = string(item.ArgDataType)
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-	nid := NewFunctionID(database, schema, name, argumentTypes)
-	d.SetId(nid.String())
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
 
@@ -507,11 +510,8 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	id, err := DecodeFunctionID(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("name", id.name.Name()); err != nil {
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	if err := d.Set("name", id.Name()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("database", id.DatabaseName()); err != nil {
@@ -526,7 +526,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	for i, arg := range arguments {
 		argumentTypes[i] = arg.(map[string]interface{})["type"].(string)
 	}
-	functionDetails, err := client.Functions.Describe(ctx, sdk.NewDescribeFunctionRequest(id.name, id.argumentTypes))
+	functionDetails, err := client.Functions.Describe(ctx, sdk.NewDescribeFunctionRequest(id.WithoutArguments(), id.Arguments()))
 	if err != nil {
 		// if function is not found then mark resource to be removed from state file during apply or refresh
 		d.SetId("")
@@ -626,7 +626,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// Show functions to set is_secure and comment
-	request := sdk.NewShowFunctionRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&sdk.Like{Pattern: sdk.String(id.name.Name())})
+	request := sdk.NewShowFunctionRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&sdk.Like{Pattern: sdk.String(id.Name())})
 	functions, err := client.Functions.Show(ctx, request)
 	if err != nil {
 		return diag.FromErr(err)
@@ -634,7 +634,8 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	for _, function := range functions {
 		signature := strings.Split(function.Arguments, " RETURN ")[0]
 		signature = strings.ReplaceAll(signature, " ", "")
-		if signature == id.ArgumentSignature() {
+		id.FullyQualifiedName()
+		if signature == id.ArgumentsSignature() {
 			if err := d.Set("is_secure", function.IsSecure); err != nil {
 				return diag.FromErr(err)
 			}
@@ -650,17 +651,13 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	id, err := DecodeFunctionID(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
 		name := d.Get("name")
-		if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.name, id.argumentTypes).WithRenameTo(sdk.Pointer(sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name.(string))))); err != nil {
+		if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name.(string))))); err != nil {
 			return diag.FromErr(err)
 		}
-		id.name = sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name.(string))
+		id = sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name.(string), id.Arguments())
 		if err := d.Set("name", name); err != nil {
 			return diag.FromErr(err)
 		}
@@ -668,11 +665,11 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("is_secure") {
 		secure := d.Get("is_secure")
 		if secure.(bool) {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.name, id.argumentTypes).WithSetSecure(sdk.Bool(true))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithSetSecure(sdk.Bool(true))); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.name, id.argumentTypes).WithUnsetSecure(sdk.Bool(true))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithUnsetSecure(sdk.Bool(true))); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -680,11 +677,11 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if comment != "" {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.name, id.argumentTypes).WithSetComment(sdk.String(comment.(string)))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithSetComment(sdk.String(comment.(string)))); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.name, id.argumentTypes).WithUnsetComment(sdk.Bool(true))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithUnsetComment(sdk.Bool(true))); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -696,11 +693,8 @@ func DeleteContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	id, err := DecodeFunctionID(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id.name, id.argumentTypes)); err != nil {
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id.WithoutArguments(), id.Arguments())); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")
@@ -721,63 +715,6 @@ func parseFunctionArguments(d *schema.ResourceData) ([]sdk.FunctionArgumentReque
 		}
 	}
 	return args, nil
-}
-
-type functionID struct {
-	name          sdk.SchemaObjectIdentifier
-	argumentTypes []sdk.DataType
-}
-
-func (i functionID) DatabaseName() string {
-	return i.name.DatabaseName()
-}
-
-func (i functionID) SchemaName() string {
-	return i.name.SchemaName()
-}
-
-func (i functionID) FunctionName() string {
-	return i.name.Name()
-}
-
-func (i functionID) ArgumentTypes() []sdk.DataType {
-	return i.argumentTypes
-}
-
-func (i functionID) ArgumentSignature() string {
-	argumentTypes := make([]string, len(i.argumentTypes))
-	for i, item := range i.argumentTypes {
-		argumentTypes[i] = string(item)
-	}
-	return fmt.Sprintf("%v(%v)", i.name.Name(), strings.Join(argumentTypes, ","))
-}
-
-func (i functionID) String() string {
-	argumentTypes := make([]string, len(i.argumentTypes))
-	for i, item := range i.argumentTypes {
-		argumentTypes[i] = string(item)
-	}
-	return fmt.Sprintf("%v|%v|%v|%v", i.DatabaseName(), i.SchemaName(), i.FunctionName(), strings.Join(argumentTypes, ","))
-}
-
-func NewFunctionID(database, schema, name string, argumentTypes []string) *functionID {
-	argDataTypes := make([]sdk.DataType, len(argumentTypes))
-	for i, item := range argumentTypes {
-		argDataTypes[i], _ = sdk.ToDataType(item)
-	}
-	return &functionID{
-		name:          sdk.NewSchemaObjectIdentifier(database, schema, name),
-		argumentTypes: argDataTypes,
-	}
-}
-
-func DecodeFunctionID(id string) (*functionID, error) {
-	parts := strings.Split(id, "|")
-	if len(parts) != 4 {
-		return nil, fmt.Errorf("invalid function id %v", id)
-	}
-	argumentTypes := strings.Split(parts[3], ",")
-	return NewFunctionID(parts[0], parts[1], parts[2], argumentTypes), nil
 }
 
 func convertFunctionDataType(s string) (sdk.DataType, diag.Diagnostics) {

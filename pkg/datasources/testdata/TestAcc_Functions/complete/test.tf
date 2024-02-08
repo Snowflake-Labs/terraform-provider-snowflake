@@ -1,19 +1,3 @@
-variable "function_name_one" {
-  type = string
-}
-
-variable "function_name_two" {
-  type = string
-}
-
-variable "database" {
-  type = string
-}
-
-variable "schema" {
-  type = string
-}
-
 resource "snowflake_function" "test_function_one" {
   name        = var.function_name_one
   database    = var.database
@@ -37,8 +21,8 @@ resource "snowflake_function" "test_function_two" {
   return_type = "varchar"
   language    = "JAVASCRIPT"
   statement   = <<-EOF
-		var X=1
-		return X
+		var x = 1
+		return x
   EOF
 }
 

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -74,12 +75,7 @@ func ReadContextFunctions(ctx context.Context, d *schema.ResourceData, meta inte
 	schemaName := d.Get("schema").(string)
 
 	request := sdk.NewShowFunctionRequest()
-	if databaseName != "" {
-		request.WithIn(&sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseName)})
-	}
-	if schemaName != "" {
-		request.WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)})
-	}
+	request.WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)})
 	functions, err := client.Functions.Show(ctx, request)
 	if err != nil {
 		id := d.Id()
@@ -111,7 +107,7 @@ func ReadContextFunctions(ctx context.Context, d *schema.ResourceData, meta inte
 
 		entities = append(entities, m)
 	}
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
+	d.SetId(helpers.EncodeSnowflakeID(databaseName, schemaName))
 	if err := d.Set("functions", entities); err != nil {
 		return diag.FromErr(err)
 	}

@@ -24,7 +24,7 @@ func TestAcc_Functions(t *testing.T) {
 			"function_name_two": config.StringVariable(functionNameTwo),
 		}
 	}
-	configVariables := m()
+	variableSet1 := m()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -35,7 +35,7 @@ func TestAcc_Functions(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Functions/complete"),
-				ConfigVariables: configVariables,
+				ConfigVariables: variableSet1,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(dataSourceName, "schema", acc.TestSchemaName),
