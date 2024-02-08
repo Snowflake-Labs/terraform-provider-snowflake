@@ -1,10 +1,16 @@
 package resources_test
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
@@ -976,6 +982,61 @@ resource "snowflake_grant_privileges_to_role" "test_invalidation" {
   }
 }`, acc.TestSchemaName),
 				ExpectError: regexp.MustCompile(".*Expected DatabaseObjectIdentifier identifier type.*"),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToRole_ImportedPrivileges(t *testing.T) {
+	sharedDatabaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	secondaryAccountName, err := getSecondaryAccountName(t)
+	require.NoError(t, err)
+	configVariables := config.Variables{
+		"role_name":            config.StringVariable(roleName),
+		"shared_database_name": config.StringVariable(sharedDatabaseName),
+		"share_name":           config.StringVariable(shareName),
+		"account_name":         config.StringVariable(secondaryAccountName),
+		"privileges": config.ListVariable(
+			config.StringVariable(sdk.AccountObjectPrivilegeImportedPrivileges.String()),
+		),
+	}
+	resourceName := "snowflake_grant_privileges_to_role.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: func(state *terraform.State) error {
+			return errors.Join(
+				testAccCheckAccountRolePrivilegesRevoked(roleName)(state),
+				dropSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName),
+			)
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig:       func() { assert.NoError(t, createSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName)) },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/ImportedPrivileges"),
+				ConfigVariables: configVariables,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.AccountObjectPrivilegeImportedPrivileges.String()),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/ImportedPrivileges"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
