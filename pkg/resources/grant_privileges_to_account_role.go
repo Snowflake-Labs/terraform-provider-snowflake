@@ -23,6 +23,10 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 		Description:      "The fully qualified name of the account role to which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
+	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
+	// will be returned as USAGE in SHOW GRANTS command. In addition, USAGE itself is a valid privilege, but both cannot be set at the
+	// same time (IMPORTED PRIVILEGES can only be granted to the database created from SHARE and USAGE in every other case).
+	// To handle both cases, additional logic was added in read operation where IMPORTED PRIVILEGES is replaced with USAGE.
 	"privileges": {
 		Type:        schema.TypeSet,
 		Optional:    true,
@@ -751,11 +755,10 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	expectedPrivileges := make([]string, 0)
 	expectedPrivileges = append(expectedPrivileges, id.Privileges...)
 
-	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
-	// will be returned as USAGE in SHOW GRANTS command. That's why when IMPORTED PRIVILEGES privilege is set in the ID,
-	// we expect USAGE to be found in the result grants of SHOW GRANTS command.
-	if slices.ContainsFunc(expectedPrivileges, func(s string) bool { return strings.ToUpper(s) == "IMPORTED PRIVILEGES" }) {
-		expectedPrivileges = append(expectedPrivileges, "USAGE")
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool {
+		return strings.ToUpper(s) == sdk.AccountObjectPrivilegeImportedPrivileges.String()
+	}) {
+		expectedPrivileges = append(expectedPrivileges, sdk.AccountObjectPrivilegeUsage.String())
 	}
 
 	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
@@ -783,13 +786,11 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
-	// will be returned as USAGE in SHOW GRANTS command. That's why when IMPORTED PRIVILEGES privilege is set in the ID
-	// and USAGE was found in the returned grants, we have to replace USAGE with IMPORTED PRIVILEGES. The check has to be made
-	// because in some cases USAGE itself is a valid privilege, so we shouldn't replace it every time.
-	usageIndex := slices.IndexFunc(actualPrivileges, func(s string) bool { return strings.ToUpper(s) == "USAGE" })
-	if slices.ContainsFunc(expectedPrivileges, func(s string) bool { return strings.ToUpper(s) == "IMPORTED PRIVILEGES" }) && usageIndex >= 0 {
-		actualPrivileges[usageIndex] = "IMPORTED PRIVILEGES"
+	usageIndex := slices.IndexFunc(actualPrivileges, func(s string) bool { return strings.ToUpper(s) == sdk.AccountObjectPrivilegeUsage.String() })
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool {
+		return strings.ToUpper(s) == sdk.AccountObjectPrivilegeImportedPrivileges.String()
+	}) && usageIndex >= 0 {
+		actualPrivileges[usageIndex] = sdk.AccountObjectPrivilegeImportedPrivileges.String()
 	}
 
 	logging.DebugLogger.Printf("[DEBUG] Setting privileges: %v", actualPrivileges)
