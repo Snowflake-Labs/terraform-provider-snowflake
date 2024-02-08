@@ -284,7 +284,10 @@ func getPredecessors(predecessors string) ([]string, error) {
 		for i, predecessorName := range predecessorNames {
 			formattedName := strings.Trim(predecessorName, "\\\"")
 			idx := strings.LastIndex(formattedName, "\"") + 1
-			if strings.LastIndex(formattedName, ".\"")+2 < idx {
+			// -1 because of not found +1 is 0
+			if idx == 0 {
+				idx = strings.LastIndex(formattedName, ".") + 1
+			} else if strings.LastIndex(formattedName, ".\"")+2 < idx {
 				idx++
 			}
 			formattedName = formattedName[idx:]

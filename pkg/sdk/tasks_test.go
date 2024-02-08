@@ -98,6 +98,7 @@ func Test_getPredecessors(t *testing.T) {
 		{predecessorsRaw: fmt.Sprintf("[\n  \"\\\"a\\\".\\\"b\\\".\\\"%s\\\"\"\n]", special), expectedPredecessors: []string{special}},
 		{predecessorsRaw: "[\n  \"\\\"a\\\".\\\"b\\\".\\\"c\\\"\",\"\\\"a\\\".\\\"b\\\".\\\"d\\\"\",\"\\\"a\\\".\\\"b\\\".\\\"e\\\"\"\n]", expectedPredecessors: []string{"c", "d", "e"}},
 		{predecessorsRaw: "[\"\\\"a\\\".\\\"b\\\".\\\".PHo,k:%Sz8tdx,9?23xTsgHLYxe\\\"\"]", expectedPredecessors: []string{".PHo,k:%Sz8tdx,9?23xTsgHLYxe"}},
+		{predecessorsRaw: "[\"MY_DB.MY_SCH.MY_PARENT_TASK\"]", expectedPredecessors: []string{"MY_PARENT_TASK"}},
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test number %d for input: [%s]", i, tt.predecessorsRaw), func(t *testing.T) {
