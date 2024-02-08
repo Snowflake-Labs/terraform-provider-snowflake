@@ -1,12 +1,12 @@
 package testint
 
 import (
-	"testing"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
@@ -205,6 +205,83 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(grants))
 	})
+
+	t.Run("grant and revoke on all pipes", func(t *testing.T) {
+		schemaIdentifier := sdk.RandomDatabaseObjectIdentifier()
+		schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
+		t.Cleanup(schemaCleanup)
+
+		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+		t.Cleanup(tableCleanup)
+
+		stageName := random.StringN(20)
+		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, stageName))
+		t.Cleanup(stageCleanup)
+
+		pipe, pipeCleanup := createPipe(t, client, testDb(t), schema, random.StringN(20), createPipeCopyStatement(t, table, stage))
+		t.Cleanup(pipeCleanup)
+
+		role, roleCleanup := createRole(t, client)
+		t.Cleanup(roleCleanup)
+
+		err := client.Grants.GrantPrivilegesToAccountRole(
+			ctx,
+			&sdk.AccountRoleGrantPrivileges{
+				SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeMonitor},
+			},
+			&sdk.AccountRoleGrantOn{
+				SchemaObject: &sdk.GrantOnSchemaObject{
+					All: &sdk.GrantOnSchemaObjectIn{
+						PluralObjectType: sdk.PluralObjectTypePipes,
+						InSchema:         sdk.Pointer(schema.ID()),
+					},
+				},
+			},
+			role.ID(),
+			&sdk.GrantPrivilegesToAccountRoleOptions{},
+		)
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypePipe,
+					Name:       pipe.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		require.Contains(t, grantsToPrivileges(grants), sdk.SchemaObjectPrivilegeMonitor.String())
+
+		err = client.Grants.RevokePrivilegesFromAccountRole(
+			ctx,
+			&sdk.AccountRoleGrantPrivileges{
+				SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeMonitor},
+			},
+			&sdk.AccountRoleGrantOn{
+				SchemaObject: &sdk.GrantOnSchemaObject{
+					All: &sdk.GrantOnSchemaObjectIn{
+						PluralObjectType: sdk.PluralObjectTypePipes,
+						InSchema:         sdk.Pointer(schema.ID()),
+					},
+				},
+			},
+			role.ID(),
+			&sdk.RevokePrivilegesFromAccountRoleOptions{},
+		)
+		require.NoError(t, err)
+
+		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypePipe,
+					Name:       pipe.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		require.NotContains(t, grantsToPrivileges(grants), sdk.SchemaObjectPrivilegeMonitor.String())
+	})
 }
 
 func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
@@ -401,6 +478,83 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		})
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(returnedGrants))
+	})
+
+	t.Run("grant and revoke on all pipes", func(t *testing.T) {
+		schemaIdentifier := sdk.RandomDatabaseObjectIdentifier()
+		schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
+		t.Cleanup(schemaCleanup)
+
+		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+		t.Cleanup(tableCleanup)
+
+		stageName := random.StringN(20)
+		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, stageName))
+		t.Cleanup(stageCleanup)
+
+		pipe, pipeCleanup := createPipe(t, client, testDb(t), schema, random.StringN(20), createPipeCopyStatement(t, table, stage))
+		t.Cleanup(pipeCleanup)
+
+		role, roleCleanup := createDatabaseRole(t, client, testDb(t))
+		t.Cleanup(roleCleanup)
+
+		err := client.Grants.GrantPrivilegesToDatabaseRole(
+			ctx,
+			&sdk.DatabaseRoleGrantPrivileges{
+				SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeMonitor},
+			},
+			&sdk.DatabaseRoleGrantOn{
+				SchemaObject: &sdk.GrantOnSchemaObject{
+					All: &sdk.GrantOnSchemaObjectIn{
+						PluralObjectType: sdk.PluralObjectTypePipes,
+						InSchema:         sdk.Pointer(schema.ID()),
+					},
+				},
+			},
+			sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name),
+			&sdk.GrantPrivilegesToDatabaseRoleOptions{},
+		)
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypePipe,
+					Name:       pipe.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		require.Contains(t, grantsToPrivileges(grants), sdk.SchemaObjectPrivilegeMonitor.String())
+
+		err = client.Grants.RevokePrivilegesFromDatabaseRole(
+			ctx,
+			&sdk.DatabaseRoleGrantPrivileges{
+				SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeMonitor},
+			},
+			&sdk.DatabaseRoleGrantOn{
+				SchemaObject: &sdk.GrantOnSchemaObject{
+					All: &sdk.GrantOnSchemaObjectIn{
+						PluralObjectType: sdk.PluralObjectTypePipes,
+						InSchema:         sdk.Pointer(schema.ID()),
+					},
+				},
+			},
+			sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name),
+			&sdk.RevokePrivilegesFromDatabaseRoleOptions{},
+		)
+		require.NoError(t, err)
+
+		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypePipe,
+					Name:       pipe.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		require.NotContains(t, grantsToPrivileges(grants), sdk.SchemaObjectPrivilegeMonitor.String())
 	})
 }
 
@@ -634,4 +788,12 @@ func TestInt_ShowGrants(t *testing.T) {
 		require.NoError(t, err)
 		assert.LessOrEqual(t, 2, len(grants))
 	})
+}
+
+func grantsToPrivileges(grants []sdk.Grant) []string {
+	privileges := make([]string, len(grants))
+	for i, grant := range grants {
+		privileges[i] = grant.Privilege
+	}
+	return privileges
 }

@@ -428,6 +428,56 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 	})
 }
 
+func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectPrivilegeMonitor)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"with_grant_option": config.BoolVariable(false),
+	}
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
+
+	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		Steps: []resource.TestStep{
+			{
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllPipes"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeMonitor)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.object_type_plural", string(sdk.PluralObjectTypePipes)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.in_database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|MONITOR|OnSchemaObject|OnAll|PIPES|InDatabase|%s", databaseRoleName, databaseName)),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllPipes"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{

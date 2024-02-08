@@ -3,6 +3,7 @@ package resources_test
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"regexp"
 	"strings"
 	"testing"
@@ -884,7 +885,7 @@ func grantPrivilegesToRole_multipleResources(name string, privileges1, privilege
 func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	objectType := "EXTERNAL TABLES"
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
@@ -914,6 +915,55 @@ func TestAcc_GrantPrivilegesToRole_onSchemaObject_futureInDatabase_externalTable
 			// IMPORT
 			{
 				ResourceName:      "snowflake_grant_privileges_to_role.g",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToRole_OnAllPipes(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
+	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	configVariables := config.Variables{
+		"name": config.StringVariable(roleName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaObjectPrivilegeMonitor)),
+		),
+		"database":          config.StringVariable(databaseName),
+		"with_grant_option": config.BoolVariable(false),
+	}
+	resourceName := "snowflake_grant_privileges_to_role.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/OnAllPipes"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeMonitor)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.object_type_plural", string(sdk.PluralObjectTypePipes)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.in_database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|MONITOR|false|false|false|false|false|true|true|false|||PIPES|false||true|%s", roleName, databaseName)),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/OnAllPipes"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
