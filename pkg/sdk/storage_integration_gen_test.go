@@ -139,11 +139,11 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 	t.Run("set - s3", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &StorageIntegrationSet{
-			SetS3Params: &SetS3StorageParams{
+			S3Params: &SetS3StorageParams{
 				StorageAwsRoleArn:   "new-aws-role-arn",
 				StorageAwsObjectAcl: String("new-aws-object-acl"),
 			},
-			Enabled:                 false,
+			Enabled:                 Bool(false),
 			StorageAllowedLocations: []StorageLocation{{Path: "new-allowed-location"}},
 			StorageBlockedLocations: []StorageLocation{{Path: "new-blocked-location"}},
 			Comment:                 String("changed comment"),
@@ -154,10 +154,10 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 	t.Run("set - azure", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &StorageIntegrationSet{
-			SetAzureParams: &SetAzureStorageParams{
+			AzureParams: &SetAzureStorageParams{
 				AzureTenantId: "new-azure-tenant-id",
 			},
-			Enabled:                 false,
+			Enabled:                 Bool(false),
 			StorageAllowedLocations: []StorageLocation{{Path: "new-allowed-location"}},
 			StorageBlockedLocations: []StorageLocation{{Path: "new-blocked-location"}},
 			Comment:                 String("changed comment"),
@@ -184,11 +184,12 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 	t.Run("unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &StorageIntegrationUnset{
+			StorageAwsObjectAcl:     Bool(true),
 			Enabled:                 Bool(true),
 			StorageBlockedLocations: Bool(true),
 			Comment:                 Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER STORAGE INTEGRATION %s UNSET ENABLED, STORAGE_BLOCKED_LOCATIONS, COMMENT", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER STORAGE INTEGRATION %s UNSET STORAGE_AWS_OBJECT_ACL, ENABLED, STORAGE_BLOCKED_LOCATIONS, COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("unset tags", func(t *testing.T) {

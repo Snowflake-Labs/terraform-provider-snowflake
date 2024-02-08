@@ -32,14 +32,6 @@ func (i *SchemaIdentifier) QualifiedName() string {
 	return fmt.Sprintf(`"%v"."%v"`, i.Database, i.Schema)
 }
 
-func SchemaIdentifierFromQualifiedName(name string) *SchemaIdentifier {
-	parts := strings.Split(name, ".")
-	return &SchemaIdentifier{
-		Database: strings.Trim(parts[0], `"`),
-		Schema:   strings.Trim(parts[1], `"`),
-	}
-}
-
 type SchemaObjectIdentifier struct {
 	Database   string
 	Schema     string

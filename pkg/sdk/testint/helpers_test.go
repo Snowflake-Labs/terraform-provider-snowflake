@@ -19,15 +19,16 @@ const (
 )
 
 var (
-	awsBucketUrl, awsBucketUrlIsSet = os.LookupEnv("AWS_EXTERNAL_BUCKET_URL")
-	awsKeyId, awsKeyIdIsSet         = os.LookupEnv("AWS_EXTERNAL_KEY_ID")
-	awsSecretKey, awsSecretKeyIsSet = os.LookupEnv("AWS_EXTERNAL_SECRET_KEY")
-	awsRoleARN, awsRoleARNIsSet     = os.LookupEnv("AWS_EXTERNAL_ROLE_ARN")
+	awsBucketUrl, awsBucketUrlIsSet = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL")
+	awsKeyId, awsKeyIdIsSet         = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_KEY_ID")
+	awsSecretKey, awsSecretKeyIsSet = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY")
+	awsRoleARN, awsRoleARNIsSet     = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN")
 
-	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("GCS_EXTERNAL_BUCKET_URL")
+	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL")
 
-	azureBucketUrl, azureBucketUrlIsSet = os.LookupEnv("AZURE_EXTERNAL_BUCKET_URL")
-	azureTenantId, azureTenantIdIsSet   = os.LookupEnv("AZURE_EXTERNAL_TENANT_ID")
+	azureBucketUrl, azureBucketUrlIsSet = os.LookupEnv("TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL")
+	azureTenantId, azureTenantIdIsSet   = os.LookupEnv("TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID")
+	azureSasToken, azureSasTokenIsSet   = os.LookupEnv("TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN")
 
 	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet &&
 		awsKeyIdIsSet &&
@@ -35,7 +36,8 @@ var (
 		awsRoleARNIsSet &&
 		gcsBucketUrlIsSet &&
 		azureBucketUrlIsSet &&
-		azureTenantIdIsSet
+		azureTenantIdIsSet &&
+		azureSasTokenIsSet
 )
 
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
@@ -254,69 +256,44 @@ func createTag(t *testing.T, client *sdk.Client, database *sdk.Database, schema 
 
 func createStageWithDirectory(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
 	t.Helper()
-	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE STAGE "%s" DIRECTORY = (ENABLE = TRUE)`, name))
-	require.NoError(t, err)
-
-	return &sdk.Stage{
-			DatabaseName: database.Name,
-			SchemaName:   schema.Name,
-			Name:         name,
-		}, func() {
-			_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name))
-			require.NoError(t, err)
-		}
-}
-
-func createStageWithName(t *testing.T, client *sdk.Client, name string) (*string, func()) {
-	t.Helper()
-	ctx := context.Background()
-	stageCleanup := func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP STAGE %s", name))
-		require.NoError(t, err)
-	}
-	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE STAGE %s", name))
-	if err != nil {
-		return nil, stageCleanup
-	}
-	require.NoError(t, err)
-	return &name, stageCleanup
-}
-
-func createStage(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, name string) (*sdk.Stage, func()) {
-	t.Helper()
-	require.NotNil(t, database, "database has to be created")
-	require.NotNil(t, schema, "schema has to be created")
-
 	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	ctx := context.Background()
-
-	stageCleanup := func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf("DROP STAGE %s", id.FullyQualifiedName()))
-		require.NoError(t, err)
-	}
-
-	_, err := client.ExecForTests(ctx, fmt.Sprintf("CREATE STAGE %s", id.FullyQualifiedName()))
-	if err != nil {
-		return nil, stageCleanup
-	}
-	require.NoError(t, err)
-
-	return &sdk.Stage{
-		DatabaseName: database.Name,
-		SchemaName:   schema.Name,
-		Name:         name,
-	}, stageCleanup
+	return createStageWithOptions(t, client, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest {
+		return request.WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true)))
+	})
 }
 
-func createStageWithURL(t *testing.T, client *sdk.Client, name sdk.AccountObjectIdentifier, url string) (*sdk.Stage, func()) {
+func createStage(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier) (*sdk.Stage, func()) {
+	t.Helper()
+	return createStageWithOptions(t, client, id, func(request *sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest { return request })
+}
+
+func createStageWithURL(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, url string) (*sdk.Stage, func()) {
 	t.Helper()
 	ctx := context.Background()
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE STAGE "%s" URL = '%s'`, name.Name(), url))
+	err := client.Stages.CreateOnS3(ctx, sdk.NewCreateOnS3StageRequest(id).
+		WithExternalStageParams(sdk.NewExternalS3StageParamsRequest(url)))
 	require.NoError(t, err)
 
-	return nil, func() {
-		_, err := client.ExecForTests(ctx, fmt.Sprintf(`DROP STAGE "%s"`, name.Name()))
+	stage, err := client.Stages.ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return stage, func() {
+		err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
+		require.NoError(t, err)
+	}
+}
+
+func createStageWithOptions(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, reqMapping func(*sdk.CreateInternalStageRequest) *sdk.CreateInternalStageRequest) (*sdk.Stage, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.Stages.CreateInternal(ctx, reqMapping(sdk.NewCreateInternalStageRequest(id)))
+	require.NoError(t, err)
+
+	stage, err := client.Stages.ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return stage, func() {
+		err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
 		require.NoError(t, err)
 	}
 }
@@ -716,6 +693,28 @@ func putOnStage(t *testing.T, client *sdk.Client, stage *sdk.Stage, filename str
 	require.NoError(t, err)
 }
 
+func putOnStageWithContent(t *testing.T, client *sdk.Client, id sdk.SchemaObjectIdentifier, filename string, content string) {
+	t.Helper()
+	ctx := context.Background()
+
+	tf := fmt.Sprintf("/tmp/%s", filename)
+	f, err := os.Create(tf)
+	require.NoError(t, err)
+	if content != "" {
+		_, err = f.Write([]byte(content))
+		require.NoError(t, err)
+	}
+	f.Close()
+	defer os.Remove(f.Name())
+
+	_, err = client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, f.Name(), id.FullyQualifiedName()))
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_, err = client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @%s/%s`, id.FullyQualifiedName(), filename))
+		require.NoError(t, err)
+	})
+}
+
 func createApplicationPackage(t *testing.T, client *sdk.Client, name string) func() {
 	t.Helper()
 	ctx := context.Background()
@@ -850,4 +849,21 @@ type informationSchemaColumns struct {
 	IdentityCycle          sql.NullString `db:"IDENTITY_CYCLE"`
 	IdentityOrdered        sql.NullString `db:"IDENTITY_ORDERED"`
 	Comment                sql.NullString `db:"COMMENT"`
+}
+
+func updateAccountParameterTemporarily(t *testing.T, client *sdk.Client, parameter sdk.AccountParameter, newValue string) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	param, err := client.Parameters.ShowAccountParameter(ctx, parameter)
+	require.NoError(t, err)
+	oldValue := param.Value
+
+	err = client.Parameters.SetAccountParameter(ctx, parameter, newValue)
+	require.NoError(t, err)
+
+	return func() {
+		err = client.Parameters.SetAccountParameter(ctx, parameter, oldValue)
+		require.NoError(t, err)
+	}
 }

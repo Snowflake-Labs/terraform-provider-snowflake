@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: add tests for setting masking policy on creation
-// TODO: add tests for setting recursive on creation
+// TODO [SNOW-1016430]: add tests for setting masking policy on creation
+// TODO [SNOW-1016430]: add tests for setting recursive on creation
 func TestInt_Views(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -117,6 +117,17 @@ func TestInt_Views(t *testing.T) {
 
 	t.Run("create view: no optionals", func(t *testing.T) {
 		request := createViewBasicRequest(t)
+
+		view := createViewWithRequest(t, request)
+
+		assertView(t, view, request.GetName())
+	})
+
+	// source https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2085
+	t.Run("create view: no table reference", func(t *testing.T) {
+		name := random.String()
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		request := sdk.NewCreateViewRequest(id, "SELECT NULL AS TYPE")
 
 		view := createViewWithRequest(t, request)
 

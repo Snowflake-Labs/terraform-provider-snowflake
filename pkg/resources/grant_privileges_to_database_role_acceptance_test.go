@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"regexp"
-	"slices"
+	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -19,7 +20,7 @@ import (
 )
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -70,7 +71,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -121,7 +122,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -190,7 +191,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema_ExactlyOneOf(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -240,7 +241,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -290,7 +291,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tblName := "test_database_role_table_name"
 	configVariables := config.Variables{
 		"name":       config.StringVariable(name),
@@ -344,7 +345,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPrivilege(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tableName := "test_database_role_table_name"
 	configVariables := config.Variables{
 		"name":       config.StringVariable(name),
@@ -376,7 +377,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPriv
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -428,7 +429,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{
 		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
@@ -480,7 +481,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := func(allPrivileges bool, privileges []sdk.AccountObjectPrivilege) config.Variables {
 		configVariables := config.Variables{
 			"name":     config.StringVariable(name),
@@ -570,7 +571,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := "test_database_role_schema_name"
 	configVariables := func(allPrivileges bool, privileges []string, schemaName string) config.Variables {
 		configVariables := config.Variables{
@@ -610,7 +611,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
 				}, ""),
-				Check: queriedPrivilegesEqualTo(
+				Check: queriedPrivilegesToDatabaseRoleEqualTo(
 					databaseRoleName,
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
@@ -619,7 +620,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/all_privileges"),
 				ConfigVariables: configVariables(true, []string{}, ""),
-				Check: queriedPrivilegesContainAtLeast(
+				Check: queriedPrivilegesToDatabaseRoleContainAtLeast(
 					databaseRoleName,
 					sdk.AccountObjectPrivilegeCreateDatabaseRole.String(),
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
@@ -634,7 +635,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.AccountObjectPrivilegeModify.String(),
 					sdk.AccountObjectPrivilegeMonitor.String(),
 				}, ""),
-				Check: queriedPrivilegesEqualTo(
+				Check: queriedPrivilegesToDatabaseRoleEqualTo(
 					databaseRoleName,
 					sdk.AccountObjectPrivilegeModify.String(),
 					sdk.AccountObjectPrivilegeMonitor.String(),
@@ -646,7 +647,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
 				}, schemaName),
-				Check: queriedPrivilegesEqualTo(
+				Check: queriedPrivilegesToDatabaseRoleEqualTo(
 					databaseRoleName,
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
@@ -657,7 +658,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
-	name := "test_database_role_name"
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := func(alwaysApply bool) config.Variables {
 		return config.Variables{
 			"name":           config.StringVariable(name),
@@ -760,63 +761,24 @@ func createDatabaseRoleOutsideTerraform(t *testing.T, name string) {
 	}
 }
 
-// queriedPrivilegesEqualTo will check if all the privileges specified in the argument are granted in Snowflake.
-// Any additional grants (other than usage and ownership) will be treated as an error.
-func queriedPrivilegesEqualTo(databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return func(s *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		ctx := context.Background()
-		client := sdk.NewClientFromDB(db)
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+func queriedPrivilegesToDatabaseRoleEqualTo(databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesEqualTo(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
+		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 			To: &sdk.ShowGrantsTo{
 				DatabaseRole: databaseRoleName,
 			},
 		})
-		if err != nil {
-			return err
-		}
-		for _, grant := range grants {
-			if grant.Privilege == "USAGE" || grant.Privilege == "OWNERSHIP" {
-				log.Printf("Skipping check for %s privilege as its one of the privileges that are implicitly granted by Snowflake", grant.Privilege)
-				continue
-			}
-			if !slices.Contains(privileges, grant.Privilege) {
-				return fmt.Errorf("grant not expected, grant: %v, not in %v", grants, privileges)
-			}
-		}
-
-		return nil
-	}
+	}, privileges...)
 }
 
-// queriedPrivilegesContainAtLeast will check if all the privileges specified in the argument are granted in Snowflake.
-// Any additional grants will be ignored.
-func queriedPrivilegesContainAtLeast(databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return func(s *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		ctx := context.Background()
-		client := sdk.NewClientFromDB(db)
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+func queriedPrivilegesToDatabaseRoleContainAtLeast(databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesContainAtLeast(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
+		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 			To: &sdk.ShowGrantsTo{
 				DatabaseRole: databaseRoleName,
 			},
 		})
-		if err != nil {
-			return err
-		}
-		var grantedPrivileges []string
-		for _, grant := range grants {
-			grantedPrivileges = append(grantedPrivileges, grant.Privilege)
-		}
-		notAllPrivilegesInGrantedPrivileges := slices.ContainsFunc(privileges, func(privilege string) bool {
-			return !slices.Contains(grantedPrivileges, privilege)
-		})
-		if notAllPrivilegesInGrantedPrivileges {
-			return fmt.Errorf("not every privilege from the list: %v was found in grant privileges: %v, for database role name: %s", privileges, grantedPrivileges, databaseRoleName.FullyQualifiedName())
-		}
-
-		return nil
-	}
+	}, databaseRoleName, privileges...)
 }
 
 func testAccCheckDatabaseRolePrivilegesRevoked(s *terraform.State) error {
@@ -845,7 +807,7 @@ func testAccCheckDatabaseRolePrivilegesRevoked(s *terraform.State) error {
 			}
 		}
 		if len(grantedPrivileges) > 0 {
-			return fmt.Errorf("database role (%s) still grants , granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
+			return fmt.Errorf("database role (%s) is still granted, granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
 		}
 	}
 	return nil

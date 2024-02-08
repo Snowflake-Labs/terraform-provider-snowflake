@@ -70,8 +70,8 @@ func (v *AccountRoleGrantOn) validate() error {
 }
 
 func (v *GrantOnAccountObject) validate() error {
-	if !exactlyOneValueSet(v.User, v.ResourceMonitor, v.Warehouse, v.Database, v.Integration, v.FailoverGroup, v.ReplicationGroup, v.ExternalVolume) {
-		return errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "Database", "Integration", "FailoverGroup", "ReplicationGroup", "ExternalVolume")
+	if !exactlyOneValueSet(v.User, v.ResourceMonitor, v.Warehouse, v.ComputePool, v.Database, v.Integration, v.FailoverGroup, v.ReplicationGroup, v.ExternalVolume) {
+		return errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "FailoverGroup", "ReplicationGroup", "ExternalVolume")
 	}
 	return nil
 }
@@ -233,7 +233,7 @@ func (opts *grantPrivilegeToShareOptions) validate() error {
 	if !ValidObjectIdentifier(opts.to) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !valueSet(opts.On) || opts.privilege == "" {
+	if !valueSet(opts.On) || len(opts.privileges) == 0 {
 		errs = append(errs, fmt.Errorf("on and privilege are required"))
 	}
 	if valueSet(opts.On) {
@@ -244,10 +244,10 @@ func (opts *grantPrivilegeToShareOptions) validate() error {
 	return errors.Join(errs...)
 }
 
-func (v *GrantPrivilegeToShareOn) validate() error {
+func (v *ShareGrantOn) validate() error {
 	var errs []error
-	if !exactlyOneValueSet(v.Database, v.Schema, v.Function, v.Table, v.View) {
-		errs = append(errs, errExactlyOneOf("GrantPrivilegeToShareOn", "Database", "Schema", "Function", "Table", "View"))
+	if !exactlyOneValueSet(v.Database, v.Schema, v.Function, v.Table, v.Tag, v.View) {
+		errs = append(errs, errExactlyOneOf("ShareGrantOn", "Database", "Schema", "Function", "Table", "Tag", "View"))
 	}
 	if valueSet(v.Table) {
 		if err := v.Table.validate(); err != nil {
@@ -272,32 +272,11 @@ func (opts *revokePrivilegeFromShareOptions) validate() error {
 	if !ValidObjectIdentifier(opts.from) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !valueSet(opts.On) || opts.privilege == "" {
-		errs = append(errs, errNotSet("revokePrivilegeFromShareOptions", "On", "privilege"))
+	if !valueSet(opts.On) || len(opts.privileges) == 0 {
+		errs = append(errs, errNotSet("revokePrivilegeFromShareOptions", "On", "privileges"))
 	}
 	if valueSet(opts.On) {
-		if !exactlyOneValueSet(opts.On.Database, opts.On.Schema, opts.On.Table, opts.On.View) {
-			errs = append(errs, errExactlyOneOf("revokePrivilegeFromShareOptions", "On.Database", "On.Schema", "On.Table", "On.View"))
-		}
 		if err := opts.On.validate(); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	return errors.Join(errs...)
-}
-
-func (v *RevokePrivilegeFromShareOn) validate() error {
-	var errs []error
-	if !exactlyOneValueSet(v.Database, v.Schema, v.Table, v.View) {
-		errs = append(errs, errExactlyOneOf("RevokePrivilegeFromShareOn", "Database", "Schema", "Table", "View"))
-	}
-	if valueSet(v.Table) {
-		if err := v.Table.validate(); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	if valueSet(v.View) {
-		if err := v.View.validate(); err != nil {
 			errs = append(errs, err)
 		}
 	}

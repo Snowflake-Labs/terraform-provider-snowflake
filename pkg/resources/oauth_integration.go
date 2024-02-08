@@ -310,7 +310,7 @@ func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("blocked_roles_list") {
 		runSetStatement = true
-		stmt.SetStringList(`BLOCKED_ROLES_LIST`, expandStringList(d.Get("blocked_roles_list").([]interface{})))
+		stmt.SetStringList(`BLOCKED_ROLES_LIST`, expandStringList(d.Get("blocked_roles_list").(*schema.Set).List()))
 	}
 
 	if d.HasChange("enabled") {

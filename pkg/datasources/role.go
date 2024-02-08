@@ -1,11 +1,11 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -25,8 +25,9 @@ var roleSchema = map[string]*schema.Schema{
 // Role Snowflake Role resource.
 func Role() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadRole,
-		Schema: roleSchema,
+		Read:               ReadRole,
+		Schema:             roleSchema,
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_roles instead.",
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -36,23 +37,23 @@ func Role() *schema.Resource {
 // ReadRole Reads the database metadata information.
 func ReadRole(d *schema.ResourceData, meta interface{}) error {
 	db := meta.(*sql.DB)
-	roleName := d.Get("name").(string)
-	role, err := snowflake.NewRoleBuilder(db, roleName).Show()
+	client := sdk.NewClientFromDB(db)
+	ctx := context.Background()
 
-	if errors.Is(err, sql.ErrNoRows) {
+	roleName := d.Get("name").(string)
+
+	role, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(sdk.NewAccountObjectIdentifier(roleName)))
+	if err != nil {
 		log.Printf("[DEBUG] role (%s) not found", roleName)
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
-		return err
-	}
 
-	d.SetId(role.Name.String)
-	if err := d.Set("name", role.Name.String); err != nil {
+	d.SetId(role.Name)
+	if err := d.Set("name", role.Name); err != nil {
 		return err
 	}
-	if err := d.Set("comment", role.Comment.String); err != nil {
+	if err := d.Set("comment", role.Comment); err != nil {
 		return err
 	}
 	return nil

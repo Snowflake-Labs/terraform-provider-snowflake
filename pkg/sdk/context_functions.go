@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// TODO [SNOW-1042951]: add generic select
 type ContextFunctions interface {
 	// Session functions.
 	CurrentAccount(ctx context.Context) (string, error)
@@ -16,6 +17,7 @@ type ContextFunctions interface {
 	CurrentRegion(ctx context.Context) (string, error)
 	CurrentSession(ctx context.Context) (string, error)
 	CurrentUser(ctx context.Context) (string, error)
+	CurrentSessionDetails(ctx context.Context) (*CurrentSessionDetails, error)
 
 	// Session Object functions.
 	CurrentDatabase(ctx context.Context) (string, error)
@@ -28,6 +30,33 @@ var _ ContextFunctions = (*contextFunctions)(nil)
 
 type contextFunctions struct {
 	client *Client
+}
+
+type currentSessionDetailsDBRow struct {
+	CurrentAccount string `db:"CURRENT_ACCOUNT"`
+	CurrentRole    string `db:"CURRENT_ROLE"`
+	CurrentRegion  string `db:"CURRENT_REGION"`
+	CurrentSession string `db:"CURRENT_SESSION"`
+	CurrentUser    string `db:"CURRENT_USER"`
+}
+
+type CurrentSessionDetails struct {
+	Account string `db:"CURRENT_ACCOUNT"`
+	Role    string `db:"CURRENT_ROLE"`
+	Region  string `db:"CURRENT_REGION"`
+	Session string `db:"CURRENT_SESSION"`
+	User    string `db:"CURRENT_USER"`
+}
+
+func (acc *CurrentSessionDetails) AccountURL() (string, error) {
+	if regionID, ok := regionMapping[strings.ToLower(acc.Region)]; ok {
+		accountID := acc.Account
+		if len(regionID) > 0 {
+			accountID = fmt.Sprintf("%s.%s", accountID, regionID)
+		}
+		return fmt.Sprintf("https://%s.snowflakecomputing.com", accountID), nil
+	}
+	return "", fmt.Errorf("failed to map Snowflake account region %s to a region_id", acc.Region)
 }
 
 func (c *contextFunctions) CurrentAccount(ctx context.Context) (string, error) {
@@ -128,6 +157,21 @@ func (c *contextFunctions) CurrentUser(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return s.CurrentUser, nil
+}
+
+func (c *contextFunctions) CurrentSessionDetails(ctx context.Context) (*CurrentSessionDetails, error) {
+	s := &currentSessionDetailsDBRow{}
+	err := c.client.queryOne(ctx, s, "SELECT CURRENT_ACCOUNT() as CURRENT_ACCOUNT, CURRENT_ROLE() as CURRENT_ROLE, CURRENT_REGION() AS CURRENT_REGION, CURRENT_SESSION() as CURRENT_SESSION, CURRENT_USER() as CURRENT_USER")
+	if err != nil {
+		return nil, err
+	}
+	return &CurrentSessionDetails{
+		Account: s.CurrentAccount,
+		Role:    s.CurrentRole,
+		Region:  s.CurrentRegion,
+		Session: s.CurrentSession,
+		User:    s.CurrentUser,
+	}, nil
 }
 
 func (c *contextFunctions) CurrentDatabase(ctx context.Context) (string, error) {

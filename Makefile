@@ -3,6 +3,7 @@ export SKIP_NOTIFICATION_INTEGRATION_TESTS=true
 export SKIP_SAML_INTEGRATION_TESTS=true
 export SKIP_STREAM_TEST=true
 export SKIP_MANAGED_ACCOUNT_INT_TEST=true
+export SKIP_MANAGED_ACCOUNT_TEST=true
 export BASE_BINARY_NAME=terraform-provider-snowflake
 export TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
 export TERRAFORM_PLUGIN_LOCAL_INSTALL=$(TERRAFORM_PLUGINS_DIR)/$(BASE_BINARY_NAME)
@@ -66,10 +67,10 @@ test: test-client ## run unit and integration tests
 	go test -v -cover -timeout=30m ./...
 
 test-acceptance: ## run acceptance tests
-	TF_ACC=1 go test -run "^TestAcc_" -v -cover -timeout=30m ./...
+	TF_ACC=1 go test -run "^TestAcc_" -v -cover -timeout=45m ./...
 
 test-integration: ## run SDK integration tests
-	go test -run "^TestInt_" -v -cover -timeout=20m ./...
+	go test -run "^TestInt_" -v -cover -timeout=30m ./...
 
 test-architecture: ## check architecture constraints between packages
 	go test ./pkg/architests/... -v

@@ -52,7 +52,7 @@ resource "snowflake_table" "fk_t" {
 resource "snowflake_table_constraint" "primary_key" {
   name     = "myconstraint"
   type     = "PRIMARY KEY"
-  table_id = snowflake_table.t.id
+  table_id = snowflake_table.t.qualified_name
   columns  = ["col1"]
   comment  = "hello world"
 }
@@ -60,11 +60,11 @@ resource "snowflake_table_constraint" "primary_key" {
 resource "snowflake_table_constraint" "foreign_key" {
   name     = "myconstraintfk"
   type     = "FOREIGN KEY"
-  table_id = snowflake_table.t.id
+  table_id = snowflake_table.t.qualified_name
   columns  = ["col2"]
   foreign_key_properties {
     references {
-      table_id = snowflake_table.fk_t.id
+      table_id = snowflake_table.fk_t.qualified_name
       columns  = ["fk_col1"]
     }
   }
@@ -77,7 +77,7 @@ resource "snowflake_table_constraint" "foreign_key" {
 resource "snowflake_table_constraint" "unique" {
   name     = "unique"
   type     = "UNIQUE"
-  table_id = snowflake_table.t.id
+  table_id = snowflake_table.t.qualified_name
   columns  = ["col3"]
   comment  = "hello unique"
 }

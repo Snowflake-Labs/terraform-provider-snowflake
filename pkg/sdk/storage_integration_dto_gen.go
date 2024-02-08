@@ -44,9 +44,9 @@ type AlterStorageIntegrationRequest struct {
 }
 
 type StorageIntegrationSetRequest struct {
-	SetS3Params             *SetS3StorageParamsRequest
-	SetAzureParams          *SetAzureStorageParamsRequest
-	Enabled                 bool
+	S3Params                *SetS3StorageParamsRequest
+	AzureParams             *SetAzureStorageParamsRequest
+	Enabled                 *bool
 	StorageAllowedLocations []StorageLocation
 	StorageBlockedLocations []StorageLocation
 	Comment                 *string
@@ -62,6 +62,7 @@ type SetAzureStorageParamsRequest struct {
 }
 
 type StorageIntegrationUnsetRequest struct {
+	StorageAwsObjectAcl     *bool
 	Enabled                 *bool
 	StorageBlockedLocations *bool
 	Comment                 *bool

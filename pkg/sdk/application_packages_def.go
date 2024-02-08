@@ -48,7 +48,7 @@ var applicationPackageUnset = g.NewQueryStruct("ApplicationPackageUnset").
 	OptionalSQL("DEFAULT_DDL_COLLATION").
 	OptionalSQL("COMMENT").
 	OptionalSQL("DISTRIBUTION").
-	WithValidation(g.ExactlyOneValueSet, "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution")
+	WithValidation(g.AtLeastOneValueSet, "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution")
 
 var ApplicationPackagesDef = g.NewInterface(
 	"ApplicationPackages",
@@ -83,7 +83,7 @@ var ApplicationPackagesDef = g.NewInterface(
 		OptionalQueryStructField(
 			"Unset",
 			applicationPackageUnset,
-			g.KeywordOptions().SQL("UNSET"),
+			g.ListOptions().NoParentheses().SQL("UNSET"),
 		).
 		OptionalQueryStructField(
 			"ModifyReleaseDirective",

@@ -1,24 +1,33 @@
 package resources_test
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-// TODO [SNOW-1007539]: use email of our service user
+// TODO [SNOW-1007539]: use email of our service user (verified email address is required)
 func TestAcc_EmailNotificationIntegration(t *testing.T) {
 	emailIntegrationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	verifiedEmail := "artur.sawicki@snowflake.com"
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckEmailNotificationIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: emailNotificationIntegrationConfig(emailIntegrationName, verifiedEmail),
@@ -41,13 +50,8 @@ func emailNotificationIntegrationConfig(name string, email string) string {
 resource "snowflake_email_notification_integration" "test" {
   name               = "%s"
   enabled            = true
-  allowed_recipients = ["%s"] # Verified Email Addresses is required
+  allowed_recipients = ["%s"]
   comment            = "test"
-  /*
-Error: error creating notification integration: 394209 (22023):
-Email recipients in the given list at indexes [1] are not allowed.
-Either these email addresses are not yet validated or do not belong to any user in the current account.
-  */
 }
 `
 	return fmt.Sprintf(s, name, email)
@@ -60,9 +64,12 @@ func TestAcc_EmailNotificationIntegration_issue2223(t *testing.T) {
 	verifiedEmail := "artur.sawicki@snowflake.com"
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckEmailNotificationIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: emailNotificationIntegrationWithoutRecipientsConfig(emailIntegrationName),
@@ -96,4 +103,21 @@ resource "snowflake_email_notification_integration" "test" {
   enabled            = true
 }`
 	return fmt.Sprintf(s, name)
+}
+
+func testAccCheckEmailNotificationIntegrationDestroy(s *terraform.State) error {
+	db := acc.TestAccProvider.Meta().(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "snowflake_email_notification_integration" {
+			continue
+		}
+		ctx := context.Background()
+		id := sdk.NewAccountObjectIdentifier(rs.Primary.Attributes["name"])
+		existingNotificationIntegration, err := client.NotificationIntegrations.ShowByID(ctx, id)
+		if err == nil {
+			return fmt.Errorf("notification integration %v still exists", existingNotificationIntegration.ID().FullyQualifiedName())
+		}
+	}
+	return nil
 }
