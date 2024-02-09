@@ -1,133 +1,178 @@
 package resources_test
 
 import (
-	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_Function(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_FUNCTION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_Function")
+func testAccFunction(t *testing.T, configDirectory string) {
+	t.Helper()
+
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_function.f"
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":     config.StringVariable(name),
+			"database": config.StringVariable(acc.TestDatabaseName),
+			"schema":   config.StringVariable(acc.TestSchemaName),
+			"comment":  config.StringVariable("Terraform acceptance test"),
+		}
 	}
-
-	functName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
-	expBody1 := "3.141592654::FLOAT"
-	expBody2 := "var X=3\nreturn X"
-	expBody3 := "select 1, 2\nunion all\nselect 3, 4\n"
-	expBody4 := `class CoolFunc {public static String test(int n) {return "hello!";}}`
+	variableSet2 := m()
+	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDynamicTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: functionConfig(functName, acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
+				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "name", functName),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "comment", "Terraform acceptance test"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "statement", expBody2),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "arguments.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "arguments.0.name", "ARG1"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct", "arguments.0.type", "VARCHAR"),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
 
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_simple", "name", functName),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_simple", "comment", "user-defined function"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_simple", "statement", expBody1),
-
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "name", functName),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "comment", "Table func with 2 args"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "statement", expBody3),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "arguments.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "arguments.1.name", "ARG2"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_complex", "arguments.1.type", "DATE"),
-
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "name", functName),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "comment", "Terraform acceptance test for java"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "statement", expBody4),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.name", "ARG1"),
-					resource.TestCheckResourceAttr("snowflake_function.test_funct_java", "arguments.0.type", "NUMBER"),
-					checkBool("snowflake_function.test_funct_java", "is_secure", false), // this is from user_acceptance_test.go
-
-					// TODO: temporarily remove unit tests to allow for urgent release
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "name", functName),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "comment", "Terraform acceptance test for python"),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "statement", expBody5),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.#", "2"),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.name", "ARG1"),
-					// resource.TestCheckResourceAttr("snowflake_function.test_funct_python", "arguments.0.type", "NUMBER"),
+					// computed attributes
+					resource.TestCheckResourceAttrSet(resourceName, "return_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "statement"),
+					resource.TestCheckResourceAttrSet(resourceName, "is_secure"),
 				),
+			},
+
+			// test - change comment
+			{
+				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
+				ConfigVariables: variableSet2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
+				),
+			},
+
+			// test - import
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory(configDirectory),
+				ConfigVariables:   variableSet2,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"language",
+					"null_input_behavior",
+					"return_behavior",
+				},
 			},
 		},
 	})
 }
 
-func functionConfig(name string, databaseName string, schemaName string) string {
-	return fmt.Sprintf(`
-	resource "snowflake_function" "test_funct_simple" {
-		name = "%s"
-		database = "%s"
-		schema   = "%s"
-		return_type = "float"
-		statement = "3.141592654::FLOAT"
-	}
+func TestAcc_Function_Javascript(t *testing.T) {
+	testAccFunction(t, "TestAcc_Function/javascript")
+}
 
-	resource "snowflake_function" "test_funct" {
-		name = "%s"
-		database = "%s"
-		schema   = "%s"
-		arguments {
-			name = "arg1"
-			type = "varchar"
-		}
-		comment = "Terraform acceptance test"
-		return_type = "varchar"
-		language = "javascript"
-		statement = "var X=3\nreturn X"
-	}
+func TestAcc_Function_SQL(t *testing.T) {
+	testAccFunction(t, "TestAcc_Function/sql")
+}
 
-	resource "snowflake_function" "test_funct_java" {
-		name = "%s"
-		database = "%s"
-		schema   = "%s"
-		arguments {
-			name = "arg1"
-			type = "number"
-		}
-		comment = "Terraform acceptance test for java"
-		return_type = "varchar"
-		language = "java"
-		handler = "CoolFunc.test"
-		statement = "class CoolFunc {public static String test(int n) {return \"hello!\";}}"
-	}
+func TestAcc_Function_Java(t *testing.T) {
+	testAccFunction(t, "TestAcc_Function/java")
+}
 
-	resource "snowflake_function" "test_funct_complex" {
-		name = "%s"
-		database = "%s"
-		schema   = "%s"
-		arguments {
-			name = "arg1"
-			type = "varchar"
+func TestAcc_Function_Scala(t *testing.T) {
+	testAccFunction(t, "TestAcc_Function/scala")
+}
+
+/*
+ Error: 391528 (42601): SQL compilation error: An active warehouse is required for creating Python UDFs.
+func TestAcc_Function_Python(t *testing.T) {
+	testAccFunction(t, "TestAcc_Function/python")
+}
+*/
+
+func TestAcc_Function_complex(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_function.f"
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":     config.StringVariable(name),
+			"database": config.StringVariable(acc.TestDatabaseName),
+			"schema":   config.StringVariable(acc.TestSchemaName),
+			"comment":  config.StringVariable("Terraform acceptance test"),
 		}
-		arguments {
-			name = "arg2"
-			type = "DATE"
-		}
-		comment = "Table func with 2 args"
-		return_type = "table (x number, y number)"
-		statement = <<EOT
-select 1, 2
-union all
-select 3, 4
-EOT
 	}
-	`, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName, name, databaseName, schemaName)
+	variableSet2 := m()
+	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
+
+	statement := "\t\tif (D <= 0) {\n\t\t\treturn 1;\n\t\t} else {\n\t\t\tvar result = 1;\n\t\t\tfor (var i = 2; i <= D; i++) {\n\t\t\t\tresult = result * i;\n\t\t\t}\n\t\t\treturn result;\n\t\t}\n"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDynamicTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Function/complex"),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, "statement", statement),
+					resource.TestCheckResourceAttr(resourceName, "arguments.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.0.name", "D"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.0.type", "FLOAT"),
+					resource.TestCheckResourceAttr(resourceName, "return_behavior", "VOLATILE"),
+					resource.TestCheckResourceAttr(resourceName, "return_type", "FLOAT"),
+					resource.TestCheckResourceAttr(resourceName, "language", "javascript"),
+					resource.TestCheckResourceAttr(resourceName, "null_input_behavior", "CALLED ON NULL INPUT"),
+
+					// computed attributes
+					resource.TestCheckResourceAttrSet(resourceName, "return_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "statement"),
+					resource.TestCheckResourceAttrSet(resourceName, "is_secure"),
+				),
+			},
+
+			// test - change comment
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Function/complex"),
+				ConfigVariables: variableSet2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
+				),
+			},
+
+			// test - import
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_Function/complex"),
+				ConfigVariables:   variableSet2,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"language",
+				},
+			},
+		},
+	})
 }

@@ -1,57 +1,47 @@
 package datasources_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Functions(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	functionName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+	functionNameOne := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	functionNameTwo := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	dataSourceName := "data.snowflake_functions.functions"
+
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"database":          config.StringVariable(acc.TestDatabaseName),
+			"schema":            config.StringVariable(acc.TestSchemaName),
+			"function_name_one": config.StringVariable(functionNameOne),
+			"function_name_two": config.StringVariable(functionNameTwo),
+		}
+	}
+	variableSet1 := m()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: functions(databaseName, schemaName, functionName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Functions/complete"),
+				ConfigVariables: variableSet1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_functions.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_functions.t", "schema", schemaName),
+					resource.TestCheckResourceAttr(dataSourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(dataSourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttrSet(dataSourceName, "functions.#"),
 				),
 			},
 		},
 	})
-}
-
-func functions(databaseName string, schemaName string, functionName string) string {
-	s := `
-resource "snowflake_database" "test_database" {
-	name 	  = "%v"
-	comment = "Terraform acceptance test"
-}
-resource "snowflake_schema" "test_schema" {
-	name 	   = "%v"
-	database = snowflake_database.test_database.name
-	comment  = "Terraform acceptance test"
-}
-resource "snowflake_function" "test_funct_simple" {
-	name = "%s"
-	database = snowflake_database.test_database.name
-	schema   = snowflake_schema.test_schema.name
-	return_type = "float"
-	statement = "3.141592654::FLOAT"
-}
-
-data snowflake_functions "t" {
-	database = snowflake_database.test_database.name
-	schema = snowflake_schema.test_schema.name
-	depends_on = [snowflake_function.test_funct_simple]
-}
-`
-	return fmt.Sprintf(s, databaseName, schemaName, functionName)
 }
