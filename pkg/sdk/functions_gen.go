@@ -251,8 +251,8 @@ type DescribeFunctionOptions struct {
 }
 
 type functionDetailRow struct {
-	Property string `db:"property"`
-	Value    string `db:"value"`
+	Property string         `db:"property"`
+	Value    sql.NullString `db:"value"`
 }
 
 type FunctionDetail struct {

@@ -397,8 +397,11 @@ func (r *DescribeFunctionRequest) toOpts() *DescribeFunctionOptions {
 }
 
 func (r functionDetailRow) convert() *FunctionDetail {
-	return &FunctionDetail{
+	e := &FunctionDetail{
 		Property: r.Property,
-		Value:    r.Value,
 	}
+	if r.Value.Valid {
+		e.Value = r.Value.String
+	}
+	return e
 }
