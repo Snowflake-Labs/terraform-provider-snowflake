@@ -294,7 +294,13 @@ def filter_by_role(session, table_name, role):
 		argument := sdk.NewProcedureArgumentRequest("message", sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForSQLProcedureRequest(id, *returns, definition).
 			WithOrReplace(sdk.Bool(true)).
-			WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			// Suddenly this is erroring out, when it used to not have an problem. Must be an error with the Snowflake API.
+			// Created issue in docs-discuss channel. https://snowflake.slack.com/archives/C6380540P/p1707511734666249
+			// Error:      	Received unexpected error:
+			// 001003 (42000): SQL compilation error:
+			// syntax error line 1 at position 210 unexpected 'NULL'.
+			// syntax error line 1 at position 215 unexpected 'ON'.
+			// WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
 		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
