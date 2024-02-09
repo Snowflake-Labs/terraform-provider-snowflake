@@ -14,16 +14,6 @@ It is noted as a behavior change but in some way it is not; with the previous im
 
 We will consider adding `NOT NULL` back because it can be set by `ALTER COLUMN columnX SET NOT NULL`, but first we want to revisit the whole resource design.
 
-## vX.XX.X -> v0.85.0
-
-### Migration from old (grant) resources to new ones
-
-In recent changes, we introduced a new grant resources to replace the old ones.
-To aid with the migration, we wrote a guide to show one of the possible ways to migrate deprecated resources to their new counter-parts.
-As the guide is more general and applies to every version (and provider), we moved it [here](./docs/technical-documentation/resource_migration.md).
-
-## v0.85.0 ➞ v0.86.0
-
 ### snowflake_procedure resource changes
 #### *(deprecation)* return_behavior
 `return_behavior` parameter is deprecated because it is also deprecated in the Snowflake API.

@@ -1,11 +1,11 @@
 resource "snowflake_procedure" "p" {
-  database            = var.database
-  schema              = var.schema
-  name                = var.name
+  database = var.database
+  schema   = var.schema
+  name     = var.name
   arguments {
-		name = "arg1"
-		type = "VARCHAR"
-	}
+    name = "arg1"
+    type = "VARCHAR"
+  }
   language            = "SQL"
   return_type         = "VARCHAR"
   execute_as          = "CALLER"

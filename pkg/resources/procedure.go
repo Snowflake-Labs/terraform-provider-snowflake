@@ -58,8 +58,8 @@ var procedureSchema = map[string]*schema.Schema{
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return strings.EqualFold(old, new)
 					},
-					// todo: add validation that this is a valid data type
-					Description: "The argument type",
+					ValidateFunc: IsDataType(),
+					Description:  "The argument type",
 				},
 			},
 		},
@@ -88,9 +88,9 @@ var procedureSchema = map[string]*schema.Schema{
 			}
 			return false
 		},
-		// todo: add validation that this is a valid data type
-		Required: true,
-		ForceNew: true,
+		ValidateFunc: IsDataType(),
+		Required:     true,
+		ForceNew:     true,
 	},
 	"statement": {
 		Type:             schema.TypeString,
@@ -479,7 +479,9 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	// TODO: [ { CALLED ON NULL INPUT | { RETURNS NULL ON NULL INPUT | STRICT } } ] does not work for java, scala or python
+	// [ { CALLED ON NULL INPUT | { RETURNS NULL ON NULL INPUT | STRICT } } ] does not work for java, scala or python
+	// posted in docs-discuss channel, either docs need to be updated to reflect reality or this feature needs to be added
+	// https://snowflake.slack.com/archives/C6380540P/p1707511734666249
 	// if v, ok := d.GetOk("null_input_behavior"); ok {
 	// 	req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
 	// }
@@ -538,8 +540,7 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 			diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "Describe procedure failed.",
-				// TODO: link to the design decisions doc
-				Detail: "See our document on design decisions for procedures: <LINK (coming soon)>",
+				Detail:   fmt.Sprintf("Describe procedure failed: %v", err),
 			},
 		}
 	}
