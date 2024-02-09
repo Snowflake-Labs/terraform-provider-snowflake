@@ -1,27 +1,3 @@
-variable "database" {
-  type = string
-}
-
-variable "schema" {
-  type = string
-}
-
-variable "name" {
-  type = string
-}
-
-variable "api_allowed_prefixes" {
-  type = list(string)
-}
-
-variable "url_of_proxy_and_resource" {
-  type = string
-}
-
-variable "comment" {
-  type = string
-}
-
 resource "snowflake_api_integration" "test_api_int" {
   name                 = var.name
   api_provider         = "aws_api_gateway"

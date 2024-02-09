@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -196,12 +195,11 @@ func ExternalFunction() *schema.Resource {
 func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
-
-	databaseName := d.Get("database").(string)
+	database := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schemaName, name)
 
-	schemaObjectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 	returnType := d.Get("return_type").(string)
 	resultDataType, err := sdk.ToDataType(returnType)
 	if err != nil {
@@ -209,33 +207,23 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 	}
 	apiIntegration := sdk.NewAccountObjectIdentifier(d.Get("api_integration").(string))
 	urlOfProxyAndResource := d.Get("url_of_proxy_and_resource").(string)
-	req := sdk.NewCreateExternalFunctionRequest(schemaObjectIdentifier, resultDataType, &apiIntegration, urlOfProxyAndResource)
+	req := sdk.NewCreateExternalFunctionRequest(id, resultDataType, &apiIntegration, urlOfProxyAndResource)
 
 	// Set optionals
-	var argtypes string
-	if _, ok := d.GetOk("arg"); ok {
-		arguments := make([]sdk.ExternalFunctionArgumentRequest, 0)
-		for _, arg := range d.Get("arg").([]interface{}) {
-			m := arg.(map[string]interface{})
-			argName := m["name"].(string)
-			argType := m["type"].(string)
+	args := make([]sdk.ExternalFunctionArgumentRequest, 0)
+	if v, ok := d.GetOk("arg"); ok {
+		for _, arg := range v.([]interface{}) {
+			argName := arg.(map[string]interface{})["name"].(string)
+			argType := arg.(map[string]interface{})["type"].(string)
 			argDataType, err := sdk.ToDataType(argType)
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			arguments = append(arguments, sdk.ExternalFunctionArgumentRequest{
-				ArgName:     argName,
-				ArgDataType: argDataType,
-			})
+			args = append(args, sdk.ExternalFunctionArgumentRequest{ArgName: argName, ArgDataType: argDataType})
 		}
-		req.WithArguments(arguments)
-
-		// Use '-' as a separator between arg types as the result will end in the Terraform resource id
-		types := []string{}
-		for _, arg := range arguments {
-			types = append(types, string(arg.ArgDataType))
-		}
-		argtypes = strings.Join(types, "-")
+	}
+	if len(args) > 0 {
+		req.WithArguments(args)
 	}
 
 	if v, ok := d.GetOk("return_null_allowed"); ok {
@@ -313,38 +301,21 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 	if err := client.ExternalFunctions.Create(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}
-
-	snowflakeID := helpers.EncodeSnowflakeID(databaseName, schemaName, name, argtypes)
-	d.SetId(snowflakeID)
-
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
+	}
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schemaName, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
 	return ReadContextExternalFunction(ctx, d, meta)
 }
 
 func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
-	parts := strings.Split(d.Id(), helpers.IDDelimiter)
-	if len(parts) != 4 {
-		return diag.Errorf("external function ID is not valid: %s", d.Id())
-	}
-	databaseName := parts[0]
-	schemaName := parts[1]
-	name := parts[2]
-	argtypes := parts[3]
 
-	arguments := make([]sdk.DataType, 0)
-	if argtypes != "" {
-		argTypes := strings.Split(argtypes, "-")
-		for _, argType := range argTypes {
-			dataType, err := sdk.ToDataType(argType)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			arguments = append(arguments, dataType)
-		}
-	}
-	schemaObjectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
-	externalFunction, err := client.ExternalFunctions.ShowByID(ctx, schemaObjectIdentifier, arguments)
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	externalFunction, err := client.ExternalFunctions.ShowByID(ctx, id.WithoutArguments(), id.Arguments())
 	if err != nil {
 		d.SetId("")
 		return nil
@@ -372,7 +343,7 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Some properties come from the DESCRIBE FUNCTION call
-	externalFunctionPropertyRows, err := client.ExternalFunctions.Describe(ctx, sdk.NewDescribeExternalFunctionRequest(schemaObjectIdentifier, arguments))
+	externalFunctionPropertyRows, err := client.ExternalFunctions.Describe(ctx, sdk.NewDescribeExternalFunctionRequest(id.WithoutArguments(), id.Arguments()))
 	if err != nil {
 		d.SetId("")
 		return nil
@@ -490,28 +461,9 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 func UpdateContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
-	parts := strings.Split(d.Id(), helpers.IDDelimiter)
-	if len(parts) != 4 {
-		return diag.Errorf("external function ID is not valid: %s", d.Id())
-	}
-	databaseName := parts[0]
-	schemaName := parts[1]
-	name := parts[2]
-	argtypes := parts[3]
 
-	arguments := make([]sdk.DataType, 0)
-	if argtypes != "" {
-		argTypes := strings.Split(argtypes, "-")
-		for _, argType := range argTypes {
-			dataType, err := sdk.ToDataType(argType)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			arguments = append(arguments, dataType)
-		}
-	}
-	schemaObjectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
-	req := sdk.NewAlterFunctionRequest(schemaObjectIdentifier, arguments)
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	req := sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments())
 	if d.HasChange("comment") {
 		_, new := d.GetChange("comment")
 		if new == "" {
@@ -530,28 +482,9 @@ func UpdateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 func DeleteContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
-	parts := strings.Split(d.Id(), helpers.IDDelimiter)
-	if len(parts) != 4 {
-		return diag.Errorf("external function ID is not valid: %s", d.Id())
-	}
-	databaseName := parts[0]
-	schemaName := parts[1]
-	name := parts[2]
-	argtypes := parts[3]
 
-	arguments := make([]sdk.DataType, 0)
-	if argtypes != "" {
-		argTypes := strings.Split(argtypes, "-")
-		for _, argType := range argTypes {
-			dataType, err := sdk.ToDataType(argType)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			arguments = append(arguments, dataType)
-		}
-	}
-	schemaObjectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
-	req := sdk.NewDropFunctionRequest(schemaObjectIdentifier, arguments)
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	req := sdk.NewDropFunctionRequest(id.WithoutArguments(), id.Arguments())
 	if err := client.Functions.Drop(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}

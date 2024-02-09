@@ -18,9 +18,10 @@ var externalFunctionsSchema = map[string]*schema.Schema{
 		Description: "The database from which to return the schemas from.",
 	},
 	"schema": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "The schema from which to return the external functions from.",
+		Type:         schema.TypeString,
+		Optional:     true,
+		RequiredWith: []string{"database"},
+		Description:  "The schema from which to return the external functions from.",
 	},
 	"external_functions": {
 		Type:        schema.TypeList,
@@ -67,8 +68,8 @@ func ReadContextExternalFunctions(ctx context.Context, d *schema.ResourceData, m
 	client := sdk.NewClientFromDB(db)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
-	req := sdk.NewShowExternalFunctionRequest()
 
+	req := sdk.NewShowExternalFunctionRequest()
 	externalFunctions, err := client.ExternalFunctions.Show(ctx, req)
 	if err != nil {
 		d.SetId("")

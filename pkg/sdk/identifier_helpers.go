@@ -262,6 +262,10 @@ func (i SchemaObjectIdentifier) FullyQualifiedName() string {
 	return fmt.Sprintf(`"%v"."%v"."%v"(%v)`, i.databaseName, i.schemaName, i.name, strings.Join(args, ", "))
 }
 
+func (i SchemaObjectIdentifier) WithoutArguments() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(i.databaseName, i.schemaName, i.name)
+}
+
 type TableColumnIdentifier struct {
 	databaseName string
 	schemaName   string
