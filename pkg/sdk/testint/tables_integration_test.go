@@ -681,6 +681,26 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("add constraint: not null", func(t *testing.T) {
+		name := random.String()
+		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
+		columns := []sdk.TableColumnRequest{
+			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
+		}
+
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTableProvider(id))
+
+		alterRequest := sdk.NewAlterTableRequest(id).
+			WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{
+				*sdk.NewTableColumnAlterActionRequest("COLUMN_1").
+					WithNotNullConstraint(sdk.NewTableColumnNotNullConstraintRequest().WithSet(sdk.Bool(true))),
+			}))
+		err = client.Tables.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+	})
+
 	// TODO [SNOW-1007542]: check renamed constraint
 	t.Run("alter constraint: rename", func(t *testing.T) {
 		name := random.String()
