@@ -5,29 +5,36 @@ import (
 	"database/sql"
 )
 
+var _ convertibleRow[PolicyReference] = new(policyReferenceDBRow)
+
 type PolicyReferences interface {
 	GetForEntity(ctx context.Context, request *GetForEntityPolicyReferenceRequest) ([]PolicyReference, error)
 }
 
 type getForEntityPolicyReferenceOptions struct {
-	select_       bool           `ddl:"static" sql:"SELECT"`
-	asterisk      bool           `ddl:"static" sql:"*"`
-	from          bool           `ddl:"static" sql:"FROM"`
-	tableFunction *tableFunction `ddl:"keyword"`
+	selectEverythingFrom bool                       `ddl:"static" sql:"SELECT * FROM TABLE"`
+	parameters           *policyReferenceParameters `ddl:"list,parentheses,no_comma"`
 }
 
-type tableFunction struct {
-	table                   *bool                    `ddl:"keyword" sql:"TABLE"`
-	policyReferenceFunction *policyReferenceFunction `ddl:"list,parentheses,no_comma"`
-}
-
-type policyReferenceFunction struct {
-	functionFullyQualifiedName *bool                             `ddl:"keyword" sql:"SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES"`
+type policyReferenceParameters struct {
+	functionFullyQualifiedName bool                              `ddl:"static" sql:"SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES"`
 	arguments                  *policyReferenceFunctionArguments `ddl:"list,parentheses"`
 }
+
+type PolicyEntityDomain string
+
+const (
+	PolicyEntityDomainAccount     PolicyEntityDomain = "ACCOUNT"
+	PolicyEntityDomainIntegration PolicyEntityDomain = "INTEGRATION"
+	PolicyEntityDomainTable       PolicyEntityDomain = "TABLE"
+	PolicyEntityDomainTag         PolicyEntityDomain = "TAG"
+	PolicyEntityDomainUser        PolicyEntityDomain = "USER"
+	PolicyEntityDomainView        PolicyEntityDomain = "VIEW"
+)
+
 type policyReferenceFunctionArguments struct {
-	refEntityName   []ObjectIdentifier `ddl:"parameter,single_quotes,arrow_equals" sql:"ref_entity_name"`
-	refEntityDomain *string            `ddl:"parameter,single_quotes,arrow_equals" sql:"ref_entity_domain"`
+	refEntityName   []ObjectIdentifier  `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_NAME"`
+	refEntityDomain *PolicyEntityDomain `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_DOMAIN"`
 }
 
 type PolicyReference struct {
@@ -47,6 +54,7 @@ type PolicyReference struct {
 	PolicyStatus      string
 }
 
+// TODO: Check types
 type policyReferenceDBRow struct {
 	PolicyDb          sql.NullString `db:"POLICY_DB"`
 	PolicySchema      sql.NullString `db:"POLICY_SCHEMA"`
