@@ -25,7 +25,4 @@ resource "snowflake_external_function" "external_function" {
   url_of_proxy_and_resource = var.url_of_proxy_and_resource
 }
 
-data "snowflake_external_functions" "external_functions" {
-  database = snowflake_external_function.external_function.database
-  schema   = snowflake_external_function.external_function.schema
-}
+data "snowflake_external_functions" "external_functions" {}

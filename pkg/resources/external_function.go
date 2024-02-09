@@ -83,7 +83,7 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "Indicates whether the function can return NULL values or must return only NON-NULL values.",
+		Description: "Indicates whether the function can return NULL values (true) or must return only NON-NULL values (false).",
 		Default:     true,
 	},
 	"return_behavior": {
