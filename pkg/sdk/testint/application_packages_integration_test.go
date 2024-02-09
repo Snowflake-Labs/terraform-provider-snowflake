@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -57,6 +58,12 @@ func TestInt_ApplicationPackages(t *testing.T) {
 	assertApplicationPackage := func(t *testing.T, id sdk.AccountObjectIdentifier) {
 		t.Helper()
 
+		param, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
+		require.NoError(t, err)
+
+		defaultDataRetentionTimeInDays, err := strconv.Atoi(param.Value)
+		require.NoError(t, err)
+
 		e, err := client.ApplicationPackages.ShowByID(ctx, id)
 		require.NoError(t, err)
 
@@ -67,7 +74,7 @@ func TestInt_ApplicationPackages(t *testing.T) {
 		assert.Equal(t, sdk.DistributionInternal, sdk.Distribution(e.Distribution))
 		assert.Equal(t, "ACCOUNTADMIN", e.Owner)
 		assert.Empty(t, e.Comment)
-		assert.Equal(t, 1, e.RetentionTime)
+		assert.Equal(t, defaultDataRetentionTimeInDays, e.RetentionTime)
 		assert.Empty(t, e.Options)
 		assert.Empty(t, e.DroppedOn)
 		assert.Empty(t, e.ApplicationClass)
@@ -95,7 +102,14 @@ func TestInt_ApplicationPackages(t *testing.T) {
 		require.Equal(t, sdk.DistributionExternal, sdk.Distribution(e.Distribution))
 		require.Equal(t, "ACCOUNTADMIN", e.Owner)
 		require.Equal(t, comment, e.Comment)
-		require.Equal(t, 1, e.RetentionTime)
+
+		param, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
+		require.NoError(t, err)
+
+		defaultDataRetentionTimeInDays, err := strconv.Atoi(param.Value)
+		require.NoError(t, err)
+
+		require.Equal(t, defaultDataRetentionTimeInDays, e.RetentionTime)
 	})
 
 	t.Run("alter application package: set", func(t *testing.T) {

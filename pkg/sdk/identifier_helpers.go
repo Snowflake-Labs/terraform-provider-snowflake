@@ -266,6 +266,14 @@ func (i SchemaObjectIdentifier) WithoutArguments() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(i.databaseName, i.schemaName, i.name)
 }
 
+func (i SchemaObjectIdentifier) ArgumentsSignature() string {
+	arguments := make([]string, len(i.arguments))
+	for i, item := range i.arguments {
+		arguments[i] = string(item)
+	}
+	return fmt.Sprintf("%v(%v)", i.Name(), strings.Join(arguments, ","))
+}
+
 type TableColumnIdentifier struct {
 	databaseName string
 	schemaName   string

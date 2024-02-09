@@ -303,7 +303,7 @@ var FunctionsDef = g.NewInterface(
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-function",
 	g.DbStruct("functionDetailRow").
 		Field("property", "string").
-		Field("value", "string"),
+		Field("value", "sql.NullString"),
 	g.PlainStruct("FunctionDetail").
 		Field("Property", "string").
 		Field("Value", "string"),

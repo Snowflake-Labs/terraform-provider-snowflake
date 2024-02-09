@@ -1,19 +1,20 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var languages = []string{"javascript", "java", "sql", "python"}
+var languages = []string{"javascript", "scala", "java", "sql", "python"}
 
 var functionSchema = map[string]*schema.Schema{
 	"name": {
@@ -41,15 +42,19 @@ var functionSchema = map[string]*schema.Schema{
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
-					Description:      "The argument name",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					Description: "The argument name",
 				},
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,
 					// Suppress the diff shown if the values are equal when both compared in lower case.
-					DiffSuppressFunc: DiffTypes,
-					Description:      "The argument type",
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					Description: "The argument type",
 				},
 			},
 		},
@@ -61,23 +66,28 @@ var functionSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Description: "The return type of the function",
 		// Suppress the diff shown if the values are equal when both compared in lower case.
-		DiffSuppressFunc: DiffTypes,
-		Required:         true,
-		ForceNew:         true,
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.EqualFold(old, new)
+		},
+		Required: true,
+		ForceNew: true,
 	},
 	"statement": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the javascript / java / sql / python code used to create the function.",
+		Description:      "Specifies the javascript / java / scala / sql / python code used to create the function.",
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
 	"language": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.StringInSlice(languages, false),
-		Description:  "The language of the statement",
+		Type:     schema.TypeString,
+		Optional: true,
+		Default:  "SQL",
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return strings.EqualFold(old, new)
+		},
+		ValidateFunc: validation.StringInSlice(languages, true),
+		Description:  "Specifies the language of the stored function code.",
 	},
 	"null_input_behavior": {
 		Type:     schema.TypeString,
@@ -149,10 +159,10 @@ var functionSchema = map[string]*schema.Schema{
 // Function returns a pointer to the resource representing a stored function.
 func Function() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateFunction,
-		Read:   ReadFunction,
-		Update: UpdateFunction,
-		Delete: DeleteFunction,
+		CreateContext: CreateContextFunction,
+		ReadContext:   ReadContextFunction,
+		UpdateContext: UpdateContextFunction,
+		DeleteContext: DeleteContextFunction,
 
 		Schema: functionSchema,
 		Importer: &schema.ResourceImporter{
@@ -161,402 +171,596 @@ func Function() *schema.Resource {
 	}
 }
 
-// CreateFunction implements schema.CreateFunc.
-func CreateFunction(d *schema.ResourceData, meta interface{}) error {
+func CreateContextFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	lang := strings.ToUpper(d.Get("language").(string))
+	switch lang {
+	case "JAVA":
+		return createJavaFunction(ctx, d, meta)
+	case "JAVASCRIPT":
+		return createJavascriptFunction(ctx, d, meta)
+	case "PYTHON":
+		return createPythonFunction(ctx, d, meta)
+	case "SCALA":
+		return createScalaFunction(ctx, d, meta)
+	case "", "SQL": // SQL if language is not set
+		return createSQLFunction(ctx, d, meta)
+	default:
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Invalid language",
+				Detail:   fmt.Sprintf("Language %s is not supported", lang),
+			},
+		}
+	}
+}
+
+func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	s := d.Get("statement").(string)
-	ret := d.Get("return_type").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
 
-	builder := snowflake.NewFunctionBuilder(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
-
-	// Set optionals, args
-	if _, ok := d.GetOk("arguments"); ok {
-		args := []map[string]string{}
-		for _, arg := range d.Get("arguments").([]interface{}) {
-			argDef := map[string]string{}
-			for key, val := range arg.(map[string]interface{}) {
-				argDef[key] = val.(string)
-			}
-			args = append(args, argDef)
-		}
-		builder.WithArgs(args)
+	// Set required
+	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
+	if diags != nil {
+		return diags
 	}
+	handler := d.Get("handler").(string)
+	// create request with required
+	request := sdk.NewCreateForJavaFunctionRequest(id, *returns, handler)
+	functionDefinition := d.Get("statement").(string)
+	request.WithFunctionDefinition(sdk.String(functionDefinition))
 
-	// Set optionals, default is false
-	if v, ok := d.GetOk("return_behavior"); ok {
-		builder.WithReturnBehavior(v.(string))
+	// Set optionals
+	if v, ok := d.GetOk("is_secure"); ok {
+		request.WithSecure(sdk.Bool(v.(bool)))
 	}
-
-	// Set optionals, default is false
+	arguments, diags := parseFunctionArguments(d)
+	if diags != nil {
+		return diags
+	}
+	if len(arguments) > 0 {
+		request.WithArguments(arguments)
+	}
 	if v, ok := d.GetOk("null_input_behavior"); ok {
-		builder.WithNullInputBehavior(v.(string))
+		request.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
 	}
-
-	// Set optionals, default is OWNER
-	if v, ok := d.GetOk("language"); ok {
-		builder.WithLanguage(v.(string))
+	if v, ok := d.GetOk("return_behavior"); ok {
+		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
 	}
-
-	// Set optionals, runtime version for Python
 	if v, ok := d.GetOk("runtime_version"); ok {
-		builder.WithRuntimeVersion(v.(string))
+		request.WithRuntimeVersion(sdk.String(v.(string)))
+	}
+	if v, ok := d.GetOk("comment"); ok {
+		request.WithComment(sdk.String(v.(string)))
+	}
+	if _, ok := d.GetOk("imports"); ok {
+		imports := []sdk.FunctionImportRequest{}
+		for _, item := range d.Get("imports").([]interface{}) {
+			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
+		}
+		request.WithImports(imports)
+	}
+	if _, ok := d.GetOk("packages"); ok {
+		packages := []sdk.FunctionPackageRequest{}
+		for _, item := range d.Get("packages").([]interface{}) {
+			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
+		}
+		request.WithPackages(packages)
+	}
+	if v, ok := d.GetOk("target_path"); ok {
+		request.WithTargetPath(sdk.String(v.(string)))
 	}
 
-	// Set optionals, default is false
-	if v, ok := d.GetOk("is_secure"); ok && v.(bool) {
-		builder.WithSecure()
+	if err := client.Functions.CreateForJava(ctx, request); err != nil {
+		return diag.FromErr(err)
+	}
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
+	}
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
+	return ReadContextFunction(ctx, d, meta)
+}
+
+func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	name := d.Get("name").(string)
+	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
+	// Set required
+	returnType := d.Get("return_type").(string)
+	returnDataType, diags := convertFunctionDataType(returnType)
+	if diags != nil {
+		return diags
+	}
+	functionDefinition := d.Get("statement").(string)
+	handler := d.Get("handler").(string)
+	// create request with required
+	request := sdk.NewCreateForScalaFunctionRequest(id, returnDataType, handler)
+	request.WithFunctionDefinition(sdk.String(functionDefinition))
+
+	// Set optionals
+	if v, ok := d.GetOk("is_secure"); ok {
+		request.WithSecure(sdk.Bool(v.(bool)))
+	}
+	arguments, diags := parseFunctionArguments(d)
+	if diags != nil {
+		return diags
+	}
+	if len(arguments) > 0 {
+		request.WithArguments(arguments)
+	}
+	if v, ok := d.GetOk("null_input_behavior"); ok {
+		request.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+	}
+	if v, ok := d.GetOk("return_behavior"); ok {
+		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
+	}
+	if v, ok := d.GetOk("runtime_version"); ok {
+		request.WithRuntimeVersion(sdk.String(v.(string)))
+	}
+	if v, ok := d.GetOk("comment"); ok {
+		request.WithComment(sdk.String(v.(string)))
+	}
+	if _, ok := d.GetOk("imports"); ok {
+		imports := []sdk.FunctionImportRequest{}
+		for _, item := range d.Get("imports").([]interface{}) {
+			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
+		}
+		request.WithImports(imports)
+	}
+	if _, ok := d.GetOk("packages"); ok {
+		packages := []sdk.FunctionPackageRequest{}
+		for _, item := range d.Get("packages").([]interface{}) {
+			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
+		}
+		request.WithPackages(packages)
+	}
+	if v, ok := d.GetOk("target_path"); ok {
+		request.WithTargetPath(sdk.String(v.(string)))
+	}
+
+	if err := client.Functions.CreateForScala(ctx, request); err != nil {
+		return diag.FromErr(err)
+	}
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
+	}
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
+	return ReadContextFunction(ctx, d, meta)
+}
+
+func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	name := d.Get("name").(string)
+	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
+	// Set required
+	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
+	if diags != nil {
+		return diags
+	}
+	functionDefinition := d.Get("statement").(string)
+	// create request with required
+	request := sdk.NewCreateForSQLFunctionRequest(id, *returns, functionDefinition)
+
+	// Set optionals
+	if v, ok := d.GetOk("is_secure"); ok {
+		request.WithSecure(sdk.Bool(v.(bool)))
+	}
+	arguments, diags := parseFunctionArguments(d)
+	if diags != nil {
+		return diags
+	}
+	if len(arguments) > 0 {
+		request.WithArguments(arguments)
+	}
+	if v, ok := d.GetOk("return_behavior"); ok {
+		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
+	}
+	if v, ok := d.GetOk("comment"); ok {
+		request.WithComment(sdk.String(v.(string)))
+	}
+
+	if err := client.Functions.CreateForSQL(ctx, request); err != nil {
+		return diag.FromErr(err)
+	}
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
+	}
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
+	return ReadContextFunction(ctx, d, meta)
+}
+
+func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	name := d.Get("name").(string)
+	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
+	// Set required
+	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
+	if diags != nil {
+		return diags
+	}
+	functionDefinition := d.Get("statement").(string)
+	version := d.Get("runtime_version").(string)
+	handler := d.Get("handler").(string)
+	// create request with required
+	request := sdk.NewCreateForPythonFunctionRequest(id, *returns, version, handler)
+	request.WithFunctionDefinition(sdk.String(functionDefinition))
+
+	// Set optionals
+	if v, ok := d.GetOk("is_secure"); ok {
+		request.WithSecure(sdk.Bool(v.(bool)))
+	}
+	arguments, diags := parseFunctionArguments(d)
+	if diags != nil {
+		return diags
+	}
+	if len(arguments) > 0 {
+		request.WithArguments(arguments)
+	}
+	if v, ok := d.GetOk("null_input_behavior"); ok {
+		request.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+	}
+	if v, ok := d.GetOk("return_behavior"); ok {
+		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		request.WithComment(sdk.String(v.(string)))
 	}
-
-	// Set optionals, packages for Java / Python
-	if _, ok := d.GetOk("packages"); ok {
-		packages := []string{}
-		for _, pack := range d.Get("packages").([]interface{}) {
-			packages = append(packages, pack.(string))
-		}
-		builder.WithPackages(packages)
-	}
-
-	// Set optionals, imports for Java / Python
 	if _, ok := d.GetOk("imports"); ok {
-		imports := []string{}
-		for _, imp := range d.Get("imports").([]interface{}) {
-			imports = append(imports, imp.(string))
+		imports := []sdk.FunctionImportRequest{}
+		for _, item := range d.Get("imports").([]interface{}) {
+			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
 		}
-		builder.WithImports(imports)
+		request.WithImports(imports)
+	}
+	if _, ok := d.GetOk("packages"); ok {
+		packages := []sdk.FunctionPackageRequest{}
+		for _, item := range d.Get("packages").([]interface{}) {
+			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
+		}
+		request.WithPackages(packages)
 	}
 
-	// handler for Java / Python
-	if v, ok := d.GetOk("handler"); ok {
-		builder.WithHandler(v.(string))
+	if err := client.Functions.CreateForPython(ctx, request); err != nil {
+		return diag.FromErr(err)
 	}
-
-	// target path for Java / Python
-	if v, ok := d.GetOk("target_path"); ok {
-		builder.WithTargetPath(v.(string))
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
 	}
-
-	q, err := builder.Create()
-	if err != nil {
-		return err
-	}
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error creating function %v err = %w", name, err)
-	}
-
-	functionID := &functionID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		FunctionName: name,
-		ArgTypes:     builder.ArgTypes(),
-	}
-
-	d.SetId(functionID.String())
-
-	return ReadFunction(d, meta)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
+	return ReadContextFunction(ctx, d, meta)
 }
 
-// ReadFunction implements schema.ReadFunc.
-func ReadFunction(d *schema.ResourceData, meta interface{}) error {
+func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	functionID, err := splitFunctionID(d.Id())
-	if err != nil {
-		return err
-	}
-	funct := snowflake.NewFunctionBuilder(
-		functionID.DatabaseName,
-		functionID.SchemaName,
-		functionID.FunctionName,
-		functionID.ArgTypes,
-	)
+	client := sdk.NewClientFromDB(db)
+	name := d.Get("name").(string)
+	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
 
-	// some attributes can be retrieved only by Describe and some only by Show
-	stmt, err := funct.Describe()
-	if err != nil {
-		return err
+	// Set required
+	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
+	if diags != nil {
+		return diags
 	}
-	rows, err := snowflake.Query(db, stmt)
-	if err != nil && snowflake.IsResourceNotExistOrNotAuthorized(err.Error(), "Function") {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] function (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
+	functionDefinition := d.Get("statement").(string)
+	// create request with required
+	request := sdk.NewCreateForJavascriptFunctionRequest(id, *returns, functionDefinition)
+
+	// Set optionals
+	if v, ok := d.GetOk("is_secure"); ok {
+		request.WithSecure(sdk.Bool(v.(bool)))
+	}
+	arguments, diags := parseFunctionArguments(d)
+	if diags != nil {
+		return diags
+	}
+	if len(arguments) > 0 {
+		request.WithArguments(arguments)
+	}
+	if v, ok := d.GetOk("null_input_behavior"); ok {
+		request.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+	}
+	if v, ok := d.GetOk("return_behavior"); ok {
+		request.WithReturnResultsBehavior(sdk.Pointer(sdk.ReturnResultsBehavior(v.(string))))
+	}
+	if v, ok := d.GetOk("comment"); ok {
+		request.WithComment(sdk.String(v.(string)))
+	}
+
+	if err := client.Functions.CreateForJavascript(ctx, request); err != nil {
+		return diag.FromErr(err)
+	}
+	argumentTypes := make([]sdk.DataType, 0, len(arguments))
+	for _, item := range arguments {
+		argumentTypes = append(argumentTypes, item.ArgDataType)
+	}
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes)
+	d.SetId(nid.FullyQualifiedName())
+	return ReadContextFunction(ctx, d, meta)
+}
+
+func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	if err := d.Set("name", id.Name()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("database", id.DatabaseName()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("schema", id.SchemaName()); err != nil {
+		return diag.FromErr(err)
+	}
+
+	arguments := d.Get("arguments").([]interface{})
+	argumentTypes := make([]string, len(arguments))
+	for i, arg := range arguments {
+		argumentTypes[i] = arg.(map[string]interface{})["type"].(string)
+	}
+	functionDetails, err := client.Functions.Describe(ctx, sdk.NewDescribeFunctionRequest(id.WithoutArguments(), id.Arguments()))
+	if err != nil {
+		// if function is not found then mark resource to be removed from state file during apply or refresh
 		d.SetId("")
-		return nil
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Describe function failed.",
+				Detail:   "See our document on design decisions for functions: <LINK (coming soon)>",
+			},
+		}
 	}
-	defer rows.Close()
-	descPropValues, err := snowflake.ScanFunctionDescription(rows)
-	if err != nil {
-		return err
-	}
-	for _, desc := range descPropValues {
-		switch desc.Property.String {
+	for _, desc := range functionDetails {
+		switch desc.Property {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
-			args := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "(", ""), ")", "")
+			value := strings.ReplaceAll(strings.ReplaceAll(desc.Value, "(", ""), ")", "")
+			if value != "" { // Do nothing for functions without arguments
+				pairs := strings.Split(value, ", ")
 
-			if args != "" { // Do nothing for functions without arguments
-				argPairs := strings.Split(args, ", ")
-				args := []interface{}{}
-
-				for _, argPair := range argPairs {
-					argItem := strings.Split(argPair, " ")
-
-					arg := map[string]interface{}{}
-					arg["name"] = argItem[0]
-					arg["type"] = argItem[1]
-					args = append(args, arg)
+				arguments := []interface{}{}
+				for _, pair := range pairs {
+					item := strings.Split(pair, " ")
+					argument := map[string]interface{}{}
+					argument["name"] = item[0]
+					argument["type"] = item[1]
+					arguments = append(arguments, argument)
 				}
-
-				if err := d.Set("arguments", args); err != nil {
-					return err
+				if err := d.Set("arguments", arguments); err != nil {
+					diag.FromErr(err)
 				}
 			}
 		case "null handling":
-			if err := d.Set("null_input_behavior", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("null_input_behavior", desc.Value); err != nil {
+				diag.FromErr(err)
 			}
 		case "volatility":
-			if err := d.Set("return_behavior", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("return_behavior", desc.Value); err != nil {
+				diag.FromErr(err)
 			}
 		case "body":
-			if err := d.Set("statement", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("statement", desc.Value); err != nil {
+				diag.FromErr(err)
 			}
 		case "returns":
 			// Format in Snowflake DB is returnType(<some number>)
 			re := regexp.MustCompile(`^(.*)\([0-9]*\)$`)
-			match := re.FindStringSubmatch(desc.Value.String)
-			rt := desc.Value.String
+			match := re.FindStringSubmatch(desc.Value)
+			rt := desc.Value
 			if match != nil {
 				rt = match[1]
 			}
 			if err := d.Set("return_type", rt); err != nil {
-				return err
+				diag.FromErr(err)
 			}
 		case "language":
-			if snowflake.Contains(languages, desc.Value.String) {
-				if err := d.Set("language", desc.Value.String); err != nil {
-					return err
+			if snowflake.Contains(languages, desc.Value) {
+				if err := d.Set("language", desc.Value); err != nil {
+					diag.FromErr(err)
 				}
 			}
 		case "packages":
-			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
-			if packagesString != "" { // Do nothing for Java / Python functions without packages
-				packages := strings.Split(packagesString, ",")
+			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", "")
+			if value != "" { // Do nothing for Java / Python functions without packages
+				packages := strings.Split(value, ",")
 				if err := d.Set("packages", packages); err != nil {
-					return err
+					diag.FromErr(err)
 				}
 			}
 		case "imports":
-			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
-			if importsString != "" { // Do nothing for Java functions without imports
-				imports := strings.Split(importsString, ",")
+			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", "")
+			if value != "" { // Do nothing for Java functions without imports
+				imports := strings.Split(value, ",")
 				if err := d.Set("imports", imports); err != nil {
-					return err
+					diag.FromErr(err)
 				}
 			}
 		case "handler":
-			if err := d.Set("handler", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("handler", desc.Value); err != nil {
+				diag.FromErr(err)
 			}
 		case "target_path":
-			if err := d.Set("target_path", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("target_path", desc.Value); err != nil {
+				diag.FromErr(err)
 			}
 		case "runtime_version":
-			if err := d.Set("runtime_version", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("runtime_version", desc.Value); err != nil {
+				diag.FromErr(err)
 			}
 		default:
-			log.Printf("[WARN] unexpected function property %v returned from Snowflake", desc.Property.String)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Unexpected function property returned from Snowflake",
+				Detail:   fmt.Sprintf("Unexpected function property %v returned from Snowflake", desc.Property),
+			})
 		}
 	}
 
-	q := funct.Show()
-	showRows, err := snowflake.Query(db, q)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] function (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
+	// Show functions to set is_secure and comment
+	request := sdk.NewShowFunctionRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&sdk.Like{Pattern: sdk.String(id.Name())})
+	functions, err := client.Functions.Show(ctx, request)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	defer showRows.Close()
-
-	foundFunctions, err := snowflake.ScanFunctions(showRows)
-	if err != nil {
-		return err
-	}
-	// function names can be overloaded with different argument types so we
-	// iterate over and find the correct one
-	argSig, _ := funct.ArgumentsSignature()
-
-	functionIsSecure := map[string]bool{
-		"Y": true,
-		"N": false,
-	}
-
-	for _, v := range foundFunctions {
-		if v.Arguments.String == argSig {
-			if err := d.Set("comment", v.Comment.String); err != nil {
-				return err
+	for _, function := range functions {
+		signature := strings.Split(function.Arguments, " RETURN ")[0]
+		signature = strings.ReplaceAll(signature, " ", "")
+		id.FullyQualifiedName()
+		if signature == id.ArgumentsSignature() {
+			if err := d.Set("is_secure", function.IsSecure); err != nil {
+				return diag.FromErr(err)
 			}
-			if err = d.Set("is_secure", functionIsSecure[v.IsSecure.String]); err != nil {
-				return err
+			if err := d.Set("comment", function.Description); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
-
-	return nil
+	return diags
 }
 
-// UpdateFunction implements schema.UpdateFunction.
-func UpdateFunction(d *schema.ResourceData, meta interface{}) error {
-	pID, err := splitFunctionID(d.Id())
-	if err != nil {
-		return err
-	}
-	builder := snowflake.NewFunctionBuilder(
-		pID.DatabaseName,
-		pID.SchemaName,
-		pID.FunctionName,
-		pID.ArgTypes,
-	)
-
+func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
 		name := d.Get("name")
-		q, err := builder.Rename(name.(string))
-		if err != nil {
-			return err
+		if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name.(string))))); err != nil {
+			return diag.FromErr(err)
 		}
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error renaming function %v", d.Id())
+		id = sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name.(string), id.Arguments())
+		if err := d.Set("name", name); err != nil {
+			return diag.FromErr(err)
 		}
-		newID := &functionID{
-			DatabaseName: pID.DatabaseName,
-			SchemaName:   pID.SchemaName,
-			FunctionName: name.(string),
-			ArgTypes:     pID.ArgTypes,
-		}
-		d.SetId(newID.String())
 	}
 	if d.HasChange("is_secure") {
 		secure := d.Get("is_secure")
-
 		if secure.(bool) {
-			q, err := builder.Secure()
-			if err != nil {
-				return err
-			}
-			if err = snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error setting secure for function %v", d.Id())
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithSetSecure(sdk.Bool(true))); err != nil {
+				return diag.FromErr(err)
 			}
 		} else {
-			q, err := builder.Unsecure()
-			if err != nil {
-				return err
-			}
-			if err = snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error unsetting secure for function %v", d.Id())
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithUnsetSecure(sdk.Bool(true))); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
-
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
-
-		if c := comment.(string); c == "" {
-			q, err := builder.RemoveComment()
-			if err != nil {
-				return err
-			}
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error unsetting comment for function %v err = %w", d.Id(), err)
+		if comment != "" {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithSetComment(sdk.String(comment.(string)))); err != nil {
+				return diag.FromErr(err)
 			}
 		} else {
-			q, err := builder.ChangeComment(c)
-			if err != nil {
-				return err
-			}
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error updating comment for function %v err = %w", d.Id(), err)
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithUnsetComment(sdk.Bool(true))); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
-
-	return ReadFunction(d, meta)
+	return ReadContextFunction(ctx, d, meta)
 }
 
-// DeleteFunction implements schema.DeleteFunc.
-func DeleteFunction(d *schema.ResourceData, meta interface{}) error {
+func DeleteContextFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	pID, err := splitFunctionID(d.Id())
-	if err != nil {
-		return err
-	}
-	builder := snowflake.NewFunctionBuilder(
-		pID.DatabaseName,
-		pID.SchemaName,
-		pID.FunctionName,
-		pID.ArgTypes,
-	)
+	client := sdk.NewClientFromDB(db)
 
-	q, err := builder.Drop()
-	if err != nil {
-		return err
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id.WithoutArguments(), id.Arguments())); err != nil {
+		return diag.FromErr(err)
 	}
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting function %v err = %w", d.Id(), err)
-	}
-
 	d.SetId("")
-
 	return nil
 }
 
-type functionID struct {
-	DatabaseName string
-	SchemaName   string
-	FunctionName string
-	ArgTypes     []string
-}
-
-// splitFunctionID takes the <database_name>|<schema_name>|<view_name>|<argtypes> ID and returns
-// the functionID struct, for example MYDB|PUBLIC|FUNC1|VARCHAR-DATE-VARCHAR
-// returns struct
-//
-//	DatabaseName: MYDB
-//	SchemaName: PUBLIC
-//	FunctionName: FUNC1
-//	ArgTypes: [VARCHAR, DATE, VARCHAR]
-func splitFunctionID(v string) (*functionID, error) {
-	arr := strings.Split(v, "|")
-	if len(arr) != 4 {
-		return nil, fmt.Errorf("ID %v is invalid", v)
+func parseFunctionArguments(d *schema.ResourceData) ([]sdk.FunctionArgumentRequest, diag.Diagnostics) {
+	args := make([]sdk.FunctionArgumentRequest, 0)
+	if v, ok := d.GetOk("arguments"); ok {
+		for _, arg := range v.([]interface{}) {
+			argName := arg.(map[string]interface{})["name"].(string)
+			argType := arg.(map[string]interface{})["type"].(string)
+			argDataType, diags := convertFunctionDataType(argType)
+			if diags != nil {
+				return nil, diags
+			}
+			args = append(args, sdk.FunctionArgumentRequest{ArgName: argName, ArgDataType: argDataType})
+		}
 	}
-
-	return &functionID{
-		DatabaseName: arr[0],
-		SchemaName:   arr[1],
-		FunctionName: arr[2],
-		ArgTypes:     strings.Split(arr[3], "-"),
-	}, nil
+	return args, nil
 }
 
-// the opposite of splitFunctionID.
-func (pi *functionID) String() string {
-	return fmt.Sprintf("%v|%v|%v|%v",
-		pi.DatabaseName,
-		pi.SchemaName,
-		pi.FunctionName,
-		strings.Join(pi.ArgTypes, "-"))
+func convertFunctionDataType(s string) (sdk.DataType, diag.Diagnostics) {
+	dataType, err := sdk.ToDataType(s)
+	if err != nil {
+		return dataType, diag.FromErr(err)
+	}
+	return dataType, nil
+}
+
+func convertFunctionColumns(s string) ([]sdk.FunctionColumn, diag.Diagnostics) {
+	pattern := regexp.MustCompile(`(\w+)\s+(\w+)`)
+	matches := pattern.FindAllStringSubmatch(s, -1)
+	var columns []sdk.FunctionColumn
+	for _, match := range matches {
+		if len(match) == 3 {
+			dataType, err := sdk.ToDataType(match[2])
+			if err != nil {
+				return nil, diag.FromErr(err)
+			}
+			columns = append(columns, sdk.FunctionColumn{
+				ColumnName:     match[1],
+				ColumnDataType: dataType,
+			})
+		}
+	}
+	return columns, nil
+}
+
+func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Diagnostics) {
+	returns := sdk.NewFunctionReturnsRequest()
+	if strings.HasPrefix(strings.ToLower(s), "table") {
+		columns, diags := convertFunctionColumns(s)
+		if diags != nil {
+			return nil, diags
+		}
+		var cr []sdk.FunctionColumnRequest
+		for _, item := range columns {
+			cr = append(cr, *sdk.NewFunctionColumnRequest(item.ColumnName, item.ColumnDataType))
+		}
+		returns.WithTable(sdk.NewFunctionReturnsTableRequest().WithColumns(cr))
+	} else {
+		returnDataType, diags := convertFunctionDataType(s)
+		if diags != nil {
+			return nil, diags
+		}
+		returns.WithResultDataType(sdk.NewFunctionReturnsResultDataTypeRequest(returnDataType))
+	}
+	return returns, nil
 }

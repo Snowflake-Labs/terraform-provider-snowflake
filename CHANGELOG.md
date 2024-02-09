@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.85.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.84.1...v0.85.0) (2024-02-01)
+
+
+### 🎉 **What's new:**
+
+* Add API integration to the SDK ([#2409](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2409)) ([23acda5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/23acda5dba9c8378f3b5631446d380a27cf1732c))
+* add application to sdk ([#2350](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2350)) ([de97ad8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/de97ad84db925b62ab10046e0893a5c285a26d67))
+* add external funcs to sdk ([#2440](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2440)) ([c8cf09b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c8cf09b2af605dc373a138e6ca6863b5546303d5))
+* Add grant privileges to share resource ([#2447](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2447)) ([d8241a5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d8241a5cc76ea7b929abdada81cf6929b5f6ad9e))
+* Add materialized view to the SDK ([#2403](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2403)) ([a5ce699](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a5ce69920328cce899260249d319ff7726ae3911))
+* Add notification integration to the SDK ([#2412](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2412)) ([d84240c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d84240cda369ed9106c7cb3e3eedf85b8d1fa944))
+* add sequences to sdk ([#2351](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2351)) ([d2e5ffd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d2e5ffd5405f10ff30c5ad9f7cd58bd54a5cc028))
+* add snowflake grant privileges to account role ([#2365](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2365)) ([e3d086e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e3d086eddc05e0d4963234f82e09e174a018bb08))
+* add streamlits to sdk ([#2400](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2400)) ([129d24c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/129d24c00fa244d1401cb2169b5b7fb0ba6c465c))
+* add-call-with to sdk ([#2337](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2337)) ([ebcd1bc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ebcd1bc40d554abe6863b67d2ab76f2d992dfb32))
+* stages migration follow-up ([#2372](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2372)) ([3939dbe](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3939dbe2f9189968c087a883ed97dd3b7350787f))
+* Use API integration from SDK ([#2429](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2429)) ([1ccc864](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1ccc8641106a3ceb4de813ce7c0e5077ead5272e))
+* Use managed account from the SDK ([#2420](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2420)) ([3aaa080](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3aaa08071a14f820e08751cc7b1e8bef5db16e30))
+* Use materialized views and views from SDK ([#2448](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2448)) ([dc66d02](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dc66d02304a99a7cb152e91a8e942587cab7e60f))
+* Use notification integration from sdk ([#2445](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2445)) ([e8915cc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e8915ccb99eeec1f0ac5777fe80be7ef443d8f5c))
+* use roles from the SDK ([#2405](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2405)) ([c645b4d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c645b4d0e2036d932766480e9c1e0334ef79c16e))
+* Use row access policy from SDK ([#2428](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2428)) ([119af5e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/119af5ea74bb219ae822962096e6220ed00f5910))
+* Use SDK in the storage integration ([#2380](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2380)) ([ce0741c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ce0741ce226be9464407b549e90cb179b0fe5880))
+* use sequence from sdk and add ordering attr ([#2419](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2419)) ([973b8f7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/973b8f76a8ed1540bfd948ba8cb57c212c0d4abc)), closes [#2387](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2387)
+* Use stage from sdk ([#2427](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2427)) ([c17effd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c17effd16ccd77ba4c5d45f43dcc53a9f11601c6))
+
+
+### 🔧 **Misc**
+
+* add missing deprecation message ([#2451](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2451)) ([77de569](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/77de5694f73e5ad1443bb99407d2e8aec9a87320))
+
+
+### 🐛 **Bug fixes:**
+
+* account role test ([#2422](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2422)) ([c1b47d1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c1b47d1ade4b198b5bf14dc32162d34797a3b344))
+* Adjust tests after Snowflake behavior change ([#2404](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2404)) ([8c03ffb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8c03ffb0430445c903168da9706e1ce2630675da))
+* app-pkg unset ([#2399](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2399)) ([fedb1df](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fedb1df2a731d139d68d2284bf3be47fcc4d0115))
+* Fix some bugs ([#2421](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2421)) ([dec7cd9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dec7cd9e199ac8658f5c939f811686ba9f5e2e21)), closes [#2358](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2358) [#2369](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2369) [#2329](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329)
+* snowflake_grant_privileges_to_role read ([#2424](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2424)) ([5385cec](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5385cec3e5c03d2dbff762b63523bdddee8632d3))
+
 ## [0.85.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.84.1...v0.85.0) (2024-01-22)
 
 

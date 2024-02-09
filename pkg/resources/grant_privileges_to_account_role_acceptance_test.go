@@ -3,11 +3,15 @@ package resources_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 
@@ -821,6 +825,123 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply(t *testing.T) {
 	})
 }
 
+func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
+	sharedDatabaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	secondaryAccountName, err := getSecondaryAccountName(t)
+	require.NoError(t, err)
+	configVariables := config.Variables{
+		"role_name":            config.StringVariable(roleName),
+		"shared_database_name": config.StringVariable(sharedDatabaseName),
+		"share_name":           config.StringVariable(shareName),
+		"account_name":         config.StringVariable(secondaryAccountName),
+		"privileges": config.ListVariable(
+			config.StringVariable(sdk.AccountObjectPrivilegeImportedPrivileges.String()),
+		),
+	}
+	resourceName := "snowflake_grant_privileges_to_account_role.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: func(state *terraform.State) error {
+			return errors.Join(
+				testAccCheckAccountRolePrivilegesRevoked(roleName)(state),
+				dropSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName),
+			)
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig:       func() { assert.NoError(t, createSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName)) },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/ImportedPrivileges"),
+				ConfigVariables: configVariables,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.AccountObjectPrivilegeImportedPrivileges.String()),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/ImportedPrivileges"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func getSecondaryAccountName(t *testing.T) (string, error) {
+	t.Helper()
+	config, err := sdk.ProfileConfig("secondary_test_account")
+	if err != nil {
+		t.Fatal(err)
+	}
+	client, err := sdk.NewClient(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client.ContextFunctions.CurrentAccount(context.Background())
+}
+
+func getAccountName(t *testing.T) (string, error) {
+	t.Helper()
+	client, err := sdk.NewDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client.ContextFunctions.CurrentAccount(context.Background())
+}
+
+func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
+	t.Helper()
+	config, err := sdk.ProfileConfig("secondary_test_account")
+	if err != nil {
+		t.Fatal(err)
+	}
+	client, err := sdk.NewClient(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	accountName, err := getAccountName(t)
+	return errors.Join(
+		err,
+		client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.CreateDatabaseOptions{}),
+		client.Shares.Create(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.CreateShareOptions{}),
+		client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeReferenceUsage}, &sdk.ShareGrantOn{Database: sdk.NewAccountObjectIdentifier(databaseName)}, sdk.NewAccountObjectIdentifier(shareName)),
+		client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.AlterShareOptions{Set: &sdk.ShareSet{
+			Accounts: []sdk.AccountIdentifier{sdk.NewAccountIdentifierFromAccountLocator(accountName)},
+		}}),
+	)
+}
+
+func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
+	t.Helper()
+	config, err := sdk.ProfileConfig("secondary_test_account")
+	if err != nil {
+		t.Fatal(err)
+	}
+	client, err := sdk.NewClient(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	return errors.Join(
+		client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(shareName)),
+		client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.DropDatabaseOptions{}),
+	)
+}
+
 func createAccountRoleOutsideTerraform(t *testing.T, name string) {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
@@ -840,7 +961,7 @@ func testAccCheckAccountRolePrivilegesRevoked(name string) func(*terraform.State
 		client := sdk.NewClientFromDB(db)
 
 		defer func() {
-			err := client.Roles.Drop(context.Background(), sdk.NewDropRoleRequest(sdk.NewAccountObjectIdentifier(name)))
+			err := client.Roles.Drop(context.Background(), sdk.NewDropRoleRequest(sdk.NewAccountObjectIdentifier(name)).WithIfExists(true))
 			if err != nil {
 				log.Printf("failed to drop account role (%s), err = %s\n", name, err.Error())
 			}
@@ -859,6 +980,9 @@ func testAccCheckAccountRolePrivilegesRevoked(name string) func(*terraform.State
 				},
 			})
 			if err != nil {
+				if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+					continue
+				}
 				return err
 			}
 			var grantedPrivileges []string

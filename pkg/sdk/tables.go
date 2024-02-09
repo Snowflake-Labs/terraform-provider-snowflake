@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 var _ convertibleRow[Table] = new(tableDBRow)
@@ -171,7 +172,7 @@ type ColumnMaskingPolicy struct {
 
 // OutOfLineConstraint is based on https://docs.snowflake.com/en/sql-reference/sql/create-table-constraint#out-of-line-unique-primary-foreign-key.
 type OutOfLineConstraint struct {
-	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	Name       *string              `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
 	Type       ColumnConstraintType `ddl:"keyword"`
 	Columns    []string             `ddl:"keyword,parentheses"`
 	ForeignKey *OutOfLineForeignKey `ddl:"keyword"`
@@ -269,11 +270,12 @@ type TableColumnAddAction struct {
 	InlineConstraint *TableColumnAddInlineConstraint `ddl:"keyword"`
 	MaskingPolicy    *ColumnMaskingPolicy            `ddl:"keyword"`
 	Tags             []TagAssociation                `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment          *string                         `ddl:"parameter,no_equals,single_quotes" sql:"COMMENT"`
 }
 
 type TableColumnAddInlineConstraint struct {
 	NotNull    *bool                `ddl:"keyword" sql:"NOT NULL"`
-	Name       string               `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
+	Name       *string              `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
 	Type       ColumnConstraintType `ddl:"keyword"`
 	ForeignKey *ColumnAddForeignKey `ddl:"keyword"`
 }
@@ -370,15 +372,14 @@ type TableConstraintAlterAction struct {
 	Unique         *bool   `ddl:"keyword" sql:"UNIQUE"`
 	ForeignKey     *bool   `ddl:"keyword" sql:"FOREIGN KEY"`
 
-	Columns []string `ddl:"keyword,parentheses"`
-
 	// Optional
-	Enforced    *bool `ddl:"keyword" sql:"ENFORCED"`
-	NotEnforced *bool `ddl:"keyword" sql:"NOT ENFORCED"`
-	Validate    *bool `ddl:"keyword" sql:"VALIDATE"`
-	NoValidate  *bool `ddl:"keyword" sql:"NOVALIDATE"`
-	Rely        *bool `ddl:"keyword" sql:"RELY"`
-	NoRely      *bool `ddl:"keyword" sql:"NORELY"`
+	Columns     []string `ddl:"keyword,parentheses"`
+	Enforced    *bool    `ddl:"keyword" sql:"ENFORCED"`
+	NotEnforced *bool    `ddl:"keyword" sql:"NOT ENFORCED"`
+	Validate    *bool    `ddl:"keyword" sql:"VALIDATE"`
+	NoValidate  *bool    `ddl:"keyword" sql:"NOVALIDATE"`
+	Rely        *bool    `ddl:"keyword" sql:"RELY"`
+	NoRely      *bool    `ddl:"keyword" sql:"NORELY"`
 }
 
 type TableConstraintDropAction struct {
@@ -388,11 +389,10 @@ type TableConstraintDropAction struct {
 	Unique         *bool   `ddl:"keyword" sql:"UNIQUE"`
 	ForeignKey     *bool   `ddl:"keyword" sql:"FOREIGN KEY"`
 
-	Columns []string `ddl:"keyword,parentheses"`
-
 	// Optional
-	Cascade  *bool `ddl:"keyword" sql:"CASCADE"`
-	Restrict *bool `ddl:"keyword" sql:"RESTRICT"`
+	Columns  []string `ddl:"keyword,parentheses"`
+	Cascade  *bool    `ddl:"keyword" sql:"CASCADE"`
+	Restrict *bool    `ddl:"keyword" sql:"RESTRICT"`
 }
 
 type TableUnsetTags struct {
@@ -412,6 +412,7 @@ type TableExternalTableColumnAddAction struct {
 	Name        string   `ddl:"keyword"`
 	Type        DataType `ddl:"keyword"`
 	Expression  []string `ddl:"parameter,no_equals,parentheses" sql:"AS"`
+	Comment     *string  `ddl:"parameter,no_equals,single_quotes" sql:"COMMENT"`
 }
 
 type TableExternalTableColumnRenameAction struct {
@@ -551,6 +552,22 @@ type Table struct {
 	OwnerRoleType              string
 	IsEvent                    bool
 	Budget                     *string
+}
+
+// GetClusterByKeys converts the SHOW TABLES result for ClusterBy and converts it to list of keys.
+func (v *Table) GetClusterByKeys() []string {
+	if v.ClusterBy == "" {
+		return nil
+	}
+
+	statementWithoutLinear := strings.TrimSuffix(strings.Replace(v.ClusterBy, "LINEAR(", "", 1), ")")
+	keysRaw := strings.Split(statementWithoutLinear, ",")
+	keysClean := make([]string, 0, len(keysRaw))
+	for _, key := range keysRaw {
+		keysClean = append(keysClean, strings.TrimSpace(key))
+	}
+
+	return keysClean
 }
 
 func (row tableDBRow) convert() *Table {

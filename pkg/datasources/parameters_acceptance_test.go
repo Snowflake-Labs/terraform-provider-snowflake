@@ -5,6 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -60,6 +63,44 @@ func TestAcc_ParametersOnObject(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "object_type", "DATABASE"),
 					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "object_name", dbName),
 				),
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2353 is fixed
+func TestAcc_Parameters_TransactionAbortOnErrorCanBeSet(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `resource "snowflake_account_parameter" "test" {
+				   key   = "TRANSACTION_ABORT_ON_ERROR"
+				   value = "true"
+				}`,
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2353 is fixed
+func TestAcc_Parameters_QuotedIdentifiersIgnoreCaseCanBeSet(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `resource "snowflake_account_parameter" "test" {
+				  key   = "QUOTED_IDENTIFIERS_IGNORE_CASE"
+				  value = "true"
+				}`,
 			},
 		},
 	})
