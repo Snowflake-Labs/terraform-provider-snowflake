@@ -111,6 +111,8 @@ func (e *ViewSelectStatementExtractor) ExtractDynamicTable() (string, error) {
 	e.consumeSpace()
 	e.consumeTokenParameter("warehouse")
 	e.consumeSpace()
+	e.consumeComment()
+	e.consumeSpace()
 	e.consumeToken("as")
 	e.consumeSpace()
 

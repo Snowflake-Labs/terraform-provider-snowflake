@@ -147,7 +147,8 @@ lag = 'DOWNSTREAM'
 refresh_mode = 'AUTO'
 initialize = 'ON_CREATE'
 warehouse = COMPUTE_WH
-as select * from bar;`
+as select *
+from bar;`
 
 	multilineComment := `
 create dynamic table foo
@@ -160,10 +161,14 @@ as
 select *
 from bar;`
 
-	comment := `create dynamic table foo comment = 'asdf' lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH as select * from bar;`
-	commentEscape := `create dynamic table foo comment = 'asdf\'s are fun' lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH as select * from bar;`
-	orReplace := `create or replace dynamic table foo comment = 'asdf' lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH as select * from bar;`
-	identifier := `create or replace dynamic table "foo"."bar"."bam" comment = 'asdf\'s are fun' lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH as select * from bar;`
+	comment := `create dynamic table foo lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH comment = 'asdf' as select * from bar;`
+	commentEscape := `create dynamic table foo lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH comment = 'asdf\'s are fun' as select * from bar;`
+	orReplace := `create or replace dynamic table foo lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH comment = 'asdf' as select * from bar;`
+	identifier := `create or replace dynamic table "foo"."bar"."bam" lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH comment = 'asdf\'s are fun' as select * from bar;`
+	// running SHOW DYNAMIC TABLE in Snowflake actually returns the query with
+	// the comment before other parameters, even though this is inconsistent
+	// with the order they are specified in CREATE DYNAMIC TABLE
+	commentBeforeOtherParams := `create dynamic table foo comment = 'asdf\'s are fun' lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH as select * from bar;`
 
 	type args struct {
 		input string
@@ -183,6 +188,7 @@ from bar;`
 		{"commentEscape", args{commentEscape}, "select * from bar;", false},
 		{"orReplace", args{orReplace}, "select * from bar;", false},
 		{"identifier", args{identifier}, "select * from bar;", false},
+		{"commentBeforeOtherParams", args{commentBeforeOtherParams}, "select * from bar;", false},
 	}
 	for _, tt := range tests {
 		tt := tt
