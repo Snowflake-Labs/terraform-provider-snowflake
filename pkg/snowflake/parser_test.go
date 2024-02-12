@@ -137,6 +137,75 @@ from bar;`
 	}
 }
 
+func TestViewSelectStatementExtractor_ExtractDynamicTable(t *testing.T) {
+	basic := "create dynamic table foo lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH as select * from bar;"
+	caps := "CREATE DYNAMIC TABLE FOO LAG = 'DOWNSTREAM' REFRESH_MODE = 'AUTO' INITIALIZE = 'ON_CREATE' WAREHOUSE = COMPUTE_WH AS SELECT * FROM BAR;"
+	parens := "create dynamic table foo lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH as (select * from bar);"
+	multiline := `
+create dynamic table foo
+lag = 'DOWNSTREAM'
+refresh_mode = 'AUTO'
+initialize = 'ON_CREATE'
+warehouse = COMPUTE_WH
+as select *
+from bar;`
+
+	multilineComment := `
+create dynamic table foo
+lag = 'DOWNSTREAM'
+refresh_mode = 'AUTO'
+initialize = 'ON_CREATE'
+warehouse = COMPUTE_WH
+as
+-- comment
+select *
+from bar;`
+
+	comment := `create dynamic table foo lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH comment = 'asdf' as select * from bar;`
+	commentEscape := `create dynamic table foo lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH comment = 'asdf\'s are fun' as select * from bar;`
+	orReplace := `create or replace dynamic table foo lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH comment = 'asdf' as select * from bar;`
+	identifier := `create or replace dynamic table "foo"."bar"."bam" lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH comment = 'asdf\'s are fun' as select * from bar;`
+	// running SHOW DYNAMIC TABLE in Snowflake actually returns the query with
+	// the comment before other parameters, even though this is inconsistent
+	// with the order they are specified in CREATE DYNAMIC TABLE
+	commentBeforeOtherParams := `create dynamic table foo comment = 'asdf\'s are fun' lag = 'DOWNSTREAM' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = COMPUTE_WH as select * from bar;`
+
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{"basic", args{basic}, "select * from bar;", false},
+		{"caps", args{caps}, "SELECT * FROM BAR;", false},
+		{"parens", args{parens}, "(select * from bar);", false},
+		{"multiline", args{multiline}, "select *\nfrom bar;", false},
+		{"multilineComment", args{multilineComment}, "-- comment\nselect *\nfrom bar;", false},
+		{"comment", args{comment}, "select * from bar;", false},
+		{"commentEscape", args{commentEscape}, "select * from bar;", false},
+		{"orReplace", args{orReplace}, "select * from bar;", false},
+		{"identifier", args{identifier}, "select * from bar;", false},
+		{"commentBeforeOtherParams", args{commentBeforeOtherParams}, "select * from bar;", false},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			e := NewViewSelectStatementExtractor(tt.args.input)
+			got, err := e.ExtractDynamicTable()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ViewSelectStatementExtractor.ExtractDynamicTable() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ViewSelectStatementExtractor.ExtractDynamicTable() = '%v', want '%v'", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestViewSelectStatementExtractor_consumeToken(t *testing.T) {
 	type fields struct {
 		input []rune
