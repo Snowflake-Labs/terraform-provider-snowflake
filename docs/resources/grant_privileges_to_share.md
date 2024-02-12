@@ -15,6 +15,16 @@ description: |-
 ## Example Usage
 
 ```terraform
+resource "snowflake_share" "example" {
+  name = "test"
+}
+
+resource "snowflake_database" "example" {
+  # remember to define dependency between objects on a share, because shared objects have to be dropped before dropping share
+  depends_on = [snowflake_share.example]
+  name       = "test"
+}
+
 ##################################
 ### on database
 ##################################
