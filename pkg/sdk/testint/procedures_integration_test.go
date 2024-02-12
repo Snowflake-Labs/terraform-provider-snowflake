@@ -328,7 +328,8 @@ def filter_by_role(session, table_name, role):
 		argument := sdk.NewProcedureArgumentRequest("id", sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForSQLProcedureRequest(id, *returns, definition).
 			WithOrReplace(sdk.Bool(true)).
-			WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			// SNOW-1051627 todo: uncomment once null input behavior working again
+			// WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
 		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
