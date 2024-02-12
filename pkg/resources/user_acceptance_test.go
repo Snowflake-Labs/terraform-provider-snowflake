@@ -2,7 +2,9 @@ package resources_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"log"
 	"strconv"
 	"strings"
@@ -134,10 +136,31 @@ resource "snowflake_user" "test" {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				PreConfig: removeUserOutsideOfTerraform(t, userName),
 				Config:    config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					func(state *terraform.State) error {
+						if len(state.RootModule().Resources) != 1 {
+							return errors.New("user should be created again and present in the state")
+						}
+						return nil
+					},
+				),
 			},
 		},
 	})
