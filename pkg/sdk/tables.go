@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -657,6 +658,7 @@ type TableColumnDetails struct {
 	Expression *string
 	Comment    *string
 	PolicyName *string
+	Collation  *string
 }
 
 // tableColumnDetailsRow based on https://docs.snowflake.com/en/sql-reference/sql/desc-table
@@ -675,13 +677,16 @@ type tableColumnDetailsRow struct {
 }
 
 func (r tableColumnDetailsRow) convert() *TableColumnDetails {
+	type_, collation := r.splitTypeAndCollation()
+
 	details := &TableColumnDetails{
 		Name:       r.Name,
-		Type:       r.Type,
+		Type:       type_,
 		Kind:       r.Kind,
 		IsNullable: r.IsNullable == "Y",
 		IsPrimary:  r.IsPrimary == "Y",
 		IsUnique:   r.IsUnique == "Y",
+		Collation:  collation,
 	}
 	if r.Default.Valid {
 		details.Default = String(r.Default.String)
@@ -699,6 +704,18 @@ func (r tableColumnDetailsRow) convert() *TableColumnDetails {
 		details.PolicyName = String(r.PolicyName.String)
 	}
 	return details
+}
+
+func (r tableColumnDetailsRow) splitTypeAndCollation() (DataType, *string) {
+	collateRegexp := regexp.MustCompile(`COLLATE +'([a-zA-Z0-9_-]*)'`)
+	matches := collateRegexp.FindStringSubmatch(string(r.Type))
+
+	if len(matches) == 2 {
+		collation := matches[1]
+		type_ := DataType(strings.TrimSpace(collateRegexp.ReplaceAllString(string(r.Type), "")))
+		return type_, &collation
+	}
+	return r.Type, nil
 }
 
 type describeTableStageOptions struct {

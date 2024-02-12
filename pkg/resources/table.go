@@ -139,6 +139,12 @@ var tableSchema = map[string]*schema.Schema{
 					Default:     "",
 					Description: "Masking policy to apply on column. It has to be a fully qualified name.",
 				},
+				"collate": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Column collation, e.g. utf8",
+				},
 			},
 		},
 	},
@@ -423,6 +429,10 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 		request.WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(maskingPolicy)))
 	}
 
+	if strings.Contains(_type, "CHAR") || _type == "STRING" || _type == "TEXT" {
+		request.WithCollate(sdk.String(c["collate"].(string)))
+	}
+
 	return request.
 		WithNotNull(sdk.Bool(!c["nullable"].(bool))).
 		WithComment(sdk.String(c["comment"].(string)))
@@ -468,6 +478,10 @@ func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
 
 		if td.Comment != nil {
 			flat["comment"] = *td.Comment
+		}
+
+		if td.Collation != nil {
+			flat["collate"] = *td.Collation
 		}
 
 		if td.PolicyName != nil {

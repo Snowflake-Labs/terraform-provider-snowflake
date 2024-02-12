@@ -1526,6 +1526,59 @@ func TestTableDescribeColumns(t *testing.T) {
 	})
 }
 
+func TestTableColumnDetailsRow_SplitTypeAndCollation(t *testing.T) {
+
+	t.Run("with utf8", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("VARCHAR(10) COLLATE 'utf8'"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("VARCHAR(10)"), actualType)
+		assert.Equal(t, "utf8", *actualCollation)
+	})
+
+	t.Run("with locale", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("VARCHAR(10) COLLATE 'en_US'"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("VARCHAR(10)"), actualType)
+		assert.Equal(t, "en_US", *actualCollation)
+	})
+
+	t.Run("with multiple specifiers", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("VARCHAR(10) COLLATE 'fr_CA-ai-pi-trim'"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("VARCHAR(10)"), actualType)
+		assert.Equal(t, "fr_CA-ai-pi-trim", *actualCollation)
+	})
+
+	t.Run("with empty collation", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("VARCHAR(10) COLLATE ''"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("VARCHAR(10)"), actualType)
+		assert.Equal(t, "", *actualCollation)
+	})
+
+	t.Run("without collation", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("NUMBER(38, 0)"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("NUMBER(38, 0)"), actualType)
+		assert.Nil(t, actualCollation)
+	})
+}
+
 func TestTableDescribeStage(t *testing.T) {
 	id := RandomSchemaObjectIdentifier()
 	defaultOpts := func() *describeTableStageOptions {
