@@ -81,7 +81,7 @@ func testAccCheckUserPasswordPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func userPasswordPolicyAttachmentConfig(userName, databaseName, schemaName, prefix string) string {
+func userPasswordPolicyAttachmentConfig(userName, databaseName, schemaName, passwordPolicyName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_user" "user" {
 	name = "%s"
@@ -96,5 +96,5 @@ resource "snowflake_user_password_policy_attachment" "ppa" {
 	password_policy_name = "\"${snowflake_password_policy.pp.database}\".\"${snowflake_password_policy.pp.schema}\".\"${snowflake_password_policy.pp.name}\""
 	user_name = snowflake_user.user.name
 }
-`, userName, databaseName, schemaName, prefix)
+`, userName, databaseName, schemaName, passwordPolicyName)
 }

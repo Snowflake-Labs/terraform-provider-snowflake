@@ -35,9 +35,7 @@ resource "snowflake_user_password_policy_attachment" "ppa" {
 
 ### Required
 
-- `password_policy_database` (String) Database name where the password policy is stored
-- `password_policy_name` (String) Non-qualified name of the password policy
-- `password_policy_schema` (String) Schema name where the password policy is stored
+- `password_policy_name` (String) Fully qualified name of the password policy
 - `user_name` (String) User name of the user you want to attach the password policy to
 
 ### Read-Only

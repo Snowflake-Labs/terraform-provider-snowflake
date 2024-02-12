@@ -19,10 +19,11 @@ var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 		Description: "User name of the user you want to attach the password policy to",
 	},
 	"password_policy_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Fully qualified name of the password policy",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Fully qualified name of the password policy",
+		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 }
 
@@ -95,8 +96,8 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 	if err := d.Set(
 		"password_policy_name",
 		sdk.NewSchemaObjectIdentifier(
-			policyReferences[0].PolicyDb,
-			policyReferences[0].PolicySchema,
+			*policyReferences[0].PolicyDb,
+			*policyReferences[0].PolicySchema,
 			policyReferences[0].PolicyName,
 		).FullyQualifiedName()); err != nil {
 		return err
