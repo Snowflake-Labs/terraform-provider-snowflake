@@ -34,6 +34,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 		}
 	}
 	variableSet2 := m()
+	variableSet2["warehouse"] = config.StringVariable(acc.TestWarehouseName2)
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
 	resource.Test(t, resource.TestCase{
@@ -83,6 +84,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName2),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
