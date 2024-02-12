@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -35,6 +34,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 		}
 	}
 	variableSet2 := m()
+	variableSet2["warehouse"] = config.StringVariable(acc.TestWarehouseName2)
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
 	resource.Test(t, resource.TestCase{
@@ -84,6 +84,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName2),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
@@ -336,7 +337,7 @@ func TestAcc_DynamicTable_issue2329(t *testing.T) {
 func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
 	dynamicTableName := strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha) + "AS" + acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	tableName := dynamicTableName + "_table"
-	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
+	query := fmt.Sprintf(`with temp as (select "id" from "%v"."%v"."%v") select * from temp`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":       config.StringVariable(dynamicTableName),
@@ -361,7 +362,10 @@ func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_DynamicTable_issue2329/1"),
 				ConfigVariables: m(),
-				ExpectError:     regexp.MustCompile(`too many matches found. There is no way of getting ONLY the 'query' used to create the dynamic table from Snowflake. We try to get it from the whole creation statement but there may be cases where it fails. Please submit the issue on Github \(refer to #2329\)`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", query),
+				),
 			},
 		},
 	})
