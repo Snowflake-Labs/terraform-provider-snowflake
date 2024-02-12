@@ -108,7 +108,7 @@ func ReadContextExternalFunctions(ctx context.Context, d *schema.ResourceData, m
 		externalFunctionsList = append(externalFunctionsList, externalFunctionMap)
 	}
 
-	d.SetId(fmt.Sprintf(`external_functions|%v|%v`, databaseName, schemaName))
+	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
 	if err := d.Set("external_functions", externalFunctionsList); err != nil {
 		return diag.FromErr(err)
 	}
