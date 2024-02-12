@@ -3,7 +3,6 @@ package resources_test
 import (
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	"regexp"
 	"strings"
 	"testing"

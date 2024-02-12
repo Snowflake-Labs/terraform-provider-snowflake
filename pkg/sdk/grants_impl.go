@@ -23,7 +23,9 @@ func (v *grants) GrantPrivilegesToAccountRole(ctx context.Context, privileges *A
 	opts.accountRole = role
 	logging.DebugLogger.Printf("[DEBUG] Grant privileges to account role: opts %+v", opts)
 
-	// TODO: Describe why it's here
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
+	// to every Pipe one by one.
 	if on != nil &&
 		on.SchemaObject != nil &&
 		on.SchemaObject.All != nil &&
@@ -64,7 +66,9 @@ func (v *grants) RevokePrivilegesFromAccountRole(ctx context.Context, privileges
 	opts.accountRole = role
 	logging.DebugLogger.Printf("[DEBUG] Revoke privileges from account role: opts %+v", opts)
 
-	// TODO: Describe why it's here
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "revoke x on all pipes" operation, we'll go and revoke specified privileges
+	// from every Pipe one by one.
 	if on != nil &&
 		on.SchemaObject != nil &&
 		on.SchemaObject.All != nil &&
@@ -103,7 +107,9 @@ func (v *grants) GrantPrivilegesToDatabaseRole(ctx context.Context, privileges *
 	opts.on = on
 	opts.databaseRole = role
 
-	// TODO: Describe why it's here
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
+	// to every Pipe one by one.
 	if on != nil &&
 		on.SchemaObject != nil &&
 		on.SchemaObject.All != nil &&
@@ -142,7 +148,9 @@ func (v *grants) RevokePrivilegesFromDatabaseRole(ctx context.Context, privilege
 	opts.on = on
 	opts.databaseRole = role
 
-	// TODO: Describe why it's here
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "revoke x on all pipes" operation, we'll go and revoke specified privileges
+	// from every Pipe one by one.
 	if on != nil &&
 		on.SchemaObject != nil &&
 		on.SchemaObject.All != nil &&
