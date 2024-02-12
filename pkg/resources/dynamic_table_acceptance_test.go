@@ -24,20 +24,28 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 	tableName := name + "_table"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":         config.StringVariable(name),
-			"database":     config.StringVariable(acc.TestDatabaseName),
-			"schema":       config.StringVariable(acc.TestSchemaName),
-			"warehouse":    config.StringVariable(acc.TestWarehouseName),
-			"initialize":   config.StringVariable("ON_SCHEDULE"),
-			"refresh_mode": config.StringVariable("FULL"),
-			"query":        config.StringVariable(fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)),
-			"comment":      config.StringVariable("Terraform acceptance test"),
-			"table_name":   config.StringVariable(tableName),
+			"name":       config.StringVariable(name),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"warehouse":  config.StringVariable(acc.TestWarehouseName),
+			"query":      config.StringVariable(fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)),
+			"comment":    config.StringVariable("Terraform acceptance test"),
+			"table_name": config.StringVariable(tableName),
 		}
 	}
 	variableSet2 := m()
 	variableSet2["warehouse"] = config.StringVariable(acc.TestWarehouseName2)
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
+
+	variableSet3 := m()
+	variableSet3["initialize"] = config.StringVariable("ON_SCHEDULE")
+
+	variableSet4 := m()
+	variableSet4["initialize"] = config.StringVariable("ON_SCHEDULE") // keep the same setting from set 3
+	variableSet4["refresh_mode"] = config.StringVariable("FULL")
+
+	// used to check whether a dynamic table was replaced
+	var createdOn string
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -55,8 +63,8 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName),
-					resource.TestCheckResourceAttr(resourceName, "initialize", "ON_SCHEDULE"),
-					resource.TestCheckResourceAttr(resourceName, "refresh_mode", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "initialize", "ON_CREATE"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_mode", "AUTO"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.maximum_duration", "2 minutes"),
 					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
@@ -76,6 +84,11 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "is_clone"),
 					resource.TestCheckResourceAttrSet(resourceName, "is_replica"),
 					resource.TestCheckResourceAttrSet(resourceName, "data_timestamp"),
+
+					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
+						createdOn = value
+						return nil
+					}),
 				),
 			},
 			// test target lag to downstream and change comment
@@ -91,6 +104,58 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
+
+					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
+						if value != createdOn {
+							return fmt.Errorf("created_on changed from %v to %v", createdOn, value)
+						}
+						return nil
+					}),
+				),
+			},
+			// test changing initialize setting
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: variableSet3,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "initialize", "ON_SCHEDULE"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_mode", "AUTO"),
+					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
+
+					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
+						if value == createdOn {
+							return fmt.Errorf("expected created_on to change but was not changed")
+						}
+						createdOn = value
+						return nil
+					}),
+				),
+			},
+			// test changing refresh_mode setting
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: variableSet4,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "initialize", "ON_SCHEDULE"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_mode", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
+
+					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
+						if value == createdOn {
+							return fmt.Errorf("expected created_on to change but was not changed")
+						}
+						return nil
+					}),
 				),
 			},
 			// test import

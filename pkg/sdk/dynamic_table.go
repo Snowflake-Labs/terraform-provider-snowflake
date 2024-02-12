@@ -71,9 +71,21 @@ type showDynamicTableOptions struct {
 type DynamicTableRefreshMode string
 
 const (
+	DynamicTableRefreshModeAuto        DynamicTableRefreshMode = "AUTO"
 	DynamicTableRefreshModeIncremental DynamicTableRefreshMode = "INCREMENTAL"
 	DynamicTableRefreshModeFull        DynamicTableRefreshMode = "FULL"
 )
+
+var AllDynamicRefreshModes = []DynamicTableRefreshMode{DynamicTableRefreshModeAuto, DynamicTableRefreshModeIncremental, DynamicTableRefreshModeFull}
+
+type DynamicTableInitialize string
+
+const (
+	DynamicTableInitializeOnCreate   DynamicTableInitialize = "ON_CREATE"
+	DynamicTableInitializeOnSchedule DynamicTableInitialize = "ON_SCHEDULE"
+)
+
+var AllDynamicTableInitializes = []DynamicTableInitialize{DynamicTableInitializeOnCreate, DynamicTableInitializeOnSchedule}
 
 type DynamicTableSchedulingState string
 

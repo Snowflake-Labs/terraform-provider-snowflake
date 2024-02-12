@@ -54,6 +54,32 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		}
 		query := "select id from " + tableTest.ID().FullyQualifiedName()
 		comment := random.Comment()
+		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err = client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(name))
+			require.NoError(t, err)
+		})
+		entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(name.Name())}))
+		require.NoError(t, err)
+		require.Equal(t, 1, len(entities))
+
+		entity := entities[0]
+		require.Equal(t, name.Name(), entity.Name)
+		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
+		require.Equal(t, "DOWNSTREAM", entity.TargetLag)
+		require.Equal(t, "INCREMENTAL", entity.RefreshMode)
+		require.Contains(t, entity.Text, "initialize = 'ON_SCHEDULE'")
+		require.Contains(t, entity.Text, "refresh_mode = 'AUTO'")
+	})
+
+	t.Run("test complete with refresh mode and initialize", func(t *testing.T) {
+		name := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		targetLag := sdk.TargetLag{
+			MaximumDuration: sdk.String("2 minutes"),
+		}
+		query := "select id from " + tableTest.ID().FullyQualifiedName()
+		comment := random.Comment()
 		refreshMode := "FULL"
 		initialize := "ON_SCHEDULE"
 		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, testWarehouse(t).ID(), targetLag, query).WithOrReplace(true).WithInitialize(&initialize).WithRefreshMode(&refreshMode).WithComment(&comment))
@@ -71,7 +97,8 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
 		require.Equal(t, "DOWNSTREAM", entity.TargetLag)
 		require.Equal(t, "FULL", entity.RefreshMode)
-		require.Contains(t, entity.Text, "ON_SCHEDULE")
+		require.Contains(t, entity.Text, "initialize = 'ON_SCHEDULE'")
+		require.Contains(t, entity.Text, "refresh_mode = 'FULL'")
 	})
 }
 
