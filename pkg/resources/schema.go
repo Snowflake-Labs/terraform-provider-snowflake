@@ -53,7 +53,6 @@ var schemaSchema = map[string]*schema.Schema{
 	"data_retention_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Default:      1,
 		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
 		ValidateFunc: validation.IntBetween(0, 90),
 	},

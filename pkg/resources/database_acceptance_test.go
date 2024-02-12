@@ -51,7 +51,7 @@ func TestAcc_Database(t *testing.T) {
 
 	secondaryAccountName := getSecondaryAccount(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
@@ -61,7 +61,7 @@ func TestAcc_Database(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					resource.TestCheckResourceAttrSet("snowflake_database.db", "data_retention_time_in_days"),
+					//resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", ""),
 				),
 			},
 			// RENAME
@@ -70,7 +70,7 @@ func TestAcc_Database(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					resource.TestCheckResourceAttrSet("snowflake_database.db", "data_retention_time_in_days"),
+					//resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", ""),
 				),
 			},
 			// CHANGE PROPERTIES
@@ -90,6 +90,19 @@ func TestAcc_Database(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment 2"),
 					resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", "3"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.0.accounts.0", secondaryAccountName),
+				),
+			},
+			// REMOVE data_retention_time_in_days
+			// TODO: proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2369 error
+			{
+				Config: dbConfigWithoutDataRetentionTime(prefix2, secondaryAccountName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix2),
+					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment 2"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", ""),
 					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.0.accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.0.accounts.0", secondaryAccountName),
@@ -177,6 +190,21 @@ resource "snowflake_database" "db" {
 	name = "%s"
 	comment = "test comment 2"
 	data_retention_time_in_days = 3
+	replication_configuration {
+		accounts = [
+			"%s"
+		]
+	}
+}
+`
+	return fmt.Sprintf(s, prefix, secondaryAccountName)
+}
+
+func dbConfigWithoutDataRetentionTime(prefix string, secondaryAccountName string) string {
+	s := `
+resource "snowflake_database" "db" {
+	name = "%s"
+	comment = "test comment 2"
 	replication_configuration {
 		accounts = [
 			"%s"

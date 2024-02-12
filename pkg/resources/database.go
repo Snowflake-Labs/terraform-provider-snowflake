@@ -31,7 +31,6 @@ var databaseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Description: "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database, schema, or table. For more information, see Understanding & Using Time Travel.",
-		Default:     1,
 	},
 	"from_share": {
 		Type:          schema.TypeMap,
@@ -140,8 +139,9 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 	// Is it a Secondary Database?
 	if primaryName, ok := d.GetOk("from_replica"); ok {
 		primaryID := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(primaryName.(string))
-		opts := &sdk.CreateSecondaryDatabaseOptions{
-			DataRetentionTimeInDays: sdk.Int(d.Get("data_retention_time_in_days").(int)),
+		opts := &sdk.CreateSecondaryDatabaseOptions{}
+		if v, ok := d.GetOk("data_retention_time_in_days"); ok {
+			opts.DataRetentionTimeInDays = sdk.Int(v.(int))
 		}
 		err := client.Databases.CreateSecondary(ctx, id, primaryID, opts)
 		if err != nil {
