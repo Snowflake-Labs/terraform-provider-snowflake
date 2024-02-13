@@ -14,6 +14,19 @@ It is noted as a behavior change but in some way it is not; with the previous im
 
 We will consider adding `NOT NULL` back because it can be set by `ALTER COLUMN columnX SET NOT NULL`, but first we want to revisit the whole resource design.
 
+### snowflake_external_function resource changes
+
+#### *(behavior change)* return_null_allowed default is now true
+The `return_null_allowed` attribute default value is now `true`. This is a behavior change because it was `false` before. The reason it was changed is to match the expected default value in the [documentation](https://docs.snowflake.com/en/sql-reference/sql/create-external-function#optional-parameters) `Default: The default is NULL (i.e. the function can return NULL values).`
+
+#### *(behavior change)* comment is no longer required
+The `comment` attribute is now optional. It was required before, but it is not required in Snowflake API.
+
+### snowflake_external_functions data source changes
+
+#### *(behavior change)* schema is now required with database
+The `schema` attribute is now required with `database` attribute to match old implementation `SHOW EXTERNAL FUNCTIONS IN SCHEMA "<database>"."<schema>"`. In the future this may change to make schema optional.
+
 ## vX.XX.X -> v0.85.0
 
 ### Migration from old (grant) resources to new ones
