@@ -11,11 +11,19 @@ func (opts *getForEntityPolicyReferenceOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if opts.tableFunction.policyReferenceFunction.arguments.refEntityDomain == nil {
-		errs = append(errs, errNotSet("getForEntityPolicyReferenceOptions", "refEntityDomain"))
-	}
-	if opts.tableFunction.policyReferenceFunction.arguments.refEntityName == nil {
-		errs = append(errs, errNotSet("getForEntityPolicyReferenceOptions", "refEntityName"))
+	if !valueSet(opts.parameters) {
+		errs = append(errs, errNotSet("getForEntityPolicyReferenceOptions", "parameters"))
+	} else {
+		if !valueSet(opts.parameters.arguments) {
+			errs = append(errs, errNotSet("policyReferenceParameters", "arguments"))
+		} else {
+			if opts.parameters.arguments.refEntityDomain == nil {
+				errs = append(errs, errNotSet("policyReferenceFunctionArguments", "refEntityDomain"))
+			}
+			if opts.parameters.arguments.refEntityName == nil {
+				errs = append(errs, errNotSet("policyReferenceFunctionArguments", "refEntityName"))
+			}
+		}
 	}
 	return errors.Join(errs...)
 }

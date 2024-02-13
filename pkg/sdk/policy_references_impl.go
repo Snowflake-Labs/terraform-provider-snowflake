@@ -2,6 +2,8 @@ package sdk
 
 import "context"
 
+var _ PolicyReferences = new(policyReference)
+
 type policyReference struct {
 	client *Client
 }
@@ -12,23 +14,6 @@ func (v *policyReference) GetForEntity(ctx context.Context, request *GetForEntit
 	if err != nil {
 		return nil, err
 	}
-
 	resultList := convertRows[policyReferenceDBRow, PolicyReference](dbRows)
-
 	return resultList, nil
-}
-
-func (request *GetForEntityPolicyReferenceRequest) toOpts() *getForEntityPolicyReferenceOptions {
-	return &getForEntityPolicyReferenceOptions{
-		tableFunction: &tableFunction{
-			table: Bool(true),
-			policyReferenceFunction: &policyReferenceFunction{
-				functionFullyQualifiedName: Bool(true),
-				arguments: &policyReferenceFunctionArguments{
-					refEntityName:   []ObjectIdentifier{NewObjectIdentifierFromFullyQualifiedName(request.RefEntityName)},
-					refEntityDomain: String(request.RefEntityDomain),
-				},
-			},
-		},
-	}
 }

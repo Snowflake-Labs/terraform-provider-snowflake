@@ -16,8 +16,10 @@ import (
 )
 
 func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
-	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	userName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	NewUserName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	passwordPolicyName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newPasswordPolicyName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -26,18 +28,21 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE
 			{
-				Config: userPasswordPolicyAttachmentConfig("USER", acc.TestDatabaseName, acc.TestSchemaName, prefix),
+				Config: userPasswordPolicyAttachmentConfig(userName, acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("snowflake_user_password_policy_attachment.ppa", "id"),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", userName),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "password_policy_name", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName).FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "id", fmt.Sprintf("%s|%s", sdk.NewAccountObjectIdentifier(userName).FullyQualifiedName(), sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName).FullyQualifiedName())),
 				),
 				Destroy: false,
 			},
 			// UPDATE
 			{
-				Config: userPasswordPolicyAttachmentConfig(fmt.Sprintf("USER_%s", prefix), acc.TestDatabaseName, acc.TestSchemaName, prefix2),
+				Config: userPasswordPolicyAttachmentConfig(NewUserName, acc.TestDatabaseName, acc.TestSchemaName, newPasswordPolicyName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("snowflake_user_password_policy_attachment.ppa", "id"),
-					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", fmt.Sprintf("USER_%s", prefix)),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", NewUserName),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "password_policy_name", sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, newPasswordPolicyName).FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "id", fmt.Sprintf("%s|%s", sdk.NewAccountObjectIdentifier(NewUserName).FullyQualifiedName(), sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, newPasswordPolicyName).FullyQualifiedName())),
 				),
 			},
 			// IMPORT
@@ -55,46 +60,41 @@ func testAccCheckUserPasswordPolicyAttachmentDestroy(s *terraform.State) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	for _, rs := range s.RootModule().Resources {
-		// Note: I leverage the fact that the state during the test is specific to the test case, so there should only be there resources created in this test
 		if rs.Type != "snowflake_user_password_policy_attachment" {
 			continue
 		}
-		userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"])
-		policyReferences, err := client.PolicyReferences.GetForEntity(ctx, &sdk.GetForEntityPolicyReferenceRequest{
-			RefEntityName:   userName.FullyQualifiedName(),
-			RefEntityDomain: "user",
-		})
+		policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(
+			sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]),
+			sdk.PolicyEntityDomainUser,
+		))
 		if err != nil {
 			if strings.Contains(err.Error(), "does not exist or not authorized") {
-				// Note: this can happen if the Policy Reference or the User have been deleted as well; in this case, just ignore the error
+				// Note: this can happen if the Policy Reference or the User has been deleted as well; in this case, ignore the error
 				continue
 			}
 			return err
 		}
 		if len(policyReferences) > 0 {
-			return fmt.Errorf("User Password Policy attachment %v still exists", policyReferences[0].PolicyName)
+			return fmt.Errorf("user password policy attachment %v still exists", policyReferences[0].PolicyName)
 		}
 	}
 	return nil
 }
 
-func userPasswordPolicyAttachmentConfig(userName, databaseName, schemaName, prefix string) string {
-	s := `
+func userPasswordPolicyAttachmentConfig(userName, databaseName, schemaName, passwordPolicyName string) string {
+	return fmt.Sprintf(`
 resource "snowflake_user" "user" {
 	name = "%s"
 }
 resource "snowflake_password_policy" "pp" {
 	database   = "%s"
 	schema     = "%s"
-	name       = "pp_%v"
+	name       = "%s"
 }
 
 resource "snowflake_user_password_policy_attachment" "ppa" {
-	password_policy_database = snowflake_password_policy.pp.database
-	password_policy_schema = snowflake_password_policy.pp.schema
-	password_policy_name = snowflake_password_policy.pp.name
+	password_policy_name = "\"${snowflake_password_policy.pp.database}\".\"${snowflake_password_policy.pp.schema}\".\"${snowflake_password_policy.pp.name}\""
 	user_name = snowflake_user.user.name
 }
-`
-	return fmt.Sprintf(s, userName, databaseName, schemaName, prefix)
+`, userName, databaseName, schemaName, passwordPolicyName)
 }
