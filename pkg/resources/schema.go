@@ -51,18 +51,18 @@ var schemaSchema = map[string]*schema.Schema{
 		Description: "Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.",
 	},
 	"data_retention_days": {
-		Type:                  schema.TypeInt,
-		Optional:              true,
-		Description:           "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
-		ValidateFunc:          validation.IntBetween(0, 90),
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(_, oldValue, newValue string, d *schema.ResourceData) bool {
-			if _, ok := d.GetOk("data_retention_days"); !ok && newValue != "" {
-				return true
-			}
-
-			return false
-		},
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
+		ValidateFunc: validation.IntBetween(0, 90),
+		//DiffSuppressOnRefresh: true,
+		//DiffSuppressFunc: func(_, oldValue, newValue string, d *schema.ResourceData) bool {
+		//	if _, ok := d.GetOk("data_retention_days"); !ok && newValue != "" {
+		//		return true
+		//	}
+		//
+		//	return false
+		//},
 	},
 	"tag": tagReferenceSchema,
 }
@@ -78,6 +78,13 @@ func Schema() *schema.Resource {
 		Schema: schemaSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
+			if diff.HasChange("data_retention_days") {
+
+			}
+
+			return nil
 		},
 	}
 }
