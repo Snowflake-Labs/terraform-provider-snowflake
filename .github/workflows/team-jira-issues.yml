@@ -16,23 +16,27 @@ jobs:
           --header 'Content-Type: application/json' \
           --data-raw '{
               "fields": {
-                "project":
-                {
-                    "key": "${{ secrets.JIRA_PROJECT }}"
+                "project": {
+                  "key": "${{ secrets.JIRA_PROJECT }}"
                 },
                 "summary": "terraform-provider-snowflake issue ${{ github.event.issue.number }}",
-                "description": "${{ github.event.issue.html_url }}",
+                "description": "*Title*\n${{ github.event.issue.title }}\n\n*URL*\n${{ github.event.issue.html_url }}\n\n*Body*\n${{ github.event.issue.body }}",
                 "issuetype": {
-                    "name": "Story"
+                  "name": "Task"
                 },       
-                "components": [{
-                "id": "${{ secrets.JIRA_COMPONENT }}"
-              }],
-                "labels": ["${{ secrets.JIRA_LABEL }}"],
-                "customfield_11401": {"id": "${{ secrets.JIRA_AREA }}"},
+                "components": [
+                  {
+                    "id": "${{ secrets.JIRA_COMPONENT }}"
+                  }
+                ],
+                "labels": [${{ secrets.JIRA_LABELS }}],
+                "customfield_11401": {
+                  "id": "${{ secrets.JIRA_AREA }}"
+                },
                 "customfield_10008": "${{ secrets.JIRA_EPIC }}",
-                "assignee": {"id": "${{ secrets.JIRA_ASSIGNEE }}"},
-                "reporter": {"id": "${{ secrets.JIRA_ASSIGNEE }}"}
+                "assignee": {
+                  "id": "${{ secrets.JIRA_ASSIGNEE }}"
+                }
               }
             }
           }'
