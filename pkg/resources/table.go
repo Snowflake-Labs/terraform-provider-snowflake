@@ -261,6 +261,7 @@ type column struct {
 	identity      *columnIdentity
 	comment       string
 	maskingPolicy string
+	collate       string
 }
 
 type columns []column
@@ -274,13 +275,14 @@ type changedColumn struct {
 	dropedDefault         bool
 	changedComment        bool
 	changedMaskingPolicy  bool
+	changedCollate        bool
 }
 
 func (c columns) getChangedColumnProperties(new columns) (changed changedColumns) {
 	changed = changedColumns{}
 	for _, cO := range c {
 		for _, cN := range new {
-			changeColumn := changedColumn{cN, false, false, false, false, false}
+			changeColumn := changedColumn{cN, false, false, false, false, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
 				changeColumn.changedDataType = true
 			}
@@ -297,6 +299,10 @@ func (c columns) getChangedColumnProperties(new columns) (changed changedColumns
 
 			if cO.name == cN.name && cO.maskingPolicy != cN.maskingPolicy {
 				changeColumn.changedMaskingPolicy = true
+			}
+
+			if cO.name == cN.name && cO.collate != cN.collate {
+				changeColumn.changedCollate = true
 			}
 
 			changed = append(changed, changeColumn)
@@ -369,6 +375,7 @@ func getColumn(from interface{}) (to column) {
 		_default:      cd,
 		identity:      id,
 		comment:       c["comment"].(string),
+		collate:       c["collate"].(string),
 		maskingPolicy: c["masking_policy"].(string),
 	}
 }
@@ -800,14 +807,18 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				addRequest.WithComment(sdk.String(cA.comment))
 			}
 
+			if cA.collate != "" && strings.Contains(cA.dataType, "CHAR") || cA.dataType == "STRING" || cA.dataType == "TEXT" {
+				addRequest.WithCollate(sdk.String(cA.collate))
+			}
+
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAdd(addRequest)))
 			if err != nil {
 				return fmt.Errorf("error adding column: %w", err)
 			}
 		}
 		for _, cA := range changed {
-			if cA.changedDataType {
-				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType)))})))
+			if cA.changedDataType || cA.changedCollate {
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType))).WithCollate(sdk.String(cA.newColumn.collate))})))
 				if err != nil {
 					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}

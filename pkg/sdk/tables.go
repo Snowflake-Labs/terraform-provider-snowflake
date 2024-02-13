@@ -267,6 +267,7 @@ type TableColumnAddAction struct {
 	IfNotExists      *bool                           `ddl:"keyword" sql:"IF NOT EXISTS"`
 	Name             string                          `ddl:"keyword"`
 	Type             DataType                        `ddl:"keyword"`
+	Collate          *string                         `ddl:"parameter,no_equals,single_quotes" sql:"COLLATE"`
 	DefaultValue     *ColumnDefaultValue             `ddl:"keyword"`
 	InlineConstraint *TableColumnAddInlineConstraint `ddl:"keyword"`
 	MaskingPolicy    *ColumnMaskingPolicy            `ddl:"keyword"`
@@ -295,11 +296,12 @@ type TableColumnAlterAction struct {
 	column bool   `ddl:"static" sql:"COLUMN"`
 	Name   string `ddl:"keyword"`
 
-	// One of
+	// One of (except Collate)
 	DropDefault       *bool         `ddl:"keyword" sql:"DROP DEFAULT"`
 	SetDefault        *SequenceName `ddl:"parameter,no_equals" sql:"SET DEFAULT"`
 	NotNullConstraint *TableColumnNotNullConstraint
 	Type              *DataType `ddl:"parameter,no_equals" sql:"SET DATA TYPE"`
+	Collate           *string   `ddl:"parameter,no_equals,single_quotes" sql:"COLLATE"`
 	Comment           *string   `ddl:"parameter,no_equals,single_quotes" sql:"COMMENT"`
 	UnsetComment      *bool     `ddl:"keyword" sql:"UNSET COMMENT"`
 }

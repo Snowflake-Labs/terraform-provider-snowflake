@@ -371,6 +371,7 @@ type TableColumnAddActionRequest struct {
 	With             *bool
 	Tags             []TagAssociation
 	Comment          *string
+	Collate          *string
 }
 
 type TableColumnAddInlineConstraintRequest struct {
@@ -400,6 +401,7 @@ type TableColumnAlterActionRequest struct {
 	Type              *DataType
 	Comment           *string
 	UnsetComment      *bool
+	Collate           *string
 }
 
 type TableColumnAlterSetMaskingPolicyActionRequest struct {

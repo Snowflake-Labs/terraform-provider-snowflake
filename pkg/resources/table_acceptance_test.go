@@ -1255,6 +1255,24 @@ func TestAcc_TableCollate(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.collate", ""),
 				),
 			},
+			{
+				Config: alterTableColumnWithCollate(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "4"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.collate", "en"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.collate", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.name", "column3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.collate", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.3.name", "column4"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.3.collate", "utf8"),
+				),
+			},
 		},
 	})
 }
@@ -1280,6 +1298,38 @@ resource "snowflake_table" "test_table" {
 	column {
 		name = "column3"
 		type = "VARCHAR(100)"
+	}
+}
+`
+	return fmt.Sprintf(s, name, databaseName, schemaName)
+}
+
+func alterTableColumnWithCollate(name string, databaseName string, schemaName string) string {
+	s := `
+resource "snowflake_table" "test_table" {
+	name     = "%s"
+	database = "%s"
+	schema   = "%s"
+	comment  = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(200)"
+		collate = "en"
+	}
+	column {
+		name = "column2"
+		type = "VARCHAR(200)"
+		collate = ""
+	}
+	column {
+		name = "column3"
+		type = "VARCHAR(200)"
+	}
+	column {
+		name = "column4"
+		type = "VARCHAR"
+		collate = "utf8"
 	}
 }
 `

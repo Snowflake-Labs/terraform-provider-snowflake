@@ -965,7 +965,8 @@ func TestTableAlter(t *testing.T) {
 				Add: &TableColumnAddAction{
 					IfNotExists: Bool(true),
 					Name:        columnName,
-					Type:        DataTypeBoolean,
+					Type:        DataTypeVARCHAR,
+					Collate:     String("utf8"),
 					DefaultValue: &ColumnDefaultValue{
 						Identity: &ColumnIdentity{
 							Start:     10,
@@ -975,7 +976,7 @@ func TestTableAlter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ADD COLUMN IF NOT EXISTS NEXT_COLUMN BOOLEAN IDENTITY START 10 INCREMENT 1", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ADD COLUMN IF NOT EXISTS NEXT_COLUMN VARCHAR COLLATE 'utf8' IDENTITY START 10 INCREMENT 1", id.FullyQualifiedName())
 	})
 
 	t.Run("rename column", func(t *testing.T) {
@@ -1026,8 +1027,9 @@ func TestTableAlter(t *testing.T) {
 				Comment: String("comment"),
 			},
 			{
-				Name: columnTwoName,
-				Type: Pointer(DataTypeBoolean),
+				Name:    columnTwoName,
+				Type:    Pointer(DataTypeVARCHAR),
+				Collate: String("utf8"),
 			},
 			{
 				Name:              columnTwoName,
@@ -1044,7 +1046,7 @@ func TestTableAlter(t *testing.T) {
 				Alter: actions,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ALTER COLUMN COLUMN_1 DROP DEFAULT, COLUMN COLUMN_1 SET DEFAULT SEQUENCE_1.NEXTVAL, COLUMN COLUMN_1 UNSET COMMENT, COLUMN COLUMN_2 DROP DEFAULT, COLUMN COLUMN_2 SET DEFAULT SEQUENCE_2.NEXTVAL, COLUMN COLUMN_2 COMMENT 'comment', COLUMN COLUMN_2 SET DATA TYPE BOOLEAN, COLUMN COLUMN_2 DROP NOT NULL", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ALTER COLUMN COLUMN_1 DROP DEFAULT, COLUMN COLUMN_1 SET DEFAULT SEQUENCE_1.NEXTVAL, COLUMN COLUMN_1 UNSET COMMENT, COLUMN COLUMN_2 DROP DEFAULT, COLUMN COLUMN_2 SET DEFAULT SEQUENCE_2.NEXTVAL, COLUMN COLUMN_2 COMMENT 'comment', COLUMN COLUMN_2 SET DATA TYPE VARCHAR COLLATE 'utf8', COLUMN COLUMN_2 DROP NOT NULL", id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set masking policy", func(t *testing.T) {
