@@ -142,6 +142,20 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
+	configVariables := func(databaseDataRetentionTime int) config.Variables {
+		return config.Variables{
+			"database":                     config.StringVariable(databaseName),
+			"schema":                       config.StringVariable(schemaName),
+			"database_data_retention_time": config.IntegerVariable(databaseDataRetentionTime),
+		}
+	}
+
+	configVariablesWithSchemaDataRetentionTime := func(databaseDataRetentionTime int, schemaDataRetentionTime int) config.Variables {
+		vars := configVariables(databaseDataRetentionTime)
+		vars["schema_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
+		return vars
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -151,19 +165,52 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 		CheckDestroy: testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(`
-				 resource "snowflake_database" "test" {
-					  name = "%s"
-					  data_retention_time_in_days = 5
-				 }
-
-				 resource "snowflake_schema" "test" {
-					  name = "%s"
-					  database = snowflake_database.test.name
-				 }
-				 `, databaseName, schemaName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigVariables: configVariables(5),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("snowflake_schema.test", "data_retention_days"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigVariables: configVariables(10),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("snowflake_schema.test", "data_retention_days"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "5"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 15),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "15"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigVariables: configVariables(10),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "0"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 0),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "0"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 3),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "3"),
 				),
 			},
 		},

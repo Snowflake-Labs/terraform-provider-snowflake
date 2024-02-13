@@ -55,14 +55,6 @@ var schemaSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
 		ValidateFunc: validation.IntBetween(0, 90),
-		//DiffSuppressOnRefresh: true,
-		//DiffSuppressFunc: func(_, oldValue, newValue string, d *schema.ResourceData) bool {
-		//	if _, ok := d.GetOk("data_retention_days"); !ok && newValue != "" {
-		//		return true
-		//	}
-		//
-		//	return false
-		//},
 	},
 	"tag": tagReferenceSchema,
 }
@@ -74,17 +66,9 @@ func Schema() *schema.Resource {
 		Read:   ReadSchema,
 		Update: UpdateSchema,
 		Delete: DeleteSchema,
-
 		Schema: schemaSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
-		},
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, i interface{}) error {
-			if diff.HasChange("data_retention_days") {
-
-			}
-
-			return nil
 		},
 	}
 }
@@ -121,7 +105,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
-	_, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
+	database, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
 	if err != nil {
 		d.SetId("")
 	}
@@ -147,10 +131,15 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if _, ok := d.GetOk("data_retention_days"); ok || int(retentionTime) != database.RetentionTime {
+		if err := d.Set("data_retention_days", retentionTime); err != nil {
+			return err
+		}
+	}
+
 	values := map[string]any{
-		"name":                s.Name,
-		"database":            s.DatabaseName,
-		"data_retention_days": retentionTime,
+		"name":     s.Name,
+		"database": s.DatabaseName,
 		// reset the options before reading back from the DB
 		"is_transient": false,
 		"is_managed":   false,
@@ -231,14 +220,24 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_retention_days") {
-		days := d.Get("data_retention_days")
-		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			Set: &sdk.SchemaSet{
-				DataRetentionTimeInDays: sdk.Int(days.(int)),
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("error updating data retention days on %v err = %w", d.Id(), err)
+		if days, ok := d.GetOk("data_retention_days"); ok {
+			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+				Set: &sdk.SchemaSet{
+					DataRetentionTimeInDays: sdk.Int(days.(int)),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error setting data retention days on %v err = %w", d.Id(), err)
+			}
+		} else {
+			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+				Unset: &sdk.SchemaUnset{
+					DataRetentionTimeInDays: sdk.Bool(true),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error unsetting data retention days on %v err = %w", d.Id(), err)
+			}
 		}
 	}
 

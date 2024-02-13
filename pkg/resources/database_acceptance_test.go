@@ -61,7 +61,7 @@ func TestAcc_Database(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					//resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", ""),
+					// resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", ""),
 				),
 			},
 			// RENAME
@@ -70,7 +70,7 @@ func TestAcc_Database(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.db", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					//resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", ""),
+					// resource.TestCheckResourceAttr("snowflake_database.db", "data_retention_time_in_days", ""),
 				),
 			},
 			// CHANGE PROPERTIES
