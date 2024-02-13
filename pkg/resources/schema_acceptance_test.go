@@ -137,6 +137,39 @@ func TestAcc_Schema_TwoSchemasWithTheSameNameOnDifferentDatabases(t *testing.T) 
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
+func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+				 resource "snowflake_database" "test" {
+					  name = "%s"
+					  data_retention_time_in_days = 5
+				 }
+
+				 resource "snowflake_schema" "test" {
+					  name = "%s"
+					  database = snowflake_database.test.name
+				 }
+				 `, databaseName, schemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "5"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSchemaDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)
 	client := sdk.NewClientFromDB(db)
