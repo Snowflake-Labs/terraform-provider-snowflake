@@ -39,8 +39,8 @@ func TestDynamicTableCreate(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.Comment = String("comment")
-		opts.RefreshMode = String("FULL")
-		opts.Initialize = String("ON_SCHEDULE")
+		opts.RefreshMode = DynamicTableRefreshModeFull.ToPointer()
+		opts.Initialize = DynamicTableInitializeOnSchedule.ToPointer()
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE DYNAMIC TABLE %s TARGET_LAG = '1 minutes' INITIALIZE = ON_SCHEDULE REFRESH_MODE = FULL WAREHOUSE = "warehouse_name" COMMENT = 'comment' AS SELECT product_id, product_name FROM staging_table`, id.FullyQualifiedName())
 	})
 }

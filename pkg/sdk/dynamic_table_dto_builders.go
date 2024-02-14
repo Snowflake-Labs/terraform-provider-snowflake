@@ -24,13 +24,13 @@ func (s *CreateDynamicTableRequest) WithComment(comment *string) *CreateDynamicT
 	return s
 }
 
-func (s *CreateDynamicTableRequest) WithRefreshMode(refreshMode *string) *CreateDynamicTableRequest {
-	s.refreshMode = refreshMode
+func (s *CreateDynamicTableRequest) WithRefreshMode(refreshMode DynamicTableRefreshMode) *CreateDynamicTableRequest {
+	s.refreshMode = &refreshMode
 	return s
 }
 
-func (s *CreateDynamicTableRequest) WithInitialize(initialize *string) *CreateDynamicTableRequest {
-	s.initialize = initialize
+func (s *CreateDynamicTableRequest) WithInitialize(initialize DynamicTableInitialize) *CreateDynamicTableRequest {
+	s.initialize = &initialize
 	return s
 }
 

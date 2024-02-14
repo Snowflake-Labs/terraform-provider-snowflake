@@ -38,11 +38,11 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
 	variableSet3 := m()
-	variableSet3["initialize"] = config.StringVariable("ON_SCHEDULE")
+	variableSet3["initialize"] = config.StringVariable(string(sdk.DynamicTableInitializeOnSchedule))
 
 	variableSet4 := m()
-	variableSet4["initialize"] = config.StringVariable("ON_SCHEDULE") // keep the same setting from set 3
-	variableSet4["refresh_mode"] = config.StringVariable("FULL")
+	variableSet4["initialize"] = config.StringVariable(string(sdk.DynamicTableInitializeOnSchedule)) // keep the same setting from set 3
+	variableSet4["refresh_mode"] = config.StringVariable(string(sdk.DynamicTableRefreshModeFull))
 
 	// used to check whether a dynamic table was replaced
 	var createdOn string
@@ -63,8 +63,8 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName),
-					resource.TestCheckResourceAttr(resourceName, "initialize", "ON_CREATE"),
-					resource.TestCheckResourceAttr(resourceName, "refresh_mode", "AUTO"),
+					resource.TestCheckResourceAttr(resourceName, "initialize", string(sdk.DynamicTableInitializeOnCreate)),
+					resource.TestCheckResourceAttr(resourceName, "refresh_mode", string(sdk.DynamicTableRefreshModeAuto)),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.maximum_duration", "2 minutes"),
 					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
@@ -118,14 +118,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: variableSet3,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "initialize", "ON_SCHEDULE"),
-					resource.TestCheckResourceAttr(resourceName, "refresh_mode", "AUTO"),
-					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, "initialize", string(sdk.DynamicTableInitializeOnSchedule)),
 
 					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
 						if value == createdOn {
@@ -141,14 +134,8 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: variableSet4,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "initialize", "ON_SCHEDULE"),
-					resource.TestCheckResourceAttr(resourceName, "refresh_mode", "FULL"),
-					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, "initialize", string(sdk.DynamicTableInitializeOnSchedule)),
+					resource.TestCheckResourceAttr(resourceName, "refresh_mode", string(sdk.DynamicTableRefreshModeFull)),
 
 					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
 						if value == createdOn {

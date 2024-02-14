@@ -43,8 +43,8 @@ resource "snowflake_dynamic_table" "dt" {
 
 - `comment` (String) Specifies a comment for the dynamic table.
 - `or_replace` (Boolean) Specifies whether to replace the dynamic table if it already exists.
-- `refresh_mode` (String) INCREMENTAL if the dynamic table will use incremental refreshes, or FULL if it will recompute the whole table on every refresh.
-- `initialize` (String) Specifies the behavior of the initial refresh of the dynamic table. This property cannot be altered after you create the dynamic table.
+- `refresh_mode` (String) INCREMENTAL if the dynamic table will use incremental refreshes, or FULL if it will recompute the whole table on every refresh. Specify AUTO to let Snowflake decide. The default is AUTO.
+- `initialize` (String) Specifies the behavior of the initial refresh of the dynamic table. This property cannot be altered after you create the dynamic table. Specify ON_CREATE to initialize the dynamic table immeidately, or ON_SCHEDULE to have it initialize at the next tick after creation. The default os ON_CREATE.
 
 ### Read-Only
 

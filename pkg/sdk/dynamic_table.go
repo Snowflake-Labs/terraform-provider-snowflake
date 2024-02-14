@@ -17,16 +17,16 @@ type DynamicTables interface {
 
 // createDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-dynamic-table
 type createDynamicTableOptions struct {
-	create       bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace    *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	dynamicTable bool                    `ddl:"static" sql:"DYNAMIC TABLE"`
-	name         SchemaObjectIdentifier  `ddl:"identifier"`
-	targetLag    TargetLag               `ddl:"parameter,no_quotes" sql:"TARGET_LAG"`
-	Initialize   *string                 `ddl:"parameter,no_quotes" sql:"INITIALIZE"`
-	RefreshMode  *string                 `ddl:"parameter,no_quotes" sql:"REFRESH_MODE"`
-	warehouse    AccountObjectIdentifier `ddl:"identifier,equals" sql:"WAREHOUSE"`
-	Comment      *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	query        string                  `ddl:"parameter,no_equals,no_quotes" sql:"AS"`
+	create       bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace    *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	dynamicTable bool                     `ddl:"static" sql:"DYNAMIC TABLE"`
+	name         SchemaObjectIdentifier   `ddl:"identifier"`
+	targetLag    TargetLag                `ddl:"parameter,no_quotes" sql:"TARGET_LAG"`
+	Initialize   *DynamicTableInitialize  `ddl:"parameter,no_quotes" sql:"INITIALIZE"`
+	RefreshMode  *DynamicTableRefreshMode `ddl:"parameter,no_quotes" sql:"REFRESH_MODE"`
+	warehouse    AccountObjectIdentifier  `ddl:"identifier,equals" sql:"WAREHOUSE"`
+	Comment      *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	query        string                   `ddl:"parameter,no_equals,no_quotes" sql:"AS"`
 }
 
 type TargetLag struct {
@@ -76,6 +76,10 @@ const (
 	DynamicTableRefreshModeFull        DynamicTableRefreshMode = "FULL"
 )
 
+func (d DynamicTableRefreshMode) ToPointer() *DynamicTableRefreshMode {
+	return &d
+}
+
 var AllDynamicRefreshModes = []DynamicTableRefreshMode{DynamicTableRefreshModeAuto, DynamicTableRefreshModeIncremental, DynamicTableRefreshModeFull}
 
 type DynamicTableInitialize string
@@ -84,6 +88,10 @@ const (
 	DynamicTableInitializeOnCreate   DynamicTableInitialize = "ON_CREATE"
 	DynamicTableInitializeOnSchedule DynamicTableInitialize = "ON_SCHEDULE"
 )
+
+func (d DynamicTableInitialize) ToPointer() *DynamicTableInitialize {
+	return &d
+}
 
 var AllDynamicTableInitializes = []DynamicTableInitialize{DynamicTableInitializeOnCreate, DynamicTableInitializeOnSchedule}
 

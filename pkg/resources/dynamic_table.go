@@ -325,10 +325,10 @@ func CreateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 		request.WithOrReplace(true)
 	}
 	if v, ok := d.GetOk("refresh_mode"); ok {
-		request.WithRefreshMode(sdk.String(v.(string)))
+		request.WithRefreshMode(sdk.DynamicTableRefreshMode(v.(string)))
 	}
 	if v, ok := d.GetOk("initialize"); ok {
-		request.WithInitialize(sdk.String(v.(string)))
+		request.WithInitialize(sdk.DynamicTableInitialize(v.(string)))
 	}
 	if err := client.DynamicTables.Create(context.Background(), request); err != nil {
 		return err

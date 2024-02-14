@@ -18,8 +18,8 @@ type CreateDynamicTableRequest struct {
 	query     string                  // required
 
 	comment     *string
-	refreshMode *string
-	initialize  *string
+	refreshMode *DynamicTableRefreshMode
+	initialize  *DynamicTableInitialize
 }
 
 type AlterDynamicTableRequest struct {
