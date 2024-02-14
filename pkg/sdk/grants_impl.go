@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
@@ -21,6 +22,37 @@ func (v *grants) GrantPrivilegesToAccountRole(ctx context.Context, privileges *A
 	opts.on = on
 	opts.accountRole = role
 	logging.DebugLogger.Printf("[DEBUG] Grant privileges to account role: opts %+v", opts)
+
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
+	// to every Pipe one by one.
+	if on != nil &&
+		on.SchemaObject != nil &&
+		on.SchemaObject.All != nil &&
+		on.SchemaObject.All.PluralObjectType == PluralObjectTypePipes {
+		return v.runOnAllPipes(
+			ctx,
+			on.SchemaObject.All.InDatabase,
+			on.SchemaObject.All.InSchema,
+			func(pipe Pipe) error {
+				return v.client.Grants.GrantPrivilegesToAccountRole(
+					ctx,
+					privileges,
+					&AccountRoleGrantOn{
+						SchemaObject: &GrantOnSchemaObject{
+							SchemaObject: &Object{
+								ObjectType: ObjectTypePipe,
+								Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+							},
+						},
+					},
+					role,
+					opts,
+				)
+			},
+		)
+	}
+
 	return validateAndExec(v.client, ctx, opts)
 }
 
@@ -33,6 +65,37 @@ func (v *grants) RevokePrivilegesFromAccountRole(ctx context.Context, privileges
 	opts.on = on
 	opts.accountRole = role
 	logging.DebugLogger.Printf("[DEBUG] Revoke privileges from account role: opts %+v", opts)
+
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "revoke x on all pipes" operation, we'll go and revoke specified privileges
+	// from every Pipe one by one.
+	if on != nil &&
+		on.SchemaObject != nil &&
+		on.SchemaObject.All != nil &&
+		on.SchemaObject.All.PluralObjectType == PluralObjectTypePipes {
+		return v.runOnAllPipes(
+			ctx,
+			on.SchemaObject.All.InDatabase,
+			on.SchemaObject.All.InSchema,
+			func(pipe Pipe) error {
+				return v.client.Grants.RevokePrivilegesFromAccountRole(
+					ctx,
+					privileges,
+					&AccountRoleGrantOn{
+						SchemaObject: &GrantOnSchemaObject{
+							SchemaObject: &Object{
+								ObjectType: ObjectTypePipe,
+								Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+							},
+						},
+					},
+					role,
+					opts,
+				)
+			},
+		)
+	}
+
 	return validateAndExec(v.client, ctx, opts)
 }
 
@@ -43,6 +106,37 @@ func (v *grants) GrantPrivilegesToDatabaseRole(ctx context.Context, privileges *
 	opts.privileges = privileges
 	opts.on = on
 	opts.databaseRole = role
+
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
+	// to every Pipe one by one.
+	if on != nil &&
+		on.SchemaObject != nil &&
+		on.SchemaObject.All != nil &&
+		on.SchemaObject.All.PluralObjectType == PluralObjectTypePipes {
+		return v.runOnAllPipes(
+			ctx,
+			on.SchemaObject.All.InDatabase,
+			on.SchemaObject.All.InSchema,
+			func(pipe Pipe) error {
+				return v.client.Grants.GrantPrivilegesToDatabaseRole(
+					ctx,
+					privileges,
+					&DatabaseRoleGrantOn{
+						SchemaObject: &GrantOnSchemaObject{
+							SchemaObject: &Object{
+								ObjectType: ObjectTypePipe,
+								Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+							},
+						},
+					},
+					role,
+					opts,
+				)
+			},
+		)
+	}
+
 	return validateAndExec(v.client, ctx, opts)
 }
 
@@ -53,6 +147,37 @@ func (v *grants) RevokePrivilegesFromDatabaseRole(ctx context.Context, privilege
 	opts.privileges = privileges
 	opts.on = on
 	opts.databaseRole = role
+
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "revoke x on all pipes" operation, we'll go and revoke specified privileges
+	// from every Pipe one by one.
+	if on != nil &&
+		on.SchemaObject != nil &&
+		on.SchemaObject.All != nil &&
+		on.SchemaObject.All.PluralObjectType == PluralObjectTypePipes {
+		return v.runOnAllPipes(
+			ctx,
+			on.SchemaObject.All.InDatabase,
+			on.SchemaObject.All.InSchema,
+			func(pipe Pipe) error {
+				return v.client.Grants.RevokePrivilegesFromDatabaseRole(
+					ctx,
+					privileges,
+					&DatabaseRoleGrantOn{
+						SchemaObject: &GrantOnSchemaObject{
+							SchemaObject: &Object{
+								ObjectType: ObjectTypePipe,
+								Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+							},
+						},
+					},
+					role,
+					opts,
+				)
+			},
+		)
+	}
+
 	return validateAndExec(v.client, ctx, opts)
 }
 
@@ -99,4 +224,32 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 	resultList := convertRows[grantRow, Grant](dbRows)
 	logging.DebugLogger.Printf("[DEBUG] Show grants: rows converted")
 	return resultList, nil
+}
+
+func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIdentifier, inSchema *DatabaseObjectIdentifier, command func(Pipe) error) error {
+	var in *In
+	switch {
+	case inDatabase != nil:
+		in = &In{
+			Database: *inDatabase,
+		}
+	case inSchema != nil:
+		in = &In{
+			Schema: *inSchema,
+		}
+	}
+
+	pipes, err := v.client.Pipes.Show(ctx, &ShowPipeOptions{In: in})
+	if err != nil {
+		return err
+	}
+
+	var errs []error
+	for _, pipe := range pipes {
+		if err := command(pipe); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
 }
