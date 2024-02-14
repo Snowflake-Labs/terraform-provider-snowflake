@@ -1,9 +1,9 @@
 resource "snowflake_share" "test" {
   name = var.to_share
+  depends_on = [snowflake_database.test]
 }
 
 resource "snowflake_database" "test" {
-  depends_on = [snowflake_share.test]
   name       = var.database
 }
 
