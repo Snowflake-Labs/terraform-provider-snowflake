@@ -543,9 +543,12 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 	accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
