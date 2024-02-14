@@ -24,10 +24,6 @@ variable "comment" {
   type = string
 }
 
-variable "initialize" {
-  type = string
-}
-
 variable "table_name" {
   type = string
 }

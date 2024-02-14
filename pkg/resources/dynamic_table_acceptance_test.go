@@ -37,6 +37,16 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 	variableSet2["warehouse"] = config.StringVariable(acc.TestWarehouseName2)
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
+	variableSet3 := m()
+	variableSet3["initialize"] = config.StringVariable(string(sdk.DynamicTableInitializeOnSchedule))
+
+	variableSet4 := m()
+	variableSet4["initialize"] = config.StringVariable(string(sdk.DynamicTableInitializeOnSchedule)) // keep the same setting from set 3
+	variableSet4["refresh_mode"] = config.StringVariable(string(sdk.DynamicTableRefreshModeFull))
+
+	// used to check whether a dynamic table was replaced
+	var createdOn string
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -53,6 +63,8 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName),
+					resource.TestCheckResourceAttr(resourceName, "initialize", string(sdk.DynamicTableInitializeOnCreate)),
+					resource.TestCheckResourceAttr(resourceName, "refresh_mode", string(sdk.DynamicTableRefreshModeAuto)),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.maximum_duration", "2 minutes"),
 					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
@@ -65,7 +77,6 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "rows"),
 					resource.TestCheckResourceAttrSet(resourceName, "bytes"),
 					resource.TestCheckResourceAttrSet(resourceName, "owner"),
-					resource.TestCheckResourceAttrSet(resourceName, "refresh_mode"),
 					// - not used at this time
 					// resource.TestCheckResourceAttrSet(resourceName, "automatic_clustering"),
 					resource.TestCheckResourceAttrSet(resourceName, "scheduling_state"),
@@ -73,6 +84,11 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "is_clone"),
 					resource.TestCheckResourceAttrSet(resourceName, "is_replica"),
 					resource.TestCheckResourceAttrSet(resourceName, "data_timestamp"),
+
+					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
+						createdOn = value
+						return nil
+					}),
 				),
 			},
 			// test target lag to downstream and change comment
@@ -88,6 +104,45 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
+
+					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
+						if value != createdOn {
+							return fmt.Errorf("created_on changed from %v to %v", createdOn, value)
+						}
+						return nil
+					}),
+				),
+			},
+			// test changing initialize setting
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: variableSet3,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "initialize", string(sdk.DynamicTableInitializeOnSchedule)),
+
+					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
+						if value == createdOn {
+							return fmt.Errorf("expected created_on to change but was not changed")
+						}
+						createdOn = value
+						return nil
+					}),
+				),
+			},
+			// test changing refresh_mode setting
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: variableSet4,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "initialize", string(sdk.DynamicTableInitializeOnSchedule)),
+					resource.TestCheckResourceAttr(resourceName, "refresh_mode", string(sdk.DynamicTableRefreshModeFull)),
+
+					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
+						if value == createdOn {
+							return fmt.Errorf("expected created_on to change but was not changed")
+						}
+						return nil
+					}),
 				),
 			},
 			// test import

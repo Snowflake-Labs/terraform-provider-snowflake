@@ -3,7 +3,7 @@
 page_title: "snowflake_dynamic_table Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+
 ---
 
 # snowflake_dynamic_table (Resource)
@@ -43,6 +43,8 @@ resource "snowflake_dynamic_table" "dt" {
 
 - `comment` (String) Specifies a comment for the dynamic table.
 - `or_replace` (Boolean) Specifies whether to replace the dynamic table if it already exists.
+- `refresh_mode` (String) INCREMENTAL if the dynamic table will use incremental refreshes, or FULL if it will recompute the whole table on every refresh. Specify AUTO to let Snowflake decide. The default is AUTO.
+- `initialize` (String) Specifies the behavior of the initial refresh of the dynamic table. This property cannot be altered after you create the dynamic table. Specify ON_CREATE to initialize the dynamic table immeidately, or ON_SCHEDULE to have it initialize at the next tick after creation. The default os ON_CREATE.
 
 ### Read-Only
 
@@ -55,7 +57,6 @@ resource "snowflake_dynamic_table" "dt" {
 - `is_replica` (Boolean) TRUE if the dynamic table is a replica. else FALSE.
 - `last_suspended_on` (String) Timestamp of last suspension.
 - `owner` (String) Role that owns the dynamic table.
-- `refresh_mode` (String) INCREMENTAL if the dynamic table will use incremental refreshes, or FULL if it will recompute the whole table on every refresh.
 - `refresh_mode_reason` (String) Explanation for why FULL refresh mode was chosen. NULL if refresh mode is not FULL.
 - `rows` (Number) Number of rows in the table.
 - `scheduling_state` (String) Displays RUNNING for dynamic tables that are actively scheduling refreshes and SUSPENDED for suspended dynamic tables.

@@ -4,13 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+var refreshModePattern = regexp.MustCompile(`refresh_mode = '(\w+)'`)
 
 var dynamicTableSchema = map[string]*schema.Schema{
 	"or_replace": {
@@ -74,6 +79,27 @@ var dynamicTableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the dynamic table.",
 	},
+	"refresh_mode": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		Default:      sdk.DynamicTableRefreshModeAuto,
+		Description:  "INCREMENTAL to use incremental refreshes, FULL to recompute the whole table on every refresh, or AUTO to let Snowflake decide.",
+		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllDynamicRefreshModes), true),
+		ForceNew:     true,
+	},
+	"initialize": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		Default:      sdk.DynamicTableInitializeOnCreate,
+		Description:  "Initialize trigger for the dynamic table. Can only be set on creation.",
+		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllDynamicTableInitializes), true),
+		ForceNew:     true,
+	},
+	"created_on": {
+		Type:        schema.TypeString,
+		Description: "Time when this dynamic table was created.",
+		Computed:    true,
+	},
 	"cluster_by": {
 		Type:        schema.TypeString,
 		Description: "The clustering key for the dynamic table.",
@@ -92,11 +118,6 @@ var dynamicTableSchema = map[string]*schema.Schema{
 	"owner": {
 		Type:        schema.TypeString,
 		Description: "Role that owns the dynamic table.",
-		Computed:    true,
-	},
-	"refresh_mode": {
-		Type:        schema.TypeString,
-		Description: "INCREMENTAL if the dynamic table will use incremental refreshes, or FULL if it will recompute the whole table on every refresh.",
 		Computed:    true,
 	},
 	"refresh_mode_reason": {
@@ -199,6 +220,24 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+	if strings.Contains(dynamicTable.Text, "initialize = 'ON_CREATE'") {
+		if err := d.Set("initialize", "ON_CREATE"); err != nil {
+			return err
+		}
+	} else if strings.Contains(dynamicTable.Text, "initialize = 'ON_SCHEDULE'") {
+		if err := d.Set("initialize", "ON_SCHEDULE"); err != nil {
+			return err
+		}
+	}
+	m := refreshModePattern.FindStringSubmatch(dynamicTable.Text)
+	if len(m) > 1 {
+		if err := d.Set("refresh_mode", m[1]); err != nil {
+			return err
+		}
+	}
+	if err := d.Set("created_on", dynamicTable.CreatedOn.Format(time.RFC3339)); err != nil {
+		return err
+	}
 	if err := d.Set("cluster_by", dynamicTable.ClusterBy); err != nil {
 		return err
 	}
@@ -209,9 +248,6 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if err := d.Set("owner", dynamicTable.Owner); err != nil {
-		return err
-	}
-	if err := d.Set("refresh_mode", string(dynamicTable.RefreshMode)); err != nil {
 		return err
 	}
 	if err := d.Set("refresh_mode_reason", dynamicTable.RefreshModeReason); err != nil {
@@ -287,6 +323,12 @@ func CreateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
 		request.WithOrReplace(true)
+	}
+	if v, ok := d.GetOk("refresh_mode"); ok {
+		request.WithRefreshMode(sdk.DynamicTableRefreshMode(v.(string)))
+	}
+	if v, ok := d.GetOk("initialize"); ok {
+		request.WithInitialize(sdk.DynamicTableInitialize(v.(string)))
 	}
 	if err := client.DynamicTables.Create(context.Background(), request); err != nil {
 		return err
