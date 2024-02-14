@@ -56,7 +56,7 @@ resource "snowflake_external_function" "test_ext_func" {
 - `null_input_behavior` (String) Specifies the behavior of the external function when called with null inputs.
 - `request_translator` (String) This specifies the name of the request translator function
 - `response_translator` (String) This specifies the name of the response translator function.
-- `return_null_allowed` (Boolean) Indicates whether the function can return NULL values or must return only NON-NULL values.
+- `return_null_allowed` (Boolean) Indicates whether the function can return NULL values (true) or must return only NON-NULL values (false).
 
 ### Read-Only
 

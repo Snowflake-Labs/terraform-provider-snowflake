@@ -1,25 +1,27 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
+	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var externalFunctionsSchema = map[string]*schema.Schema{
 	"database": {
 		Type:        schema.TypeString,
-		Required:    true,
+		Optional:    true,
 		Description: "The database from which to return the schemas from.",
 	},
 	"schema": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The schema from which to return the external functions from.",
+		Type:         schema.TypeString,
+		Optional:     true,
+		RequiredWith: []string{"database"},
+		Description:  "The schema from which to return the external functions from.",
 	},
 	"external_functions": {
 		Type:        schema.TypeList,
@@ -56,42 +58,59 @@ var externalFunctionsSchema = map[string]*schema.Schema{
 
 func ExternalFunctions() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadExternalFunctions,
-		Schema: externalFunctionsSchema,
+		ReadContext: ReadContextExternalFunctions,
+		Schema:      externalFunctionsSchema,
 	}
 }
 
-func ReadExternalFunctions(d *schema.ResourceData, meta interface{}) error {
+func ReadContextExternalFunctions(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentExternalFunctions, err := snowflake.ListExternalFunctions(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] external functions in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse external functions in schema (%s)", d.Id())
+	req := sdk.NewShowExternalFunctionRequest()
+	externalFunctions, err := client.ExternalFunctions.Show(ctx, req)
+	if err != nil {
 		d.SetId("")
 		return nil
 	}
 
-	externalFunctions := []map[string]interface{}{}
-
-	for _, externalFunction := range currentExternalFunctions {
+	externalFunctionsList := []map[string]interface{}{}
+	for _, externalFunction := range externalFunctions {
 		externalFunctionMap := map[string]interface{}{}
+		externalFunctionMap["name"] = externalFunction.Name
 
-		externalFunctionMap["name"] = externalFunction.ExternalFunctionName.String
-		externalFunctionMap["database"] = externalFunction.DatabaseName.String
-		externalFunctionMap["schema"] = externalFunction.SchemaName.String
-		externalFunctionMap["comment"] = externalFunction.Comment.String
-		externalFunctionMap["language"] = externalFunction.Language.String
+		// do we filter by database?
+		currentDatabase := strings.Trim(externalFunction.CatalogName, `"`)
+		if databaseName != "" {
+			if currentDatabase != databaseName {
+				continue
+			}
+			externalFunctionMap["database"] = currentDatabase
+		} else {
+			externalFunctionMap["database"] = currentDatabase
+		}
 
-		externalFunctions = append(externalFunctions, externalFunctionMap)
+		// do we filter by schema?
+		currentSchema := strings.Trim(externalFunction.SchemaName, `"`)
+		if schemaName != "" {
+			if currentSchema != schemaName {
+				continue
+			}
+			externalFunctionMap["schema"] = currentSchema
+		} else {
+			externalFunctionMap["schema"] = currentSchema
+		}
+
+		externalFunctionMap["comment"] = externalFunction.Description
+		externalFunctionMap["language"] = externalFunction.Language
+		externalFunctionsList = append(externalFunctionsList, externalFunctionMap)
 	}
 
 	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
-	return d.Set("external_functions", externalFunctions)
+	if err := d.Set("external_functions", externalFunctionsList); err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }

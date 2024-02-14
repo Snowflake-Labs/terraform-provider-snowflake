@@ -1,143 +1,113 @@
 package sdk
 
 import (
-	"strings"
 	"testing"
 )
 
 func TestPolicyReferencesGetForEntity(t *testing.T) {
-	userName := NewAccountObjectIdentifierFromFullyQualifiedName("USER")
+	t.Run("validation: missing parameters", func(t *testing.T) {
+		opts := &getForEntityPolicyReferenceOptions{}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("getForEntityPolicyReferenceOptions", "parameters"))
+	})
+
+	t.Run("validation: missing arguments", func(t *testing.T) {
+		opts := &getForEntityPolicyReferenceOptions{
+			parameters: &policyReferenceParameters{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("policyReferenceParameters", "arguments"))
+	})
 
 	t.Run("validation: missing refEntityName", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
-			tableFunction: &tableFunction{
-				table: Bool(true),
-				policyReferenceFunction: &policyReferenceFunction{
-					functionFullyQualifiedName: Bool(true),
-					arguments: &policyReferenceFunctionArguments{
-						refEntityName:   nil,
-						refEntityDomain: String("user"),
-					},
+			parameters: &policyReferenceParameters{
+				arguments: &policyReferenceFunctionArguments{
+					refEntityDomain: Pointer(PolicyEntityDomainUser),
 				},
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("getForEntityPolicyReferenceOptions", "refEntityName"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("policyReferenceFunctionArguments", "refEntityName"))
 	})
 
 	t.Run("validation: missing refEntityDomain", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
-			tableFunction: &tableFunction{
-				table: Bool(true),
-				policyReferenceFunction: &policyReferenceFunction{
-					functionFullyQualifiedName: Bool(true),
-					arguments: &policyReferenceFunctionArguments{
-						refEntityName:   []ObjectIdentifier{userName},
-						refEntityDomain: nil,
-					},
+			parameters: &policyReferenceParameters{
+				arguments: &policyReferenceFunctionArguments{
+					refEntityName: []ObjectIdentifier{NewAccountObjectIdentifierFromFullyQualifiedName("user_name")},
 				},
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("getForEntityPolicyReferenceOptions", "refEntityDomain"))
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("policyReferenceFunctionArguments", "refEntityDomain"))
 	})
 
-	t.Run("validation: domain: user", func(t *testing.T) {
+	t.Run("user domain", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
-			tableFunction: &tableFunction{
-				table: Bool(true),
-				policyReferenceFunction: &policyReferenceFunction{
-					functionFullyQualifiedName: Bool(true),
-					arguments: &policyReferenceFunctionArguments{
-						refEntityName:   []ObjectIdentifier{userName},
-						refEntityDomain: String("user"),
-					},
+			parameters: &policyReferenceParameters{
+				arguments: &policyReferenceFunctionArguments{
+					refEntityName:   []ObjectIdentifier{NewAccountObjectIdentifier("user_name")},
+					refEntityDomain: Pointer(PolicyEntityDomainUser),
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'user'))", strings.ReplaceAll(userName.FullyQualifiedName(), `"`, `\"`))
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '\"user_name\"', REF_ENTITY_DOMAIN => 'USER'))`)
 	})
 
-	tableName := NewSchemaObjectIdentifier("db", "schema", "table")
-	t.Run("validation: domain: table", func(t *testing.T) {
+	t.Run("table domain", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
-			tableFunction: &tableFunction{
-				table: Bool(true),
-				policyReferenceFunction: &policyReferenceFunction{
-					functionFullyQualifiedName: Bool(true),
-					arguments: &policyReferenceFunctionArguments{
-						refEntityName:   []ObjectIdentifier{tableName},
-						refEntityDomain: String("table"),
-					},
+			parameters: &policyReferenceParameters{
+				arguments: &policyReferenceFunctionArguments{
+					refEntityName:   []ObjectIdentifier{NewSchemaObjectIdentifier("db", "schema", "table")},
+					refEntityDomain: Pointer(PolicyEntityDomainTable),
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'table'))", strings.ReplaceAll(tableName.FullyQualifiedName(), `"`, `\"`))
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '\"db\".\"schema\".\"table\"', REF_ENTITY_DOMAIN => 'TABLE'))`)
 	})
 
-	accountName := NewAccountObjectIdentifier("account")
-	t.Run("validation: domain: account", func(t *testing.T) {
+	t.Run("account domain", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
-			tableFunction: &tableFunction{
-				table: Bool(true),
-				policyReferenceFunction: &policyReferenceFunction{
-					functionFullyQualifiedName: Bool(true),
-					arguments: &policyReferenceFunctionArguments{
-						refEntityName:   []ObjectIdentifier{accountName},
-						refEntityDomain: String("account"),
-					},
+			parameters: &policyReferenceParameters{
+				arguments: &policyReferenceFunctionArguments{
+					refEntityName:   []ObjectIdentifier{NewAccountObjectIdentifier("account_name")},
+					refEntityDomain: Pointer(PolicyEntityDomainAccount),
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'account'))", strings.ReplaceAll(accountName.FullyQualifiedName(), `"`, `\"`))
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '\"account_name\"', REF_ENTITY_DOMAIN => 'ACCOUNT'))`)
 	})
 
-	integrationName := NewAccountObjectIdentifier("integration")
-	t.Run("validation: domain: integration", func(t *testing.T) {
+	t.Run("integration domain", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
-			tableFunction: &tableFunction{
-				table: Bool(true),
-				policyReferenceFunction: &policyReferenceFunction{
-					functionFullyQualifiedName: Bool(true),
-					arguments: &policyReferenceFunctionArguments{
-						refEntityName:   []ObjectIdentifier{integrationName},
-						refEntityDomain: String("integration"),
-					},
+			parameters: &policyReferenceParameters{
+				arguments: &policyReferenceFunctionArguments{
+					refEntityName:   []ObjectIdentifier{NewAccountObjectIdentifier("integration_name")},
+					refEntityDomain: Pointer(PolicyEntityDomainIntegration),
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'integration'))", strings.ReplaceAll(integrationName.FullyQualifiedName(), `"`, `\"`))
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '\"integration_name\"', REF_ENTITY_DOMAIN => 'INTEGRATION'))`)
 	})
 
-	tagName := NewSchemaObjectIdentifier("db", "schema", "tag")
-	t.Run("validation: domain: tag", func(t *testing.T) {
+	t.Run("tag domain", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
-			tableFunction: &tableFunction{
-				table: Bool(true),
-				policyReferenceFunction: &policyReferenceFunction{
-					functionFullyQualifiedName: Bool(true),
-					arguments: &policyReferenceFunctionArguments{
-						refEntityName:   []ObjectIdentifier{tagName},
-						refEntityDomain: String("tag"),
-					},
+			parameters: &policyReferenceParameters{
+				arguments: &policyReferenceFunctionArguments{
+					refEntityName:   []ObjectIdentifier{NewSchemaObjectIdentifier("db", "schema", "tag_name")},
+					refEntityDomain: Pointer(PolicyEntityDomainTag),
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'tag'))", strings.ReplaceAll(tagName.FullyQualifiedName(), `"`, `\"`))
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '\"db\".\"schema\".\"tag_name\"', REF_ENTITY_DOMAIN => 'TAG'))`)
 	})
 
-	viewName := NewSchemaObjectIdentifier("db", "schema", "view")
-	t.Run("validation: domain: integration", func(t *testing.T) {
+	t.Run("view domain", func(t *testing.T) {
 		opts := &getForEntityPolicyReferenceOptions{
-			tableFunction: &tableFunction{
-				table: Bool(true),
-				policyReferenceFunction: &policyReferenceFunction{
-					functionFullyQualifiedName: Bool(true),
-					arguments: &policyReferenceFunctionArguments{
-						refEntityName:   []ObjectIdentifier{viewName},
-						refEntityDomain: String("view"),
-					},
+			parameters: &policyReferenceParameters{
+				arguments: &policyReferenceFunctionArguments{
+					refEntityName:   []ObjectIdentifier{NewSchemaObjectIdentifier("db", "schema", "view_name")},
+					refEntityDomain: Pointer(PolicyEntityDomainView),
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (ref_entity_name => '%s', ref_entity_domain => 'view'))", strings.ReplaceAll(viewName.FullyQualifiedName(), `"`, `\"`))
+		assertOptsValidAndSQLEquals(t, opts, `SELECT * FROM TABLE (SNOWFLAKE.INFORMATION_SCHEMA.POLICY_REFERENCES (REF_ENTITY_NAME => '\"db\".\"schema\".\"view_name\"', REF_ENTITY_DOMAIN => 'VIEW'))`)
 	})
 }

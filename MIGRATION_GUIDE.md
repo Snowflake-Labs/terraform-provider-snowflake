@@ -1,6 +1,6 @@
 # Migration guide
 
-This document is meant to help you migrate your Terraform config to the new newest version. In migration guides, we will only 
+This document is meant to help you migrate your Terraform config to the new newest version. In migration guides, we will only
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
@@ -14,6 +14,19 @@ It is noted as a behavior change but in some way it is not; with the previous im
 
 We will consider adding `NOT NULL` back because it can be set by `ALTER COLUMN columnX SET NOT NULL`, but first we want to revisit the whole resource design.
 
+### snowflake_external_function resource changes
+
+#### *(behavior change)* return_null_allowed default is now true
+The `return_null_allowed` attribute default value is now `true`. This is a behavior change because it was `false` before. The reason it was changed is to match the expected default value in the [documentation](https://docs.snowflake.com/en/sql-reference/sql/create-external-function#optional-parameters) `Default: The default is NULL (i.e. the function can return NULL values).`
+
+#### *(behavior change)* comment is no longer required
+The `comment` attribute is now optional. It was required before, but it is not required in Snowflake API.
+
+### snowflake_external_functions data source changes
+
+#### *(behavior change)* schema is now required with database
+The `schema` attribute is now required with `database` attribute to match old implementation `SHOW EXTERNAL FUNCTIONS IN SCHEMA "<database>"."<schema>"`. In the future this may change to make schema optional.
+
 ## vX.XX.X -> v0.85.0
 
 ### Migration from old (grant) resources to new ones
@@ -21,6 +34,14 @@ We will consider adding `NOT NULL` back because it can be set by `ALTER COLUMN c
 In recent changes, we introduced a new grant resources to replace the old ones.
 To aid with the migration, we wrote a guide to show one of the possible ways to migrate deprecated resources to their new counter-parts.
 As the guide is more general and applies to every version (and provider), we moved it [here](./docs/technical-documentation/resource_migration.md).
+
+### snowflake_procedure resource changes
+#### *(deprecation)* return_behavior
+`return_behavior` parameter is deprecated because it is also deprecated in the Snowflake API.
+
+### snowflake_function resource changes
+#### *(behavior change)* return_type
+`return_type` has become force new because there is no way to alter it without dropping and recreating the function.
 
 ## v0.84.0 ➞ v0.85.0
 
@@ -47,7 +68,7 @@ Force new was added for the following attributes (because no usable SQL alter st
 ## v0.73.0 ➞ v0.74.0
 ### Provider configuration changes
 
-In this change we have done a provider refactor to make it more complete and customizable by supporting more options that 
+In this change we have done a provider refactor to make it more complete and customizable by supporting more options that
 were already available in Golang Snowflake driver. This lead to several attributes being added and a few deprecated.
 We will focus on the deprecated ones and show you how to adapt your current configuration to the new changes.
 
@@ -57,7 +78,7 @@ We will focus on the deprecated ones and show you how to adapt your current conf
 provider "snowflake" {
   # before
   username = "username"
-  
+
   # after
   user = "username"
 }
@@ -123,7 +144,7 @@ provider "snowflake" {
 provider "snowflake" {
   # before
   session_params = {}
-  
+
   # after
   params = {}
 }

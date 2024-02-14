@@ -415,10 +415,13 @@ func (r *DescribeProcedureRequest) toOpts() *DescribeProcedureOptions {
 }
 
 func (r procedureDetailRow) convert() *ProcedureDetail {
-	return &ProcedureDetail{
+	e := &ProcedureDetail{
 		Property: r.Property,
-		Value:    r.Value,
 	}
+	if r.Value.Valid {
+		e.Value = r.Value.String
+	}
+	return e
 }
 
 func (r *CallProcedureRequest) toOpts() *CallProcedureOptions {

@@ -1,14 +1,14 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -64,50 +64,59 @@ var proceduresSchema = map[string]*schema.Schema{
 
 func Procedures() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadProcedures,
-		Schema: proceduresSchema,
+		ReadContext: ReadContextProcedures,
+		Schema:      proceduresSchema,
 	}
 }
 
-func ReadProcedures(d *schema.ResourceData, meta interface{}) error {
+func ReadContextProcedures(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	currentProcedures, err := snowflake.ListProcedures(databaseName, schemaName, db)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] procedures in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	} else if err != nil {
-		log.Printf("[DEBUG] unable to parse procedures in schema (%s)", d.Id())
-		d.SetId("")
-		return nil
+	req := sdk.NewShowProcedureRequest()
+	if databaseName != "" {
+		req.WithIn(&sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseName)})
 	}
+	if schemaName != "" {
+		req.WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)})
+	}
+	procedures, err := client.Procedures.Show(ctx, req)
+	if err != nil {
+		id := fmt.Sprintf(`%v|%v`, databaseName, schemaName)
 
-	procedures := []map[string]interface{}{}
-
-	for _, procedure := range currentProcedures {
-		procedureMap := map[string]interface{}{}
-
-		procedureSignatureMap, err := parseArguments(procedure.Arguments.String)
-		if err != nil {
-			return err
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Unable to parse procedures in schema (%s)", id),
+				Detail:   "See our document on design decisions for procedures: <LINK (coming soon)>",
+			},
 		}
+	}
+	proceduresList := []map[string]interface{}{}
 
-		procedureMap["name"] = procedure.Name.String
-		procedureMap["database"] = procedure.DatabaseName.String
-		procedureMap["schema"] = procedure.SchemaName.String
-		procedureMap["comment"] = procedure.Comment.String
+	for _, procedure := range procedures {
+		procedureMap := map[string]interface{}{}
+		procedureMap["name"] = procedure.Name
+		procedureMap["database"] = procedure.CatalogName
+		procedureMap["schema"] = procedure.SchemaName
+		procedureMap["comment"] = procedure.Description
+		procedureSignatureMap, err := parseArguments(procedure.Arguments)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 		procedureMap["argument_types"] = procedureSignatureMap["argumentTypes"].([]string)
 		procedureMap["return_type"] = procedureSignatureMap["returnType"].(string)
-
-		procedures = append(procedures, procedureMap)
+		proceduresList = append(proceduresList, procedureMap)
 	}
 
 	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
-	return d.Set("procedures", procedures)
+	if err := d.Set("procedures", proceduresList); err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }
 
 func parseArguments(arguments string) (map[string]interface{}, error) {

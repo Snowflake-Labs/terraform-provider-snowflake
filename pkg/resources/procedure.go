@@ -1,19 +1,18 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
+	"regexp"
 	"slices"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
-
-var procedureLanguages = []string{"javascript", "java", "scala", "SQL", "python"}
 
 var procedureSchema = map[string]*schema.Schema{
 	"name": {
@@ -32,6 +31,12 @@ var procedureSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "The schema in which to create the procedure. Don't use the | character.",
 		ForceNew:    true,
+	},
+	"secure": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Specifies that the procedure is secure. For more information about secure procedures, see Protecting Sensitive Information with Secure UDFs and Stored Procedures.",
+		Default:     false,
 	},
 	"arguments": {
 		Type: schema.TypeList,
@@ -53,7 +58,8 @@ var procedureSchema = map[string]*schema.Schema{
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return strings.EqualFold(old, new)
 					},
-					Description: "The argument type",
+					ValidateFunc: IsDataType(),
+					Description:  "The argument type",
 				},
 			},
 		},
@@ -82,8 +88,9 @@ var procedureSchema = map[string]*schema.Schema{
 			}
 			return false
 		},
-		Required: true,
-		ForceNew: true,
+		ValidateFunc: IsDataType(),
+		Required:     true,
+		ForceNew:     true,
 	},
 	"statement": {
 		Type:             schema.TypeString,
@@ -99,7 +106,7 @@ var procedureSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 			return strings.EqualFold(old, new)
 		},
-		ValidateFunc: validation.StringInSlice(procedureLanguages, true),
+		ValidateFunc: validation.StringInSlice([]string{"javascript", "java", "scala", "SQL", "python"}, true),
 		Description:  "Specifies the language of the stored procedure code.",
 	},
 	"execute_as": {
@@ -124,6 +131,7 @@ var procedureSchema = map[string]*schema.Schema{
 		ForceNew:     true,
 		ValidateFunc: validation.StringInSlice([]string{"VOLATILE", "IMMUTABLE"}, false),
 		Description:  "Specifies the behavior of the function when returning results",
+		Deprecated:   "These keywords are deprecated for stored procedures. These keywords are not intended to apply to stored procedures. In a future release, these keywords will be removed from the documentation.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -163,17 +171,13 @@ var procedureSchema = map[string]*schema.Schema{
 	},
 }
 
-func DiffTypes(_, o, n string, _ *schema.ResourceData) bool {
-	return strings.EqualFold(strings.ToUpper(o), strings.ToUpper(n))
-}
-
 // Procedure returns a pointer to the resource representing a stored procedure.
 func Procedure() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateProcedure,
-		Read:   ReadProcedure,
-		Update: UpdateProcedure,
-		Delete: DeleteProcedure,
+		CreateContext: CreateContextProcedure,
+		ReadContext:   ReadContextProcedure,
+		UpdateContext: UpdateContextProcedure,
+		DeleteContext: DeleteContextProcedure,
 
 		Schema: procedureSchema,
 		Importer: &schema.ResourceImporter{
@@ -182,136 +186,369 @@ func Procedure() *schema.Resource {
 	}
 }
 
-// CreateProcedure implements schema.CreateFunc.
-func CreateProcedure(d *schema.ResourceData, meta interface{}) error {
+func CreateContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	lang := strings.ToUpper(d.Get("language").(string))
+	switch lang {
+	case "JAVA":
+		return createJavaProcedure(ctx, d, meta)
+	case "JAVASCRIPT":
+		return createJavaScriptProcedure(ctx, d, meta)
+	case "PYTHON":
+		return createPythonProcedure(ctx, d, meta)
+	case "SCALA":
+		return createScalaProcedure(ctx, d, meta)
+	case "SQL":
+		return createSQLProcedure(ctx, d, meta)
+	default:
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Invalid language",
+				Detail:   fmt.Sprintf("Language %s is not supported", lang),
+			},
+		}
+	}
+}
+
+func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	s := d.Get("statement").(string)
-	ret := d.Get("return_type").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
 
-	builder := snowflake.NewProcedureBuilder(database, schema, name, []string{}).WithStatement(s).WithReturnType(ret)
-
-	// Set optionals, args
-	if _, ok := d.GetOk("arguments"); ok {
-		args := []map[string]string{}
-		for _, arg := range d.Get("arguments").([]interface{}) {
-			argDef := map[string]string{}
-			for key, val := range arg.(map[string]interface{}) {
-				argDef[key] = val.(string)
-			}
-			args = append(args, argDef)
-		}
-		builder.WithArgs(args)
+	returns, diags := parseProcedureReturnsRequest(d.Get("return_type").(string))
+	if diags != nil {
+		return diags
+	}
+	procedureDefinition := d.Get("statement").(string)
+	runtimeVersion := d.Get("runtime_version").(string)
+	packages := []sdk.ProcedurePackageRequest{}
+	for _, item := range d.Get("packages").([]interface{}) {
+		packages = append(packages, *sdk.NewProcedurePackageRequest(item.(string)))
+	}
+	handler := d.Get("handler").(string)
+	req := sdk.NewCreateForJavaProcedureRequest(id, *returns, runtimeVersion, packages, handler)
+	req.WithProcedureDefinition(sdk.String(procedureDefinition))
+	args, diags := getProcedureArguments(d)
+	if diags != nil {
+		return diags
+	}
+	if len(args) > 0 {
+		req.WithArguments(args)
 	}
 
-	// Set optionals, default is false
-	if v, ok := d.GetOk("return_behavior"); ok {
-		builder.WithReturnBehavior(v.(string))
-	}
-
-	// Set optionals, default is false
-	if v, ok := d.GetOk("null_input_behavior"); ok {
-		builder.WithNullInputBehavior(v.(string))
-	}
-
-	// Set optionals, default is OWNER
+	// read optional params
 	if v, ok := d.GetOk("execute_as"); ok {
-		builder.WithExecuteAs(v.(string))
+		if strings.ToUpper(v.(string)) == "OWNER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsOwner))
+		} else if strings.ToUpper(v.(string)) == "CALLER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsCaller))
+		}
 	}
-
-	// Set optionals, default is SQL
-	if v, ok := d.GetOk("language"); ok {
-		builder.WithLanguage(strings.ToUpper(v.(string)))
-	}
-
-	// Set optionals, runtime version for Python
-	if v, ok := d.GetOk("runtime_version"); ok {
-		builder.WithRuntimeVersion(v.(string))
-	}
-
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		req.WithComment(sdk.String(v.(string)))
 	}
-
-	// Set optionals, packages for Java / Python
-	if _, ok := d.GetOk("packages"); ok {
-		packages := []string{}
-		for _, pack := range d.Get("packages").([]interface{}) {
-			packages = append(packages, pack.(string))
-		}
-		builder.WithPackages(packages)
+	if v, ok := d.GetOk("secure"); ok {
+		req.WithSecure(sdk.Bool(v.(bool)))
 	}
-
-	// Set optionals, imports for Java / Python
 	if _, ok := d.GetOk("imports"); ok {
-		imports := []string{}
-		for _, imp := range d.Get("imports").([]interface{}) {
-			imports = append(imports, imp.(string))
+		imports := []sdk.ProcedureImportRequest{}
+		for _, item := range d.Get("imports").([]interface{}) {
+			imports = append(imports, *sdk.NewProcedureImportRequest(item.(string)))
 		}
-		builder.WithImports(imports)
+		req.WithImports(imports)
 	}
 
-	// handler for Java / Python
-	if v, ok := d.GetOk("handler"); ok {
-		builder.WithHandler(v.(string))
+	if err := client.Procedures.CreateForJava(ctx, req); err != nil {
+		return diag.FromErr(err)
 	}
-
-	q, err := builder.Create()
-	if err != nil {
-		return err
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
 	}
-
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error creating procedure %v err = %w", name, err)
-	}
-
-	procedureID := &procedureID{
-		DatabaseName:  database,
-		SchemaName:    schema,
-		ProcedureName: name,
-		ArgTypes:      builder.ArgTypes(),
-	}
-
-	d.SetId(procedureID.String())
-
-	return ReadProcedure(d, meta)
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
+	return ReadContextProcedure(ctx, d, meta)
 }
 
-// ReadProcedure implements schema.ReadFunc.
-func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
+func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	procedureID, err := splitProcedureID(d.Id())
-	if err != nil {
-		return err
-	}
-	proc := snowflake.NewProcedureBuilder(
-		procedureID.DatabaseName,
-		procedureID.SchemaName,
-		procedureID.ProcedureName,
-		procedureID.ArgTypes,
-	)
+	client := sdk.NewClientFromDB(db)
+	name := d.Get("name").(string)
+	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
 
-	// some attributes can be retrieved only by Describe and some only by Show
-	stmt, err := proc.Describe()
-	if err != nil {
-		return err
+	returnType := d.Get("return_type").(string)
+	returnDataType, diags := convertProcedureDataType(returnType)
+	if diags != nil {
+		return diags
 	}
-	rows, err := snowflake.Query(db, stmt)
-	if err != nil {
-		return err
+	procedureDefinition := d.Get("statement").(string)
+	req := sdk.NewCreateForJavaScriptProcedureRequest(id, returnDataType, procedureDefinition)
+	args, diags := getProcedureArguments(d)
+	if diags != nil {
+		return diags
 	}
-	defer rows.Close()
-	descPropValues, err := snowflake.ScanProcedureDescription(rows)
-	if err != nil {
-		return err
+	if len(args) > 0 {
+		req.WithArguments(args)
 	}
-	for _, desc := range descPropValues {
-		switch desc.Property.String {
+
+	// read optional params
+	if v, ok := d.GetOk("execute_as"); ok {
+		if strings.ToUpper(v.(string)) == "OWNER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsOwner))
+		} else if strings.ToUpper(v.(string)) == "CALLER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsCaller))
+		}
+	}
+	if v, ok := d.GetOk("null_input_behavior"); ok {
+		req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+	}
+	if v, ok := d.GetOk("comment"); ok {
+		req.WithComment(sdk.String(v.(string)))
+	}
+	if v, ok := d.GetOk("secure"); ok {
+		req.WithSecure(sdk.Bool(v.(bool)))
+	}
+
+	if err := client.Procedures.CreateForJavaScript(ctx, req); err != nil {
+		return diag.FromErr(err)
+	}
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
+	}
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
+	return ReadContextProcedure(ctx, d, meta)
+}
+
+func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	name := d.Get("name").(string)
+	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
+	returns, diags := parseProcedureReturnsRequest(d.Get("return_type").(string))
+	if diags != nil {
+		return diags
+	}
+	procedureDefinition := d.Get("statement").(string)
+	runtimeVersion := d.Get("runtime_version").(string)
+	packages := []sdk.ProcedurePackageRequest{}
+	for _, item := range d.Get("packages").([]interface{}) {
+		packages = append(packages, *sdk.NewProcedurePackageRequest(item.(string)))
+	}
+	handler := d.Get("handler").(string)
+	req := sdk.NewCreateForScalaProcedureRequest(id, *returns, runtimeVersion, packages, handler)
+	req.WithProcedureDefinition(sdk.String(procedureDefinition))
+	args, diags := getProcedureArguments(d)
+	if diags != nil {
+		return diags
+	}
+	if len(args) > 0 {
+		req.WithArguments(args)
+	}
+
+	// read optional params
+	if v, ok := d.GetOk("execute_as"); ok {
+		if strings.ToUpper(v.(string)) == "OWNER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsOwner))
+		} else if strings.ToUpper(v.(string)) == "CALLER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsCaller))
+		}
+	}
+	if v, ok := d.GetOk("comment"); ok {
+		req.WithComment(sdk.String(v.(string)))
+	}
+	if v, ok := d.GetOk("secure"); ok {
+		req.WithSecure(sdk.Bool(v.(bool)))
+	}
+	if _, ok := d.GetOk("imports"); ok {
+		imports := []sdk.ProcedureImportRequest{}
+		for _, item := range d.Get("imports").([]interface{}) {
+			imports = append(imports, *sdk.NewProcedureImportRequest(item.(string)))
+		}
+		req.WithImports(imports)
+	}
+
+	if err := client.Procedures.CreateForScala(ctx, req); err != nil {
+		return diag.FromErr(err)
+	}
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
+	}
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
+	return ReadContextProcedure(ctx, d, meta)
+}
+
+func createSQLProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	name := d.Get("name").(string)
+	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
+	returns, diags := parseProcedureSQLReturnsRequest(d.Get("return_type").(string))
+	if diags != nil {
+		return diags
+	}
+	procedureDefinition := d.Get("statement").(string)
+	req := sdk.NewCreateForSQLProcedureRequest(id, *returns, procedureDefinition)
+	args, diags := getProcedureArguments(d)
+	if diags != nil {
+		return diags
+	}
+	if len(args) > 0 {
+		req.WithArguments(args)
+	}
+
+	// read optional params
+	if v, ok := d.GetOk("execute_as"); ok {
+		if strings.ToUpper(v.(string)) == "OWNER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsOwner))
+		} else if strings.ToUpper(v.(string)) == "CALLER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsCaller))
+		}
+	}
+	if v, ok := d.GetOk("null_input_behavior"); ok {
+		req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+	}
+	if v, ok := d.GetOk("comment"); ok {
+		req.WithComment(sdk.String(v.(string)))
+	}
+	if v, ok := d.GetOk("secure"); ok {
+		req.WithSecure(sdk.Bool(v.(bool)))
+	}
+
+	if err := client.Procedures.CreateForSQL(ctx, req); err != nil {
+		return diag.FromErr(err)
+	}
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
+	}
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
+	return ReadContextProcedure(ctx, d, meta)
+}
+
+func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+	name := d.Get("name").(string)
+	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+
+	returns, diags := parseProcedureReturnsRequest(d.Get("return_type").(string))
+	if diags != nil {
+		return diags
+	}
+	procedureDefinition := d.Get("statement").(string)
+	runtimeVersion := d.Get("runtime_version").(string)
+	packages := []sdk.ProcedurePackageRequest{}
+	for _, item := range d.Get("packages").([]interface{}) {
+		packages = append(packages, *sdk.NewProcedurePackageRequest(item.(string)))
+	}
+	handler := d.Get("handler").(string)
+	req := sdk.NewCreateForPythonProcedureRequest(id, *returns, runtimeVersion, packages, handler)
+	req.WithProcedureDefinition(sdk.String(procedureDefinition))
+	args, diags := getProcedureArguments(d)
+	if diags != nil {
+		return diags
+	}
+	if len(args) > 0 {
+		req.WithArguments(args)
+	}
+
+	// read optional params
+	if v, ok := d.GetOk("execute_as"); ok {
+		if strings.ToUpper(v.(string)) == "OWNER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsOwner))
+		} else if strings.ToUpper(v.(string)) == "CALLER" {
+			req.WithExecuteAs(sdk.Pointer(sdk.ExecuteAsCaller))
+		}
+	}
+
+	// [ { CALLED ON NULL INPUT | { RETURNS NULL ON NULL INPUT | STRICT } } ] does not work for java, scala or python
+	// posted in docs-discuss channel, either docs need to be updated to reflect reality or this feature needs to be added
+	// https://snowflake.slack.com/archives/C6380540P/p1707511734666249
+	// if v, ok := d.GetOk("null_input_behavior"); ok {
+	// 	req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehavior(v.(string))))
+	// }
+
+	if v, ok := d.GetOk("comment"); ok {
+		req.WithComment(sdk.String(v.(string)))
+	}
+	if v, ok := d.GetOk("secure"); ok {
+		req.WithSecure(sdk.Bool(v.(bool)))
+	}
+	if _, ok := d.GetOk("imports"); ok {
+		imports := []sdk.ProcedureImportRequest{}
+		for _, item := range d.Get("imports").([]interface{}) {
+			imports = append(imports, *sdk.NewProcedureImportRequest(item.(string)))
+		}
+		req.WithImports(imports)
+	}
+
+	if err := client.Procedures.CreateForPython(ctx, req); err != nil {
+		return diag.FromErr(err)
+	}
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
+	}
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
+	return ReadContextProcedure(ctx, d, meta)
+}
+
+func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	if err := d.Set("name", id.Name()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("database", id.DatabaseName()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("schema", id.SchemaName()); err != nil {
+		return diag.FromErr(err)
+	}
+	args := d.Get("arguments").([]interface{})
+	argTypes := make([]string, len(args))
+	for i, arg := range args {
+		argTypes[i] = arg.(map[string]interface{})["type"].(string)
+	}
+	procedureDetails, err := client.Procedures.Describe(ctx, sdk.NewDescribeProcedureRequest(id.WithoutArguments(), id.Arguments()))
+	if err != nil {
+		// if procedure is not found then mark resource to be removed from state file during apply or refresh
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Describe procedure failed.",
+				Detail:   fmt.Sprintf("Describe procedure failed: %v", err),
+			},
+		}
+	}
+	for _, desc := range procedureDetails {
+		switch desc.Property {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
-			args := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "(", ""), ")", "")
+			args := strings.ReplaceAll(strings.ReplaceAll(desc.Value, "(", ""), ")", "")
 
 			if args != "" { // Do nothing for functions without arguments
 				argPairs := strings.Split(args, ", ")
@@ -327,237 +564,218 @@ func ReadProcedure(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				if err := d.Set("arguments", args); err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 		case "null handling":
-			if err := d.Set("null_input_behavior", desc.Value.String); err != nil {
-				return err
-			}
-		case "volatility":
-			if err := d.Set("return_behavior", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("null_input_behavior", desc.Value); err != nil {
+				return diag.FromErr(err)
 			}
 		case "body":
-			if err := d.Set("statement", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("statement", desc.Value); err != nil {
+				return diag.FromErr(err)
 			}
 		case "execute as":
-			if err := d.Set("execute_as", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("execute_as", desc.Value); err != nil {
+				return diag.FromErr(err)
 			}
 		case "returns":
-			if err := d.Set("return_type", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("return_type", desc.Value); err != nil {
+				return diag.FromErr(err)
 			}
 		case "language":
-			if err := d.Set("language", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("language", desc.Value); err != nil {
+				return diag.FromErr(err)
 			}
 		case "runtime_version":
-			if err := d.Set("runtime_version", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("runtime_version", desc.Value); err != nil {
+				return diag.FromErr(err)
 			}
 		case "packages":
-			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", "")
+			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", "")
 			if packagesString != "" { // Do nothing for Java / Python functions without packages
 				packages := strings.Split(packagesString, ",")
 				if err := d.Set("packages", packages); err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 		case "imports":
-			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "'", ""), " ", "")
+			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", ""), " ", "")
 			if importsString != "" { // Do nothing for Java functions without imports
 				imports := strings.Split(importsString, ",")
 				if err := d.Set("imports", imports); err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 		case "handler":
-			if err := d.Set("handler", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("handler", desc.Value); err != nil {
+				return diag.FromErr(err)
 			}
-
 		default:
-			log.Printf("[WARN] unexpected procedure property %v returned from Snowflake", desc.Property.String)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Unexpected procedure property returned from Snowflake",
+				Detail:   fmt.Sprintf("Unexpected procedure property %v returned from Snowflake", desc.Property),
+			})
 		}
 	}
 
-	q := proc.Show()
-	showRows, err := snowflake.Query(db, q)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] procedure (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	defer showRows.Close()
+	request := sdk.NewShowProcedureRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName())}).WithLike(&sdk.Like{Pattern: sdk.String(id.Name())})
 
-	foundProcedures, err := snowflake.ScanProcedures(showRows)
+	procedures, err := client.Procedures.Show(ctx, request)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	// procedure names can be overloaded with different argument types so we
-	// iterate over and find the correct one
-	argSig, _ := proc.ArgumentsSignature()
-
-	for _, v := range foundProcedures {
-		showArgs := strings.Split(v.Arguments.String, " RETURN ")
-		if showArgs[0] == argSig {
-			if err := d.Set("name", v.Name.String); err != nil {
-				return err
+	// procedure names can be overloaded with different argument types so we iterate over and find the correct one
+	// the ShowByID function should probably be updated to also require the list of arg types, like describe procedure
+	for _, procedure := range procedures {
+		argumentSignature := strings.Split(procedure.Arguments, " RETURN ")[0]
+		argumentSignature = strings.ReplaceAll(argumentSignature, " ", "")
+		if argumentSignature == id.ArgumentsSignature() {
+			if err := d.Set("secure", procedure.IsSecure); err != nil {
+				return diag.FromErr(err)
 			}
-			database := strings.Trim(v.DatabaseName.String, "\"")
-			if err := d.Set("database", database); err != nil {
-				return err
-			}
-			schema := strings.Trim(v.SchemaName.String, "\"")
-			if err := d.Set("schema", schema); err != nil {
-				return err
-			}
-			if err := d.Set("comment", v.Comment.String); err != nil {
-				return err
+			if err := d.Set("comment", procedure.Description); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
 
-	return nil
+	return diags
 }
 
-// UpdateProcedure implements schema.UpdateProcedure.
-func UpdateProcedure(d *schema.ResourceData, meta interface{}) error {
-	pID, err := splitProcedureID(d.Id())
-	if err != nil {
-		return err
-	}
-	builder := snowflake.NewProcedureBuilder(
-		pID.DatabaseName,
-		pID.SchemaName,
-		pID.ProcedureName,
-		pID.ArgTypes,
-	)
-
+func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
+
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
 		name := d.Get("name")
-		q, err := builder.Rename(name.(string))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name.(string)))))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error renaming procedure %v", d.Id())
+		id = sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name.(string), id.Arguments())
+		if err := d.Set("name", name); err != nil {
+			return diag.FromErr(err)
 		}
-		newID := &procedureID{
-			DatabaseName:  pID.DatabaseName,
-			SchemaName:    pID.SchemaName,
-			ProcedureName: name.(string),
-			ArgTypes:      pID.ArgTypes,
-		}
-		d.SetId(newID.String())
 	}
-
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
-
-		if c := comment.(string); c == "" {
-			q, err := builder.RemoveComment()
-			if err != nil {
-				return err
-			}
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error unsetting comment for procedure %v", d.Id())
+		if comment != "" {
+			if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithSetComment(sdk.String(comment.(string)))); err != nil {
+				return diag.FromErr(err)
 			}
 		} else {
-			q, err := builder.ChangeComment(c)
-			if err != nil {
-				return err
-			}
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error updating comment for procedure %v", d.Id())
+			if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithUnsetComment(sdk.Bool(true))); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
 	if d.HasChange("execute_as") {
 		executeAs := d.Get("execute_as")
-
-		q, err := builder.ChangeExecuteAs(executeAs.(string))
-		if err != nil {
-			return err
-		}
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error changing execute as for procedure %v", d.Id())
+		if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithExecuteAs(sdk.Pointer(sdk.ExecuteAs(executeAs.(string))))); err != nil {
+			return diag.FromErr(err)
 		}
 	}
-
-	return ReadProcedure(d, meta)
+	return ReadContextProcedure(ctx, d, meta)
 }
 
-// DeleteProcedure implements schema.DeleteFunc.
-func DeleteProcedure(d *schema.ResourceData, meta interface{}) error {
+func DeleteContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	pID, err := splitProcedureID(d.Id())
-	if err != nil {
-		return err
-	}
-	builder := snowflake.NewProcedureBuilder(
-		pID.DatabaseName,
-		pID.SchemaName,
-		pID.ProcedureName,
-		pID.ArgTypes,
-	)
+	client := sdk.NewClientFromDB(db)
 
-	q, err := builder.Drop()
-	if err != nil {
-		return err
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	if err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id.WithoutArguments(), id.Arguments())); err != nil {
+		return diag.FromErr(err)
 	}
-
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting procedure %v err = %w", d.Id(), err)
-	}
-
 	d.SetId("")
-
 	return nil
 }
 
-type procedureID struct {
-	DatabaseName  string
-	SchemaName    string
-	ProcedureName string
-	ArgTypes      []string
-}
-
-// splitProcedureID takes the <database_name>|<schema_name>|<view_name>|<argtypes> ID and returns
-// the procedureID struct, for example MYDB|PUBLIC|PROC1|VARCHAR-DATE-VARCHAR
-// returns struct
-//
-//	DatabaseName: MYDB
-//	SchemaName: PUBLIC
-//	ProcedureName: PROC1
-//	ArgTypes: [VARCHAR, DATE, VARCHAR]
-func splitProcedureID(v string) (*procedureID, error) {
-	arr := strings.Split(v, "|")
-	if len(arr) != 4 {
-		return nil, fmt.Errorf("ID %v is invalid", v)
+func getProcedureArguments(d *schema.ResourceData) ([]sdk.ProcedureArgumentRequest, diag.Diagnostics) {
+	args := make([]sdk.ProcedureArgumentRequest, 0)
+	if v, ok := d.GetOk("arguments"); ok {
+		for _, arg := range v.([]interface{}) {
+			argName := arg.(map[string]interface{})["name"].(string)
+			argType := arg.(map[string]interface{})["type"].(string)
+			argDataType, diags := convertProcedureDataType(argType)
+			if diags != nil {
+				return nil, diags
+			}
+			args = append(args, sdk.ProcedureArgumentRequest{ArgName: argName, ArgDataType: argDataType})
+		}
 	}
-
-	return &procedureID{
-		DatabaseName:  arr[0],
-		SchemaName:    arr[1],
-		ProcedureName: arr[2],
-		ArgTypes:      strings.Split(arr[3], "-"),
-	}, nil
+	return args, nil
 }
 
-// the opposite of splitProcedureID.
-func (pi *procedureID) String() string {
-	return fmt.Sprintf("%v|%v|%v|%v",
-		pi.DatabaseName,
-		pi.SchemaName,
-		pi.ProcedureName,
-		strings.Join(pi.ArgTypes, "-"))
+func convertProcedureDataType(s string) (sdk.DataType, diag.Diagnostics) {
+	dataType, err := sdk.ToDataType(s)
+	if err != nil {
+		return dataType, diag.FromErr(err)
+	}
+	return dataType, nil
+}
+
+func convertProcedureColumns(s string) ([]sdk.ProcedureColumn, diag.Diagnostics) {
+	pattern := regexp.MustCompile(`(\w+)\s+(\w+)`)
+	matches := pattern.FindAllStringSubmatch(s, -1)
+	var columns []sdk.ProcedureColumn
+	for _, match := range matches {
+		if len(match) == 3 {
+			dataType, err := sdk.ToDataType(match[2])
+			if err != nil {
+				return nil, diag.FromErr(err)
+			}
+			columns = append(columns, sdk.ProcedureColumn{
+				ColumnName:     match[1],
+				ColumnDataType: dataType,
+			})
+		}
+	}
+	return columns, nil
+}
+
+func parseProcedureReturnsRequest(s string) (*sdk.ProcedureReturnsRequest, diag.Diagnostics) {
+	returns := sdk.NewProcedureReturnsRequest()
+	if strings.HasPrefix(strings.ToLower(s), "table") {
+		columns, diags := convertProcedureColumns(s)
+		if diags != nil {
+			return nil, diags
+		}
+		var cr []sdk.ProcedureColumnRequest
+		for _, item := range columns {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, item.ColumnDataType))
+		}
+		returns.WithTable(sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	} else {
+		returnDataType, diags := convertProcedureDataType(s)
+		if diags != nil {
+			return nil, diags
+		}
+		returns.WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
+	}
+	return returns, nil
+}
+
+func parseProcedureSQLReturnsRequest(s string) (*sdk.ProcedureSQLReturnsRequest, diag.Diagnostics) {
+	returns := sdk.NewProcedureSQLReturnsRequest()
+	if strings.HasPrefix(strings.ToLower(s), "table") {
+		columns, diags := convertProcedureColumns(s)
+		if diags != nil {
+			return nil, diags
+		}
+		var cr []sdk.ProcedureColumnRequest
+		for _, item := range columns {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, item.ColumnDataType))
+		}
+		returns.WithTable(sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	} else {
+		returnDataType, diags := convertProcedureDataType(s)
+		if diags != nil {
+			return nil, diags
+		}
+		returns.WithResultDataType(sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
+	}
+	return returns, nil
 }
