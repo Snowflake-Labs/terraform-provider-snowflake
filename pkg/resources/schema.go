@@ -131,7 +131,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, ok := d.GetOk("data_retention_days"); ok || (!ok && int(retentionTime) != database.RetentionTime) {
+	if _, ok := d.GetOk("data_retention_days"); ok || (!ok && retentionTime != int64(database.RetentionTime)) {
 		if err := d.Set("data_retention_days", retentionTime); err != nil {
 			return err
 		}
