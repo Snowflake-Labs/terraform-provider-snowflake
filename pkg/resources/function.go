@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
 	"regexp"
 	"strings"
 
@@ -159,6 +160,8 @@ var functionSchema = map[string]*schema.Schema{
 // Function returns a pointer to the resource representing a stored function.
 func Function() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: CreateContextFunction,
 		ReadContext:   ReadContextFunction,
 		UpdateContext: UpdateContextFunction,
@@ -167,6 +170,14 @@ func Function() *schema.Resource {
 		Schema: functionSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    cty.EmptyObject,
+				Upgrade: v085FunctionIdStateUpgrader,
+			},
 		},
 	}
 }

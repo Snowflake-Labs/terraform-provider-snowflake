@@ -194,6 +194,11 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: testAccCheckFunctionDestroy,
+
+		// Using the string config because of the validation in teststep_validate.go:
+		// teststep.Config.HasConfigurationFiles() returns true both for ConfigFile and ConfigDirectory.
+		// It returns false for Config. I don't understand why they have such a validation, but we will work around it later.
+		// Added as subtask SNOW-1057066 to SNOW-926148.
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -222,7 +227,6 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 	})
 }
 
-// TODO: describe why string instead of file
 func functionConfig(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_function" "f" {
