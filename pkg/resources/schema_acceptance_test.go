@@ -7,6 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/stretchr/testify/require"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -215,6 +218,85 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	id := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
+
+	configVariables := func(databaseDataRetentionTime int) config.Variables {
+		return config.Variables{
+			"database":                     config.StringVariable(databaseName),
+			"schema":                       config.StringVariable(schemaName),
+			"database_data_retention_time": config.IntegerVariable(databaseDataRetentionTime),
+		}
+	}
+
+	configVariablesWithSchemaDataRetentionTime := func(databaseDataRetentionTime int, schemaDataRetentionTime int) config.Variables {
+		vars := configVariables(databaseDataRetentionTime)
+		vars["schema_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
+		return vars
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigVariables: configVariables(5),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("snowflake_schema.test", "data_retention_days"),
+				),
+			},
+			// Terraform will unset it (hierarchy default in Snowflake)
+			{
+				PreConfig:       setSchemaDataRetentionTime(t, id, 20),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigVariables: configVariables(5),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// Terraform will set it back to 3
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 3),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "3"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func setSchemaDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, days int) func() {
+	t.Helper()
+
+	return func() {
+		client, err := sdk.NewDefaultClient()
+		require.NoError(t, err)
+		ctx := context.Background()
+
+		err = client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+			Set: &sdk.SchemaSet{
+				DataRetentionTimeInDays: sdk.Int(days),
+			},
+		})
+		require.NoError(t, err)
+	}
 }
 
 func testAccCheckSchemaDestroy(s *terraform.State) error {
