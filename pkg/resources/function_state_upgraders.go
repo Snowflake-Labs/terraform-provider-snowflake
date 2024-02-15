@@ -18,14 +18,20 @@ type v085FunctionId struct {
 func parseV085FunctionId(v string) (*v085FunctionId, error) {
 	arr := strings.Split(v, "|")
 	if len(arr) != 4 {
-		return nil, fmt.Errorf("ID %v is invalid", v)
+		return nil, sdk.NewError(fmt.Sprintf("ID %v is invalid", v))
+	}
+
+	// this is a bit different from V085 state, but it was buggy
+	var args []string
+	if arr[3] != "" {
+		args = strings.Split(arr[3], "-")
 	}
 
 	return &v085FunctionId{
 		DatabaseName: arr[0],
 		SchemaName:   arr[1],
 		FunctionName: arr[2],
-		ArgTypes:     strings.Split(arr[3], "-"),
+		ArgTypes:     args,
 	}, nil
 }
 
