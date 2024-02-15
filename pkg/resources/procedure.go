@@ -88,9 +88,8 @@ var procedureSchema = map[string]*schema.Schema{
 			}
 			return false
 		},
-		ValidateFunc: IsDataType(),
-		Required:     true,
-		ForceNew:     true,
+		Required: true,
+		ForceNew: true,
 	},
 	"statement": {
 		Type:             schema.TypeString,
