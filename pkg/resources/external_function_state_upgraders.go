@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"encoding/csv"
-	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -21,14 +20,14 @@ func parseV085ExternalFunctionId(stringID string) (*v085ExternalFunctionId, erro
 	reader.Comma = '|'
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
+		return nil, sdk.NewError("not CSV compatible")
 	}
 
 	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
+		return nil, sdk.NewError("1 line at a time")
 	}
 	if len(lines[0]) != 4 {
-		return nil, fmt.Errorf("4 fields allowed")
+		return nil, sdk.NewError("4 fields allowed")
 	}
 
 	return &v085ExternalFunctionId{
