@@ -12,6 +12,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -220,6 +221,51 @@ func TestAcc_NotificationIntegration_PushAzure(t *testing.T) {
 	t.Skip("Skipping because can't be currently created. Check 'create and describe notification integration - push azure' test in the SDK.")
 }
 
+// proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2501
+func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckNotificationIntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.85.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: googleAutoConfig(accName, gcpPubsubSubscriptionName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   googleAutoConfigWithoutDirection(accName, gcpPubsubSubscriptionName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),
+				),
+			},
+		},
+	})
+}
+
 func googleAutoConfig(name string, gcpPubsubSubscriptionName string) string {
 	s := `
 resource "snowflake_notification_integration" "test" {
@@ -227,6 +273,17 @@ resource "snowflake_notification_integration" "test" {
   notification_provider           = "%s"
   gcp_pubsub_subscription_name    = "%s"
   direction                       = "INBOUND"
+}
+`
+	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName)
+}
+
+func googleAutoConfigWithoutDirection(name string, gcpPubsubSubscriptionName string) string {
+	s := `
+resource "snowflake_notification_integration" "test" {
+  name                            = "%s"
+  notification_provider           = "%s"
+  gcp_pubsub_subscription_name    = "%s"
 }
 `
 	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName)
