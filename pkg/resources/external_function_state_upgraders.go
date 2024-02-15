@@ -50,13 +50,15 @@ func v085ExternalFunctionStateUpgrader(ctx context.Context, rawState map[string]
 		return nil, err
 	}
 
-	argDataTypes := make([]sdk.DataType, len(parsedV085ExternalFunctionId.ExternalFunctionArgTypes))
-	for i, argType := range strings.Split(parsedV085ExternalFunctionId.ExternalFunctionArgTypes, "-") {
-		argDataType, err := sdk.ToDataType(argType)
-		if err != nil {
-			return nil, err
+	argDataTypes := make([]sdk.DataType, 0)
+	if parsedV085ExternalFunctionId.ExternalFunctionArgTypes != "" {
+		for _, argType := range strings.Split(parsedV085ExternalFunctionId.ExternalFunctionArgTypes, "-") {
+			argDataType, err := sdk.ToDataType(argType)
+			if err != nil {
+				return nil, err
+			}
+			argDataTypes = append(argDataTypes, argDataType)
 		}
-		argDataTypes[i] = argDataType
 	}
 
 	schemaObjectIdentifierWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(parsedV085ExternalFunctionId.DatabaseName, parsedV085ExternalFunctionId.SchemaName, parsedV085ExternalFunctionId.ExternalFunctionName, argDataTypes)
