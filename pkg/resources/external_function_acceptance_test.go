@@ -7,9 +7,11 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -231,4 +233,80 @@ func TestAcc_ExternalFunction_complete(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.85.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", "\""+acc.TestDatabaseName+"\""),
+					resource.TestCheckResourceAttr(resourceName, "schema", "\""+acc.TestSchemaName+"\""),
+					resource.TestCheckNoResourceAttr(resourceName, "return_null_allowed"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "return_null_allowed", "true"),
+				),
+			},
+		},
+	})
+}
+
+func externalFunctionConfig(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_api_integration" "test_api_int" {
+  name                 = "%[3]s"
+  api_provider         = "aws_api_gateway"
+  api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+  api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+  enabled              = true
+}
+
+resource "snowflake_external_function" "f" {
+  name     = "%[3]s"
+  database = "%[1]s"
+  schema   = "%[2]s"
+  arg {
+    name = "ARG1"
+    type = "VARCHAR"
+  }
+  arg {
+    name = "ARG2"
+    type = "VARCHAR"
+  }
+  return_type               = "VARIANT"
+  return_behavior           = "IMMUTABLE"
+  api_integration           = snowflake_api_integration.test_api_int.name
+  url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+}
+
+`, database, schema, name)
 }
