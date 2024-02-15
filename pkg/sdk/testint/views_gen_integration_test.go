@@ -488,6 +488,31 @@ func TestInt_Views(t *testing.T) {
 		assert.NotContains(t, returnedViews, *view2)
 	})
 
+	// proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2506
+	t.Run("show view by id: same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := createSchema(t, client, testDb(t))
+		t.Cleanup(schemaCleanup)
+
+		name := random.String()
+		id1 := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, name)
+
+		request1 := sdk.NewCreateViewRequest(id1, sql)
+		request2 := sdk.NewCreateViewRequest(id2, sql)
+
+		view1 := createViewWithRequest(t, request1)
+		view2 := createViewWithRequest(t, request2)
+
+		assert.Equal(t, id1, view1.ID())
+		assert.Equal(t, id2, view2.ID())
+
+		for i := 0; i < 10; i++ {
+			returnedView, err := client.Views.ShowByID(ctx, id1)
+			require.NoError(t, err)
+			require.Equal(t, id1, returnedView.ID())
+		}
+	})
+
 	t.Run("describe view", func(t *testing.T) {
 		view := createView(t)
 
