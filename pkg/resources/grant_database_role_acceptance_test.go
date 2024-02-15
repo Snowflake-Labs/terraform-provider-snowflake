@@ -97,15 +97,17 @@ func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
 	})
 }
 
-/*
-todo: once snowflake_grant_privileges_to_share is implemented. Cannot test this without having  'GRANT USAGE ON DATABASE <NAME> TO SHARE <share_name>',
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2410 is fixed
 func TestAcc_GrantDatabaseRole_share(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleId := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resourceName := "snowflake_grant_database_role.g"
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"database":           config.StringVariable(acc.TestDatabaseName),
+	shareId := sdk.NewAccountObjectIdentifier(shareName).FullyQualifiedName()
+	resourceName := "snowflake_grant_database_role.test"
+	configVariables := func() config.Variables {
+		return config.Variables{
+			"database":           config.StringVariable(databaseName),
 			"database_role_name": config.StringVariable(databaseRoleName),
 			"share_name":         config.StringVariable(shareName),
 		}
@@ -120,17 +122,17 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
-				ConfigVariables: m(),
+				ConfigVariables: configVariables(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId),
 					resource.TestCheckResourceAttr(resourceName, "share_name", shareName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleName, "SHARE", shareName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`%v|%v|%v`, databaseRoleId, "SHARE", shareId)),
 				),
 			},
 			// test import
 			{
 				ConfigDirectory:   config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
-				ConfigVariables:   m(),
+				ConfigVariables:   configVariables(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -138,7 +140,6 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 		},
 	})
 }
-*/
 
 func testAccCheckGrantDatabaseRoleDestroy(s *terraform.State) error {
 	db := acc.TestAccProvider.Meta().(*sql.DB)

@@ -223,8 +223,13 @@ func (row grantRow) convert() *Grant {
 	var granteeName AccountObjectIdentifier
 	if grantedTo == ObjectTypeShare {
 		parts := strings.Split(row.GranteeName, ".")
-		name := strings.Join(parts[1:], ".")
-		granteeName = NewAccountObjectIdentifier(name)
+		switch {
+		case len(parts) == 1:
+			granteeName = NewAccountObjectIdentifier(parts[0])
+		case len(parts) > 1:
+			name := strings.Join(parts[1:], ".")
+			granteeName = NewAccountObjectIdentifier(name)
+		}
 	} else {
 		granteeName = NewAccountObjectIdentifier(row.GranteeName)
 	}
