@@ -11,7 +11,7 @@ variable "database" {
 }
 
 resource "snowflake_database" "test" {
-  name     = var.database
+  name = var.database
 }
 
 resource "snowflake_database_role" "test" {
@@ -24,9 +24,9 @@ resource "snowflake_share" "test" {
 }
 
 resource "snowflake_grant_privileges_to_share" "test" {
-  privileges = ["USAGE"]
+  privileges  = ["USAGE"]
   on_database = snowflake_database.test.name
-  to_share = snowflake_share.test.name
+  to_share    = snowflake_share.test.name
 }
 
 resource "snowflake_grant_database_role" "test" {
