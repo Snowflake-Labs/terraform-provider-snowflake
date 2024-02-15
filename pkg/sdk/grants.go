@@ -223,6 +223,7 @@ func (row grantRow) convert() *Grant {
 	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
 	var granteeName AccountObjectIdentifier
 	if grantedTo == ObjectTypeShare {
+		// TODO(SNOW-1058419): Change this logic during identifiers rework
 		parts := strings.Split(row.GranteeName, ".")
 		switch {
 		case len(parts) == 1:
