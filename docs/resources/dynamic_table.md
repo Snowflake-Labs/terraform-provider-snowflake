@@ -42,7 +42,7 @@ resource "snowflake_dynamic_table" "dt" {
 ### Optional
 
 - `comment` (String) Specifies a comment for the dynamic table.
-- `initialize` (String) Initialize trigger for the dynamic table. Can only be set on creation.
+- `initialize` (String) Initialize trigger for the dynamic table. Can only be set on creation. Available options are ON_CREATE and ON_SCHEDULE.
 - `or_replace` (Boolean) Specifies whether to replace the dynamic table if it already exists.
 - `refresh_mode` (String) INCREMENTAL to use incremental refreshes, FULL to recompute the whole table on every refresh, or AUTO to let Snowflake decide.
 

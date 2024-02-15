@@ -91,7 +91,7 @@ var dynamicTableSchema = map[string]*schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
 		Default:      sdk.DynamicTableInitializeOnCreate,
-		Description:  "Initialize trigger for the dynamic table. Can only be set on creation.",
+		Description:  "Initialize trigger for the dynamic table. Can only be set on creation. Available options are ON_CREATE and ON_SCHEDULE.",
 		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllDynamicTableInitializes), true),
 		ForceNew:     true,
 	},

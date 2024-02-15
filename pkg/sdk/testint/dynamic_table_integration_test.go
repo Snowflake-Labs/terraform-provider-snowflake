@@ -69,7 +69,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
 		require.Equal(t, "DOWNSTREAM", entity.TargetLag)
 		require.Equal(t, sdk.DynamicTableRefreshModeIncremental, entity.RefreshMode)
-		require.Contains(t, entity.Text, "initialize = 'ON_SCHEDULE'")
+		require.Contains(t, entity.Text, "initialize = 'ON_CREATE'")
 		require.Contains(t, entity.Text, "refresh_mode = 'AUTO'")
 	})
 
@@ -95,7 +95,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		entity := entities[0]
 		require.Equal(t, name.Name(), entity.Name)
 		require.Equal(t, testWarehouse(t).ID().Name(), entity.Warehouse)
-		require.Equal(t, "DOWNSTREAM", entity.TargetLag)
+		require.Equal(t, *targetLag.MaximumDuration, entity.TargetLag)
 		require.Equal(t, sdk.DynamicTableRefreshModeFull, entity.RefreshMode)
 		require.Contains(t, entity.Text, "initialize = 'ON_SCHEDULE'")
 		require.Contains(t, entity.Text, "refresh_mode = 'FULL'")
