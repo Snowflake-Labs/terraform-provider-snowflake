@@ -1,13 +1,16 @@
 package resources_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -176,4 +179,61 @@ func TestAcc_Procedure_complex(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_procedure.p"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.85.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: procedureConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   procedureConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+				),
+			},
+		},
+	})
+}
+
+func procedureConfig(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_procedure" "p" {
+  database    = "%[1]s"
+  schema      = "%[2]s"
+  name        = "%[3]s"
+  language    = "JAVASCRIPT"
+  return_type = "VARCHAR"
+  statement   = <<EOT
+    return "Hi"
+  EOT
+}
+`, database, schema, name)
 }
