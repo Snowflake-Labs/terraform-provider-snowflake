@@ -1,13 +1,19 @@
 package resources_test
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -33,7 +39,7 @@ func testAccFunction(t *testing.T, configDirectory string) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
@@ -124,7 +130,7 @@ func TestAcc_Function_complex(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Function/complex"),
@@ -175,4 +181,86 @@ func TestAcc_Function_complex(t *testing.T) {
 			},
 		},
 	})
+}
+
+// proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2490
+func TestAcc_Function_migrateFromVersion085(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckFunctionDestroy,
+
+		// Using the string config because of the validation in teststep_validate.go:
+		// teststep.Config.HasConfigurationFiles() returns true both for ConfigFile and ConfigDirectory.
+		// It returns false for Config. I don't understand why they have such a validation, but we will work around it later.
+		// Added as subtask SNOW-1057066 to SNOW-926148.
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.85.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+				),
+			},
+		},
+	})
+}
+
+func functionConfig(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_function" "f" {
+  database        = "%[1]s"
+  schema          = "%[2]s"
+  name            = "%[3]s"
+  return_type     = "VARCHAR"
+  return_behavior = "IMMUTABLE"
+  statement       = "SELECT PARAM"
+
+  arguments {
+    name = "PARAM"
+    type = "VARCHAR"
+  }
+}
+`, database, schema, name)
+}
+
+func testAccCheckFunctionDestroy(s *terraform.State) error {
+	client, err := sdk.NewDefaultClient()
+	if err != nil {
+		return errors.New("client could not be instantiated")
+	}
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "snowflake_function" {
+			continue
+		}
+		ctx := context.Background()
+		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
+		function, err := client.Functions.ShowByID(ctx, id)
+		if err == nil {
+			return fmt.Errorf("function %v still exists", function.Name)
+		}
+	}
+	return nil
 }
