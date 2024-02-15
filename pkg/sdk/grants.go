@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 	"strings"
 	"time"
 )
@@ -226,9 +227,10 @@ func (row grantRow) convert() *Grant {
 		switch {
 		case len(parts) == 1:
 			granteeName = NewAccountObjectIdentifier(parts[0])
-		case len(parts) > 1:
-			name := strings.Join(parts[1:], ".")
-			granteeName = NewAccountObjectIdentifier(name)
+		case len(parts) == 2:
+			granteeName = NewAccountObjectIdentifier(parts[1])
+		default:
+			log.Printf("unsupported case for share's grantee name: %s", row.GranteeName)
 		}
 	} else {
 		granteeName = NewAccountObjectIdentifier(row.GranteeName)
