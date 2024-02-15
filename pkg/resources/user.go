@@ -246,9 +246,8 @@ func ReadUser(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	user, err := client.Users.Describe(ctx, objectIdentifier)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// If not found, mark resource to be removed from state file during apply or refresh
-			log.Printf("[DEBUG] user (%s) not found or we are not authorized.Err:\n%s", d.Id(), err.Error())
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			log.Printf("[DEBUG] user (%s) not found or we are not authorized. Err: %s", d.Id(), err)
 			d.SetId("")
 			return nil
 		}

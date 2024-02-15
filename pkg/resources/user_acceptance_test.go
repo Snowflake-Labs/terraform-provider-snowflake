@@ -1,11 +1,18 @@
 package resources_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
@@ -110,6 +117,68 @@ func TestAcc_User(t *testing.T) {
 			},
 		},
 	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2481 has been fixed
+func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
+	userName := sdk.NewAccountObjectIdentifier(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	config := fmt.Sprintf(`
+resource "snowflake_user" "test" {
+	name = "%s"
+}
+`, userName.Name())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				PreConfig: removeUserOutsideOfTerraform(t, userName),
+				Config:    config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					func(state *terraform.State) error {
+						if len(state.RootModule().Resources) != 1 {
+							return errors.New("user should be created again and present in the state")
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+func removeUserOutsideOfTerraform(t *testing.T, name sdk.AccountObjectIdentifier) func() {
+	t.Helper()
+	return func() {
+		client, err := sdk.NewDefaultClient()
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx := context.Background()
+		if err := client.Users.Drop(ctx, name); err != nil {
+			t.Fatalf("failed to drop user: %s", name.FullyQualifiedName())
+		}
+	}
 }
 
 func uConfig(prefix, key1, key2 string) string {
