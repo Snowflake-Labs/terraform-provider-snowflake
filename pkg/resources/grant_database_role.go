@@ -179,6 +179,10 @@ func ReadGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 						parts = strings.Split(s, "\".")
 						if len(parts) < 2 {
 							parts = strings.Split(s, ".\"")
+							if len(parts) < 2 {
+								s = strings.Trim(s, "\"")
+								parts = strings.Split(s, ".")
+							}
 						}
 					}
 					s = sdk.NewDatabaseObjectIdentifier(parts[0], parts[1]).FullyQualifiedName()
