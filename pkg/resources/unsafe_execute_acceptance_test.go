@@ -645,6 +645,54 @@ func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2491
+func TestAcc_UnsafeExecute_queryResultsBug(t *testing.T) {
+	resourceName := "snowflake_unsafe_execute.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: unsafeExecuteConfig(108),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "query", "SELECT 108"),
+					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "query_results.0.108"),
+				),
+			},
+			{
+				Config: unsafeExecuteConfig(96),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "query", "SELECT 96"),
+					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "query_results.0.96"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+func unsafeExecuteConfig(queryNumber int) string {
+	return fmt.Sprintf(`
+resource "snowflake_unsafe_execute" "test" {
+  execute = "SELECT 18"
+  revert  = "SELECT 36"
+  query  = "SELECT %d"
+}
+
+output "unsafe" {
+  value = snowflake_unsafe_execute.test.query_results
+}
+`, queryNumber)
+}
+
 // generateUnsafeExecuteTestDatabaseName returns capitalized name on purpose.
 // Using small caps without escaping creates problem with later using sdk client which uses identifier that is escaped by default.
 func generateUnsafeExecuteTestDatabaseName(t *testing.T) string {
