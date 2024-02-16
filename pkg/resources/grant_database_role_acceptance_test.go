@@ -57,6 +57,39 @@ func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
 	})
 }
 
+func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
+	databaseName := "DB_TEST_DB_DEV"
+	databaseRoleName := "TEST_DATABASE_ROLE_02"
+	parentDatabaseRoleName := "TEST_DATABASE_ROLE_01"
+	resourceName := "snowflake_grant_database_role.g"
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"database":                  config.StringVariable(databaseName),
+			"database_role_name":        config.StringVariable(databaseRoleName),
+			"parent_database_role_name": config.StringVariable(parentDatabaseRoleName),
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckGrantDatabaseRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantDatabaseRole/issue2402"),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", fmt.Sprintf(`"%v"."%v"`, databaseName, databaseRoleName)),
+					resource.TestCheckResourceAttr(resourceName, "parent_database_role_name", fmt.Sprintf(`"%v"."%v"`, databaseName, parentDatabaseRoleName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|DATABASE ROLE|"%v"."%v"`, databaseName, databaseRoleName, databaseName, parentDatabaseRoleName)),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
 	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	parentRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
