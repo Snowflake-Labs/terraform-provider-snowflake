@@ -150,7 +150,7 @@ func CreateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 	q := builder.Create()
 
 	if err := snowflake.Exec(db, q); err != nil {
-		return diag.Errorf("error creating stage %v", name)
+		return diag.Errorf("error creating stage %v, err: %v", name, err)
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(database, schema, name))

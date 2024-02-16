@@ -58,9 +58,9 @@ func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
 }
 
 func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
-	databaseName := "DB_TEST_DB_DEV"
-	databaseRoleName := "TEST_DATABASE_ROLE_02"
-	parentDatabaseRoleName := "TEST_DATABASE_ROLE_01"
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	parentDatabaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_grant_database_role.g"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -69,6 +69,7 @@ func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
 			"parent_database_role_name": config.StringVariable(parentDatabaseRoleName),
 		}
 	}
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
