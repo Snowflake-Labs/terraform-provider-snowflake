@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -81,6 +82,12 @@ func Provider() *schema.Provider {
 				Description: "Specifies the role to use by default for accessing Snowflake objects in the client session. Can also be sourced from the `SNOWFLAKE_ROLE` environment variable. .",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ROLE", nil),
+			},
+			"use_secondary_roles": {
+				Type:        schema.TypeBool,
+				Description: "TODO",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USE_SECONDARY_ROLES", nil),
 			},
 			"validate_default_parameters": {
 				Type:        schema.TypeBool,
@@ -798,4 +805,11 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	}
 
 	return &provider.Context{Client: cl}, nil
+
+	if v, ok := s.GetOk("use_secondary_roles"); ok && v.(bool) {
+		err := client.Sessions.UseSecondaryRoles(context.Background(), sdk.SecondaryRolesAll)
+		return nil, err
+	}
+
+	return client.GetConn().DB, nil
 }
