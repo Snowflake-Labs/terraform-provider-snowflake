@@ -21,6 +21,7 @@ Coverage is focused on part of Snowflake related to access control.
 provider "snowflake" {
   account                = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT env var
   username               = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
+  authenticator          = "..." # required if not using password as auth method
   password               = "..."
   oauth_access_token     = "..."
   private_key_path       = "..."
@@ -31,6 +32,7 @@ provider "snowflake" {
   oauth_client_secret    = "..."
   oauth_endpoint         = "..."
   oauth_redirect_url     = "..."
+
 
   // optional
   region    = "..." # required if using legacy format for account identifier
