@@ -401,7 +401,7 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 	if len(_default) == 1 {
 		if c, ok := _default[0].(map[string]interface{})["constant"]; ok {
 			if constant, ok := c.(string); ok && len(constant) > 0 {
-				if strings.Contains(_type, "CHAR") || _type == "STRING" || _type == "TEXT" {
+				if sdk.IsStringType(_type) {
 					expression = snowflake.EscapeSnowflakeString(constant)
 				} else {
 					expression = constant
@@ -436,7 +436,7 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 		request.WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(maskingPolicy)))
 	}
 
-	if strings.Contains(_type, "CHAR") || _type == "STRING" || _type == "TEXT" {
+	if sdk.IsStringType(_type) {
 		request.WithCollate(sdk.String(c["collate"].(string)))
 	}
 
@@ -529,8 +529,7 @@ func toColumnDefaultConfig(td sdk.TableColumnDetails) map[string]any {
 		return def
 	}
 
-	columnType := strings.ToUpper(string(td.Type))
-	if strings.Contains(columnType, "CHAR") || columnType == "STRING" || columnType == "TEXT" {
+	if sdk.IsStringType(string(td.Type)) {
 		def["constant"] = snowflake.UnescapeSnowflakeString(defaultRaw)
 		return def
 	}
@@ -787,7 +786,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
 				}
 				var expression string
-				if strings.Contains(cA.dataType, "CHAR") || cA.dataType == "STRING" || cA.dataType == "TEXT" {
+				if sdk.IsStringType(cA.dataType) {
 					expression = snowflake.EscapeSnowflakeString(*cA._default.constant)
 				} else {
 					expression = *cA._default.constant
@@ -807,7 +806,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				addRequest.WithComment(sdk.String(cA.comment))
 			}
 
-			if cA.collate != "" && strings.Contains(cA.dataType, "CHAR") || cA.dataType == "STRING" || cA.dataType == "TEXT" {
+			if cA.collate != "" && sdk.IsStringType(cA.dataType) {
 				addRequest.WithCollate(sdk.String(cA.collate))
 			}
 
