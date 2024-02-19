@@ -115,26 +115,6 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating database %v: %w", name, err)
 		}
 		d.SetId(name)
-		if v, ok := d.GetOk("replication_configuration"); ok {
-			replicationConfiguration := v.([]interface{})[0].(map[string]interface{})
-			accounts := replicationConfiguration["accounts"].([]interface{})
-			accountIDs := make([]sdk.AccountIdentifier, len(accounts))
-			for i, account := range accounts {
-				accountIDs[i] = sdk.NewAccountIdentifierFromAccountLocator(account.(string))
-			}
-			opts := &sdk.AlterDatabaseReplicationOptions{
-				EnableReplication: &sdk.EnableReplication{
-					ToAccounts: accountIDs,
-				},
-			}
-			if ignoreEditionCheck, ok := replicationConfiguration["ignore_edition_check"]; ok {
-				opts.EnableReplication.IgnoreEditionCheck = sdk.Bool(ignoreEditionCheck.(bool))
-			}
-			err := client.Databases.AlterReplication(ctx, id, opts)
-			if err != nil {
-				return fmt.Errorf("error enabling replication for database %v: %w", name, err)
-			}
-		}
 		return ReadDatabase(d, meta)
 	}
 	// Is it a Secondary Database?
@@ -177,6 +157,28 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating database %v: %w", name, err)
 	}
 	d.SetId(name)
+
+	if v, ok := d.GetOk("replication_configuration"); ok {
+		replicationConfiguration := v.([]interface{})[0].(map[string]interface{})
+		accounts := replicationConfiguration["accounts"].([]interface{})
+		accountIDs := make([]sdk.AccountIdentifier, len(accounts))
+		for i, account := range accounts {
+			accountIDs[i] = sdk.NewAccountIdentifierFromAccountLocator(account.(string))
+		}
+		opts := &sdk.AlterDatabaseReplicationOptions{
+			EnableReplication: &sdk.EnableReplication{
+				ToAccounts: accountIDs,
+			},
+		}
+		if ignoreEditionCheck, ok := replicationConfiguration["ignore_edition_check"]; ok {
+			opts.EnableReplication.IgnoreEditionCheck = sdk.Bool(ignoreEditionCheck.(bool))
+		}
+		err := client.Databases.AlterReplication(ctx, id, opts)
+		if err != nil {
+			return fmt.Errorf("error enabling replication for database %v: %w", name, err)
+		}
+	}
+
 	return ReadDatabase(d, meta)
 }
 

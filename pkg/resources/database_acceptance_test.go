@@ -279,7 +279,7 @@ func testAccCheckIfDatabaseIsReplicated(t *testing.T, id string) func(state *ter
 
 		var exists bool
 		for _, o := range replicationDatabases {
-			if o.SnowflakeRegion == "aaa" {
+			if o.Name == id {
 				exists = true
 				break
 			}
