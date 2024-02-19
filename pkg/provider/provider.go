@@ -807,8 +807,9 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	return &provider.Context{Client: cl}, nil
 
 	if v, ok := s.GetOk("use_secondary_roles"); ok && v.(bool) {
-		err := client.Sessions.UseSecondaryRoles(context.Background(), sdk.SecondaryRolesAll)
-		return nil, err
+		if err := client.Sessions.UseSecondaryRoles(context.Background(), sdk.SecondaryRolesAll); err != nil {
+			return nil, err
+		}
 	}
 
 	return client.GetConn().DB, nil
