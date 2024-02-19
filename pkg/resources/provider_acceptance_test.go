@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -37,6 +38,32 @@ func TestAcc_Provider_UseSecondaryRoles(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", databaseName),
 				),
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_UseSecondaryRolesUnchecked(t *testing.T) {
+	providerRole := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	providerUseSecondaryRolesSetup(t, providerRole)
+
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	providerConfigVariables := config.Variables{
+		"profile":             config.StringVariable("default"),
+		"role":                config.StringVariable(providerRole),
+		"use_secondary_roles": config.BoolVariable(false),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      providerUseSecondarySchemaConfig(providerConfig(t, providerConfigVariables), databaseName),
+				ExpectError: regexp.MustCompile("Insufficient privileges"),
 			},
 		},
 	})
