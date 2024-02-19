@@ -77,7 +77,7 @@ func (i ExternalObjectIdentifier) Name() string {
 }
 
 func (i ExternalObjectIdentifier) FullyQualifiedName() string {
-	return fmt.Sprintf(`%v.%v`, i.accountIdentifier.Name(), i.objectIdentifier.FullyQualifiedName())
+	return fmt.Sprintf(`"%v".%v`, i.accountIdentifier.Name(), i.objectIdentifier.FullyQualifiedName())
 }
 
 type AccountIdentifier struct {
