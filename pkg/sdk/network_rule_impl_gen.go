@@ -2,9 +2,8 @@ package sdk
 
 import (
 	"context"
-	"strings"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"strings"
 )
 
 var _ NetworkRules = (*networkRules)(nil)
@@ -119,8 +118,8 @@ func (row ShowNetworkRulesRow) convert() *NetworkRule {
 		SchemaName:         row.SchemaName,
 		Owner:              row.Owner,
 		Comment:            row.Comment,
-		Type:               NetworkRuleType(row.Type),
-		Mode:               NetworkRuleMode(row.Mode),
+		Type:               row.Type,
+		Mode:               row.Mode,
 		EntriesInValueList: row.EntriesInValueList,
 		OwnerRoleType:      row.OwnerRoleType,
 	}
@@ -145,8 +144,8 @@ func (row DescNetworkRulesRow) convert() *NetworkRuleDetails {
 		SchemaName:   row.SchemaName,
 		Owner:        row.Owner,
 		Comment:      row.Comment,
-		Type:         NetworkRuleType(row.Type),
-		Mode:         NetworkRuleMode(row.Mode),
+		Type:         row.Type,
+		Mode:         row.Mode,
 		ValueList:    valueList,
 	}
 }
