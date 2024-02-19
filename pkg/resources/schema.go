@@ -51,13 +51,10 @@ var schemaSchema = map[string]*schema.Schema{
 		Description: "Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.",
 	},
 	"data_retention_days": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Default:     -1,
-		Description: "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
-		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return oldValue == "-1" && newValue == ""
-		},
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      -1,
+		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
 		ValidateFunc: validation.IntBetween(-1, 90),
 	},
 	"tag": tagReferenceSchema,
@@ -225,7 +222,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_retention_days") {
-		if days := d.Get("data_retention_days"); days.(int) != -1 { // TODO: diff suppress ?
+		if days := d.Get("data_retention_days"); days.(int) != -1 {
 			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
 				Set: &sdk.SchemaSet{
 					DataRetentionTimeInDays: sdk.Int(days.(int)),
