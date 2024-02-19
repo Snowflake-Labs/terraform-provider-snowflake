@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"slices"
 	"strings"
 
@@ -720,19 +721,13 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if id.AllPrivileges {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Show with all_privileges option is skipped.",
-				// TODO: link to the design decisions doc (SNOW-990811)
-				Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
-			},
-		}
+		log.Printf("[INFO] Show with all_privileges option is skipped. No changes in privileges in Snowflake will be detected. Consider specyfying all privileges in 'privileges' block.")
+		return nil
 	}
 
-	opts, grantedOn, diags := prepareShowGrantsRequestForAccountRole(id)
-	if len(diags) != 0 {
-		return diags
+	opts, grantedOn := prepareShowGrantsRequestForAccountRole(id)
+	if opts == nil {
+		return nil
 	}
 
 	db := meta.(*sql.DB)
@@ -807,7 +802,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (*sdk.ShowGrantOptions, sdk.ObjectType, diag.Diagnostics) {
+func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (*sdk.ShowGrantOptions, sdk.ObjectType) {
 	opts := new(sdk.ShowGrantOptions)
 	var grantedOn sdk.ObjectType
 
@@ -839,14 +834,8 @@ func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (
 				},
 			}
 		case OnAllSchemasInDatabaseSchemaGrantKind:
-			return nil, "", diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Show with OnAllSchemasInDatabase option is skipped.",
-					// TODO: link to the design decisions doc (SNOW-990811)
-					Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
-				},
-			}
+			log.Printf("[INFO] Show with on_schema.all_schemas_in_database option is skipped. No changes in privileges in Snowflake will be detected.")
+			return nil, ""
 		case OnFutureSchemasInDatabaseSchemaGrantKind:
 			opts.Future = sdk.Bool(true)
 			opts.In = &sdk.ShowGrantsIn{
@@ -863,14 +852,8 @@ func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (
 				Object: data.Object,
 			}
 		case OnAllSchemaObjectGrantKind:
-			return nil, "", diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Show with OnAll option is skipped.",
-					// TODO: link to the design decisions doc (SNOW-990811)
-					Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
-				},
-			}
+			log.Printf("[INFO] Show with on_schema_object.on_all option is skipped. No changes in privileges in Snowflake will be detected.")
+			return nil, ""
 		case OnFutureSchemaObjectGrantKind:
 			grantedOn = data.OnAllOrFuture.ObjectNamePlural.Singular()
 			opts.Future = sdk.Bool(true)
@@ -888,7 +871,7 @@ func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (
 		}
 	}
 
-	return opts, grantedOn, nil
+	return opts, grantedOn
 }
 
 func getAccountRolePrivilegesFromSchema(d *schema.ResourceData) *sdk.AccountRoleGrantPrivileges {
