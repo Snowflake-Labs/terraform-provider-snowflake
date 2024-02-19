@@ -54,7 +54,7 @@ var schemaSchema = map[string]*schema.Schema{
 		Type:         schema.TypeInt,
 		Optional:     true,
 		Default:      -1,
-		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
+		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema. Default value for this field is set to -1, which is a fallback to use Snowflake default.",
 		ValidateFunc: validation.IntBetween(-1, 90),
 	},
 	"tag": tagReferenceSchema,
@@ -112,6 +112,11 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
+	database, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
+	if err != nil {
+		d.SetId("")
+	}
+
 	s, err := client.Schemas.ShowByID(ctx, id)
 	if err != nil {
 		log.Printf("[DEBUG] schema (%s) not found", d.Id())
@@ -133,7 +138,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if dataRetentionDays := d.Get("data_retention_days"); dataRetentionDays.(int) != -1 {
+	if dataRetentionDays := d.Get("data_retention_days"); dataRetentionDays.(int) != -1 || int64(database.RetentionTime) != retentionTime {
 		if err := d.Set("data_retention_days", retentionTime); err != nil {
 			return err
 		}
