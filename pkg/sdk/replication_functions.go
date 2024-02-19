@@ -9,8 +9,10 @@ import (
 
 var _ ReplicationFunctions = (*replicationFunctions)(nil)
 
-var _ validatable = new(ShowRegionsOptions)
-var _ validatable = new(ShowReplicationDatabasesOptions)
+var (
+	_ validatable = new(ShowRegionsOptions)
+	_ validatable = new(ShowReplicationDatabasesOptions)
+)
 
 var _ convertibleRow[ReplicationDatabase] = new(replicationDatabaseRow)
 
