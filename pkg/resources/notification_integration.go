@@ -42,8 +42,10 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 		Optional:     true,
 		ValidateFunc: validation.StringInSlice([]string{"INBOUND", "OUTBOUND"}, true),
 		Description:  "Direction of the cloud messaging with respect to Snowflake (required only for error notifications)",
-		ForceNew:     true,
 		Deprecated:   "Will be removed - it is added automatically on the SDK level.",
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			return true
+		},
 	},
 	// This part of the schema is the cloudProviderParams in the Snowflake documentation and differs between vendors
 	"notification_provider": {

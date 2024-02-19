@@ -600,11 +600,11 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 }
 
 func taskConfigManagedScheduled(name string, taskRootName string, databaseName string, schemaName string) string {
-	s := `
+	return fmt.Sprintf(`
 resource "snowflake_task" "test_task_root" {
-	name     	                    = "%s"
-	database  	                    = "%s"
-	schema    	                    = "%s"
+	name     	                    = "%[1]s"
+	database  	                    = "%[2]s"
+	schema    	                    = "%[3]s"
 	sql_statement                   = "SELECT 1"
 	enabled  	                    = true
 	schedule                        = "5 MINUTE"
@@ -612,23 +612,22 @@ resource "snowflake_task" "test_task_root" {
 }
 
 resource "snowflake_task" "test_task" {
-	name     	  = "%s"
-	database  	  = "%s"
-	schema    	  = "%s"
+	name     	  = "%[4]s"
+	database  	  = "%[2]s"
+	schema    	  = "%[3]s"
 	sql_statement = "SELECT 1"
 	enabled  	  = true
 	schedule      = "5 MINUTE"
 }
-`
-	return fmt.Sprintf(s, taskRootName, databaseName, schemaName, name, databaseName, schemaName)
+`, taskRootName, databaseName, schemaName, name)
 }
 
 func taskConfigManagedScheduled2(name string, taskRootName string, databaseName string, schemaName string) string {
-	s := `
+	return fmt.Sprintf(`
 resource "snowflake_task" "test_task_root" {
-	name     	                    = "%s"
-	database  	                    =  "%s"
-	schema    	                    =  "%s"
+	name     	                    = "%[1]s"
+	database  	                    = "%[2]s"
+	schema    	                    = "%[3]s"
 	sql_statement                   = "SELECT 1"
 	enabled  	                    = true
 	schedule                        = "5 MINUTE"
@@ -636,15 +635,14 @@ resource "snowflake_task" "test_task_root" {
 }
 
 resource "snowflake_task" "test_task" {
-	name     	  = "%s"
-	database  	  = "%s"
-	schema    	  = "%s"
+	name     	  = "%[4]s"
+	database  	  = "%[2]s"
+	schema    	  = "%[3]s"
 	sql_statement = "SELECT 1"
 	enabled  	  = true
 	after         = [snowflake_task.test_task_root.name]
 }
-`
-	return fmt.Sprintf(s, taskRootName, databaseName, schemaName, name, databaseName, schemaName)
+`, taskRootName, databaseName, schemaName, name)
 }
 
 func taskConfigManagedScheduled3(name string, taskRootName string, databaseName string, schemaName string) string {

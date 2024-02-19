@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -180,6 +181,8 @@ var externalFunctionSchema = map[string]*schema.Schema{
 // ExternalFunction returns a pointer to the resource representing an external function.
 func ExternalFunction() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: CreateContextExternalFunction,
 		ReadContext:   ReadContextExternalFunction,
 		UpdateContext: UpdateContextExternalFunction,
@@ -188,6 +191,15 @@ func ExternalFunction() *schema.Resource {
 		Schema: externalFunctionSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v085ExternalFunctionStateUpgrader,
+			},
 		},
 	}
 }

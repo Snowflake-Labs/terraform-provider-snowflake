@@ -9,8 +9,10 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,13 +20,16 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 	// TODO test more attributes
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: resourceMonitorConfig(name),
+				Config: resourceMonitorConfig(name, acc.TestWarehouseName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", name),
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "credit_quota", "100"),
@@ -71,9 +76,12 @@ func TestAcc_ResourceMonitor(t *testing.T) {
 func TestAcc_ResourceMonitorChangeStartEndTimestamp(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -165,9 +173,12 @@ func TestAcc_ResourceMonitorUpdateNotifyUsers(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -190,14 +201,8 @@ func TestAcc_ResourceMonitorUpdateNotifyUsers(t *testing.T) {
 	})
 }
 
-func resourceMonitorConfig(accName string) string {
+func resourceMonitorConfig(accName string, warehouse string) string {
 	return fmt.Sprintf(`
-resource "snowflake_warehouse" "warehouse" {
-  name           = "test"
-  comment        = "foo"
-  warehouse_size = "SMALL"
-}
-
 resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
 	credit_quota    = 100
@@ -205,19 +210,13 @@ resource "snowflake_resource_monitor" "test" {
  	notify_triggers = [40]
 	suspend_trigger = 80
 	suspend_immediate_trigger = 90
-	warehouses      = [snowflake_warehouse.warehouse.id]
+	warehouses      = ["%s"]
 }
-`, accName)
+`, accName, warehouse)
 }
 
 func resourceMonitorConfig2(accName string, suspendTrigger int) string {
 	return fmt.Sprintf(`
-resource "snowflake_warehouse" "warehouse" {
-  name           = "test"
-  comment        = "foo"
-  warehouse_size = "SMALL"
-}
-
 resource "snowflake_resource_monitor" "test" {
 	name            = "%v"
 	credit_quota    = 150
@@ -241,8 +240,11 @@ func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 	require.NoError(t, err)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -277,9 +279,12 @@ func TestAcc_ResourceMonitorNotifyUsers(t *testing.T) {
 	for _, s := range users {
 		checks = append(checks, resource.TestCheckTypeSetElemAttr("snowflake_resource_monitor.test", "notify_users.*", s))
 	}
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

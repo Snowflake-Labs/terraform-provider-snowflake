@@ -22,6 +22,7 @@ provider "snowflake" {
   account                = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT env var
   username               = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
   password               = "..."
+  authenticator          = "..." # required if not using password as auth method
   oauth_access_token     = "..."
   private_key_path       = "..."
   private_key            = "..."
