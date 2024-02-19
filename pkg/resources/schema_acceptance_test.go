@@ -145,7 +145,7 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	configVariables := func(databaseDataRetentionTime int) config.Variables {
+	configVariablesWithoutSchemaDataRetentionTime := func(databaseDataRetentionTime int) config.Variables {
 		return config.Variables{
 			"database":                     config.StringVariable(databaseName),
 			"schema":                       config.StringVariable(schemaName),
@@ -154,7 +154,7 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 	}
 
 	configVariablesWithSchemaDataRetentionTime := func(databaseDataRetentionTime int, schemaDataRetentionTime int) config.Variables {
-		vars := configVariables(databaseDataRetentionTime)
+		vars := configVariablesWithoutSchemaDataRetentionTime(databaseDataRetentionTime)
 		vars["schema_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
 		return vars
 	}
@@ -169,16 +169,16 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
-				ConfigVariables: configVariables(5),
+				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("snowflake_schema.test", "data_retention_days"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "-1"),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
-				ConfigVariables: configVariables(10),
+				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(10),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("snowflake_schema.test", "data_retention_days"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "-1"),
 				),
 			},
 			{
@@ -197,9 +197,9 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
-				ConfigVariables: configVariables(10),
+				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(10),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "0"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "-1"),
 				),
 			},
 			{
@@ -225,7 +225,7 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	id := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
 
-	configVariables := func(databaseDataRetentionTime int) config.Variables {
+	configVariablesWithoutSchemaDataRetentionTime := func(databaseDataRetentionTime int) config.Variables {
 		return config.Variables{
 			"database":                     config.StringVariable(databaseName),
 			"schema":                       config.StringVariable(schemaName),
@@ -234,7 +234,7 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 	}
 
 	configVariablesWithSchemaDataRetentionTime := func(databaseDataRetentionTime int, schemaDataRetentionTime int) config.Variables {
-		vars := configVariables(databaseDataRetentionTime)
+		vars := configVariablesWithoutSchemaDataRetentionTime(databaseDataRetentionTime)
 		vars["schema_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
 		return vars
 	}
@@ -249,16 +249,16 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
-				ConfigVariables: configVariables(5),
+				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("snowflake_schema.test", "data_retention_days"),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "-1"),
 				),
 			},
 			// Terraform will unset it (hierarchy default in Snowflake)
 			{
 				PreConfig:       setSchemaDataRetentionTime(t, id, 20),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
-				ConfigVariables: configVariables(5),
+				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),

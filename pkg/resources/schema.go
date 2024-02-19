@@ -51,10 +51,14 @@ var schemaSchema = map[string]*schema.Schema{
 		Description: "Specifies a managed schema. Managed access schemas centralize privilege management with the schema owner.",
 	},
 	"data_retention_days": {
-		Type:         schema.TypeInt,
-		Optional:     true,
-		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
-		ValidateFunc: validation.IntBetween(0, 90),
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     -1,
+		Description: "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
+		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+			return oldValue == "-1" && newValue == ""
+		},
+		ValidateFunc: validation.IntBetween(-1, 90),
 	},
 	"tag": tagReferenceSchema,
 }
@@ -82,13 +86,19 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
-	err := client.Schemas.Create(ctx, sdk.NewDatabaseObjectIdentifier(database, name), &sdk.CreateSchemaOptions{
-		Transient:               GetPropertyAsPointer[bool](d, "is_transient"),
-		WithManagedAccess:       GetPropertyAsPointer[bool](d, "is_managed"),
-		DataRetentionTimeInDays: GetPropertyAsPointer[int](d, "data_retention_days"),
-		Tag:                     getPropertyTags(d, "tag"),
-		Comment:                 GetPropertyAsPointer[string](d, "comment"),
-	})
+	createReq := &sdk.CreateSchemaOptions{
+		Transient:         GetPropertyAsPointer[bool](d, "is_transient"),
+		WithManagedAccess: GetPropertyAsPointer[bool](d, "is_managed"),
+		Tag:               getPropertyTags(d, "tag"),
+		Comment:           GetPropertyAsPointer[string](d, "comment"),
+	}
+
+	dataRetentionTimeInDays := GetPropertyAsPointer[int](d, "data_retention_days")
+	if dataRetentionTimeInDays != nil && *dataRetentionTimeInDays != -1 {
+		createReq.DataRetentionTimeInDays = dataRetentionTimeInDays
+	}
+
+	err := client.Schemas.Create(ctx, sdk.NewDatabaseObjectIdentifier(database, name), createReq)
 	if err != nil {
 		return fmt.Errorf("error creating schema %v err = %w", name, err)
 	}
@@ -104,11 +114,6 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
-
-	database, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
-	if err != nil {
-		d.SetId("")
-	}
 
 	s, err := client.Schemas.ShowByID(ctx, id)
 	if err != nil {
@@ -131,7 +136,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, ok := d.GetOk("data_retention_days"); ok || (!ok && retentionTime != int64(database.RetentionTime)) {
+	if dataRetentionDays := d.Get("data_retention_days"); dataRetentionDays.(int) != -1 {
 		if err := d.Set("data_retention_days", retentionTime); err != nil {
 			return err
 		}
@@ -220,7 +225,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_retention_days") {
-		if days, ok := d.GetOk("data_retention_days"); ok {
+		if days := d.Get("data_retention_days"); days.(int) != -1 { // TODO: diff suppress ?
 			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
 				Set: &sdk.SchemaSet{
 					DataRetentionTimeInDays: sdk.Int(days.(int)),
