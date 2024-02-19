@@ -118,8 +118,8 @@ func (row ShowNetworkRulesRow) convert() *NetworkRule {
 		SchemaName:         row.SchemaName,
 		Owner:              row.Owner,
 		Comment:            row.Comment,
-		Type:               row.Type,
-		Mode:               row.Mode,
+		Type:               NetworkRuleType(row.Type),
+		Mode:               NetworkRuleMode(row.Mode),
 		EntriesInValueList: row.EntriesInValueList,
 		OwnerRoleType:      row.OwnerRoleType,
 	}
@@ -144,8 +144,8 @@ func (row DescNetworkRulesRow) convert() *NetworkRuleDetails {
 		SchemaName:   row.SchemaName,
 		Owner:        row.Owner,
 		Comment:      row.Comment,
-		Type:         row.Type,
-		Mode:         row.Mode,
+		Type:         NetworkRuleType(row.Type),
+		Mode:         NetworkRuleMode(row.Mode),
 		ValueList:    valueList,
 	}
 }

@@ -88,8 +88,8 @@ type NetworkRule struct {
 	SchemaName         string
 	Owner              string
 	Comment            string
-	Type               string
-	Mode               string
+	Type               NetworkRuleType
+	Mode               NetworkRuleMode
 	EntriesInValueList int
 	OwnerRoleType      string
 }
@@ -120,7 +120,7 @@ type NetworkRuleDetails struct {
 	SchemaName   string
 	Owner        string
 	Comment      string
-	Type         string
-	Mode         string
+	Type         NetworkRuleType
+	Mode         NetworkRuleMode
 	ValueList    []string
 }

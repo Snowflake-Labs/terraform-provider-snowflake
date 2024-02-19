@@ -82,7 +82,33 @@ func TestInt_NetworkRules(t *testing.T) {
 	})
 
 	t.Run("Show", func(t *testing.T) {
-		// TODO: fill me
+		id := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
+		err := client.NetworkRules.Create(ctx, sdk.NewCreateNetworkRuleRequest(id, sdk.NetworkRuleTypeIpv4, []sdk.NetworkRuleValue{}, sdk.NetworkRuleModeIngress).WithComment(sdk.String("some comment")))
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			err := client.NetworkRules.Drop(ctx, sdk.NewDropNetworkRuleRequest(id))
+			require.NoError(t, err)
+		})
+
+		networkRules, err := client.NetworkRules.Show(ctx, sdk.NewShowNetworkRuleRequest().WithIn(&sdk.In{
+			Schema: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+		}).WithLike(&sdk.Like{
+			Pattern: sdk.String(id.Name()),
+		}))
+		require.NoError(t, err)
+
+		require.Equal(t, 1, len(networkRules))
+		require.False(t, networkRules[0].CreatedOn.IsZero())
+		require.Equal(t, id.Name(), networkRules[0].Name)
+		require.Equal(t, id.DatabaseName(), networkRules[0].DatabaseName)
+		require.Equal(t, id.SchemaName(), networkRules[0].SchemaName)
+		require.Equal(t, "ACCOUNTADMIN", networkRules[0].Owner)
+		require.Equal(t, "some comment", networkRules[0].Comment)
+		require.Equal(t, sdk.NetworkRuleTypeIpv4, networkRules[0].Type)
+		require.Equal(t, sdk.NetworkRuleModeIngress, networkRules[0].Mode)
+		require.Equal(t, 0, networkRules[0].EntriesInValueList)
+		require.Equal(t, "ROLE", networkRules[0].OwnerRoleType)
 	})
 
 	t.Run("Describe", func(t *testing.T) {
@@ -101,9 +127,10 @@ func TestInt_NetworkRules(t *testing.T) {
 		assert.Equal(t, id.DatabaseName(), ruleDetails.DatabaseName)
 		assert.Equal(t, id.SchemaName(), ruleDetails.SchemaName)
 		assert.Equal(t, id.Name(), ruleDetails.Name)
+		require.Equal(t, "ACCOUNTADMIN", ruleDetails.Owner)
 		assert.Equal(t, "some comment", ruleDetails.Comment)
 		assert.Empty(t, ruleDetails.ValueList)
-		assert.Equal(t, string(sdk.NetworkRuleModeIngress), ruleDetails.Mode)
-		assert.Equal(t, string(sdk.NetworkRuleTypeIpv4), ruleDetails.Type)
+		assert.Equal(t, sdk.NetworkRuleModeIngress, ruleDetails.Mode)
+		assert.Equal(t, sdk.NetworkRuleTypeIpv4, ruleDetails.Type)
 	})
 }
