@@ -53,9 +53,9 @@ var schemaSchema = map[string]*schema.Schema{
 	"data_retention_days": {
 		Type:         schema.TypeInt,
 		Optional:     true,
-		Default:      1,
-		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema.",
-		ValidateFunc: validation.IntBetween(0, 90),
+		Default:      -1,
+		Description:  "Specifies the number of days for which Time Travel actions (CLONE and UNDROP) can be performed on the schema, as well as specifying the default Time Travel retention time for all tables created in the schema. Default value for this field is set to -1, which is a fallback to use Snowflake default.",
+		ValidateFunc: validation.IntBetween(-1, 90),
 	},
 	"tag": tagReferenceSchema,
 }
@@ -67,7 +67,6 @@ func Schema() *schema.Resource {
 		Read:   ReadSchema,
 		Update: UpdateSchema,
 		Delete: DeleteSchema,
-
 		Schema: schemaSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -84,13 +83,19 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
-	err := client.Schemas.Create(ctx, sdk.NewDatabaseObjectIdentifier(database, name), &sdk.CreateSchemaOptions{
-		Transient:               GetPropertyAsPointer[bool](d, "is_transient"),
-		WithManagedAccess:       GetPropertyAsPointer[bool](d, "is_managed"),
-		DataRetentionTimeInDays: GetPropertyAsPointer[int](d, "data_retention_days"),
-		Tag:                     getPropertyTags(d, "tag"),
-		Comment:                 GetPropertyAsPointer[string](d, "comment"),
-	})
+	createReq := &sdk.CreateSchemaOptions{
+		Transient:         GetPropertyAsPointer[bool](d, "is_transient"),
+		WithManagedAccess: GetPropertyAsPointer[bool](d, "is_managed"),
+		Tag:               getPropertyTags(d, "tag"),
+		Comment:           GetPropertyAsPointer[string](d, "comment"),
+	}
+
+	dataRetentionTimeInDays := GetPropertyAsPointer[int](d, "data_retention_days")
+	if dataRetentionTimeInDays != nil && *dataRetentionTimeInDays != -1 {
+		createReq.DataRetentionTimeInDays = dataRetentionTimeInDays
+	}
+
+	err := client.Schemas.Create(ctx, sdk.NewDatabaseObjectIdentifier(database, name), createReq)
 	if err != nil {
 		return fmt.Errorf("error creating schema %v err = %w", name, err)
 	}
@@ -107,7 +112,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
-	_, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
+	database, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
 	if err != nil {
 		d.SetId("")
 	}
@@ -133,10 +138,15 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if dataRetentionDays := d.Get("data_retention_days"); dataRetentionDays.(int) != -1 || int64(database.RetentionTime) != retentionTime {
+		if err := d.Set("data_retention_days", retentionTime); err != nil {
+			return err
+		}
+	}
+
 	values := map[string]any{
-		"name":                s.Name,
-		"database":            s.DatabaseName,
-		"data_retention_days": retentionTime,
+		"name":     s.Name,
+		"database": s.DatabaseName,
 		// reset the options before reading back from the DB
 		"is_transient": false,
 		"is_managed":   false,
@@ -217,14 +227,24 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_retention_days") {
-		days := d.Get("data_retention_days")
-		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			Set: &sdk.SchemaSet{
-				DataRetentionTimeInDays: sdk.Int(days.(int)),
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("error updating data retention days on %v err = %w", d.Id(), err)
+		if days := d.Get("data_retention_days"); days.(int) != -1 {
+			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+				Set: &sdk.SchemaSet{
+					DataRetentionTimeInDays: sdk.Int(days.(int)),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error setting data retention days on %v err = %w", d.Id(), err)
+			}
+		} else {
+			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+				Unset: &sdk.SchemaUnset{
+					DataRetentionTimeInDays: sdk.Bool(true),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error unsetting data retention days on %v err = %w", d.Id(), err)
+			}
 		}
 	}
 
