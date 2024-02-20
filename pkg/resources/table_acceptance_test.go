@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -1226,6 +1227,165 @@ resource "snowflake_table" "test_table" {
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
+}
+
+func TestAcc_TableCollate(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: tableColumnWithCollate(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.collate", "en"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.collate", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.name", "column3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.collate", ""),
+				),
+			},
+			{
+				Config: alterTableColumnWithCollate(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "4"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.collate", "en"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.collate", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.name", "column3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.collate", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.3.name", "column4"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.3.collate", "utf8"),
+				),
+			},
+			{
+				Config:      alterTableColumnWithIncompatibleCollate(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				ExpectError: regexp.MustCompile("\"VARCHAR\\(200\\) COLLATE 'fr'\" because they have incompatible collations\\."),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "4"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.collate", "en"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "column2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.collate", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.name", "column3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.collate", ""),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.3.name", "column4"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.3.collate", "utf8"),
+				),
+			},
+		},
+	})
+}
+
+func tableColumnWithCollate(name string, databaseName string, schemaName string) string {
+	s := `
+resource "snowflake_table" "test_table" {
+	name     = "%s"
+	database = "%s"
+	schema   = "%s"
+	comment  = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(100)"
+		collate = "en"
+	}
+	column {
+		name = "column2"
+		type = "VARCHAR(100)"
+		collate = ""
+	}
+	column {
+		name = "column3"
+		type = "VARCHAR(100)"
+	}
+}
+`
+	return fmt.Sprintf(s, name, databaseName, schemaName)
+}
+
+func alterTableColumnWithCollate(name string, databaseName string, schemaName string) string {
+	s := `
+resource "snowflake_table" "test_table" {
+	name     = "%s"
+	database = "%s"
+	schema   = "%s"
+	comment  = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(200)"
+		collate = "en"
+	}
+	column {
+		name = "column2"
+		type = "VARCHAR(200)"
+		collate = ""
+	}
+	column {
+		name = "column3"
+		type = "VARCHAR(200)"
+	}
+	column {
+		name = "column4"
+		type = "VARCHAR"
+		collate = "utf8"
+	}
+}
+`
+	return fmt.Sprintf(s, name, databaseName, schemaName)
+}
+
+func alterTableColumnWithIncompatibleCollate(name string, databaseName string, schemaName string) string {
+	s := `
+resource "snowflake_table" "test_table" {
+	name     = "%s"
+	database = "%s"
+	schema   = "%s"
+	comment  = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(200)"
+		collate = "fr"
+	}
+	column {
+		name = "column2"
+		type = "VARCHAR(200)"
+		collate = ""
+	}
+	column {
+		name = "column3"
+		type = "VARCHAR(200)"
+	}
+	column {
+		name = "column4"
+		type = "VARCHAR"
+		collate = "utf8"
+	}
+}
+`
+	return fmt.Sprintf(s, name, databaseName, schemaName)
 }
 
 func TestAcc_TableRename(t *testing.T) {

@@ -394,6 +394,7 @@ func (r *TableColumnActionRequest) toOpts() *TableColumnAction {
 				DefaultValue:     defaultValue,
 				InlineConstraint: inlineConstraint,
 				Comment:          r.Add.Comment,
+				Collate:          r.Add.Collate,
 			},
 		}
 	}
@@ -422,6 +423,7 @@ func (r *TableColumnActionRequest) toOpts() *TableColumnAction {
 				NotNullConstraint: notNullConstraint,
 				Type:              alterAction.Type,
 				Comment:           alterAction.Comment,
+				Collate:           alterAction.Collate,
 				UnsetComment:      alterAction.UnsetComment,
 			})
 		}
