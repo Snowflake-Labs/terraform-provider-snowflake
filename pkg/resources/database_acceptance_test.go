@@ -197,13 +197,22 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 		return vars
 	}
 
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	param, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
+	require.NoError(t, err)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: func(state *terraform.State) error {
+			return client.Parameters.SetAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays, param.Value)
+		},
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
@@ -283,13 +292,22 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 		return vars
 	}
 
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	param, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
+	require.NoError(t, err)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: func(state *terraform.State) error {
+			return client.Parameters.SetAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays, param.Value)
+		},
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
