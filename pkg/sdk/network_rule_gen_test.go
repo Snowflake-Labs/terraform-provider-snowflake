@@ -153,13 +153,17 @@ func TestNetworkRules_Show(t *testing.T) {
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.In = &In{
-			Database: NewAccountObjectIdentifier("database-name"),
-		}
 		opts.Like = &Like{
 			Pattern: String("name"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `SHOW NETWORK RULES LIKE 'name' IN DATABASE "database-name"`)
+		opts.In = &In{
+			Database: NewAccountObjectIdentifier("database-name"),
+		}
+		opts.StartsWith = String("abc")
+		opts.Limit = &LimitFrom{
+			Rows: Int(10),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW NETWORK RULES LIKE 'name' IN DATABASE "database-name" STARTS WITH 'abc' LIMIT 10`)
 	})
 }
 
