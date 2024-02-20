@@ -1529,7 +1529,6 @@ func TestTableDescribeColumns(t *testing.T) {
 }
 
 func TestTableColumnDetailsRow_SplitTypeAndCollation(t *testing.T) {
-
 	t.Run("with utf8", func(t *testing.T) {
 		row := tableColumnDetailsRow{
 			Type: DataType("VARCHAR(10) COLLATE 'utf8'"),
