@@ -1,11 +1,12 @@
 package testint
 
 import (
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInt_NetworkRules(t *testing.T) {
@@ -49,8 +50,8 @@ func TestInt_NetworkRules(t *testing.T) {
 		})
 
 		setReq := sdk.NewNetworkRuleSetRequest([]sdk.NetworkRuleValue{
-			{"0.0.0.0"},
-			{"1.1.1.1"},
+			{Value: "0.0.0.0"},
+			{Value: "1.1.1.1"},
 		}).WithComment(sdk.String("some comment"))
 		err = client.NetworkRules.Alter(ctx, sdk.NewAlterNetworkRuleRequest(id).WithSet(setReq))
 		require.NoError(t, err)

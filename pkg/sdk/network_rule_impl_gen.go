@@ -2,8 +2,9 @@ package sdk
 
 import (
 	"context"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 )
 
 var _ NetworkRules = (*networkRules)(nil)
