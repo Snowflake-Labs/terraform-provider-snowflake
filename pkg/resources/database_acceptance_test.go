@@ -3,11 +3,11 @@ package resources_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -19,14 +19,14 @@ import (
 )
 
 func TestAcc_DatabaseWithUnderscore(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_DATABASE_TESTS"); ok {
-		t.Skip("Skipping TestAcc_DatabaseWithUnderscore")
-	}
-
 	prefix := "_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -42,18 +42,17 @@ func TestAcc_DatabaseWithUnderscore(t *testing.T) {
 }
 
 func TestAcc_Database(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_DATABASE_TESTS"); ok {
-		t.Skip("Skipping TestAcc_Database")
-	}
-
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	secondaryAccountName := getSecondaryAccount(t)
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -150,6 +149,34 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2021
+func TestAcc_Database_issue2021(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	secondaryAccountName := getSecondaryAccount(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: dbConfigWithReplication(name, secondaryAccountName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", name),
+					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_database.db", "replication_configuration.0.accounts.0", secondaryAccountName),
+					testAccCheckIfDatabaseIsReplicated(t, name),
+				),
+			},
+		},
+	})
+}
+
 func dbConfig(prefix string) string {
 	s := `
 resource "snowflake_database" "db" {
@@ -232,6 +259,36 @@ func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) fu
 				return fmt.Errorf("database %v still exists", id)
 			}
 		}
+		return nil
+	}
+}
+
+func testAccCheckIfDatabaseIsReplicated(t *testing.T, id string) func(state *terraform.State) error {
+	t.Helper()
+	return func(state *terraform.State) error {
+		client, err := sdk.NewDefaultClient()
+		if err != nil {
+			return err
+		}
+
+		ctx := context.Background()
+		replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, nil)
+		if err != nil {
+			return err
+		}
+
+		var exists bool
+		for _, o := range replicationDatabases {
+			if o.Name == id {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			return fmt.Errorf("database %s should be replicated", id)
+		}
+
 		return nil
 	}
 }

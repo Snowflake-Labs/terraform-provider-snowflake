@@ -43,7 +43,7 @@ func TestShareAlter(t *testing.T) {
 				ShareRestrictions: Bool(true),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" ADD ACCOUNTS = "my-org.myaccount" SHARE_RESTRICTIONS = true`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" ADD ACCOUNTS = "my-org"."myaccount" SHARE_RESTRICTIONS = true`)
 	})
 
 	t.Run("with remove", func(t *testing.T) {
@@ -55,7 +55,7 @@ func TestShareAlter(t *testing.T) {
 				Accounts: accounts,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" REMOVE ACCOUNTS = "my-org.myaccount", "my-org.myaccount2"`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" REMOVE ACCOUNTS = "my-org"."myaccount", "my-org"."myaccount2"`)
 	})
 
 	t.Run("with set", func(t *testing.T) {
@@ -69,7 +69,7 @@ func TestShareAlter(t *testing.T) {
 				Comment:  &comment,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" SET ACCOUNTS = "my-org.myaccount" COMMENT = '%s'`, comment)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" SET ACCOUNTS = "my-org"."myaccount" COMMENT = '%s'`, comment)
 	})
 
 	t.Run("with set tag", func(t *testing.T) {
