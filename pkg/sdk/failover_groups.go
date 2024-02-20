@@ -410,7 +410,12 @@ func (row failoverGroupDBRow) convert() *FailoverGroup {
 	ots := strings.Split(row.ObjectTypes, ",")
 	pluralObjectTypes := make([]PluralObjectType, 0, len(ots))
 	for _, ot := range ots {
-		pluralObjectTypes = append(pluralObjectTypes, PluralObjectType(strings.TrimSpace(ot)))
+		pot := PluralObjectType(strings.TrimSpace(ot))
+		if pot == PluralObjectTypeParameters {
+			pluralObjectTypes = append(pluralObjectTypes, PluralObjectType("ACCOUNT PARAMETERS"))
+		} else {
+			pluralObjectTypes = append(pluralObjectTypes, pot)
+		}
 	}
 	its := strings.Split(row.AllowedIntegrationTypes, ",")
 	allowedIntegrationTypes := make([]IntegrationType, 0, len(its))

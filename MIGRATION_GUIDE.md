@@ -5,7 +5,12 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.86.0 ➞ v0.87.0
+### snowflake_failover_group resource changes
+#### *(bug fix)* ACCOUNT PARAMETERS is returned as PARAMETERS from SHOW FAILOVER GROUPS
+Longer context in [#2517](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2517).
+After this change, one apply may be required to update the state correctly for failover group resources using `ACCOUNT PARAMETERS`.
 
+### snowflake_schema resource changes
 #### *(behavior change)* Schema `data_retention_days`
 To make `snowflake_schema.data_retention_days` truly optional field (previously it was producing plan every time when no value was set),
 we added `-1` as a possible value as set it as default. That got rid of the unexpected plans when no value is set and added possibility to use default value assigned by Snowflake (see [the data retention period](https://docs.snowflake.com/en/user-guide/data-time-travel#data-retention-period)).

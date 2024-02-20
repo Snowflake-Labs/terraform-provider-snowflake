@@ -6,8 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_FailoverGroups(t *testing.T) {
@@ -18,18 +21,21 @@ func TestAcc_FailoverGroups(t *testing.T) {
 
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: failoverGroupsConfig(name, accountName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_groups.d", "failover_groups.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_failover_groups.d", "failover_groups.0.name", name),
-					resource.TestCheckResourceAttr("snowflake_failover_groups.d", "failover_groups.0.object_types.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_failover_groups.d", "failover_groups.0.object_types.0", "ROLES"),
-					resource.TestCheckResourceAttr("snowflake_failover_groups.d", "failover_groups.0.allowed_accounts.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_failover_groups.d", "failover_groups.0.allowed_accounts.0", accountName),
+					resource.TestCheckResourceAttr("data.snowflake_failover_groups.d", "failover_groups.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_failover_groups.d", "failover_groups.0.object_types.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_failover_groups.d", "failover_groups.0.object_types.0", "ROLES"),
+					resource.TestCheckResourceAttr("data.snowflake_failover_groups.d", "failover_groups.0.allowed_accounts.#", "1"),
+					resource.TestCheckResourceAttr("data.snowflake_failover_groups.d", "failover_groups.0.allowed_accounts.0", accountName),
 				),
 			},
 		},

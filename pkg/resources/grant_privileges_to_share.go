@@ -301,9 +301,9 @@ func ReadGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	opts, grantedOn, diags := prepareShowGrantsRequestForShare(id)
-	if len(diags) != 0 {
-		return diags
+	opts, grantedOn := prepareShowGrantsRequestForShare(id)
+	if opts == nil {
+		return nil
 	}
 
 	db := meta.(*sql.DB)
@@ -440,7 +440,7 @@ func getShareGrantOn(d *schema.ResourceData) *sdk.ShareGrantOn {
 	return grantOn
 }
 
-func prepareShowGrantsRequestForShare(id GrantPrivilegesToShareId) (*sdk.ShowGrantOptions, sdk.ObjectType, diag.Diagnostics) {
+func prepareShowGrantsRequestForShare(id GrantPrivilegesToShareId) (*sdk.ShowGrantOptions, sdk.ObjectType) {
 	opts := new(sdk.ShowGrantOptions)
 	var objectType sdk.ObjectType
 
@@ -452,14 +452,8 @@ func prepareShowGrantsRequestForShare(id GrantPrivilegesToShareId) (*sdk.ShowGra
 	case OnTableShareGrantKind:
 		objectType = sdk.ObjectTypeTable
 	case OnAllTablesInSchemaShareGrantKind:
-		return nil, "", diag.Diagnostics{
-			diag.Diagnostic{
-				// TODO: link to the design decisions doc (SNOW-990811)
-				Severity: diag.Warning,
-				Summary:  "Show with OnAll option is skipped.",
-				Detail:   "See our document on design decisions for grants: <LINK (coming soon)>",
-			},
-		}
+		log.Printf("[INFO] Show with on_all_tables_in_schema option is skipped. No changes in privileges in Snowflake will be detected.")
+		return nil, ""
 	case OnTagShareGrantKind:
 		objectType = sdk.ObjectTypeTag
 	case OnViewShareGrantKind:
@@ -473,5 +467,5 @@ func prepareShowGrantsRequestForShare(id GrantPrivilegesToShareId) (*sdk.ShowGra
 		},
 	}
 
-	return opts, objectType, nil
+	return opts, objectType
 }
