@@ -583,7 +583,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
 		createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
 	}
-	//else if v, ok := d.GetOk("data_retention_days"); ok { // TODO: I would remove it
+	// else if v, ok := d.GetOk("data_retention_days"); ok { // TODO: I would remove it
 	//	createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
 	//}
 
@@ -666,7 +666,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 || int64(table.RetentionTime) != schemaRetentionTime {
 		dataRetentionKey = "data_retention_time_in_days"
 	}
-	//else if _, ok := d.GetOk("data_retention_days"); ok { // TODO: I would remove it
+	// else if _, ok := d.GetOk("data_retention_days"); ok { // TODO: I would remove it
 	//	dataRetentionKey = "data_retention_days"
 	//}
 	if dataRetentionKey != "" {
@@ -724,7 +724,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		setRequest.WithChangeTracking(sdk.Bool(changeTracking))
 	}
 
-	//if d.HasChange("data_retention_days") { // TODO: I would remove it
+	// if d.HasChange("data_retention_days") { // TODO: I would remove it
 	//	dataRetentionDays := d.Get("data_retention_days").(int)
 	//	runSetStatement = true
 	//	setRequest.WithDataRetentionTimeInDays(sdk.Int(dataRetentionDays))

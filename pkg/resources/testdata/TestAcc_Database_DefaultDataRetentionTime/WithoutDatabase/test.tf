@@ -4,5 +4,5 @@ resource "snowflake_account_parameter" "test" {
 }
 
 resource "snowflake_database" "test" {
-  name                        = var.database
+  name = var.database
 }
