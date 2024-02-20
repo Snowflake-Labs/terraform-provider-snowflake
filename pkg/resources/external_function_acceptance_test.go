@@ -283,6 +283,44 @@ func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
 	})
 }
 
+func TestAcc_ExternalFunction_issue2528(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.86.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfigIssue2528(acc.TestDatabaseName, acc.TestSchemaName, accName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", accName),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "arg.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "arg.0.name", "SNS_NOTIF"),
+					resource.TestCheckResourceAttr(resourceName, "arg.0.type", "OBJECT"),
+					resource.TestCheckResourceAttr(resourceName, "return_type", "VARIANT"),
+					resource.TestCheckResourceAttr(resourceName, "return_behavior", "VOLATILE"),
+					resource.TestCheckResourceAttrSet(resourceName, "api_integration"),
+					resource.TestCheckResourceAttr(resourceName, "url_of_proxy_and_resource", "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_on"),
+				),
+			},
+		},
+	})
+}
+
 func externalFunctionConfig(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_api_integration" "test_api_int" {
@@ -311,5 +349,31 @@ resource "snowflake_external_function" "f" {
   url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
 }
 
+`, database, schema, name)
+}
+
+func externalFunctionConfigIssue2528(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_api_integration" "test_api_int" {
+  name                 = "%[3]s"
+  api_provider         = "aws_api_gateway"
+  api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+  api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+  enabled              = true
+}
+
+resource "snowflake_external_function" "f" {
+  name     = "%[3]s"
+  database = "%[1]s"
+  schema   = "%[2]s"
+  arg {
+    name = "SNS_NOTIF"
+    type = "OBJECT"
+  }
+  return_type = "VARIANT"
+  return_behavior = "VOLATILE"
+  api_integration = snowflake_api_integration.test_api_int.name
+  url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+}
 `, database, schema, name)
 }
