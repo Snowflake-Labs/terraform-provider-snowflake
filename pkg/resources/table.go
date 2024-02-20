@@ -193,8 +193,9 @@ var tableSchema = map[string]*schema.Schema{
 	"data_retention_time_in_days": {
 		Type:          schema.TypeInt,
 		Optional:      true,
-		Description:   "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.",
-		ValidateFunc:  validation.IntBetween(0, 90),
+		Default:       -1,
+		Description:   "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified table. Default value for this field is set to -1, which is a fallback to use Snowflake default. For more information, see Understanding & Using Time Travel.",
+		ValidateFunc:  validation.IntBetween(-1, 90),
 		ConflictsWith: []string{"data_retention_days"},
 	},
 	"change_tracking": {
@@ -599,11 +600,12 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if v, ok := d.GetOk("data_retention_days"); ok {
-		createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
-	} else if v, ok := d.GetOk("data_retention_time_in_days"); ok {
+	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
 		createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
 	}
+	//else if v, ok := d.GetOk("data_retention_days"); ok { // TODO: I would remove it
+	//	createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
+	//}
 
 	if v, ok := d.GetOk("change_tracking"); ok {
 		createRequest.WithChangeTracking(sdk.Bool(v.(bool)))
@@ -643,6 +645,26 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	s, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))
+	if err != nil {
+		log.Printf("[DEBUG] schema (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+	var schemaRetentionTime int64
+	// "retention_time" may sometimes be empty string instead of an integer
+	{
+		rt := s.RetentionTime
+		if rt == "" {
+			rt = "0"
+		}
+
+		schemaRetentionTime, err = strconv.ParseInt(rt, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+
 	tableDescription, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
 	if err != nil {
 		return err
@@ -661,11 +683,12 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		"qualified_name":  id.FullyQualifiedName(),
 	}
 	var dataRetentionKey string
-	if _, ok := d.GetOk("data_retention_time_in_days"); ok {
+	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 || int64(table.RetentionTime) != schemaRetentionTime {
 		dataRetentionKey = "data_retention_time_in_days"
-	} else if _, ok := d.GetOk("data_retention_days"); ok {
-		dataRetentionKey = "data_retention_days"
 	}
+	//else if _, ok := d.GetOk("data_retention_days"); ok { // TODO: I would remove it
+	//	dataRetentionKey = "data_retention_days"
+	//}
 	if dataRetentionKey != "" {
 		toSet[dataRetentionKey] = table.RetentionTime
 	}
@@ -721,15 +744,21 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		setRequest.WithChangeTracking(sdk.Bool(changeTracking))
 	}
 
-	checkChangeForDataRetention := func(key string) {
-		if d.HasChange(key) {
-			dataRetentionDays := d.Get(key).(int)
+	//if d.HasChange("data_retention_days") { // TODO: I would remove it
+	//	dataRetentionDays := d.Get("data_retention_days").(int)
+	//	runSetStatement = true
+	//	setRequest.WithDataRetentionTimeInDays(sdk.Int(dataRetentionDays))
+	//}
+
+	if d.HasChange("data_retention_time_in_days") {
+		if days := d.Get("data_retention_time_in_days"); days.(int) != -1 {
 			runSetStatement = true
-			setRequest.WithDataRetentionTimeInDays(sdk.Int(dataRetentionDays))
+			setRequest.WithDataRetentionTimeInDays(sdk.Int(days.(int)))
+		} else {
+			runUnsetStatement = true
+			unsetRequest.WithDataRetentionTimeInDays(true)
 		}
 	}
-	checkChangeForDataRetention("data_retention_days")
-	checkChangeForDataRetention("data_retention_time_in_days")
 
 	if runSetStatement {
 		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(setRequest))
