@@ -30,6 +30,10 @@ func RandomSchemaObjectIdentifier() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(random.StringN(12), random.StringN(12), random.StringN(12))
 }
 
+func RandomExternalObjectIdentifier() ExternalObjectIdentifier {
+	return NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator(random.StringN(12)), RandomAccountObjectIdentifier())
+}
+
 func RandomDatabaseObjectIdentifier() DatabaseObjectIdentifier {
 	return NewDatabaseObjectIdentifier(random.StringN(12), random.StringN(12))
 }
