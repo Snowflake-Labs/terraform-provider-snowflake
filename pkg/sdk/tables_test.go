@@ -965,7 +965,8 @@ func TestTableAlter(t *testing.T) {
 				Add: &TableColumnAddAction{
 					IfNotExists: Bool(true),
 					Name:        columnName,
-					Type:        DataTypeBoolean,
+					Type:        DataTypeVARCHAR,
+					Collate:     String("utf8"),
 					DefaultValue: &ColumnDefaultValue{
 						Identity: &ColumnIdentity{
 							Start:     10,
@@ -975,7 +976,7 @@ func TestTableAlter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ADD COLUMN IF NOT EXISTS NEXT_COLUMN BOOLEAN IDENTITY START 10 INCREMENT 1", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ADD COLUMN IF NOT EXISTS NEXT_COLUMN VARCHAR COLLATE 'utf8' IDENTITY START 10 INCREMENT 1", id.FullyQualifiedName())
 	})
 
 	t.Run("rename column", func(t *testing.T) {
@@ -1026,8 +1027,9 @@ func TestTableAlter(t *testing.T) {
 				Comment: String("comment"),
 			},
 			{
-				Name: columnTwoName,
-				Type: Pointer(DataTypeBoolean),
+				Name:    columnTwoName,
+				Type:    Pointer(DataTypeVARCHAR),
+				Collate: String("utf8"),
 			},
 			{
 				Name:              columnTwoName,
@@ -1044,7 +1046,7 @@ func TestTableAlter(t *testing.T) {
 				Alter: actions,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ALTER COLUMN COLUMN_1 DROP DEFAULT, COLUMN COLUMN_1 SET DEFAULT SEQUENCE_1.NEXTVAL, COLUMN COLUMN_1 UNSET COMMENT, COLUMN COLUMN_2 DROP DEFAULT, COLUMN COLUMN_2 SET DEFAULT SEQUENCE_2.NEXTVAL, COLUMN COLUMN_2 COMMENT 'comment', COLUMN COLUMN_2 SET DATA TYPE BOOLEAN, COLUMN COLUMN_2 DROP NOT NULL", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TABLE %s ALTER COLUMN COLUMN_1 DROP DEFAULT, COLUMN COLUMN_1 SET DEFAULT SEQUENCE_1.NEXTVAL, COLUMN COLUMN_1 UNSET COMMENT, COLUMN COLUMN_2 DROP DEFAULT, COLUMN COLUMN_2 SET DEFAULT SEQUENCE_2.NEXTVAL, COLUMN COLUMN_2 COMMENT 'comment', COLUMN COLUMN_2 SET DATA TYPE VARCHAR COLLATE 'utf8', COLUMN COLUMN_2 DROP NOT NULL", id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set masking policy", func(t *testing.T) {
@@ -1523,6 +1525,58 @@ func TestTableDescribeColumns(t *testing.T) {
 	t.Run("describe", func(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE TABLE %s TYPE = COLUMNS`, id.FullyQualifiedName())
+	})
+}
+
+func TestTableColumnDetailsRow_SplitTypeAndCollation(t *testing.T) {
+	t.Run("with utf8", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("VARCHAR(10) COLLATE 'utf8'"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("VARCHAR(10)"), actualType)
+		assert.Equal(t, "utf8", *actualCollation)
+	})
+
+	t.Run("with locale", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("VARCHAR(10) COLLATE 'en_US'"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("VARCHAR(10)"), actualType)
+		assert.Equal(t, "en_US", *actualCollation)
+	})
+
+	t.Run("with multiple specifiers", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("VARCHAR(10) COLLATE 'fr_CA-ai-pi-trim'"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("VARCHAR(10)"), actualType)
+		assert.Equal(t, "fr_CA-ai-pi-trim", *actualCollation)
+	})
+
+	t.Run("with empty collation", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("VARCHAR(10) COLLATE ''"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("VARCHAR(10)"), actualType)
+		assert.Equal(t, "", *actualCollation)
+	})
+
+	t.Run("without collation", func(t *testing.T) {
+		row := tableColumnDetailsRow{
+			Type: DataType("NUMBER(38, 0)"),
+		}
+
+		actualType, actualCollation := row.splitTypeAndCollation()
+		assert.Equal(t, DataType("NUMBER(38, 0)"), actualType)
+		assert.Nil(t, actualCollation)
 	})
 }
 

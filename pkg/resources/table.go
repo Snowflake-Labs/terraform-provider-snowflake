@@ -139,6 +139,12 @@ var tableSchema = map[string]*schema.Schema{
 					Default:     "",
 					Description: "Masking policy to apply on column. It has to be a fully qualified name.",
 				},
+				"collate": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Column collation, e.g. utf8",
+				},
 			},
 		},
 	},
@@ -255,6 +261,7 @@ type column struct {
 	identity      *columnIdentity
 	comment       string
 	maskingPolicy string
+	collate       string
 }
 
 type columns []column
@@ -268,13 +275,14 @@ type changedColumn struct {
 	dropedDefault         bool
 	changedComment        bool
 	changedMaskingPolicy  bool
+	changedCollate        bool
 }
 
 func (c columns) getChangedColumnProperties(new columns) (changed changedColumns) {
 	changed = changedColumns{}
 	for _, cO := range c {
 		for _, cN := range new {
-			changeColumn := changedColumn{cN, false, false, false, false, false}
+			changeColumn := changedColumn{cN, false, false, false, false, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
 				changeColumn.changedDataType = true
 			}
@@ -291,6 +299,10 @@ func (c columns) getChangedColumnProperties(new columns) (changed changedColumns
 
 			if cO.name == cN.name && cO.maskingPolicy != cN.maskingPolicy {
 				changeColumn.changedMaskingPolicy = true
+			}
+
+			if cO.name == cN.name && cO.collate != cN.collate {
+				changeColumn.changedCollate = true
 			}
 
 			changed = append(changed, changeColumn)
@@ -363,6 +375,7 @@ func getColumn(from interface{}) (to column) {
 		_default:      cd,
 		identity:      id,
 		comment:       c["comment"].(string),
+		collate:       c["collate"].(string),
 		maskingPolicy: c["masking_policy"].(string),
 	}
 }
@@ -388,7 +401,7 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 	if len(_default) == 1 {
 		if c, ok := _default[0].(map[string]interface{})["constant"]; ok {
 			if constant, ok := c.(string); ok && len(constant) > 0 {
-				if strings.Contains(_type, "CHAR") || _type == "STRING" || _type == "TEXT" {
+				if sdk.IsStringType(_type) {
 					expression = snowflake.EscapeSnowflakeString(constant)
 				} else {
 					expression = constant
@@ -421,6 +434,10 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 	maskingPolicy := c["masking_policy"].(string)
 	if maskingPolicy != "" {
 		request.WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(maskingPolicy)))
+	}
+
+	if sdk.IsStringType(_type) {
+		request.WithCollate(sdk.String(c["collate"].(string)))
 	}
 
 	return request.
@@ -470,6 +487,10 @@ func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
 			flat["comment"] = *td.Comment
 		}
 
+		if td.Collation != nil {
+			flat["collate"] = *td.Collation
+		}
+
 		if td.PolicyName != nil {
 			// TODO [SNOW-867240]: SHOW TABLE returns last part of id without double quotes... we have to quote it again. Move it to SDK.
 			flat["masking_policy"] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*td.PolicyName).FullyQualifiedName()
@@ -508,8 +529,7 @@ func toColumnDefaultConfig(td sdk.TableColumnDetails) map[string]any {
 		return def
 	}
 
-	columnType := strings.ToUpper(string(td.Type))
-	if strings.Contains(columnType, "CHAR") || columnType == "STRING" || columnType == "TEXT" {
+	if sdk.IsStringType(string(td.Type)) {
 		def["constant"] = snowflake.UnescapeSnowflakeString(defaultRaw)
 		return def
 	}
@@ -778,7 +798,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
 				}
 				var expression string
-				if strings.Contains(cA.dataType, "CHAR") || cA.dataType == "STRING" || cA.dataType == "TEXT" {
+				if sdk.IsStringType(cA.dataType) {
 					expression = snowflake.EscapeSnowflakeString(*cA._default.constant)
 				} else {
 					expression = *cA._default.constant
@@ -798,14 +818,18 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				addRequest.WithComment(sdk.String(cA.comment))
 			}
 
+			if cA.collate != "" && sdk.IsStringType(cA.dataType) {
+				addRequest.WithCollate(sdk.String(cA.collate))
+			}
+
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAdd(addRequest)))
 			if err != nil {
 				return fmt.Errorf("error adding column: %w", err)
 			}
 		}
 		for _, cA := range changed {
-			if cA.changedDataType {
-				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType)))})))
+			if cA.changedDataType || cA.changedCollate {
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType))).WithCollate(sdk.String(cA.newColumn.collate))})))
 				if err != nil {
 					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}

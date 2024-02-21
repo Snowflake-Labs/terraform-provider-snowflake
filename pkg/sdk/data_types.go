@@ -91,3 +91,13 @@ func ToDataType(s string) (DataType, error) {
 
 	return "", fmt.Errorf("invalid data type: %s", s)
 }
+
+func IsStringType(_type string) bool {
+	t := strings.ToUpper(_type)
+	return strings.HasPrefix(t, "STRING") ||
+		strings.HasPrefix(t, "VARCHAR") ||
+		strings.HasPrefix(t, "CHAR") ||
+		strings.HasPrefix(t, "TEXT") ||
+		strings.HasPrefix(t, "NVARCHAR") ||
+		strings.HasPrefix(t, "NCHAR")
+}
