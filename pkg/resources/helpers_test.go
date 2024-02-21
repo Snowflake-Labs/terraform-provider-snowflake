@@ -548,3 +548,23 @@ func queriedPrivilegesContainAtLeast(query func(client *sdk.Client, ctx context.
 		return nil
 	}
 }
+
+func updateAccountParameter(t *testing.T, client *sdk.Client, parameter sdk.AccountParameter, temporarily bool, newValue string) func() {
+	t.Helper()
+
+	ctx := context.Background()
+
+	param, err := client.Parameters.ShowAccountParameter(ctx, parameter)
+	require.NoError(t, err)
+	oldValue := param.Value
+
+	t.Cleanup(func() {
+		err = client.Parameters.SetAccountParameter(ctx, parameter, oldValue)
+		require.NoError(t, err)
+	})
+
+	return func() {
+		err = client.Parameters.SetAccountParameter(ctx, parameter, newValue)
+		require.NoError(t, err)
+	}
+}

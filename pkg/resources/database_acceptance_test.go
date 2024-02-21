@@ -184,23 +184,20 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	id := sdk.NewAccountObjectIdentifier(databaseName)
 
-	configVariablesWithoutDatabaseDataRetentionTime := func(accountDataRetentionTime int) config.Variables {
+	configVariablesWithoutDatabaseDataRetentionTime := func() config.Variables {
 		return config.Variables{
-			"database":                    config.StringVariable(databaseName),
-			"account_data_retention_time": config.IntegerVariable(accountDataRetentionTime),
+			"database": config.StringVariable(databaseName),
 		}
 	}
 
-	configVariablesWithDatabaseDataRetentionTime := func(databaseDataRetentionTime int, schemaDataRetentionTime int) config.Variables {
-		vars := configVariablesWithoutDatabaseDataRetentionTime(databaseDataRetentionTime)
-		vars["database_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
+	configVariablesWithDatabaseDataRetentionTime := func(databaseDataRetentionTime int) config.Variables {
+		vars := configVariablesWithoutDatabaseDataRetentionTime()
+		vars["database_data_retention_time"] = config.IntegerVariable(databaseDataRetentionTime)
 		return vars
 	}
 
-	oldValue := getAccountDataRetentionTime(t)
-	t.Cleanup(func() {
-		setAccountDataRetentionTime(t, oldValue)
-	})
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -211,16 +208,18 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
+				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, true, "5"),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
-				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(5),
+				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
 					checkAccountAndDatabaseDataRetentionTime(id, 5, 5),
 				),
 			},
 			{
+				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, false, "10"),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
-				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(10),
+				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
 					checkAccountAndDatabaseDataRetentionTime(id, 10, 10),
@@ -228,7 +227,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
-				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(10, 5),
+				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "5"),
 					checkAccountAndDatabaseDataRetentionTime(id, 10, 5),
@@ -236,7 +235,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
-				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(10, 15),
+				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(15),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "15"),
 					checkAccountAndDatabaseDataRetentionTime(id, 10, 15),
@@ -244,7 +243,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
-				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(10),
+				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
 					checkAccountAndDatabaseDataRetentionTime(id, 10, 10),
@@ -252,7 +251,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
-				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(10, 0),
+				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "0"),
 					checkAccountAndDatabaseDataRetentionTime(id, 10, 0),
@@ -260,7 +259,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
-				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(10, 3),
+				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "3"),
 					checkAccountAndDatabaseDataRetentionTime(id, 10, 3),
@@ -275,24 +274,19 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	id := sdk.NewAccountObjectIdentifier(databaseName)
 
-	configVariablesWithoutDatabaseDataRetentionTime := func(accountDataRetentionTime int) config.Variables {
+	configVariablesWithoutDatabaseDataRetentionTime := func() config.Variables {
 		return config.Variables{
-			"database":                    config.StringVariable(databaseName),
-			"account_data_retention_time": config.IntegerVariable(accountDataRetentionTime),
+			"database": config.StringVariable(databaseName),
 		}
 	}
 
-	configVariablesWithDatabaseDataRetentionTime := func(databaseDataRetentionTime int, schemaDataRetentionTime int) config.Variables {
-		vars := configVariablesWithoutDatabaseDataRetentionTime(databaseDataRetentionTime)
-		vars["database_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
+	configVariablesWithDatabaseDataRetentionTime := func(databaseDataRetentionTime int) config.Variables {
+		vars := configVariablesWithoutDatabaseDataRetentionTime()
+		vars["database_data_retention_time"] = config.IntegerVariable(databaseDataRetentionTime)
 		return vars
 	}
 
 	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	param, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
 	require.NoError(t, err)
 
 	resource.Test(t, resource.TestCase{
@@ -301,30 +295,37 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: func(state *terraform.State) error {
-			return client.Parameters.SetAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays, param.Value)
-		},
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
+				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, true, "5"),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
-				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(5),
+				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
 					checkAccountAndDatabaseDataRetentionTime(id, 5, 5),
 				),
 			},
 			{
-				PreConfig:       setDatabaseDataRetentionTime(t, id, 20),
+				PreConfig: func() {
+					err = client.Databases.Alter(context.Background(), id, &sdk.AlterDatabaseOptions{
+						Set: &sdk.DatabaseSet{
+							DataRetentionTimeInDays: sdk.Int(20),
+						},
+					})
+					require.NoError(t, err)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
-				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(5),
+				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
 					checkAccountAndDatabaseDataRetentionTime(id, 5, 5),
 				),
 			},
 			{
+				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, false, "10"),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
-				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(10, 3),
+				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "3"),
 					checkAccountAndDatabaseDataRetentionTime(id, 10, 3),
@@ -485,48 +486,4 @@ func checkAccountAndDatabaseDataRetentionTime(id sdk.AccountObjectIdentifier, ex
 
 		return nil
 	}
-}
-
-func setDatabaseDataRetentionTime(t *testing.T, id sdk.AccountObjectIdentifier, days int) func() {
-	t.Helper()
-
-	return func() {
-		client, err := sdk.NewDefaultClient()
-		require.NoError(t, err)
-		ctx := context.Background()
-
-		err = client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
-			Set: &sdk.DatabaseSet{
-				DataRetentionTimeInDays: sdk.Int(days),
-			},
-		})
-		require.NoError(t, err)
-	}
-}
-
-func getAccountDataRetentionTime(t *testing.T) int {
-	t.Helper()
-
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	ctx := context.Background()
-
-	param, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
-	require.NoError(t, err)
-
-	value, err := strconv.Atoi(param.Value)
-	require.NoError(t, err)
-
-	return value
-}
-
-func setAccountDataRetentionTime(t *testing.T, days int) {
-	t.Helper()
-
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-	ctx := context.Background()
-
-	err = client.Parameters.SetAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays, strconv.Itoa(days))
-	require.NoError(t, err)
 }
