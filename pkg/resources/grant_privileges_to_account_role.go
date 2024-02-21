@@ -815,6 +815,9 @@ func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (
 	case OnAccountObjectAccountRoleGrantKind:
 		data := id.Data.(*OnAccountObjectGrantData)
 		grantedOn = data.ObjectType
+		if data.ObjectType == sdk.ObjectTypeExternalVolume {
+			grantedOn = "VOLUME"
+		}
 		opts.On = &sdk.ShowGrantsOn{
 			Object: &sdk.Object{
 				ObjectType: data.ObjectType,
