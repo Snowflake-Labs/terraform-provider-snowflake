@@ -1,45 +1,70 @@
 package resources_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Tag(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_tag.t"
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":     config.StringVariable(name),
+			"database": config.StringVariable(acc.TestDatabaseName),
+			"schema":   config.StringVariable(acc.TestSchemaName),
+			"comment":  config.StringVariable("Terraform acceptance test"),
+		}
+	}
+	variableSet2 := m()
+	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: tagConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/basic"),
+				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_tag.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_tag.test", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_tag.test", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_tag.test", "allowed_values.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_tag.test", "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "allowed_values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_values.0", "alv1"),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
 				),
+			},
+
+			// test - change comment
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/basic"),
+				ConfigVariables: variableSet2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
+				),
+			},
+
+			// test - import
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_Tag/basic"),
+				ConfigVariables:   variableSet2,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
-}
-
-func tagConfig(n string, databaseName string, schemaName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_tag" "test" {
-	name = "%s"
-	database = "%s"
-	schema = "%s"
-	allowed_values = ["alv1", "alv2"]
-	comment = "Terraform acceptance test"
-}
-`, n, databaseName, schemaName)
 }

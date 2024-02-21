@@ -26,9 +26,6 @@ func (opts *createTagOptions) validate() error {
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
 		errs = append(errs, errOneOf("createTagOptions", "OrReplace", "IfNotExists"))
 	}
-	if valueSet(opts.Comment) && valueSet(opts.AllowedValues) {
-		errs = append(errs, errOneOf("createTagOptions", "Comment", "AllowedValues"))
-	}
 	if valueSet(opts.AllowedValues) {
 		if err := opts.AllowedValues.validate(); err != nil {
 			errs = append(errs, err)

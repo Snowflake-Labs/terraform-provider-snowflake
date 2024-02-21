@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
@@ -137,16 +138,7 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	t := &TagID{
-		DatabaseName: builder.GetTagDatabase(),
-		SchemaName:   builder.GetTagSchema(),
-		TagName:      builder.GetTagName(),
-	}
-	dataIDInput, err := t.String()
-	if err != nil {
-		return fmt.Errorf("error creating tag id")
-	}
-	d.SetId(dataIDInput)
+	d.SetId(helpers.EncodeSnowflakeID(builder.GetTagDatabase(), builder.GetTagSchema(), builder.GetTagName()))
 	return ReadTagAssociation(d, meta)
 }
 

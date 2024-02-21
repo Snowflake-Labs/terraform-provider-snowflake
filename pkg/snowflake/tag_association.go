@@ -67,6 +67,13 @@ func (tb *TagAssociationBuilder) GetTableAndColumnName() (string, string) {
 	tableSchema := strings.ReplaceAll(splObjIdentifier[1], "\"", "")
 	tableName := strings.ReplaceAll(splObjIdentifier[2], "\"", "")
 	columnName := strings.ReplaceAll(splObjIdentifier[3], "\"", "")
+	if len(splObjIdentifier) > 4 {
+		var parts []string
+		for i := 3; i < len(splObjIdentifier); i++ {
+			parts = append(parts, strings.ReplaceAll(splObjIdentifier[i], "\"", ""))
+		}
+		columnName = strings.Join(parts, ".")
+	}
 	return fmt.Sprintf(`"%s"."%s"."%s"`, tableDatabase, tableSchema, tableName), columnName
 }
 

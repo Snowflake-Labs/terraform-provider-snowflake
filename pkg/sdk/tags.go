@@ -24,8 +24,8 @@ type createTagOptions struct {
 	tag           string                 `ddl:"static" sql:"TAG"`
 	IfNotExists   *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name          SchemaObjectIdentifier `ddl:"identifier"`
-	Comment       *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	AllowedValues *AllowedValues         `ddl:"keyword" sql:"ALLOWED_VALUES"`
+	Comment       *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type AllowedValues struct {
