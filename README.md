@@ -19,7 +19,6 @@ This is a terraform provider for managing [Snowflake](https://www.snowflake.com/
   - [Table of contents](#table-of-contents)
   - [Getting started](#getting-started)
   - [Roadmap](#roadmap)
-  - [SDK migration table](#sdk-migration-table)
   - [Getting Help](#getting-help)
   - [Additional debug logs for `snowflake_grant_privileges_to_role` resource](#additional-debug-logs-for-snowflake_grant_privileges_to_role-resource)
   - [Additional SQL Client configuration](#additional-sql-client-configuration)
@@ -58,67 +57,6 @@ Start browsing the [registry docs](https://registry.terraform.io/providers/Snowf
 ## Roadmap
 
 Check [Roadmap](./ROADMAP.md).
-
-## SDK migration table
-
-This table represents the current state of SDK migration from pkg/snowflake to pkg/sdk package.
-The goal of migration is to support every Snowflake feature with more type safe API and use it in every resource / datasource.
-
-SDK implementation status - indicates if given object has been migrated into new SDK.
-
-Migration status - indicates if given resource / datasource is using new SDK.
-
-✅ - done<br>
-❌ - not started<br>
-👨‍💻 - in progress<br>
-🟨 - partially done<br>
-
-| Object Type                         | SDK implementation status | Resource name                                  | Datasource name             | Migration status |
-|-------------------------------------|---------------------------|------------------------------------------------|-----------------------------|------------------|
-| Account                             | ✅                         | snowflake_account                              | snowflake_account           | ✅                |
-| Managed Account                     | ✅                         | snowflake_managed_account                      | snowflake_managed_account   | 👨‍💻            |
-| User                                | ✅                         | snowflake_user                                 | snowflake_user              | ✅                |
-| Database Role                       | ✅                         | snowflake_database_role                        | snowflake_database_role     | ✅                |
-| Role                                | ✅                         | snowflake_role                                 | snowflake_role              | 👨‍💻            |
-| Grant Privilege to Application Role | ✅                         | snowflake_grant_privileges_to_application_role | snowflake_grants            | ❌                |
-| Grant Privilege to Database Role    | ✅                         | snowflake_grant_privileges_to_database_role    | snowflake_grants            | ✅                |
-| Grant Privilege to Role             | ✅                         | snowflake_grant_privileges_to_role             | snowflake_grants            | ✅                |
-| Grant Role                          | ✅                         | snowflake_grant_role                           | snowflake_grants            | 👨‍💻            |
-| Grant Database Role                 | ✅                         | snowflake_grant_database_role                  | snowflake_grants            | 👨‍💻            |
-| Grant Application Role              | ✅                         | snowflake_grant_application_role               | snowflake_grants            | 👨‍💻            |
-| Grant Privilege to Share            | ✅                         | snowflake_grant_privileges_to_share            | snowflake_grants            | 👨‍💻            |
-| Grant Ownership                     | ✅                         | snowflake_grant_ownership                      | snowflake_grants            | 👨‍💻            |
-| API Integration                     | ❌                         | snowflake_api_integration                      | snowflake_integrations      | ❌                |
-| Notification Integration            | ❌                         | snowflake_notification_integration             | snowflake_integrations      | ❌                |
-| Storage Integration                 | ✅                         | snowflake_storage_integration                  | snowflake_integrations      | ❌                |
-| Network Policy                      | ✅                         | snowflake_network_policy                       | snowflake_network_policy    | ✅                |
-| Password Policy                     | ✅                         | snowflake_password_policy                      | snowflake_password_policy   | ✅                |
-| Failover Group                      | ✅                         | snowflake_failover_group                       | snowflake_failover_group    | ✅                |
-| Account Parameters                  | ✅                         | snowflake_account_parameter                    | snowflake_parameters        | ✅                |
-| Session Parameters                  | ✅                         | snowflake_session_parameter                    | snowflake_parameters        | ✅                |
-| Object Parameters                   | ✅                         | snowflake_object_parameter                     | snowflake_parameters        | ✅                |
-| Warehouse                           | ✅                         | snowflake_warehouse                            | snowflake_warehouse         | ✅                |
-| Resource Monitor                    | ✅                         | snowflake_resource_monitor                     | snowflake_resource_monitor  | ✅                |
-| Database                            | ✅                         | snowflake_database                             | snowflake_database          | ✅                |
-| Schema                              | ✅                         | snowflake_schema                               | snowflake_schema            | ✅                |
-| Share                               | ✅                         | snowflake_share                                | snowflake_share             | ✅                |
-| Table                               | ✅                         | snowflake_table                                | snowflake_table             | 👨‍💻            |
-| Dynamic Table                       | ✅                         | snowflake_dynamic_table                        | snowflake_dynamic_table     | ✅                |
-| External Table                      | ✅                         | snowflake_external_table                       | snowflake_external_table    | ✅                |
-| View                                | ✅                         | snowflake_view                                 | snowflake_view              | ❌                |
-| Materialized View                   | 👨‍💻                     | snowflake_materialized_view                    | snowflake_materialized_view | ❌                |
-| Sequence                            | ✅                     | snowflake_sequence                             | snowflake_sequence          | ✅                |
-| Function                            | ✅                         | snowflake_function                             | snowflake_function          | ❌                |
-| External Function                   | ❌                         | snowflake_external_function                    | snowflake_external_function | ❌                |
-| Stored Procedure                    | ✅                         | snowflake_procedure                            | snowflake_procedure         | ❌                |
-| Stream                              | ✅                         | snowflake_stream                               | snowflake_stream            | ✅                |
-| Task                                | ✅                         | snowflake_task                                 | snowflake_task              | ✅                |
-| Masking Policy                      | ✅                         | snowflake_masking_policy                       | snowflake_masking_policy    | ✅                |
-| Row Access Policy                   | ✅                         | snowflake_row_access_policy                    | snowflake_row_access_policy | ❌                |
-| Stage                               | 🟨                        | snowflake_stage                                | snowflake_stage             | ❌                |
-| File Format                         | ✅                         | snowflake_file_format                          | snowflake_file_format       | ✅                |
-| Pipe                                | ✅                         | snowflake_pipe                                 | snowflake_pipe              | ✅                |
-| Alert                               | ✅                         | snowflake_alert                                | snowflake_alert             | ✅                |
 
 ## Getting Help
 
