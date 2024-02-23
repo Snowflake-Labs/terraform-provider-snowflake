@@ -2,7 +2,6 @@ package provider_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"regexp"
 	"testing"
@@ -14,6 +13,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Provider_configHierarchy(t *testing.T) {

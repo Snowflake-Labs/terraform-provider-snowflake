@@ -1,8 +1,10 @@
 package snowflakeenvs
 
-const Account = "SNOWFLAKE_ACCOUNT"
-const User = "SNOWFLAKE_USER"
-const Password = "SNOWFLAKE_PASSWORD"
-const Role = "SNOWFLAKE_ROLE"
-const ConfigPath = "SNOWFLAKE_CONFIG_PATH"
-const Host = "SNOWFLAKE_HOST"
+const (
+	Account    = "SNOWFLAKE_ACCOUNT"
+	User       = "SNOWFLAKE_USER"
+	Password   = "SNOWFLAKE_PASSWORD"
+	Role       = "SNOWFLAKE_ROLE"
+	ConfigPath = "SNOWFLAKE_CONFIG_PATH"
+	Host       = "SNOWFLAKE_HOST"
+)

@@ -9,13 +9,14 @@ import (
 )
 
 func Test_GetOrSkipTest(t *testing.T) {
-	runGetOrSkipInGoroutineAndWait := func(tut *testing.T) string {
+	runGetOrSkipInGoroutineAndWait := func(t *testing.T) string {
+		t.Helper()
 		var env string
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			env = testenvs.GetOrSkipTest(tut, testenvs.User)
+			env = testenvs.GetOrSkipTest(t, testenvs.User)
 		}()
 		wg.Wait()
 		return env
