@@ -1,22 +1,32 @@
 package testenvs
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
 
-const User = "TEST_SF_TF_USER"
-const Password = "TEST_SF_TF_PASSWORD"
-const Account = "TEST_SF_TF_ACCOUNT"
-const Role = "TEST_SF_TF_ROLE"
-const Host = "TEST_SF_TF_HOST"
+type env string
 
-// TODO: allow to be used only with the set above
+const (
+	User     env = "TEST_SF_TF_USER"
+	Password env = "TEST_SF_TF_PASSWORD"
+	Account  env = "TEST_SF_TF_ACCOUNT"
+	Role     env = "TEST_SF_TF_ROLE"
+	Host     env = "TEST_SF_TF_HOST"
+)
+
 // TODO: test
-func GetOrSkipTest(t *testing.T, envName string) string {
-	env := os.Getenv(envName)
+func GetOrSkipTest(t *testing.T, envName Env) string {
+	env := os.Getenv(fmt.Sprintf("%v", envName))
 	if env == "" {
 		t.Skipf("Skipping %s", t.Name())
 	}
 	return env
 }
+
+type Env interface {
+	xxxProtected()
+}
+
+func (e env) xxxProtected() {}
