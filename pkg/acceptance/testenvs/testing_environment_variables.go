@@ -16,7 +16,6 @@ const (
 	Host     env = "TEST_SF_TF_HOST"
 )
 
-// TODO: test
 func GetOrSkipTest(t *testing.T, envName Env) string {
 	env := os.Getenv(fmt.Sprintf("%v", envName))
 	if env == "" {
