@@ -12,8 +12,8 @@ import (
 func DefaultConfig() *gosnowflake.Config {
 	config, err := ProfileConfig("default")
 	if err != nil || config == nil {
-		log.Printf("[DEBUG] No Snowflake config file found, falling back to environment variables: %v\n", err)
-		return EnvConfig()
+		log.Printf("[DEBUG] No Snowflake config file found, returning empty config: %v\n", err)
+		config = &gosnowflake.Config{}
 	}
 	return config
 }
@@ -51,22 +51,22 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 	if baseConfig == nil {
 		return mergeConfig
 	}
-	if mergeConfig.Account != "" {
+	if baseConfig.Account == "" {
 		baseConfig.Account = mergeConfig.Account
 	}
-	if mergeConfig.User != "" {
+	if baseConfig.User == "" {
 		baseConfig.User = mergeConfig.User
 	}
-	if mergeConfig.Password != "" {
+	if baseConfig.Password == "" {
 		baseConfig.Password = mergeConfig.Password
 	}
-	if mergeConfig.Role != "" {
+	if baseConfig.Role == "" {
 		baseConfig.Role = mergeConfig.Role
 	}
-	if mergeConfig.Region != "" {
+	if baseConfig.Region == "" {
 		baseConfig.Region = mergeConfig.Region
 	}
-	if mergeConfig.Host != "" {
+	if baseConfig.Host == "" {
 		baseConfig.Host = mergeConfig.Host
 	}
 	return baseConfig

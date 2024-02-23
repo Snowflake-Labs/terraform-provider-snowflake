@@ -97,8 +97,29 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 				Config:      providerConfigWithUser(nonExistingUser, "default"),
 				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
 			},
+			// make sure the teardown is fine by using a correct env config at the end
+			{
+				PreConfig: func() {
+					require.NotEmpty(t, os.Getenv("SNOWFLAKE_CONFIG_PATH"))
+					require.NotEmpty(t, os.Getenv("SNOWFLAKE_USER"))
+					require.NotEmpty(t, os.Getenv("SNOWFLAKE_PASSWORD"))
+					require.NotEmpty(t, os.Getenv("SNOWFLAKE_ACCOUNT"))
+					require.NotEmpty(t, os.Getenv("SNOWFLAKE_ROLE"))
+					require.NotEmpty(t, os.Getenv("SNOWFLAKE_HOST"))
+				},
+				Config: emptyProviderConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
+				),
+			},
 		},
 	})
+}
+
+func emptyProviderConfig() string {
+	return `
+provider "snowflake" {
+}` + datasourceConfig()
 }
 
 func providerConfig(profile string) string {
