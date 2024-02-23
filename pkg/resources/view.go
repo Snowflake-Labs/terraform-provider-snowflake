@@ -44,10 +44,11 @@ var viewSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.",
+		Description: "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause. OR REPLACE must be set when COPY GRANTS is set.",
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 			return oldValue != "" && oldValue != newValue
 		},
+		RequiredWith: []string{"or_replace"},
 	},
 	"is_secure": {
 		Type:        schema.TypeBool,
