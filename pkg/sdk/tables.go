@@ -564,12 +564,14 @@ func (v *Table) GetClusterByKeys() []string {
 	}
 
 	statementWithoutLinear := strings.TrimSuffix(strings.Replace(v.ClusterBy, "LINEAR(", "", 1), ")")
+	return splitClusterBy(statementWithoutLinear)
+}
+func splitClusterBy(statementWithoutLinear string) []string {
 	keysRaw := strings.Split(statementWithoutLinear, ",")
 	keysClean := make([]string, 0, len(keysRaw))
 	for _, key := range keysRaw {
 		keysClean = append(keysClean, strings.TrimSpace(key))
 	}
-
 	return keysClean
 }
 
