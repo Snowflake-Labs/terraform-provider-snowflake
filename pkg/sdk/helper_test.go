@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 )
 
 func testClient(t *testing.T) *Client {
@@ -15,16 +17,12 @@ func testClient(t *testing.T) *Client {
 	return client
 }
 
-const (
-	secondaryAccountProfile = "secondary_test_account"
-)
-
 func testSecondaryClient(t *testing.T) *Client {
 	t.Helper()
 
-	client, err := testClientFromProfile(t, secondaryAccountProfile)
+	client, err := testClientFromProfile(t, testprofiles.Secondary)
 	if err != nil {
-		t.Skipf("Snowflake secondary account not configured. Must be set in ~./snowflake/config.yml with profile name: %s", secondaryAccountProfile)
+		t.Skipf("Snowflake secondary account not configured. Must be set in ~./snowflake/config.yml with profile name: %s", testprofiles.Secondary)
 	}
 
 	return client
