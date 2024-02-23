@@ -8,9 +8,9 @@ import (
 )
 
 func AssertEnvNotSet(t *testing.T, envName string) {
-	require.Empty(t, os.Getenv(envName))
+	require.Emptyf(t, os.Getenv(envName), "environment variable %v should not be set", envName)
 }
 
 func AssertEnvSet(t *testing.T, envName string) {
-	require.NotEmpty(t, os.Getenv(envName))
+	require.NotEmptyf(t, os.Getenv(envName), "environment variable %v should not be empty", envName)
 }
