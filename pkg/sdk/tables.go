@@ -566,12 +566,30 @@ func (v *Table) GetClusterByKeys() []string {
 	statementWithoutLinear := strings.TrimSuffix(strings.Replace(v.ClusterBy, "LINEAR(", "", 1), ")")
 	return splitClusterBy(statementWithoutLinear)
 }
+
 func splitClusterBy(statementWithoutLinear string) []string {
-	keysRaw := strings.Split(statementWithoutLinear, ",")
-	keysClean := make([]string, 0, len(keysRaw))
-	for _, key := range keysRaw {
-		keysClean = append(keysClean, strings.TrimSpace(key))
+	keysClean := make([]string, 0)
+
+	var current string
+	var open int
+	for _, character := range statementWithoutLinear {
+		strChar := string(character)
+		switch strChar {
+		case "(":
+			open++
+		case ")":
+			open--
+		case ",":
+			if open == 0 {
+				keysClean = append(keysClean, strings.TrimSpace(current))
+				current = ""
+				continue
+			}
+		}
+		current += strChar
 	}
+	keysClean = append(keysClean, strings.TrimSpace(current))
+
 	return keysClean
 }
 
