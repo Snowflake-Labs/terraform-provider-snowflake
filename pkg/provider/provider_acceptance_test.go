@@ -27,7 +27,11 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -86,7 +90,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			// provider's config should not be rewritten by env when there is no profile (incorrect user in config versus correct one in env) - proves #2242
 			{
 				PreConfig: func() {
-					require.NotEmpty(t, os.Getenv(snowflakeenvs.ConfigPath))
+					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
 					t.Setenv(snowflakeenvs.User, user)
 					t.Setenv(snowflakeenvs.Password, pass)
 					t.Setenv(snowflakeenvs.Account, account)
@@ -99,12 +103,12 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			// make sure the teardown is fine by using a correct env config at the end
 			{
 				PreConfig: func() {
-					require.NotEmpty(t, os.Getenv(snowflakeenvs.ConfigPath))
-					require.NotEmpty(t, os.Getenv(snowflakeenvs.User))
-					require.NotEmpty(t, os.Getenv(snowflakeenvs.Password))
-					require.NotEmpty(t, os.Getenv(snowflakeenvs.Account))
-					require.NotEmpty(t, os.Getenv(snowflakeenvs.Role))
-					require.NotEmpty(t, os.Getenv(snowflakeenvs.Host))
+					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
+					testenvs.AssertEnvSet(t, snowflakeenvs.User)
+					testenvs.AssertEnvSet(t, snowflakeenvs.Password)
+					testenvs.AssertEnvSet(t, snowflakeenvs.Account)
+					testenvs.AssertEnvSet(t, snowflakeenvs.Role)
+					testenvs.AssertEnvSet(t, snowflakeenvs.Host)
 				},
 				Config: emptyProviderConfig(),
 				Check: resource.ComposeTestCheckFunc(

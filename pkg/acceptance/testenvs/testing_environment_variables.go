@@ -20,7 +20,7 @@ const (
 func GetOrSkipTest(t *testing.T, envName Env) string {
 	env := os.Getenv(fmt.Sprintf("%v", envName))
 	if env == "" {
-		t.Skipf("Skipping %s", t.Name())
+		t.Skipf("Skipping %s, env %v missing", t.Name(), envName)
 	}
 	return env
 }

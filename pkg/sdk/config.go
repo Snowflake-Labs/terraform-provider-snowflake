@@ -87,34 +87,6 @@ func configFile() (string, error) {
 	return filepath.Join(dir, ".snowflake", "config"), nil
 }
 
-func EnvConfig() *gosnowflake.Config {
-	config := &gosnowflake.Config{}
-
-	if account, ok := os.LookupEnv("SNOWFLAKE_ACCOUNT"); ok {
-		config.Account = account
-	}
-	if user, ok := os.LookupEnv("SNOWFLAKE_USER"); ok {
-		config.User = user
-	}
-	if password, ok := os.LookupEnv("SNOWFLAKE_PASSWORD"); ok {
-		config.Password = password
-	}
-	if role, ok := os.LookupEnv("SNOWFLAKE_ROLE"); ok {
-		config.Role = role
-	}
-	if region, ok := os.LookupEnv("SNOWFLAKE_REGION"); ok {
-		config.Region = region
-	}
-	if host, ok := os.LookupEnv("SNOWFLAKE_HOST"); ok {
-		config.Host = host
-	}
-	if warehouse, ok := os.LookupEnv("SNOWFLAKE_WAREHOUSE"); ok {
-		config.Warehouse = warehouse
-	}
-
-	return config
-}
-
 func loadConfigFile() (map[string]*gosnowflake.Config, error) {
 	path, err := configFile()
 	if err != nil {

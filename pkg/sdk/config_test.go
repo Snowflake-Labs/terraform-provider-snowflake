@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,8 +25,8 @@ func TestLoadConfigFile(t *testing.T) {
 	role='SECURITYADMIN'
 	`
 	configPath := testFile(t, "config", []byte(c))
-	cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
-	t.Cleanup(cleanupEnvVars)
+	t.Setenv(snowflakeenvs.ConfigPath, configPath)
+
 	m, err := loadConfigFile()
 	require.NoError(t, err)
 	assert.Equal(t, "TEST_ACCOUNT", m["default"].Account)
@@ -49,8 +50,8 @@ func TestProfileConfig(t *testing.T) {
 	configPath := testFile(t, "config", []byte(c))
 
 	t.Run("with found profile", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
-		t.Cleanup(cleanupEnvVars)
+		t.Setenv(snowflakeenvs.ConfigPath, configPath)
+
 		config, err := ProfileConfig("securityadmin")
 		require.NoError(t, err)
 		assert.Equal(t, "TEST_ACCOUNT", config.Account)
@@ -60,33 +61,21 @@ func TestProfileConfig(t *testing.T) {
 	})
 
 	t.Run("with not found profile", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
-		t.Cleanup(cleanupEnvVars)
+		t.Setenv(snowflakeenvs.ConfigPath, configPath)
+
 		config, err := ProfileConfig("orgadmin")
 		require.NoError(t, err)
 		require.Nil(t, config)
 	})
-}
 
-func TestEnvConfig(t *testing.T) {
-	t.Run("with no environment variables", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "", "", "", "", "")
-		t.Cleanup(cleanupEnvVars)
-		config := EnvConfig()
-		assert.Equal(t, "", config.Account)
-		assert.Equal(t, "", config.User)
-		assert.Equal(t, "", config.Password)
-		assert.Equal(t, "", config.Role)
-	})
+	t.Run("with not found config", func(t *testing.T) {
+		dir, err := os.UserHomeDir()
+		require.NoError(t, err)
+		t.Setenv(snowflakeenvs.ConfigPath, dir)
 
-	t.Run("with environment variables", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
-		t.Cleanup(cleanupEnvVars)
-		config := EnvConfig()
-		assert.Equal(t, "TEST_ACCOUNT", config.Account)
-		assert.Equal(t, "TEST_USER", config.User)
-		assert.Equal(t, "abcd1234", config.Password)
-		assert.Equal(t, "ACCOUNTADMIN", config.Role)
+		config, err := ProfileConfig("orgadmin")
+		require.Error(t, err)
+		require.Nil(t, config)
 	})
 }
 
@@ -96,27 +85,4 @@ func testFile(t *testing.T, filename string, dat []byte) string {
 	err := os.WriteFile(path, dat, 0o600)
 	require.NoError(t, err)
 	return path
-}
-
-func setupEnvVars(t *testing.T, account, user, password, role, configPath string) func() {
-	t.Helper()
-	orginalAccount := os.Getenv("SNOWFLAKE_ACCOUNT")
-	orginalUser := os.Getenv("SNOWFLAKE_USER")
-	originalPassword := os.Getenv("SNOWFLAKE_PASSWORD")
-	originalRole := os.Getenv("SNOWFLAKE_ROLE")
-	originalPath := os.Getenv("SNOWFLAKE_CONFIG_PATH")
-
-	os.Setenv("SNOWFLAKE_ACCOUNT", account)
-	os.Setenv("SNOWFLAKE_USER", user)
-	os.Setenv("SNOWFLAKE_PASSWORD", password)
-	os.Setenv("SNOWFLAKE_ROLE", role)
-	os.Setenv("SNOWFLAKE_CONFIG_PATH", configPath)
-
-	return func() {
-		os.Setenv("SNOWFLAKE_ACCOUNT", orginalAccount)
-		os.Setenv("SNOWFLAKE_USER", orginalUser)
-		os.Setenv("SNOWFLAKE_PASSWORD", originalPassword)
-		os.Setenv("SNOWFLAKE_ROLE", originalRole)
-		os.Setenv("SNOWFLAKE_CONFIG_PATH", originalPath)
-	}
 }
