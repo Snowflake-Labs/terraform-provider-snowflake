@@ -17,14 +17,11 @@ import (
 )
 
 func TestAcc_Provider_configHierarchy(t *testing.T) {
-	user := os.Getenv(testenvs.User)
-	pass := os.Getenv(testenvs.Password)
-	account := os.Getenv(testenvs.Account)
-	role := os.Getenv(testenvs.Role)
-	host := os.Getenv(testenvs.Host)
-	if user == "" || pass == "" || account == "" || role == "" || host == "" {
-		t.Skip("Skipping TestAcc_Provider_configHierarchy")
-	}
+	user := testenvs.GetOrSkipTest(t, testenvs.User)
+	pass := testenvs.GetOrSkipTest(t, testenvs.Password)
+	account := testenvs.GetOrSkipTest(t, testenvs.Account)
+	role := testenvs.GetOrSkipTest(t, testenvs.Role)
+	host := testenvs.GetOrSkipTest(t, testenvs.Host)
 
 	nonExistingUser := "non-existing-user"
 
