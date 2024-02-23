@@ -5,6 +5,22 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.86.0 ➞ v0.87.0
+### Provider configuration changes
+
+#### **IMPORTANT** *(bug fix)* Configuration hierarchy
+There were several issues reported about the configuration hierarchy, e.g. [#2294](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2294) and [#2242](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2242).
+In fact, the order of precedence described in the docs was not followed. This have led to the incorrect behavior.
+
+After migrating to this version, the hierarchy from the docs should be followed:
+```text
+The Snowflake provider will use the following order of precedence when determining which credentials to use:
+1) Provider Configuration
+2) Environment Variables
+3) Config File
+```
+
+**BEWARE**: your configurations will be affected with that change because they may have been leveraging the incorrect configurations precedence. Please be sure to check all the configurations before running terraform.
+
 ### snowflake_failover_group resource changes
 #### *(bug fix)* ACCOUNT PARAMETERS is returned as PARAMETERS from SHOW FAILOVER GROUPS
 Longer context in [#2517](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2517).
