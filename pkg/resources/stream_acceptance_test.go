@@ -52,17 +52,16 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 }
 
 func TestAcc_Stream(t *testing.T) {
-	env := os.Getenv("SKIP_STREAM_TEST")
-	if env != "" {
-		t.Skip("Skipping TestAcc_Stream")
-	}
+	// Current error is User: <redacted> is not authorized to perform: sts:AssumeRole on resource: <redacted> duration 1.162414333s args {}] ()
+	t.Skip("Skipping TestAcc_Stream")
+
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	accNameExternalTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	bucketURL := os.Getenv("AWS_EXTERNAL_BUCKET_URL")
+	bucketURL := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL")
 	if bucketURL == "" {
 		t.Skip("Skipping TestAcc_ExternalTable")
 	}
-	roleName := os.Getenv("AWS_EXTERNAL_ROLE_NAME")
+	roleName := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN")
 	if roleName == "" {
 		t.Skip("Skipping TestAcc_ExternalTable")
 	}
@@ -230,7 +229,7 @@ resource "snowflake_stage" "test" {
 }
 resource "snowflake_storage_integration" "external_table_stream_integration" {
 	name = "%v"
-	storage_allowed_locations = [%s]
+	storage_allowed_locations = ["%s"]
 	storage_provider = "S3"
 	storage_aws_role_arn = "%s"
 }
