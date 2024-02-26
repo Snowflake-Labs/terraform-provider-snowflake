@@ -14,6 +14,8 @@ const (
 	Account  env = "TEST_SF_TF_ACCOUNT"
 	Role     env = "TEST_SF_TF_ROLE"
 	Host     env = "TEST_SF_TF_HOST"
+
+	BusinessCriticalAccount env = "SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT"
 )
 
 func GetOrSkipTest(t *testing.T, envName Env) string {
