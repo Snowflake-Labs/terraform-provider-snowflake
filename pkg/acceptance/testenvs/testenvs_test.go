@@ -9,7 +9,9 @@ import (
 )
 
 func Test_GetOrSkipTest(t *testing.T) {
-	runGetOrSkipInGoroutineAndWait := func(t *testing.T) string {
+	// runGetOrSkipInGoroutineAndWaitForCompletion is needed because underneath we test t.Skipf, that leads to t.SkipNow() that in turn call runtime.Goexit()
+	// so we need to be wrapped in a Goroutine.
+	runGetOrSkipInGoroutineAndWaitForCompletion := func(t *testing.T) string {
 		t.Helper()
 		var env string
 		var wg sync.WaitGroup
@@ -26,7 +28,7 @@ func Test_GetOrSkipTest(t *testing.T) {
 		t.Setenv(string(testenvs.User), "")
 
 		tut := &testing.T{}
-		env := runGetOrSkipInGoroutineAndWait(tut)
+		env := runGetOrSkipInGoroutineAndWaitForCompletion(tut)
 
 		require.True(t, tut.Skipped())
 		require.Empty(t, env)
@@ -36,7 +38,7 @@ func Test_GetOrSkipTest(t *testing.T) {
 		t.Setenv(string(testenvs.User), "user")
 
 		tut := &testing.T{}
-		env := runGetOrSkipInGoroutineAndWait(tut)
+		env := runGetOrSkipInGoroutineAndWaitForCompletion(tut)
 
 		require.False(t, tut.Skipped())
 		require.Equal(t, "user", env)
@@ -44,7 +46,9 @@ func Test_GetOrSkipTest(t *testing.T) {
 }
 
 func Test_Assertions(t *testing.T) {
-	runAssertionInGoroutineAndWait := func(assertion func()) {
+	// runAssertionInGoroutineAndWaitForCompletion is needed because underneath we test require, that leads to t.FailNow() that in turn call runtime.Goexit()
+	// so we need to be wrapped in a Goroutine.
+	runAssertionInGoroutineAndWaitForCompletion := func(assertion func()) {
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go func() {
@@ -58,10 +62,10 @@ func Test_Assertions(t *testing.T) {
 		t.Setenv(string(testenvs.User), "")
 
 		tut1 := &testing.T{}
-		runAssertionInGoroutineAndWait(func() { testenvs.AssertEnvNotSet(tut1, string(testenvs.User)) })
+		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvNotSet(tut1, string(testenvs.User)) })
 
 		tut2 := &testing.T{}
-		runAssertionInGoroutineAndWait(func() { testenvs.AssertEnvSet(tut2, string(testenvs.User)) })
+		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvSet(tut2, string(testenvs.User)) })
 
 		require.False(t, tut1.Failed())
 		require.True(t, tut2.Failed())
@@ -71,10 +75,10 @@ func Test_Assertions(t *testing.T) {
 		t.Setenv(string(testenvs.User), "user")
 
 		tut1 := &testing.T{}
-		runAssertionInGoroutineAndWait(func() { testenvs.AssertEnvNotSet(tut1, string(testenvs.User)) })
+		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvNotSet(tut1, string(testenvs.User)) })
 
 		tut2 := &testing.T{}
-		runAssertionInGoroutineAndWait(func() { testenvs.AssertEnvSet(tut2, string(testenvs.User)) })
+		runAssertionInGoroutineAndWaitForCompletion(func() { testenvs.AssertEnvSet(tut2, string(testenvs.User)) })
 
 		require.True(t, tut1.Failed())
 		require.False(t, tut2.Failed())

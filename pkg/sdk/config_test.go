@@ -110,7 +110,7 @@ func Test_MergeConfig(t *testing.T) {
 		require.Equal(t, "", config1.Role)
 	})
 
-	t.Run("merge configs reverted", func(t *testing.T) {
+	t.Run("merge configs inverted", func(t *testing.T) {
 		config1 := createConfig("user", "password", "account", "")
 		config2 := createConfig("user2", "", "", "region2")
 
