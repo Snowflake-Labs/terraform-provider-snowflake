@@ -2,8 +2,6 @@
 
 package sdk
 
-import ()
-
 func NewCreateExternalFunctionRequest(
 	name SchemaObjectIdentifier,
 	ResultDataType DataType,
@@ -225,6 +223,11 @@ func NewShowExternalFunctionRequest() *ShowExternalFunctionRequest {
 
 func (s *ShowExternalFunctionRequest) WithLike(Like *Like) *ShowExternalFunctionRequest {
 	s.Like = Like
+	return s
+}
+
+func (s *ShowExternalFunctionRequest) WithIn(In *In) *ShowExternalFunctionRequest {
+	s.In = In
 	return s
 }
 

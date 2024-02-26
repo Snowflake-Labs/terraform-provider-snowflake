@@ -74,6 +74,7 @@ type ExternalFunctionUnsetRequest struct {
 
 type ShowExternalFunctionRequest struct {
 	Like *Like
+	In   *In
 }
 
 type DescribeExternalFunctionRequest struct {
