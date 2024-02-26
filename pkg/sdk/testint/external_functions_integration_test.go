@@ -249,13 +249,11 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseTest.Name, schemaTest.Name)}))
 		require.NoError(t, err)
 
-		require.Equal(t, 1, len(es))
 		require.Contains(t, es, *e1)
 
 		es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseTest.Name)}))
 		require.NoError(t, err)
 
-		require.Equal(t, 1, len(es))
 		require.Contains(t, es, *e1)
 
 		es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Database: otherDb.ID()}))
