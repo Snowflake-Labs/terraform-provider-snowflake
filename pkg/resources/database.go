@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"slices"
 	"strconv"
 
@@ -197,6 +198,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
 		d.SetId("")
+		log.Printf("Database %s not found, err = %s", name, err)
 		return nil
 	}
 

@@ -95,8 +95,7 @@ resource "snowflake_table" "table" {
 - `change_tracking` (Boolean) Specifies whether to enable change tracking on the table. Default false.
 - `cluster_by` (List of String) A list of one or more table columns/expressions to be used as clustering key(s) for the table
 - `comment` (String) Specifies a comment for the table.
-- `data_retention_days` (Number, Deprecated) Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.
-- `data_retention_time_in_days` (Number) Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified table. Default value for this field is set to -1, which is a fallback to use Snowflake default. For more information, see Understanding & Using Time Travel.
+- `data_retention_time_in_days` (Number) Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. If you wish to inherit the parent schema setting then pass in the schema attribute to this argument or do not fill this parameter at all; the default value for this field is -1, which is a fallback to use Snowflake default - in this case the schema value
 - `primary_key` (Block List, Max: 1, Deprecated) Definitions of primary key constraint to create on table (see [below for nested schema](#nestedblock--primary_key))
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 

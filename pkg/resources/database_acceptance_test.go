@@ -210,7 +210,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, true, "5"),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
@@ -219,7 +219,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 			},
 			{
 				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, false, "10"),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
@@ -227,7 +227,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "5"),
@@ -235,7 +235,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(15),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "15"),
@@ -243,7 +243,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
@@ -251,7 +251,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "0"),
@@ -259,7 +259,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "3"),
@@ -300,7 +300,7 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, true, "5"),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
@@ -316,7 +316,7 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 					})
 					require.NoError(t, err)
 				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
@@ -325,7 +325,7 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 			},
 			{
 				PreConfig:       updateAccountParameter(t, client, sdk.AccountParameterDataRetentionTimeInDays, false, "10"),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDatabase"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "3"),

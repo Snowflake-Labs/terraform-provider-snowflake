@@ -26,10 +26,14 @@ The Snowflake provider will use the following order of precedence when determini
 Longer context in [#2517](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2517).
 After this change, one apply may be required to update the state correctly for failover group resources using `ACCOUNT PARAMETERS`.
 
-### snowflake_schema resource changes
-#### *(behavior change)* Schema `data_retention_days`
-To make `snowflake_schema.data_retention_days` truly optional field (previously it was producing plan every time when no value was set),
+### snowflake_database, snowflake_schema, and snowflake_table resource changes
+#### *(behavior change)* Database `data_retention_time_in_days` + Schema `data_retention_days` + Table `data_retention_time_in_days`
+To make data retention fields truly optional (previously they were producing plan every time when no value was set),
 we added `-1` as a possible value as set it as default. That got rid of the unexpected plans when no value is set and added possibility to use default value assigned by Snowflake (see [the data retention period](https://docs.snowflake.com/en/user-guide/data-time-travel#data-retention-period)).
+
+### snowflake_table resource changes
+#### *(behavior change)* Table `data_retention_days` field removed in favor of `data_retention_time_in_days`
+To define data retention days for table `data_retention_time_in_days` should be used as deprecated `data_retention_days` field is being removed.
 
 ## v0.85.0 ➞ v0.86.0
 ### snowflake_table_constraint resource changes
