@@ -8,15 +8,13 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/avast/retry-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_FailoverGroupsCreate(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
 	client := testClient(t)
 	ctx := testContext(t)
 	shareTest, shareCleanup := createShare(t, client)
@@ -72,6 +70,38 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(fgShares))
 		assert.Equal(t, shareTest.ID().Name(), fgShares[0].Name())
+	})
+
+	t.Run("test with identifier containing a dot", func(t *testing.T) {
+		shareId := sdk.NewAccountObjectIdentifier(random.AlphanumericN(6) + "." + random.AlphanumericN(6))
+
+		shareWithDot, shareWithDotCleanup := createShareWithOptions(t, client, shareId, &sdk.CreateShareOptions{})
+		t.Cleanup(shareWithDotCleanup)
+
+		id := sdk.RandomAccountObjectIdentifier()
+		objectTypes := []sdk.PluralObjectType{
+			sdk.PluralObjectTypeShares,
+		}
+		allowedAccounts := []sdk.AccountIdentifier{
+			getAccountIdentifier(t, testSecondaryClient(t)),
+		}
+		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
+			AllowedShares: []sdk.AccountObjectIdentifier{
+				shareWithDot.ID(),
+			},
+			IgnoreEditionCheck: sdk.Bool(true),
+		})
+		require.NoError(t, err)
+		cleanupFailoverGroup := func() {
+			err := client.FailoverGroups.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		}
+		t.Cleanup(cleanupFailoverGroup)
+
+		fgShares, err := client.FailoverGroups.ShowShares(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(fgShares))
+		assert.Equal(t, shareWithDot.ID().Name(), fgShares[0].Name())
 	})
 
 	t.Run("test with allowed integration types", func(t *testing.T) {

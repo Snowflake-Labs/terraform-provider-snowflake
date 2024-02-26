@@ -574,15 +574,17 @@ func (v *failoverGroups) ShowShares(ctx context.Context, id AccountObjectIdentif
 		return nil, err
 	}
 	dest := []struct {
-		Name string `db:"name"`
+		Name         string `db:"name"`
+		OwnerAccount string `db:"owner_account"`
 	}{}
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, err
 	}
 	resultList := make([]AccountObjectIdentifier, len(dest))
-	for i, row := range dest {
-		resultList[i] = NewExternalObjectIdentifierFromFullyQualifiedName(row.Name).objectIdentifier.(AccountObjectIdentifier)
+	for i, r := range dest {
+		// TODO [SNOW-999049]: this was not working correctly with identifiers containing `.` character
+		resultList[i] = NewExternalObjectIdentifier(NewAccountIdentifierFromFullyQualifiedName(r.OwnerAccount), NewAccountObjectIdentifier(r.Name)).objectIdentifier.(AccountObjectIdentifier)
 	}
 	return resultList, nil
 }
