@@ -59,6 +59,7 @@ resource "snowflake_table" "table" {
     name     = "data"
     type     = "text"
     nullable = false
+    collate  = "en-ci"
   }
 
   column {
@@ -115,6 +116,7 @@ Required:
 
 Optional:
 
+- `collate` (String) Column collation, e.g. utf8
 - `comment` (String) Column comment
 - `default` (Block List, Max: 1) Defines the column default value; note due to limitations of Snowflake's ALTER TABLE ADD/MODIFY COLUMN updates to default will not be applied (see [below for nested schema](#nestedblock--column--default))
 - `identity` (Block List, Max: 1) Defines the identity start/step values for a column. **Note** Identity/default are mutually exclusive. (see [below for nested schema](#nestedblock--column--identity))
