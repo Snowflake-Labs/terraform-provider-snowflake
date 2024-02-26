@@ -10,18 +10,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
@@ -931,7 +931,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 
 func getSecondaryAccountName(t *testing.T) (string, error) {
 	t.Helper()
-	config, err := sdk.ProfileConfig("secondary_test_account")
+	config, err := sdk.ProfileConfig(testprofiles.Secondary)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -953,7 +953,7 @@ func getAccountName(t *testing.T) (string, error) {
 
 func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
 	t.Helper()
-	config, err := sdk.ProfileConfig("secondary_test_account")
+	config, err := sdk.ProfileConfig(testprofiles.Secondary)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -976,7 +976,7 @@ func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, s
 
 func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
 	t.Helper()
-	config, err := sdk.ProfileConfig("secondary_test_account")
+	config, err := sdk.ProfileConfig(testprofiles.Secondary)
 	if err != nil {
 		t.Fatal(err)
 	}
