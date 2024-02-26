@@ -1537,3 +1537,50 @@ func testAccCheckTableDestroy(s *terraform.State) error {
 	}
 	return nil
 }
+
+// proves issues https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2110 and https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2495
+func TestAcc_Table_ClusterBy(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: tableConfigWithComplexClusterBy(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "cluster_by.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "cluster_by.0", "date_trunc('month', LAST_LOAD_TIME)"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "cluster_by.1", "COL1"),
+				),
+			},
+		},
+	})
+}
+
+func tableConfigWithComplexClusterBy(name string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test_table" {
+	name                = "%[1]s"
+	database            = "%[2]s"
+	schema              = "%[3]s"
+	cluster_by = ["date_trunc('month', LAST_LOAD_TIME)", "COL1"]
+	column {
+		name = "COL1"
+		type = "VARCHAR(16777216)"
+	}
+    column {
+        name     = "LAST_LOAD_TIME"
+        type     = "TIMESTAMP_LTZ(6)"
+        nullable = true
+    }
+}
+`, name, databaseName, schemaName)
+}

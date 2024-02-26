@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -378,6 +379,38 @@ func TestAcc_ViewStatementUpdate(t *testing.T) {
 	})
 }
 
+func TestAcc_View_copyGrants(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	query := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckViewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      viewConfigWithCopyGrants(acc.TestDatabaseName, acc.TestSchemaName, accName, query, true),
+				ExpectError: regexp.MustCompile("all of `copy_grants,or_replace` must be specified"),
+			},
+			{
+				Config: viewConfigWithCopyGrantsAndOrReplace(acc.TestDatabaseName, acc.TestSchemaName, accName, query, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+				),
+			},
+			{
+				Config: viewConfigWithOrReplace(acc.TestDatabaseName, acc.TestSchemaName, accName, query, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+				),
+			},
+		},
+	})
+}
+
 func viewConfigWithGrants(databaseName string, schemaName string, selectStatement string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "table" {
@@ -428,6 +461,43 @@ data "snowflake_grants" "grants" {
 		databaseName, schemaName,
 		databaseName, schemaName,
 		databaseName, schemaName)
+}
+
+func viewConfigWithCopyGrants(databaseName string, schemaName string, name string, selectStatement string, copyGrants bool) string {
+	return fmt.Sprintf(`
+resource "snowflake_view" "test" {
+  name = "%[3]s"
+  database = "%[1]s"
+  schema = "%[2]s"
+  statement = "%[4]s"
+  copy_grants = %[5]t
+}
+	`, databaseName, schemaName, name, selectStatement, copyGrants)
+}
+
+func viewConfigWithCopyGrantsAndOrReplace(databaseName string, schemaName string, name string, selectStatement string, copyGrants bool, orReplace bool) string {
+	return fmt.Sprintf(`
+resource "snowflake_view" "test" {
+  name = "%[3]s"
+  database = "%[1]s"
+  schema = "%[2]s"
+  statement = "%[4]s"
+  copy_grants = %[5]t
+  or_replace = %[6]t
+}
+	`, databaseName, schemaName, name, selectStatement, copyGrants, orReplace)
+}
+
+func viewConfigWithOrReplace(databaseName string, schemaName string, name string, selectStatement string, orReplace bool) string {
+	return fmt.Sprintf(`
+resource "snowflake_view" "test" {
+  name = "%[3]s"
+  database = "%[1]s"
+  schema = "%[2]s"
+  statement = "%[4]s"
+  or_replace = %[5]t
+}
+	`, databaseName, schemaName, name, selectStatement, orReplace)
 }
 
 func testAccCheckViewDestroy(s *terraform.State) error {
