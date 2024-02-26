@@ -208,7 +208,15 @@ func (v *tableConstraintID) parse(s string) {
 }
 
 func getTableIdentifier(s string) (*sdk.SchemaObjectIdentifier, error) {
-	objectIdentifier, err := helpers.DecodeSnowflakeParameterID(s)
+	var objectIdentifier sdk.ObjectIdentifier
+	var err error
+	// TODO [SNOW-999049]: Fallback for old implementations using table.id instead of table.qualified_name - probably will be removed later.
+	if strings.Contains(s, "|") {
+		objectIdentifier = helpers.DecodeSnowflakeID(s)
+	} else {
+		objectIdentifier, err = helpers.DecodeSnowflakeParameterID(s)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("table id is incorrect: %s, err: %w", objectIdentifier, err)
 	}
