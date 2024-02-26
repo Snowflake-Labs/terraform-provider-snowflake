@@ -1,13 +1,17 @@
+resource "snowflake_database" "test" {
+  name                        = var.database
+  data_retention_time_in_days = var.database_data_retention_time
+}
+
 resource "snowflake_schema" "test" {
-  database            = var.database
+  database            = snowflake_database.test.name
   name                = var.schema
   data_retention_days = var.schema_data_retention_time
 }
 
 resource "snowflake_table" "test" {
-  depends_on                  = [snowflake_schema.test]
-  database                    = var.database
-  schema                      = var.schema
+  database                    = snowflake_database.test.name
+  schema                      = snowflake_schema.test.name
   name                        = var.table
   data_retention_time_in_days = var.table_data_retention_time
 

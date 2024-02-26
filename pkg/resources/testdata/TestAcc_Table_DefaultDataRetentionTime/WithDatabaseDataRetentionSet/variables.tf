@@ -10,6 +10,6 @@ variable "table" {
   type = string
 }
 
-variable "schema_data_retention_time" {
+variable "database_data_retention_time" {
   type = number
 }

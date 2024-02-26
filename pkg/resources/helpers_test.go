@@ -558,10 +558,12 @@ func updateAccountParameter(t *testing.T, client *sdk.Client, parameter sdk.Acco
 	require.NoError(t, err)
 	oldValue := param.Value
 
-	t.Cleanup(func() {
-		err = client.Parameters.SetAccountParameter(ctx, parameter, oldValue)
-		require.NoError(t, err)
-	})
+	if temporarily {
+		t.Cleanup(func() {
+			err = client.Parameters.SetAccountParameter(ctx, parameter, oldValue)
+			require.NoError(t, err)
+		})
+	}
 
 	return func() {
 		err = client.Parameters.SetAccountParameter(ctx, parameter, newValue)
