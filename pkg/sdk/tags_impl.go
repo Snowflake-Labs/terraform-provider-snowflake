@@ -51,6 +51,16 @@ func (v *tags) Undrop(ctx context.Context, request *UndropTagRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *tags) Set(ctx context.Context, request *SetTagRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *tags) Unset(ctx context.Context, request *UnsetTagRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (s *CreateTagRequest) toOpts() *createTagOptions {
 	return &createTagOptions{
 		OrReplace:     Bool(s.orReplace),
@@ -90,4 +100,38 @@ func (s *UndropTagRequest) toOpts() *undropTagOptions {
 	return &undropTagOptions{
 		name: s.name,
 	}
+}
+
+func (s *SetTagRequest) toOpts() *setTagOptions {
+	o := &setTagOptions{
+		objectType: s.objectType,
+		objectName: s.objectName,
+		SetTags:    s.SetTags,
+	}
+	if o.objectType == ObjectTypeColumn {
+		id, ok := o.objectName.(TableColumnIdentifier)
+		if ok {
+			o.objectType = ObjectTypeTable
+			o.objectName = NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), id.TableName())
+			o.column = String(id.Name())
+		}
+	}
+	return o
+}
+
+func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
+	o := &unsetTagOptions{
+		objectType: s.objectType,
+		objectName: s.objectName,
+		UnsetTags:  s.UnsetTags,
+	}
+	if o.objectType == ObjectTypeColumn {
+		id, ok := o.objectName.(TableColumnIdentifier)
+		if ok {
+			o.objectType = ObjectTypeTable
+			o.objectName = NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), id.TableName())
+			o.column = String(id.Name())
+		}
+	}
+	return o
 }

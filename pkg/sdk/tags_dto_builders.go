@@ -1,5 +1,29 @@
 package sdk
 
+func NewSetTagRequest(objectType ObjectType, objectName ObjectIdentifier) *SetTagRequest {
+	return &SetTagRequest{
+		objectType: objectType,
+		objectName: objectName,
+	}
+}
+
+func (s *SetTagRequest) WithSetTags(tags []TagAssociation) *SetTagRequest {
+	s.SetTags = tags
+	return s
+}
+
+func NewUnsetTagRequest(objectType ObjectType, objectName ObjectIdentifier) *UnsetTagRequest {
+	return &UnsetTagRequest{
+		objectType: objectType,
+		objectName: objectName,
+	}
+}
+
+func (s *UnsetTagRequest) WithUnsetTags(tags []ObjectIdentifier) *UnsetTagRequest {
+	s.UnsetTags = tags
+	return s
+}
+
 func NewCreateTagRequest(name SchemaObjectIdentifier) *CreateTagRequest {
 	s := CreateTagRequest{}
 	s.name = name

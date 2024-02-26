@@ -141,3 +141,25 @@ func (opts *undropTagOptions) validate() error {
 	}
 	return errors.Join(errs...)
 }
+
+func (opts *setTagOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.objectName) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *unsetTagOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.objectName) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
+}

@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -294,5 +295,99 @@ func TestTagAlter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TagUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
+	})
+}
+
+func TestTagSet(t *testing.T) {
+	id := RandomSchemaObjectIdentifier()
+	defaultOpts := func() *setTagOptions {
+		return &setTagOptions{
+			objectType: ObjectTypeStage,
+			objectName: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		opts := (*setTagOptions)(nil)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectName = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("set with all optional", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag1"),
+				Value: "value1",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s SET TAG "tag1" = 'value1'`, opts.objectType, id.FullyQualifiedName())
+	})
+
+	t.Run("set with column", func(t *testing.T) {
+		table, column := NewSchemaObjectIdentifier("db1", "schema1", "table1"), "column1"
+		objectName := NewObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s.%s.%s", table.DatabaseName(), table.SchemaName(), table.Name(), column))
+		request := SetTagRequest{
+			objectType: ObjectTypeColumn,
+			objectName: objectName,
+			SetTags: []TagAssociation{
+				{
+					Name:  NewAccountObjectIdentifier("tag1"),
+					Value: "value1",
+				},
+			},
+		}
+		opts := request.toOpts()
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s MODIFY COLUMN "%s" SET TAG "tag1" = 'value1'`, opts.objectType, table.FullyQualifiedName(), column)
+	})
+}
+
+func TestTagUnset(t *testing.T) {
+	id := RandomSchemaObjectIdentifier()
+	defaultOpts := func() *unsetTagOptions {
+		return &unsetTagOptions{
+			objectType: ObjectTypeStage,
+			objectName: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		opts := (*unsetTagOptions)(nil)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectName = NewSchemaObjectIdentifier("", "", "")
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("unset with all optional", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("tag1"),
+			NewAccountObjectIdentifier("tag2"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s UNSET TAG "tag1", "tag2"`, opts.objectType, id.FullyQualifiedName())
+	})
+
+	t.Run("unset with column", func(t *testing.T) {
+		table, column := NewSchemaObjectIdentifier("db1", "schema1", "table1"), "column1"
+		objectName := NewObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s.%s.%s", table.DatabaseName(), table.SchemaName(), table.Name(), column))
+		request := UnsetTagRequest{
+			objectType: ObjectTypeColumn,
+			objectName: objectName,
+			UnsetTags: []ObjectIdentifier{
+				NewAccountObjectIdentifier("tag1"),
+				NewAccountObjectIdentifier("tag2"),
+			},
+		}
+		opts := request.toOpts()
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s MODIFY COLUMN "%s" UNSET TAG "tag1", "tag2"`, opts.objectType, table.FullyQualifiedName(), column)
 	})
 }
