@@ -77,9 +77,7 @@ func testAccFunction(t *testing.T, configDirectory string) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"language",
 					"null_input_behavior",
-					"return_behavior",
 				},
 			},
 		},
