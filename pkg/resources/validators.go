@@ -40,51 +40,58 @@ func IsDataType() schema.SchemaValidateFunc { //nolint:staticcheck
 // To use this function, pass it as a validation function on identifier field with generic parameter set to the desired sdk.ObjectIdentifier implementation.
 func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier]() schema.SchemaValidateDiagFunc {
 	return func(value any, path cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-
 		if _, ok := value.(string); !ok {
-			diags = append(diags, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "Invalid schema identifier type",
-				Detail:        fmt.Sprintf("Expected schema string type, but got: %T. This is a provider error please file a report: https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/new/choose", value),
-				AttributePath: path,
-			})
-			return diags
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "Invalid schema identifier type",
+					Detail:        fmt.Sprintf("Expected schema string type, but got: %T. This is a provider error please file a report: https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/new/choose", value),
+					AttributePath: path,
+				},
+			}
+		}
+
+		// TODO(SNOW-1163071): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
+		if _, ok := any(sdk.AccountObjectIdentifier{}).(T); ok {
+			return nil
 		}
 
 		stringValue := value.(string)
 		id, err := helpers.DecodeSnowflakeParameterID(stringValue)
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to parse the identifier",
-				Detail: fmt.Sprintf(
-					"Unable to parse the identifier: %s. Make sure you are using the correct form of the fully qualified name for this field: %s.\nOriginal Error: %s",
-					stringValue,
-					getExpectedIdentifierRepresentationFromGeneric[T](),
-					err.Error(),
-				),
-				AttributePath: path,
-			})
-			return diags
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Unable to parse the identifier",
+					Detail: fmt.Sprintf(
+						"Unable to parse the identifier: %s. Make sure you are using the correct form of the fully qualified name for this field: %s.\nOriginal Error: %s",
+						stringValue,
+						getExpectedIdentifierRepresentationFromGeneric[T](),
+						err.Error(),
+					),
+					AttributePath: path,
+				},
+			}
 		}
 
 		if _, ok := id.(T); !ok {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Invalid identifier type",
-				Detail: fmt.Sprintf(
-					"Expected %s identifier type, but got: %T. The correct form of the fully qualified name for this field is: %s, but was %s",
-					reflect.TypeOf(new(T)).Elem().Name(),
-					id,
-					getExpectedIdentifierRepresentationFromGeneric[T](),
-					getExpectedIdentifierRepresentationFromParam(id),
-				),
-				AttributePath: path,
-			})
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Invalid identifier type",
+					Detail: fmt.Sprintf(
+						"Expected %s identifier type, but got: %T. The correct form of the fully qualified name for this field is: %s, but was %s",
+						reflect.TypeOf(new(T)).Elem().Name(),
+						id,
+						getExpectedIdentifierRepresentationFromGeneric[T](),
+						getExpectedIdentifierRepresentationFromParam(id),
+					),
+					AttributePath: path,
+				},
+			}
 		}
 
-		return diags
+		return nil
 	}
 }
 
