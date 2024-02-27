@@ -656,12 +656,12 @@ func createFailoverGroupWithOptions(t *testing.T, client *sdk.Client, objectType
 
 func createShare(t *testing.T, client *sdk.Client) (*sdk.Share, func()) {
 	t.Helper()
-	return createShareWithOptions(t, client, &sdk.CreateShareOptions{})
+	id := sdk.RandomAccountObjectIdentifier()
+	return createShareWithOptions(t, client, id, &sdk.CreateShareOptions{})
 }
 
-func createShareWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateShareOptions) (*sdk.Share, func()) {
+func createShareWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateShareOptions) (*sdk.Share, func()) {
 	t.Helper()
-	id := sdk.RandomAccountObjectIdentifier()
 	ctx := context.Background()
 	err := client.Shares.Create(ctx, id, opts)
 	require.NoError(t, err)

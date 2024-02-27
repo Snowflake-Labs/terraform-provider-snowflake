@@ -2,12 +2,12 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -16,10 +16,7 @@ import (
 func TestAcc_FailoverGroupBasic(t *testing.T) {
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	if _, ok := os.LookupEnv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT"); !ok {
-		t.Skip("Skipping TestAcc_FailoverGroup since not a business critical account")
-	}
-	accountName := os.Getenv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT")
+	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -54,10 +51,7 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	if _, ok := os.LookupEnv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT"); !ok {
-		t.Skip("Skipping TestAcc_FailoverGroup since not a business critical account")
-	}
-	accountName := os.Getenv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT")
+	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -95,10 +89,7 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 func TestAcc_FailoverGroupInterval(t *testing.T) {
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	if _, ok := os.LookupEnv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT"); !ok {
-		t.Skip("Skipping TestAcc_FailoverGroup since not a business critical account")
-	}
-	accountName := os.Getenv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT")
+	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -194,10 +185,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 func TestAcc_FailoverGroup_issue2517(t *testing.T) {
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	if _, ok := os.LookupEnv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT"); !ok {
-		t.Skip("Skipping TestAcc_FailoverGroup since not a business critical account")
-	}
-	accountName := os.Getenv("SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT")
+	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -216,6 +204,34 @@ func TestAcc_FailoverGroup_issue2517(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_integration_types.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.expression", "0 0 10-20 * TUE,THU"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "replication_schedule.0.cron.0.time_zone", "UTC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_FailoverGroup_issue2544(t *testing.T) {
+	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: failoverGroupBasic(randomCharacters, accountName, acc.TestDatabaseName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+				),
+			},
+			{
+				Config: failoverGroupWithChanges(randomCharacters, accountName, 20),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
 				),
 			},
 		},
@@ -303,4 +319,18 @@ resource "snowflake_failover_group" "fg" {
 	}
 }
 `, randomCharacters, accountName, databaseName)
+}
+
+func failoverGroupWithChanges(randomCharacters string, accountName string, interval int) string {
+	return fmt.Sprintf(`
+resource "snowflake_failover_group" "fg" {
+	name = "%[1]s"
+	object_types = ["DATABASES", "INTEGRATIONS"]
+	allowed_accounts= ["%[2]s"]
+	allowed_integration_types = ["NOTIFICATION INTEGRATIONS"]
+	replication_schedule {
+		interval = %d
+	}
+}
+`, randomCharacters, accountName, interval)
 }
