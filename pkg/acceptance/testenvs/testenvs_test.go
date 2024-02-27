@@ -45,6 +45,39 @@ func Test_GetOrSkipTest(t *testing.T) {
 	})
 }
 
+func Test_SkipTestIfSet(t *testing.T) {
+	// runSkipTestIfSetInGoroutineAndWaitForCompletion is needed because underneath we test t.Skipf, that leads to t.SkipNow() that in turn call runtime.Goexit()
+	// so we need to be wrapped in a Goroutine.
+	runSkipTestIfSetInGoroutineAndWaitForCompletion := func(t *testing.T, env testenvs.Env) {
+		t.Helper()
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			testenvs.SkipTestIfSet(t, env, "some good reason")
+		}()
+		wg.Wait()
+	}
+
+	t.Run("skip test if env is set", func(t *testing.T) {
+		t.Setenv(string(testenvs.User), "1")
+
+		tut := &testing.T{}
+		runSkipTestIfSetInGoroutineAndWaitForCompletion(tut, testenvs.User)
+
+		require.True(t, tut.Skipped())
+	})
+
+	t.Run("do not skip if env not set", func(t *testing.T) {
+		t.Setenv(string(testenvs.User), "")
+
+		tut := &testing.T{}
+		runSkipTestIfSetInGoroutineAndWaitForCompletion(tut, testenvs.User)
+
+		require.False(t, tut.Skipped())
+	})
+}
+
 func Test_Assertions(t *testing.T) {
 	// runAssertionInGoroutineAndWaitForCompletion is needed because underneath we test require, that leads to t.FailNow() that in turn call runtime.Goexit()
 	// so we need to be wrapped in a Goroutine.

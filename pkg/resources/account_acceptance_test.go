@@ -2,20 +2,19 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_Account_complete(t *testing.T) {
-	// SNOWFLAKE_TEST_ACCOUNT_CREATE must be set to 1 to run this test
-	if _, ok := os.LookupEnv("SNOWFLAKE_TEST_ACCOUNT_CREATE"); !ok {
-		t.Skip("Skipping TestInt_AccountCreate")
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
+
 	accountName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	password := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha) + "123ABC"
 

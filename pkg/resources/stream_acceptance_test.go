@@ -2,14 +2,16 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
@@ -57,17 +59,15 @@ func TestAcc_Stream(t *testing.T) {
 
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	accNameExternalTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	bucketURL := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL")
-	if bucketURL == "" {
-		t.Skip("Skipping TestAcc_ExternalTable")
-	}
-	roleName := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN")
-	if roleName == "" {
-		t.Skip("Skipping TestAcc_ExternalTable")
-	}
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	bucketURL := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
+	roleName := testenvs.GetOrSkipTest(t, testenvs.AwsExternalRoleArn)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

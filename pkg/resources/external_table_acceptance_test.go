@@ -6,29 +6,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"slices"
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/stretchr/testify/require"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_ExternalTable_basic(t *testing.T) {
-	shouldSkip, awsBucketURL, awsKeyId, awsSecretKey := externalTableTestEnvs()
-	if shouldSkip {
-		t.Skip("Skipping TestAcc_ExternalTable_basic")
-	}
+	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_external_table.test_table"
@@ -131,10 +127,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2310 is fixed
 func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
-	shouldSkip, awsBucketURL, awsKeyId, awsSecretKey := externalTableTestEnvs()
-	if shouldSkip {
-		t.Skip("Skipping TestAcc_ExternalTable_CorrectDataTypes")
-	}
+	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_external_table.test_table"
@@ -192,10 +185,7 @@ func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2293 is fixed
 func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
-	shouldSkip, awsBucketURL, awsKeyId, awsSecretKey := externalTableTestEnvs()
-	if shouldSkip {
-		t.Skip("Skipping TestAcc_ExternalTable_CanCreateWithPartitions")
-	}
+	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_external_table.test_table"
@@ -254,10 +244,7 @@ func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1564 is implemented
 func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
-	shouldSkip, awsBucketURL, awsKeyId, awsSecretKey := externalTableTestEnvs()
-	if shouldSkip {
-		t.Skip("Skipping TestAcc_ExternalTable_DeltaLake")
-	}
+	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_external_table.test_table"
@@ -324,11 +311,11 @@ func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 	})
 }
 
-func externalTableTestEnvs() (bool, string, string, string) {
-	awsBucketURL := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL")
-	awsKeyId := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_KEY_ID")
-	awsSecretKey := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY")
-	return awsBucketURL == "" || awsKeyId == "" || awsSecretKey == "", awsBucketURL, awsKeyId, awsSecretKey
+func getExternalTableTestEnvsOrSkipTest(t *testing.T) (string, string, string) {
+	awsBucketURL := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
+	awsKeyId := testenvs.GetOrSkipTest(t, testenvs.AwsExternalKeyId)
+	awsSecretKey := testenvs.GetOrSkipTest(t, testenvs.AwsExternalSecretKey)
+	return awsBucketURL, awsKeyId, awsSecretKey
 }
 
 func externalTableContainsData(name string, contains func(rows []map[string]*any) bool) func(state *terraform.State) error {

@@ -2,19 +2,19 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_SamlIntegration(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_SAML_INTEGRATION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_SamlIntegration")
-	}
+	// TODO [SNOW-926148]: unskip
+	testenvs.SkipTestIfSet(t, testenvs.SkipSamlIntegrationTest, "because was skipped earlier")
 
 	samlIntName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 

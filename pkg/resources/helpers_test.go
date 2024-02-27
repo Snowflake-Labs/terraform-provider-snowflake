@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"slices"
 	"testing"
 
@@ -28,26 +27,6 @@ const (
 	normal grantType = iota
 	onFuture
 	onAll
-)
-
-var (
-	awsBucketUrl, awsBucketUrlIsSet = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL")
-	awsKeyId, awsKeyIdIsSet         = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_KEY_ID")
-	awsSecretKey, awsSecretKeyIsSet = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY")
-	awsRoleARN, awsRoleARNIsSet     = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN")
-
-	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL")
-
-	azureBucketUrl, azureBucketUrlIsSet = os.LookupEnv("TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL")
-	azureTenantId, azureTenantIdIsSet   = os.LookupEnv("TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID")
-
-	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet &&
-		awsKeyIdIsSet &&
-		awsSecretKeyIsSet &&
-		awsRoleARNIsSet &&
-		gcsBucketUrlIsSet &&
-		azureBucketUrlIsSet &&
-		azureTenantIdIsSet
 )
 
 func TestGetPropertyAsPointer(t *testing.T) {

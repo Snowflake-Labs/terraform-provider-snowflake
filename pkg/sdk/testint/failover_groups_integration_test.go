@@ -2,7 +2,6 @@ package testint
 
 import (
 	"log"
-	"os"
 	"slices"
 	"testing"
 	"time"
@@ -213,11 +212,10 @@ func TestInt_Issue2544(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	primaryAccountID := getAccountIdentifier(t, client)
@@ -290,11 +288,10 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	assert.Equal(t, 2, len(failoverGroups))
 }
 
-// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsAlterSource(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	t.Run("rename the failover group", func(t *testing.T) {
@@ -648,11 +645,10 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	primaryAccountID := getAccountIdentifier(t, client)
@@ -774,11 +770,10 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsDrop(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	t.Run("no options", func(t *testing.T) {
@@ -797,11 +792,10 @@ func TestInt_FailoverGroupsDrop(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsShow(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
@@ -830,11 +824,10 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
@@ -864,11 +857,10 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	assert.Equal(t, testDb(t).ID(), databases[0])
 }
 
-// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsShowShares(t *testing.T) {
-	if _, ok := os.LookupEnv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES"); !ok {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
