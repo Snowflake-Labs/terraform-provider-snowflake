@@ -134,6 +134,78 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	})
 }
 
+func TestInt_Issue2544(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	t.Run("alter object types, replication schedule, and allowed integration types at the same time", func(t *testing.T) {
+		id := sdk.RandomAccountObjectIdentifier()
+		objectTypes := []sdk.PluralObjectType{
+			sdk.PluralObjectTypeIntegrations,
+			sdk.PluralObjectTypeDatabases,
+		}
+		allowedAccounts := []sdk.AccountIdentifier{
+			getAccountIdentifier(t, testSecondaryClient(t)),
+		}
+		allowedIntegrationTypes := []sdk.IntegrationType{
+			sdk.IntegrationTypeAPIIntegrations,
+			sdk.IntegrationTypeNotificationIntegrations,
+		}
+		replicationSchedule := "10 MINUTE"
+		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
+			AllowedDatabases: []sdk.AccountObjectIdentifier{
+				testDb(t).ID(),
+			},
+			AllowedIntegrationTypes: allowedIntegrationTypes,
+			ReplicationSchedule:     sdk.String(replicationSchedule),
+		})
+		require.NoError(t, err)
+		cleanupFailoverGroup := func() {
+			err := client.FailoverGroups.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		}
+		t.Cleanup(cleanupFailoverGroup)
+
+		newObjectTypes := []sdk.PluralObjectType{
+			sdk.PluralObjectTypeIntegrations,
+		}
+		newAllowedIntegrationTypes := []sdk.IntegrationType{
+			sdk.IntegrationTypeAPIIntegrations,
+		}
+		newReplicationSchedule := "20 MINUTE"
+
+		// does not work together:
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes:             newObjectTypes,
+				AllowedIntegrationTypes: newAllowedIntegrationTypes,
+				ReplicationSchedule:     sdk.String(newReplicationSchedule),
+			},
+		}
+		err = client.FailoverGroups.AlterSource(ctx, id, opts)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "unexpected 'REPLICATION_SCHEDULE'")
+
+		// works as two separate alters:
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes:             newObjectTypes,
+				AllowedIntegrationTypes: newAllowedIntegrationTypes,
+			},
+		}
+		err = client.FailoverGroups.AlterSource(ctx, id, opts)
+		require.NoError(t, err)
+
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ReplicationSchedule: sdk.String(newReplicationSchedule),
+			},
+		}
+		err = client.FailoverGroups.AlterSource(ctx, id, opts)
+		require.NoError(t, err)
+	})
+}
+
 func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	// TODO: Business Critical Snowflake Edition (SNOW-1002023)
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {

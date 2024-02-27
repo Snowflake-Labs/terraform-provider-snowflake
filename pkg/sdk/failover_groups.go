@@ -183,8 +183,8 @@ func (opts *AlterSourceFailoverGroupOptions) validate() error {
 
 type FailoverGroupSet struct {
 	ObjectTypes             []PluralObjectType `ddl:"parameter" sql:"OBJECT_TYPES"`
-	ReplicationSchedule     *string            `ddl:"parameter,single_quotes" sql:"REPLICATION_SCHEDULE"`
 	AllowedIntegrationTypes []IntegrationType  `ddl:"parameter" sql:"ALLOWED_INTEGRATION_TYPES"`
+	ReplicationSchedule     *string            `ddl:"parameter,single_quotes" sql:"REPLICATION_SCHEDULE"`
 }
 
 func (v *FailoverGroupSet) validate() error {
