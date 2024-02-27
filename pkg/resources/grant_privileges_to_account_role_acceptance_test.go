@@ -955,7 +955,8 @@ func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
 			{
 				PreConfig: func() {
 					createAccountRoleOutsideTerraform(t, name)
-					createExternalVolumeTemporarily(t, externalVolumeName)
+					cleanupExternalVolume := createExternalVolume(t, externalVolumeName)
+					t.Cleanup(cleanupExternalVolume)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnExternalVolume"),
 				ConfigVariables: configVariables,
@@ -1111,7 +1112,7 @@ func queriedAccountRolePrivilegesContainAtLeast(roleName sdk.AccountObjectIdenti
 	}, roleName, privileges...)
 }
 
-func createExternalVolumeTemporarily(t *testing.T, externalVolumeName string) {
+func createExternalVolume(t *testing.T, externalVolumeName string) func() {
 	t.Helper()
 
 	client, err := sdk.NewDefaultClient()
@@ -1130,8 +1131,8 @@ func createExternalVolumeTemporarily(t *testing.T, externalVolumeName string) {
 `, externalVolumeName))
 	require.NoError(t, err)
 
-	t.Cleanup(func() {
+	return func() {
 		_, err = client.ExecForTests(ctx, fmt.Sprintf(`drop external volume "%s"`, externalVolumeName))
 		require.NoError(t, err)
-	})
+	}
 }
