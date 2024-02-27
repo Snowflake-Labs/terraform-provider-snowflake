@@ -312,6 +312,7 @@ func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 }
 
 func getExternalTableTestEnvsOrSkipTest(t *testing.T) (string, string, string) {
+	t.Helper()
 	awsBucketURL := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
 	awsKeyId := testenvs.GetOrSkipTest(t, testenvs.AwsExternalKeyId)
 	awsSecretKey := testenvs.GetOrSkipTest(t, testenvs.AwsExternalSecretKey)

@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"strings"
 	"testing"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 const (

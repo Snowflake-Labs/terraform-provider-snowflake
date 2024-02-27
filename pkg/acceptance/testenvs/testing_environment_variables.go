@@ -23,11 +23,11 @@ const (
 
 	AwsExternalBucketUrl   env = "TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL"
 	AwsExternalKeyId       env = "TEST_SF_TF_AWS_EXTERNAL_KEY_ID"
-	AwsExternalSecretKey   env = "TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY"
+	AwsExternalSecretKey   env = "TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY" // #nosec G101
 	AwsExternalRoleArn     env = "TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN"
 	AzureExternalBucketUrl env = "TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL"
 	AzureExternalTenantId  env = "TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID"
-	AzureExternalSasToken  env = "TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN"
+	AzureExternalSasToken  env = "TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN" // #nosec G101
 	GcsExternalBuckerUrl   env = "TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL"
 
 	SkipManagedAccountTest  env = "TEST_SF_TF_SKIP_MANAGED_ACCOUNT_TEST"
