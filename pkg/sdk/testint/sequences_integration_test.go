@@ -145,7 +145,7 @@ func TestInt_Sequences(t *testing.T) {
 		increment := 2
 		err := client.Sequences.Alter(ctx, sdk.NewAlterSequenceRequest(id).WithSetIncrement(&increment))
 		require.NoError(t, err)
-		assertSequence(t, id, 2, true, "")
+		assertSequence(t, id, 2, false, "")
 	})
 
 	t.Run("alter sequence: rename", func(t *testing.T) {

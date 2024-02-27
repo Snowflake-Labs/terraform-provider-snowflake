@@ -6,6 +6,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,12 +21,36 @@ func TestClient_NewClient(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("uses env vars if values are missing", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
-		t.Cleanup(cleanupEnvVars)
-		config := EnvConfig()
-		_, err := NewClient(config)
-		require.Error(t, err)
+	t.Run("with missing config", func(t *testing.T) {
+		dir, err := os.UserHomeDir()
+		require.NoError(t, err)
+		t.Setenv(snowflakeenvs.ConfigPath, dir)
+
+		config := DefaultConfig()
+		_, err = NewClient(config)
+		require.ErrorContains(t, err, "260000: account is empty")
+	})
+
+	t.Run("with incorrect config", func(t *testing.T) {
+		config, err := ProfileConfig(testprofiles.IncorrectUserAndPassword)
+		require.NoError(t, err)
+		require.NotNil(t, config)
+
+		_, err = NewClient(config)
+		require.ErrorContains(t, err, "Incorrect username or password was specified")
+	})
+
+	t.Run("with missing config - should not care about correct env variables", func(t *testing.T) {
+		account := testenvs.GetOrSkipTest(t, testenvs.Account)
+		t.Setenv(snowflakeenvs.Account, account)
+
+		dir, err := os.UserHomeDir()
+		require.NoError(t, err)
+		t.Setenv(snowflakeenvs.ConfigPath, dir)
+
+		config := DefaultConfig()
+		_, err = NewClient(config)
+		require.ErrorContains(t, err, "260000: account is empty")
 	})
 
 	t.Run("registers snowflake-instrumented driver", func(t *testing.T) {

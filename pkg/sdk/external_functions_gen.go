@@ -87,6 +87,7 @@ type ShowExternalFunctionOptions struct {
 	show              bool  `ddl:"static" sql:"SHOW"`
 	externalFunctions bool  `ddl:"static" sql:"EXTERNAL FUNCTIONS"`
 	Like              *Like `ddl:"keyword" sql:"LIKE"`
+	In                *In   `ddl:"keyword" sql:"IN"`
 }
 
 type externalFunctionRow struct {

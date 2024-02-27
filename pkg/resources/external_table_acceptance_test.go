@@ -325,11 +325,10 @@ func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 }
 
 func externalTableTestEnvs() (bool, string, string, string) {
-	shouldSkip := os.Getenv("SKIP_EXTERNAL_TABLE_TEST")
-	awsBucketURL := os.Getenv("AWS_EXTERNAL_BUCKET_URL")
-	awsKeyId := os.Getenv("AWS_EXTERNAL_KEY_ID")
-	awsSecretKey := os.Getenv("AWS_EXTERNAL_SECRET_KEY")
-	return shouldSkip != "" || awsBucketURL == "" || awsKeyId == "" || awsSecretKey == "", awsBucketURL, awsKeyId, awsSecretKey
+	awsBucketURL := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL")
+	awsKeyId := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_KEY_ID")
+	awsSecretKey := os.Getenv("TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY")
+	return awsBucketURL == "" || awsKeyId == "" || awsSecretKey == "", awsBucketURL, awsKeyId, awsSecretKey
 }
 
 func externalTableContainsData(name string, contains func(rows []map[string]*any) bool) func(state *terraform.State) error {
