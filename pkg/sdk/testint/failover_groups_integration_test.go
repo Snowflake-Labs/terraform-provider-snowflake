@@ -213,8 +213,8 @@ func TestInt_Issue2544(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
-	// TODO: Business Critical Snowflake Edition (SNOW-1002023)
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
@@ -290,6 +290,7 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 	assert.Equal(t, 2, len(failoverGroups))
 }
 
+// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
@@ -647,8 +648,8 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
-	// TODO: Business Critical Snowflake Edition (SNOW-1002023)
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
 	}
@@ -773,6 +774,7 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsDrop(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
@@ -795,6 +797,7 @@ func TestInt_FailoverGroupsDrop(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsShow(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
@@ -827,6 +830,7 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
@@ -860,6 +864,7 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 	assert.Equal(t, testDb(t).ID(), databases[0])
 }
 
+// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 func TestInt_FailoverGroupsShowShares(t *testing.T) {
 	if _, ok := os.LookupEnv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES"); !ok {
 		t.Skip("Skipping TestInt_FailoverGroupsCreate")
