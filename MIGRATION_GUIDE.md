@@ -28,11 +28,13 @@ After this change, one apply may be required to update the state correctly for f
 
 ### snowflake_database, snowflake_schema, and snowflake_table resource changes
 #### *(behavior change)* Database `data_retention_time_in_days` + Schema `data_retention_days` + Table `data_retention_time_in_days`
+For context [#2356](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356).
 To make data retention fields truly optional (previously they were producing plan every time when no value was set),
-we added `-1` as a possible value as set it as default. That got rid of the unexpected plans when no value is set and added possibility to use default value assigned by Snowflake (see [the data retention period](https://docs.snowflake.com/en/user-guide/data-time-travel#data-retention-period)).
+we added `-1` as a possible value, and it is set as default. That got rid of the unexpected plans when no value is set and added possibility to use default value assigned by Snowflake (see [the data retention period](https://docs.snowflake.com/en/user-guide/data-time-travel#data-retention-period)).
 
 ### snowflake_table resource changes
 #### *(behavior change)* Table `data_retention_days` field removed in favor of `data_retention_time_in_days`
+For context [#2356](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356).
 To define data retention days for table `data_retention_time_in_days` should be used as deprecated `data_retention_days` field is being removed.
 
 ## v0.85.0 ➞ v0.86.0

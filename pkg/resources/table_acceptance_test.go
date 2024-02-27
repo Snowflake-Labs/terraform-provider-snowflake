@@ -1649,6 +1649,86 @@ func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) 
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
+func TestAcc_Table_DefaultDataRetentionTimeSettingUnsetting(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, tableName)
+
+	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
+		return config.Variables{
+			"database":                     config.StringVariable(databaseName),
+			"schema":                       config.StringVariable(schemaName),
+			"table":                        config.StringVariable(tableName),
+			"database_data_retention_time": config.IntegerVariable(databaseDataRetentionTime),
+		}
+	}
+
+	configWithSchemaDataRetentionSet := func(databaseDataRetentionTime int, schemaDataRetentionTime int) config.Variables {
+		vars := configWithDatabaseDataRetentionSet(databaseDataRetentionTime)
+		vars["schema_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
+		return vars
+	}
+
+	configWithTableDataRetentionSet := func(databaseDataRetentionTime int, schemaDataRetentionTime int, tableDataRetentionTime int) config.Variables {
+		vars := configWithSchemaDataRetentionSet(databaseDataRetentionTime, schemaDataRetentionTime)
+		vars["table_data_retention_time"] = config.IntegerVariable(tableDataRetentionTime)
+		return vars
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
+				ConfigVariables: configWithTableDataRetentionSet(10, 3, 5),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "5"),
+					checkDatabaseSchemaAndTableDataRetentionTime(id, 10, 3, 5),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
+				ConfigVariables: configWithTableDataRetentionSet(10, 3, -1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "-1"),
+					checkDatabaseSchemaAndTableDataRetentionTime(id, 10, 3, 3),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithSchemaDataRetentionSet"),
+				ConfigVariables: configWithSchemaDataRetentionSet(10, 3),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "-1"),
+					checkDatabaseSchemaAndTableDataRetentionTime(id, 10, 3, 3),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
+				ConfigVariables: configWithTableDataRetentionSet(10, 3, -1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "-1"),
+					checkDatabaseSchemaAndTableDataRetentionTime(id, 10, 3, 3),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
+				ConfigVariables: configWithTableDataRetentionSet(10, 3, 5),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "5"),
+					checkDatabaseSchemaAndTableDataRetentionTime(id, 10, 3, 5),
+				),
+			},
+		},
+	})
+}
+
 func tableWithMaskingPolicy(name string, databaseName string, schemaName string, policy string) string {
 	s := `
 resource "snowflake_masking_policy" "policy1" {
