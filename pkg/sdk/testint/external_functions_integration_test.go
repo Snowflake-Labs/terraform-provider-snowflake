@@ -240,6 +240,28 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		require.NotContains(t, es, *e2)
 	})
 
+	t.Run("show external function: with in", func(t *testing.T) {
+		otherDb, otherDbCleanup := createDatabase(t, testClient(t))
+		t.Cleanup(otherDbCleanup)
+
+		e1 := createExternalFunction(t, sdk.DataTypeVARCHAR)
+
+		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseTest.Name, schemaTest.Name)}))
+		require.NoError(t, err)
+
+		require.Contains(t, es, *e1)
+
+		es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseTest.Name)}))
+		require.NoError(t, err)
+
+		require.Contains(t, es, *e1)
+
+		es, err = client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Database: otherDb.ID()}))
+		require.NoError(t, err)
+
+		require.Empty(t, es)
+	})
+
 	t.Run("show external function: no matches", func(t *testing.T) {
 		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithLike(&sdk.Like{Pattern: sdk.String(random.String())}))
 		require.NoError(t, err)

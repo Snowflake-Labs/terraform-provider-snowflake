@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,8 +26,8 @@ func TestLoadConfigFile(t *testing.T) {
 	role='SECURITYADMIN'
 	`
 	configPath := testFile(t, "config", []byte(c))
-	cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
-	t.Cleanup(cleanupEnvVars)
+	t.Setenv(snowflakeenvs.ConfigPath, configPath)
+
 	m, err := loadConfigFile()
 	require.NoError(t, err)
 	assert.Equal(t, "TEST_ACCOUNT", m["default"].Account)
@@ -49,8 +51,8 @@ func TestProfileConfig(t *testing.T) {
 	configPath := testFile(t, "config", []byte(c))
 
 	t.Run("with found profile", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
-		t.Cleanup(cleanupEnvVars)
+		t.Setenv(snowflakeenvs.ConfigPath, configPath)
+
 		config, err := ProfileConfig("securityadmin")
 		require.NoError(t, err)
 		assert.Equal(t, "TEST_ACCOUNT", config.Account)
@@ -60,33 +62,72 @@ func TestProfileConfig(t *testing.T) {
 	})
 
 	t.Run("with not found profile", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "", "", "", "", configPath)
-		t.Cleanup(cleanupEnvVars)
+		t.Setenv(snowflakeenvs.ConfigPath, configPath)
+
 		config, err := ProfileConfig("orgadmin")
 		require.NoError(t, err)
 		require.Nil(t, config)
 	})
+
+	t.Run("with not found config", func(t *testing.T) {
+		dir, err := os.UserHomeDir()
+		require.NoError(t, err)
+		t.Setenv(snowflakeenvs.ConfigPath, dir)
+
+		config, err := ProfileConfig("orgadmin")
+		require.Error(t, err)
+		require.Nil(t, config)
+	})
 }
 
-func TestEnvConfig(t *testing.T) {
-	t.Run("with no environment variables", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "", "", "", "", "")
-		t.Cleanup(cleanupEnvVars)
-		config := EnvConfig()
-		assert.Equal(t, "", config.Account)
-		assert.Equal(t, "", config.User)
-		assert.Equal(t, "", config.Password)
-		assert.Equal(t, "", config.Role)
+func Test_MergeConfig(t *testing.T) {
+	createConfig := func(user string, password string, account string, region string) *gosnowflake.Config {
+		return &gosnowflake.Config{
+			User:     user,
+			Password: password,
+			Account:  account,
+			Region:   region,
+		}
+	}
+
+	t.Run("merge configs", func(t *testing.T) {
+		config1 := createConfig("user", "password", "account", "")
+		config2 := createConfig("user2", "", "", "region2")
+
+		config := MergeConfig(config1, config2)
+
+		require.Equal(t, "user", config.User)
+		require.Equal(t, "password", config.Password)
+		require.Equal(t, "account", config.Account)
+		require.Equal(t, "region2", config.Region)
+		require.Equal(t, "", config.Role)
+
+		require.Equal(t, config1, config)
+		require.Equal(t, "user", config1.User)
+		require.Equal(t, "password", config1.Password)
+		require.Equal(t, "account", config1.Account)
+		require.Equal(t, "region2", config1.Region)
+		require.Equal(t, "", config1.Role)
 	})
 
-	t.Run("with environment variables", func(t *testing.T) {
-		cleanupEnvVars := setupEnvVars(t, "TEST_ACCOUNT", "TEST_USER", "abcd1234", "ACCOUNTADMIN", "")
-		t.Cleanup(cleanupEnvVars)
-		config := EnvConfig()
-		assert.Equal(t, "TEST_ACCOUNT", config.Account)
-		assert.Equal(t, "TEST_USER", config.User)
-		assert.Equal(t, "abcd1234", config.Password)
-		assert.Equal(t, "ACCOUNTADMIN", config.Role)
+	t.Run("merge configs inverted", func(t *testing.T) {
+		config1 := createConfig("user", "password", "account", "")
+		config2 := createConfig("user2", "", "", "region2")
+
+		config := MergeConfig(config2, config1)
+
+		require.Equal(t, "user2", config.User)
+		require.Equal(t, "password", config.Password)
+		require.Equal(t, "account", config.Account)
+		require.Equal(t, "region2", config.Region)
+		require.Equal(t, "", config.Role)
+
+		require.Equal(t, config2, config)
+		require.Equal(t, "user2", config2.User)
+		require.Equal(t, "password", config2.Password)
+		require.Equal(t, "account", config2.Account)
+		require.Equal(t, "region2", config2.Region)
+		require.Equal(t, "", config2.Role)
 	})
 }
 
@@ -96,27 +137,4 @@ func testFile(t *testing.T, filename string, dat []byte) string {
 	err := os.WriteFile(path, dat, 0o600)
 	require.NoError(t, err)
 	return path
-}
-
-func setupEnvVars(t *testing.T, account, user, password, role, configPath string) func() {
-	t.Helper()
-	orginalAccount := os.Getenv("SNOWFLAKE_ACCOUNT")
-	orginalUser := os.Getenv("SNOWFLAKE_USER")
-	originalPassword := os.Getenv("SNOWFLAKE_PASSWORD")
-	originalRole := os.Getenv("SNOWFLAKE_ROLE")
-	originalPath := os.Getenv("SNOWFLAKE_CONFIG_PATH")
-
-	os.Setenv("SNOWFLAKE_ACCOUNT", account)
-	os.Setenv("SNOWFLAKE_USER", user)
-	os.Setenv("SNOWFLAKE_PASSWORD", password)
-	os.Setenv("SNOWFLAKE_ROLE", role)
-	os.Setenv("SNOWFLAKE_CONFIG_PATH", configPath)
-
-	return func() {
-		os.Setenv("SNOWFLAKE_ACCOUNT", orginalAccount)
-		os.Setenv("SNOWFLAKE_USER", orginalUser)
-		os.Setenv("SNOWFLAKE_PASSWORD", originalPassword)
-		os.Setenv("SNOWFLAKE_ROLE", originalRole)
-		os.Setenv("SNOWFLAKE_CONFIG_PATH", originalPath)
-	}
 }

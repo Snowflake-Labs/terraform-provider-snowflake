@@ -283,6 +283,33 @@ func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
 	})
 }
 
+// Proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2528.
+// The problem originated from ShowById without IN clause. There was no IN clause in the docs at the time.
+// It was raised with the appropriate team in Snowflake.
+func TestAcc_ExternalFunction_issue2528(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	secondSchema := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: externalFunctionConfigIssue2528(acc.TestDatabaseName, acc.TestSchemaName, accName, secondSchema),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", accName),
+				),
+			},
+		},
+	})
+}
+
 func externalFunctionConfig(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_api_integration" "test_api_int" {
@@ -312,4 +339,51 @@ resource "snowflake_external_function" "f" {
 }
 
 `, database, schema, name)
+}
+
+func externalFunctionConfigIssue2528(database string, schema string, name string, schema2 string) string {
+	return fmt.Sprintf(`
+resource "snowflake_api_integration" "test_api_int" {
+  name                 = "%[3]s"
+  api_provider         = "aws_api_gateway"
+  api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+  api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+  enabled              = true
+}
+
+resource "snowflake_schema" "s2" {
+  database            = "%[1]s"
+  name                = "%[4]s"
+}
+
+resource "snowflake_external_function" "f" {
+  name     = "%[3]s"
+  database = "%[1]s"
+  schema   = "%[2]s"
+  arg {
+    name = "SNS_NOTIF"
+    type = "OBJECT"
+  }
+  return_type = "VARIANT"
+  return_behavior = "VOLATILE"
+  api_integration = snowflake_api_integration.test_api_int.name
+  url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+}
+
+resource "snowflake_external_function" "f2" {
+  depends_on = [snowflake_schema.s2]
+
+  name     = "%[3]s"
+  database = "%[1]s"
+  schema   = "%[4]s"
+  arg {
+    name = "SNS_NOTIF"
+    type = "OBJECT"
+  }
+  return_type = "VARIANT"
+  return_behavior = "VOLATILE"
+  api_integration = snowflake_api_integration.test_api_int.name
+  url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+}
+`, database, schema, name, schema2)
 }

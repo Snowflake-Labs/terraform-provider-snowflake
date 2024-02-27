@@ -7,12 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
-)
-
-const (
-	secondaryAccountProfile = "secondary_test_account"
 )
 
 var (
@@ -116,7 +113,7 @@ func (itc *integrationTestContext) initialize() error {
 	itc.warehouse = wh
 	itc.warehouseCleanup = whCleanup
 
-	config, err := sdk.ProfileConfig(secondaryAccountProfile)
+	config, err := sdk.ProfileConfig(testprofiles.Secondary)
 	if err != nil {
 		return err
 	}

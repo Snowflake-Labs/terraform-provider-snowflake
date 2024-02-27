@@ -1192,6 +1192,11 @@ func (s *TableColumnAddActionRequest) WithComment(comment *string) *TableColumnA
 	return s
 }
 
+func (s *TableColumnAddActionRequest) WithCollate(collate *string) *TableColumnAddActionRequest {
+	s.Collate = collate
+	return s
+}
+
 func NewTableColumnAddInlineConstraintRequest() *TableColumnAddInlineConstraintRequest {
 	return &TableColumnAddInlineConstraintRequest{}
 }
@@ -1270,6 +1275,11 @@ func (s *TableColumnAlterActionRequest) WithType(dataType *DataType) *TableColum
 
 func (s *TableColumnAlterActionRequest) WithComment(comment *string) *TableColumnAlterActionRequest {
 	s.Comment = comment
+	return s
+}
+
+func (s *TableColumnAlterActionRequest) WithCollate(collate *string) *TableColumnAlterActionRequest {
+	s.Collate = collate
 	return s
 }
 

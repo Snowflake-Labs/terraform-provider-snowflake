@@ -5,15 +5,35 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.86.0 ➞ v0.87.0
+### Provider configuration changes
+
+#### **IMPORTANT** *(bug fix)* Configuration hierarchy
+There were several issues reported about the configuration hierarchy, e.g. [#2294](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2294) and [#2242](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2242).
+In fact, the order of precedence described in the docs was not followed. This have led to the incorrect behavior.
+
+After migrating to this version, the hierarchy from the docs should be followed:
+```text
+The Snowflake provider will use the following order of precedence when determining which credentials to use:
+1) Provider Configuration
+2) Environment Variables
+3) Config File
+```
+
+**BEWARE**: your configurations will be affected with that change because they may have been leveraging the incorrect configurations precedence. Please be sure to check all the configurations before running terraform.
+
 ### snowflake_failover_group resource changes
 #### *(bug fix)* ACCOUNT PARAMETERS is returned as PARAMETERS from SHOW FAILOVER GROUPS
 Longer context in [#2517](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2517).
 After this change, one apply may be required to update the state correctly for failover group resources using `ACCOUNT PARAMETERS`.
 
-### snowflake_schema resource changes
-#### *(behavior change)* Schema `data_retention_days`
-To make `snowflake_schema.data_retention_days` truly optional field (previously it was producing plan every time when no value was set),
+### snowflake_database, snowflake_schema, and snowflake_table resource changes
+#### *(behavior change)* Database `data_retention_time_in_days` + Schema `data_retention_days` + Table `data_retention_time_in_days`
+To make data retention fields truly optional (previously they were producing plan every time when no value was set),
 we added `-1` as a possible value as set it as default. That got rid of the unexpected plans when no value is set and added possibility to use default value assigned by Snowflake (see [the data retention period](https://docs.snowflake.com/en/user-guide/data-time-travel#data-retention-period)).
+
+### snowflake_table resource changes
+#### *(behavior change)* Table `data_retention_days` field removed in favor of `data_retention_time_in_days`
+To define data retention days for table `data_retention_time_in_days` should be used as deprecated `data_retention_days` field is being removed.
 
 ## v0.85.0 ➞ v0.86.0
 ### snowflake_table_constraint resource changes
@@ -24,6 +44,11 @@ The reason for that is, that syntax for Out-of-Line constraint ([docs](https://d
 It is noted as a behavior change but in some way it is not; with the previous implementation it did not work at all with `type` set to `NOT NULL` because the generated statement was not a valid Snowflake statement.
 
 We will consider adding `NOT NULL` back because it can be set by `ALTER COLUMN columnX SET NOT NULL`, but first we want to revisit the whole resource design.
+
+#### *(behavior change)* table_id reference
+The docs were inconsistent. Example prior to 0.86.0 version showed using the `table.id` as the `table_id` reference. The description of the `table_id` parameter never allowed such a value (`table.id` is a `|`-delimited identifier representation and only the `.`-separated values were listed in the docs: https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.85.0/docs/resources/table_constraint#required. The misuse of `table.id` parameter will result in error after migrating to 0.86.0. To make the config work, please remove and reimport the constraint resource from the state as described in [resource migration doc](./docs/technical-documentation/resource_migration.md).
+
+After discussions in [#2535](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535) we decided to provide a temporary workaround in 0.87.0 version, so that the manual migration is not necessary. It allows skipping the migration and jumping straight to 0.87.0 version. However, the temporary workaround will be gone in one of the future versions. Please adjust to the newly suggested reference with the new resources you create.
 
 ### snowflake_external_function resource changes
 

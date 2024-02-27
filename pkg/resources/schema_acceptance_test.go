@@ -170,65 +170,66 @@ func TestAcc_Schema_DefaultDataRetentionTime(t *testing.T) {
 		CheckDestroy: testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "-1"),
-					checkDataRetentionTime(id, 5, 5),
+					checkDatabaseAndSchemaDataRetentionTime(id, 5, 5),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(10),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "-1"),
-					checkDataRetentionTime(id, 10, 10),
+					checkDatabaseAndSchemaDataRetentionTime(id, 10, 10),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "5"),
-					checkDataRetentionTime(id, 10, 5),
+					checkDatabaseAndSchemaDataRetentionTime(id, 10, 5),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 15),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "15"),
-					checkDataRetentionTime(id, 10, 15),
+					checkDatabaseAndSchemaDataRetentionTime(id, 10, 15),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(10),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "-1"),
-					checkDataRetentionTime(id, 10, 10),
+					checkDatabaseAndSchemaDataRetentionTime(id, 10, 10),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "0"),
-					checkDataRetentionTime(id, 10, 0),
+					checkDatabaseAndSchemaDataRetentionTime(id, 10, 0),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "3"),
-					checkDataRetentionTime(id, 10, 3),
+					checkDatabaseAndSchemaDataRetentionTime(id, 10, 3),
 				),
 			},
 		},
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -257,28 +258,28 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 		CheckDestroy: testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "-1"),
-					checkDataRetentionTime(id, 5, 5),
+					checkDatabaseAndSchemaDataRetentionTime(id, 5, 5),
 				),
 			},
 			{
 				PreConfig:       setSchemaDataRetentionTime(t, id, 20),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "-1"),
-					checkDataRetentionTime(id, 5, 5),
+					checkDatabaseAndSchemaDataRetentionTime(id, 5, 5),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithSchema"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithDataRetentionSet"),
 				ConfigVariables: configVariablesWithSchemaDataRetentionTime(10, 3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "data_retention_days", "3"),
-					checkDataRetentionTime(id, 10, 3),
+					checkDatabaseAndSchemaDataRetentionTime(id, 10, 3),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -290,7 +291,7 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 	})
 }
 
-func checkDataRetentionTime(id sdk.DatabaseObjectIdentifier, expectedDatabaseRetentionsDays int, expectedSchemaRetentionDays int) func(state *terraform.State) error {
+func checkDatabaseAndSchemaDataRetentionTime(id sdk.DatabaseObjectIdentifier, expectedDatabaseRetentionsDays int, expectedSchemaRetentionDays int) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
 		db := acc.TestAccProvider.Meta().(*sql.DB)
 		client := sdk.NewClientFromDB(db)

@@ -2,7 +2,6 @@ package datasources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -11,10 +10,6 @@ import (
 )
 
 func TestAcc_ExternalTables(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_EXTERNAL_TABLE_TESTS"); ok {
-		t.Skip("Skipping TestAcc_ExternalTables")
-	}
-
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	stageName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
