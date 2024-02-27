@@ -2,6 +2,8 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -129,5 +131,128 @@ resource "snowflake_table_constraint" "unique" {
 	comment = "hello unique"
 }
 
+`, n, databaseName, schemaName, n)
+}
+
+// proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535
+func TestAcc_Table_issue2535_newConstraint(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.86.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:      tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				ExpectError: regexp.MustCompile(`.*table id is incorrect.*`),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
+				),
+			},
+		},
+	})
+}
+
+// proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535
+func TestAcc_Table_issue2535_existingTable(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// reference done by table.id in 0.85.0
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.85.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
+				),
+			},
+			// switched to qualified_name in 0.86.0
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.86.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:      tableConstraintUniqueConfigUsingFullyQualifiedName(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				ExpectError: regexp.MustCompile(`.*table id is incorrect.*`),
+			},
+			// fixed in the current version
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConstraintUniqueConfigUsingFullyQualifiedName(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
+				),
+			},
+		},
+	})
+}
+
+func tableConstraintUniqueConfigUsingFullyQualifiedName(n string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "t" {
+	name     = "%s"
+	database = "%s"
+	schema   = "%s"
+
+	column {
+		name = "col1"
+		type = "NUMBER(38,0)"
+	}
+}
+
+resource "snowflake_table_constraint" "unique" {
+	name     = "%s"
+	type     = "UNIQUE"
+	table_id = snowflake_table.t.qualified_name
+	columns  = ["col1"]
+}
+`, n, databaseName, schemaName, n)
+}
+
+func tableConstraintUniqueConfigUsingTableId(n string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "t" {
+	name     = "%s"
+	database = "%s"
+	schema   = "%s"
+
+	column {
+		name = "col1"
+		type = "NUMBER(38,0)"
+	}
+}
+
+resource "snowflake_table_constraint" "unique" {
+	name     = "%s"
+	type     = "UNIQUE"
+	table_id = snowflake_table.t.id
+	columns  = ["col1"]
+}
 `, n, databaseName, schemaName, n)
 }
