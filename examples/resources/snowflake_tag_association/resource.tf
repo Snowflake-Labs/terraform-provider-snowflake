@@ -48,3 +48,14 @@ resource "snowflake_tag_association" "table_association" {
   tag_id      = snowflake_tag.test.id
   tag_value   = "engineering"
 }
+
+resource "snowflake_tag_association" "column_association" {
+  object_identifier {
+    name     = "${snowflake_table.test.name}.column_name"
+    database = snowflake_database.test.name
+    schema   = snowflake_schema.test.name
+  }
+  object_type = "COLUMN"
+  tag_id      = snowflake_tag.test.id
+  tag_value   = "engineering"
+}
