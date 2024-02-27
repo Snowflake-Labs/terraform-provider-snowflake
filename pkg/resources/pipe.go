@@ -101,8 +101,8 @@ func pipeCopyStatementDiffSuppress(_, o, n string, _ *schema.ResourceData) bool 
 	o = strings.ReplaceAll(o, "\r\n", "\n")
 	n = strings.ReplaceAll(n, "\r\n", "\n")
 
-	// trim off any trailing line endings
-	return strings.TrimRight(o, ";\r\n") == strings.TrimRight(n, ";\r\n")
+	// trim off any trailing line endings and leading/trailing whitespace
+	return strings.TrimSpace(strings.TrimRight(o, ";\r\n")) == strings.TrimSpace(strings.TrimRight(n, ";\r\n"))
 }
 
 // CreatePipe implements schema.CreateFunc.
