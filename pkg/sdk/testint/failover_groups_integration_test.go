@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/avast/retry-go"
@@ -20,6 +21,9 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	shareTest, shareCleanup := createShare(t, client)
 	t.Cleanup(shareCleanup)
 
+	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
+	businessCriticalAccountId := sdk.NewAccountIdentifierFromFullyQualifiedName(accountName)
+
 	t.Run("test complete", func(t *testing.T) {
 		id := sdk.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
@@ -27,7 +31,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 			sdk.PluralObjectTypeDatabases,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			getAccountIdentifier(t, testSecondaryClient(t)),
+			businessCriticalAccountId,
 		}
 		replicationSchedule := "10 MINUTE"
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
@@ -83,7 +87,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 			sdk.PluralObjectTypeShares,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			getAccountIdentifier(t, testSecondaryClient(t)),
+			businessCriticalAccountId,
 		}
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
 			AllowedShares: []sdk.AccountObjectIdentifier{
@@ -110,7 +114,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 			sdk.PluralObjectTypeIntegrations,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			getAccountIdentifier(t, testSecondaryClient(t)),
+			businessCriticalAccountId,
 		}
 		allowedIntegrationTypes := []sdk.IntegrationType{
 			sdk.IntegrationTypeAPIIntegrations,
@@ -138,6 +142,9 @@ func TestInt_Issue2544(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
+	businessCriticalAccountId := sdk.NewAccountIdentifierFromFullyQualifiedName(accountName)
+
 	t.Run("alter object types, replication schedule, and allowed integration types at the same time", func(t *testing.T) {
 		id := sdk.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
@@ -145,7 +152,7 @@ func TestInt_Issue2544(t *testing.T) {
 			sdk.PluralObjectTypeDatabases,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			getAccountIdentifier(t, testSecondaryClient(t)),
+			businessCriticalAccountId,
 		}
 		allowedIntegrationTypes := []sdk.IntegrationType{
 			sdk.IntegrationTypeAPIIntegrations,

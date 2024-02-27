@@ -423,29 +423,6 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		runSet = true
 	}
 
-	if d.HasChange("replication_schedule") {
-		_, n := d.GetChange("replication_schedule")
-		replicationSchedule := n.([]interface{})[0].(map[string]interface{})
-		c := replicationSchedule["cron"].([]interface{})
-		if len(c) > 0 {
-			if len(c) > 0 {
-				cron := c[0].(map[string]interface{})
-				cronExpression := cron["expression"].(string)
-				cronExpression = "USING CRON " + cronExpression
-				if v, ok := cron["time_zone"]; ok {
-					timeZone := v.(string)
-					if timeZone != "" {
-						cronExpression = cronExpression + " " + timeZone
-					}
-				}
-				opts.Set.ReplicationSchedule = &cronExpression
-			}
-		} else {
-			opts.Set.ReplicationSchedule = sdk.String(fmt.Sprintf("%d MINUTE", replicationSchedule["interval"].(int)))
-		}
-		runSet = true
-	}
-
 	if d.HasChange("allowed_integration_types") {
 		_, n := d.GetChange("allowed_integration_types")
 		newAllowedIntegrationTypes := expandStringList(n.(*schema.Set).List())
@@ -458,6 +435,36 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 	if runSet {
 		if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("replication_schedule") {
+		_, n := d.GetChange("replication_schedule")
+		replicationSchedule := n.([]interface{})[0].(map[string]interface{})
+		c := replicationSchedule["cron"].([]interface{})
+		var updatedReplicationSchedule string
+		if len(c) > 0 {
+			cron := c[0].(map[string]interface{})
+			cronExpression := cron["expression"].(string)
+			cronExpression = "USING CRON " + cronExpression
+			if v, ok := cron["time_zone"]; ok {
+				timeZone := v.(string)
+				if timeZone != "" {
+					cronExpression = cronExpression + " " + timeZone
+				}
+			}
+			updatedReplicationSchedule = cronExpression
+		} else {
+			updatedReplicationSchedule = fmt.Sprintf("%d MINUTE", replicationSchedule["interval"].(int))
+		}
+
+		err := client.FailoverGroups.AlterSource(ctx, id, &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ReplicationSchedule: sdk.String(updatedReplicationSchedule),
+			},
+		})
+		if err != nil {
 			return err
 		}
 	}
