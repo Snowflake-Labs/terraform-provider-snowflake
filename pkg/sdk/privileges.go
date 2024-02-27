@@ -3,11 +3,8 @@ package sdk
 type GlobalPrivilege string
 
 const (
-	// CREATE {
-	//	ACCOUNT | DATA EXCHANGE LISTING | DATABASE | FAILOVER GROUP | INTEGRATION
-	//	| NETWORK POLICY | REPLICATION GROUP | ROLE | SHARE | USER | WAREHOUSE
-	// }
 	GlobalPrivilegeCreateAccount             GlobalPrivilege = "CREATE ACCOUNT"
+	GlobalPrivilegeCreateComputePool         GlobalPrivilege = "CREATE COMPUTE POOL"
 	GlobalPrivilegeCreateDataExchangeListing GlobalPrivilege = "CREATE DATA EXCHANGE LISTING"
 	GlobalPrivilegeCreateDatabase            GlobalPrivilege = "CREATE DATABASE"
 	GlobalPrivilegeCreateFailoverGroup       GlobalPrivilege = "CREATE FAILOVER GROUP"
@@ -20,40 +17,41 @@ const (
 	GlobalPrivilegeCreateUser                GlobalPrivilege = "CREATE USER"
 	GlobalPrivilegeCreateWarehouse           GlobalPrivilege = "CREATE WAREHOUSE"
 
-	// | APPLY { { MASKING | PASSWORD | ROW ACCESS | SESSION } POLICY | TAG }
-	GlobalPrivilegeApplyMaskingPolicy   GlobalPrivilege = "APPLY MASKING POLICY"
-	GlobalPrivilegeApplyPasswordPolicy  GlobalPrivilege = "APPLY PASSWORD POLICY"
-	GlobalPrivilegeApplyRowAccessPolicy GlobalPrivilege = "APPLY ROW ACCESS POLICY"
-	GlobalPrivilegeApplySessionPolicy   GlobalPrivilege = "APPLY SESSION POLICY"
-	GlobalPrivilegeApplyTag             GlobalPrivilege = "APPLY TAG"
+	GlobalPrivilegeApplyAggregationPolicy    GlobalPrivilege = "APPLY AGGREGATION POLICY"
+	GlobalPrivilegeApplyAuthenticationPolicy GlobalPrivilege = "APPLY AUTHENTICATION POLICY"
+	GlobalPrivilegeApplyMaskingPolicy        GlobalPrivilege = "APPLY MASKING POLICY"
+	GlobalPrivilegeApplyPackagesPolicy       GlobalPrivilege = "APPLY PACKAGES POLICY"
+	GlobalPrivilegeApplyPasswordPolicy       GlobalPrivilege = "APPLY PASSWORD POLICY"
+	GlobalPrivilegeApplyProjectionPolicy     GlobalPrivilege = "APPLY PROJECTION POLICY"
+	GlobalPrivilegeApplyRowAccessPolicy      GlobalPrivilege = "APPLY ROW ACCESS POLICY"
+	GlobalPrivilegeApplySessionPolicy        GlobalPrivilege = "APPLY SESSION POLICY"
+	GlobalPrivilegeApplyTag                  GlobalPrivilege = "APPLY TAG"
 
-	// | ATTACH POLICY | AUDIT |
-	GlobalPrivilegeAttachPolicy GlobalPrivilege = "ATTACH POLICY"
-	GlobalPrivilegeAudit        GlobalPrivilege = "AUDIT"
+	GlobalPrivilegeAttachPolicy        GlobalPrivilege = "ATTACH POLICY"
+	GlobalPrivilegeAudit               GlobalPrivilege = "AUDIT"
+	GlobalPrivilegeBindServiceEndpoint GlobalPrivilege = "BIND SERVICE ENDPOINT"
 
-	// | EXECUTE { ALERT | TASK }
 	GlobalPrivilegeExecuteAlert GlobalPrivilege = "EXECUTE ALERT"
 	GlobalPrivilegeExecuteTask  GlobalPrivilege = "EXECUTE TASK"
-	// | IMPORT SHARE
-	GlobalPrivilegeImportShare GlobalPrivilege = "IMPORT SHARE"
-	// | MANAGE GRANTS
-	GlobalPrivilegeManageGrants GlobalPrivilege = "MANAGE GRANTS"
-	// | MANAGE WAREHOUSES
-	GlobalPrivilegeManageWarehouses GlobalPrivilege = "MANAGE WAREHOUSES"
 
-	// | MODIFY { LOG LEVEL | TRACE LEVEL | SESSION LOG LEVEL | SESSION TRACE LEVEL }
+	GlobalPrivilegeImportShare GlobalPrivilege = "IMPORT SHARE"
+
+	GlobalPrivilegeManageGrants                 GlobalPrivilege = "MANAGE GRANTS"
+	GlobalPrivilegeManageListingAutoFulfillment GlobalPrivilege = "MANAGE LISTING AUTO FULFILLMENT"
+	GlobalPrivilegeManageWarehouses             GlobalPrivilege = "MANAGE WAREHOUSES"
+
 	GlobalPrivilegeModifyLogLevel          GlobalPrivilege = "MODIFY LOG LEVEL"
 	GlobalPrivilegeModifyTraceLevel        GlobalPrivilege = "MODIFY TRACE LEVEL"
 	GlobalPrivilegeModifySessionLogLevel   GlobalPrivilege = "MODIFY SESSION LOG LEVEL"
 	GlobalPrivilegeModifySessionTraceLevel GlobalPrivilege = "MODIFY SESSION TRACE LEVEL"
 
-	// | MONITOR { EXECUTION | USAGE }
 	GlobalPrivilegeMonitorExecution GlobalPrivilege = "MONITOR EXECUTION"
+	GlobalPrivilegeMonitorSecurity  GlobalPrivilege = "MONITOR SECURITY"
 	GlobalPrivilegeMonitorUsage     GlobalPrivilege = "MONITOR USAGE"
 
-	// | OVERRIDE SHARE RESTRICTIONS | RESOLVE ALL
-	GlobalPrivilegeOverrideShareRestrictions GlobalPrivilege = "OVERRIDE SHARE RESTRICTIONS"
-	GlobalPrivilegeResolveAll                GlobalPrivilege = "RESOLVE ALL"
+	GlobalPrivilegeOverrideShareRestrictions   GlobalPrivilege = "OVERRIDE SHARE RESTRICTIONS"
+	GlobalPrivilegePurchaseDataExchangeListing GlobalPrivilege = "PURCHASE DATA EXCHANGE LISTING"
+	GlobalPrivilegeResolveAll                  GlobalPrivilege = "RESOLVE ALL"
 )
 
 func (p GlobalPrivilege) String() string {
@@ -63,8 +61,14 @@ func (p GlobalPrivilege) String() string {
 type AccountObjectPrivilege string
 
 const (
-	// -- For DATABASE
-	// { CREATE { DATABASE ROLE | SCHEMA } | IMPORTED PRIVILEGES | MODIFY | MONITOR | USAGE } [ , ... ]
+	// For COMPUTE POOL
+	//AccountObjectPrivilegeOperate AccountObjectPrivilege = "OPERATE" (duplicate)
+	//AccountObjectPrivilegeModify  AccountObjectPrivilege = "MODIFY" (duplicate)
+	//AccountObjectPrivilegeMonitor AccountObjectPrivilege = "MONITOR" (duplicate)
+	//AccountObjectPrivilegeUsage   AccountObjectPrivilege = "USAGE" (duplicate)
+
+	// For DATABASE
+	AccountObjectPrivilegeApplyBudget        AccountObjectPrivilege = "APPLYBUDGET"
 	AccountObjectPrivilegeCreateDatabaseRole AccountObjectPrivilege = "CREATE DATABASE ROLE"
 	AccountObjectPrivilegeCreateSchema       AccountObjectPrivilege = "CREATE SCHEMA"
 	AccountObjectPrivilegeImportedPrivileges AccountObjectPrivilege = "IMPORTED PRIVILEGES"
@@ -72,41 +76,36 @@ const (
 	AccountObjectPrivilegeMonitor            AccountObjectPrivilege = "MONITOR"
 	AccountObjectPrivilegeUsage              AccountObjectPrivilege = "USAGE"
 
-	// -- For EXTERNAL VOLUME
-	// AccountObjectPrivilegeUsage              AccountObjectPrivilege = "USAGE" (duplicate)
+	// For EXTERNAL VOLUME
+	// AccountObjectPrivilegeUsage AccountObjectPrivilege = "USAGE" (duplicate)
 
-	// -- For FAILOVER GROUP
-	// { FAILOVER | MODIFY | MONITOR | REPLICATE } [ , ... ]
+	// For FAILOVER GROUP
 	AccountObjectPrivilegeFailover AccountObjectPrivilege = "FAILOVER"
 	// AccountObjectPrivilegeModify AccountObjectPrivilege = "MODIFY" (duplicate)
 	// AccountObjectPrivilegeMonitor AccountObjectPrivilege = "MONITOR" (duplicate)
 	// AccountObjectPrivilegeReplicate AccountObjectPrivilege = "REPLICATE" (duplicate)
 
-	// -- For INTEGRATION
-	// { USAGE | USE_ANY_ROLE } [ , ... ]
+	// For INTEGRATION
 	// AccountObjectPrivilegeUsage AccountObjectPrivilege = "USAGE" (duplicate)
 	AccountObjectPrivilegeUseAnyRole AccountObjectPrivilege = "USE_ANY_ROLE"
 
-	// -- For REPLICATION GROUP
-	// { MODIFY | MONITOR | REPLICATE } [ , ... ]
+	// For REPLICATION GROUP
 	// AccountObjectPrivilegeModify AccountObjectPrivilege = "MODIFY" (duplicate)
 	// AccountObjectPrivilegeMonitor AccountObjectPrivilege = "MONITOR" (duplicate)
 	AccountObjectPrivilegeReplicate AccountObjectPrivilege = "REPLICATE"
 
-	//-- For RESOURCE MONITOR
-	// { MODIFY | MONITOR } [ , ... ]
+	// For RESOURCE MONITOR
 	// AccountObjectPrivilegeModify AccountObjectPrivilege = "MODIFY" (duplicate)
 	// AccountObjectPrivilegeMonitor AccountObjectPrivilege = "MONITOR" (duplicate)
 
-	// -- For USER
-	// { MONITOR } [ , ... ]
+	// For USER
 	// AccountObjectPrivilegeModify AccountObjectPrivilege = "MODIFY" (duplicate)
 
-	// -- For WAREHOUSE
-	// { MODIFY | MONITOR | USAGE | OPERATE } [ , ... ]
-	// AccountObjectPrivilegeModify AccountObjectPrivilege = "MODIFY" (duplicate)
-	// AccountObjectPrivilegeMonitor AccountObjectPrivilege = "MONITOR" (duplicate)
-	// AccountObjectPrivilegeUsage AccountObjectPrivilege = "USAGE" (duplicate)
+	// For WAREHOUSE
+	// AccountObjectPrivilegeApplyBudget AccountObjectPrivilege = "APPLYBUDGET" (duplicate)
+	// AccountObjectPrivilegeModify   	 AccountObjectPrivilege = "MODIFY" (duplicate)
+	// AccountObjectPrivilegeMonitor  	 AccountObjectPrivilege = "MONITOR" (duplicate)
+	// AccountObjectPrivilegeUsage    	 AccountObjectPrivilege = "USAGE" (duplicate)
 	AccountObjectPrivilegeOperate AccountObjectPrivilege = "OPERATE"
 )
 
@@ -117,45 +116,45 @@ func (p AccountObjectPrivilege) String() string {
 type SchemaPrivilege string
 
 const (
-	/*
-		ADD SEARCH OPTIMIZATION
-		| CREATE {
-			ALERT | EXTERNAL TABLE | FILE FORMAT | FUNCTION
-			| MATERIALIZED VIEW | PIPE | PROCEDURE
-			| { MASKING | PASSWORD | ROW ACCESS | SESSION } POLICY
-			| SECRET | SEQUENCE | STAGE | STREAM
-			| TAG | TABLE | TASK | VIEW
-		  }
-		| MODIFY | MONITOR | USAGE
-		[ , ... ]
-	*/
-	SchemaPrivilegeAddSearchOptimization  SchemaPrivilege = "ADD SEARCH OPTIMIZATION"
-	SchemaPrivilegeApplyBudget            SchemaPrivilege = "APPLYBUDGET"
-	SchemaPrivilegeCreateAlert            SchemaPrivilege = "CREATE ALERT"
-	SchemaPrivilegeCreateDynamicTable     SchemaPrivilege = "CREATE DYNAMIC TABLE"
-	SchemaPrivilegeCreateExternalTable    SchemaPrivilege = "CREATE EXTERNAL TABLE"
-	SchemaPrivilegeCreateFileFormat       SchemaPrivilege = "CREATE FILE FORMAT"
-	SchemaPrivilegeCreateFunction         SchemaPrivilege = "CREATE FUNCTION"
-	SchemaPrivilegeCreateIcebergTable     SchemaPrivilege = "CREATE ICEBERG TABLE"
-	SchemaPrivilegeCreateMaterializedView SchemaPrivilege = "CREATE MATERIALIZED VIEW"
-	SchemaPrivilegeCreatePipe             SchemaPrivilege = "CREATE PIPE"
-	SchemaPrivilegeCreateProcedure        SchemaPrivilege = "CREATE PROCEDURE"
-	SchemaPrivilegeCreateMaskingPolicy    SchemaPrivilege = "CREATE MASKING POLICY"
-	SchemaPrivilegeCreatePasswordPolicy   SchemaPrivilege = "CREATE PASSWORD POLICY"
-	SchemaPrivilegeCreateRowAccessPolicy  SchemaPrivilege = "CREATE ROW ACCESS POLICY"
-	SchemaPrivilegeCreateSessionPolicy    SchemaPrivilege = "CREATE SESSION POLICY"
-	SchemaPrivilegeCreateSecret           SchemaPrivilege = "CREATE SECRET"
-	SchemaPrivilegeCreateSequence         SchemaPrivilege = "CREATE SEQUENCE"
-	SchemaPrivilegeCreateStage            SchemaPrivilege = "CREATE STAGE"
-	SchemaPrivilegeCreateStream           SchemaPrivilege = "CREATE STREAM"
-	SchemaPrivilegeCreateStreamlit        SchemaPrivilege = "CREATE STREAMLIT"
-	SchemaPrivilegeCreateTag              SchemaPrivilege = "CREATE TAG"
-	SchemaPrivilegeCreateTable            SchemaPrivilege = "CREATE TABLE"
-	SchemaPrivilegeCreateTask             SchemaPrivilege = "CREATE TASK"
-	SchemaPrivilegeCreateView             SchemaPrivilege = "CREATE VIEW"
-	SchemaPrivilegeModify                 SchemaPrivilege = "MODIFY"
-	SchemaPrivilegeMonitor                SchemaPrivilege = "MONITOR"
-	SchemaPrivilegeUsage                  SchemaPrivilege = "USAGE"
+	SchemaPrivilegeAddSearchOptimization             SchemaPrivilege = "ADD SEARCH OPTIMIZATION"
+	SchemaPrivilegeApplyBudget                       SchemaPrivilege = "APPLYBUDGET"
+	SchemaPrivilegeCreateAlert                       SchemaPrivilege = "CREATE ALERT"
+	SchemaPrivilegeCreateDynamicTable                SchemaPrivilege = "CREATE DYNAMIC TABLE"
+	SchemaPrivilegeCreateExternalTable               SchemaPrivilege = "CREATE EXTERNAL TABLE"
+	SchemaPrivilegeCreateFileFormat                  SchemaPrivilege = "CREATE FILE FORMAT"
+	SchemaPrivilegeCreateFunction                    SchemaPrivilege = "CREATE FUNCTION"
+	SchemaPrivilegeCreateHybridTable                 SchemaPrivilege = "CREATE HYBRID TABLE"
+	SchemaPrivilegeCreateImageRepository             SchemaPrivilege = "CREATE IMAGE REPOSITORY"
+	SchemaPrivilegeCreateIcebergTable                SchemaPrivilege = "CREATE ICEBERG TABLE"
+	SchemaPrivilegeCreateMaterializedView            SchemaPrivilege = "CREATE MATERIALIZED VIEW"
+	SchemaPrivilegeCreateModel                       SchemaPrivilege = "CREATE MODEL"
+	SchemaPrivilegeCreateNetworkRule                 SchemaPrivilege = "CREATE NETWORK RULE"
+	SchemaPrivilegeCreatePipe                        SchemaPrivilege = "CREATE PIPE"
+	SchemaPrivilegeCreateProcedure                   SchemaPrivilege = "CREATE PROCEDURE"
+	SchemaPrivilegeCreateAggregationPolicy           SchemaPrivilege = "CREATE AGGREGATION POLICY"
+	SchemaPrivilegeCreateAuthenticationPolicy        SchemaPrivilege = "CREATE AUTHENTICATION POLICY"
+	SchemaPrivilegeCreateMaskingPolicy               SchemaPrivilege = "CREATE MASKING POLICY"
+	SchemaPrivilegeCreatePackagesPolicy              SchemaPrivilege = "CREATE PACKAGES POLICY"
+	SchemaPrivilegeCreatePasswordPolicy              SchemaPrivilege = "CREATE PASSWORD POLICY"
+	SchemaPrivilegeCreateProjectionPolicy            SchemaPrivilege = "CREATE PROJECTION POLICY"
+	SchemaPrivilegeCreateRowAccessPolicy             SchemaPrivilege = "CREATE ROW ACCESS POLICY"
+	SchemaPrivilegeCreateSessionPolicy               SchemaPrivilege = "CREATE SESSION POLICY"
+	SchemaPrivilegeCreateService                     SchemaPrivilege = "CREATE SERVICE"
+	SchemaPrivilegeCreateSecret                      SchemaPrivilege = "CREATE SECRET"
+	SchemaPrivilegeCreateSequence                    SchemaPrivilege = "CREATE SEQUENCE"
+	SchemaPrivilegeCreateStage                       SchemaPrivilege = "CREATE STAGE"
+	SchemaPrivilegeCreateStream                      SchemaPrivilege = "CREATE STREAM"
+	SchemaPrivilegeCreateStreamlit                   SchemaPrivilege = "CREATE STREAMLIT"
+	SchemaPrivilegeCreateSnowflakeCoreBudget         SchemaPrivilege = "CREATE SNOWFLAKE.CORE.BUDGET"
+	SchemaPrivilegeCreateSnowflakeMlAnomalyDetection SchemaPrivilege = "CREATE SNOWFLAKE.ML.ANOMALY_DETECTION"
+	SchemaPrivilegeCreateSnowflakeMlForecast         SchemaPrivilege = "CREATE SNOWFLAKE.ML.FORECAST"
+	SchemaPrivilegeCreateTag                         SchemaPrivilege = "CREATE TAG"
+	SchemaPrivilegeCreateTable                       SchemaPrivilege = "CREATE TABLE"
+	SchemaPrivilegeCreateTask                        SchemaPrivilege = "CREATE TASK"
+	SchemaPrivilegeCreateView                        SchemaPrivilege = "CREATE VIEW"
+	SchemaPrivilegeModify                            SchemaPrivilege = "MODIFY"
+	SchemaPrivilegeMonitor                           SchemaPrivilege = "MONITOR"
+	SchemaPrivilegeUsage                             SchemaPrivilege = "USAGE"
 )
 
 func (p SchemaPrivilege) String() string {
@@ -167,73 +166,87 @@ type SchemaObjectPrivilege string
 const (
 	SchemaObjectOwnership SchemaObjectPrivilege = "OWNERSHIP"
 
-	// -- For ALERT
-	// OPERATE [ , ... ]
+	// For ALERT
+	// SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "MONITOR" (duplicate)
 	SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE"
 
-	// -- FOR DYNAMIC TABLE
-	//  OPERATE, SELECT [ , ...]
+	// For DYNAMIC TABLE
+	// SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "MONITOR" (duplicate)
 	// SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE" (duplicate)
-	// SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT" (duplicate)
+	// SchemaObjectPrivilegeSelect  SchemaObjectPrivilege = "SELECT" (duplicate)
 
-	// -- For EVENT TABLE
-	// { SELECT | INSERT } [ , ... ]
+	// For EVENT TABLE
 	SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT"
 	SchemaObjectPrivilegeInsert SchemaObjectPrivilege = "INSERT"
 
-	// -- For FILE FORMAT, FUNCTION (UDF or external function), PROCEDURE, SECRET, or SEQUENCE
-	// USAGE [ , ... ]
+	// For FILE FORMAT, FUNCTION (UDF or external function), PROCEDURE, SECRET, or SEQUENCE
 	SchemaObjectPrivilegeUsage SchemaObjectPrivilege = "USAGE"
 
-	// -- For ICEBERG TABLE
-	SchemaObjectPrivilegeApplyBudget SchemaObjectPrivilege = "APPLYBUDGET"
-	// SchemaObjectPrivilegeDelete      SchemaObjectPrivilege = "DELETE" (duplicate)
-	// SchemaObjectPrivilegeInsert      SchemaObjectPrivilege = "INSERT" (duplicate)
-	// SchemaObjectPrivilegeReferences  SchemaObjectPrivilege = "REFERENCES" (duplicate)
-	// SchemaObjectPrivilegeSelect      SchemaObjectPrivilege = "SELECT" (duplicate)
-	// SchemaObjectPrivilegeTruncate      SchemaObjectPrivilege = "Truncate" (duplicate)
-	// SchemaObjectPrivilegeUpdate      SchemaObjectPrivilege = "Update" (duplicate)
+	// For HYBRID TABLE
+	// SchemaObjectPrivilegeInsert SchemaObjectPrivilege = "INSERT" (duplicate)
+	// SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT" (duplicate)
+	// SchemaObjectPrivilegeUpdate SchemaObjectPrivilege = "UPDATE" (duplicate)
 
-	// -- For PIPE
-	// { MONITOR | OPERATE } [ , ... ]
+	// For IMAGE REPOSITORY
+	//SchemaObjectPrivilegeRead  SchemaObjectPrivilege = "READ" (duplicate)
+	//SchemaObjectPrivilegeWrite SchemaObjectPrivilege = "WRITE" (duplicate)
+
+	// For ICEBERG TABLE
+	SchemaObjectPrivilegeApplyBudget SchemaObjectPrivilege = "APPLYBUDGET"
+	// SchemaObjectPrivilegeDelete     SchemaObjectPrivilege = "DELETE" (duplicate)
+	// SchemaObjectPrivilegeInsert     SchemaObjectPrivilege = "INSERT" (duplicate)
+	// SchemaObjectPrivilegeReferences SchemaObjectPrivilege = "REFERENCES" (duplicate)
+	// SchemaObjectPrivilegeSelect     SchemaObjectPrivilege = "SELECT" (duplicate)
+	// SchemaObjectPrivilegeTruncate   SchemaObjectPrivilege = "TRUNCATE" (duplicate)
+	// SchemaObjectPrivilegeUpdate     SchemaObjectPrivilege = "UPDATE" (duplicate)
+
+	// For PIPE
+	// SchemaObjectPrivilegeApplyBudget SchemaObjectPrivilege = "APPLYBUDGET" (duplicate)
 	SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "MONITOR"
 	// SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE" (duplicate)
 
-	// -- For { MASKING | PASSWORD | ROW ACCESS | SESSION } POLICY or TAG
-	// APPLY [ , ... ]
+	// For { MASKING | PASSWORD | ROW ACCESS | SESSION } POLICY or TAG
 	SchemaObjectPrivilegeApply SchemaObjectPrivilege = "APPLY"
 
-	// -- For external STAGE
-	// USAGE [ , ... ]
+	// For external STAGE
 	// SchemaObjectPrivilegeUsage SchemaObjectPrivilege = "USAGE" (duplicate)
 
-	// -- For internal STAGE
-	// READ [ , WRITE ] [ , ... ]
+	// For internal STAGE
 	SchemaObjectPrivilegeRead  SchemaObjectPrivilege = "READ"
 	SchemaObjectPrivilegeWrite SchemaObjectPrivilege = "WRITE"
 
-	// -- For STREAM
-	// SELECT [ , ... ]
+	// For STREAM
 	// SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT" (duplicate)
 
-	// -- For TABLE
-	// { SELECT | INSERT | UPDATE | DELETE | TRUNCATE | REFERENCES } [ , ... ]
-	// SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT" (duplicate)
-	// SchemaObjectPrivilegeInsert SchemaObjectPrivilege = "INSERT" (duplicate)
-	SchemaObjectPrivilegeUpdate     SchemaObjectPrivilege = "UPDATE"
-	SchemaObjectPrivilegeDelete     SchemaObjectPrivilege = "DELETE"
-	SchemaObjectPrivilegeTruncate   SchemaObjectPrivilege = "TRUNCATE"
-	SchemaObjectPrivilegeReferences SchemaObjectPrivilege = "REFERENCES"
+	// For STREAMLIT
+	// SchemaObjectPrivilegeUsage SchemaObjectPrivilege = "USAGE" (duplicate)
 
-	// -- For TASK
-	// { MONITOR | OPERATE } [ , ... ]
-	// SchemaObjectPrivilegeMonitor SchemaObjectPrivilege = "MONITOR" (duplicate)
-	// SchemaObjectPrivilegeOperate SchemaObjectPrivilege = "OPERATE" (duplicate)
+	// For TABLE
+	// SchemaObjectPrivilegeApplyBudget SchemaObjectPrivilege = "APPLYBUDGET" (duplicate)
+	// SchemaObjectPrivilegeSelect 		SchemaObjectPrivilege = "SELECT" (duplicate)
+	// SchemaObjectPrivilegeInsert 		SchemaObjectPrivilege = "INSERT" (duplicate)
+	SchemaObjectPrivilegeEvolveSchema SchemaObjectPrivilege = "EVOLVE SCHEMA"
+	SchemaObjectPrivilegeUpdate       SchemaObjectPrivilege = "UPDATE"
+	SchemaObjectPrivilegeDelete       SchemaObjectPrivilege = "DELETE"
+	SchemaObjectPrivilegeTruncate     SchemaObjectPrivilege = "TRUNCATE"
+	SchemaObjectPrivilegeReferences   SchemaObjectPrivilege = "REFERENCES"
 
-	// -- For VIEW or MATERIALIZED VIEW
-	// { SELECT | REFERENCES } [ , ... ]
-	// SchemaObjectPrivilegeSelect SchemaObjectPrivilege = "SELECT" (duplicate)
-	// SchemaObjectPrivilegeReferences SchemaObjectPrivilege = "REFERENCES" (duplicate)
+	// For Tag
+	// SchemaObjectPrivilegeRead SchemaObjectPrivilege = "READ" (duplicate)
+
+	// For TASK
+	// SchemaObjectPrivilegeApplyBudget SchemaObjectPrivilege = "APPLYBUDGET" (duplicate)
+	// SchemaObjectPrivilegeMonitor 	SchemaObjectPrivilege = "MONITOR" (duplicate)
+	// SchemaObjectPrivilegeOperate 	SchemaObjectPrivilege = "OPERATE" (duplicate)
+
+	// For VIEW
+	// SchemaObjectPrivilegeSelect		SchemaObjectPrivilege = "SELECT" (duplicate)
+	// SchemaObjectPrivilegeReferences  SchemaObjectPrivilege = "REFERENCES" (duplicate)
+
+	// For MATERIALIZED VIEW
+	// SchemaObjectPrivilegeApplyBudget SchemaObjectPrivilege = "APPLYBUDGET" (duplicate)
+	// SchemaObjectPrivilegeSelect 		SchemaObjectPrivilege = "SELECT" (duplicate)
+	// SchemaObjectPrivilegeReferences 	SchemaObjectPrivilege = "REFERENCES" (duplicate)
 )
 
 func (p SchemaObjectPrivilege) String() string {
