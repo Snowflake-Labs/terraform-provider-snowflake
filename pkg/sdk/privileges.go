@@ -62,10 +62,10 @@ type AccountObjectPrivilege string
 
 const (
 	// For COMPUTE POOL
-	//AccountObjectPrivilegeOperate AccountObjectPrivilege = "OPERATE" (duplicate)
-	//AccountObjectPrivilegeModify  AccountObjectPrivilege = "MODIFY" (duplicate)
-	//AccountObjectPrivilegeMonitor AccountObjectPrivilege = "MONITOR" (duplicate)
-	//AccountObjectPrivilegeUsage   AccountObjectPrivilege = "USAGE" (duplicate)
+	// AccountObjectPrivilegeOperate AccountObjectPrivilege = "OPERATE" (duplicate)
+	// AccountObjectPrivilegeModify  AccountObjectPrivilege = "MODIFY" (duplicate)
+	// AccountObjectPrivilegeMonitor AccountObjectPrivilege = "MONITOR" (duplicate)
+	// AccountObjectPrivilegeUsage   AccountObjectPrivilege = "USAGE" (duplicate)
 
 	// For DATABASE
 	AccountObjectPrivilegeApplyBudget        AccountObjectPrivilege = "APPLYBUDGET"
@@ -188,8 +188,8 @@ const (
 	// SchemaObjectPrivilegeUpdate SchemaObjectPrivilege = "UPDATE" (duplicate)
 
 	// For IMAGE REPOSITORY
-	//SchemaObjectPrivilegeRead  SchemaObjectPrivilege = "READ" (duplicate)
-	//SchemaObjectPrivilegeWrite SchemaObjectPrivilege = "WRITE" (duplicate)
+	// SchemaObjectPrivilegeRead  SchemaObjectPrivilege = "READ" (duplicate)
+	// SchemaObjectPrivilegeWrite SchemaObjectPrivilege = "WRITE" (duplicate)
 
 	// For ICEBERG TABLE
 	SchemaObjectPrivilegeApplyBudget SchemaObjectPrivilege = "APPLYBUDGET"
