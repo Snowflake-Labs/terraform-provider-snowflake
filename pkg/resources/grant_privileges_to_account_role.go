@@ -815,11 +815,6 @@ func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (
 	case OnAccountObjectAccountRoleGrantKind:
 		data := id.Data.(*OnAccountObjectGrantData)
 		grantedOn = data.ObjectType
-
-		// For EXTERNAL VOLUME, we have to change it to VOLUME because that's what Snowflake returns
-		if data.ObjectType == sdk.ObjectTypeExternalVolume {
-			grantedOn = "VOLUME"
-		}
 		opts.On = &sdk.ShowGrantsOn{
 			Object: &sdk.Object{
 				ObjectType: data.ObjectType,

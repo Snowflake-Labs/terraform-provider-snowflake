@@ -929,7 +929,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 	})
 }
 
-// proves x is fixed
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2533 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
