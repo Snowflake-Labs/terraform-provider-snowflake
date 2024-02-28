@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"regexp"
 	"slices"
 	"strings"
@@ -622,12 +623,12 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 			if err := d.Set("handler", desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
+		case "volatility":
+			if err := d.Set("return_behavior", desc.Value); err != nil {
+				return diag.FromErr(err)
+			}
 		default:
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Unexpected procedure property returned from Snowflake",
-				Detail:   fmt.Sprintf("Unexpected procedure property %v returned from Snowflake", desc.Property),
-			})
+			log.Printf("[INFO] Unexpected procedure property %v returned from Snowflake with value %v", desc.Property, desc.Value)
 		}
 	}
 
