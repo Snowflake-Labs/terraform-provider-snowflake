@@ -33,6 +33,11 @@ func testAccFunction(t *testing.T, configDirectory string) {
 	variableSet2 := m()
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
+	ignoreDuringImport := []string{"null_input_behavior"}
+	if strings.Contains(configDirectory, "/sql") {
+		ignoreDuringImport = append(ignoreDuringImport, "return_behavior")
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -71,14 +76,12 @@ func testAccFunction(t *testing.T, configDirectory string) {
 
 			// test - import
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory(configDirectory),
-				ConfigVariables:   variableSet2,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"null_input_behavior",
-				},
+				ConfigDirectory:         acc.ConfigurationDirectory(configDirectory),
+				ConfigVariables:         variableSet2,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: ignoreDuringImport,
 			},
 		},
 	})
@@ -144,7 +147,7 @@ func TestAcc_Function_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "arguments.0.type", "FLOAT"),
 					resource.TestCheckResourceAttr(resourceName, "return_behavior", "VOLATILE"),
 					resource.TestCheckResourceAttr(resourceName, "return_type", "FLOAT"),
-					resource.TestCheckResourceAttr(resourceName, "language", "javascript"),
+					resource.TestCheckResourceAttr(resourceName, "language", "JAVASCRIPT"),
 					resource.TestCheckResourceAttr(resourceName, "null_input_behavior", "CALLED ON NULL INPUT"),
 
 					// computed attributes
