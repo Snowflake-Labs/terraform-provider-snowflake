@@ -137,9 +137,6 @@ func ReadContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.Resou
 			if err := client.Warehouses.Drop(ctx, wid, nil); err != nil {
 				log.Printf("[WARN] error cleaning up temp warehouse %v", err)
 			}
-			if err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(warehouse)); err != nil {
-				log.Printf("[WARN] error resetting warehouse %v", err)
-			}
 		}()
 		if err := client.Sessions.UseWarehouse(ctx, wid); err != nil {
 			return diag.FromErr(err)

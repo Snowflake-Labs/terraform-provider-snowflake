@@ -30,7 +30,8 @@ func TestAcc_Tag(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy,
+		// todo: implement CheckDestroy (SNOW-1165865)
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/basic"),
@@ -41,6 +42,7 @@ func TestAcc_Tag(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "allowed_values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_values.0", "alv1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_values.1", "alv2"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
 				),
 			},

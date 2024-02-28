@@ -33,7 +33,10 @@ func (v *tags) Show(ctx context.Context, request *ShowTagRequest) ([]Tag, error)
 }
 
 func (v *tags) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error) {
-	request := NewShowTagRequest().WithLike(id.Name())
+	request := NewShowTagRequest().WithIn(&In{
+		Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+	}).WithLike(id.Name())
+
 	tags, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

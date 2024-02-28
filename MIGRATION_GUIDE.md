@@ -4,6 +4,13 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.87.0 ➞ v0.88.0
+### snowflake_tag_association resource changes
+#### *(behavior change)* `object_name`
+No longer deprecated.
+#### *(behavior change)* `object_identifier`
+No longer required.
+
 ## v0.86.0 ➞ v0.87.0
 ### snowflake_failover_group resource changes
 #### *(bug fix)* ACCOUNT PARAMETERS is returned as PARAMETERS from SHOW FAILOVER GROUPS
