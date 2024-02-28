@@ -572,7 +572,7 @@ func (opts *FileFormatTypeOptions) validate() error {
 		return fmt.Errorf("IgnoreUTF8Errors and ReplaceInvalidCharacters cannot be set simultaneously")
 	}
 
-	validEnclosedBy := []string{"null", "'", `"`}
+	validEnclosedBy := []string{"NONE", "'", `"`}
 	if valueSet(opts.CSVFieldOptionallyEnclosedBy) && !slices.Contains(validEnclosedBy, *opts.CSVFieldOptionallyEnclosedBy) {
 		return fmt.Errorf("CSVFieldOptionallyEnclosedBy must be one of %v", validEnclosedBy)
 	}
