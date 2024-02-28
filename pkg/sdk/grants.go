@@ -242,10 +242,17 @@ func (row grantRow) convert() *Grant {
 	if row.GrantedOn != "" {
 		grantedOn = ObjectType(strings.ReplaceAll(row.GrantedOn, "_", " "))
 	}
+	if row.GrantedOn == "VOLUME" {
+		grantedOn = ObjectTypeExternalVolume
+	}
+
 	var grantOn ObjectType
 	// true for future grants
 	if row.GrantOn != "" {
 		grantOn = ObjectType(strings.ReplaceAll(row.GrantOn, "_", " "))
+	}
+	if row.GrantOn == "VOLUME" {
+		grantOn = ObjectTypeExternalVolume
 	}
 
 	return &Grant{
