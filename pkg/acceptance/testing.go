@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	TestDatabaseName  = "terraform_test_database"
-	TestSchemaName    = "terraform_test_schema"
-	TestWarehouseName = "terraform_test_warehouse"
+	TestDatabaseName   = "terraform_test_database"
+	TestSchemaName     = "terraform_test_schema"
+	TestWarehouseName  = "terraform_test_warehouse"
+	TestWarehouseName2 = "terraform_test_warehouse_2"
 )
 
 var TestAccProvider *schema.Provider
@@ -69,6 +70,13 @@ func TestAccPreCheck(t *testing.T) {
 
 		warehouseId := sdk.NewAccountObjectIdentifier(TestWarehouseName)
 		if err := client.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{
+			IfNotExists: sdk.Bool(true),
+		}); err != nil {
+			t.Fatal(err)
+		}
+
+		warehouseId2 := sdk.NewAccountObjectIdentifier(TestWarehouseName2)
+		if err := client.Warehouses.Create(ctx, warehouseId2, &sdk.CreateWarehouseOptions{
 			IfNotExists: sdk.Bool(true),
 		}); err != nil {
 			t.Fatal(err)

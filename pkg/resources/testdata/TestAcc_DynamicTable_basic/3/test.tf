@@ -19,7 +19,8 @@ resource "snowflake_dynamic_table" "dt" {
   target_lag {
     downstream = true
   }
-  warehouse = var.warehouse
-  query     = var.query
-  comment   = var.comment
+  warehouse  = var.warehouse
+  query      = var.query
+  comment    = var.comment
+  initialize = var.initialize
 }

@@ -63,14 +63,14 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("with setting a policy", func(t *testing.T) {
-		passwordPolicy := "PASSWORD_POLICY1"
+		passwordPolicy := NewSchemaObjectIdentifier("db", "schema", "PASSWORD_POLICY1")
 		opts := &AlterUserOptions{
 			name: id,
 			Set: &UserSet{
-				PasswordPolicy: String(passwordPolicy),
+				PasswordPolicy: &passwordPolicy,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD POLICY = %s", id.FullyQualifiedName(), passwordPolicy)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD POLICY %s", id.FullyQualifiedName(), passwordPolicy.FullyQualifiedName())
 	})
 
 	t.Run("with setting tags", func(t *testing.T) {

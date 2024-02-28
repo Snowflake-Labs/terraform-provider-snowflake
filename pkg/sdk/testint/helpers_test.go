@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -83,6 +84,30 @@ func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountO
 	return database, func() {
 		err := client.Databases.Drop(ctx, id, nil)
 		require.NoError(t, err)
+		err = client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName))
+		require.NoError(t, err)
+	}
+}
+
+func createSecondaryDatabase(t *testing.T, client *sdk.Client, externalId sdk.ExternalObjectIdentifier) (*sdk.Database, func()) {
+	t.Helper()
+	return createSecondaryDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), externalId, &sdk.CreateSecondaryDatabaseOptions{})
+}
+
+func createSecondaryDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, externalId sdk.ExternalObjectIdentifier, opts *sdk.CreateSecondaryDatabaseOptions) (*sdk.Database, func()) {
+	t.Helper()
+	ctx := context.Background()
+	err := client.Databases.CreateSecondary(ctx, id, externalId, opts)
+	require.NoError(t, err)
+	database, err := client.Databases.ShowByID(ctx, id)
+	require.NoError(t, err)
+	return database, func() {
+		err := client.Databases.Drop(ctx, id, nil)
+		require.NoError(t, err)
+
+		// TODO [926148]: make this wait better with tests stabilization
+		// waiting because sometimes dropping primary db right after dropping the secondary resulted in error
+		time.Sleep(1 * time.Second)
 		err = client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName))
 		require.NoError(t, err)
 	}
@@ -631,12 +656,12 @@ func createFailoverGroupWithOptions(t *testing.T, client *sdk.Client, objectType
 
 func createShare(t *testing.T, client *sdk.Client) (*sdk.Share, func()) {
 	t.Helper()
-	return createShareWithOptions(t, client, &sdk.CreateShareOptions{})
+	id := sdk.RandomAccountObjectIdentifier()
+	return createShareWithOptions(t, client, id, &sdk.CreateShareOptions{})
 }
 
-func createShareWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateShareOptions) (*sdk.Share, func()) {
+func createShareWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateShareOptions) (*sdk.Share, func()) {
 	t.Helper()
-	id := sdk.RandomAccountObjectIdentifier()
 	ctx := context.Background()
 	err := client.Shares.Create(ctx, id, opts)
 	require.NoError(t, err)

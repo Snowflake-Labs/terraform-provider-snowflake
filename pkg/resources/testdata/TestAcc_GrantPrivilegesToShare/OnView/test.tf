@@ -1,3 +1,8 @@
+resource "snowflake_share" "test" {
+  depends_on = [snowflake_database.test]
+  name       = var.to_share
+}
+
 resource "snowflake_database" "test" {
   name = var.database
 }
@@ -23,10 +28,6 @@ resource "snowflake_view" "test" {
   schema    = snowflake_schema.test.name
   is_secure = true
   statement = "select \"id\" from \"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\".\"${snowflake_table.test.name}\""
-}
-
-resource "snowflake_share" "test" {
-  name = var.to_share
 }
 
 resource "snowflake_grant_privileges_to_share" "test_setup" {

@@ -1,8 +1,41 @@
 # Migration guide
 
-This document is meant to help you migrate your Terraform config to the new newest version. In migration guides, we will only 
+This document is meant to help you migrate your Terraform config to the new newest version. In migration guides, we will only
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
+
+## v0.86.0 ➞ v0.87.0
+### Provider configuration changes
+
+#### **IMPORTANT** *(bug fix)* Configuration hierarchy
+There were several issues reported about the configuration hierarchy, e.g. [#2294](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2294) and [#2242](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2242).
+In fact, the order of precedence described in the docs was not followed. This have led to the incorrect behavior.
+
+After migrating to this version, the hierarchy from the docs should be followed:
+```text
+The Snowflake provider will use the following order of precedence when determining which credentials to use:
+1) Provider Configuration
+2) Environment Variables
+3) Config File
+```
+
+**BEWARE**: your configurations will be affected with that change because they may have been leveraging the incorrect configurations precedence. Please be sure to check all the configurations before running terraform.
+
+### snowflake_failover_group resource changes
+#### *(bug fix)* ACCOUNT PARAMETERS is returned as PARAMETERS from SHOW FAILOVER GROUPS
+Longer context in [#2517](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2517).
+After this change, one apply may be required to update the state correctly for failover group resources using `ACCOUNT PARAMETERS`.
+
+### snowflake_database, snowflake_schema, and snowflake_table resource changes
+#### *(behavior change)* Database `data_retention_time_in_days` + Schema `data_retention_days` + Table `data_retention_time_in_days`
+For context [#2356](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356).
+To make data retention fields truly optional (previously they were producing plan every time when no value was set),
+we added `-1` as a possible value, and it is set as default. That got rid of the unexpected plans when no value is set and added possibility to use default value assigned by Snowflake (see [the data retention period](https://docs.snowflake.com/en/user-guide/data-time-travel#data-retention-period)).
+
+### snowflake_table resource changes
+#### *(behavior change)* Table `data_retention_days` field removed in favor of `data_retention_time_in_days`
+For context [#2356](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356).
+To define data retention days for table `data_retention_time_in_days` should be used as deprecated `data_retention_days` field is being removed.
 
 ## v0.85.0 ➞ v0.86.0
 ### snowflake_table_constraint resource changes
@@ -14,6 +47,24 @@ It is noted as a behavior change but in some way it is not; with the previous im
 
 We will consider adding `NOT NULL` back because it can be set by `ALTER COLUMN columnX SET NOT NULL`, but first we want to revisit the whole resource design.
 
+#### *(behavior change)* table_id reference
+The docs were inconsistent. Example prior to 0.86.0 version showed using the `table.id` as the `table_id` reference. The description of the `table_id` parameter never allowed such a value (`table.id` is a `|`-delimited identifier representation and only the `.`-separated values were listed in the docs: https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.85.0/docs/resources/table_constraint#required. The misuse of `table.id` parameter will result in error after migrating to 0.86.0. To make the config work, please remove and reimport the constraint resource from the state as described in [resource migration doc](./docs/technical-documentation/resource_migration.md).
+
+After discussions in [#2535](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535) we decided to provide a temporary workaround in 0.87.0 version, so that the manual migration is not necessary. It allows skipping the migration and jumping straight to 0.87.0 version. However, the temporary workaround will be gone in one of the future versions. Please adjust to the newly suggested reference with the new resources you create.
+
+### snowflake_external_function resource changes
+
+#### *(behavior change)* return_null_allowed default is now true
+The `return_null_allowed` attribute default value is now `true`. This is a behavior change because it was `false` before. The reason it was changed is to match the expected default value in the [documentation](https://docs.snowflake.com/en/sql-reference/sql/create-external-function#optional-parameters) `Default: The default is NULL (i.e. the function can return NULL values).`
+
+#### *(behavior change)* comment is no longer required
+The `comment` attribute is now optional. It was required before, but it is not required in Snowflake API.
+
+### snowflake_external_functions data source changes
+
+#### *(behavior change)* schema is now required with database
+The `schema` attribute is now required with `database` attribute to match old implementation `SHOW EXTERNAL FUNCTIONS IN SCHEMA "<database>"."<schema>"`. In the future this may change to make schema optional.
+
 ## vX.XX.X -> v0.85.0
 
 ### Migration from old (grant) resources to new ones
@@ -21,6 +72,14 @@ We will consider adding `NOT NULL` back because it can be set by `ALTER COLUMN c
 In recent changes, we introduced a new grant resources to replace the old ones.
 To aid with the migration, we wrote a guide to show one of the possible ways to migrate deprecated resources to their new counter-parts.
 As the guide is more general and applies to every version (and provider), we moved it [here](./docs/technical-documentation/resource_migration.md).
+
+### snowflake_procedure resource changes
+#### *(deprecation)* return_behavior
+`return_behavior` parameter is deprecated because it is also deprecated in the Snowflake API.
+
+### snowflake_function resource changes
+#### *(behavior change)* return_type
+`return_type` has become force new because there is no way to alter it without dropping and recreating the function.
 
 ## v0.84.0 ➞ v0.85.0
 
@@ -47,7 +106,7 @@ Force new was added for the following attributes (because no usable SQL alter st
 ## v0.73.0 ➞ v0.74.0
 ### Provider configuration changes
 
-In this change we have done a provider refactor to make it more complete and customizable by supporting more options that 
+In this change we have done a provider refactor to make it more complete and customizable by supporting more options that
 were already available in Golang Snowflake driver. This lead to several attributes being added and a few deprecated.
 We will focus on the deprecated ones and show you how to adapt your current configuration to the new changes.
 
@@ -57,7 +116,7 @@ We will focus on the deprecated ones and show you how to adapt your current conf
 provider "snowflake" {
   # before
   username = "username"
-  
+
   # after
   user = "username"
 }
@@ -123,7 +182,7 @@ provider "snowflake" {
 provider "snowflake" {
   # before
   session_params = {}
-  
+
   # after
   params = {}
 }

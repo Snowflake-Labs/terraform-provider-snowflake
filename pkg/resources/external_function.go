@@ -1,22 +1,18 @@
 package resources
 
 import (
-	"bytes"
+	"context"
 	"database/sql"
-	"encoding/csv"
-	"fmt"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-)
-
-const (
-	externalFunctionIDDelimiter = '|'
 )
 
 var externalFunctionSchema = map[string]*schema.Schema{
@@ -88,7 +84,8 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "Indicates whether the function can return NULL values or must return only NON-NULL values.",
+		Description: "Indicates whether the function can return NULL values (true) or must return only NON-NULL values (false).",
+		Default:     true,
 	},
 	"return_behavior": {
 		Type:         schema.TypeString,
@@ -172,7 +169,6 @@ var externalFunctionSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Default:     "user-defined function",
-		ForceNew:    true,
 		Description: "A description of the external function.",
 	},
 	"created_on": {
@@ -185,227 +181,191 @@ var externalFunctionSchema = map[string]*schema.Schema{
 // ExternalFunction returns a pointer to the resource representing an external function.
 func ExternalFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateExternalFunction,
-		Read:   ReadExternalFunction,
-		Delete: DeleteExternalFunction,
+		SchemaVersion: 1,
+
+		CreateContext: CreateContextExternalFunction,
+		ReadContext:   ReadContextExternalFunction,
+		UpdateContext: UpdateContextExternalFunction,
+		DeleteContext: DeleteContextExternalFunction,
 
 		Schema: externalFunctionSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v085ExternalFunctionStateUpgrader,
+			},
+		},
 	}
 }
 
-type externalFunctionID struct {
-	DatabaseName             string
-	SchemaName               string
-	ExternalFunctionName     string
-	ExternalFunctionArgTypes string
-}
-
-func (si *externalFunctionID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = externalFunctionIDDelimiter
-	if err := csvWriter.WriteAll([][]string{{si.DatabaseName, si.SchemaName, si.ExternalFunctionName, si.ExternalFunctionArgTypes}}); err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(buf.String()), nil
-}
-
-func externalFunctionIDFromString(stringID string) (*externalFunctionID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = externalFunctionIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line at a time")
-	}
-	if len(lines[0]) != 4 {
-		return nil, fmt.Errorf("4 fields allowed")
-	}
-
-	return &externalFunctionID{
-		DatabaseName:             lines[0][0],
-		SchemaName:               lines[0][1],
-		ExternalFunctionName:     lines[0][2],
-		ExternalFunctionArgTypes: lines[0][3],
-	}, nil
-}
-
-// CreateExternalFunction implements schema.CreateFunc.
-func CreateExternalFunction(d *schema.ResourceData, meta interface{}) error {
+func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 	database := d.Get("database").(string)
-	dbSchema := d.Get("schema").(string)
+	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
-	var argtypes string
+	id := sdk.NewSchemaObjectIdentifier(database, schemaName, name)
 
-	builder := snowflake.NewExternalFunctionBuilder(name, database, dbSchema)
-	builder.WithReturnType(d.Get("return_type").(string))
-	builder.WithReturnBehavior(d.Get("return_behavior").(string))
-	builder.WithAPIIntegration(d.Get("api_integration").(string))
-	builder.WithURLOfProxyAndResource(d.Get("url_of_proxy_and_resource").(string))
+	returnType := d.Get("return_type").(string)
+	resultDataType, err := sdk.ToDataType(returnType)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	apiIntegration := sdk.NewAccountObjectIdentifier(d.Get("api_integration").(string))
+	urlOfProxyAndResource := d.Get("url_of_proxy_and_resource").(string)
+	req := sdk.NewCreateExternalFunctionRequest(id, resultDataType, &apiIntegration, urlOfProxyAndResource)
 
 	// Set optionals
-	if _, ok := d.GetOk("arg"); ok {
-		var types []string
-		args := []map[string]string{}
-		for _, arg := range d.Get("arg").([]interface{}) {
-			argDef := map[string]string{}
-			for key, val := range arg.(map[string]interface{}) {
-				argDef[key] = val.(string)
-
-				if key == "type" {
-					// Also store arg types in distinct array as list of types is required for some Snowflake commands (DESC, DROP)
-					types = append(types, argDef[key])
-				}
+	args := make([]sdk.ExternalFunctionArgumentRequest, 0)
+	if v, ok := d.GetOk("arg"); ok {
+		for _, arg := range v.([]interface{}) {
+			argName := arg.(map[string]interface{})["name"].(string)
+			argType := arg.(map[string]interface{})["type"].(string)
+			argDataType, err := sdk.ToDataType(argType)
+			if err != nil {
+				return diag.FromErr(err)
 			}
-			args = append(args, argDef)
+			args = append(args, sdk.ExternalFunctionArgumentRequest{ArgName: argName, ArgDataType: argDataType})
 		}
-
-		// Use '-' as a separator between arg types as the result will end in the Terraform resource id
-		argtypes = strings.Join(types, "-")
-
-		builder.WithArgs(args)
-		builder.WithArgTypes(argtypes)
+	}
+	if len(args) > 0 {
+		req.WithArguments(args)
 	}
 
 	if v, ok := d.GetOk("return_null_allowed"); ok {
-		builder.WithReturnNullAllowed(v.(bool))
+		if v.(bool) {
+			req.WithReturnNullValues(&sdk.ReturnNullValuesNull)
+		} else {
+			req.WithReturnNullValues(&sdk.ReturnNullValuesNotNull)
+		}
+	}
+
+	if v, ok := d.GetOk("return_behavior"); ok {
+		if v.(string) == "VOLATILE" {
+			req.WithReturnResultsBehavior(&sdk.ReturnResultsBehaviorVolatile)
+		} else {
+			req.WithReturnResultsBehavior(&sdk.ReturnResultsBehaviorImmutable)
+		}
 	}
 
 	if v, ok := d.GetOk("null_input_behavior"); ok {
-		builder.WithNullInputBehavior(v.(string))
+		switch {
+		case v.(string) == "CALLED ON NULL INPUT":
+			req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehaviorCalledOnNullInput))
+		case v.(string) == "RETURNS NULL ON NULL INPUT":
+			req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehaviorReturnNullInput))
+		default:
+			req.WithNullInputBehavior(sdk.Pointer(sdk.NullInputBehaviorStrict))
+		}
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		req.WithComment(sdk.String(v.(string)))
 	}
 
 	if _, ok := d.GetOk("header"); ok {
-		headers := []map[string]string{}
+		headers := make([]sdk.ExternalFunctionHeaderRequest, 0)
 		for _, header := range d.Get("header").(*schema.Set).List() {
-			headerDef := map[string]string{}
-			for key, val := range header.(map[string]interface{}) {
-				headerDef[key] = val.(string)
-			}
-			headers = append(headers, headerDef)
+			m := header.(map[string]interface{})
+			headerName := m["name"].(string)
+			headerValue := m["value"].(string)
+			headers = append(headers, sdk.ExternalFunctionHeaderRequest{
+				Name:  headerName,
+				Value: headerValue,
+			})
 		}
-
-		builder.WithHeaders(headers)
+		req.WithHeaders(headers)
 	}
 
 	if v, ok := d.GetOk("context_headers"); ok {
-		contextHeaders := expandStringList(v.([]interface{}))
-		builder.WithContextHeaders(contextHeaders)
+		contextHeadersList := expandStringList(v.([]interface{}))
+		contextHeaders := make([]sdk.ExternalFunctionContextHeaderRequest, 0)
+		for _, header := range contextHeadersList {
+			contextHeaders = append(contextHeaders, sdk.ExternalFunctionContextHeaderRequest{
+				ContextFunction: header,
+			})
+		}
+		req.WithContextHeaders(contextHeaders)
 	}
 
 	if v, ok := d.GetOk("max_batch_rows"); ok {
-		builder.WithMaxBatchRows(v.(int))
+		req.WithMaxBatchRows(sdk.Int(v.(int)))
 	}
 
 	if v, ok := d.GetOk("compression"); ok {
-		builder.WithCompression(v.(string))
+		req.WithCompression(sdk.String(v.(string)))
 	}
+
 	if v, ok := d.GetOk("request_translator"); ok {
-		builder.WithRequestTranslator(v.(string))
+		req.WithRequestTranslator(sdk.Pointer(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(v.(string))))
 	}
+
 	if v, ok := d.GetOk("response_translator"); ok {
-		builder.WithResponseTranslator(v.(string))
+		req.WithResponseTranslator(sdk.Pointer(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(v.(string))))
 	}
 
-	stmt := builder.Create()
-	if err := snowflake.Exec(db, stmt); err != nil {
-		return fmt.Errorf("error creating external function %v err = %w", name, err)
+	if err := client.ExternalFunctions.Create(ctx, req); err != nil {
+		return diag.FromErr(err)
 	}
-
-	externalFunctionID := &externalFunctionID{
-		DatabaseName:             database,
-		SchemaName:               dbSchema,
-		ExternalFunctionName:     name,
-		ExternalFunctionArgTypes: argtypes,
+	argTypes := make([]sdk.DataType, 0, len(args))
+	for _, item := range args {
+		argTypes = append(argTypes, item.ArgDataType)
 	}
-	dataIDInput, err := externalFunctionID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
-
-	return ReadExternalFunction(d, meta)
+	sid := sdk.NewSchemaObjectIdentifierWithArguments(database, schemaName, name, argTypes)
+	d.SetId(sid.FullyQualifiedName())
+	return ReadContextExternalFunction(ctx, d, meta)
 }
 
-// ReadExternalFunction implements schema.ReadFunc.
-func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
+func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	externalFunctionID, err := externalFunctionIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
+	client := sdk.NewClientFromDB(db)
 
-	dbName := externalFunctionID.DatabaseName
-	dbSchema := externalFunctionID.SchemaName
-	name := externalFunctionID.ExternalFunctionName
-	argtypes := externalFunctionID.ExternalFunctionArgTypes
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	externalFunction, err := client.ExternalFunctions.ShowByID(ctx, id.WithoutArguments(), id.Arguments())
+	if err != nil {
+		d.SetId("")
+		return nil
+	}
 
 	// Some properties can come from the SHOW EXTERNAL FUNCTION call
-	stmt := snowflake.NewExternalFunctionBuilder(name, dbName, dbSchema).Show()
-	row := snowflake.QueryRow(db, stmt)
-	externalFunction, err := snowflake.ScanExternalFunction(row)
-	if err != nil {
-		if err.Error() == snowflake.ErrNoRowInRS {
-			d.SetId("")
-			return nil
-		}
-		return err
+	if err := d.Set("name", externalFunction.Name); err != nil {
+		return diag.FromErr(err)
 	}
 
-	// Note: 'language' must be EXTERNAL and 'is_external_function' set to Y
-	if externalFunction.Language.String != "EXTERNAL" || externalFunction.IsExternalFunction.String != "Y" {
-		return fmt.Errorf("expected %v to be an external function, got 'language=%v' and 'is_external_function=%v'", d.Id(), externalFunction.Language.String, externalFunction.IsExternalFunction.String)
+	if err := d.Set("schema", strings.Trim(externalFunction.SchemaName, "\"")); err != nil {
+		return diag.FromErr(err)
 	}
 
-	if err := d.Set("name", externalFunction.ExternalFunctionName.String); err != nil {
-		return err
+	if err := d.Set("database", strings.Trim(externalFunction.CatalogName, "\"")); err != nil {
+		return diag.FromErr(err)
 	}
 
-	if err := d.Set("schema", externalFunction.SchemaName.String); err != nil {
-		return err
+	if err := d.Set("comment", externalFunction.Description); err != nil {
+		return diag.FromErr(err)
 	}
 
-	if err := d.Set("database", externalFunction.DatabaseName.String); err != nil {
-		return err
-	}
-
-	if err := d.Set("comment", externalFunction.Comment.String); err != nil {
-		return err
-	}
-
-	if err := d.Set("created_on", externalFunction.CreatedOn.String); err != nil {
-		return err
+	if err := d.Set("created_on", externalFunction.CreatedOn); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// Some properties come from the DESCRIBE FUNCTION call
-	stmt = snowflake.NewExternalFunctionBuilder(name, dbName, dbSchema).WithArgTypes(argtypes).Describe()
-	externalFunctionDescriptionRows, err := snowflake.Query(db, stmt)
+	externalFunctionPropertyRows, err := client.ExternalFunctions.Describe(ctx, sdk.NewDescribeExternalFunctionRequest(id.WithoutArguments(), id.Arguments()))
 	if err != nil {
-		return err
+		d.SetId("")
+		return nil
 	}
 
-	externalFunctionDescription, err := snowflake.ScanExternalFunctionDescription(externalFunctionDescriptionRows)
-	if err != nil {
-		return err
-	}
-
-	for _, desc := range externalFunctionDescription {
-		switch desc.Property.String {
+	for _, row := range externalFunctionPropertyRows {
+		switch row.Property {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
-			args := strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "(", ""), ")", "")
+			args := strings.ReplaceAll(strings.ReplaceAll(row.Value, "(", ""), ")", "")
 
 			if args != "" { // Do nothing for functions without arguments
 				argPairs := strings.Split(args, ", ")
@@ -421,46 +381,41 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				if err := d.Set("arg", args); err != nil {
-					return err
+					return diag.Errorf("error setting arg: %v", err)
 				}
 			}
 		case "returns":
-			returnType := desc.Value.String
-			// We first check for VARIANT
-			if returnType == "VARIANT" {
+			returnType := row.Value
+			// We first check for VARIANT or OBJECT
+			if returnType == "VARIANT" || returnType == "OBJECT" {
 				if err := d.Set("return_type", returnType); err != nil {
-					return err
-				}
-				break
-			} else if returnType == "OBJECT" {
-				if err := d.Set("return_type", returnType); err != nil {
-					return err
+					return diag.Errorf("error setting return_type: %v", err)
 				}
 				break
 			}
 
 			// otherwise, format in Snowflake DB is returnType(<some number>)
 			re := regexp.MustCompile(`^(\w+)\([0-9]*\)$`)
-			match := re.FindStringSubmatch(desc.Value.String)
+			match := re.FindStringSubmatch(row.Value)
 			if len(match) < 2 {
-				return fmt.Errorf("return_type %s not recognized", returnType)
+				return diag.Errorf("return_type %s not recognized", returnType)
 			}
 			if err := d.Set("return_type", match[1]); err != nil {
-				return err
+				return diag.Errorf("error setting return_type: %v", err)
 			}
 
 		case "null handling":
-			if err := d.Set("null_input_behavior", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("null_input_behavior", row.Value); err != nil {
+				return diag.Errorf("error setting null_input_behavior: %v", err)
 			}
 		case "volatility":
-			if err := d.Set("return_behavior", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("return_behavior", row.Value); err != nil {
+				return diag.Errorf("error setting return_behavior: %v", err)
 			}
 		case "headers":
-			if desc.Value.Valid && desc.Value.String != "null" {
+			if row.Value != "" && row.Value != "null" {
 				// Format in Snowflake DB is: {"head1":"val1","head2":"val2"}
-				headerPairs := strings.Split(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "{", ""), "}", ""), "\"", ""), ",")
+				headerPairs := strings.Split(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(row.Value, "{", ""), "}", ""), "\"", ""), ",")
 				headers := []interface{}{}
 
 				for _, headerPair := range headerPairs {
@@ -473,63 +428,77 @@ func ReadExternalFunction(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				if err := d.Set("header", headers); err != nil {
-					return err
+					return diag.Errorf("error setting return_behavior: %v", err)
 				}
 			}
 		case "context_headers":
-			if desc.Value.Valid && desc.Value.String != "null" {
+			if row.Value != "" && row.Value != "null" {
 				// Format in Snowflake DB is: ["CONTEXT_FUNCTION_1","CONTEXT_FUNCTION_2"]
-				contextHeaders := strings.Split(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value.String, "[", ""), "]", ""), "\"", ""), ",")
-
+				contextHeaders := strings.Split(strings.Trim(row.Value, "[]"), ",")
+				for i, v := range contextHeaders {
+					contextHeaders[i] = strings.Trim(v, "\"")
+				}
 				if err := d.Set("context_headers", contextHeaders); err != nil {
-					return err
+					return diag.Errorf("error setting context_headers: %v", err)
 				}
 			}
 		case "max_batch_rows":
-			if desc.Value.String != "not set" {
-				i, err := strconv.ParseInt(desc.Value.String, 10, 64)
+			if row.Value != "not set" {
+				maxBatchRows, err := strconv.ParseInt(row.Value, 10, 64)
 				if err != nil {
-					return err
+					return diag.Errorf("error parsing max_batch_rows: %v", err)
 				}
-
-				if err := d.Set("max_batch_rows", i); err != nil {
-					return err
+				if err := d.Set("max_batch_rows", maxBatchRows); err != nil {
+					return diag.Errorf("error setting max_batch_rows: %v", err)
 				}
 			}
 		case "compression":
-			if err := d.Set("compression", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("compression", row.Value); err != nil {
+				return diag.Errorf("error setting compression: %v", err)
 			}
 		case "body":
-			if err := d.Set("url_of_proxy_and_resource", desc.Value.String); err != nil {
-				return err
+			if err := d.Set("url_of_proxy_and_resource", row.Value); err != nil {
+				return diag.Errorf("error setting url_of_proxy_and_resource: %v", err)
 			}
 		case "language":
 			// To ignore
 		default:
-			log.Printf("[WARN] unexpected external function property %v returned from Snowflake", desc.Property.String)
+			log.Printf("[WARN] unexpected external function property %v returned from Snowflake", row.Property)
 		}
 	}
 
 	return nil
 }
 
-// DeleteExternalFunction implements schema.DeleteFunc.
-func DeleteExternalFunction(d *schema.ResourceData, meta interface{}) error {
+func UpdateContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
-	externalFunctionID, err := externalFunctionIDFromString(d.Id())
-	if err != nil {
-		return err
+	client := sdk.NewClientFromDB(db)
+
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	req := sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments())
+	if d.HasChange("comment") {
+		_, new := d.GetChange("comment")
+		if new == "" {
+			req.UnsetComment = sdk.Bool(true)
+		} else {
+			req.SetComment = sdk.String(new.(string))
+		}
+		err := client.Functions.Alter(ctx, req)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
+	return ReadContextExternalFunction(ctx, d, meta)
+}
 
-	dbName := externalFunctionID.DatabaseName
-	dbSchema := externalFunctionID.SchemaName
-	name := externalFunctionID.ExternalFunctionName
-	argtypes := externalFunctionID.ExternalFunctionArgTypes
+func DeleteContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 
-	q := snowflake.NewExternalFunctionBuilder(name, dbName, dbSchema).WithArgTypes(argtypes).Drop()
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting external function %v error %w", d.Id(), err)
+	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
+	req := sdk.NewDropFunctionRequest(id.WithoutArguments(), id.Arguments())
+	if err := client.Functions.Drop(ctx, req); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

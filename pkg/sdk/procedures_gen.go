@@ -245,8 +245,8 @@ type DescribeProcedureOptions struct {
 }
 
 type procedureDetailRow struct {
-	Property string `db:"property"`
-	Value    string `db:"value"`
+	Property string         `db:"property"`
+	Value    sql.NullString `db:"value"`
 }
 
 type ProcedureDetail struct {

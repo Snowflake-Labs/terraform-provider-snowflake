@@ -8,10 +8,14 @@ import (
 	"text/template"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 type (
@@ -539,9 +543,12 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 	accName := "tst-terraform-" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	taskRootName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -593,11 +600,11 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 }
 
 func taskConfigManagedScheduled(name string, taskRootName string, databaseName string, schemaName string) string {
-	s := `
+	return fmt.Sprintf(`
 resource "snowflake_task" "test_task_root" {
-	name     	                    = "%s"
-	database  	                    = "%s"
-	schema    	                    = "%s"
+	name     	                    = "%[1]s"
+	database  	                    = "%[2]s"
+	schema    	                    = "%[3]s"
 	sql_statement                   = "SELECT 1"
 	enabled  	                    = true
 	schedule                        = "5 MINUTE"
@@ -605,23 +612,22 @@ resource "snowflake_task" "test_task_root" {
 }
 
 resource "snowflake_task" "test_task" {
-	name     	  = "%s"
-	database  	  = "%s"
-	schema    	  = "%s"
+	name     	  = "%[4]s"
+	database  	  = "%[2]s"
+	schema    	  = "%[3]s"
 	sql_statement = "SELECT 1"
 	enabled  	  = true
 	schedule      = "5 MINUTE"
 }
-`
-	return fmt.Sprintf(s, taskRootName, databaseName, schemaName, name, databaseName, schemaName)
+`, taskRootName, databaseName, schemaName, name)
 }
 
 func taskConfigManagedScheduled2(name string, taskRootName string, databaseName string, schemaName string) string {
-	s := `
+	return fmt.Sprintf(`
 resource "snowflake_task" "test_task_root" {
-	name     	                    = "%s"
-	database  	                    =  "%s"
-	schema    	                    =  "%s"
+	name     	                    = "%[1]s"
+	database  	                    = "%[2]s"
+	schema    	                    = "%[3]s"
 	sql_statement                   = "SELECT 1"
 	enabled  	                    = true
 	schedule                        = "5 MINUTE"
@@ -629,15 +635,14 @@ resource "snowflake_task" "test_task_root" {
 }
 
 resource "snowflake_task" "test_task" {
-	name     	  = "%s"
-	database  	  = "%s"
-	schema    	  = "%s"
+	name     	  = "%[4]s"
+	database  	  = "%[2]s"
+	schema    	  = "%[3]s"
 	sql_statement = "SELECT 1"
 	enabled  	  = true
 	after         = [snowflake_task.test_task_root.name]
 }
-`
-	return fmt.Sprintf(s, taskRootName, databaseName, schemaName, name, databaseName, schemaName)
+`, taskRootName, databaseName, schemaName, name)
 }
 
 func taskConfigManagedScheduled3(name string, taskRootName string, databaseName string, schemaName string) string {
@@ -667,4 +672,107 @@ func checkInt64(name, key string, value int64) func(*terraform.State) error {
 	return func(state *terraform.State) error {
 		return resource.TestCheckResourceAttr(name, key, fmt.Sprintf("%v", value))(state)
 	}
+}
+
+func TestAcc_Task_issue2207(t *testing.T) {
+	prefix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	rootName := prefix + "_root_task"
+	childName := prefix + "_child_task"
+
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"root_name":  config.StringVariable(rootName),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"warehouse":  config.StringVariable(acc.TestWarehouseName),
+			"child_name": config.StringVariable(childName),
+			"comment":    config.StringVariable("abc"),
+		}
+	}
+	m2 := m()
+	m2["comment"] = config.StringVariable("def")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.root_task", "enabled", true),
+					checkBool("snowflake_task.child_task", "enabled", true),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// change comment
+			{
+				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
+				ConfigVariables: m2,
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.root_task", "enabled", true),
+					checkBool("snowflake_task.child_task", "enabled", true),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_issue2036(t *testing.T) {
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":      config.StringVariable(name),
+			"database":  config.StringVariable(acc.TestDatabaseName),
+			"schema":    config.StringVariable(acc.TestSchemaName),
+			"warehouse": config.StringVariable(acc.TestWarehouseName),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			// create without when
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", ""),
+				),
+			},
+			// add when
+			{
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", "TRUE"),
+				),
+			},
+			// remove when
+			{
+				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", ""),
+				),
+			},
+		},
+	})
 }

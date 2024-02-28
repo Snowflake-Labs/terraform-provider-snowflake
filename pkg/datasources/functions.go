@@ -1,10 +1,13 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
-	"log"
+	"fmt"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -60,43 +63,52 @@ var functionsSchema = map[string]*schema.Schema{
 
 func Functions() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadFunctions,
-		Schema: functionsSchema,
+		ReadContext: ReadContextFunctions,
+		Schema:      functionsSchema,
 	}
 }
 
-// todo: fix this. ListUserFunctions isn't using the right struct right now and also the signature of this doesn't support all the features it could for example, database and schema should be optional, and you could also list by account.
-func ReadFunctions(d *schema.ResourceData, meta interface{}) error {
+func ReadContextFunctions(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	db := meta.(*sql.DB)
+	client := sdk.NewClientFromDB(db)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	d.SetId("functions")
-	currentFunctions, err := snowflake.ListUserFunctions(databaseName, schemaName, db)
+	request := sdk.NewShowFunctionRequest()
+	request.WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)})
+	functions, err := client.Functions.Show(ctx, request)
 	if err != nil {
-		log.Printf("[DEBUG] error listing functions: %v", err)
-		return nil
-	}
+		id := d.Id()
 
-	functions := []map[string]interface{}{}
-
-	for _, function := range currentFunctions {
-		functionMap := map[string]interface{}{}
-
-		functionSignatureMap, err := parseArguments(function.Arguments.String)
-		if err != nil {
-			return err
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Unable to parse functions in schema (%s)", id),
+				Detail:   "See our document on design decisions for functions: <LINK (coming soon)>",
+			},
 		}
-
-		functionMap["name"] = function.Name.String
-		functionMap["database"] = databaseName
-		functionMap["schema"] = schemaName
-		functionMap["comment"] = function.Description.String
-		functionMap["argument_types"] = functionSignatureMap["argumentTypes"].([]string)
-		functionMap["return_type"] = functionSignatureMap["returnType"].(string)
-
-		functions = append(functions, functionMap)
 	}
 
-	return d.Set("functions", functions)
+	entities := []map[string]interface{}{}
+	for _, item := range functions {
+		signature, err := parseArguments(item.Arguments)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		m := map[string]interface{}{}
+		m["name"] = item.Name
+		m["database"] = databaseName
+		m["schema"] = schemaName
+		m["comment"] = item.Description
+		m["argument_types"] = signature["argumentTypes"].([]string)
+		m["return_type"] = signature["returnType"].(string)
+
+		entities = append(entities, m)
+	}
+	d.SetId(helpers.EncodeSnowflakeID(databaseName, schemaName))
+	if err := d.Set("functions", entities); err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }

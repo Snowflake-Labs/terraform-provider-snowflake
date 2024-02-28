@@ -3,14 +3,19 @@ package resources
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"log"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+var refreshModePattern = regexp.MustCompile(`refresh_mode = '(\w+)'`)
 
 var dynamicTableSchema = map[string]*schema.Schema{
 	"or_replace": {
@@ -61,7 +66,6 @@ var dynamicTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "The warehouse in which to create the dynamic table.",
-		ForceNew:    true,
 	},
 	"query": {
 		Type:             schema.TypeString,
@@ -74,6 +78,27 @@ var dynamicTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the dynamic table.",
+	},
+	"refresh_mode": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		Default:      sdk.DynamicTableRefreshModeAuto,
+		Description:  "INCREMENTAL to use incremental refreshes, FULL to recompute the whole table on every refresh, or AUTO to let Snowflake decide.",
+		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllDynamicRefreshModes), true),
+		ForceNew:     true,
+	},
+	"initialize": {
+		Type:         schema.TypeString,
+		Optional:     true,
+		Default:      sdk.DynamicTableInitializeOnCreate,
+		Description:  "Initialize trigger for the dynamic table. Can only be set on creation. Available options are ON_CREATE and ON_SCHEDULE.",
+		ValidateFunc: validation.StringInSlice(sdk.AsStringList(sdk.AllDynamicTableInitializes), true),
+		ForceNew:     true,
+	},
+	"created_on": {
+		Type:        schema.TypeString,
+		Description: "Time when this dynamic table was created.",
+		Computed:    true,
 	},
 	"cluster_by": {
 		Type:        schema.TypeString,
@@ -93,11 +118,6 @@ var dynamicTableSchema = map[string]*schema.Schema{
 	"owner": {
 		Type:        schema.TypeString,
 		Description: "Role that owns the dynamic table.",
-		Computed:    true,
-	},
-	"refresh_mode": {
-		Type:        schema.TypeString,
-		Description: "INCREMENTAL if the dynamic table will use incremental refreshes, or FULL if it will recompute the whole table on every refresh.",
 		Computed:    true,
 	},
 	"refresh_mode_reason": {
@@ -200,6 +220,24 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+	if strings.Contains(dynamicTable.Text, "initialize = 'ON_CREATE'") {
+		if err := d.Set("initialize", "ON_CREATE"); err != nil {
+			return err
+		}
+	} else if strings.Contains(dynamicTable.Text, "initialize = 'ON_SCHEDULE'") {
+		if err := d.Set("initialize", "ON_SCHEDULE"); err != nil {
+			return err
+		}
+	}
+	m := refreshModePattern.FindStringSubmatch(dynamicTable.Text)
+	if len(m) > 1 {
+		if err := d.Set("refresh_mode", m[1]); err != nil {
+			return err
+		}
+	}
+	if err := d.Set("created_on", dynamicTable.CreatedOn.Format(time.RFC3339)); err != nil {
+		return err
+	}
 	if err := d.Set("cluster_by", dynamicTable.ClusterBy); err != nil {
 		return err
 	}
@@ -210,9 +248,6 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if err := d.Set("owner", dynamicTable.Owner); err != nil {
-		return err
-	}
-	if err := d.Set("refresh_mode", string(dynamicTable.RefreshMode)); err != nil {
 		return err
 	}
 	if err := d.Set("refresh_mode_reason", dynamicTable.RefreshModeReason); err != nil {
@@ -243,7 +278,8 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	query, err := getQueryFromDDL(dynamicTable.Text)
+	extractor := snowflake.NewViewSelectStatementExtractor(dynamicTable.Text)
+	query, err := extractor.ExtractDynamicTable()
 	if err != nil {
 		return err
 	}
@@ -252,33 +288,6 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-/*
- * Previous implementation tried to match query part from the whole dynamic table DDL statement by just using `AS`.
- * It was failing for table names containing `AS` (like `REASON`). It was also failing for other parts containing `AS`.
- * We cannot simply match by ` AS ` because this can still be part of COMMENT or SELECT query itself.
- * We have considered not setting the query at all but it was not ideal because of:
- * - possible external changes to dynamic table (drop and recreate externally with different query);
- * - import not 100% correct.
- * We did not want to complicate the implementation too much by introducing parsers.
- * One more thing worth mentioning is the whitespace that can be introduced by the user that is still returned by SHOW.
- * For now, we just normalize the DDL before extraction of query.
- *
- * The outcome implementation matches by ` AS SELECT ` and checks the number of matches.
- * If more matches are found, the error is returned to inform user about possible cause of error.
- *
- * Refer to issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329.
- */
-func getQueryFromDDL(text string) (string, error) {
-	normalizedDDL := normalizeQuery(text)
-	matchSubstring := " AS SELECT "
-	matches := strings.Count(strings.ToUpper(normalizedDDL), matchSubstring)
-	if matches != 1 {
-		return "", errors.New("too many matches found. There is no way of getting ONLY the 'query' used to create the dynamic table from Snowflake. We try to get it from the whole creation statement but there may be cases where it fails. Please submit the issue on Github (refer to #2329)")
-	}
-	idx := strings.Index(strings.ToUpper(normalizedDDL), " AS SELECT ")
-	return strings.TrimSpace(normalizedDDL[idx+4:]), nil
 }
 
 func parseTargetLag(v interface{}) sdk.TargetLag {
@@ -314,6 +323,12 @@ func CreateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("or_replace"); ok && v.(bool) {
 		request.WithOrReplace(true)
+	}
+	if v, ok := d.GetOk("refresh_mode"); ok {
+		request.WithRefreshMode(sdk.DynamicTableRefreshMode(v.(string)))
+	}
+	if v, ok := d.GetOk("initialize"); ok {
+		request.WithInitialize(sdk.DynamicTableInitialize(v.(string)))
 	}
 	if err := client.DynamicTables.Create(context.Background(), request); err != nil {
 		return err

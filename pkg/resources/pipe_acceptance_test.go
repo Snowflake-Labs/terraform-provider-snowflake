@@ -2,24 +2,25 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Pipe(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_PIPE_TESTS"); ok {
-		t.Skip("Skipping TestAcc_Pipe")
-	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -37,6 +38,7 @@ func TestAcc_Pipe(t *testing.T) {
 	})
 }
 
+// whitespace in copy_statement matters for the tests, change with caution!
 func pipeConfig(name string, databaseName string, schemaName string) string {
 	s := `
 resource "snowflake_table" "test" {
@@ -69,7 +71,7 @@ resource "snowflake_pipe" "test" {
   name           = "%s"
   comment        = "Terraform acceptance test"
   copy_statement = <<CMD
-COPY INTO "${snowflake_table.test.database}"."${snowflake_table.test.schema}"."${snowflake_table.test.name}"
+  	COPY INTO "${snowflake_table.test.database}"."${snowflake_table.test.schema}"."${snowflake_table.test.name}"
   FROM @"${snowflake_stage.test.database}"."${snowflake_stage.test.schema}"."${snowflake_stage.test.name}"
   FILE_FORMAT = (TYPE = CSV)
 CMD

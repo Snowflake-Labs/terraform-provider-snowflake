@@ -139,6 +139,12 @@ var tableSchema = map[string]*schema.Schema{
 					Default:     "",
 					Description: "Masking policy to apply on column. It has to be a fully qualified name.",
 				},
+				"collate": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Column collation, e.g. utf8",
+				},
 			},
 		},
 	},
@@ -176,21 +182,12 @@ var tableSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-	"data_retention_days": {
-		Type:          schema.TypeInt,
-		Optional:      true,
-		Description:   "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.",
-		ValidateFunc:  validation.IntBetween(0, 90),
-		Deprecated:    "Use data_retention_time_in_days attribute instead",
-		ConflictsWith: []string{"data_retention_time_in_days"},
-	},
 	"data_retention_time_in_days": {
-		Type:          schema.TypeInt,
-		Optional:      true,
-		Description:   "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. Default value is 1, if you wish to inherit the parent schema setting then pass in the schema attribute to this argument.",
-		ValidateFunc:  validation.IntBetween(0, 90),
-		Deprecated:    "Use snowflake_object_parameter instead",
-		ConflictsWith: []string{"data_retention_days"},
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      -1,
+		Description:  "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. If you wish to inherit the parent schema setting then pass in the schema attribute to this argument or do not fill this parameter at all; the default value for this field is -1, which is a fallback to use Snowflake default - in this case the schema value",
+		ValidateFunc: validation.IntBetween(-1, 90),
 	},
 	"change_tracking": {
 		Type:        schema.TypeBool,
@@ -255,6 +252,7 @@ type column struct {
 	identity      *columnIdentity
 	comment       string
 	maskingPolicy string
+	collate       string
 }
 
 type columns []column
@@ -268,13 +266,14 @@ type changedColumn struct {
 	dropedDefault         bool
 	changedComment        bool
 	changedMaskingPolicy  bool
+	changedCollate        bool
 }
 
 func (c columns) getChangedColumnProperties(new columns) (changed changedColumns) {
 	changed = changedColumns{}
 	for _, cO := range c {
 		for _, cN := range new {
-			changeColumn := changedColumn{cN, false, false, false, false, false}
+			changeColumn := changedColumn{cN, false, false, false, false, false, false}
 			if cO.name == cN.name && cO.dataType != cN.dataType {
 				changeColumn.changedDataType = true
 			}
@@ -291,6 +290,10 @@ func (c columns) getChangedColumnProperties(new columns) (changed changedColumns
 
 			if cO.name == cN.name && cO.maskingPolicy != cN.maskingPolicy {
 				changeColumn.changedMaskingPolicy = true
+			}
+
+			if cO.name == cN.name && cO.collate != cN.collate {
+				changeColumn.changedCollate = true
 			}
 
 			changed = append(changed, changeColumn)
@@ -363,6 +366,7 @@ func getColumn(from interface{}) (to column) {
 		_default:      cd,
 		identity:      id,
 		comment:       c["comment"].(string),
+		collate:       c["collate"].(string),
 		maskingPolicy: c["masking_policy"].(string),
 	}
 }
@@ -388,7 +392,7 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 	if len(_default) == 1 {
 		if c, ok := _default[0].(map[string]interface{})["constant"]; ok {
 			if constant, ok := c.(string); ok && len(constant) > 0 {
-				if strings.Contains(_type, "CHAR") || _type == "STRING" || _type == "TEXT" {
+				if sdk.IsStringType(_type) {
 					expression = snowflake.EscapeSnowflakeString(constant)
 				} else {
 					expression = constant
@@ -421,6 +425,10 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 	maskingPolicy := c["masking_policy"].(string)
 	if maskingPolicy != "" {
 		request.WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(maskingPolicy)))
+	}
+
+	if sdk.IsStringType(_type) {
+		request.WithCollate(sdk.String(c["collate"].(string)))
 	}
 
 	return request.
@@ -470,6 +478,10 @@ func toColumnConfig(descriptions []sdk.TableColumnDetails) []any {
 			flat["comment"] = *td.Comment
 		}
 
+		if td.Collation != nil {
+			flat["collate"] = *td.Collation
+		}
+
 		if td.PolicyName != nil {
 			// TODO [SNOW-867240]: SHOW TABLE returns last part of id without double quotes... we have to quote it again. Move it to SDK.
 			flat["masking_policy"] = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*td.PolicyName).FullyQualifiedName()
@@ -508,8 +520,7 @@ func toColumnDefaultConfig(td sdk.TableColumnDetails) map[string]any {
 		return def
 	}
 
-	columnType := strings.ToUpper(string(td.Type))
-	if strings.Contains(columnType, "CHAR") || columnType == "STRING" || columnType == "TEXT" {
+	if sdk.IsStringType(string(td.Type)) {
 		def["constant"] = snowflake.UnescapeSnowflakeString(defaultRaw)
 		return def
 	}
@@ -580,9 +591,7 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if v, ok := d.GetOk("data_retention_days"); ok {
-		createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
-	} else if v, ok := d.GetOk("data_retention_time_in_days"); ok {
+	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
 		createRequest.WithDataRetentionTimeInDays(sdk.Int(v.(int)))
 	}
 
@@ -624,6 +633,26 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	s, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))
+	if err != nil {
+		log.Printf("[DEBUG] schema (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+	var schemaRetentionTime int64
+	// "retention_time" may sometimes be empty string instead of an integer
+	{
+		rt := s.RetentionTime
+		if rt == "" {
+			rt = "0"
+		}
+
+		schemaRetentionTime, err = strconv.ParseInt(rt, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
+
 	tableDescription, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
 	if err != nil {
 		return err
@@ -641,14 +670,8 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		"change_tracking": table.ChangeTracking,
 		"qualified_name":  id.FullyQualifiedName(),
 	}
-	var dataRetentionKey string
-	if _, ok := d.GetOk("data_retention_time_in_days"); ok {
-		dataRetentionKey = "data_retention_time_in_days"
-	} else if _, ok := d.GetOk("data_retention_days"); ok {
-		dataRetentionKey = "data_retention_days"
-	}
-	if dataRetentionKey != "" {
-		toSet[dataRetentionKey] = table.RetentionTime
+	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 || int64(table.RetentionTime) != schemaRetentionTime {
+		toSet["data_retention_time_in_days"] = table.RetentionTime
 	}
 
 	for key, val := range toSet {
@@ -702,15 +725,15 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		setRequest.WithChangeTracking(sdk.Bool(changeTracking))
 	}
 
-	checkChangeForDataRetention := func(key string) {
-		if d.HasChange(key) {
-			dataRetentionDays := d.Get(key).(int)
+	if d.HasChange("data_retention_time_in_days") {
+		if days := d.Get("data_retention_time_in_days"); days.(int) != -1 {
 			runSetStatement = true
-			setRequest.WithDataRetentionTimeInDays(sdk.Int(dataRetentionDays))
+			setRequest.WithDataRetentionTimeInDays(sdk.Int(days.(int)))
+		} else {
+			runUnsetStatement = true
+			unsetRequest.WithDataRetentionTimeInDays(true)
 		}
 	}
-	checkChangeForDataRetention("data_retention_days")
-	checkChangeForDataRetention("data_retention_time_in_days")
 
 	if runSetStatement {
 		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(setRequest))
@@ -766,7 +789,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
 				}
 				var expression string
-				if strings.Contains(cA.dataType, "CHAR") || cA.dataType == "STRING" || cA.dataType == "TEXT" {
+				if sdk.IsStringType(cA.dataType) {
 					expression = snowflake.EscapeSnowflakeString(*cA._default.constant)
 				} else {
 					expression = *cA._default.constant
@@ -786,14 +809,18 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				addRequest.WithComment(sdk.String(cA.comment))
 			}
 
+			if cA.collate != "" && sdk.IsStringType(cA.dataType) {
+				addRequest.WithCollate(sdk.String(cA.collate))
+			}
+
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAdd(addRequest)))
 			if err != nil {
 				return fmt.Errorf("error adding column: %w", err)
 			}
 		}
 		for _, cA := range changed {
-			if cA.changedDataType {
-				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType)))})))
+			if cA.changedDataType || cA.changedCollate {
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType))).WithCollate(sdk.String(cA.newColumn.collate))})))
 				if err != nil {
 					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}

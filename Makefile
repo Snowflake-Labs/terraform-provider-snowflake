@@ -1,7 +1,4 @@
-export SKIP_EMAIL_INTEGRATION_TESTS=true
-export SKIP_NOTIFICATION_INTEGRATION_TESTS=true
 export SKIP_SAML_INTEGRATION_TESTS=true
-export SKIP_STREAM_TEST=true
 export SKIP_MANAGED_ACCOUNT_INT_TEST=true
 export SKIP_MANAGED_ACCOUNT_TEST=true
 export BASE_BINARY_NAME=terraform-provider-snowflake
@@ -67,7 +64,7 @@ test: test-client ## run unit and integration tests
 	go test -v -cover -timeout=30m ./...
 
 test-acceptance: ## run acceptance tests
-	TF_ACC=1 go test -run "^TestAcc_" -v -cover -timeout=45m ./...
+	TF_ACC=1 go test -run "^TestAcc_" -v -cover -timeout=60m ./...
 
 test-integration: ## run SDK integration tests
 	go test -run "^TestInt_" -v -cover -timeout=30m ./...

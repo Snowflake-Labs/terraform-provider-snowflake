@@ -1,80 +1,100 @@
 package datasources_test
 
 import (
-	"fmt"
+	"os"
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_ExternalFunctions(t *testing.T) {
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	apiName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	externalFunctionName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+func TestAcc_ExternalFunctions_basic(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_EXTERNAL_FUNCTION_TESTS"); ok {
+		t.Skip("Skipping TestAcc_ExternalFunction")
+	}
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"database":                  config.StringVariable(acc.TestDatabaseName),
+			"schema":                    config.StringVariable(acc.TestSchemaName),
+			"name":                      config.StringVariable(accName),
+			"api_allowed_prefixes":      config.ListVariable(config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/")),
+			"url_of_proxy_and_resource": config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"),
+			"comment":                   config.StringVariable("Terraform acceptance test"),
+		}
+	}
+
+	dataSourceName := "data.snowflake_external_functions.external_functions"
+	configVariables := m()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: externalFunctions(databaseName, schemaName, apiName, externalFunctionName),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalFunctions/basic"),
+				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_external_functions.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_external_functions.t", "schema", schemaName),
-					resource.TestCheckResourceAttrSet("data.snowflake_external_functions.t", "external_functions.#"),
-					resource.TestCheckResourceAttr("data.snowflake_external_functions.t", "external_functions.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_external_functions.t", "external_functions.0.name", externalFunctionName),
+					resource.TestCheckResourceAttr(dataSourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(dataSourceName, "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.#"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.0.name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.0.database"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.0.schema"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.0.comment"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.0.language"),
 				),
 			},
 		},
 	})
 }
 
-func externalFunctions(databaseName string, schemaName string, apiName string, externalFunctionName string) string {
-	return fmt.Sprintf(`
-
-	resource snowflake_database "test_database" {
-		name = "%v"
+func TestAcc_ExternalFunctions_no_database(t *testing.T) {
+	if _, ok := os.LookupEnv("SKIP_EXTERNAL_FUNCTION_TESTS"); ok {
+		t.Skip("Skipping TestAcc_ExternalFunction")
 	}
-
-	resource snowflake_schema "test_schema"{
-		name 	 = "%v"
-		database = snowflake_database.test_database.name
-	}
-
-	resource "snowflake_api_integration" "test_api_int" {
-		name = "%v"
-		api_provider = "aws_api_gateway"
-		api_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
-		api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
-		enabled = true
-	}
-
-	resource "snowflake_external_function" "test_func" {
-		name     = "%v"
-		database = snowflake_database.test_database.name
-		schema   = snowflake_schema.test_schema.name
-		arg {
-			name = "arg1"
-			type = "varchar"
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"database":                  config.StringVariable(acc.TestDatabaseName),
+			"schema":                    config.StringVariable(acc.TestSchemaName),
+			"name":                      config.StringVariable(accName),
+			"api_allowed_prefixes":      config.ListVariable(config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/")),
+			"url_of_proxy_and_resource": config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"),
+			"comment":                   config.StringVariable("Terraform acceptance test"),
 		}
-		arg {
-			name = "arg2"
-			type = "varchar"
-		}
-		comment = "Terraform acceptance test"
-		return_type = "varchar"
-		return_behavior = "IMMUTABLE"
-		api_integration = snowflake_api_integration.test_api_int.name
-		url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
 	}
 
-	data snowflake_external_functions "t" {
-		database = snowflake_external_function.test_func.database
-		schema = snowflake_external_function.test_func.schema
-		depends_on = [snowflake_external_function.test_func]
-	}
-	`, databaseName, schemaName, apiName, externalFunctionName)
+	dataSourceName := "data.snowflake_external_functions.external_functions"
+	configVariables := m()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalFunctions/no_filter"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.#"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.0.name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.0.comment"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "external_functions.0.language"),
+				),
+			},
+		},
+	})
 }

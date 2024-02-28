@@ -4,7 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"slices"
+	"strconv"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,10 +32,11 @@ var databaseSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"data_retention_time_in_days": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database, schema, or table. For more information, see Understanding & Using Time Travel.",
-		Default:     1,
+		Type:         schema.TypeInt,
+		Optional:     true,
+		Default:      -1,
+		Description:  "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database. Default value for this field is set to -1, which is a fallback to use Snowflake default. For more information, see Understanding & Using Time Travel.",
+		ValidateFunc: validation.IntBetween(-1, 90),
 	},
 	"from_share": {
 		Type:          schema.TypeMap,
@@ -115,33 +120,14 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating database %v: %w", name, err)
 		}
 		d.SetId(name)
-		if v, ok := d.GetOk("replication_configuration"); ok {
-			replicationConfiguration := v.([]interface{})[0].(map[string]interface{})
-			accounts := replicationConfiguration["accounts"].([]interface{})
-			accountIDs := make([]sdk.AccountIdentifier, len(accounts))
-			for i, account := range accounts {
-				accountIDs[i] = sdk.NewAccountIdentifierFromAccountLocator(account.(string))
-			}
-			opts := &sdk.AlterDatabaseReplicationOptions{
-				EnableReplication: &sdk.EnableReplication{
-					ToAccounts: accountIDs,
-				},
-			}
-			if ignoreEditionCheck, ok := replicationConfiguration["ignore_edition_check"]; ok {
-				opts.EnableReplication.IgnoreEditionCheck = sdk.Bool(ignoreEditionCheck.(bool))
-			}
-			err := client.Databases.AlterReplication(ctx, id, opts)
-			if err != nil {
-				return fmt.Errorf("error enabling replication for database %v: %w", name, err)
-			}
-		}
 		return ReadDatabase(d, meta)
 	}
 	// Is it a Secondary Database?
 	if primaryName, ok := d.GetOk("from_replica"); ok {
 		primaryID := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(primaryName.(string))
-		opts := &sdk.CreateSecondaryDatabaseOptions{
-			DataRetentionTimeInDays: sdk.Int(d.Get("data_retention_time_in_days").(int)),
+		opts := &sdk.CreateSecondaryDatabaseOptions{}
+		if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
+			opts.DataRetentionTimeInDays = sdk.Int(v.(int))
 		}
 		err := client.Databases.CreateSecondary(ctx, id, primaryID, opts)
 		if err != nil {
@@ -168,7 +154,7 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if v, ok := d.GetOk("data_retention_time_in_days"); ok {
+	if v := d.Get("data_retention_time_in_days"); v.(int) != -1 {
 		opts.DataRetentionTimeInDays = sdk.Int(v.(int))
 	}
 
@@ -177,6 +163,28 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating database %v: %w", name, err)
 	}
 	d.SetId(name)
+
+	if v, ok := d.GetOk("replication_configuration"); ok {
+		replicationConfiguration := v.([]interface{})[0].(map[string]interface{})
+		accounts := replicationConfiguration["accounts"].([]interface{})
+		accountIDs := make([]sdk.AccountIdentifier, len(accounts))
+		for i, account := range accounts {
+			accountIDs[i] = sdk.NewAccountIdentifierFromAccountLocator(account.(string))
+		}
+		opts := &sdk.AlterDatabaseReplicationOptions{
+			EnableReplication: &sdk.EnableReplication{
+				ToAccounts: accountIDs,
+			},
+		}
+		if ignoreEditionCheck, ok := replicationConfiguration["ignore_edition_check"]; ok {
+			opts.EnableReplication.IgnoreEditionCheck = sdk.Bool(ignoreEditionCheck.(bool))
+		}
+		err := client.Databases.AlterReplication(ctx, id, opts)
+		if err != nil {
+			return fmt.Errorf("error enabling replication for database %v: %w", name, err)
+		}
+	}
+
 	return ReadDatabase(d, meta)
 }
 
@@ -190,6 +198,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
 		d.SetId("")
+		log.Printf("Database %s not found, err = %s", name, err)
 		return nil
 	}
 
@@ -200,8 +209,19 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("data_retention_time_in_days", database.RetentionTime); err != nil {
+	dataRetention, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
+	if err != nil {
 		return err
+	}
+	paramDataRetention, err := strconv.Atoi(dataRetention.Value)
+	if err != nil {
+		return err
+	}
+
+	if dataRetentionDays := d.Get("data_retention_time_in_days"); dataRetentionDays.(int) != -1 || database.RetentionTime != paramDataRetention {
+		if err := d.Set("data_retention_time_in_days", database.RetentionTime); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("is_transient", database.Transient); err != nil {
@@ -248,15 +268,24 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("data_retention_time_in_days") {
-		days := d.Get("data_retention_time_in_days").(int)
-		opts := &sdk.AlterDatabaseOptions{
-			Set: &sdk.DatabaseSet{
-				DataRetentionTimeInDays: sdk.Int(days),
-			},
-		}
-		err := client.Databases.Alter(ctx, id, opts)
-		if err != nil {
-			return fmt.Errorf("error updating database data retention time on %v err = %w", d.Id(), err)
+		if days := d.Get("data_retention_time_in_days"); days.(int) != -1 {
+			err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
+				Set: &sdk.DatabaseSet{
+					DataRetentionTimeInDays: sdk.Int(days.(int)),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error when setting database data retention time on %v err = %w", d.Id(), err)
+			}
+		} else {
+			err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
+				Unset: &sdk.DatabaseUnset{
+					DataRetentionTimeInDays: sdk.Bool(true),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error when usetting database data retention time on %v err = %w", d.Id(), err)
+			}
 		}
 	}
 

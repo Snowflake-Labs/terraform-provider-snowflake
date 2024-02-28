@@ -45,7 +45,7 @@ func TestDatabasesCreateShared(t *testing.T) {
 			name:      databaseID,
 			fromShare: NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator("account1"), NewAccountObjectIdentifier("db1")),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db1" FROM SHARE account1."db1"`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db1" FROM SHARE "account1"."db1"`)
 	})
 
 	t.Run("with comment", func(t *testing.T) {
@@ -55,7 +55,7 @@ func TestDatabasesCreateShared(t *testing.T) {
 			fromShare: NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator("account1"), NewAccountObjectIdentifier("db1")),
 			Comment:   String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db1" FROM SHARE account1."db1" COMMENT = 'comment'`)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db1" FROM SHARE "account1"."db1" COMMENT = 'comment'`)
 	})
 }
 
@@ -65,7 +65,7 @@ func TestDatabasesCreateSecondary(t *testing.T) {
 		primaryDatabase:         NewExternalObjectIdentifier(NewAccountIdentifierFromAccountLocator("account1"), NewAccountObjectIdentifier("db1")),
 		DataRetentionTimeInDays: Int(1),
 	}
-	assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db1" AS REPLICA OF account1."db1" DATA_RETENTION_TIME_IN_DAYS = 1`)
+	assertOptsValidAndSQLEquals(t, opts, `CREATE DATABASE "db1" AS REPLICA OF "account1"."db1" DATA_RETENTION_TIME_IN_DAYS = 1`)
 }
 
 func TestDatabasesDrop(t *testing.T) {

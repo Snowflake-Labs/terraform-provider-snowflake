@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"slices"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -22,6 +24,10 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 		Description:      "The fully qualified name of the account role to which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
+	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
+	// will be returned as USAGE in SHOW GRANTS command. In addition, USAGE itself is a valid privilege, but both cannot be set at the
+	// same time (IMPORTED PRIVILEGES can only be granted to the database created from SHARE and USAGE in every other case).
+	// To handle both cases, additional logic was added in read operation where IMPORTED PRIVILEGES is replaced with USAGE.
 	"privileges": {
 		Type:        schema.TypeSet,
 		Optional:    true,
@@ -715,19 +721,13 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if id.AllPrivileges {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Show with all_privileges option is skipped.",
-				// TODO: link to the design decisions doc (SNOW-990811)
-				Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
-			},
-		}
+		log.Printf("[INFO] Show with all_privileges option is skipped. No changes in privileges in Snowflake will be detected. Consider specyfying all privileges in 'privileges' block.")
+		return nil
 	}
 
-	opts, grantedOn, diags := prepareShowGrantsRequestForAccountRole(id)
-	if len(diags) != 0 {
-		return diags
+	opts, grantedOn := prepareShowGrantsRequestForAccountRole(id)
+	if opts == nil {
+		return nil
 	}
 
 	db := meta.(*sql.DB)
@@ -746,7 +746,15 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	var privileges []string
+	actualPrivileges := make([]string, 0)
+	expectedPrivileges := make([]string, 0)
+	expectedPrivileges = append(expectedPrivileges, id.Privileges...)
+
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool {
+		return strings.ToUpper(s) == sdk.AccountObjectPrivilegeImportedPrivileges.String()
+	}) {
+		expectedPrivileges = append(expectedPrivileges, sdk.AccountObjectPrivilegeUsage.String())
+	}
 
 	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {
@@ -756,7 +764,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		}
 		// Only consider privileges that are already present in the ID, so we
 		// don't delete privileges managed by other resources.
-		if !slices.Contains(id.Privileges, grant.Privilege) {
+		if !slices.Contains(expectedPrivileges, grant.Privilege) {
 			continue
 		}
 		if grant.GrantOption == id.WithGrantOption && grant.GranteeName.Name() == id.RoleName.Name() {
@@ -768,18 +776,25 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 			// grant_on is for future grants, granted_on is for current grants.
 			// They function the same way though in a test for matching the object type
 			if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
-				privileges = append(privileges, grant.Privilege)
+				actualPrivileges = append(actualPrivileges, grant.Privilege)
 			}
 		}
 	}
 
-	logging.DebugLogger.Printf("[DEBUG] Setting privileges: %v", privileges)
-	if err := d.Set("privileges", privileges); err != nil {
+	usageIndex := slices.IndexFunc(actualPrivileges, func(s string) bool { return strings.ToUpper(s) == sdk.AccountObjectPrivilegeUsage.String() })
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool {
+		return strings.ToUpper(s) == sdk.AccountObjectPrivilegeImportedPrivileges.String()
+	}) && usageIndex >= 0 {
+		actualPrivileges[usageIndex] = sdk.AccountObjectPrivilegeImportedPrivileges.String()
+	}
+
+	logging.DebugLogger.Printf("[DEBUG] Setting privileges: %v", actualPrivileges)
+	if err := d.Set("privileges", actualPrivileges); err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Error setting privileges for account role",
-				Detail:   fmt.Sprintf("Id: %s\nPrivileges: %v\nError: %s", d.Id(), privileges, err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nPrivileges: %v\nError: %s", d.Id(), actualPrivileges, err.Error()),
 			},
 		}
 	}
@@ -787,7 +802,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (*sdk.ShowGrantOptions, sdk.ObjectType, diag.Diagnostics) {
+func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (*sdk.ShowGrantOptions, sdk.ObjectType) {
 	opts := new(sdk.ShowGrantOptions)
 	var grantedOn sdk.ObjectType
 
@@ -819,14 +834,8 @@ func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (
 				},
 			}
 		case OnAllSchemasInDatabaseSchemaGrantKind:
-			return nil, "", diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Show with OnAllSchemasInDatabase option is skipped.",
-					// TODO: link to the design decisions doc (SNOW-990811)
-					Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
-				},
-			}
+			log.Printf("[INFO] Show with on_schema.all_schemas_in_database option is skipped. No changes in privileges in Snowflake will be detected.")
+			return nil, ""
 		case OnFutureSchemasInDatabaseSchemaGrantKind:
 			opts.Future = sdk.Bool(true)
 			opts.In = &sdk.ShowGrantsIn{
@@ -843,14 +852,8 @@ func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (
 				Object: data.Object,
 			}
 		case OnAllSchemaObjectGrantKind:
-			return nil, "", diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Show with OnAll option is skipped.",
-					// TODO: link to the design decisions doc (SNOW-990811)
-					Detail: "See our document on design decisions for grants: <LINK (coming soon)>",
-				},
-			}
+			log.Printf("[INFO] Show with on_schema_object.on_all option is skipped. No changes in privileges in Snowflake will be detected.")
+			return nil, ""
 		case OnFutureSchemaObjectGrantKind:
 			grantedOn = data.OnAllOrFuture.ObjectNamePlural.Singular()
 			opts.Future = sdk.Bool(true)
@@ -868,7 +871,7 @@ func prepareShowGrantsRequestForAccountRole(id GrantPrivilegesToAccountRoleId) (
 		}
 	}
 
-	return opts, grantedOn, nil
+	return opts, grantedOn
 }
 
 func getAccountRolePrivilegesFromSchema(d *schema.ResourceData) *sdk.AccountRoleGrantPrivileges {

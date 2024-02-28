@@ -16,6 +16,10 @@ import (
 )
 
 var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
+	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
+	// will be returned as USAGE in SHOW GRANTS command. In addition, USAGE itself is a valid privilege, but both cannot be set at the
+	// same time (IMPORTED PRIVILEGES can only be granted to the database created from SHARE and USAGE in every other case).
+	// To handle both cases, additional logic was added in read operation where IMPORTED PRIVILEGES is replaced with USAGE.
 	"privileges": {
 		Type:        schema.TypeSet,
 		Optional:    true,
@@ -834,14 +838,23 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 	}
 
 	withGrantOption := d.Get("with_grant_option").(bool)
-	privileges := []string{}
 	roleName := d.Get("role_name").(string)
+
+	actualPrivileges := make([]string, 0)
+	expectedPrivileges := make([]string, 0)
+	expectedPrivileges = append(expectedPrivileges, id.Privileges...)
+
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool {
+		return strings.ToUpper(s) == sdk.AccountObjectPrivilegeImportedPrivileges.String()
+	}) {
+		expectedPrivileges = append(expectedPrivileges, sdk.AccountObjectPrivilegeUsage.String())
+	}
 
 	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {
 		// Only consider privileges that are already present in the ID so we
 		// don't delete privileges managed by other resources.
-		if !slices.Contains(id.Privileges, grant.Privilege) {
+		if !slices.Contains(expectedPrivileges, grant.Privilege) {
 			continue
 		}
 		if grant.GrantOption == withGrantOption && grant.GranteeName.Name() == sdk.NewAccountObjectIdentifier(roleName).Name() {
@@ -852,13 +865,20 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 			}
 			// grant_on is for future grants, granted_on is for current grants. They function the same way though in a test for matching the object type
 			if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
-				privileges = append(privileges, grant.Privilege)
+				actualPrivileges = append(actualPrivileges, grant.Privilege)
 			}
 		}
 	}
 
+	usageIndex := slices.IndexFunc(actualPrivileges, func(s string) bool { return strings.ToUpper(s) == sdk.AccountObjectPrivilegeUsage.String() })
+	if slices.ContainsFunc(expectedPrivileges, func(s string) bool {
+		return strings.ToUpper(s) == sdk.AccountObjectPrivilegeImportedPrivileges.String()
+	}) && usageIndex >= 0 {
+		actualPrivileges[usageIndex] = sdk.AccountObjectPrivilegeImportedPrivileges.String()
+	}
+
 	logging.DebugLogger.Printf("[DEBUG] Setting privileges on account")
-	if err := d.Set("privileges", privileges); err != nil {
+	if err := d.Set("privileges", actualPrivileges); err != nil {
 		logging.DebugLogger.Printf("[DEBUG] Error setting privileges for account role: err = %v", err)
 		return fmt.Errorf("error setting privileges for account role: %w", err)
 	}

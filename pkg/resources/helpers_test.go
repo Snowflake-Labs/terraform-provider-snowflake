@@ -548,3 +548,27 @@ func queriedPrivilegesContainAtLeast(query func(client *sdk.Client, ctx context.
 		return nil
 	}
 }
+
+// TODO(SNOW-936093): This function should be merged with testint/helpers_test.go updateAccountParameterTemporarily function which does the same thing.
+// We cannot use it right now because it requires moving the function between the packages, so both tests will be able to see it.
+func updateAccountParameter(t *testing.T, client *sdk.Client, parameter sdk.AccountParameter, temporarily bool, newValue string) func() {
+	t.Helper()
+
+	ctx := context.Background()
+
+	param, err := client.Parameters.ShowAccountParameter(ctx, parameter)
+	require.NoError(t, err)
+	oldValue := param.Value
+
+	if temporarily {
+		t.Cleanup(func() {
+			err = client.Parameters.SetAccountParameter(ctx, parameter, oldValue)
+			require.NoError(t, err)
+		})
+	}
+
+	return func() {
+		err = client.Parameters.SetAccountParameter(ctx, parameter, newValue)
+		require.NoError(t, err)
+	}
+}

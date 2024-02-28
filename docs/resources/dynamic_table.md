@@ -42,20 +42,22 @@ resource "snowflake_dynamic_table" "dt" {
 ### Optional
 
 - `comment` (String) Specifies a comment for the dynamic table.
+- `initialize` (String) Initialize trigger for the dynamic table. Can only be set on creation. Available options are ON_CREATE and ON_SCHEDULE.
 - `or_replace` (Boolean) Specifies whether to replace the dynamic table if it already exists.
+- `refresh_mode` (String) INCREMENTAL to use incremental refreshes, FULL to recompute the whole table on every refresh, or AUTO to let Snowflake decide.
 
 ### Read-Only
 
 - `automatic_clustering` (Boolean) Whether auto-clustering is enabled on the dynamic table. Not currently supported for dynamic tables.
 - `bytes` (Number) Number of bytes that will be scanned if the entire dynamic table is scanned in a query.
 - `cluster_by` (String) The clustering key for the dynamic table.
+- `created_on` (String) Time when this dynamic table was created.
 - `data_timestamp` (String) Timestamp of the data in the base object(s) that is included in the dynamic table.
 - `id` (String) The ID of this resource.
 - `is_clone` (Boolean) TRUE if the dynamic table has been cloned, else FALSE.
 - `is_replica` (Boolean) TRUE if the dynamic table is a replica. else FALSE.
 - `last_suspended_on` (String) Timestamp of last suspension.
 - `owner` (String) Role that owns the dynamic table.
-- `refresh_mode` (String) INCREMENTAL if the dynamic table will use incremental refreshes, or FULL if it will recompute the whole table on every refresh.
 - `refresh_mode_reason` (String) Explanation for why FULL refresh mode was chosen. NULL if refresh mode is not FULL.
 - `rows` (Number) Number of rows in the table.
 - `scheduling_state` (String) Displays RUNNING for dynamic tables that are actively scheduling refreshes and SUSPENDED for suspended dynamic tables.

@@ -1,0 +1,1 @@
+terraform import snowflake_user_password_policy_attachment.example "MY_DATABASE|MY_SCHEMA|PASSWORD_POLICY_NAME|USER_NAME"

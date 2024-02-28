@@ -44,6 +44,7 @@ resource "snowflake_table" "table" {
     name     = "data"
     type     = "text"
     nullable = false
+    collate  = "en-ci"
   }
 
   column {

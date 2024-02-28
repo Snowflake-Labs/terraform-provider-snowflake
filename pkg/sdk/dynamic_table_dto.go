@@ -17,7 +17,9 @@ type CreateDynamicTableRequest struct {
 	targetLag TargetLag               // required
 	query     string                  // required
 
-	comment *string
+	comment     *string
+	refreshMode *DynamicTableRefreshMode
+	initialize  *DynamicTableInitialize
 }
 
 type AlterDynamicTableRequest struct {

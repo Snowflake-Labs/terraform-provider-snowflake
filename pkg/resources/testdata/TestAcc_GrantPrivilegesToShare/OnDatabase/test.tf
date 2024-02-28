@@ -1,10 +1,10 @@
 resource "snowflake_share" "test" {
-  name = var.to_share
+  depends_on = [snowflake_database.test]
+  name       = var.to_share
 }
 
 resource "snowflake_database" "test" {
-  depends_on = [snowflake_share.test]
-  name       = var.database
+  name = var.database
 }
 
 resource "snowflake_grant_privileges_to_share" "test" {

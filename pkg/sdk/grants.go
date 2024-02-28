@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 	"strings"
 	"time"
 )
@@ -222,9 +223,16 @@ func (row grantRow) convert() *Grant {
 	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
 	var granteeName AccountObjectIdentifier
 	if grantedTo == ObjectTypeShare {
+		// TODO(SNOW-1058419): Change this logic during identifiers rework
 		parts := strings.Split(row.GranteeName, ".")
-		name := strings.Join(parts[1:], ".")
-		granteeName = NewAccountObjectIdentifier(name)
+		switch {
+		case len(parts) == 1:
+			granteeName = NewAccountObjectIdentifier(parts[0])
+		case len(parts) == 2:
+			granteeName = NewAccountObjectIdentifier(parts[1])
+		default:
+			log.Printf("unsupported case for share's grantee name: %s", row.GranteeName)
+		}
 	} else {
 		granteeName = NewAccountObjectIdentifier(row.GranteeName)
 	}
@@ -234,10 +242,17 @@ func (row grantRow) convert() *Grant {
 	if row.GrantedOn != "" {
 		grantedOn = ObjectType(strings.ReplaceAll(row.GrantedOn, "_", " "))
 	}
+	if row.GrantedOn == "VOLUME" {
+		grantedOn = ObjectTypeExternalVolume
+	}
+
 	var grantOn ObjectType
 	// true for future grants
 	if row.GrantOn != "" {
 		grantOn = ObjectType(strings.ReplaceAll(row.GrantOn, "_", " "))
+	}
+	if row.GrantOn == "VOLUME" {
+		grantOn = ObjectTypeExternalVolume
 	}
 
 	return &Grant{

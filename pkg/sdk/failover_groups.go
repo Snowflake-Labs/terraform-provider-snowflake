@@ -183,8 +183,8 @@ func (opts *AlterSourceFailoverGroupOptions) validate() error {
 
 type FailoverGroupSet struct {
 	ObjectTypes             []PluralObjectType `ddl:"parameter" sql:"OBJECT_TYPES"`
-	ReplicationSchedule     *string            `ddl:"parameter,single_quotes" sql:"REPLICATION_SCHEDULE"`
 	AllowedIntegrationTypes []IntegrationType  `ddl:"parameter" sql:"ALLOWED_INTEGRATION_TYPES"`
+	ReplicationSchedule     *string            `ddl:"parameter,single_quotes" sql:"REPLICATION_SCHEDULE"`
 }
 
 func (v *FailoverGroupSet) validate() error {
@@ -410,7 +410,12 @@ func (row failoverGroupDBRow) convert() *FailoverGroup {
 	ots := strings.Split(row.ObjectTypes, ",")
 	pluralObjectTypes := make([]PluralObjectType, 0, len(ots))
 	for _, ot := range ots {
-		pluralObjectTypes = append(pluralObjectTypes, PluralObjectType(strings.TrimSpace(ot)))
+		pot := PluralObjectType(strings.TrimSpace(ot))
+		if pot == PluralObjectTypeParameters {
+			pluralObjectTypes = append(pluralObjectTypes, PluralObjectType("ACCOUNT PARAMETERS"))
+		} else {
+			pluralObjectTypes = append(pluralObjectTypes, pot)
+		}
 	}
 	its := strings.Split(row.AllowedIntegrationTypes, ",")
 	allowedIntegrationTypes := make([]IntegrationType, 0, len(its))
@@ -569,15 +574,17 @@ func (v *failoverGroups) ShowShares(ctx context.Context, id AccountObjectIdentif
 		return nil, err
 	}
 	dest := []struct {
-		Name string `db:"name"`
+		Name         string `db:"name"`
+		OwnerAccount string `db:"owner_account"`
 	}{}
 	err = v.client.query(ctx, &dest, sql)
 	if err != nil {
 		return nil, err
 	}
 	resultList := make([]AccountObjectIdentifier, len(dest))
-	for i, row := range dest {
-		resultList[i] = NewExternalObjectIdentifierFromFullyQualifiedName(row.Name).objectIdentifier.(AccountObjectIdentifier)
+	for i, r := range dest {
+		// TODO [SNOW-999049]: this was not working correctly with identifiers containing `.` character
+		resultList[i] = NewExternalObjectIdentifier(NewAccountIdentifierFromFullyQualifiedName(r.OwnerAccount), NewAccountObjectIdentifier(r.Name)).objectIdentifier.(AccountObjectIdentifier)
 	}
 	return resultList, nil
 }
