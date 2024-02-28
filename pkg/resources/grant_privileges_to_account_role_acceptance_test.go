@@ -929,6 +929,41 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 	})
 }
 
+func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) {
+	nameBytes := []byte(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
+	nameBytes[3] = '.'
+	nameBytes[6] = '.'
+	name := string(nameBytes)
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.GlobalPrivilegeCreateDatabase)),
+			config.StringVariable(string(sdk.GlobalPrivilegeCreateRole)),
+		),
+		"with_grant_option": config.BoolVariable(true),
+	}
+	resourceName := "snowflake_grant_privileges_to_account_role.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", name),
+				),
+			},
+		},
+	})
+}
+
 func getSecondaryAccountName(t *testing.T) (string, error) {
 	t.Helper()
 	config, err := sdk.ProfileConfig(testprofiles.Secondary)
