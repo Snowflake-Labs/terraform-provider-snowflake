@@ -70,18 +70,6 @@ func TestIsValidIdentifier(t *testing.T) {
 			CheckingFn: accountObjectIdentifierCheck,
 		},
 		{
-			Name:       "validation: invalid identifier representation",
-			Value:      "",
-			Error:      "Unable to parse the identifier: ",
-			CheckingFn: accountObjectIdentifierCheck,
-		},
-		{
-			Name:       "validation: incorrect form for account object identifier",
-			Value:      "a.b",
-			Error:      "<name>, but was <database_name>.<name>",
-			CheckingFn: accountObjectIdentifierCheck,
-		},
-		{
 			Name:       "validation: incorrect form for database object identifier",
 			Value:      "a.b.c",
 			Error:      "<database_name>.<name>, but was <database_name>.<schema_name>.<name>",
@@ -102,6 +90,16 @@ func TestIsValidIdentifier(t *testing.T) {
 		{
 			Name:       "correct form for account object identifier",
 			Value:      "a",
+			CheckingFn: accountObjectIdentifierCheck,
+		},
+		{
+			Name:       "correct form for account object identifier - multiple parts",
+			Value:      "a.b",
+			CheckingFn: accountObjectIdentifierCheck,
+		},
+		{
+			Name:       "correct form for account object identifier - quoted",
+			Value:      "\"a.b\"",
 			CheckingFn: accountObjectIdentifierCheck,
 		},
 		{

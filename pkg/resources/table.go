@@ -187,7 +187,7 @@ var tableSchema = map[string]*schema.Schema{
 		Optional:     true,
 		Default:      -1,
 		Description:  "Specifies the retention period for the table so that Time Travel actions (SELECT, CLONE, UNDROP) can be performed on historical data in the table. If you wish to inherit the parent schema setting then pass in the schema attribute to this argument or do not fill this parameter at all; the default value for this field is -1, which is a fallback to use Snowflake default - in this case the schema value",
-		ValidateFunc: validation.IntBetween(0, 90),
+		ValidateFunc: validation.IntBetween(-1, 90),
 	},
 	"change_tracking": {
 		Type:        schema.TypeBool,
