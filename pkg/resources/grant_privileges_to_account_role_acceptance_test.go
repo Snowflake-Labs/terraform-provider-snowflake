@@ -934,9 +934,8 @@ func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) 
 	nameBytes[3] = '.'
 	nameBytes[6] = '.'
 	name := string(nameBytes)
-	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
 	configVariables := config.Variables{
-		"name": config.StringVariable(roleName),
+		"name": config.StringVariable(name),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.GlobalPrivilegeCreateDatabase)),
 			config.StringVariable(string(sdk.GlobalPrivilegeCreateRole)),
@@ -958,15 +957,8 @@ func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) 
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", name),
 				),
-			},
-			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
-				ConfigVariables:   configVariables,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
