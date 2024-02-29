@@ -225,12 +225,14 @@ var grantPrivilegesOnDatabaseRoleBulkOperationSchema = map[string]*schema.Schema
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
+		Description:      "TODO",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"in_schema": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
+		Description:      "TODO",
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 	},
 }
