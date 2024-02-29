@@ -77,7 +77,7 @@ resource "snowflake_tag_association" "table_association" {
 ### Optional
 
 - `object_identifier` (Block List) Specifies the object identifier for the tag association. (see [below for nested schema](#nestedblock--object_identifier))
-- `object_name` (String) Specifies the object identifier for the tag association.
+- `object_name` (String, Deprecated) Specifies the object identifier for the tag association.
 - `skip_validation` (Boolean) If true, skips validation of the tag association.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 

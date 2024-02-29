@@ -24,11 +24,13 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the object identifier for the tag association.",
 		ForceNew:    true,
+		Deprecated:  "Use `object_identifier` instead",
 	},
 	"object_identifier": {
 		Type:        schema.TypeList,
 		Optional:    true,
 		MinItems:    1,
+		Required:    true,
 		Description: "Specifies the object identifier for the tag association.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
