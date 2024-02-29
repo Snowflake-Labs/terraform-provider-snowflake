@@ -3,13 +3,13 @@ package resources_test
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -151,10 +151,7 @@ resource "snowflake_resource_monitor" "test" {
 }
 
 func TestAcc_ResourceMonitorUpdateNotifyUsers(t *testing.T) {
-	userEnv := os.Getenv("RESOURCE_MONITOR_NOTIFY_USERS_TEST")
-	if userEnv == "" {
-		t.Skip("Skipping ResourceMonitorUpdateNotifyUsers")
-	}
+	userEnv := testenvs.GetOrSkipTest(t, testenvs.ResourceMonitorNotifyUsers)
 	users := strings.Split(userEnv, ",")
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	config, err := resourceMonitorNotifyUsersConfig(name, users)
@@ -262,10 +259,7 @@ func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 }
 
 func TestAcc_ResourceMonitorNotifyUsers(t *testing.T) {
-	userEnv := os.Getenv("RESOURCE_MONITOR_NOTIFY_USERS_TEST")
-	if userEnv == "" {
-		t.Skip("Skipping TestAcc_ResourceMonitorNotifyUsers")
-	}
+	userEnv := testenvs.GetOrSkipTest(t, testenvs.ResourceMonitorNotifyUsers)
 	users := strings.Split(userEnv, ",")
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	config, err := resourceMonitorNotifyUsersConfig(name, users)

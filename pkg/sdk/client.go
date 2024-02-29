@@ -8,6 +8,7 @@ import (
 	"os"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
 	"github.com/snowflakedb/gosnowflake"
@@ -19,8 +20,8 @@ var (
 )
 
 func init() {
-	instrumentedSQL = os.Getenv("SF_TF_NO_INSTRUMENTED_SQL") == ""
-	gosnowflakeLoggingLevel = os.Getenv("SF_TF_GOSNOWFLAKE_LOG_LEVEL")
+	instrumentedSQL = os.Getenv(snowflakeenvs.NoInstrumentedSql) == ""
+	gosnowflakeLoggingLevel = os.Getenv(snowflakeenvs.GosnowflakeLogLevel)
 }
 
 type Client struct {
@@ -59,6 +60,7 @@ type Client struct {
 	MaskingPolicies          MaskingPolicies
 	MaterializedViews        MaterializedViews
 	NetworkPolicies          NetworkPolicies
+	NetworkRules             NetworkRules
 	NotificationIntegrations NotificationIntegrations
 	Parameters               Parameters
 	PasswordPolicies         PasswordPolicies
@@ -212,6 +214,7 @@ func (c *Client) initialize() {
 	c.MaskingPolicies = &maskingPolicies{client: c}
 	c.MaterializedViews = &materializedViews{client: c}
 	c.NetworkPolicies = &networkPolicies{client: c}
+	c.NetworkRules = &networkRules{client: c}
 	c.NotificationIntegrations = &notificationIntegrations{client: c}
 	c.Parameters = &parameters{client: c}
 	c.PasswordPolicies = &passwordPolicies{client: c}

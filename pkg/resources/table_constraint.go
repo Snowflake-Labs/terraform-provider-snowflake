@@ -41,7 +41,7 @@ var tableConstraintSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: `Identifier for table to create constraint on. Format must follow: "\"<db_name>\".\"<schema_name>\".\"<table_name>\"" or "<db_name>.<schema_name>.<table_name>" (snowflake_table.my_table.id)`,
+		Description: `Identifier for table to create constraint on. Format must follow: "\"&lt;db_name&gt;\".\"&lt;schema_name&gt;\".\"&lt;table_name&gt;\"" or "&lt;db_name&gt;.&lt;schema_name&gt;.&lt;table_name&gt;" (snowflake_table.my_table.id)`,
 	},
 	"columns": {
 		Type:     schema.TypeList,
@@ -208,7 +208,15 @@ func (v *tableConstraintID) parse(s string) {
 }
 
 func getTableIdentifier(s string) (*sdk.SchemaObjectIdentifier, error) {
-	objectIdentifier, err := helpers.DecodeSnowflakeParameterID(s)
+	var objectIdentifier sdk.ObjectIdentifier
+	var err error
+	// TODO [SNOW-999049]: Fallback for old implementations using table.id instead of table.qualified_name - probably will be removed later.
+	if strings.Contains(s, "|") {
+		objectIdentifier = helpers.DecodeSnowflakeID(s)
+	} else {
+		objectIdentifier, err = helpers.DecodeSnowflakeParameterID(s)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("table id is incorrect: %s, err: %w", objectIdentifier, err)
 	}

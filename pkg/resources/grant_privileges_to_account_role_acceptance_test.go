@@ -10,18 +10,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
@@ -929,9 +929,90 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 	})
 }
 
+func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) {
+	nameBytes := []byte(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
+	nameBytes[3] = '.'
+	nameBytes[6] = '.'
+	name := string(nameBytes)
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.GlobalPrivilegeCreateDatabase)),
+			config.StringVariable(string(sdk.GlobalPrivilegeCreateRole)),
+		),
+		"with_grant_option": config.BoolVariable(true),
+	}
+	resourceName := "snowflake_grant_privileges_to_account_role.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", name),
+				),
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2533 is fixed
+func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
+	externalVolumeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"name":            config.StringVariable(roleName),
+		"external_volume": config.StringVariable(externalVolumeName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeUsage)),
+		),
+		"with_grant_option": config.BoolVariable(true),
+	}
+	resourceName := "snowflake_grant_privileges_to_account_role.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					createAccountRoleOutsideTerraform(t, name)
+					cleanupExternalVolume := createExternalVolume(t, externalVolumeName)
+					t.Cleanup(cleanupExternalVolume)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnExternalVolume"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleName),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeUsage)),
+					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "true"),
+					resource.TestCheckResourceAttr(resourceName, "on_account_object.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_account_object.0.object_type", "EXTERNAL VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "on_account_object.0.object_name", externalVolumeName),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|USAGE|OnAccountObject|EXTERNAL VOLUME|\"%s\"", roleName, externalVolumeName)),
+				),
+			},
+		},
+	})
+}
+
 func getSecondaryAccountName(t *testing.T) (string, error) {
 	t.Helper()
-	config, err := sdk.ProfileConfig("secondary_test_account")
+	config, err := sdk.ProfileConfig(testprofiles.Secondary)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -953,7 +1034,7 @@ func getAccountName(t *testing.T) (string, error) {
 
 func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
 	t.Helper()
-	config, err := sdk.ProfileConfig("secondary_test_account")
+	config, err := sdk.ProfileConfig(testprofiles.Secondary)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -976,7 +1057,7 @@ func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, s
 
 func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
 	t.Helper()
-	config, err := sdk.ProfileConfig("secondary_test_account")
+	config, err := sdk.ProfileConfig(testprofiles.Secondary)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1064,4 +1145,29 @@ func queriedAccountRolePrivilegesContainAtLeast(roleName sdk.AccountObjectIdenti
 			},
 		})
 	}, roleName, privileges...)
+}
+
+func createExternalVolume(t *testing.T, externalVolumeName string) func() {
+	t.Helper()
+
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
+
+	ctx := context.Background()
+	_, err = client.ExecForTests(ctx, fmt.Sprintf(`create external volume "%s" storage_locations = (
+    (
+        name = 'test' 
+        storage_provider = 's3' 
+        storage_base_url = 's3://my_example_bucket/'
+        storage_aws_role_arn = 'arn:aws:iam::123456789012:role/myrole'
+        encryption=(type='aws_sse_kms' kms_key_id='1234abcd-12ab-34cd-56ef-1234567890ab')
+    )
+)
+`, externalVolumeName))
+	require.NoError(t, err)
+
+	return func() {
+		_, err = client.ExecForTests(ctx, fmt.Sprintf(`drop external volume "%s"`, externalVolumeName))
+		require.NoError(t, err)
+	}
 }

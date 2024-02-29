@@ -2,26 +2,23 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_Share(t *testing.T) {
+	t.Skip("second and third account must be set for Share acceptance tests")
+	var account2 string
+	var account3 string
+
 	shareComment := "Created by a Terraform acceptance test"
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	account2 := os.Getenv("SNOWFLAKE_ACCOUNT_SECOND")
-	if account2 == "" {
-		t.Skip("SNOWFLAKE_ACCOUNT_SECOND must be set for Share acceptance tests")
-	}
-	account3 := os.Getenv("SNOWFLAKE_ACCOUNT_THIRD")
-	if account3 == "" {
-		t.Skip("SNOWFLAKE_ACCOUNT_THIRD must be set for Share acceptance tests")
-	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    acc.TestAccProviders(),
 		PreCheck:     func() { acc.TestAccPreCheck(t) },

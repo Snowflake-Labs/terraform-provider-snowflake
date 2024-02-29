@@ -2,25 +2,26 @@ package testint
 
 import (
 	"log"
-	"os"
 	"slices"
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/avast/retry-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInt_FailoverGroupsCreate(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
 	client := testClient(t)
 	ctx := testContext(t)
 	shareTest, shareCleanup := createShare(t, client)
 	t.Cleanup(shareCleanup)
+
+	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
+	businessCriticalAccountId := sdk.NewAccountIdentifierFromFullyQualifiedName(accountName)
 
 	t.Run("test complete", func(t *testing.T) {
 		id := sdk.RandomAccountObjectIdentifier()
@@ -29,7 +30,7 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 			sdk.PluralObjectTypeDatabases,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			getAccountIdentifier(t, testSecondaryClient(t)),
+			businessCriticalAccountId,
 		}
 		replicationSchedule := "10 MINUTE"
 		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
@@ -74,13 +75,45 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 		assert.Equal(t, shareTest.ID().Name(), fgShares[0].Name())
 	})
 
+	t.Run("test with identifier containing a dot", func(t *testing.T) {
+		shareId := sdk.NewAccountObjectIdentifier(random.AlphanumericN(6) + "." + random.AlphanumericN(6))
+
+		shareWithDot, shareWithDotCleanup := createShareWithOptions(t, client, shareId, &sdk.CreateShareOptions{})
+		t.Cleanup(shareWithDotCleanup)
+
+		id := sdk.RandomAccountObjectIdentifier()
+		objectTypes := []sdk.PluralObjectType{
+			sdk.PluralObjectTypeShares,
+		}
+		allowedAccounts := []sdk.AccountIdentifier{
+			businessCriticalAccountId,
+		}
+		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
+			AllowedShares: []sdk.AccountObjectIdentifier{
+				shareWithDot.ID(),
+			},
+			IgnoreEditionCheck: sdk.Bool(true),
+		})
+		require.NoError(t, err)
+		cleanupFailoverGroup := func() {
+			err := client.FailoverGroups.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		}
+		t.Cleanup(cleanupFailoverGroup)
+
+		fgShares, err := client.FailoverGroups.ShowShares(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(fgShares))
+		assert.Equal(t, shareWithDot.ID().Name(), fgShares[0].Name())
+	})
+
 	t.Run("test with allowed integration types", func(t *testing.T) {
 		id := sdk.RandomAccountObjectIdentifier()
 		objectTypes := []sdk.PluralObjectType{
 			sdk.PluralObjectTypeIntegrations,
 		}
 		allowedAccounts := []sdk.AccountIdentifier{
-			getAccountIdentifier(t, testSecondaryClient(t)),
+			businessCriticalAccountId,
 		}
 		allowedIntegrationTypes := []sdk.IntegrationType{
 			sdk.IntegrationTypeAPIIntegrations,
@@ -104,11 +137,85 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 	})
 }
 
+func TestInt_Issue2544(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
+	businessCriticalAccountId := sdk.NewAccountIdentifierFromFullyQualifiedName(accountName)
+
+	t.Run("alter object types, replication schedule, and allowed integration types at the same time", func(t *testing.T) {
+		id := sdk.RandomAccountObjectIdentifier()
+		objectTypes := []sdk.PluralObjectType{
+			sdk.PluralObjectTypeIntegrations,
+			sdk.PluralObjectTypeDatabases,
+		}
+		allowedAccounts := []sdk.AccountIdentifier{
+			businessCriticalAccountId,
+		}
+		allowedIntegrationTypes := []sdk.IntegrationType{
+			sdk.IntegrationTypeAPIIntegrations,
+			sdk.IntegrationTypeNotificationIntegrations,
+		}
+		replicationSchedule := "10 MINUTE"
+		err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &sdk.CreateFailoverGroupOptions{
+			AllowedDatabases: []sdk.AccountObjectIdentifier{
+				testDb(t).ID(),
+			},
+			AllowedIntegrationTypes: allowedIntegrationTypes,
+			ReplicationSchedule:     sdk.String(replicationSchedule),
+		})
+		require.NoError(t, err)
+		cleanupFailoverGroup := func() {
+			err := client.FailoverGroups.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		}
+		t.Cleanup(cleanupFailoverGroup)
+
+		newObjectTypes := []sdk.PluralObjectType{
+			sdk.PluralObjectTypeIntegrations,
+		}
+		newAllowedIntegrationTypes := []sdk.IntegrationType{
+			sdk.IntegrationTypeAPIIntegrations,
+		}
+		newReplicationSchedule := "20 MINUTE"
+
+		// does not work together:
+		opts := &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes:             newObjectTypes,
+				AllowedIntegrationTypes: newAllowedIntegrationTypes,
+				ReplicationSchedule:     sdk.String(newReplicationSchedule),
+			},
+		}
+		err = client.FailoverGroups.AlterSource(ctx, id, opts)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "unexpected 'REPLICATION_SCHEDULE'")
+
+		// works as two separate alters:
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ObjectTypes:             newObjectTypes,
+				AllowedIntegrationTypes: newAllowedIntegrationTypes,
+			},
+		}
+		err = client.FailoverGroups.AlterSource(ctx, id, opts)
+		require.NoError(t, err)
+
+		opts = &sdk.AlterSourceFailoverGroupOptions{
+			Set: &sdk.FailoverGroupSet{
+				ReplicationSchedule: sdk.String(newReplicationSchedule),
+			},
+		}
+		err = client.FailoverGroups.AlterSource(ctx, id, opts)
+		require.NoError(t, err)
+	})
+}
+
 func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
-	// TODO: Business Critical Snowflake Edition (SNOW-1002023)
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	primaryAccountID := getAccountIdentifier(t, client)
@@ -182,9 +289,9 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 }
 
 func TestInt_FailoverGroupsAlterSource(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	t.Run("rename the failover group", func(t *testing.T) {
@@ -539,10 +646,9 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 }
 
 func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
-	// TODO: Business Critical Snowflake Edition (SNOW-1002023)
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	primaryAccountID := getAccountIdentifier(t, client)
@@ -665,9 +771,9 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 }
 
 func TestInt_FailoverGroupsDrop(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	t.Run("no options", func(t *testing.T) {
@@ -687,9 +793,9 @@ func TestInt_FailoverGroupsDrop(t *testing.T) {
 }
 
 func TestInt_FailoverGroupsShow(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
@@ -719,9 +825,9 @@ func TestInt_FailoverGroupsShow(t *testing.T) {
 }
 
 func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
-	if os.Getenv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES") != "1" {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)
@@ -752,9 +858,9 @@ func TestInt_FailoverGroupsShowDatabases(t *testing.T) {
 }
 
 func TestInt_FailoverGroupsShowShares(t *testing.T) {
-	if _, ok := os.LookupEnv("SNOWFLAKE_TEST_BUSINESS_CRITICAL_FEATURES"); !ok {
-		t.Skip("Skipping TestInt_FailoverGroupsCreate")
-	}
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	failoverGroupTest, failoverGroupCleanup := createFailoverGroup(t, client)

@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/assert"
@@ -15,8 +16,8 @@ import (
 // This is dependent on the SF_TF_NO_INSTRUMENTED_SQL env variable setting. That's why it was extracted to another file.
 // To run this test use: `make test-client` command.
 func TestNewClientWithoutInstrumentedSQL(t *testing.T) {
-	if os.Getenv("SF_TF_NO_INSTRUMENTED_SQL") == "" {
-		t.Skip("Skipping TestNewClientWithoutInstrumentedSQL, because SF_TF_NO_INSTRUMENTED_SQL is not set")
+	if os.Getenv(snowflakeenvs.NoInstrumentedSql) == "" {
+		t.Skipf("Skipping TestNewClientWithoutInstrumentedSQL, because %s is not set", snowflakeenvs.NoInstrumentedSql)
 	}
 
 	t.Run("registers snowflake-not-instrumented driver", func(t *testing.T) {
@@ -31,8 +32,8 @@ func TestNewClientWithoutInstrumentedSQL(t *testing.T) {
 
 func TestNewClientWithDebugLoggingSetFromEnv(t *testing.T) {
 	t.Run("set gosnowflake driver logging to debug", func(t *testing.T) {
-		if os.Getenv("SF_TF_GOSNOWFLAKE_LOG_LEVEL") == "" {
-			t.Skip("Skipping TestNewClientWithDebugLoggingSet, because SF_TF_GOSNOWFLAKE_LOG_LEVEL is not set")
+		if os.Getenv(snowflakeenvs.GosnowflakeLogLevel) == "" {
+			t.Skipf("Skipping TestNewClientWithDebugLoggingSet, because %s is not set", snowflakeenvs.GosnowflakeLogLevel)
 		}
 
 		config := sdk.DefaultConfig()

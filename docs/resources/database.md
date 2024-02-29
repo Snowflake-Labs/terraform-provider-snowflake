@@ -55,7 +55,7 @@ resource "snowflake_database" "from_share" {
 ### Optional
 
 - `comment` (String)
-- `data_retention_time_in_days` (Number) Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database, schema, or table. For more information, see Understanding & Using Time Travel.
+- `data_retention_time_in_days` (Number) Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database. Default value for this field is set to -1, which is a fallback to use Snowflake default. For more information, see Understanding & Using Time Travel.
 - `from_database` (String) Specify a database to create a clone from.
 - `from_replica` (String) Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of "<organization_name>"."<account_name>"."<db_name>". An example would be: "myorg1"."account1"."db1"
 - `from_share` (Map of String) Specify a provider and a share in this map to create a database from a share.

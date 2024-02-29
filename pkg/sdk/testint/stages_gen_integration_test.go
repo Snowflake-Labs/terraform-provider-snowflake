@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
@@ -14,9 +15,12 @@ func TestInt_Stages(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	if !hasExternalEnvironmentVariablesSet {
-		t.Skip("Skipping TestInt_Stages (External env variables are not set)")
-	}
+	awsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
+	awsKeyId := testenvs.GetOrSkipTest(t, testenvs.AwsExternalKeyId)
+	awsSecretKey := testenvs.GetOrSkipTest(t, testenvs.AwsExternalSecretKey)
+	gcsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.GcsExternalBuckerUrl)
+	azureBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AzureExternalBucketUrl)
+	azureSasToken := testenvs.GetOrSkipTest(t, testenvs.AzureExternalSasToken)
 
 	s3StorageIntegration, err := client.StorageIntegrations.ShowByID(ctx, sdk.NewAccountObjectIdentifier("S3_STORAGE_INTEGRATION"))
 	require.NoError(t, err)

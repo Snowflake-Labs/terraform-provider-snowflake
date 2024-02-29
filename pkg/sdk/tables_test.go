@@ -1629,4 +1629,22 @@ func TestTable_GetClusterByKeys(t *testing.T) {
 
 		assert.Equal(t, []string{"abc", "def"}, table.GetClusterByKeys())
 	})
+
+	t.Run("with function with one param", func(t *testing.T) {
+		table := Table{ClusterBy: "LINEAR(some_func(some_param),other_param)"}
+
+		assert.Equal(t, []string{"some_func(some_param)", "other_param"}, table.GetClusterByKeys())
+	})
+
+	t.Run("with function with more than one param", func(t *testing.T) {
+		table := Table{ClusterBy: "LINEAR(date_trunc('HOUR',TIMESTAMP_HR),CLIENT_ID)"}
+
+		assert.Equal(t, []string{"date_trunc('HOUR',TIMESTAMP_HR)", "CLIENT_ID"}, table.GetClusterByKeys())
+	})
+
+	t.Run("with nested functions", func(t *testing.T) {
+		table := Table{ClusterBy: "LINEAR(some_func(some_param, some_other_param, other_func(some_param, some_other_param)),other_param)"}
+
+		assert.Equal(t, []string{"some_func(some_param, some_other_param, other_func(some_param, some_other_param))", "other_param"}, table.GetClusterByKeys())
+	})
 }

@@ -1,10 +1,10 @@
 package testint
 
 import (
-	"os"
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -14,9 +14,7 @@ import (
 
 // TODO [SNOW-1011985]: unskip the tests
 func TestInt_ManagedAccounts(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_MANAGED_ACCOUNT_INT_TEST"); ok {
-		t.Skip("Skipping TestInt_ManagedAccounts due to error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support.")
-	}
+	testenvs.SkipTestIfSet(t, testenvs.SkipManagedAccountTest, "error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support")
 
 	client := testClient(t)
 	ctx := testContext(t)

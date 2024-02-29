@@ -12,8 +12,8 @@ import (
 func DefaultConfig() *gosnowflake.Config {
 	config, err := ProfileConfig("default")
 	if err != nil || config == nil {
-		log.Printf("[DEBUG] No Snowflake config file found, falling back to environment variables: %v\n", err)
-		return EnvConfig()
+		log.Printf("[DEBUG] No Snowflake config file found, returning empty config: %v\n", err)
+		config = &gosnowflake.Config{}
 	}
 	return config
 }
@@ -51,22 +51,22 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 	if baseConfig == nil {
 		return mergeConfig
 	}
-	if mergeConfig.Account != "" {
+	if baseConfig.Account == "" {
 		baseConfig.Account = mergeConfig.Account
 	}
-	if mergeConfig.User != "" {
+	if baseConfig.User == "" {
 		baseConfig.User = mergeConfig.User
 	}
-	if mergeConfig.Password != "" {
+	if baseConfig.Password == "" {
 		baseConfig.Password = mergeConfig.Password
 	}
-	if mergeConfig.Role != "" {
+	if baseConfig.Role == "" {
 		baseConfig.Role = mergeConfig.Role
 	}
-	if mergeConfig.Region != "" {
+	if baseConfig.Region == "" {
 		baseConfig.Region = mergeConfig.Region
 	}
-	if mergeConfig.Host != "" {
+	if baseConfig.Host == "" {
 		baseConfig.Host = mergeConfig.Host
 	}
 	return baseConfig
@@ -85,34 +85,6 @@ func configFile() (string, error) {
 	}
 	// default config path is ~/.snowflake/config.
 	return filepath.Join(dir, ".snowflake", "config"), nil
-}
-
-func EnvConfig() *gosnowflake.Config {
-	config := &gosnowflake.Config{}
-
-	if account, ok := os.LookupEnv("SNOWFLAKE_ACCOUNT"); ok {
-		config.Account = account
-	}
-	if user, ok := os.LookupEnv("SNOWFLAKE_USER"); ok {
-		config.User = user
-	}
-	if password, ok := os.LookupEnv("SNOWFLAKE_PASSWORD"); ok {
-		config.Password = password
-	}
-	if role, ok := os.LookupEnv("SNOWFLAKE_ROLE"); ok {
-		config.Role = role
-	}
-	if region, ok := os.LookupEnv("SNOWFLAKE_REGION"); ok {
-		config.Region = region
-	}
-	if host, ok := os.LookupEnv("SNOWFLAKE_HOST"); ok {
-		config.Host = host
-	}
-	if warehouse, ok := os.LookupEnv("SNOWFLAKE_WAREHOUSE"); ok {
-		config.Warehouse = warehouse
-	}
-
-	return config
 }
 
 func loadConfigFile() (map[string]*gosnowflake.Config, error) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -594,10 +595,12 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				diag.FromErr(err)
 			}
 		case "language":
-			if snowflake.Contains(languages, desc.Value) {
+			if snowflake.Contains(languages, strings.ToLower(desc.Value)) {
 				if err := d.Set("language", desc.Value); err != nil {
 					diag.FromErr(err)
 				}
+			} else {
+				log.Printf("[INFO] Unexpected language for function %v returned from Snowflake", desc.Value)
 			}
 		case "packages":
 			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", "")
@@ -628,11 +631,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				diag.FromErr(err)
 			}
 		default:
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Unexpected function property returned from Snowflake",
-				Detail:   fmt.Sprintf("Unexpected function property %v returned from Snowflake", desc.Property),
-			})
+			log.Printf("[INFO] Unexpected function property %v returned from Snowflake with value %v", desc.Property, desc.Value)
 		}
 	}
 

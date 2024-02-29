@@ -31,6 +31,11 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 	variableSet2 := m()
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 
+	ignoreDuringImport := []string{"null_input_behavior"}
+	if strings.Contains(configDirectory, "/sql") {
+		ignoreDuringImport = append(ignoreDuringImport, "return_behavior")
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -47,6 +52,7 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, "return_behavior", "VOLATILE"),
 
 					// computed attributes
 					resource.TestCheckResourceAttrSet(resourceName, "return_type"),
@@ -70,15 +76,12 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 
 			// test - import
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory(configDirectory),
-				ConfigVariables:   variableSet2,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"null_input_behavior",
-					"return_behavior",
-				},
+				ConfigDirectory:         acc.ConfigurationDirectory(configDirectory),
+				ConfigVariables:         variableSet2,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: ignoreDuringImport,
 			},
 		},
 	})

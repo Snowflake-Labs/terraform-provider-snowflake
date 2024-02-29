@@ -280,6 +280,15 @@ func TestExternalFunctions_Show(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW EXTERNAL FUNCTIONS LIKE 'pattern'`)
 	})
+
+	t.Run("show with in", func(t *testing.T) {
+		id := RandomDatabaseObjectIdentifier()
+		opts := defaultOpts()
+		opts.In = &In{
+			Schema: id,
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW EXTERNAL FUNCTIONS IN SCHEMA %s`, id.FullyQualifiedName())
+	})
 }
 
 func TestExternalFunctions_Describe(t *testing.T) {

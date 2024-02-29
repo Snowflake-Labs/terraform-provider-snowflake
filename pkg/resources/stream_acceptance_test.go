@@ -2,14 +2,16 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_StreamCreateOnStageWithoutDirectoryEnabled(t *testing.T) {
@@ -52,23 +54,20 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 }
 
 func TestAcc_Stream(t *testing.T) {
-	env := os.Getenv("SKIP_STREAM_TEST")
-	if env != "" {
-		t.Skip("Skipping TestAcc_Stream")
-	}
+	// Current error is User: <redacted> is not authorized to perform: sts:AssumeRole on resource: <redacted> duration 1.162414333s args {}] ()
+	t.Skip("Skipping TestAcc_Stream")
+
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	accNameExternalTable := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	bucketURL := os.Getenv("AWS_EXTERNAL_BUCKET_URL")
-	if bucketURL == "" {
-		t.Skip("Skipping TestAcc_ExternalTable")
-	}
-	roleName := os.Getenv("AWS_EXTERNAL_ROLE_NAME")
-	if roleName == "" {
-		t.Skip("Skipping TestAcc_ExternalTable")
-	}
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+	bucketURL := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
+	roleName := testenvs.GetOrSkipTest(t, testenvs.AwsExternalRoleArn)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -230,7 +229,7 @@ resource "snowflake_stage" "test" {
 }
 resource "snowflake_storage_integration" "external_table_stream_integration" {
 	name = "%v"
-	storage_allowed_locations = [%s]
+	storage_allowed_locations = ["%s"]
 	storage_provider = "S3"
 	storage_aws_role_arn = "%s"
 }
