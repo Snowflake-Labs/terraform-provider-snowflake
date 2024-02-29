@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -17,9 +16,6 @@ import (
 )
 
 func TestAcc_ExternalFunction_basic(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_EXTERNAL_FUNCTION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_ExternalFunction")
-	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	m := func() map[string]config.Variable {
@@ -91,9 +87,6 @@ func TestAcc_ExternalFunction_basic(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_no_arguments(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_EXTERNAL_FUNCTION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_ExternalFunction")
-	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	m := func() map[string]config.Variable {
@@ -161,9 +154,6 @@ func TestAcc_ExternalFunction_no_arguments(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_complete(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_EXTERNAL_FUNCTION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_ExternalFunction")
-	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	m := func() map[string]config.Variable {

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
@@ -15,9 +16,11 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	if !hasExternalEnvironmentVariablesSet {
-		t.Skip("Skipping TestInt_StorageIntegrations (External env variables are not set)")
-	}
+	awsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
+	awsRoleARN := testenvs.GetOrSkipTest(t, testenvs.AwsExternalRoleArn)
+	gcsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.GcsExternalBuckerUrl)
+	azureBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AzureExternalBucketUrl)
+	azureTenantId := testenvs.GetOrSkipTest(t, testenvs.AzureExternalTenantId)
 
 	assertStorageIntegrationShowResult := func(t *testing.T, s *sdk.StorageIntegration, name sdk.AccountObjectIdentifier, comment string) {
 		t.Helper()

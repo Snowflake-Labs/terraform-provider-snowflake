@@ -19,28 +19,6 @@ const (
 	nycWeatherDataURL = "s3://snowflake-workshop-lab/weather-nyc"
 )
 
-var (
-	awsBucketUrl, awsBucketUrlIsSet = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL")
-	awsKeyId, awsKeyIdIsSet         = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_KEY_ID")
-	awsSecretKey, awsSecretKeyIsSet = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY")
-	awsRoleARN, awsRoleARNIsSet     = os.LookupEnv("TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN")
-
-	gcsBucketUrl, gcsBucketUrlIsSet = os.LookupEnv("TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL")
-
-	azureBucketUrl, azureBucketUrlIsSet = os.LookupEnv("TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL")
-	azureTenantId, azureTenantIdIsSet   = os.LookupEnv("TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID")
-	azureSasToken, azureSasTokenIsSet   = os.LookupEnv("TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN")
-
-	hasExternalEnvironmentVariablesSet = awsBucketUrlIsSet &&
-		awsKeyIdIsSet &&
-		awsSecretKeyIsSet &&
-		awsRoleARNIsSet &&
-		gcsBucketUrlIsSet &&
-		azureBucketUrlIsSet &&
-		azureTenantIdIsSet &&
-		azureSasTokenIsSet
-)
-
 // there is no direct way to get the account identifier from Snowflake API, but you can get it if you know
 // the account locator and by filtering the list of accounts in replication accounts by the account locator
 func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifier {

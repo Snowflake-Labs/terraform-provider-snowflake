@@ -1,17 +1,14 @@
 package sdk
 
 import (
-	"os"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSweepAll(t *testing.T) {
-	enableSweep := os.Getenv("SNOWFLAKE_ENABLE_SWEEP")
-	if enableSweep != "1" {
-		t.Skip("SNOWFLAKE_ENABLE_SWEEP not enabled, skipping sweep tests")
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableSweep)
 
 	t.Run("all sweepers in secondary account", func(t *testing.T) {
 		client := testSecondaryClient(t)
@@ -27,10 +24,8 @@ func TestSweepAll(t *testing.T) {
 }
 
 func TestSweep(t *testing.T) {
-	enableSweep := os.Getenv("SNOWFLAKE_ENABLE_SWEEP")
-	if enableSweep != "1" {
-		t.Skip("SNOWFLAKE_ENABLE_SWEEP not enabled, skipping sweep tests")
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableSweep)
+
 	t.Run("sweepers", func(t *testing.T) {
 		client := testClient(t)
 		err := Sweep(client, "TEST_")
