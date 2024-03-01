@@ -74,7 +74,7 @@ func main() {
 	indexTemplateContents = strings.ReplaceAll(indexTemplateContents, deprecatedResourcesPlaceholder, deprecatedResourcesBuffer.String())
 	indexTemplateContents = strings.ReplaceAll(indexTemplateContents, deprecatedDatasourcesPlaceholder, deprecatedDatasourcesBuffer.String())
 
-	err = os.WriteFile(filepath.Join(templatesPath, "updated-index.md.tmpl"), []byte(indexTemplateContents), 0o600)
+	err = os.WriteFile(filepath.Join(templatesPath, "index.md.tmpl"), []byte(indexTemplateContents), 0o600)
 	if err != nil {
 		log.Panicln(err)
 	}
