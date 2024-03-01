@@ -233,7 +233,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 	name := d.Id()
 	id := sdk.NewAccountObjectIdentifier(name)
-	client := meta.(provider.Context).Client
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	if d.HasChange("name") {
