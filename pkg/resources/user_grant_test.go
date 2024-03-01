@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -34,7 +37,9 @@ func TestUserGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT MONITOR ON USER "test-user" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT MONITOR ON USER "test-user" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadUserGrant(mock)
-		err := resources.CreateUserGrant(d, db)
+		err := resources.CreateUserGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }

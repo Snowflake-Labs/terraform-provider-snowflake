@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 
@@ -37,7 +40,9 @@ func TestResourceMonitorGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT MONITOR ON RESOURCE MONITOR "test-monitor" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT MONITOR ON RESOURCE MONITOR "test-monitor" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadResourceMonitorGrant(mock)
-		err := resources.CreateResourceMonitorGrant(d, db)
+		err := resources.CreateResourceMonitorGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -56,7 +61,9 @@ func TestResourceMonitorGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadResourceMonitorGrant(mock)
-		err := resources.ReadResourceMonitorGrant(d, db)
+		err := resources.ReadResourceMonitorGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }

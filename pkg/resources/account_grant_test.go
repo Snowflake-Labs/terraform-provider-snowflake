@@ -2,9 +2,10 @@ package resources_test
 
 import (
 	"database/sql"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"

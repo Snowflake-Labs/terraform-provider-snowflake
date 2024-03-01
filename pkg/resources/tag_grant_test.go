@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -36,7 +39,9 @@ func TestTagGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT APPLY ON TAG "test-db"."PUBLIC"."test_tag" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT APPLY ON TAG "test-db"."PUBLIC"."test_tag" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadTagGrant(mock)
-		err := resources.CreateTagGrant(d, db)
+		err := resources.CreateTagGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -57,7 +62,9 @@ func TestTagGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadTagGrant(mock)
-		err := resources.ReadTagGrant(d, db)
+		err := resources.ReadTagGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 

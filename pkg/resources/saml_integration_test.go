@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -38,7 +41,9 @@ func TestSAMLIntegrationCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadSAMLIntegration(mock)
 
-		err := resources.CreateSAMLIntegration(d, db)
+		err := resources.CreateSAMLIntegration(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -51,7 +56,9 @@ func TestSAMLIntegrationRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadSAMLIntegration(mock)
 
-		err := resources.ReadSAMLIntegration(d, db)
+		err := resources.ReadSAMLIntegration(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -63,7 +70,9 @@ func TestSAMLIntegrationDelete(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP SECURITY INTEGRATION "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := resources.DeleteSAMLIntegration(d, db)
+		err := resources.DeleteSAMLIntegration(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }

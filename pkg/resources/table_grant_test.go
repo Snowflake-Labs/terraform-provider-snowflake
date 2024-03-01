@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 
@@ -42,7 +45,9 @@ func TestTableGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT SELECT ON TABLE "test-db"."PUBLIC"."test-table" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT SELECT ON TABLE "test-db"."PUBLIC"."test-table" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadTableGrant(mock)
-		err := resources.CreateTableGrant(d, db)
+		err := resources.CreateTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -68,7 +73,9 @@ func TestTableGrantUpdate(t *testing.T) {
 		mock.ExpectExec(`^GRANT SELECT ON TABLE "test-db"."PUBLIC"."test-table" TO SHARE "test-share-2"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadTableGrant(mock)
 
-		err := resources.UpdateTableGrant(d, db)
+		err := resources.UpdateTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -90,7 +97,9 @@ func TestTableGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadTableGrant(mock)
-		err := resources.ReadTableGrant(d, db)
+		err := resources.ReadTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -142,7 +151,9 @@ func TestFutureTableGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE TABLES IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureTableGrant(mock)
-		err := resources.CreateTableGrant(d, db)
+		err := resources.CreateTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		roles := d.Get("roles").(*schema.Set)
 		// After the CreateTableGrant has been created a ReadTableGrant reads the current grants
 		// and this read should ignore test-role-3 what is returned by SHOW FUTURE GRANTS ON SCHEMA PUBLIC because
@@ -173,7 +184,9 @@ func TestFutureTableGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE TABLES IN DATABASE "test-db" TO ROLE "test-role-2"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureTableDatabaseGrant(mock)
-		err := resources.CreateTableGrant(d, db)
+		err := resources.CreateTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		b.NoError(err)
 	})
 }

@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -37,7 +40,9 @@ func TestSequenceGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT USAGE ON SEQUENCE "test-db"."PUBLIC"."test-sequence" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT USAGE ON SEQUENCE "test-db"."PUBLIC"."test-sequence" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadSequenceGrant(mock)
-		err := resources.CreateSequenceGrant(d, db)
+		err := resources.CreateSequenceGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -58,7 +63,9 @@ func TestSequenceGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadSequenceGrant(mock)
-		err := resources.ReadSequenceGrant(d, db)
+		err := resources.ReadSequenceGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -101,7 +108,9 @@ func TestFutureSequenceGrantCreate(t *testing.T) {
 			`^GRANT USAGE ON FUTURE SEQUENCES IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureSequenceGrant(mock)
-		err := resources.CreateSequenceGrant(d, db)
+		err := resources.CreateSequenceGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -125,7 +134,9 @@ func TestFutureSequenceGrantCreate(t *testing.T) {
 			`^GRANT USAGE ON FUTURE SEQUENCES IN DATABASE "test-db" TO ROLE "test-role-2"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureSequenceDatabaseGrant(mock)
-		err := resources.CreateSequenceGrant(d, db)
+		err := resources.CreateSequenceGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		b.NoError(err)
 	})
 }
