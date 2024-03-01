@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -121,9 +122,8 @@ func StorageIntegration() *schema.Resource {
 }
 
 func CreateStorageIntegration(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	name := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("name").(string))
 	enabled := d.Get("enabled").(bool)
@@ -186,9 +186,8 @@ func CreateStorageIntegration(d *schema.ResourceData, meta any) error {
 }
 
 func ReadStorageIntegration(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id, ok := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	if !ok {
 		return fmt.Errorf("storage integration read, error decoding id: %s as sdk.AccountObjectIdentifier, got: %T", d.Id(), id)
@@ -278,9 +277,8 @@ func ReadStorageIntegration(d *schema.ResourceData, meta any) error {
 }
 
 func UpdateStorageIntegration(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id, ok := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	if !ok {
 		return fmt.Errorf("storage integration update, error decoding id: %s as sdk.AccountObjectIdentifier, got: %T", d.Id(), id)
@@ -365,9 +363,8 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta any) error {
 }
 
 func DeleteStorageIntegration(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id, ok := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	if !ok {
 		return fmt.Errorf("storage integration delete, error decoding id: %s as sdk.AccountObjectIdentifier, got: %T", d.Id(), id)

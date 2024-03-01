@@ -2,7 +2,8 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -61,10 +62,9 @@ func MaskingPolicies() *schema.Resource {
 }
 
 func ReadMaskingPolicies(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	maskingPolicies, err := client.MaskingPolicies.Show(ctx, &sdk.ShowMaskingPolicyOptions{
 		In: &sdk.In{

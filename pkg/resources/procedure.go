@@ -2,12 +2,13 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
@@ -223,8 +224,7 @@ func CreateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
@@ -286,8 +286,7 @@ func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
@@ -339,8 +338,7 @@ func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
@@ -402,8 +400,7 @@ func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func createSQLProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
@@ -454,8 +451,7 @@ func createSQLProcedure(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
@@ -526,8 +522,7 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 
 func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	diags := diag.Diagnostics{}
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if err := d.Set("name", id.Name()); err != nil {
@@ -657,8 +652,7 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
@@ -694,8 +688,7 @@ func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func DeleteContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id.WithoutArguments(), id.Arguments())); err != nil {

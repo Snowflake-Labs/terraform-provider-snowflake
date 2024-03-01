@@ -2,8 +2,9 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -50,10 +51,9 @@ func SessionParameter() *schema.Resource {
 
 // CreateSessionParameter implements schema.CreateFunc.
 func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	onAccount := d.Get("on_account").(bool)
 	user := d.Get("user").(string)
@@ -83,8 +83,7 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSessionParameter implements schema.ReadFunc.
 func ReadSessionParameter(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	parameter := d.Id()
 
@@ -115,9 +114,8 @@ func UpdateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSessionParameter implements schema.DeleteFunc.
 func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
 	onAccount := d.Get("on_account").(bool)

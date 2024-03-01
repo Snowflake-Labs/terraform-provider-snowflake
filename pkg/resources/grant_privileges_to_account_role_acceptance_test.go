@@ -2,13 +2,14 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -1087,8 +1088,7 @@ func createAccountRoleOutsideTerraform(t *testing.T, name string) {
 
 func testAccCheckAccountRolePrivilegesRevoked(name string) func(*terraform.State) error {
 	return func(state *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		client := sdk.NewClientFromDB(db)
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 
 		defer func() {
 			err := client.Roles.Drop(context.Background(), sdk.NewDropRoleRequest(sdk.NewAccountObjectIdentifier(name)).WithIfExists(true))

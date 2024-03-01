@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -79,7 +81,8 @@ func createGenericGrantRolesAndShares(
 	roles []string,
 	shares []string,
 ) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	for _, role := range roles {
 		if err := snowflake.Exec(db, builder.Role(role).Grant(priv, grantOption)); err != nil {
 			return err
@@ -118,7 +121,8 @@ func readGenericGrant(
 	allObjects bool,
 	_ PrivilegeSet,
 ) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	var grants []*grant
 	var err error
 
@@ -330,7 +334,8 @@ func deleteGenericGrantRolesAndShares(
 	roles []string,
 	shares []string,
 ) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	for _, role := range roles {
 		executable := builder.Role(role).Revoke(priv)

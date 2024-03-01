@@ -3,10 +3,11 @@ package resources
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -322,8 +323,7 @@ func FileFormat() *schema.Resource {
 
 // CreateFileFormat implements schema.CreateFunc.
 func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	dbName := d.Get("database").(string)
@@ -529,8 +529,7 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 // ReadFileFormat implements schema.ReadFunc.
 func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	fileFormatID, err := fileFormatIDFromString(d.Id())
@@ -757,8 +756,7 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateFileFormat implements schema.UpdateFunc.
 func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	fileFormatID, err := fileFormatIDFromString(d.Id())
@@ -1110,8 +1108,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteFileFormat implements schema.DeleteFunc.
 func DeleteFileFormat(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	fileFormatID, err := fileFormatIDFromString(d.Id())

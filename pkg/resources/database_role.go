@@ -2,9 +2,10 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -48,8 +49,7 @@ func DatabaseRole() *schema.Resource {
 
 // ReadDatabaseRole implements schema.ReadFunc.
 func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
@@ -78,8 +78,7 @@ func ReadDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 
 // CreateDatabaseRole implements schema.CreateFunc.
 func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	databaseName := d.Get("database").(string)
 	roleName := d.Get("name").(string)
@@ -104,8 +103,7 @@ func CreateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateDatabaseRole implements schema.UpdateFunc.
 func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
@@ -125,8 +123,7 @@ func UpdateDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteDatabaseRole implements schema.DeleteFunc.
 func DeleteDatabaseRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 

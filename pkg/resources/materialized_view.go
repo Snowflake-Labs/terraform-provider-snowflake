@@ -2,9 +2,10 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -80,9 +81,8 @@ func MaterializedView() *schema.Resource {
 
 // CreateMaterializedView implements schema.CreateFunc.
 func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -132,9 +132,8 @@ func CreateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 // ReadMaterializedView implements schema.ReadFunc.
 func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	materializedView, err := client.MaterializedViews.ShowByID(ctx, id)
@@ -181,9 +180,8 @@ func ReadMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateMaterializedView implements schema.UpdateFunc.
 func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("name") {
@@ -264,9 +262,8 @@ func UpdateMaterializedView(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteMaterializedView implements schema.DeleteFunc.
 func DeleteMaterializedView(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	err := client.MaterializedViews.Drop(ctx, sdk.NewDropMaterializedViewRequest(id))

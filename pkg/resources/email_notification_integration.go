@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -61,9 +62,8 @@ func toAllowedRecipients(emails []string) []sdk.NotificationIntegrationAllowedRe
 
 // CreateEmailNotificationIntegration implements schema.CreateFunc.
 func CreateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -93,9 +93,8 @@ func CreateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}
 
 // ReadEmailNotificationIntegration implements schema.ReadFunc.
 func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	integration, err := client.NotificationIntegrations.ShowByID(ctx, id)
@@ -147,9 +146,8 @@ func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) 
 
 // UpdateEmailNotificationIntegration implements schema.UpdateFunc.
 func UpdateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	var runSetStatement bool
@@ -202,9 +200,8 @@ func UpdateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}
 
 // DeleteEmailNotificationIntegration implements schema.DeleteFunc.
 func DeleteEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	err := client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(id))

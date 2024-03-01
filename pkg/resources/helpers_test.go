@@ -2,10 +2,11 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"slices"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -482,9 +483,8 @@ func tagGrant(t *testing.T, id string, params map[string]interface{}) *schema.Re
 // queriedAccountRolePrivilegesEqualTo will check if all the privileges specified in the argument are granted in Snowflake.
 func queriedPrivilegesEqualTo(query func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error), privileges ...string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
-		client := sdk.NewClientFromDB(db)
 		grants, err := query(client, ctx)
 		if err != nil {
 			return err
@@ -506,9 +506,9 @@ func queriedPrivilegesEqualTo(query func(client *sdk.Client, ctx context.Context
 // Any additional grants will be ignored.
 func queriedPrivilegesContainAtLeast(query func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error), roleName sdk.ObjectIdentifier, privileges ...string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
-		client := sdk.NewClientFromDB(db)
+
 		grants, err := query(client, ctx)
 		if err != nil {
 			return err

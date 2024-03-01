@@ -2,11 +2,12 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -501,8 +502,7 @@ resource "snowflake_view" "test" {
 }
 
 func testAccCheckViewDestroy(s *terraform.State) error {
-	db := acc.TestAccProvider.Meta().(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := acc.TestAccProvider.Meta().(*provider.Context).Client
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "snowflake_view" {
 			continue

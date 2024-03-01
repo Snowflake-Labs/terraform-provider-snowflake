@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -36,8 +37,8 @@ func SystemGetSnowflakePlatformInfo() *schema.Resource {
 
 // ReadSystemGetSnowflakePlatformInfo implements schema.ReadFunc.
 func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	sel := snowflake.SystemGetSnowflakePlatformInfoQuery()
 	row := snowflake.QueryRow(db, sel)

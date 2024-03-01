@@ -1,8 +1,9 @@
 package resources
 
 import (
-	"database/sql"
 	"fmt"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -57,7 +58,8 @@ func CreateTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta inte
 
 	stmt := manager.Create(input)
 
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	_, err := db.Exec(stmt)
 	if err != nil {
 		return fmt.Errorf("error applying masking policy: %w", err)
@@ -88,7 +90,8 @@ func ReadTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta interf
 
 	stmt := manager.Read(input)
 
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return fmt.Errorf("error querying password policy: %w", err)
@@ -120,7 +123,8 @@ func DeleteTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta inte
 
 	stmt := manager.Delete(input)
 
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	_, err := db.Exec(stmt)
 	if err != nil {
 		return fmt.Errorf("error executing drop statement: %w", err)

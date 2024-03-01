@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"slices"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-uuid"
@@ -333,8 +334,7 @@ func ImportGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 }
 
 func CreateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := createGrantPrivilegesToDatabaseRoleIdFromSchema(d)
 	err := client.Grants.GrantPrivilegesToDatabaseRole(
@@ -362,8 +362,7 @@ func CreateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 }
 
 func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
 	if err != nil {
 		return diag.Diagnostics{
@@ -546,8 +545,7 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 }
 
 func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
 	if err != nil {
 		return diag.Diagnostics{
@@ -637,8 +635,7 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 		return nil
 	}
 
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
 		return diag.Diagnostics{

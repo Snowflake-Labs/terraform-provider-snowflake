@@ -2,7 +2,8 @@ package resources
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -132,8 +133,7 @@ func MaskingPolicy() *schema.Resource {
 
 // CreateMaskingPolicy implements schema.CreateFunc.
 func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	name := d.Get("name").(string)
 	databaseName := d.Get("database").(string)
@@ -186,8 +186,7 @@ func CreateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // ReadMaskingPolicy implements schema.ReadFunc.
 func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	ctx := context.Background()
@@ -251,8 +250,7 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateMaskingPolicy implements schema.UpdateFunc.
 func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	ctx := context.Background()
 
@@ -304,8 +302,7 @@ func UpdateMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteMaskingPolicy implements schema.DeleteFunc.
 func DeleteMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 

@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/require"
 
@@ -40,7 +43,9 @@ func TestDatabaseGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT USAGE ON DATABASE "test-database" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadDatabaseGrant(mock)
-		err := resources.CreateDatabaseGrant(d, db)
+		err := resources.CreateDatabaseGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -60,7 +65,9 @@ func TestDatabaseGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadDatabaseGrant(mock)
-		err := resources.ReadDatabaseGrant(d, db)
+		err := resources.ReadDatabaseGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 	roles := d.Get("roles").(*schema.Set)

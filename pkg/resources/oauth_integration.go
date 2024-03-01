@@ -1,11 +1,12 @@
 package resources
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -99,7 +100,8 @@ func OAuthIntegration() *schema.Resource {
 
 // CreateOAuthIntegration implements schema.CreateFunc.
 func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	name := d.Get("name").(string)
 
 	stmt := snowflake.NewOAuthIntegrationBuilder(name).Create()
@@ -144,7 +146,8 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // ReadOAuthIntegration implements schema.ReadFunc.
 func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	id := d.Id()
 
 	stmt := snowflake.NewOAuthIntegrationBuilder(id).Show()
@@ -271,7 +274,8 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateOAuthIntegration implements schema.UpdateFunc.
 func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	id := d.Id()
 
 	stmt := snowflake.NewOAuthIntegrationBuilder(id).Alter()

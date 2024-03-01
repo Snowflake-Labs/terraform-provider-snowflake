@@ -7,6 +7,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -65,7 +67,8 @@ func UserOwnershipGrant() *schema.Resource {
 }
 
 func CreateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	user := d.Get("on_user_name").(string)
 	role := d.Get("to_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
@@ -82,7 +85,8 @@ func CreateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ReadUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	log.Println(d.Id())
 	user := strings.Split(d.Id(), "|")[0]
 	currentGrants := strings.Split(d.Id(), "|")[2]
@@ -128,7 +132,8 @@ func ReadUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	user := d.Get("on_user_name").(string)
 	role := d.Get("to_role_name").(string)
 	currentGrants := d.Get("current_grants").(string)
@@ -145,7 +150,8 @@ func UpdateUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
 }
 
 func DeleteUserOwnershipGrant(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	user := d.Get("on_user_name").(string)
 	currentGrants := d.Get("current_grants").(string)
 	reversionRole := d.Get("revert_ownership_to_role_name").(string)

@@ -2,10 +2,11 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -70,8 +71,7 @@ func Procedures() *schema.Resource {
 }
 
 func ReadContextProcedures(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 

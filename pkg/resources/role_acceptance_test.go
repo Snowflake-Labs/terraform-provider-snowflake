@@ -2,10 +2,11 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -151,8 +152,7 @@ func TestAcc_AccountRole_updates(t *testing.T) {
 
 func testAccCheckAccountRoleDestroy(accountRoleName string) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		client := sdk.NewClientFromDB(db)
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		for _, rs := range state.RootModule().Resources {
 			if rs.Type != "snowflake_role" {
 				continue

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/snowflakedb/gosnowflake"
 
@@ -772,9 +774,15 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 			config = sdk.MergeConfig(config, profileConfig)
 		}
 	}
+
 	client, err := sdk.NewClient(config)
 	if err != nil {
 		return nil, err
 	}
-	return client.GetConn().DB, nil
+
+	providerContext := &provider.Context{
+		Client: client,
+	}
+
+	return providerContext, nil
 }

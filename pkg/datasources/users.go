@@ -2,10 +2,11 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -105,9 +106,8 @@ func Users() *schema.Resource {
 }
 
 func ReadUsers(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	userPattern := d.Get("pattern").(string)
 

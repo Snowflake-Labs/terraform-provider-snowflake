@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -40,7 +43,9 @@ func TestViewGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-view" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadViewGrant(mock)
-		err := resources.CreateViewGrant(d, db)
+		err := resources.CreateViewGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -62,7 +67,9 @@ func TestViewGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadViewGrant(mock)
-		err := resources.ReadViewGrant(d, db)
+		err := resources.ReadViewGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -114,7 +121,9 @@ func TestFutureViewGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE VIEWS IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureViewGrant(mock)
-		err := resources.CreateViewGrant(d, db)
+		err := resources.CreateViewGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 
 		roles := d.Get("roles").(*schema.Set)
@@ -146,7 +155,9 @@ func TestFutureViewGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE VIEWS IN DATABASE "test-db" TO ROLE "test-role-2"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureViewDatabaseGrant(mock)
-		err := resources.CreateViewGrant(d, db)
+		err := resources.CreateViewGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		b.NoError(err)
 	})
 }

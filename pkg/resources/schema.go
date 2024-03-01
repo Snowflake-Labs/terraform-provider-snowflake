@@ -2,11 +2,12 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
@@ -76,11 +77,10 @@ func Schema() *schema.Resource {
 
 // CreateSchema implements schema.CreateFunc.
 func CreateSchema(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	database := d.Get("database").(string)
 
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
 	createReq := &sdk.CreateSchemaOptions{
@@ -107,8 +107,7 @@ func CreateSchema(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSchema implements schema.ReadFunc.
 func ReadSchema(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 
@@ -182,8 +181,7 @@ func ReadSchema(d *schema.ResourceData, meta interface{}) error {
 // UpdateSchema implements schema.UpdateFunc.
 func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	if d.HasChange("name") {
@@ -275,8 +273,7 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteSchema implements schema.DeleteFunc.
 func DeleteSchema(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.DatabaseObjectIdentifier)
 

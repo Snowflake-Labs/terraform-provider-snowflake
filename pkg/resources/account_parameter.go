@@ -2,8 +2,9 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -39,10 +40,9 @@ func AccountParameter() *schema.Resource {
 
 // CreateAccountParameter implements schema.CreateFunc.
 func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	parameter := sdk.AccountParameter(key)
 	err := client.Parameters.SetAccountParameter(ctx, parameter, value)
@@ -55,8 +55,7 @@ func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 
 // ReadAccountParameter implements schema.ReadFunc.
 func ReadAccountParameter(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	parameterName := d.Id()
 	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(parameterName))
@@ -77,9 +76,8 @@ func UpdateAccountParameter(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteAccountParameter implements schema.DeleteFunc.
 func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	parameter := sdk.AccountParameter(key)
 	defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))

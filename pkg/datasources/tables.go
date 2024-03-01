@@ -2,8 +2,9 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
 	"log"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -57,9 +58,8 @@ func Tables() *schema.Resource {
 }
 
 func ReadTables(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
