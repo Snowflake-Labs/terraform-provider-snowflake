@@ -1,0 +1,145 @@
+---
+page_title: "Provider: Snowflake"
+description: Manage SnowflakeDB with Terraform.
+---
+
+# Snowflake Provider
+
+~> **Disclaimer** the project is still in the 0.x.x version, which means it’s still in the experimental phase (check [Go module versioning](https://go.dev/doc/modules/version-numbers#v0-number) for more details). It can be used in production but makes no stability or backward compatibility guarantees. We do not provide backward bug fixes and, therefore, always suggest using the newest version. We are providing only limited support for the provider; priorities will be assigned on a case-by-case basis. Our main current goals are stabilization, addressing existing issues, and providing the missing features (prioritizing the GA features; supporting PrPr and PuPr features are not high priorities now). With all that in mind, we aim to reach V1 with a stable, reliable, and functional provider. V1 will be free of all the above limitations.
+
+~> **Note** Please check the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) when changing the version of the provider.
+
+-> **Note** the current roadmap is available in our GitHub repository: [ROADMAP.md](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md).
+
+This is a terraform provider plugin for managing [Snowflake](https://www.snowflake.com/) accounts.
+Coverage is focused on part of Snowflake related to access control.
+
+
+## Example Provider Configuration
+
+{{tffile "examples/provider/provider.tf"}}
+
+## Configuration Schema
+
+**Warning: these values are passed directly to the gosnowflake library, which may not work exactly the way you expect. See the [gosnowflake docs](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Connection_Parameters) for more.**
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Authentication
+
+The Snowflake provider support multiple ways to authenticate:
+
+* Password
+* OAuth Access Token
+* OAuth Refresh Token
+* Browser Auth
+* Private Key
+* Config File
+
+In all cases account and username are required.
+
+### Keypair Authentication Environment Variables
+
+You should generate the public and private keys and set up environment variables.
+
+```shell
+
+cd ~/.ssh
+openssl genrsa -out snowflake_key 4096
+openssl rsa -in snowflake_key -pubout -out snowflake_key.pub
+```
+
+To export the variables into your provider:
+
+```shell
+export SNOWFLAKE_USER="..."
+export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
+```
+
+### Keypair Authentication Passphrase
+
+If your private key requires a passphrase, then this can be supplied via the
+environment variable `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE`.
+
+Only the ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm,
+aes-256-cbc, aes-256-gcm, and des-ede3-cbc are supported on the private key
+
+```shell
+cd ~/.ssh
+openssl genrsa -out snowflake_key 4096
+openssl rsa -in snowflake_key -pubout -out snowflake_key.pub
+openssl pkcs8 -topk8 -inform pem -in snowflake_key -outform PEM -v2 aes-256-cbc -out snowflake_key.p8
+```
+
+To export the variables into your provider:
+
+```shell
+export SNOWFLAKE_USER="..."
+export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key.p8"
+export SNOWFLAKE_PRIVATE_KEY_PASSPHRASE="..."
+```
+
+### OAuth Access Token
+
+If you have an OAuth access token, export these credentials as environment variables:
+
+```shell
+export SNOWFLAKE_USER='...'
+export SNOWFLAKE_OAUTH_ACCESS_TOKEN='...'
+```
+
+Note that once this access token expires, you'll need to request a new one through an external application.
+
+### OAuth Refresh Token
+
+If you have an OAuth Refresh token, export these credentials as environment variables:
+
+```shell
+export SNOWFLAKE_OAUTH_REFRESH_TOKEN='...'
+export SNOWFLAKE_OAUTH_CLIENT_ID='...'
+export SNOWFLAKE_OAUTH_CLIENT_SECRET='...'
+export SNOWFLAKE_OAUTH_ENDPOINT='...'
+export SNOWFLAKE_OAUTH_REDIRECT_URL='https://localhost.com'
+```
+
+Note because access token have a short life; typically 10 minutes, by passing refresh token new access token will be generated.
+
+### Username and Password Environment Variables
+
+If you choose to use Username and Password Authentication, export these credentials:
+
+```shell
+export SNOWFLAKE_USER='...'
+export SNOWFLAKE_PASSWORD='...'
+```
+
+### Config File
+
+If you choose to use a config file, the optional `profile` attribute specifies the profile to use from the config file. If no profile is specified, the default profile is used. The Snowflake config file lives at `~/.snowflake/config` and uses [TOML](https://toml.io/) format. You can override this location by setting the `SNOWFLAKE_CONFIG_PATH` environment variable. If no username and account are specified, the provider will fall back to reading the config file.
+
+```shell
+[default]
+account='TESTACCOUNT'
+user='TEST_USER'
+password='hunter2'
+role='ACCOUNTADMIN'
+
+[securityadmin]
+account='TESTACCOUNT'
+user='TEST_USER'
+password='hunter2'
+role='SECURITYADMIN'
+```
+
+## Order Precedence
+
+The Snowflake provider will use the following order of precedence when determining which credentials to use:
+1) Provider Configuration
+2) Environment Variables
+3) Config File
+
+## Currently deprecated resources
+%%doc-gen-helper:deprecated-resources%%
+
+## Currently deprecated datasources
+%%doc-gen-helper:deprecated-datasources%%
