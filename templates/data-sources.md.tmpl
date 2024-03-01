@@ -13,20 +13,18 @@ description: |-
 
 {{ .Description | trimspace }}
 
-    **WARNING** This resource cannot be destroyed!!! The only way to delete accounts is to go through [Snowflake Support](https://docs.snowflake.com/en/user-guide/organizations-manage-accounts.html#deleting-an-account)
-
-    **NOTE** ORGADMIN priviliges are required for this resource
-
+{{ if .HasExample -}}
 ## Example Usage
 
-{{ tffile (printf "examples/resources/%s/resource.tf" .Name)}}
+{{ printf "{{tffile %q}}" .ExampleFile }}
+{{- end }}
 
 {{ .SchemaMarkdown | trimspace }}
+{{- if .HasImport }}
 
 ## Import
 
 Import is supported using the following syntax:
 
-```shell
-terraform import snowflake_account.account <account_locator>
-```
+{{ printf "{{codefile \"shell\" %q}}" .ImportFile }}
+{{- end }}
