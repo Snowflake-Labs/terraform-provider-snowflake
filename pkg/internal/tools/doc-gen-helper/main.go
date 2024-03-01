@@ -4,7 +4,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -24,16 +23,11 @@ func main() {
 	templatesPath := filepath.Join(path, "templates")
 	currentPath := filepath.Join(path, "pkg", "internal", "tools", "doc-gen-helper")
 
-	deprecatedResourcesPlaceholder := "%%doc-gen-helper:deprecated-resources%%"
-	deprecatedDatasourcesPlaceholder := "%%doc-gen-helper:deprecated-datasources%%"
-
 	indexTemplateRaw, err := os.ReadFile(filepath.Join(currentPath, "index.md.tmpl"))
 	if err != nil {
 		log.Panicf("Could not open index template file, %v", err)
 	}
 	indexTemplateContents := string(indexTemplateRaw)
-
-	fmt.Printf("Will save template in %v\n", templatesPath)
 
 	deprecatedResources := make([]DeprecatedResource, 0)
 	for key, resource := range provider.Provider().ResourcesMap {
@@ -70,29 +64,3 @@ func printTo(writer io.Writer, template *template.Template, model any) {
 		log.Panicln(err)
 	}
 }
-
-type DeprecatedResourcesContext struct {
-	Resources []DeprecatedResource
-}
-
-type DeprecatedResource struct {
-	Name string
-}
-
-type DeprecatedDatasourcesContext struct {
-	Datasources []DeprecatedDatasource
-}
-
-type DeprecatedDatasource struct {
-	Name string
-}
-
-var DeprecatedResourcesTemplate, _ = template.New("deprecatedResourcesTemplate").Parse(
-	`{{ range .Resources -}}
-	- {{ .Name }}
-{{ end -}}`)
-
-var DeprecatedDatasourcesTemplate, _ = template.New("deprecatedDatasourcesTemplate").Parse(
-	`{{ range .Datasources -}}
-	- {{ .Name }}
-{{ end -}}`)

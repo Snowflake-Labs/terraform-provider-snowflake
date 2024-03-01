@@ -107,6 +107,6 @@ run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on given object definitio
 	go generate ./pkg/sdk/$*_dto_gen.go
 
 generate-doc-templates:
-	go run ./pkg/internal/tools/doc-gen-helper/main.go $$PWD
+	go run ./pkg/internal/tools/doc-gen-helper/ $$PWD
 
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf
