@@ -571,8 +571,10 @@ func getDataSources() map[string]*schema.Resource {
 	return dataSources
 }
 
-var configuredClient *sdk.Client
-var configureClientErr error
+var (
+	configuredClient     *sdk.Client
+	configureClientError error //nolint:errname
+)
 
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	// hacky way to speed up our acceptance tests
@@ -580,8 +582,8 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		if configuredClient != nil {
 			return &provider.Context{Client: configuredClient}, nil
 		}
-		if configureClientErr != nil {
-			return nil, configureClientErr
+		if configureClientError != nil {
+			return nil, configureClientError
 		}
 	}
 
@@ -787,10 +789,10 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		}
 	}
 
-	configuredClient, configureClientErr = sdk.NewClient(config)
+	configuredClient, configureClientError = sdk.NewClient(config)
 
-	if configureClientErr != nil {
-		return nil, configureClientErr
+	if configureClientError != nil {
+		return nil, configureClientError
 	}
 
 	return &provider.Context{Client: configuredClient}, nil

@@ -24,9 +24,11 @@ const (
 	TestWarehouseName2 = "terraform_test_warehouse_2"
 )
 
-var TestAccProvider *schema.Provider
-var v5Server tfprotov5.ProviderServer
-var v6Server tfprotov6.ProviderServer
+var (
+	TestAccProvider *schema.Provider
+	v5Server        tfprotov5.ProviderServer
+	v6Server        tfprotov6.ProviderServer
+)
 
 func init() {
 	TestAccProvider = provider.Provider()
@@ -115,13 +117,5 @@ func ConfigurationSameAsStepN(step int) func(config.TestStepConfigRequest) strin
 func ConfigurationDirectory(directory string) func(config.TestStepConfigRequest) string {
 	return func(req config.TestStepConfigRequest) string {
 		return filepath.Join("testdata", directory)
-	}
-}
-
-// ConfigurationInnerDirectory is similar to ConfigurationSameAsStepN, but instead of index-based directories,
-// you can choose a particular one by name.
-func ConfigurationInnerDirectory(innerDirectory string) func(config.TestStepConfigRequest) string {
-	return func(req config.TestStepConfigRequest) string {
-		return filepath.Join("testdata", req.TestName, innerDirectory)
 	}
 }
