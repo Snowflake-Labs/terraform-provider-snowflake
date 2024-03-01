@@ -7,8 +7,6 @@ description: |-
 
 # snowflake_account_password_policy_attachment (Resource)
 
-~> **Deprecation** dupa dupa. Please use [snowflake_roles](./roles) instead. <deprecation>
-
 Specifies the password policy to use for the current account. To set the password policy of a different account, use a provider alias.
 
 ## Example Usage
