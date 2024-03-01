@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/url"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -19,12 +18,6 @@ import (
 )
 
 func init() {
-	// This message should be used in DeprecationMessage to get a nice link in the documentation to the replacing resource.
-	deprecationMessageRegex := regexp.MustCompile(`Please use (snowflake_(\w+)) instead.`)
-	// This allows us to get relative link to the resource/datasource in the same subtree. Will have to change when we introduce subcategories.
-	relativeLinkOnTheSameLevel := func(title string, page string) string {
-		return fmt.Sprintf(`[%s](./%s)`, title, page)
-	}
 
 	// useful links:
 	// - https://github.com/hashicorp/terraform-plugin-docs/issues/10#issuecomment-767682837
@@ -33,9 +26,9 @@ func init() {
 		desc := r.Description
 		if r.DeprecationMessage != "" {
 			deprecationMessage := r.DeprecationMessage
-			resourcesRepl := deprecationMessageRegex.FindStringSubmatch(deprecationMessage)
-			if len(resourcesRepl) == 3 {
-				deprecationMessage = strings.ReplaceAll(deprecationMessage, resourcesRepl[1], relativeLinkOnTheSameLevel(resourcesRepl[1], resourcesRepl[2]))
+			replacement, path, ok := GetDeprecatedResourceReplacement(deprecationMessage)
+			if ok {
+				deprecationMessage = strings.ReplaceAll(deprecationMessage, replacement, RelativeLink(replacement, path))
 			}
 			// <deprecation> tag is a hack to split description into two parts (deprecation/real description) nicely. This tag won't be rendered.
 			// Check resources.md.tmpl for usage example.

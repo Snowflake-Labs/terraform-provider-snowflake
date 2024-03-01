@@ -5,7 +5,9 @@ type DeprecatedResourcesContext struct {
 }
 
 type DeprecatedResource struct {
-	Name string
+	Name                    string
+	Replacement             string
+	ReplacementPathRelative string
 }
 
 type DeprecatedDatasourcesContext struct {
@@ -13,5 +15,7 @@ type DeprecatedDatasourcesContext struct {
 }
 
 type DeprecatedDatasource struct {
-	Name string
+	Name                    string
+	Replacement             string
+	ReplacementPathRelative string
 }

@@ -32,14 +32,32 @@ func main() {
 	deprecatedResources := make([]DeprecatedResource, 0)
 	for key, resource := range provider.Provider().ResourcesMap {
 		if resource.DeprecationMessage != "" {
-			deprecatedResources = append(deprecatedResources, DeprecatedResource{Name: key})
+			replacement, path, _ := provider.GetDeprecatedResourceReplacement(resource.DeprecationMessage)
+			var relativeLink string
+			if replacement != "" && path != "" {
+				relativeLink = provider.RelativeLink(replacement, filepath.Join("resources", path))
+			}
+			deprecatedResources = append(deprecatedResources, DeprecatedResource{
+				Name:                    key,
+				Replacement:             replacement,
+				ReplacementPathRelative: relativeLink,
+			})
 		}
 	}
 
 	deprecatedDatasources := make([]DeprecatedDatasource, 0)
 	for key, datasource := range provider.Provider().DataSourcesMap {
 		if datasource.DeprecationMessage != "" {
-			deprecatedDatasources = append(deprecatedDatasources, DeprecatedDatasource{Name: key})
+			replacement, path, _ := provider.GetDeprecatedResourceReplacement(datasource.DeprecationMessage)
+			var relativeLink string
+			if replacement != "" && path != "" {
+				relativeLink = provider.RelativeLink(replacement, filepath.Join("data-sources", path))
+			}
+			deprecatedDatasources = append(deprecatedDatasources, DeprecatedDatasource{
+				Name:                    key,
+				Replacement:             replacement,
+				ReplacementPathRelative: relativeLink,
+			})
 		}
 	}
 
