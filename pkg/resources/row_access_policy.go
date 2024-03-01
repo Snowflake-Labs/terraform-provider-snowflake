@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -68,9 +69,8 @@ func RowAccessPolicy() *schema.Resource {
 
 // CreateRowAccessPolicy implements schema.CreateFunc.
 func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -105,9 +105,8 @@ func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // ReadRowAccessPolicy implements schema.ReadFunc.
 func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	rowAccessPolicy, err := client.RowAccessPolicies.ShowByID(ctx, id)
@@ -151,9 +150,8 @@ func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateRowAccessPolicy implements schema.UpdateFunc.
 func UpdateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("comment") {
@@ -184,9 +182,8 @@ func UpdateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteRowAccessPolicy implements schema.DeleteFunc.
 func DeleteRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))

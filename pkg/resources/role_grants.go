@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -77,7 +79,8 @@ func RoleGrants() *schema.Resource {
 }
 
 func CreateRoleGrants(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	roleName := d.Get("role_name").(string)
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
 	users := expandStringList(d.Get("users").(*schema.Set).List())
@@ -125,7 +128,8 @@ type roleGrant struct {
 }
 
 func ReadRoleGrants(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	roleName := d.Get("role_name").(string)
 
 	roles := make([]string, 0)
@@ -210,7 +214,8 @@ func readGrants(db *sql.DB, roleName string) ([]*roleGrant, error) {
 }
 
 func DeleteRoleGrants(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	roleName := d.Get("role_name").(string)
 
 	roles := expandStringList(d.Get("roles").(*schema.Set).List())
@@ -283,7 +288,8 @@ func revokeRoleFromUser(db *sql.DB, role1, user string) error {
 }
 
 func UpdateRoleGrants(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	roleName := d.Get("role_name").(string)
 
 	x := func(resource string, grant func(db *sql.DB, role string, target string) error, revoke func(db *sql.DB, role string, target string) error) error {

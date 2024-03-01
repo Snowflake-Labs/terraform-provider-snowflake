@@ -2,13 +2,14 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -293,7 +294,7 @@ func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "column.1.type", "string"),
 					resource.TestCheckResourceAttr(resourceName, "column.1.as", "value:name::string"),
 					func(state *terraform.State) error {
-						client := sdk.NewClientFromDB(acc.TestAccProvider.Meta().(*sql.DB))
+						client := acc.TestAccProvider.Meta().(*provider.Context).Client
 						ctx := context.Background()
 						id := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name)
 						result, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id))
@@ -321,7 +322,7 @@ func getExternalTableTestEnvsOrSkipTest(t *testing.T) (string, string, string) {
 
 func externalTableContainsData(name string, contains func(rows []map[string]*any) bool) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
-		client := sdk.NewClientFromDB(acc.TestAccProvider.Meta().(*sql.DB))
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
 		id := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name)
 		rows, err := client.QueryUnsafe(ctx, fmt.Sprintf("select * from %s", id.FullyQualifiedName()))
@@ -358,7 +359,7 @@ func publishExternalTablesTestData(stageName sdk.SchemaObjectIdentifier, data []
 
 func expectTableToHaveColumnDataTypes(tableName string, expectedDataTypes []sdk.DataType) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		client := sdk.NewClientFromDB(acc.TestAccProvider.Meta().(*sql.DB))
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
 		id := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName)
 		columnsDesc, err := client.ExternalTables.DescribeColumns(ctx, sdk.NewDescribeExternalTableColumnsRequest(id))
@@ -388,7 +389,7 @@ func expectTableToHaveColumnDataTypes(tableName string, expectedDataTypes []sdk.
 
 func expectTableDDLContains(tableName string, substr string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		client := sdk.NewClientFromDB(acc.TestAccProvider.Meta().(*sql.DB))
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
 		id := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName)
 
@@ -428,8 +429,7 @@ func expectTableDDLContains(tableName string, substr string) func(s *terraform.S
 }
 
 func testAccCheckExternalTableDestroy(s *terraform.State) error {
-	db := acc.TestAccProvider.Meta().(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := acc.TestAccProvider.Meta().(*provider.Context).Client
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "snowflake_external_table" {
 			continue

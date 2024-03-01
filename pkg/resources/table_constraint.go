@@ -2,9 +2,10 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -229,9 +230,8 @@ func getTableIdentifier(s string) (*sdk.SchemaObjectIdentifier, error) {
 
 // CreateTableConstraint implements schema.CreateFunc.
 func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	name := d.Get("name").(string)
 	cType := d.Get("type").(string)
@@ -347,7 +347,7 @@ func ReadTableConstraint(_ *schema.ResourceData, _ interface{}) error {
 	// also it takes a while for the database to reflect changes. Would likely need to add a validation
 	// step like in tag association. People don't like waiting 40 minutes for Terraform to run.
 
-	/*db := meta.(*sql.DB)
+	/*providerContext := meta.(*provider.Context)
 	tc := tableConstraintID{}
 	tc.parse(d.Id())
 	databaseName, schemaName, tableName := snowflakeValidation.ParseFullyQualifiedObjectID(tc.tableID)
@@ -363,9 +363,8 @@ func ReadTableConstraint(_ *schema.ResourceData, _ interface{}) error {
 
 // UpdateTableConstraint implements schema.UpdateFunc.
 func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	tc := tableConstraintID{}
 	tc.parse(d.Id())
@@ -390,9 +389,8 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteTableConstraint implements schema.DeleteFunc.
 func DeleteTableConstraint(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	tc := tableConstraintID{}
 	tc.parse(d.Id())

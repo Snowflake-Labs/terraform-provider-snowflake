@@ -2,11 +2,12 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"slices"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -394,9 +395,8 @@ func (v GrantPrivilegesToRoleID) String() string {
 
 func CreateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	logging.DebugLogger.Printf("[DEBUG] Entering create grant privileges to role")
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	resourceID := &GrantPrivilegesToRoleID{}
 	var privileges []string
@@ -433,9 +433,8 @@ func CreateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 
 func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	logging.DebugLogger.Printf("[DEBUG] Entering read grant privileges to role")
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	resourceID := NewGrantPrivilegesToRoleID(d.Id())
 	roleName := resourceID.RoleName
@@ -546,9 +545,8 @@ func ReadGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 
 func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	logging.DebugLogger.Printf("[DEBUG] Entering update grant privileges to role")
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
 	// the only thing that can change is "privileges"
@@ -615,9 +613,8 @@ func UpdateGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error
 
 func DeleteGrantPrivilegesToRole(d *schema.ResourceData, meta interface{}) error {
 	logging.DebugLogger.Printf("[DEBUG] Entering delete grant privileges to role")
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
 	roleName := d.Get("role_name").(string)

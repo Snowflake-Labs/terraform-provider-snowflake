@@ -1,11 +1,12 @@
 package resources
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -154,7 +155,8 @@ func SAMLIntegration() *schema.Resource {
 
 // CreateSAMLIntegration implements schema.CreateFunc.
 func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	name := d.Get("name").(string)
 
 	stmt := snowflake.NewSamlIntegrationBuilder(name).Create()
@@ -219,7 +221,8 @@ func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSAMLIntegration implements schema.ReadFunc.
 func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	id := d.Id()
 
 	stmt := snowflake.NewSamlIntegrationBuilder(id).Show()
@@ -383,7 +386,8 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateSAMLIntegration implements schema.UpdateFunc.
 func UpdateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	id := d.Id()
 
 	stmt := snowflake.NewSamlIntegrationBuilder(id).Alter()

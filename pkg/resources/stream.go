@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -105,7 +106,7 @@ func Stream() *schema.Resource {
 
 // CreateStream implements schema.CreateFunc.
 func CreateStream(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
@@ -114,7 +115,6 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	showInitialRows := d.Get("show_initial_rows").(bool)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
 	onTable, onTableSet := d.GetOk("on_table")
@@ -218,8 +218,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 
 // ReadStream implements schema.ReadFunc.
 func ReadStream(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	stream, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
@@ -274,8 +273,7 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateStream implements schema.UpdateFunc.
 func UpdateStream(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
@@ -299,8 +297,7 @@ func UpdateStream(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteStream implements schema.DeleteFunc.
 func DeleteStream(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	streamId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 

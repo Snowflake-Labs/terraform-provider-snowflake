@@ -2,12 +2,13 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -120,8 +121,7 @@ func Alert() *schema.Resource {
 
 // ReadAlert implements schema.ReadFunc.
 func ReadAlert(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	ctx := context.Background()
@@ -204,8 +204,7 @@ func ReadAlert(d *schema.ResourceData, meta interface{}) error {
 
 // CreateAlert implements schema.CreateFunc.
 func CreateAlert(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -272,8 +271,7 @@ func getAlertSchedule(v interface{}) string {
 
 // UpdateAlert implements schema.UpdateFunc.
 func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	ctx := context.Background()
 
@@ -354,8 +352,7 @@ func UpdateAlert(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteAlert implements schema.DeleteFunc.
 func DeleteAlert(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 

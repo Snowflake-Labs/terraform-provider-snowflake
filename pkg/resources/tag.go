@@ -9,6 +9,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -152,7 +154,8 @@ func Tag() *schema.Resource {
 
 // CreateSchema implements schema.CreateFunc.
 func CreateTag(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	name := d.Get("name").(string)
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
@@ -190,7 +193,8 @@ func CreateTag(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSchema implements schema.ReadFunc.
 func ReadTag(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	tagID, err := tagIDFromString(d.Id())
 	if err != nil {
 		return err
@@ -250,7 +254,8 @@ func UpdateTag(d *schema.ResourceData, meta interface{}) error {
 
 	builder := snowflake.NewTagBuilder(tag).WithDB(dbName).WithSchema(schemaName)
 
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	if d.HasChange("comment") {
 		comment, ok := d.GetOk("comment")
 		var q string
@@ -305,7 +310,8 @@ func expandAllowedValues(avChangeSet interface{}) []string {
 
 // DeleteTag implements schema.DeleteFunc.
 func DeleteTag(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	tagID, err := tagIDFromString(d.Id())
 	if err != nil {
 		return err

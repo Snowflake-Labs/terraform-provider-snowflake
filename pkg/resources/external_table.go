@@ -2,9 +2,10 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -151,9 +152,8 @@ func ExternalTable() *schema.Resource {
 
 // CreateExternalTable implements schema.CreateFunc.
 func CreateExternalTable(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
@@ -252,9 +252,8 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 
 // ReadExternalTable implements schema.ReadFunc.
 func ReadExternalTable(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id))
@@ -277,9 +276,8 @@ func ReadExternalTable(d *schema.ResourceData, meta any) error {
 
 // UpdateExternalTable implements schema.UpdateFunc.
 func UpdateExternalTable(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("tag") {
@@ -309,9 +307,8 @@ func UpdateExternalTable(d *schema.ResourceData, meta any) error {
 
 // DeleteExternalTable implements schema.DeleteFunc.
 func DeleteExternalTable(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	err := client.ExternalTables.Drop(ctx, sdk.NewDropExternalTableRequest(id))

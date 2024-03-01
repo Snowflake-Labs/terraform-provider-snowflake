@@ -10,6 +10,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -104,7 +106,8 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 
 // CreateTagMaskingPolicyAssociation implements schema.CreateFunc.
 func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	tagID := d.Get("tag_id").(string)
 	tagIDStruct, idErr := tagIDFromString(tagID)
 	if idErr != nil {
@@ -148,7 +151,7 @@ func CreateTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{})
 
 // ReadTagTagMaskingPolicyAssociation implements schema.ReadFunc.
 func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	attachementID, err := attachedPolicyIDFromString(d.Id())
 	if err != nil {
 		return err
@@ -165,7 +168,7 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 	builder := snowflake.NewTagBuilder(tagName).WithDB(tagDBName).WithSchema(tagSchemaName).WithMaskingPolicy(mP)
 
 	// create temp warehouse to query the tag, and make sure to clean it up
-	client := sdk.NewClientFromDB(db)
+	db := client.GetConn().DB
 	ctx := context.Background()
 	originalWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
 	if err != nil {
@@ -217,7 +220,8 @@ func ReadTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) e
 
 // DeleteTagMaskingPolicyAssociation implements schema.DeleteFunc.
 func DeleteTagMaskingPolicyAssociation(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	attachmentID, err := attachedPolicyIDFromString(d.Id())
 	if err != nil {
 		return err

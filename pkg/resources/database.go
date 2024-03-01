@@ -2,11 +2,12 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"slices"
 	"strconv"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -100,8 +101,7 @@ func Database() *schema.Resource {
 
 // CreateDatabase implements schema.CreateFunc.
 func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -189,8 +189,7 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	name := d.Id()
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -234,8 +233,7 @@ func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
 func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 	name := d.Id()
 	id := sdk.NewAccountObjectIdentifier(name)
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(provider.Context).Client
 	ctx := context.Background()
 
 	if d.HasChange("name") {
@@ -358,8 +356,7 @@ func UpdateDatabase(d *schema.ResourceData, meta interface{}) error {
 }
 
 func DeleteDatabase(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	name := d.Id()
 	id := sdk.NewAccountObjectIdentifier(name)

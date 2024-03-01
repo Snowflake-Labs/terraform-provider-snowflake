@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -209,7 +211,8 @@ func CreateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("couldn't generate create statement: %w", err)
 	}
 
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	err = snowflake.Exec(db, stmt)
 	if err != nil {
 		return fmt.Errorf("error executing create statement: %w", err)
@@ -229,7 +232,8 @@ func ReadExternalOauthIntegration(d *schema.ResourceData, meta interface{}) erro
 
 	input := ExternalOauthIntegrationIdentifier(d.Id())
 
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	// This resource needs a SHOW and a DESCRIBE
 
@@ -517,7 +521,8 @@ func UpdateExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	if runAlter {
 		stmt, err := manager.Update(alterInput)
@@ -564,7 +569,8 @@ func DeleteExternalOauthIntegration(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("couldn't generate drop statement: %w", err)
 	}
 
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	err = snowflake.Exec(db, stmt)
 	if err != nil {
 		return fmt.Errorf("error executing drop statement: %w", err)
