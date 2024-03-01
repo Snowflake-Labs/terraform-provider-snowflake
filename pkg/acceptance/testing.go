@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"log"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,18 +25,40 @@ const (
 )
 
 var TestAccProvider *schema.Provider
-
-var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"snowflake": func() (tfprotov6.ProviderServer, error) {
-		return tf5to6server.UpgradeServer(
-			context.Background(),
-			TestAccProvider.GRPCProvider,
-		)
-	},
-}
+var v5Server tfprotov5.ProviderServer
+var v6Server tfprotov6.ProviderServer
 
 func init() {
 	TestAccProvider = provider.Provider()
+	v5Server = TestAccProvider.GRPCProvider()
+	var err error
+	v6Server, err = tf5to6server.UpgradeServer(
+		context.Background(),
+		func() tfprotov5.ProviderServer {
+			return v5Server
+		},
+	)
+	if err != nil {
+		log.Panic("Cannot upgrade server from proto v5 to proto v6, failing")
+	}
+	_ = testAccProtoV6ProviderFactoriesNew
+}
+
+var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"snowflake": func() (tfprotov6.ProviderServer, error) {
+		return v6Server, nil
+	},
+}
+
+// if we do not reuse the created objects there is no `Previously configured provider being re-configured.` warning
+// currently left for possible usage after other improvements
+var testAccProtoV6ProviderFactoriesNew = map[string]func() (tfprotov6.ProviderServer, error){
+	"snowflake": func() (tfprotov6.ProviderServer, error) {
+		return tf5to6server.UpgradeServer(
+			context.Background(),
+			provider.Provider().GRPCProvider,
+		)
+	},
 }
 
 func TestAccProviders() map[string]*schema.Provider {
