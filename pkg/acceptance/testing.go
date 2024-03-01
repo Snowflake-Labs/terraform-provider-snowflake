@@ -61,12 +61,6 @@ var testAccProtoV6ProviderFactoriesNew = map[string]func() (tfprotov6.ProviderSe
 	},
 }
 
-func TestAccProviders() map[string]*schema.Provider {
-	return map[string]*schema.Provider{
-		"snowflake": provider.Provider(),
-	}
-}
-
 var once sync.Once
 
 func TestAccPreCheck(t *testing.T) {

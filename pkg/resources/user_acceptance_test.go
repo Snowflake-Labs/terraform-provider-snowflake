@@ -47,7 +47,10 @@ func TestAcc_User(t *testing.T) {
 	r.NoError(err)
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -244,7 +247,10 @@ func TestAcc_User_issue2058(t *testing.T) {
 	r.NoError(err)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

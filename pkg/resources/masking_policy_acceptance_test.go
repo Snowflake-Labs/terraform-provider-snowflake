@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_MaskingPolicy(t *testing.T) {
@@ -16,7 +18,10 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 	comment := "Terraform acceptance test"
 	comment2 := "Terraform acceptance test 2"
 	resource.ParallelTest(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
