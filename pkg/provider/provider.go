@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,6 +16,26 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
+
+func init() {
+	deprecationMessageRegex := regexp.MustCompile(`Please use (snowflake_(\w+)) instead.`)
+	relativeLinkOnTheSameLevel := func(title string, page string) string {
+		return fmt.Sprintf(`[%s](./%s)`, title, page)
+	}
+
+	schema.ResourceDescriptionBuilder = func(r *schema.Resource) string {
+		desc := r.Description
+		if r.DeprecationMessage != "" {
+			deprecationMessage := r.DeprecationMessage
+			resourcesRepl := deprecationMessageRegex.FindStringSubmatch(deprecationMessage)
+			if len(resourcesRepl) == 3 {
+				deprecationMessage = strings.ReplaceAll(deprecationMessage, resourcesRepl[1], relativeLinkOnTheSameLevel(resourcesRepl[1], resourcesRepl[2]))
+			}
+			desc = fmt.Sprintf("~> **Deprecation** %v <deprecation>\n\n%s", deprecationMessage, r.Description)
+		}
+		return strings.TrimSpace(desc)
+	}
+}
 
 // Provider returns a Terraform Provider using configuration from https://pkg.go.dev/github.com/snowflakedb/gosnowflake#Config
 func Provider() *schema.Provider {
