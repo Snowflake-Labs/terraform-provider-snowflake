@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -204,7 +205,65 @@ func GrantOwnership() *schema.Resource {
 
 func ImportGrantOwnership() schema.StateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		return nil, nil
+		logging.DebugLogger.Printf("[DEBUG] Entering import grant privileges to account role")
+		id, err := ParseGrantOwnershipId(d.Id())
+		if err != nil {
+			return nil, err
+		}
+		logging.DebugLogger.Printf("[DEBUG] Imported identifier: %s", id.String())
+
+		switch id.GrantOwnershipTargetRoleKind {
+		case ToAccountGrantOwnershipTargetRoleKind:
+			if err := d.Set("account_role_name", id.AccountRoleName.FullyQualifiedName()); err != nil {
+				return nil, err
+			}
+		case ToDatabaseGrantOwnershipTargetRoleKind:
+			if err := d.Set("database_role_name", id.DatabaseRoleName.FullyQualifiedName()); err != nil {
+				return nil, err
+			}
+		}
+
+		if err := d.Set("outbound_privileges", id.OutboundPrivilegesBehavior); err != nil {
+			return nil, err
+		}
+
+		switch id.Kind {
+		case OnObjectGrantOwnershipKind:
+			data := id.Data.(*OnObjectGrantOwnershipData)
+
+			onObject := make(map[string]any)
+			onObject["object_type"] = data.ObjectType.String()
+			onObject["object_name"] = data.ObjectName.FullyQualifiedName()
+
+			if err := d.Set("on", []any{onObject}); err != nil {
+				return nil, err
+			}
+		case OnAllGrantOwnershipKind, OnFutureGrantOwnershipKind:
+			data := id.Data.(*BulkOperationGrantData)
+
+			on := make(map[string]any)
+			onAllOrFuture := make(map[string]any)
+			onAllOrFuture["object_type_plural"] = data.ObjectNamePlural.String()
+			switch data.Kind {
+			case InDatabaseBulkOperationGrantKind:
+				onAllOrFuture["in_database"] = data.Database.FullyQualifiedName()
+			case InSchemaBulkOperationGrantKind:
+				onAllOrFuture["in_schema"] = data.Schema.FullyQualifiedName()
+			}
+
+			switch id.Kind {
+			case OnAllGrantOwnershipKind:
+				on["all"] = onAllOrFuture
+			case OnFutureGrantOwnershipKind:
+				on["future"] = onAllOrFuture
+			}
+
+			if err := d.Set("on", []any{on}); err != nil {
+				return nil, err
+			}
+		}
+
+		return []*schema.ResourceData{d}, nil
 	}
 }
 
@@ -226,7 +285,7 @@ func DeleteGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	id, err := ParseGrantPrivilegesToDatabaseRoleId(d.Id())
+	id, err := ParseGrantOwnershipId(d.Id())
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
@@ -237,18 +296,17 @@ func DeleteGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	err = client.Grants.RevokePrivilegesFromDatabaseRole(
+	err = client.Grants.GrantOwnership(
 		ctx,
-		getDatabaseRolePrivilegesFromSchema(d),
-		getDatabaseRoleGrantOn(d),
-		id.DatabaseRoleName,
-		&sdk.RevokePrivilegesFromDatabaseRoleOptions{},
+		sdk.OwnershipGrantOn{},
+		sdk.OwnershipGrantTo{},
+		&sdk.GrantOwnershipOptions{},
 	)
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "An error occurred when revoking privileges from database role",
+				Summary:  "An error occurred when transferring ownership back to the original role", // TODO: do we save original role on create ?
 				Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", d.Id(), id.DatabaseRoleName, err.Error()),
 			},
 		}

@@ -87,18 +87,23 @@ func ParseGrantOwnershipId(id string) (GrantOwnershipId, error) {
 	case ToDatabaseGrantOwnershipTargetRoleKind:
 		grantOwnershipId.DatabaseRoleName = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[1])
 	default:
-		return grantOwnershipId, sdk.NewError(fmt.Sprintf("unknown GrantOwnershipTargetRoleKind: %v", grantOwnershipId.GrantOwnershipTargetRoleKind))
+		return grantOwnershipId, sdk.NewError(fmt.Sprintf("unknown GrantOwnershipTargetRoleKind: %v, valid options are %v | %v", grantOwnershipId.GrantOwnershipTargetRoleKind, ToAccountGrantOwnershipTargetRoleKind, ToDatabaseGrantOwnershipTargetRoleKind))
 	}
 
 	if len(parts[2]) > 0 {
-		grantOwnershipId.OutboundPrivilegesBehavior = sdk.Pointer(OutboundPrivilegesBehavior(parts[2]))
+		switch outboundPrivilegesBehavior := OutboundPrivilegesBehavior(parts[2]); outboundPrivilegesBehavior {
+		case CopyOutboundPrivilegesBehavior, RevokeOutboundPrivilegesBehavior:
+			grantOwnershipId.OutboundPrivilegesBehavior = sdk.Pointer(outboundPrivilegesBehavior)
+		default:
+			return grantOwnershipId, sdk.NewError(fmt.Sprintf("unknown OutboundPrivilegesBehavior: %v, valid options are %v | %v", outboundPrivilegesBehavior, CopyOutboundPrivilegesBehavior, RevokeOutboundPrivilegesBehavior))
+		}
 	}
 
 	grantOwnershipId.Kind = GrantOwnershipKind(parts[3])
 	switch grantOwnershipId.Kind {
 	case OnObjectGrantOwnershipKind:
 		if len(parts) != 6 {
-			return grantOwnershipId, sdk.NewError(`grant ownership identifier should hold 6 parts "<target_role_kind>|<role_name>|<outbound_privileges_behavior>|OnObject|<object_type>|<object_name>"`)
+			return grantOwnershipId, sdk.NewError(`grant ownership identifier should consist of 6 parts "<target_role_kind>|<role_name>|<outbound_privileges_behavior>|OnObject|<object_type>|<object_name>"`)
 		}
 		// TODO: Custom type for OnObject grant - because ObjectName can be pretty much any of the possible identifiers
 		grantOwnershipId.Data = &OnObjectGrantOwnershipData{
@@ -110,7 +115,7 @@ func ParseGrantOwnershipId(id string) (GrantOwnershipId, error) {
 			ObjectNamePlural: sdk.PluralObjectType(parts[4]),
 		}
 		if len(parts) != 7 {
-			return grantOwnershipId, sdk.NewError(`grant ownership identifier should hold 7 parts "<target_role_kind>|<role_name>|<outbound_privileges_behavior>|On[All or Future]|<object_type_plural>|In[Database or Schema]|<identifier>"`)
+			return grantOwnershipId, sdk.NewError(`grant ownership identifier should consist of 7 parts "<target_role_kind>|<role_name>|<outbound_privileges_behavior>|On[All or Future]|<object_type_plural>|In[Database or Schema]|<identifier>"`)
 		}
 		bulkOperationGrantData.Kind = BulkOperationGrantKind(parts[5])
 		switch bulkOperationGrantData.Kind {
@@ -119,7 +124,7 @@ func ParseGrantOwnershipId(id string) (GrantOwnershipId, error) {
 		case InSchemaBulkOperationGrantKind:
 			bulkOperationGrantData.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[6]))
 		default:
-			return grantOwnershipId, sdk.NewError(fmt.Sprintf("invalid BulkOperationGrantKind: %s", bulkOperationGrantData.Kind))
+			return grantOwnershipId, sdk.NewError(fmt.Sprintf("invalid BulkOperationGrantKind: %s, valid options are %v | %v", bulkOperationGrantData.Kind, InDatabaseBulkOperationGrantKind, InSchemaBulkOperationGrantKind))
 		}
 		grantOwnershipId.Data = bulkOperationGrantData
 	default:
