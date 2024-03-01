@@ -2,7 +2,7 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -200,8 +200,7 @@ func DynamicTables() *schema.Resource {
 
 // ReadDynamicTables Reads the dynamic tables metadata information.
 func ReadDynamicTables(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	request := sdk.NewShowDynamicTableRequest()
 	if v, ok := d.GetOk("like"); ok {
 		like := v.([]interface{})[0].(map[string]interface{})

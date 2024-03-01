@@ -2,7 +2,7 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -82,8 +82,7 @@ func Alerts() *schema.Resource {
 
 // ReadAlerts Reads the database metadata information.
 func ReadAlerts(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	d.SetId("alerts_read")

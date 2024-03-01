@@ -3,6 +3,7 @@ package datasources
 import (
 	"database/sql"
 	"errors"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -74,7 +75,8 @@ func SystemGetPrivateLinkConfig() *schema.Resource {
 
 // ReadSystemGetPrivateLinkConfig implements schema.ReadFunc.
 func ReadSystemGetPrivateLinkConfig(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	sel := snowflake.SystemGetPrivateLinkConfigQuery()
 	row := snowflake.QueryRow(db, sel)

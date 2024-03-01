@@ -2,11 +2,10 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -40,9 +39,8 @@ func CurrentAccount() *schema.Resource {
 
 // ReadCurrentAccount read the current snowflake account information.
 func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	current, err := client.ContextFunctions.CurrentSessionDetails(ctx)
 	if err != nil {

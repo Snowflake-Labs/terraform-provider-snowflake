@@ -2,8 +2,8 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -48,8 +48,7 @@ func ResourceMonitors() *schema.Resource {
 }
 
 func ReadResourceMonitors(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	account, err := client.ContextFunctions.CurrentSessionDetails(ctx)

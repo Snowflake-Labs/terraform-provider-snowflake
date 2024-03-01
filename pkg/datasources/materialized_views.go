@@ -2,7 +2,7 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -57,12 +57,11 @@ func MaterializedViews() *schema.Resource {
 }
 
 func ReadMaterializedViews(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
+	ctx := context.Background()
 	schemaId := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
 	extractedMaterializedViews, err := client.MaterializedViews.Show(ctx, sdk.NewShowMaterializedViewRequest().WithIn(
 		&sdk.In{Schema: schemaId},

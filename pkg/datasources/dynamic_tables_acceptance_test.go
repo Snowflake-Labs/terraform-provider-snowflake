@@ -2,8 +2,8 @@ package datasources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"regexp"
 	"strings"
 	"testing"
@@ -146,8 +146,8 @@ data "snowflake_dynamic_tables" "dts" {
 }
 
 func testAccCheckDynamicTableDestroy(s *terraform.State) error {
-	db := acc.TestAccProvider.Meta().(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := acc.TestAccProvider.Meta().(*provider.Context).Client
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "snowflake_dynamic_table" {
 			continue

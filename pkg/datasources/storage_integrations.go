@@ -2,7 +2,6 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -47,9 +46,8 @@ func StorageIntegrations() *schema.Resource {
 }
 
 func ReadStorageIntegrations(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	account, err := client.ContextFunctions.CurrentAccount(ctx)
 	if err != nil {

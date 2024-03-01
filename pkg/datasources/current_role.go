@@ -2,10 +2,9 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -25,9 +24,8 @@ func CurrentRole() *schema.Resource {
 }
 
 func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	role, err := client.ContextFunctions.CurrentRole(ctx)
 	if err != nil {
