@@ -32,15 +32,17 @@ func main() {
 	deprecatedResources := make([]DeprecatedResource, 0)
 	for key, resource := range provider.Provider().ResourcesMap {
 		if resource.DeprecationMessage != "" {
+			nameRelativeLink := provider.RelativeLink(key, filepath.Join("resources", strings.Replace(key, "snowflake_", "", 1)))
+
 			replacement, path, _ := provider.GetDeprecatedResourceReplacement(resource.DeprecationMessage)
-			var relativeLink string
+			var replacementRelativeLink string
 			if replacement != "" && path != "" {
-				relativeLink = provider.RelativeLink(replacement, filepath.Join("resources", path))
+				replacementRelativeLink = provider.RelativeLink(replacement, filepath.Join("resources", path))
 			}
+
 			deprecatedResources = append(deprecatedResources, DeprecatedResource{
-				Name:                    key,
-				Replacement:             replacement,
-				ReplacementPathRelative: relativeLink,
+				NameRelativeLink:        nameRelativeLink,
+				ReplacementRelativeLink: replacementRelativeLink,
 			})
 		}
 	}
@@ -48,15 +50,17 @@ func main() {
 	deprecatedDatasources := make([]DeprecatedDatasource, 0)
 	for key, datasource := range provider.Provider().DataSourcesMap {
 		if datasource.DeprecationMessage != "" {
+			nameRelativeLink := provider.RelativeLink(key, filepath.Join("resources", strings.Replace(key, "snowflake_", "", 1)))
+
 			replacement, path, _ := provider.GetDeprecatedResourceReplacement(datasource.DeprecationMessage)
-			var relativeLink string
+			var replacementRelativeLink string
 			if replacement != "" && path != "" {
-				relativeLink = provider.RelativeLink(replacement, filepath.Join("data-sources", path))
+				replacementRelativeLink = provider.RelativeLink(replacement, filepath.Join("resources", path))
 			}
+
 			deprecatedDatasources = append(deprecatedDatasources, DeprecatedDatasource{
-				Name:                    key,
-				Replacement:             replacement,
-				ReplacementPathRelative: relativeLink,
+				NameRelativeLink:        nameRelativeLink,
+				ReplacementRelativeLink: replacementRelativeLink,
 			})
 		}
 	}
