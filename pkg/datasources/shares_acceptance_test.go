@@ -15,7 +15,7 @@ func TestAcc_Shares(t *testing.T) {
 	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	pattern := shareName
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

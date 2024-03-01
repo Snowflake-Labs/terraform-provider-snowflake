@@ -11,7 +11,7 @@ import (
 
 func TestAcc_Users(t *testing.T) {
 	userName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers: providers(),
 		Steps: []resource.TestStep{
 			{

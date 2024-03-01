@@ -13,7 +13,7 @@ import (
 )
 
 func TestAcc_ParametersOnAccount(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -32,7 +32,7 @@ func TestAcc_ParametersOnAccount(t *testing.T) {
 
 func TestAcc_ParametersOnSession(t *testing.T) {
 	userName := "TEST_USER_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -51,7 +51,7 @@ func TestAcc_ParametersOnSession(t *testing.T) {
 
 func TestAcc_ParametersOnObject(t *testing.T) {
 	dbName := "TEST_DB_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

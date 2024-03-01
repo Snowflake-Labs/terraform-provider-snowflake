@@ -19,7 +19,7 @@ func TestAcc_ExternalOauthIntegration(t *testing.T) {
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -55,7 +55,7 @@ func TestAcc_ExternalOauthIntegrationEmptyComment(t *testing.T) {
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -91,7 +91,7 @@ func TestAcc_ExternalOauthIntegrationLowercaseName(t *testing.T) {
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -127,7 +127,7 @@ func TestAcc_ExternalOauthIntegrationCustom(t *testing.T) {
 
 	issuer := fmt.Sprintf("https://sts.windows.net/%s", uuid.NewString())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

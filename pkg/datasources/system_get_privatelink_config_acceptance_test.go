@@ -7,7 +7,7 @@ import (
 )
 
 func TestAcc_SystemGetPrivateLinkConfig_aws(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    providers(),
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

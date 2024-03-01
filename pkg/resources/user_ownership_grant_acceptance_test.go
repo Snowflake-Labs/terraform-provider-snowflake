@@ -15,7 +15,7 @@ func TestAcc_UserOwnershipGrant_defaults(t *testing.T) {
 	user := "tst-terraform" + acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	role := "tst-terraform" + acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
