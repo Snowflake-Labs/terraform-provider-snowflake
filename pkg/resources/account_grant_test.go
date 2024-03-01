@@ -2,10 +2,12 @@ package resources_test
 
 import (
 	"database/sql"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	. "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
@@ -36,7 +38,9 @@ func TestAccountGrantCreate(t *testing.T) { // lintignore:AT003
 		mock.ExpectExec(`^GRANT CREATE DATABASE ON ACCOUNT TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT CREATE DATABASE ON ACCOUNT TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadAccountGrant(mock)
-		err := resources.CreateAccountGrant(d, db)
+		err := resources.CreateAccountGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -55,7 +59,9 @@ func TestAccountGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadAccountGrant(mock)
-		err := resources.ReadAccountGrant(d, db)
+		err := resources.ReadAccountGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -73,7 +79,9 @@ func TestMonitorExecution(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadAccountGrant(mock)
-		err := resources.ReadAccountGrant(d, db)
+		err := resources.ReadAccountGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -91,7 +99,9 @@ func TestExecuteTask(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadAccountGrant(mock)
-		err := resources.ReadAccountGrant(d, db)
+		err := resources.ReadAccountGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -120,7 +130,9 @@ func TestApplyMaskingPolicy(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadAccountGrant(mock)
-		err := resources.ReadAccountGrant(d, db)
+		err := resources.ReadAccountGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
