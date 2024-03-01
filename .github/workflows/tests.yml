@@ -44,7 +44,17 @@ jobs:
       - run: make test
         if: steps.create_config.conclusion == 'success'
 
+      - name: Setup Terraform
+        if: steps.create_config.conclusion == 'success'
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.4
+          terraform_wrapper: true
+
       - run: make test-acceptance
+        env:
+          TF_ACC_TERRAFORM_PATH: ${{ env.TERRAFORM_CLI_PATH }}/terraform
+          TF_ACC_TERRAFORM_VERSION: 1.7.4
         if: steps.create_config.conclusion == 'success'
 
       - name: sweepers cleanup
