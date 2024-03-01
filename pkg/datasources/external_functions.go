@@ -3,8 +3,9 @@ package datasources
 import (
 	"context"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"

@@ -2,8 +2,9 @@ package datasources
 
 import (
 	"context"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"log"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 

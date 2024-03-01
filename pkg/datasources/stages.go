@@ -3,6 +3,7 @@ package datasources
 import (
 	"context"
 	"fmt"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"

@@ -3,10 +3,11 @@ package datasources_test
 import (
 	"context"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
