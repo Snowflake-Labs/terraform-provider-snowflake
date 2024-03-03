@@ -58,7 +58,7 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_file_format.test", "comment", "Terraform acceptance test 2"),
 				),
 			},
-			// UPDATE
+			// UPDATE: field_optionally_enclosed_by can take the value NONE
 			{
 				Config: fileFormatConfigCSV(accName, acc.TestDatabaseName, acc.TestSchemaName, ",", "NONE", "Terraform acceptance test 2"),
 				Check: resource.ComposeTestCheckFunc(
