@@ -41,7 +41,7 @@ func init() {
 		},
 	)
 	if err != nil {
-		log.Panic("Cannot upgrade server from proto v5 to proto v6, failing")
+		log.Panicf("Cannot upgrade server from proto v5 to proto v6, failing, err: %v", err)
 	}
 	_ = testAccProtoV6ProviderFactoriesNew
 }
