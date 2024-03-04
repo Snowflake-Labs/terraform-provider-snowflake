@@ -83,8 +83,8 @@ func (g *GrantOwnershipId) String() string {
 	return strings.Join(parts, helpers.IDDelimiter)
 }
 
-func ParseGrantOwnershipId(id string) (GrantOwnershipId, error) {
-	var grantOwnershipId GrantOwnershipId
+func ParseGrantOwnershipId(id string) (*GrantOwnershipId, error) {
+	grantOwnershipId := new(GrantOwnershipId)
 
 	parts := strings.Split(id, helpers.IDDelimiter)
 	if len(parts) < 5 {

@@ -56,16 +56,15 @@ var validGrantOwnershipObjectTypes = []sdk.ObjectType{
 	sdk.ObjectTypeWarehouse,
 }
 
-var validGrantOwnershipObjectTypesString []string
-var validGrantOwnershipPluralObjectTypesString []string
+var (
+	validGrantOwnershipObjectTypesString       = make([]string, len(validGrantOwnershipObjectTypes))
+	validGrantOwnershipPluralObjectTypesString = make([]string, len(validGrantOwnershipObjectTypes))
+)
 
 func init() {
-	validGrantOwnershipObjectTypesString = make([]string, len(validGrantOwnershipObjectTypes))
-	validGrantOwnershipPluralObjectTypesString = make([]string, len(validGrantOwnershipObjectTypes))
-
 	for i, objectType := range validGrantOwnershipObjectTypes {
 		validGrantOwnershipObjectTypesString[i] = objectType.String()
-		validGrantOwnershipObjectTypesString[i] = objectType.Plural().String()
+		validGrantOwnershipPluralObjectTypesString[i] = objectType.Plural().String()
 	}
 }
 
@@ -108,11 +107,6 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Description: "TODO",
 		MaxItems:    1,
-		ExactlyOneOf: []string{
-			"on.0.object_name",
-			"on.0.all",
-			"on.0.future",
-		},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"object_type": {
@@ -133,6 +127,11 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 					RequiredWith: []string{
 						"on.0.object_type",
 					},
+					ExactlyOneOf: []string{
+						"on.0.object_name",
+						"on.0.all",
+						"on.0.future",
+					},
 				},
 				"all": {
 					Type:        schema.TypeList,
@@ -141,11 +140,12 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantOwnershipBulkOperationSchema,
+						Schema: grantOwnershipBulkOperationSchema("all"),
 					},
 					ExactlyOneOf: []string{
-						"on.0.all.0.in_database",
-						"on.0.all.0.in_schema",
+						"on.0.object_name",
+						"on.0.all",
+						"on.0.future",
 					},
 				},
 				"future": {
@@ -155,11 +155,12 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantOwnershipBulkOperationSchema,
+						Schema: grantOwnershipBulkOperationSchema("future"),
 					},
 					ExactlyOneOf: []string{
-						"on.0.future.0.in_database",
-						"on.0.future.0.in_schema",
+						"on.0.object_name",
+						"on.0.all",
+						"on.0.future",
 					},
 				},
 			},
@@ -167,28 +168,38 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 	},
 }
 
-var grantOwnershipBulkOperationSchema = map[string]*schema.Schema{
-	"object_type_plural": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  "Specifies the type of object in plural form on which you are transferring ownership. Available values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | COMPUTE POOLS | DATABASES | DATABASE ROLES | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | EXTERNAL VOLUMES | FAILOVER GROUPS | FILE FORMATS | FUNCTIONS | HYBRID TABLES | ICEBERG TABLES | IMAGE REPOSITORIES | INTEGRATIONS | MATERIALIZED VIEWS | NETWORK POLICIES | NETWORK RULES | PACKAGES POLICIES | PIPES | PROCEDURES | MASKING POLICIES | PASSWORD POLICIES | PROJECTION POLICIES | REPLICATION GROUPS | ROLES | ROW ACCESS POLICIES | SCHEMAS | SESSION POLICIES | SECRETS | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | USERS | VIEWS | WAREHOUSES",
-		ValidateFunc: validation.StringInSlice(validGrantOwnershipPluralObjectTypesString, true),
-	},
-	"in_database": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		Description:      "The fully qualified name of the database.",
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
-	},
-	"in_schema": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		Description:      "The fully qualified name of the schema.",
-		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
-	},
+func grantOwnershipBulkOperationSchema(branchName string) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"object_type_plural": {
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			Description:  "Specifies the type of object in plural form on which you are transferring ownership. Available values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | COMPUTE POOLS | DATABASES | DATABASE ROLES | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | EXTERNAL VOLUMES | FAILOVER GROUPS | FILE FORMATS | FUNCTIONS | HYBRID TABLES | ICEBERG TABLES | IMAGE REPOSITORIES | INTEGRATIONS | MATERIALIZED VIEWS | NETWORK POLICIES | NETWORK RULES | PACKAGES POLICIES | PIPES | PROCEDURES | MASKING POLICIES | PASSWORD POLICIES | PROJECTION POLICIES | REPLICATION GROUPS | ROLES | ROW ACCESS POLICIES | SCHEMAS | SESSION POLICIES | SECRETS | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | USERS | VIEWS | WAREHOUSES",
+			ValidateFunc: validation.StringInSlice(validGrantOwnershipPluralObjectTypesString, true),
+		},
+		"in_database": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			Description:      "The fully qualified name of the database.",
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			ExactlyOneOf: []string{
+				fmt.Sprintf("on.0.%s.0.in_database", branchName),
+				fmt.Sprintf("on.0.%s.0.in_schema", branchName),
+			},
+		},
+		"in_schema": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			Description:      "The fully qualified name of the schema.",
+			ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+			ExactlyOneOf: []string{
+				fmt.Sprintf("on.0.%s.0.in_database", branchName),
+				fmt.Sprintf("on.0.%s.0.in_schema", branchName),
+			},
+		},
+	}
 }
 
 func GrantOwnership() *schema.Resource {
@@ -285,8 +296,8 @@ func CreateGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  fmt.Sprintf("An error occurred when transferring ownership %s", id.GrantOwnershipTargetRoleKind),
-				Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", id.String(), id.RoleName, err),
+				Summary:  "An error occurred during grant ownership",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", id.String(), err),
 			},
 		}
 	}
@@ -463,7 +474,7 @@ func getOwnershipGrantOpts(id *GrantOwnershipId) *sdk.GrantOwnershipOptions {
 	return new(sdk.GrantOwnershipOptions)
 }
 
-func prepareShowGrantsRequestForGrantOwnership(id GrantOwnershipId) (*sdk.ShowGrantOptions, sdk.ObjectType) {
+func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowGrantOptions, sdk.ObjectType) {
 	opts := new(sdk.ShowGrantOptions)
 	var grantedOn sdk.ObjectType
 
