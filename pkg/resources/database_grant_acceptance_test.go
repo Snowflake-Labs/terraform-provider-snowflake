@@ -78,7 +78,10 @@ func TestAcc_DatabaseGrant(t *testing.T) {
 // 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 // 	resource.Test(t, resource.TestCase{
-// 		Providers: providers(),
+// 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+//		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+//			tfversion.RequireAbove(tfversion.Version1_5_0),
+//		},
 // 		Steps: []resource.TestStep{
 // 			{
 // 				// Note the DB we're trying to grant to doesn't exist

@@ -174,7 +174,7 @@ resource "snowflake_task" "test" {
 	schema   		= "%s"
 	warehouse 		= snowflake_warehouse.test.name
 	sql_statement = "SHOW FUNCTIONS"
-	enabled  	  	= true
+	enabled  	  	= false
 	schedule 	  	= "15 MINUTES"
 	lifecycle {
 		ignore_changes = [session_parameters]
@@ -187,6 +187,7 @@ resource "snowflake_task_grant" "test" {
 	roles         = [snowflake_role.test.name]
 	schema_name   = "%s"
 	privilege 	= "%s"
+	depends_on = [snowflake_task.test]
 }
 `
 	return fmt.Sprintf(s, name, name, concurrency, name, databaseName, schemaName, taskNameConfig, databaseName, schemaName, privilege)
