@@ -86,6 +86,7 @@ func main() {
 	var deprecatedDatasourcesBuffer bytes.Buffer
 	printTo(&deprecatedDatasourcesBuffer, DeprecatedDatasourcesTemplate, DeprecatedDatasourcesContext{deprecatedDatasources})
 
+	// TODO: consider including markdown files instead of replacing placeholders; that way we can reuse the included markdown files also on GH docs (improvement for the future)
 	indexTemplateContents = strings.ReplaceAll(indexTemplateContents, deprecatedResourcesPlaceholder, deprecatedResourcesBuffer.String())
 	indexTemplateContents = strings.ReplaceAll(indexTemplateContents, deprecatedDatasourcesPlaceholder, deprecatedDatasourcesBuffer.String())
 
