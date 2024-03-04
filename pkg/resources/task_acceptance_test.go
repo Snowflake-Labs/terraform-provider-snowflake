@@ -618,6 +618,7 @@ resource "snowflake_task" "test_task_root" {
 }
 
 resource "snowflake_task" "test_task" {
+	depends_on = [snowflake_task.test_task_root]
 	name     	  = "%[4]s"
 	database  	  = "%[2]s"
 	schema    	  = "%[3]s"
