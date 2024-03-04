@@ -52,9 +52,6 @@ jobs:
           terraform_wrapper: false
 
       - run: make test-acceptance
-        env:
-          TF_ACC_TERRAFORM_PATH: ${{ env.TERRAFORM_CLI_PATH }}/terraform
-          TF_ACC_TERRAFORM_VERSION: 1.7.4
         if: steps.create_config.conclusion == 'success'
 
       - name: sweepers cleanup
