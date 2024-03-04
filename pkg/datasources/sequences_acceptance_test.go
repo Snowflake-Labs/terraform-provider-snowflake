@@ -58,7 +58,6 @@ func sequences(databaseName string, schemaName string, sequenceName string) stri
 	data snowflake_sequences "t" {
 		database = snowflake_sequence.t.database
 		schema = snowflake_sequence.t.schema
-		depends_on = [snowflake_sequence.t]
 	}
 	`, databaseName, schemaName, sequenceName)
 }

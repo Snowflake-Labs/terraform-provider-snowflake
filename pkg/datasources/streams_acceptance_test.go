@@ -17,6 +17,7 @@ func TestAcc_Streams(t *testing.T) {
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	streamName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -77,7 +78,6 @@ func streams(databaseName string, schemaName string, tableName string, streamNam
 	data snowflake_streams "t" {
 		database = snowflake_stream.test_stream.database
 		schema = snowflake_stream.test_stream.schema
-		depends_on = [snowflake_stream.test_stream]
 	}
 	`, databaseName, schemaName, tableName, streamName)
 }
