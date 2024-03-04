@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -29,8 +30,15 @@ func main() {
 	}
 	indexTemplateContents := string(indexTemplateRaw)
 
+	orderedResources := make([]string, 0)
+	for key, _ := range provider.Provider().ResourcesMap {
+		orderedResources = append(orderedResources, key)
+	}
+	slices.Sort(orderedResources)
+
 	deprecatedResources := make([]DeprecatedResource, 0)
-	for key, resource := range provider.Provider().ResourcesMap {
+	for _, key := range orderedResources {
+		resource := provider.Provider().ResourcesMap[key]
 		if resource.DeprecationMessage != "" {
 			nameRelativeLink := provider.RelativeLink(key, filepath.Join("resources", strings.Replace(key, "snowflake_", "", 1)))
 
@@ -47,8 +55,15 @@ func main() {
 		}
 	}
 
+	orderedDatasources := make([]string, 0)
+	for key, _ := range provider.Provider().DataSourcesMap {
+		orderedDatasources = append(orderedDatasources, key)
+	}
+	slices.Sort(orderedDatasources)
+
 	deprecatedDatasources := make([]DeprecatedDatasource, 0)
-	for key, datasource := range provider.Provider().DataSourcesMap {
+	for _, key := range orderedDatasources {
+		datasource := provider.Provider().DataSourcesMap[key]
 		if datasource.DeprecationMessage != "" {
 			nameRelativeLink := provider.RelativeLink(key, filepath.Join("resources", strings.Replace(key, "snowflake_", "", 1)))
 
