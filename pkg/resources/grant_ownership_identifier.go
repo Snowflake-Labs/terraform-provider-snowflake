@@ -21,6 +21,17 @@ const (
 	RevokeOutboundPrivilegesBehavior OutboundPrivilegesBehavior = "REVOKE"
 )
 
+func (o OutboundPrivilegesBehavior) ToOwnershipCurrentGrantsOutboundPrivileges() *sdk.OwnershipCurrentGrantsOutboundPrivileges {
+	switch o {
+	case CopyOutboundPrivilegesBehavior:
+		return sdk.Pointer(sdk.Copy)
+	case RevokeOutboundPrivilegesBehavior:
+		return sdk.Pointer(sdk.Revoke)
+	default:
+		return nil
+	}
+}
+
 type GrantOwnershipKind string
 
 const (
