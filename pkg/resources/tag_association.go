@@ -112,7 +112,7 @@ func useTagDatabaseAndSchema(ot sdk.ObjectType) bool {
 	}
 }
 
-func tagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectIdentifier, []sdk.ObjectIdentifier, sdk.ObjectType) {
+func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectIdentifier, []sdk.ObjectIdentifier, sdk.ObjectType) {
 	tag := d.Get("tag_id").(string)
 	objectType := sdk.ObjectType(d.Get("object_type").(string))
 
@@ -168,7 +168,7 @@ func CreateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 	client := sdk.NewClientFromDB(db)
 	tagValue := d.Get("tag_value").(string)
 
-	tid, ids, ot := tagIdentifierAndObjectIdentifier(d)
+	tid, ids, ot := TagIdentifierAndObjectIdentifier(d)
 	for _, oid := range ids {
 		request := sdk.NewSetTagRequest(ot, oid).WithSetTags([]sdk.TagAssociation{
 			{
@@ -206,7 +206,7 @@ func ReadContextTagAssociation(ctx context.Context, d *schema.ResourceData, meta
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	tid, ids, ot := tagIdentifierAndObjectIdentifier(d)
+	tid, ids, ot := TagIdentifierAndObjectIdentifier(d)
 	for _, oid := range ids {
 		tagValue, err := client.SystemFunctions.GetTag(ctx, tid, oid, ot)
 		if err != nil {
@@ -223,7 +223,7 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	tid, ids, ot := tagIdentifierAndObjectIdentifier(d)
+	tid, ids, ot := TagIdentifierAndObjectIdentifier(d)
 	for _, oid := range ids {
 		if d.HasChange("skip_validation") {
 			o, n := d.GetChange("skip_validation")
@@ -256,7 +256,7 @@ func DeleteContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 	db := meta.(*sql.DB)
 	client := sdk.NewClientFromDB(db)
 
-	tid, ids, ot := tagIdentifierAndObjectIdentifier(d)
+	tid, ids, ot := TagIdentifierAndObjectIdentifier(d)
 	for _, oid := range ids {
 		request := sdk.NewUnsetTagRequest(ot, oid).WithUnsetTags([]sdk.ObjectIdentifier{tid})
 		if err := client.Tags.Unset(ctx, request); err != nil {
