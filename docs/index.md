@@ -243,6 +243,7 @@ The Snowflake provider will use the following order of precedence when determini
 - [snowflake_pipe_grant](./resources/pipe_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
 - [snowflake_procedure_grant](./resources/procedure_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
 - [snowflake_resource_monitor_grant](./resources/resource_monitor_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
+- [snowflake_role_grants](./resources/role_grants) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
 - [snowflake_row_access_policy_grant](./resources/row_access_policy_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
 - [snowflake_schema_grant](./resources/schema_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
 - [snowflake_sequence_grant](./resources/sequence_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead

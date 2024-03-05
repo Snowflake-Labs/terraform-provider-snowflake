@@ -31,7 +31,7 @@ func main() {
 	indexTemplateContents := string(indexTemplateRaw)
 
 	orderedResources := make([]string, 0)
-	for key, _ := range provider.Provider().ResourcesMap {
+	for key := range provider.Provider().ResourcesMap {
 		orderedResources = append(orderedResources, key)
 	}
 	slices.Sort(orderedResources)
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	orderedDatasources := make([]string, 0)
-	for key, _ := range provider.Provider().DataSourcesMap {
+	for key := range provider.Provider().DataSourcesMap {
 		orderedDatasources = append(orderedDatasources, key)
 	}
 	slices.Sort(orderedDatasources)
