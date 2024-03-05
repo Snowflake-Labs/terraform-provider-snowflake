@@ -227,12 +227,6 @@ The Snowflake provider will use the following order of precedence when determini
 2) Environment Variables
 3) Config File
 
-## Hackers
-
-some
-thing
-shiny
-
 ## Currently deprecated resources
 
 - [snowflake_account_grant](./resources/account_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
@@ -262,8 +256,6 @@ shiny
 - [snowflake_view_grant](./resources/view_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
 - [snowflake_warehouse_grant](./resources/warehouse_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
 
-
 ## Currently deprecated datasources
 
 - [snowflake_role](./data-sources/role) - use [snowflake_roles](./data-sources/roles) instead
-

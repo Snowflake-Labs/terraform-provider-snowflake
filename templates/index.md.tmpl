@@ -138,41 +138,6 @@ The Snowflake provider will use the following order of precedence when determini
 2) Environment Variables
 3) Config File
 
-## Hackers
+{{ index (split (codefile "" "examples/additional/deprecated_resources.MD") "```") 1 | trimspace }}
 
-{{ index (split (codefile "" "examples/additional/example.MD") "```") 1 | trimspace }}
-
-## Currently deprecated resources
-
-- [snowflake_account_grant](./resources/account_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_database_grant](./resources/database_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_external_table_grant](./resources/external_table_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_failover_group_grant](./resources/failover_group_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_file_format_grant](./resources/file_format_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_function_grant](./resources/function_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_grant_privileges_to_role](./resources/grant_privileges_to_role) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_integration_grant](./resources/integration_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_masking_policy_grant](./resources/masking_policy_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_materialized_view_grant](./resources/materialized_view_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_pipe_grant](./resources/pipe_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_procedure_grant](./resources/procedure_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_resource_monitor_grant](./resources/resource_monitor_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_role_grants](./resources/role_grants) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_row_access_policy_grant](./resources/row_access_policy_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_schema_grant](./resources/schema_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_sequence_grant](./resources/sequence_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_stage_grant](./resources/stage_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_stream_grant](./resources/stream_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_table_grant](./resources/table_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_tag_grant](./resources/tag_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_task_grant](./resources/task_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_unsafe_execute](./resources/unsafe_execute)
-- [snowflake_user_grant](./resources/user_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_view_grant](./resources/view_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-- [snowflake_warehouse_grant](./resources/warehouse_grant) - use [snowflake_grant_privileges_to_account_role](./resources/grant_privileges_to_account_role) instead
-
-
-## Currently deprecated datasources
-
-- [snowflake_role](./data-sources/role) - use [snowflake_roles](./data-sources/roles) instead
-
+{{ index (split (codefile "" "examples/additional/deprecated_datasources.MD") "```") 1 | trimspace }}

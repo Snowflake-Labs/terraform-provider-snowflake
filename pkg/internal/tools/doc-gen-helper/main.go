@@ -22,14 +22,7 @@ func main() {
 	}
 
 	path := os.Args[1]
-	templatesPath := filepath.Join(path, "templates")
-	currentPath := filepath.Join(path, "pkg", "internal", "tools", "doc-gen-helper")
-
-	indexTemplateRaw, err := os.ReadFile(filepath.Join(currentPath, "index.md.tmpl"))
-	if err != nil {
-		log.Panicf("Could not open index template file, %v", err)
-	}
-	indexTemplateContents := string(indexTemplateRaw)
+	additionalExamplesPath := filepath.Join(path, "examples", "additional")
 
 	orderedResources := make([]string, 0)
 	for key := range provider.Provider().ResourcesMap {
@@ -87,11 +80,11 @@ func main() {
 	var deprecatedDatasourcesBuffer bytes.Buffer
 	printTo(&deprecatedDatasourcesBuffer, DeprecatedDatasourcesTemplate, DeprecatedDatasourcesContext{deprecatedDatasources})
 
-	// TODO: consider including markdown files instead of replacing placeholders; that way we can reuse the included markdown files also on GH docs (improvement for the future)
-	indexTemplateContents = strings.ReplaceAll(indexTemplateContents, deprecatedResourcesPlaceholder, deprecatedResourcesBuffer.String())
-	indexTemplateContents = strings.ReplaceAll(indexTemplateContents, deprecatedDatasourcesPlaceholder, deprecatedDatasourcesBuffer.String())
-
-	err = os.WriteFile(filepath.Join(templatesPath, "index.md.tmpl"), []byte(indexTemplateContents), 0o600)
+	err := os.WriteFile(filepath.Join(additionalExamplesPath, deprecatedResourcesFilename), deprecatedResourcesBuffer.Bytes(), 0o600)
+	if err != nil {
+		log.Panicln(err)
+	}
+	err = os.WriteFile(filepath.Join(additionalExamplesPath, deprecatedDatasourcesFilename), deprecatedDatasourcesBuffer.Bytes(), 0o600)
 	if err != nil {
 		log.Panicln(err)
 	}
