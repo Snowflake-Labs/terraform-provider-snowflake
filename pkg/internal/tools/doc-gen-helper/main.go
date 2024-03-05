@@ -1,5 +1,3 @@
-//aaago:build exclude
-
 package main
 
 import (
