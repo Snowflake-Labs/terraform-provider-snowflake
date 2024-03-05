@@ -28,7 +28,6 @@ var tagAssociationSchema = map[string]*schema.Schema{
 	},
 	"object_identifier": {
 		Type:        schema.TypeList,
-		Optional:    true,
 		MinItems:    1,
 		Required:    true,
 		Description: "Specifies the object identifier for the tag association.",
@@ -184,12 +183,12 @@ func CreateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 		if !skipValidate {
 			log.Println("[DEBUG] validating tag creation")
 			if err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
-				tags, err := client.SystemFunctions.GetTags(ctx, tid, oid, ot)
+				tag, err := client.SystemFunctions.GetTag(ctx, tid, oid, ot)
 				if err != nil {
-					return retry.NonRetryableError(fmt.Errorf("error getting tags: %w", err))
+					return retry.NonRetryableError(fmt.Errorf("error getting tag: %w", err))
 				}
-				// if length of response is zero, tag association was not found. retry for up to 70 minutes
-				if len(tags) == 0 {
+				// if length of response is zero, tag association was not found. retry
+				if len(tag) == 0 {
 					return retry.RetryableError(fmt.Errorf("expected tag association to be created but not yet created"))
 				}
 				return nil

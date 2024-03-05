@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_TagMaskingPolicyAssociation(t *testing.T) {
+func TestAcc_TagMaskingPolicyAssociationBasic(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,7 +31,7 @@ func TestAcc_TagMaskingPolicyAssociation(t *testing.T) {
 	})
 }
 
-func TestAcc_TagMaskingPolicyAssociation1(t *testing.T) {
+func TestAcc_TagMaskingPolicyAssociationsystem_functions_integration_testComplete(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_tag.test"
 	m := func() map[string]config.Variable {

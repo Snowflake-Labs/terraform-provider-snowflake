@@ -330,20 +330,16 @@ func TestTagSet(t *testing.T) {
 	})
 
 	t.Run("set with column", func(t *testing.T) {
-		table, column := NewSchemaObjectIdentifier("db1", "schema1", "table1"), "column1"
-		objectName := NewObjectIdentifierFromFullyQualifiedName(fmt.Sprintf("%s.%s.%s.%s", table.DatabaseName(), table.SchemaName(), table.Name(), column))
-		request := SetTagRequest{
-			objectType: ObjectTypeColumn,
-			objectName: objectName,
-			SetTags: []TagAssociation{
-				{
-					Name:  NewAccountObjectIdentifier("tag1"),
-					Value: "value1",
-				},
+		objectName := NewTableColumnIdentifier("db1", "schema1", "table1", "column1")
+		tableName := NewSchemaObjectIdentifier("db1", "schema1", "table1")
+		request := NewSetTagRequest(ObjectTypeColumn, objectName).WithSetTags([]TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag1"),
+				Value: "value1",
 			},
-		}
+		})
 		opts := request.toOpts()
-		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s MODIFY COLUMN "%s" SET TAG "tag1" = 'value1'`, opts.objectType, table.FullyQualifiedName(), column)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s MODIFY COLUMN "%s" SET TAG "tag1" = 'value1'`, tableName.FullyQualifiedName(), objectName.columnName)
 	})
 }
 

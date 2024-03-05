@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -206,10 +206,7 @@ func testAccCheckTableColumnTagAssociation(tagID sdk.SchemaObjectIdentifier, obj
 
 func TestAcc_TagAssociationAccountIssues1910(t *testing.T) {
 	// todo: use role with ORGADMIN in CI (SNOW-1165821)
-	// SNOWFLAKE_TEST_ACCOUNT_CREATE must be set to 1 to run this test
-	if _, ok := os.LookupEnv("SNOWFLAKE_TEST_ACCOUNT_CREATE"); !ok {
-		t.Skip("Skipping TestInt_AccountCreate")
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 	tagName := "tag-" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	accountName := "account_" + strings.ToUpper(acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
 	resourceName := "snowflake_tag_association.test"
@@ -257,6 +254,16 @@ func TestAcc_TagAssociationIssue1926(t *testing.T) {
 			"schema":      config.StringVariable(acc.TestSchemaName),
 		}
 	}
+
+	m2 := m()
+	tableName2 := "table.test"
+	columnName2 := "column"
+	columnName3 := "column.test"
+	m2["table_name"] = config.StringVariable(tableName2)
+	m2["column_name"] = config.StringVariable(columnName2)
+	m3 := m()
+	m3["table_name"] = config.StringVariable(tableName2)
+	m3["column_name"] = config.StringVariable(columnName3)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -278,6 +285,34 @@ func TestAcc_TagAssociationIssue1926(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
 				),
 			},
+			/*
+				todo: (SNOW-1205719) uncomment this
+				{
+					ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
+					ConfigVariables: m2,
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
+						resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+						resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName2)),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
+					),
+				},
+				{
+					ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
+					ConfigVariables: m3,
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
+						resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+						resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName3)),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
+					),
+				},*/
 		},
 	})
 }

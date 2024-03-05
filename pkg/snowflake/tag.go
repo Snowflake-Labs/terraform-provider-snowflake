@@ -1,3 +1,5 @@
+// todo: remove this
+// https://snowflakecomputing.atlassian.net/browse/SNOW-1205579
 package snowflake
 
 import (
