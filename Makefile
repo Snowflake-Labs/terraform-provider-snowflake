@@ -16,7 +16,7 @@ dev-cleanup: ## cleanup development dependencies
 	rm -rf bin/*
 	rm -rf tools/bin/*
 
-docs: generate-doc-templates ## generate docs
+docs: generate-docs-additional-files ## generate docs
 	tools/bin/tfplugindocs generate
 
 docs-check: docs ## check that docs have been generated
@@ -48,9 +48,9 @@ mod: ## add missing and remove unused modules
 mod-check: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum
 
-pre-push: mod fmt generate-doc-templates docs lint test-architecture ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
+pre-push: mod fmt generate-docs-additional-files docs lint test-architecture ## Run a few checks before pushing a change (docs, fmt, mod, etc.)
 
-pre-push-check: pre-push mod-check generate-doc-templates-check docs-check ## Run checks before pushing a change (docs, fmt, mod, etc.)
+pre-push-check: pre-push mod-check generate-docs-additional-files-check docs-check ## Run checks before pushing a change (docs, fmt, mod, etc.)
 
 sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
@@ -108,10 +108,10 @@ run-generator-%: ./pkg/sdk/%_def.go ## Run go generate on given object definitio
 	go generate $<
 	go generate ./pkg/sdk/$*_dto_gen.go
 
-generate-doc-templates: ## generate doc templates
+generate-docs-additional-files: ## generate docs additional files
 	go run ./pkg/internal/tools/doc-gen-helper/ $$PWD
 
-generate-doc-templates-check: generate-doc-templates ## check that doc templates have been generated
-	git diff --exit-code -- templates
+generate-docs-additional-files-check: generate-docs-additional-files ## check that docs additional files have been generated
+	git diff --exit-code -- examples/additional
 
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf
