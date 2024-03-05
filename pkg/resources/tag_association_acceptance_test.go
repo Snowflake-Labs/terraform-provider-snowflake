@@ -2,13 +2,14 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -190,8 +191,7 @@ func TestAcc_TagAssociationIssue1909(t *testing.T) {
 
 func testAccCheckTableColumnTagAssociation(tagID sdk.SchemaObjectIdentifier, objectID sdk.ObjectIdentifier, tagValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		client := sdk.NewClientFromDB(db)
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
 		tv, err := client.SystemFunctions.GetTag(ctx, tagID, objectID, sdk.ObjectTypeColumn)
 		if err != nil {
