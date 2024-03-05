@@ -1,4 +1,4 @@
-package provider
+package docs
 
 import (
 	"fmt"

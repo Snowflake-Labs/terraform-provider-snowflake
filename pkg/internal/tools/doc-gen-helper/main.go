@@ -12,6 +12,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 )
 
@@ -40,12 +41,12 @@ func main() {
 	for _, key := range orderedResources {
 		resource := provider.Provider().ResourcesMap[key]
 		if resource.DeprecationMessage != "" {
-			nameRelativeLink := provider.RelativeLink(key, filepath.Join("resources", strings.Replace(key, "snowflake_", "", 1)))
+			nameRelativeLink := docs.RelativeLink(key, filepath.Join("resources", strings.Replace(key, "snowflake_", "", 1)))
 
-			replacement, path, _ := provider.GetDeprecatedResourceReplacement(resource.DeprecationMessage)
+			replacement, path, _ := docs.GetDeprecatedResourceReplacement(resource.DeprecationMessage)
 			var replacementRelativeLink string
 			if replacement != "" && path != "" {
-				replacementRelativeLink = provider.RelativeLink(replacement, filepath.Join("resources", path))
+				replacementRelativeLink = docs.RelativeLink(replacement, filepath.Join("resources", path))
 			}
 
 			deprecatedResources = append(deprecatedResources, DeprecatedResource{
@@ -65,12 +66,12 @@ func main() {
 	for _, key := range orderedDatasources {
 		datasource := provider.Provider().DataSourcesMap[key]
 		if datasource.DeprecationMessage != "" {
-			nameRelativeLink := provider.RelativeLink(key, filepath.Join("resources", strings.Replace(key, "snowflake_", "", 1)))
+			nameRelativeLink := docs.RelativeLink(key, filepath.Join("data-sources", strings.Replace(key, "snowflake_", "", 1)))
 
-			replacement, path, _ := provider.GetDeprecatedResourceReplacement(datasource.DeprecationMessage)
+			replacement, path, _ := docs.GetDeprecatedResourceReplacement(datasource.DeprecationMessage)
 			var replacementRelativeLink string
 			if replacement != "" && path != "" {
-				replacementRelativeLink = provider.RelativeLink(replacement, filepath.Join("resources", path))
+				replacementRelativeLink = docs.RelativeLink(replacement, filepath.Join("data-sources", path))
 			}
 
 			deprecatedDatasources = append(deprecatedDatasources, DeprecatedDatasource{

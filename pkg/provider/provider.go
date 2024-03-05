@@ -11,6 +11,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,9 +26,9 @@ func init() {
 		desc := r.Description
 		if r.DeprecationMessage != "" {
 			deprecationMessage := r.DeprecationMessage
-			replacement, path, ok := GetDeprecatedResourceReplacement(deprecationMessage)
+			replacement, path, ok := docs.GetDeprecatedResourceReplacement(deprecationMessage)
 			if ok {
-				deprecationMessage = strings.ReplaceAll(deprecationMessage, replacement, RelativeLink(replacement, path))
+				deprecationMessage = strings.ReplaceAll(deprecationMessage, replacement, docs.RelativeLink(replacement, path))
 			}
 			// <deprecation> tag is a hack to split description into two parts (deprecation/real description) nicely. This tag won't be rendered.
 			// Check resources.md.tmpl for usage example.
