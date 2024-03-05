@@ -1,7 +1,6 @@
 package datasources_test
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -14,9 +13,6 @@ import (
 )
 
 func TestAcc_ExternalFunctions_basic(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_EXTERNAL_FUNCTION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_ExternalFunction")
-	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -59,9 +55,6 @@ func TestAcc_ExternalFunctions_basic(t *testing.T) {
 }
 
 func TestAcc_ExternalFunctions_no_database(t *testing.T) {
-	if _, ok := os.LookupEnv("SKIP_EXTERNAL_FUNCTION_TESTS"); ok {
-		t.Skip("Skipping TestAcc_ExternalFunction")
-	}
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{

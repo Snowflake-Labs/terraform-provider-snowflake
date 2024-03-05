@@ -8,6 +8,7 @@ import (
 	"os"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
 	"github.com/snowflakedb/gosnowflake"
@@ -19,8 +20,8 @@ var (
 )
 
 func init() {
-	instrumentedSQL = os.Getenv("SF_TF_NO_INSTRUMENTED_SQL") == ""
-	gosnowflakeLoggingLevel = os.Getenv("SF_TF_GOSNOWFLAKE_LOG_LEVEL")
+	instrumentedSQL = os.Getenv(snowflakeenvs.NoInstrumentedSql) == ""
+	gosnowflakeLoggingLevel = os.Getenv(snowflakeenvs.GosnowflakeLogLevel)
 }
 
 type Client struct {

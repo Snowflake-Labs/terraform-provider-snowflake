@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -223,8 +224,7 @@ func Account() *schema.Resource {
 
 // CreateAccount implements schema.CreateFunc.
 func CreateAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	name := d.Get("name").(string)
@@ -309,8 +309,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 
 // ReadAccount implements schema.ReadFunc.
 func ReadAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
@@ -359,7 +358,7 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
 	/*
 		todo: comments may eventually work again for accounts, so this can be uncommented when that happens
-		db := meta.(*sql.DB)
+		client := meta.(*provider.Context).Client
 		client := sdk.NewClientFromDB(db)
 		ctx := context.Background()
 
@@ -383,8 +382,7 @@ func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteAccount implements schema.DeleteFunc.
 func DeleteAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	gracePeriodInDays := d.Get("grace_period_in_days").(int)
 	err := client.Accounts.Drop(ctx, helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier), gracePeriodInDays, &sdk.DropAccountOptions{

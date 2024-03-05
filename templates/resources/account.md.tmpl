@@ -2,7 +2,11 @@
 page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
 subcategory: ""
 description: |-
+{{ if gt (len (split .Description "<deprecation>")) 1 -}}
+{{ index (split .Description "<deprecation>") 1 | plainmarkdown | trimspace | prefixlines "  " }}
+{{- else -}}
 {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+{{- end }}
 ---
 
 # {{.Name}} ({{.Type}})

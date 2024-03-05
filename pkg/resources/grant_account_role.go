@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -80,8 +81,7 @@ func GrantAccountRole() *schema.Resource {
 
 // CreateGrantAccountRole implements schema.CreateFunc.
 func CreateGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	roleName := d.Get("role_name").(string)
 	roleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(roleName)
@@ -113,8 +113,7 @@ func CreateGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ReadGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	parts := strings.Split(d.Id(), helpers.IDDelimiter)
 	if len(parts) != 3 {
 		return fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id())
@@ -153,8 +152,7 @@ func ReadGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
 }
 
 func DeleteGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	parts := strings.Split(d.Id(), helpers.IDDelimiter)
 	if len(parts) != 3 {
 		return fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id())

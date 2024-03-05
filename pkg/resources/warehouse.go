@@ -2,7 +2,8 @@ package resources
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -157,8 +158,7 @@ func Warehouse() *schema.Resource {
 
 // CreateWarehouse implements schema.CreateFunc.
 func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	name := d.Get("name").(string)
@@ -221,8 +221,7 @@ func CreateWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 // ReadWarehouse implements schema.ReadFunc.
 func ReadWarehouse(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
@@ -313,8 +312,7 @@ func readWarehouseObjectProperties(d *schema.ResourceData, warehouseId sdk.Accou
 
 // UpdateWarehouse implements schema.UpdateFunc.
 func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
@@ -462,8 +460,7 @@ func UpdateWarehouse(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteWarehouse implements schema.DeleteFunc.
 func DeleteWarehouse(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)

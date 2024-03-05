@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
@@ -83,9 +84,8 @@ func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 		req = req.WithAllowedIpList(ipRequests)
 	}
 
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	err := client.NetworkPolicies.Create(ctx, req)
 	if err != nil {
 		return fmt.Errorf("error creating network policy %v err = %w", name, err)
@@ -98,9 +98,8 @@ func CreateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 // ReadNetworkPolicy implements schema.ReadFunc.
 func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	policyName := d.Id()
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	networkPolicy, err := client.NetworkPolicies.ShowByID(ctx, sdk.NewAccountObjectIdentifier(policyName))
 	if networkPolicy == nil || err != nil {
@@ -142,9 +141,8 @@ func ReadNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 // UpdateNetworkPolicy implements schema.UpdateFunc.
 func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	name := d.Id()
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	baseReq := sdk.NewAlterNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name))
 
 	if d.HasChange("comment") {
@@ -196,9 +194,8 @@ func UpdateNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 // DeleteNetworkPolicy implements schema.DeleteFunc.
 func DeleteNetworkPolicy(d *schema.ResourceData, meta interface{}) error {
 	name := d.Id()
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	err := client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(sdk.NewAccountObjectIdentifier(name)))
 	if err != nil {

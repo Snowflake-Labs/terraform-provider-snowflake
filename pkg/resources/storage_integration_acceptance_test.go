@@ -2,11 +2,13 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -174,9 +176,7 @@ func TestAcc_StorageIntegration_AWS_Update(t *testing.T) {
 }
 
 func TestAcc_StorageIntegration_Azure_Update(t *testing.T) {
-	if !azureBucketUrlIsSet {
-		t.Skip("Skipping TestAcc_StorageIntegration_Azure_Update (Azure bucket url is not set)")
-	}
+	azureBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AzureExternalBucketUrl)
 
 	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	azureTenantId, err := uuid.GenerateUUID()
@@ -332,8 +332,7 @@ func TestAcc_StorageIntegration_GCP_Update(t *testing.T) {
 }
 
 func testAccCheckStorageIntegrationDestroy(s *terraform.State) error {
-	db := acc.TestAccProvider.Meta().(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := acc.TestAccProvider.Meta().(*provider.Context).Client
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "snowflake_storage_integration" {
 			continue

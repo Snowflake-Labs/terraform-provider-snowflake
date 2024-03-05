@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -140,9 +141,8 @@ func toApiIntegrationEndpointPrefix(paths []string) []sdk.ApiIntegrationEndpoint
 
 // CreateAPIIntegration implements schema.CreateFunc.
 func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -211,9 +211,8 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // ReadAPIIntegration implements schema.ReadFunc.
 func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	integration, err := client.ApiIntegrations.ShowByID(ctx, id)
@@ -316,9 +315,8 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateAPIIntegration implements schema.UpdateFunc.
 func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	var runSetStatement bool
@@ -403,9 +401,8 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteAPIIntegration implements schema.DeleteFunc.
 func DeleteAPIIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	err := client.ApiIntegrations.Drop(ctx, sdk.NewDropApiIntegrationRequest(id))

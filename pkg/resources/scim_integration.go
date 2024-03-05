@@ -1,10 +1,11 @@
 package resources
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -75,7 +76,8 @@ func SCIMIntegration() *schema.Resource {
 
 // CreateSCIMIntegration implements schema.CreateFunc.
 func CreateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	name := d.Get("name").(string)
 
 	stmt := snowflake.NewSCIMIntegrationBuilder(name).Create()
@@ -101,7 +103,8 @@ func CreateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // ReadSCIMIntegration implements schema.ReadFunc.
 func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	id := d.Id()
 
 	stmt := snowflake.NewSCIMIntegrationBuilder(id).Show()
@@ -164,7 +167,8 @@ func ReadSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateSCIMIntegration implements schema.UpdateFunc.
 func UpdateSCIMIntegration(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	id := d.Id()
 
 	stmt := snowflake.NewSCIMIntegrationBuilder(id).Alter()

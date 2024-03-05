@@ -5,15 +5,45 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
+	"regexp"
+	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/snowflakedb/gosnowflake"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/snowflakedb/gosnowflake"
 )
+
+func init() {
+	// This message should be used in DeprecationMessage to get a nice link in the documentation to the replacing resource.
+	deprecationMessageRegex := regexp.MustCompile(`Please use (snowflake_(\w+)) instead.`)
+	// This allows us to get relative link to the resource/datasource in the same subtree. Will have to change when we introduce subcategories.
+	relativeLinkOnTheSameLevel := func(title string, page string) string {
+		return fmt.Sprintf(`[%s](./%s)`, title, page)
+	}
+
+	// useful links:
+	// - https://github.com/hashicorp/terraform-plugin-docs/issues/10#issuecomment-767682837
+	// - https://github.com/hashicorp/terraform-plugin-docs/issues/156#issuecomment-1600427216
+	schema.ResourceDescriptionBuilder = func(r *schema.Resource) string {
+		desc := r.Description
+		if r.DeprecationMessage != "" {
+			deprecationMessage := r.DeprecationMessage
+			resourcesRepl := deprecationMessageRegex.FindStringSubmatch(deprecationMessage)
+			if len(resourcesRepl) == 3 {
+				deprecationMessage = strings.ReplaceAll(deprecationMessage, resourcesRepl[1], relativeLinkOnTheSameLevel(resourcesRepl[1], resourcesRepl[2]))
+			}
+			// <deprecation> tag is a hack to split description into two parts (deprecation/real description) nicely. This tag won't be rendered.
+			// Check resources.md.tmpl for usage example.
+			desc = fmt.Sprintf("~> **Deprecation** %v <deprecation>\n\n%s", deprecationMessage, r.Description)
+		}
+		return strings.TrimSpace(desc)
+	}
+}
 
 // Provider returns a Terraform Provider using configuration from https://pkg.go.dev/github.com/snowflakedb/gosnowflake#Config
 func Provider() *schema.Provider {
@@ -541,7 +571,22 @@ func getDataSources() map[string]*schema.Resource {
 	return dataSources
 }
 
+var (
+	configuredClient     *sdk.Client
+	configureClientError error //nolint:errname
+)
+
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
+	// hacky way to speed up our acceptance tests
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+		if configuredClient != nil {
+			return &provider.Context{Client: configuredClient}, nil
+		}
+		if configureClientError != nil {
+			return nil, configureClientError
+		}
+	}
+
 	config := &gosnowflake.Config{
 		Application: "terraform-provider-snowflake",
 	}
@@ -743,9 +788,12 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 			config = sdk.MergeConfig(config, profileConfig)
 		}
 	}
-	client, err := sdk.NewClient(config)
-	if err != nil {
-		return nil, err
+
+	configuredClient, configureClientError = sdk.NewClient(config)
+
+	if configureClientError != nil {
+		return nil, configureClientError
 	}
-	return client.GetConn().DB, nil
+
+	return &provider.Context{Client: configuredClient}, nil
 }

@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -38,7 +41,9 @@ func TestTagCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadTag(mock)
-		err := resources.CreateTag(d, db)
+		err := resources.CreateTag(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -63,7 +68,9 @@ func TestTagUpdate(t *testing.T) {
 		mock.ExpectExec(`^ALTER TAG "test_db"."test_schema"."good_name" ADD ALLOWED_VALUES 'marketing', 'finance'$`).WillReturnResult(sqlmock.NewResult(1, 1))
 
 		expectReadTag(mock)
-		err := resources.UpdateTag(d, db)
+		err := resources.UpdateTag(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -86,7 +93,9 @@ func TestTagDelete(t *testing.T) {
 			`^DROP TAG "test_db"."test_schema"."good_name"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 
-		err := resources.DeleteTag(d, db)
+		err := resources.DeleteTag(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -108,7 +117,9 @@ func TestTagRead(t *testing.T) {
 		r.NotEmpty(d.State())
 		q := snowflake.NewTagBuilder("good_name").WithDB("test_db").WithSchema("test_schema").Show()
 		mock.ExpectQuery(q).WillReturnError(sql.ErrNoRows)
-		err := resources.ReadTag(d, db)
+		err := resources.ReadTag(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.Empty(d.State())
 		r.Nil(err)
 	})

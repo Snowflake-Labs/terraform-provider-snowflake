@@ -1,6 +1,5 @@
-export SKIP_SAML_INTEGRATION_TESTS=true
-export SKIP_MANAGED_ACCOUNT_INT_TEST=true
-export SKIP_MANAGED_ACCOUNT_TEST=true
+export TEST_SF_TF_SKIP_SAML_INTEGRATION_TEST=true
+export TEST_SF_TF_SKIP_MANAGED_ACCOUNT_TEST=true
 export BASE_BINARY_NAME=terraform-provider-snowflake
 export TERRAFORM_PLUGINS_DIR=$(HOME)/.terraform.d/plugins
 export TERRAFORM_PLUGIN_LOCAL_INSTALL=$(TERRAFORM_PLUGINS_DIR)/$(BASE_BINARY_NAME)
@@ -56,7 +55,7 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 	@echo "Are you sure? [y/n]" >&2
 	@read -r REPLY; \
 		if echo "$$REPLY" | grep -qG "^[yY]$$"; then \
-			SNOWFLAKE_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
+			TEST_SF_TF_ENABLE_SWEEP=1 go test -timeout 300s -run ^TestSweepAll ./pkg/sdk -v; \
 			else echo "Aborting..."; \
 		fi;
 
@@ -64,7 +63,7 @@ test: test-client ## run unit and integration tests
 	go test -v -cover -timeout=30m ./...
 
 test-acceptance: ## run acceptance tests
-	TF_ACC=1 go test -run "^TestAcc_" -v -cover -timeout=60m ./...
+	TF_ACC=1 SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true go test -run "^TestAcc_" -v -cover -timeout=60m ./...
 
 test-integration: ## run SDK integration tests
 	go test -run "^TestInt_" -v -cover -timeout=30m ./...

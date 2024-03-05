@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -34,7 +37,9 @@ func TestOAuthIntegrationCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadOAuthIntegration(mock)
 
-		err := resources.CreateOAuthIntegration(d, db)
+		err := resources.CreateOAuthIntegration(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -47,7 +52,9 @@ func TestOAuthIntegrationRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadOAuthIntegration(mock)
 
-		err := resources.ReadOAuthIntegration(d, db)
+		err := resources.ReadOAuthIntegration(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -59,7 +66,9 @@ func TestOAuthIntegrationDelete(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP SECURITY INTEGRATION "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := resources.DeleteOAuthIntegration(d, db)
+		err := resources.DeleteOAuthIntegration(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }

@@ -2,8 +2,9 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -127,8 +128,7 @@ func checkAccountAgainstWarehouses(d *schema.ResourceData, name string) error {
 
 // CreateResourceMonitor implements schema.CreateFunc.
 func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 
 	check := checkAccountAgainstWarehouses(d, name)
@@ -231,8 +231,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 // ReadResourceMonitor implements schema.ReadFunc.
 func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	ctx := context.Background()
@@ -302,8 +301,7 @@ func ReadResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateResourceMonitor implements schema.UpdateFunc.
 func UpdateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 
 	check := checkAccountAgainstWarehouses(d, name)
@@ -493,8 +491,7 @@ func collectResourceMonitorTriggers(d *schema.ResourceData) []sdk.TriggerDefinit
 
 // DeleteResourceMonitor implements schema.DeleteFunc.
 func DeleteResourceMonitor(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 

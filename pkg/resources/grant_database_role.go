@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -98,8 +99,7 @@ func GrantDatabaseRole() *schema.Resource {
 
 // CreateGrantDatabaseRole implements schema.CreateFunc.
 func CreateGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	databaseRoleName := d.Get("database_role_name").(string)
 	databaseRoleIdentifier := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName)
@@ -133,8 +133,7 @@ func CreateGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 
 // ReadGrantDatabaseRole implements schema.ReadFunc.
 func ReadGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	parts := strings.Split(d.Id(), helpers.IDDelimiter)
 	databaseRoleName := parts[0]
 	databaseRoleIdentifier := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName)
@@ -204,8 +203,7 @@ func ReadGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteGrantDatabaseRole implements schema.DeleteFunc.
 func DeleteGrantDatabaseRole(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	parts := strings.Split(d.Id(), "|")
 	id := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(parts[0])

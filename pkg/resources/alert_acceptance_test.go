@@ -9,8 +9,10 @@ import (
 	"text/template"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 type (
@@ -32,11 +34,10 @@ type (
 )
 
 var (
-	warehouseName = "wh_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	alertName     = "a_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	alertName = "a_" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	alertInitialState = &AccAlertTestSettings{ //nolint
-		WarehouseName: warehouseName,
+		WarehouseName: acc.TestWarehouseName,
 		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
 			Name:      alertName,
@@ -51,7 +52,7 @@ var (
 
 	// Changes: condition, action, comment, schedule.
 	alertStepOne = &AccAlertTestSettings{ //nolint
-		WarehouseName: warehouseName,
+		WarehouseName: acc.TestWarehouseName,
 		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
 			Name:      alertName,
@@ -66,7 +67,7 @@ var (
 
 	// Changes: condition, action, comment, schedule.
 	alertStepTwo = &AccAlertTestSettings{ //nolint
-		WarehouseName: warehouseName,
+		WarehouseName: acc.TestWarehouseName,
 		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
 			Name:      alertName,
@@ -81,7 +82,7 @@ var (
 
 	// Changes: condition, action, comment, schedule.
 	alertStepThree = &AccAlertTestSettings{ //nolint
-		WarehouseName: warehouseName,
+		WarehouseName: acc.TestWarehouseName,
 		DatabaseName:  acc.TestDatabaseName,
 		Alert: &AlertSettings{
 			Name:      alertName,
@@ -96,8 +97,11 @@ var (
 
 func TestAcc_Alert(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		Providers:    acc.TestAccProviders(),
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -171,14 +175,11 @@ func TestAcc_Alert(t *testing.T) {
 
 func alertConfig(settings *AccAlertTestSettings) string { //nolint
 	config, err := template.New("alert_acceptance_test_config").Parse(`
-resource "snowflake_warehouse" "test_wh" {
-	name = "{{ .WarehouseName }}"
-}
 resource "snowflake_alert" "test_alert" {
 	name     	      = "{{ .Alert.Name }}"
 	database  	      = "{{ .DatabaseName }}"
 	schema   	      = "{{ .Alert.Schema }}"
-	warehouse 	      = snowflake_warehouse.test_wh.name
+	warehouse 	      = "{{ .WarehouseName }}"
 	alert_schedule 	  {
 		interval = "{{ .Alert.Schedule }}"
 	}

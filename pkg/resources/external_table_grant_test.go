@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -40,7 +43,9 @@ func TestExternalTableGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT SELECT ON EXTERNAL TABLE "test-db"."PUBLIC"."test-external-table" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT SELECT ON EXTERNAL TABLE "test-db"."PUBLIC"."test-external-table" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadExternalTableGrant(mock)
-		err := resources.CreateExternalTableGrant(d, db)
+		err := resources.CreateExternalTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -62,7 +67,9 @@ func TestExternalTableGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadExternalTableGrant(mock)
-		err := resources.ReadExternalTableGrant(d, db)
+		err := resources.ReadExternalTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -114,7 +121,9 @@ func TestFutureExternalTableGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE EXTERNAL TABLES IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureExternalTableGrant(mock)
-		err := resources.CreateExternalTableGrant(d, db)
+		err := resources.CreateExternalTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -138,7 +147,9 @@ func TestFutureExternalTableGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE EXTERNAL TABLES IN DATABASE "test-db" TO ROLE "test-role-2"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureExternalTableDatabaseGrant(mock)
-		err := resources.CreateExternalTableGrant(d, db)
+		err := resources.CreateExternalTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		b.NoError(err)
 	})
 
@@ -154,7 +165,9 @@ func TestFutureExternalTableGrantCreate(t *testing.T) {
 	d = schema.TestResourceDataRaw(t, resources.ExternalTableGrant().Resource.Schema, in)
 	c.NotNil(d)
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		err := resources.CreateExternalTableGrant(d, db)
+		err := resources.CreateExternalTableGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		c.Error(err)
 	})
 }

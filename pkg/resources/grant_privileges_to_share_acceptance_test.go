@@ -2,11 +2,12 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -526,8 +527,7 @@ func testAccCheckSharePrivilegesRevoked() func(*terraform.State) error {
 			if rs.Type != "snowflake_grant_privileges_to_share" {
 				continue
 			}
-			db := acc.TestAccProvider.Meta().(*sql.DB)
-			client := sdk.NewClientFromDB(db)
+			client := acc.TestAccProvider.Meta().(*provider.Context).Client
 			ctx := context.Background()
 
 			id := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["to_share"])

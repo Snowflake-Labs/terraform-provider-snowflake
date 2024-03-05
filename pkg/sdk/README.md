@@ -5,12 +5,12 @@
 Required environment variable to run sweepers (cleanup up resources created by integration tests):
 
 ```
-SNOWFLAKE_ENABLE_SWEEP=1
+TEST_SF_TF_ENABLE_SWEEP=1
 ```
 Required environment variable to test creating an account. Note that this cannot be cleaned up by sweepers:
 
 ```
-SNOWFLAKE_TEST_ACCOUNT_CREATE=1
+TEST_SF_TF_TEST_ACCOUNT_CREATE=1
 ```
 
 ## SQL clause types

@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -37,7 +40,9 @@ func TestStreamGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT SELECT ON STREAM "test-db"."PUBLIC"."test-stream" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT SELECT ON STREAM "test-db"."PUBLIC"."test-stream" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadStreamGrant(mock)
-		err := resources.CreateStreamGrant(d, db)
+		err := resources.CreateStreamGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -58,7 +63,9 @@ func TestStreamGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadStreamGrant(mock)
-		err := resources.ReadStreamGrant(d, db)
+		err := resources.ReadStreamGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -101,7 +108,9 @@ func TestFutureStreamGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE STREAMS IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureStreamGrant(mock)
-		err := resources.CreateStreamGrant(d, db)
+		err := resources.CreateStreamGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -125,7 +134,9 @@ func TestFutureStreamGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE STREAMS IN DATABASE "test-db" TO ROLE "test-role-2"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureStreamDatabaseGrant(mock)
-		err := resources.CreateStreamGrant(d, db)
+		err := resources.CreateStreamGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		b.NoError(err)
 	})
 }

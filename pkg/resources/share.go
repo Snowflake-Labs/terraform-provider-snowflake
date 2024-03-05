@@ -2,11 +2,12 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -57,10 +58,9 @@ func Share() *schema.Resource {
 
 // CreateShare implements schema.CreateFunc.
 func CreateShare(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	comment := d.Get("comment").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
 	var opts sdk.CreateShareOptions
@@ -156,9 +156,8 @@ func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.Accou
 
 // ReadShare implements schema.ReadFunc.
 func ReadShare(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	id := sdk.NewAccountObjectIdentifier(d.Id())
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 
 	share, err := client.Shares.ShowByID(ctx, id)
@@ -203,8 +202,7 @@ func accountIdentifiersFromSlice(accounts []string) []sdk.AccountIdentifier {
 
 // UpdateShare implements schema.UpdateFunc.
 func UpdateShare(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	if d.HasChange("accounts") {
 		o, n := d.GetChange("accounts")
@@ -245,8 +243,7 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteShare implements schema.DeleteFunc.
 func DeleteShare(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(d.Id()))
 	if err != nil {

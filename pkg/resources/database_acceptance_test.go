@@ -2,11 +2,12 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -459,8 +460,8 @@ func testAccCheckIfDatabaseIsReplicated(t *testing.T, id string) func(state *ter
 
 func checkAccountAndDatabaseDataRetentionTime(id sdk.AccountObjectIdentifier, expectedAccountRetentionDays int, expectedDatabaseRetentionsDays int) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		client := sdk.NewClientFromDB(db)
+		providerContext := acc.TestAccProvider.Meta().(*provider.Context)
+		client := providerContext.Client
 		ctx := context.Background()
 
 		database, err := client.Databases.ShowByID(ctx, id)

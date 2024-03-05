@@ -2,12 +2,13 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -451,6 +452,7 @@ resource "snowflake_table" "test_table" {
 		type = "VARCHAR(16)"
 	}
 }
+
 resource "snowflake_object_parameter" "data_retention_in_time" {
 	key = "DATA_RETENTION_TIME_IN_DAYS"
 	value = "30"
@@ -460,6 +462,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 		database = "%s"
 		schema = "%s"
 	}
+	depends_on = [snowflake_table.test_table]
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
@@ -487,6 +490,7 @@ resource "snowflake_table" "test_table" {
 		]
 	}
 }
+
 resource "snowflake_object_parameter" "data_retention_in_time" {
 	key = "DATA_RETENTION_TIME_IN_DAYS"
 	value = "30"
@@ -496,6 +500,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 		database = "%s"
 		schema = "%s"
 	}
+	depends_on = [snowflake_table.test_table]
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
@@ -531,6 +536,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 		database = "%s"
 		schema = "%s"
 	}
+	depends_on = [snowflake_table.test_table]
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
@@ -1776,8 +1782,7 @@ resource "snowflake_table" "test_table" {
 }
 
 func testAccCheckTableDestroy(s *terraform.State) error {
-	db := acc.TestAccProvider.Meta().(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := acc.TestAccProvider.Meta().(*provider.Context).Client
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "snowflake_table" {
 			continue
@@ -1841,8 +1846,7 @@ resource "snowflake_table" "test_table" {
 
 func checkDatabaseSchemaAndTableDataRetentionTime(id sdk.SchemaObjectIdentifier, expectedDatabaseRetentionDays int, expectedSchemaRetentionDays int, expectedTableRetentionsDays int) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		client := sdk.NewClientFromDB(db)
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
 
 		database, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))

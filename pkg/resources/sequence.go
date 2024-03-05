@@ -2,7 +2,8 @@ package resources
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -79,8 +80,7 @@ func Sequence() *schema.Resource {
 }
 
 func CreateSequence(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
@@ -109,8 +109,7 @@ func CreateSequence(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ReadSequence(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	seq, err := client.Sequences.ShowByID(ctx, id)
@@ -158,8 +157,7 @@ func ReadSequence(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
@@ -190,8 +188,7 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 }
 
 func DeleteSequence(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 

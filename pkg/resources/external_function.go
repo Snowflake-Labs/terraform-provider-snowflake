@@ -2,11 +2,12 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
@@ -205,8 +206,7 @@ func ExternalFunction() *schema.Resource {
 }
 
 func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	database := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
@@ -323,8 +323,7 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 }
 
 func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	externalFunction, err := client.ExternalFunctions.ShowByID(ctx, id.WithoutArguments(), id.Arguments())
@@ -471,8 +470,7 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 }
 
 func UpdateContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	req := sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments())
@@ -492,8 +490,7 @@ func UpdateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 }
 
 func DeleteContextExternalFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	req := sdk.NewDropFunctionRequest(id.WithoutArguments(), id.Arguments())

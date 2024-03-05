@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -75,9 +76,8 @@ func CreateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 
 // ReadNetworkPolicyAttachment implements schema.ReadFunc.
 func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	policyName := strings.Replace(d.Id(), "_attachment", "", 1)
 
 	var currentUsers []string
@@ -198,9 +198,8 @@ func DeleteNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 // setOnAccount sets the network policy globally for the Snowflake account
 // Note: the ip address of the session executing this SQL must be allowed by the network policy being set.
 func setOnAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	policyName := d.Get("network_policy_name").(string)
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{Set: &sdk.AccountSet{Parameters: &sdk.AccountLevelParameters{ObjectParameters: &sdk.ObjectParameters{NetworkPolicy: sdk.String(policyName)}}}})
@@ -213,9 +212,8 @@ func setOnAccount(d *schema.ResourceData, meta interface{}) error {
 
 // setOnAccount unsets the network policy globally for the Snowflake account.
 func unsetOnAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	policyName := d.Get("network_policy_name").(string)
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{Unset: &sdk.AccountUnset{Parameters: &sdk.AccountLevelParametersUnset{ObjectParameters: &sdk.ObjectParametersUnset{NetworkPolicy: sdk.Bool(true)}}}})
@@ -240,9 +238,8 @@ func setOnUsers(users []string, data *schema.ResourceData, meta interface{}) err
 
 // setOnUser sets the network policy for a given user.
 func setOnUser(user string, data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	policyName := data.Get("network_policy_name").(string)
 
 	err := client.Users.Alter(ctx, sdk.NewAccountObjectIdentifier(user), &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectParameters: &sdk.UserObjectParameters{NetworkPolicy: sdk.String(policyName)}}})
@@ -267,9 +264,8 @@ func unsetOnUsers(users []string, data *schema.ResourceData, meta interface{}) e
 
 // unsetOnUser sets the network policy for a given user.
 func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	policyName := data.Get("network_policy_name").(string)
 
 	err := client.Users.Alter(ctx, sdk.NewAccountObjectIdentifier(user), &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectParameters: &sdk.UserObjectParametersUnset{NetworkPolicy: sdk.Bool(true)}}})
@@ -282,9 +278,8 @@ func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error
 
 // ensureUserAlterPrivileges ensures the executing Snowflake user can alter each user in the set of users.
 func ensureUserAlterPrivileges(users []string, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	for _, user := range users {
 		_, err := client.Users.Describe(ctx, sdk.NewAccountObjectIdentifier(user))

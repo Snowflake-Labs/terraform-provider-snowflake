@@ -1,18 +1,23 @@
 package datasources_test
 
 import (
-	"os"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Accounts(t *testing.T) {
-	if _, ok := os.LookupEnv("SNOWFLAKE_TEST_ACCOUNTS_SHOW"); !ok {
-		t.Skip("Skipping TestInt_Accounts")
-	}
-	resource.ParallelTest(t, resource.TestCase{
-		Providers:    providers(),
+	t.Skipf("Skipping because of: ORGADMIN role is not in current session, cannot read accounts")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{

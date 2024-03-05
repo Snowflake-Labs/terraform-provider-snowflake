@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -40,7 +43,9 @@ func TestMaterializedViewGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-materialized-view" TO SHARE "test-share-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT SELECT ON VIEW "test-db"."PUBLIC"."test-materialized-view" TO SHARE "test-share-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadMaterializedViewGrant(mock)
-		err := resources.CreateMaterializedViewGrant(d, db)
+		err := resources.CreateMaterializedViewGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -62,7 +67,9 @@ func TestMaterializedViewGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadMaterializedViewGrant(mock)
-		err := resources.ReadMaterializedViewGrant(d, db)
+		err := resources.ReadMaterializedViewGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -114,7 +121,9 @@ func TestFutureMaterializedViewGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE MATERIALIZED VIEWS IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureMaterializedViewGrant(mock)
-		err := resources.CreateMaterializedViewGrant(d, db)
+		err := resources.CreateMaterializedViewGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -138,7 +147,9 @@ func TestFutureMaterializedViewGrantCreate(t *testing.T) {
 			`^GRANT SELECT ON FUTURE MATERIALIZED VIEWS IN DATABASE "test-db" TO ROLE "test-role-2"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureMaterializedViewDatabaseGrant(mock)
-		err := resources.CreateMaterializedViewGrant(d, db)
+		err := resources.CreateMaterializedViewGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		b.NoError(err)
 	})
 
@@ -156,7 +167,9 @@ func TestFutureMaterializedViewGrantCreate(t *testing.T) {
 	m.NotNil(d)
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
-		err := resources.CreateMaterializedViewGrant(d, db)
+		err := resources.CreateMaterializedViewGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		m.Error(err)
 	})
 }

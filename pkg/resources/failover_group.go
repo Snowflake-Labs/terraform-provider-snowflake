@@ -2,12 +2,13 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -149,8 +150,7 @@ func FailoverGroup() *schema.Resource {
 
 // CreateFailoverGroup implements schema.CreateFunc.
 func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	// getting required attributes
 	name := d.Get("name").(string)
@@ -264,8 +264,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 // ReadFailoverGroup implements schema.ReadFunc.
 func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	name := d.Id()
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -392,8 +391,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateFailoverGroup implements schema.UpdateFunc.
 func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	name := d.Id()
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -629,8 +627,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteFailoverGroup implements schema.DeleteFunc.
 func DeleteFailoverGroup(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	name := d.Id()
 	id := sdk.NewAccountObjectIdentifier(name)
 	ctx := context.Background()

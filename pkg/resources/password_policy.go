@@ -2,7 +2,8 @@ package resources
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -154,8 +155,7 @@ func PasswordPolicy() *schema.Resource {
 
 // CreatePasswordPolicy implements schema.CreateFunc.
 func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	name := d.Get("name").(string)
 	database := d.Get("database").(string)
@@ -192,8 +192,7 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // ReadPasswordPolicy implements schema.ReadFunc.
 func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
@@ -262,8 +261,7 @@ func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // UpdatePasswordPolicy implements schema.UpdateFunc.
 func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
@@ -433,8 +431,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 // DeletePasswordPolicy implements schema.DeleteFunc.
 func DeletePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	err := client.PasswordPolicies.Drop(ctx, objectIdentifier, nil)

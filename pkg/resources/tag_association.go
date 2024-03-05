@@ -8,6 +8,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -103,7 +105,8 @@ func TagAssociation() *schema.Resource {
 
 // CreateTagAssociation implements schema.CreateFunc.
 func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
 	tagValue := d.Get("tag_value").(string)
@@ -152,7 +155,8 @@ func CreateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 // ReadTagAssociation implements schema.ReadFunc.
 func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
@@ -181,7 +185,8 @@ func ReadTagAssociation(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)
@@ -214,7 +219,8 @@ func UpdateTagAssociation(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteTagAssociation implements schema.DeleteFunc.
 func DeleteTagAssociation(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	tagID := d.Get("tag_id").(string)
 	objectType := d.Get("object_type").(string)

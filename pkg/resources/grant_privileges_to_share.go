@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"slices"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -158,8 +159,7 @@ func ImportGrantPrivilegesToShare() func(ctx context.Context, d *schema.Resource
 }
 
 func CreateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	id := createGrantPrivilegesToShareIdFromSchema(d)
 	log.Printf("[DEBUG] created identifier from schema: %s", id.String())
 
@@ -180,8 +180,7 @@ func CreateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, m
 }
 
 func UpdateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id, err := ParseGrantPrivilegesToShareId(d.Id())
 	if err != nil {
@@ -259,8 +258,7 @@ func UpdateGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, m
 }
 
 func DeleteGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id, err := ParseGrantPrivilegesToShareId(d.Id())
 	if err != nil {
@@ -306,8 +304,7 @@ func ReadGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, met
 		return nil
 	}
 
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
 		return diag.Diagnostics{
