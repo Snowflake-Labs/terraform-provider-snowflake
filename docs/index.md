@@ -227,6 +227,11 @@ The Snowflake provider will use the following order of precedence when determini
 2) Environment Variables
 3) Config File
 
+## Hackers
+
+some
+thing
+shiny
 
 ## Currently deprecated resources
 
