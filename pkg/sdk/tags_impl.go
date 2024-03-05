@@ -33,7 +33,10 @@ func (v *tags) Show(ctx context.Context, request *ShowTagRequest) ([]Tag, error)
 }
 
 func (v *tags) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error) {
-	request := NewShowTagRequest().WithLike(id.Name())
+	request := NewShowTagRequest().WithIn(&In{
+		Schema: NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()),
+	}).WithLike(id.Name())
+
 	tags, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -47,6 +50,16 @@ func (v *tags) Drop(ctx context.Context, request *DropTagRequest) error {
 }
 
 func (v *tags) Undrop(ctx context.Context, request *UndropTagRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *tags) Set(ctx context.Context, request *SetTagRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *tags) Unset(ctx context.Context, request *UnsetTagRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -90,4 +103,38 @@ func (s *UndropTagRequest) toOpts() *undropTagOptions {
 	return &undropTagOptions{
 		name: s.name,
 	}
+}
+
+func (s *SetTagRequest) toOpts() *setTagOptions {
+	o := &setTagOptions{
+		objectType: s.objectType,
+		objectName: s.objectName,
+		SetTags:    s.SetTags,
+	}
+	if o.objectType == ObjectTypeColumn {
+		id, ok := o.objectName.(TableColumnIdentifier)
+		if ok {
+			o.objectType = ObjectTypeTable
+			o.objectName = NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), id.TableName())
+			o.column = String(id.Name())
+		}
+	}
+	return o
+}
+
+func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
+	o := &unsetTagOptions{
+		objectType: s.objectType,
+		objectName: s.objectName,
+		UnsetTags:  s.UnsetTags,
+	}
+	if o.objectType == ObjectTypeColumn {
+		id, ok := o.objectName.(TableColumnIdentifier)
+		if ok {
+			o.objectType = ObjectTypeTable
+			o.objectName = NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), id.TableName())
+			o.column = String(id.Name())
+		}
+	}
+	return o
 }

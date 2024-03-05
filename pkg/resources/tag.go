@@ -1,24 +1,16 @@
 package resources
 
 import (
-	"bytes"
-	"database/sql"
-	"encoding/csv"
-	"errors"
+	"context"
 	"fmt"
-	"log"
-	"strings"
+	"slices"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
-)
-
-const (
-	tagIDDelimiter = '|'
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 var tagSchema = map[string]*schema.Schema{
@@ -85,65 +77,13 @@ var tagReferenceSchema = &schema.Schema{
 	},
 }
 
-type TagID struct {
-	DatabaseName string
-	SchemaName   string
-	TagName      string
-}
-
-type TagBuilder interface {
-	UnsetTag(snowflake.TagValue) string
-	AddTag(snowflake.TagValue) string
-	ChangeTag(snowflake.TagValue) string
-}
-
-// String() takes in a schemaID object and returns a pipe-delimited string:
-// DatabaseName|SchemaName|TagName.
-func (ti *TagID) String() (string, error) {
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-	csvWriter.Comma = schemaIDDelimiter
-	dataIdentifiers := [][]string{{ti.DatabaseName, ti.SchemaName, ti.TagName}}
-
-	if err := csvWriter.WriteAll(dataIdentifiers); err != nil {
-		return "", err
-	}
-	strTagID := strings.TrimSpace(buf.String())
-	return strTagID, nil
-}
-
-// tagIDFromString() takes in a pipe-delimited string: DatabaseName|tagName
-// and returns a tagID object.
-func tagIDFromString(stringID string) (*TagID, error) {
-	reader := csv.NewReader(strings.NewReader(stringID))
-	reader.Comma = tagIDDelimiter
-	lines, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("not CSV compatible")
-	}
-
-	if len(lines) != 1 {
-		return nil, fmt.Errorf("1 line per schema")
-	}
-	if len(lines[0]) != 3 {
-		return nil, fmt.Errorf("3 fields allowed")
-	}
-
-	tagResult := &TagID{
-		DatabaseName: lines[0][0],
-		SchemaName:   lines[0][1],
-		TagName:      lines[0][2],
-	}
-	return tagResult, nil
-}
-
 // Schema returns a pointer to the resource representing a schema.
 func Tag() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateTag,
-		Read:   ReadTag,
-		Update: UpdateTag,
-		Delete: DeleteTag,
+		CreateContext: CreateContextTag,
+		ReadContext:   ReadContextTag,
+		UpdateContext: UpdateContextTag,
+		DeleteContext: DeleteContextTag,
 
 		Schema: tagSchema,
 		Importer: &schema.ResourceImporter{
@@ -152,149 +92,113 @@ func Tag() *schema.Resource {
 	}
 }
 
-// CreateSchema implements schema.CreateFunc.
-func CreateTag(d *schema.ResourceData, meta interface{}) error {
+func CreateContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	db := client.GetConn().DB
 	name := d.Get("name").(string)
-	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
+	database := d.Get("database").(string)
+	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
 
-	builder := snowflake.NewTagBuilder(name).WithDB(database).WithSchema(schema)
-
-	// Set optionals
+	request := sdk.NewCreateTagRequest(id)
 	if v, ok := d.GetOk("comment"); ok {
-		builder.WithComment(v.(string))
+		request.WithComment(sdk.String(v.(string)))
 	}
-
 	if v, ok := d.GetOk("allowed_values"); ok {
-		builder.WithAllowedValues(expandStringList(v.([]interface{})))
+		request.WithAllowedValues(expandStringList(v.([]interface{})))
 	}
-
-	q := builder.Create()
-
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error creating tag %v", name)
+	if err := client.Tags.Create(ctx, request); err != nil {
+		return diag.FromErr(err)
 	}
-
-	tagID := &TagID{
-		DatabaseName: database,
-		SchemaName:   schema,
-		TagName:      name,
-	}
-	dataIDInput, err := tagID.String()
-	if err != nil {
-		return err
-	}
-	d.SetId(dataIDInput)
-
-	return ReadTag(d, meta)
+	d.SetId(helpers.EncodeSnowflakeID(id))
+	return ReadContextTag(ctx, d, meta)
 }
 
-// ReadSchema implements schema.ReadFunc.
-func ReadTag(d *schema.ResourceData, meta interface{}) error {
+func ReadContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
 	client := meta.(*provider.Context).Client
-	db := client.GetConn().DB
-	tagID, err := tagIDFromString(d.Id())
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	tag, err := client.Tags.ShowByID(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-
-	dbName := tagID.DatabaseName
-	schemaName := tagID.SchemaName
-	tag := tagID.TagName
-
-	q := snowflake.NewTagBuilder(tag).WithDB(dbName).WithSchema(schemaName).Show()
-	row := snowflake.QueryRow(db, q)
-
-	t, err := snowflake.ScanTag(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		// If not found, mark resource to be removed from state file during apply or refresh
-		log.Printf("[DEBUG] tag (%s) not found", d.Id())
-		d.SetId("")
-		return nil
+	if err := d.Set("name", tag.Name); err != nil {
+		return diag.FromErr(err)
 	}
-	if err != nil {
-		return err
+	if err := d.Set("database", tag.DatabaseName); err != nil {
+		return diag.FromErr(err)
 	}
-
-	if err := d.Set("name", t.Name.String); err != nil {
-		return err
+	if err := d.Set("schema", tag.SchemaName); err != nil {
+		return diag.FromErr(err)
 	}
-
-	if err := d.Set("database", t.DatabaseName.String); err != nil {
-		return err
+	if err := d.Set("comment", tag.Comment); err != nil {
+		return diag.FromErr(err)
 	}
-
-	if err := d.Set("schema", t.SchemaName.String); err != nil {
-		return err
+	if err := d.Set("allowed_values", tag.AllowedValues); err != nil {
+		return diag.FromErr(err)
 	}
-
-	if err := d.Set("comment", t.Comment.String); err != nil {
-		return err
-	}
-
-	av := strings.ReplaceAll(t.AllowedValues.String, "\"", "")
-	av = strings.TrimPrefix(av, "[")
-	av = strings.TrimSuffix(av, "]")
-	err = d.Set("allowed_values", helpers.StringListToList(av))
-	return err
+	return diags
 }
 
-// UpdateTag implements schema.UpdateFunc.
-func UpdateTag(d *schema.ResourceData, meta interface{}) error {
-	tagID, err := tagIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := tagID.DatabaseName
-	schemaName := tagID.SchemaName
-	tag := tagID.TagName
-
-	builder := snowflake.NewTagBuilder(tag).WithDB(dbName).WithSchema(schemaName)
-
+func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	db := client.GetConn().DB
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	if d.HasChange("comment") {
 		comment, ok := d.GetOk("comment")
-		var q string
 		if ok {
-			q = builder.ChangeComment(comment.(string))
+			set := sdk.NewTagSetRequest().WithComment(comment.(string))
+			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithSet(set)); err != nil {
+				return diag.FromErr(err)
+			}
 		} else {
-			q = builder.RemoveComment()
-		}
-		if err := snowflake.Exec(db, q); err != nil {
-			return fmt.Errorf("error updating tag comment on %v", d.Id())
+			unset := sdk.NewTagUnsetRequest().WithComment(true)
+			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithUnset(unset)); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
-
-	// If there is change in allowed_values field
 	if d.HasChange("allowed_values") {
-		if _, ok := d.GetOk("allowed_values"); ok {
-			v := d.Get("allowed_values")
+		old, new := d.GetChange("allowed_values")
+		oldAllowedValues := expandStringList(old.([]interface{}))
+		newAllowedValues := expandStringList(new.([]interface{}))
+		var allowedValuesToAdd, allowedValuesToRemove []string
 
-			ns := expandAllowedValues(v)
-
-			q := builder.RemoveAllowedValues()
-
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error removing ALLOWED_VALUES for tag %v", tag)
+		for _, oldAllowedValue := range oldAllowedValues {
+			if !slices.Contains(newAllowedValues, oldAllowedValue) {
+				allowedValuesToRemove = append(allowedValuesToRemove, oldAllowedValue)
 			}
+		}
 
-			addQuery := builder.AddAllowedValues(ns)
-			if err := snowflake.Exec(db, addQuery); err != nil {
-				return fmt.Errorf("error adding ALLOWED_VALUES for tag %v", tag)
+		for _, newAllowedValue := range newAllowedValues {
+			if !slices.Contains(oldAllowedValues, newAllowedValue) {
+				allowedValuesToAdd = append(allowedValuesToAdd, newAllowedValue)
 			}
-		} else {
-			q := builder.RemoveAllowedValues()
-			if err := snowflake.Exec(db, q); err != nil {
-				return fmt.Errorf("error removing ALLOWED_VALUES for tag %v", tag)
+		}
+
+		if len(allowedValuesToAdd) > 0 {
+			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithAdd(allowedValuesToAdd)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if len(allowedValuesToRemove) > 0 {
+			req := sdk.NewAlterTagRequest(id).WithUnset(sdk.NewTagUnsetRequest().WithAllowedValues(true))
+			if err := client.Tags.Alter(ctx, req); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
+	return ReadContextTag(ctx, d, meta)
+}
 
-	return ReadTag(d, meta)
+func DeleteContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	if err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id)); err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId("")
+	return nil
 }
 
 // Returns the slice of strings for inputed allowed values.
@@ -306,119 +210,4 @@ func expandAllowedValues(avChangeSet interface{}) []string {
 	}
 
 	return newAvs
-}
-
-// DeleteTag implements schema.DeleteFunc.
-func DeleteTag(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*provider.Context).Client
-	db := client.GetConn().DB
-	tagID, err := tagIDFromString(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbName := tagID.DatabaseName
-	schemaName := tagID.SchemaName
-	tag := tagID.TagName
-
-	q := snowflake.NewTagBuilder(tag).WithDB(dbName).WithSchema(schemaName).Drop()
-
-	if err := snowflake.Exec(db, q); err != nil {
-		return fmt.Errorf("error deleting tag %v err = %w", d.Id(), err)
-	}
-
-	d.SetId("")
-
-	return nil
-}
-
-type tags []tag
-
-func (t tags) toSnowflakeTagValues() []snowflake.TagValue {
-	sT := make([]snowflake.TagValue, len(t))
-	for i, tag := range t {
-		sT[i] = tag.toSnowflakeTagValue()
-	}
-	return sT
-}
-
-func (t tag) toSnowflakeTagValue() snowflake.TagValue {
-	return snowflake.TagValue{
-		Name:     t.name,
-		Value:    t.value,
-		Database: t.database,
-		Schema:   t.schema,
-	}
-}
-
-func (t tags) getNewIn(new tags) (added tags) {
-	added = tags{}
-	for _, t0 := range t {
-		found := false
-		for _, cN := range new {
-			if t0.name == cN.name {
-				found = true
-				break
-			}
-		}
-		if !found {
-			added = append(added, t0)
-		}
-	}
-	return
-}
-
-func (t tags) getChangedTagProperties(new tags) (changed tags) {
-	changed = tags{}
-	for _, t0 := range t {
-		for _, tN := range new {
-			if t0.name == tN.name && t0.value != tN.value {
-				changed = append(changed, tN)
-			}
-		}
-	}
-	return
-}
-
-func (t tags) diffs(new tags) (removed tags, added tags, changed tags) {
-	return t.getNewIn(new), new.getNewIn(t), t.getChangedTagProperties(new)
-}
-
-func (t columns) getNewIn(new columns) (added columns) {
-	added = columns{}
-	for _, cO := range t {
-		found := false
-		for _, cN := range new {
-			if cO.name == cN.name {
-				found = true
-				break
-			}
-		}
-		if !found {
-			added = append(added, cO)
-		}
-	}
-	return
-}
-
-type tag struct {
-	name     string
-	value    string
-	database string
-	schema   string
-}
-
-func getTags(from interface{}) (to tags) {
-	tags := from.([]interface{})
-	to = make([]tag, len(tags))
-	for i, t := range tags {
-		v := t.(map[string]interface{})
-		to[i] = tag{
-			name:     v["name"].(string),
-			value:    v["value"].(string),
-			database: v["database"].(string),
-			schema:   v["schema"].(string),
-		}
-	}
-	return to
 }

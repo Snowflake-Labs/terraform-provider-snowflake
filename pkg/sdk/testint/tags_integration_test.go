@@ -87,8 +87,17 @@ func TestInt_Tags(t *testing.T) {
 
 		comment := random.Comment()
 		values := []string{"value1", "value2"}
-		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id).WithOrReplace(true).WithComment(&comment).WithAllowedValues(values))
-		sdk.ErrorsEqual(t, sdk.ErrOneOf("createTagOptions", "Comment", "AllowedValues"), err)
+		request := sdk.NewCreateTagRequest(id).
+			WithOrReplace(true).
+			WithComment(&comment).
+			WithAllowedValues(values)
+		err := client.Tags.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupTagHandle(id))
+
+		tag, err := client.Tags.ShowByID(ctx, id)
+		require.NoError(t, err)
+		assertTagHandle(t, tag, name, comment, values)
 	})
 
 	t.Run("create tag: no optionals", func(t *testing.T) {

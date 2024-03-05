@@ -26,9 +26,6 @@ func (opts *createTagOptions) validate() error {
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
 		errs = append(errs, errOneOf("createTagOptions", "OrReplace", "IfNotExists"))
 	}
-	if valueSet(opts.Comment) && valueSet(opts.AllowedValues) {
-		errs = append(errs, errOneOf("createTagOptions", "Comment", "AllowedValues"))
-	}
 	if valueSet(opts.AllowedValues) {
 		if err := opts.AllowedValues.validate(); err != nil {
 			errs = append(errs, err)
@@ -140,6 +137,28 @@ func (opts *undropTagOptions) validate() error {
 	}
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *setTagOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.objectName) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return errors.Join(errs...)
+}
+
+func (opts *unsetTagOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.objectName) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return errors.Join(errs...)
