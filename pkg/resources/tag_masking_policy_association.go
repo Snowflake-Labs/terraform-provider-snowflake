@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -86,9 +87,7 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 }
 
 func CreateContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-
+	client := meta.(*provider.Context).Client
 	value := d.Get("tag_id").(string)
 	tid := helpers.DecodeSnowflakeID(value).(sdk.SchemaObjectIdentifier)
 	value = d.Get("masking_policy_id").(string)
@@ -113,9 +112,8 @@ func CreateContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.Res
 
 func ReadContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	diags := diag.Diagnostics{}
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	aid, err := parseAttachmentID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
@@ -165,9 +163,7 @@ func ReadContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.Resou
 }
 
 func DeleteContextTagMaskingPolicyAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-
+	client := meta.(*provider.Context).Client
 	aid, err := parseAttachmentID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)

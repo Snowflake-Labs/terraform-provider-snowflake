@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -36,7 +39,9 @@ func TestRowAccessPolicyGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT APPLY ON ROW ACCESS POLICY "test-db"."PUBLIC"."test-row-access-policy" TO ROLE "test-role-1"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT APPLY ON ROW ACCESS POLICY "test-db"."PUBLIC"."test-row-access-policy" TO ROLE "test-role-2"$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadRowAccessPolicyGrant(mock)
-		err := resources.CreateRowAccessPolicyGrant(d, db)
+		err := resources.CreateRowAccessPolicyGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -57,7 +62,9 @@ func TestRowAccessPolicyGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadRowAccessPolicyGrant(mock)
-		err := resources.ReadRowAccessPolicyGrant(d, db)
+		err := resources.ReadRowAccessPolicyGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 

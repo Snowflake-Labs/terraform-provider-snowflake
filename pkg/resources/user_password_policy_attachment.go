@@ -2,9 +2,10 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -41,8 +42,7 @@ func UserPasswordPolicyAttachment() *schema.Resource {
 }
 
 func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
@@ -63,8 +63,7 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error 
 }
 
 func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	parts := strings.Split(d.Id(), helpers.IDDelimiter)
@@ -107,8 +106,7 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 }
 
 func DeleteUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))

@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -29,7 +32,9 @@ func TestRoleOwnershipGrantCreate(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`GRANT OWNERSHIP ON ROLE "good_name" TO ROLE "other_good_name" COPY CURRENT GRANTS`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadRoleOwnershipGrant(mock)
-		err := resources.CreateRoleOwnershipGrant(d, db)
+		err := resources.CreateRoleOwnershipGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -45,7 +50,9 @@ func TestRoleOwnershipGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadRoleOwnershipGrant(mock)
-		err := resources.ReadRoleOwnershipGrant(d, db)
+		err := resources.ReadRoleOwnershipGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -77,7 +84,9 @@ func TestRoleOwnershipGrantDelete(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`GRANT OWNERSHIP ON ROLE "good_name" TO ROLE "ACCOUNTADMIN" COPY CURRENT GRANTS`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := resources.DeleteRoleOwnershipGrant(d, db)
+		err := resources.DeleteRoleOwnershipGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }

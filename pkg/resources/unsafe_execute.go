@@ -2,11 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -67,9 +67,8 @@ func UnsafeExecute() *schema.Resource {
 }
 
 func ReadUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	readStatement := d.Get("query").(string)
 
@@ -120,9 +119,8 @@ func ReadUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 }
 
 func CreateUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	id, err := uuid.GenerateUUID()
 	if err != nil {
@@ -142,9 +140,8 @@ func CreateUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 }
 
 func DeleteUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	revertStatement := d.Get("revert").(string)
 	_, err := client.ExecUnsafe(ctx, revertStatement)

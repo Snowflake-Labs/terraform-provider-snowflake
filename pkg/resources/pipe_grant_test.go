@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -37,7 +40,9 @@ func TestPipeGrantCreate(t *testing.T) {
 		mock.ExpectExec(`^GRANT OPERATE ON PIPE "test-db"."PUBLIC"."test-pipe" TO ROLE "test-role-1" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`^GRANT OPERATE ON PIPE "test-db"."PUBLIC"."test-pipe" TO ROLE "test-role-2" WITH GRANT OPTION$`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadPipeGrant(mock)
-		err := resources.CreatePipeGrant(d, db)
+		err := resources.CreatePipeGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -58,7 +63,9 @@ func TestPipeGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadPipeGrant(mock)
-		err := resources.ReadPipeGrant(d, db)
+		err := resources.ReadPipeGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -101,7 +108,9 @@ func TestFuturePipeGrantCreate(t *testing.T) {
 			`^GRANT OPERATE ON FUTURE PIPES IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFuturePipeGrant(mock)
-		err := resources.CreatePipeGrant(d, db)
+		err := resources.CreatePipeGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -125,7 +134,9 @@ func TestFuturePipeGrantCreate(t *testing.T) {
 			`^GRANT OPERATE ON FUTURE PIPES IN DATABASE "test-db" TO ROLE "test-role-2"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFuturePipeDatabaseGrant(mock)
-		err := resources.CreatePipeGrant(d, db)
+		err := resources.CreatePipeGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		b.NoError(err)
 	})
 }

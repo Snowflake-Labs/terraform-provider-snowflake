@@ -2,11 +2,12 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/stretchr/testify/require"
@@ -293,8 +294,7 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 
 func checkDatabaseAndSchemaDataRetentionTime(id sdk.DatabaseObjectIdentifier, expectedDatabaseRetentionsDays int, expectedSchemaRetentionDays int) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
-		db := acc.TestAccProvider.Meta().(*sql.DB)
-		client := sdk.NewClientFromDB(db)
+		client := acc.TestAccProvider.Meta().(*provider.Context).Client
 		ctx := context.Background()
 
 		schema, err := client.Schemas.ShowByID(ctx, id)
@@ -351,8 +351,7 @@ func setSchemaDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, d
 }
 
 func testAccCheckSchemaDestroy(s *terraform.State) error {
-	db := acc.TestAccProvider.Meta().(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := acc.TestAccProvider.Meta().(*provider.Context).Client
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "snowflake_schema" {
 			continue

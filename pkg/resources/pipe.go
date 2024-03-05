@@ -2,10 +2,11 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -107,8 +108,7 @@ func pipeCopyStatementDiffSuppress(_, o, n string, _ *schema.ResourceData) bool 
 
 // CreatePipe implements schema.CreateFunc.
 func CreatePipe(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -154,8 +154,7 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 
 // ReadPipe implements schema.ReadFunc.
 func ReadPipe(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	ctx := context.Background()
@@ -214,8 +213,7 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 
 // UpdatePipe implements schema.UpdateFunc.
 func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	ctx := context.Background()
 
@@ -265,8 +263,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 
 // DeletePipe implements schema.DeleteFunc.
 func DeletePipe(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 

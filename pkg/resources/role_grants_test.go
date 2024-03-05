@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -33,7 +36,9 @@ func TestRoleGrantsCreate(t *testing.T) {
 		mock.ExpectExec(`GRANT ROLE "good_name" TO USER "user1"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`GRANT ROLE "good_name" TO USER "user2"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadRoleGrants(mock)
-		err := resources.CreateRoleGrants(d, db)
+		err := resources.CreateRoleGrants(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -65,7 +70,9 @@ func TestRoleGrantsRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		r.NotEmpty(d.State())
 		expectReadRoleGrants(mock)
-		err := resources.ReadRoleGrants(d, db)
+		err := resources.ReadRoleGrants(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NotEmpty(d.State())
 		r.NoError(err)
 		r.Len(d.Get("users").(*schema.Set).List(), 2)
@@ -87,7 +94,9 @@ func TestRoleGrantsDelete(t *testing.T) {
 		mock.ExpectExec(`REVOKE ROLE "drop_it" FROM ROLE "role2"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`REVOKE ROLE "drop_it" FROM USER "user1"`).WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`REVOKE ROLE "drop_it" FROM USER "user2"`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := resources.DeleteRoleGrants(d, db)
+		err := resources.DeleteRoleGrants(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }
@@ -121,7 +130,9 @@ func TestIgnoreUnknownRoleGrants(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		// Make sure that extraneous grants are ignored.
 		expectReadUnhandledRoleGrants(mock)
-		err := resources.ReadRoleGrants(d, db)
+		err := resources.ReadRoleGrants(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 		r.Len(d.Get("users").(*schema.Set).List(), 2)
 		r.Len(d.Get("roles").(*schema.Set).List(), 2)

@@ -2,8 +2,9 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -37,8 +38,7 @@ func AccountPasswordPolicyAttachment() *schema.Resource {
 
 // CreateAccountPasswordPolicyAttachment implements schema.CreateFunc.
 func CreateAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	passwordPolicy, ok := sdk.NewObjectIdentifierFromFullyQualifiedName(d.Get("password_policy").(string)).(sdk.SchemaObjectIdentifier)
@@ -72,8 +72,7 @@ func ReadAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interface{
 
 // DeleteAccountPasswordPolicyAttachment implements schema.DeleteFunc.
 func DeleteAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{

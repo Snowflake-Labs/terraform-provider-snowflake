@@ -2,8 +2,9 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -40,8 +41,7 @@ func Role() *schema.Resource {
 }
 
 func CreateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -72,8 +72,7 @@ func CreateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 }
 
 func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	accountRole, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(id))
@@ -123,8 +122,7 @@ func ReadAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag
 }
 
 func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	if d.HasChange("comment") {
@@ -223,8 +221,7 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 }
 
 func DeleteAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(id))

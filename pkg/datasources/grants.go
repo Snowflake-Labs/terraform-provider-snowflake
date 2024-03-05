@@ -1,8 +1,7 @@
 package datasources
 
 import (
-	"database/sql"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -255,7 +254,8 @@ func Grants() *schema.Resource {
 }
 
 func ReadGrants(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	var grantDetails []snowflake.GrantDetail
 	var err error

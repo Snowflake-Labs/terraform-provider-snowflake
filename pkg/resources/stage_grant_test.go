@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -40,7 +43,9 @@ func TestStageGrantCreate(t *testing.T) {
 			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-1" WITH GRANT OPTION$`, testPriv)).WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectExec(fmt.Sprintf(`^GRANT %s ON STAGE "test-db"."test-schema"."test-stage" TO ROLE "test-role-2" WITH GRANT OPTION$`, testPriv)).WillReturnResult(sqlmock.NewResult(1, 1))
 			expectReadStageGrant(mock, testPriv)
-			err := resources.CreateStageGrant(d, db)
+			err := resources.CreateStageGrant(d, &internalprovider.Context{
+				Client: sdk.NewClientFromDB(db),
+			})
 			r.NoError(err)
 		})
 	}
@@ -62,7 +67,9 @@ func TestStageGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadStageGrant(mock, "USAGE")
-		err := resources.ReadStageGrant(d, db)
+		err := resources.ReadStageGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -105,7 +112,9 @@ func TestFutureStageGrantCreate(t *testing.T) {
 			`^GRANT USAGE ON FUTURE STAGES IN SCHEMA "test-db"."PUBLIC" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureStageGrant(mock)
-		err := resources.CreateStageGrant(d, db)
+		err := resources.CreateStageGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 
@@ -129,7 +138,9 @@ func TestFutureStageGrantCreate(t *testing.T) {
 			`^GRANT USAGE ON FUTURE STAGES IN DATABASE "test-db" TO ROLE "test-role-2"$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureStageDatabaseGrant(mock)
-		err := resources.CreateStageGrant(d, db)
+		err := resources.CreateStageGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		b.NoError(err)
 	})
 }

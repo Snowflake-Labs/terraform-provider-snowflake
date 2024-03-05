@@ -2,9 +2,10 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
@@ -83,10 +84,9 @@ func ObjectParameter() *schema.Resource {
 
 // CreateObjectParameter implements schema.CreateFunc.
 func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
-	client := sdk.NewClientFromDB(db)
 	ctx := context.Background()
 	parameter := sdk.ObjectParameter(key)
 
@@ -139,9 +139,8 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 
 // ReadObjectParameter implements schema.ReadFunc.
 func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 	id := d.Id()
 	parts := strings.Split(id, "|")
 	if len(parts) != 3 {
@@ -180,8 +179,7 @@ func UpdateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteObjectParameter implements schema.DeleteFunc.
 func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	key := d.Get("key").(string)
 

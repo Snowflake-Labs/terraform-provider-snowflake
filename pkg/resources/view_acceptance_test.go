@@ -2,11 +2,12 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -352,6 +353,9 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 }
 
 func TestAcc_ViewStatementUpdate(t *testing.T) {
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -361,7 +365,7 @@ func TestAcc_ViewStatementUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckViewDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, `\"name\"`),
+				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, tableName, viewName, `\"name\"`),
 				Check: resource.ComposeTestCheckFunc(
 					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
@@ -369,7 +373,7 @@ func TestAcc_ViewStatementUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, "*"),
+				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, tableName, viewName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
@@ -411,12 +415,12 @@ func TestAcc_View_copyGrants(t *testing.T) {
 	})
 }
 
-func viewConfigWithGrants(databaseName string, schemaName string, selectStatement string) string {
+func viewConfigWithGrants(databaseName string, schemaName string, tableName string, viewName string, selectStatement string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "table" {
-  database = "%s"
-  schema = "%s"
-  name     = "view_test_table"
+  database = "%[1]s"
+  schema = "%[2]s"
+  name     = "%[3]s"
 
   column {
     name = "name"
@@ -426,11 +430,11 @@ resource "snowflake_table" "table" {
 
 resource "snowflake_view" "test" {
   depends_on = [snowflake_table.table]
-  name = "test"
+  name = "%[4]s"
   comment = "created by terraform"
-  database = "%s"
-  schema = "%s"
-  statement = "select %s from \"%s\".\"%s\".\"${snowflake_table.table.name}\""
+  database = "%[1]s"
+  schema = "%[2]s"
+  statement = "select %[5]s from \"%[1]s\".\"%[2]s\".\"${snowflake_table.table.name}\""
   or_replace = true
   copy_grants = true
   is_secure = true
@@ -441,8 +445,8 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_view_grant" "grant" {
-  database_name = "%s"
-  schema_name = "%s"
+  database_name = "%[1]s"
+  schema_name = "%[2]s"
   view_name = snowflake_view.test.name
   privilege = "SELECT"
   roles = [snowflake_role.test.name]
@@ -451,16 +455,11 @@ resource "snowflake_view_grant" "grant" {
 data "snowflake_grants" "grants" {
   depends_on = [snowflake_view_grant.grant, snowflake_view.test]
   grants_on {
-    object_name = "\"%s\".\"%s\".\"${snowflake_view.test.name}\""
+    object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
     object_type = "VIEW"
   }
 }
-	`, databaseName, schemaName,
-		databaseName, schemaName,
-		selectStatement,
-		databaseName, schemaName,
-		databaseName, schemaName,
-		databaseName, schemaName)
+	`, databaseName, schemaName, tableName, viewName, selectStatement)
 }
 
 func viewConfigWithCopyGrants(databaseName string, schemaName string, name string, selectStatement string, copyGrants bool) string {
@@ -501,8 +500,7 @@ resource "snowflake_view" "test" {
 }
 
 func testAccCheckViewDestroy(s *terraform.State) error {
-	db := acc.TestAccProvider.Meta().(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := acc.TestAccProvider.Meta().(*provider.Context).Client
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "snowflake_view" {
 			continue

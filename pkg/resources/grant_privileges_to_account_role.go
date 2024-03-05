@@ -2,11 +2,12 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"slices"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -399,10 +400,7 @@ func ImportGrantPrivilegesToAccountRole() func(ctx context.Context, d *schema.Re
 
 func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	logging.DebugLogger.Printf("[DEBUG] Entering create grant privileges to account role")
-	db := meta.(*sql.DB)
-
-	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := createGrantPrivilegesToAccountRoleIdFromSchema(d)
 	logging.DebugLogger.Printf("[DEBUG] created identifier from schema: %s", id.String())
@@ -434,10 +432,7 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	logging.DebugLogger.Printf("[DEBUG] Entering update grant privileges to account role")
-	db := meta.(*sql.DB)
-
-	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
 	if err != nil {
@@ -633,10 +628,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	logging.DebugLogger.Printf("[DEBUG] Entering delete grant privileges to account role")
-	db := meta.(*sql.DB)
-
-	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
 	if err != nil {
@@ -730,9 +722,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 
-	db := meta.(*sql.DB)
-	logging.DebugLogger.Printf("[DEBUG] Creating new client from db")
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)

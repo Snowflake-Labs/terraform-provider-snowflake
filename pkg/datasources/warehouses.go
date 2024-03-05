@@ -2,10 +2,10 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -57,8 +57,7 @@ func Warehouses() *schema.Resource {
 }
 
 func ReadWarehouses(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	account, err := client.ContextFunctions.CurrentSessionDetails(ctx)

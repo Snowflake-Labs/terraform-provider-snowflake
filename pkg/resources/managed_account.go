@@ -2,9 +2,10 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 
@@ -96,9 +97,8 @@ func ManagedAccount() *schema.Resource {
 
 // CreateManagedAccount implements schema.CreateFunc.
 func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
-	client := sdk.NewClientFromDB(db)
 
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -125,8 +125,7 @@ func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 
 // ReadManagedAccount implements schema.ReadFunc.
 func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
@@ -188,8 +187,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteManagedAccount implements schema.DeleteFunc.
 func DeleteManagedAccount(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)

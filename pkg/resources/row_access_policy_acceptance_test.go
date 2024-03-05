@@ -2,10 +2,11 @@ package resources_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -88,8 +89,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 }
 
 func testAccCheckRowAccessPolicyDestroy(s *terraform.State) error {
-	db := acc.TestAccProvider.Meta().(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := acc.TestAccProvider.Meta().(*provider.Context).Client
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "snowflake_row_access_policy" {
 			continue

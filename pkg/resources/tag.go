@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"slices"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -93,8 +93,7 @@ func Tag() *schema.Resource {
 }
 
 func CreateContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
 	database := d.Get("database").(string)
@@ -116,9 +115,7 @@ func CreateContextTag(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func ReadContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	diags := diag.Diagnostics{}
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-
+	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	tag, err := client.Tags.ShowByID(ctx, id)
@@ -144,9 +141,7 @@ func ReadContextTag(ctx context.Context, d *schema.ResourceData, meta interface{
 }
 
 func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-
+	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	if d.HasChange("comment") {
 		comment, ok := d.GetOk("comment")
@@ -197,9 +192,7 @@ func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func DeleteContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-
+	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	if err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id)); err != nil {
 		return diag.FromErr(err)

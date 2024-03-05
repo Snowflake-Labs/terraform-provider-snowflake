@@ -2,9 +2,10 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -103,7 +104,8 @@ func Stage() *schema.Resource {
 }
 
 func CreateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	name := d.Get("name").(string)
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
@@ -159,9 +161,8 @@ func CreateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 }
 
 func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	client := sdk.NewClientFromDB(db)
 
 	properties, err := client.Stages.Describe(ctx, id)
 	if err != nil {
@@ -257,8 +258,8 @@ func UpdateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 
 	builder := snowflake.NewStageBuilder(id.Name(), id.DatabaseName(), id.SchemaName())
 
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 
 	if d.HasChange("credentials") {
 		credentials := d.Get("credentials")
@@ -347,9 +348,8 @@ func UpdateStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 }
 
 func DeleteStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	client := sdk.NewClientFromDB(db)
 
 	err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
 	if err != nil {

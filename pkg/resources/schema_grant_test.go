@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -50,7 +53,9 @@ func TestSchemaGrantCreate(t *testing.T) {
 				fmt.Sprintf(`^GRANT %s ON SCHEMA "test-db"."test-schema" TO SHARE "test-share-2" WITH GRANT OPTION$`, testPriv),
 			).WillReturnResult(sqlmock.NewResult(1, 1))
 			expectReadSchemaGrant(mock, testPriv)
-			err := resources.CreateSchemaGrant(d, db)
+			err := resources.CreateSchemaGrant(d, &internalprovider.Context{
+				Client: sdk.NewClientFromDB(db),
+			})
 			r.NoError(err)
 		})
 	}
@@ -72,7 +77,9 @@ func TestSchemaGrantRead(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadSchemaGrant(mock, "USAGE")
-		err := resources.ReadSchemaGrant(d, db)
+		err := resources.ReadSchemaGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 	roles := d.Get("roles").(*schema.Set)
@@ -122,7 +129,9 @@ func TestFutureSchemaGrantCreate(t *testing.T) {
 			`^GRANT USAGE ON FUTURE SCHEMAS IN DATABASE "test-db" TO ROLE "test-role-2" WITH GRANT OPTION$`,
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadFutureSchemaGrant(mock)
-		err := resources.CreateSchemaGrant(d, db)
+		err := resources.CreateSchemaGrant(d, &internalprovider.Context{
+			Client: sdk.NewClientFromDB(db),
+		})
 		r.NoError(err)
 	})
 }

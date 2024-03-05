@@ -2,11 +2,12 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -174,8 +175,7 @@ func DynamicTable() *schema.Resource {
 
 // ReadDynamicTable implements schema.ReadFunc.
 func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	dynamicTable, err := client.DynamicTables.ShowByID(context.Background(), id)
@@ -305,8 +305,7 @@ func parseTargetLag(v interface{}) sdk.TargetLag {
 
 // CreateDynamicTable implements schema.CreateFunc.
 func CreateDynamicTable(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -340,8 +339,7 @@ func CreateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 
 // UpdateDynamicTable implements schema.UpdateFunc.
 func UpdateDynamicTable(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	request := sdk.NewAlterDynamicTableRequest(id)
@@ -382,8 +380,7 @@ func UpdateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 
 // DeleteDynamicTable implements schema.DeleteFunc.
 func DeleteDynamicTable(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	if err := client.DynamicTables.Drop(context.Background(), sdk.NewDropDynamicTableRequest(id)); err != nil {

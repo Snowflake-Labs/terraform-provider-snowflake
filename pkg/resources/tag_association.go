@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
@@ -164,8 +164,7 @@ func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectI
 }
 
 func CreateContextTagAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	tagValue := d.Get("tag_value").(string)
 
 	tid, ids, ot := TagIdentifierAndObjectIdentifier(d)
@@ -203,8 +202,7 @@ func CreateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 
 func ReadContextTagAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	diags := diag.Diagnostics{}
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 
 	tid, ids, ot := TagIdentifierAndObjectIdentifier(d)
 	for _, oid := range ids {
@@ -220,9 +218,7 @@ func ReadContextTagAssociation(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-
+	client := meta.(*provider.Context).Client
 	tid, ids, ot := TagIdentifierAndObjectIdentifier(d)
 	for _, oid := range ids {
 		if d.HasChange("skip_validation") {
@@ -253,9 +249,7 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 }
 
 func DeleteContextTagAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
-
+	client := meta.(*provider.Context).Client
 	tid, ids, ot := TagIdentifierAndObjectIdentifier(d)
 	for _, oid := range ids {
 		request := sdk.NewUnsetTagRequest(ot, oid).WithUnsetTags([]sdk.ObjectIdentifier{tid})

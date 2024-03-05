@@ -2,9 +2,10 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
@@ -84,8 +85,7 @@ func Parameters() *schema.Resource {
 }
 
 func ReadParameters(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
-	client := sdk.NewClientFromDB(db)
+	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	p, ok := d.GetOk("pattern")
 	pattern := ""

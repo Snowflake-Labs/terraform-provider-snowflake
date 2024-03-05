@@ -8,6 +8,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -79,7 +81,8 @@ func checkUserExists(db *sql.DB, name string) (bool, error) {
 }
 
 func ReadUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	id := d.Id()
 
 	exists, err := checkUserExists(db, id)
@@ -96,7 +99,8 @@ func ReadUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 }
 
 func CreateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	name := d.Get("name").(string)
 
 	for _, prop := range userPublicKeyProperties {
@@ -115,7 +119,8 @@ func CreateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 }
 
 func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	name := d.Id()
 
 	propsToSet := map[string]string{}
@@ -155,7 +160,8 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 }
 
 func DeleteUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
-	db := meta.(*sql.DB)
+	client := meta.(*provider.Context).Client
+	db := client.GetConn().DB
 	name := d.Id()
 
 	for _, prop := range userPublicKeyProperties {
