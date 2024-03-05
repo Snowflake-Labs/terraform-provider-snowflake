@@ -102,6 +102,27 @@ func TestInt_FileFormatsCreateAndRead(t *testing.T) {
 		assert.Equal(t, true, *describeResult.Options.CSVSkipByteOrderMark)
 		assert.Equal(t, &sdk.CSVEncodingGB18030, describeResult.Options.CSVEncoding)
 	})
+
+	// Check that field_optionally_enclosed_by can take the value NONE
+	t.Run("CSV", func(t *testing.T) {
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
+			Type: sdk.FileFormatTypeCSV,
+			FileFormatTypeOptions: sdk.FileFormatTypeOptions{
+				CSVFieldOptionallyEnclosedBy: sdk.String("NONE"),
+			},
+		})
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.FileFormats.Drop(ctx, id, nil)
+			require.NoError(t, err)
+		})
+
+		result, err := client.FileFormats.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, "NONE", *result.Options.CSVFieldOptionallyEnclosedBy)
+	})
 	t.Run("JSON", func(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
 		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{
