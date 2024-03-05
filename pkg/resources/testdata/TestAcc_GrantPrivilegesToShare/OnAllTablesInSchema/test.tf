@@ -22,4 +22,5 @@ resource "snowflake_grant_privileges_to_share" "test" {
   to_share                = snowflake_share.test.name
   privileges              = var.privileges
   on_all_tables_in_schema = "\"${snowflake_schema.test.database}\".\"${snowflake_schema.test.name}\""
+  depends_on              = [snowflake_grant_privileges_to_share.test_setup]
 }

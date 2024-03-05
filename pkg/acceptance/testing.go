@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"log"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,25 +24,43 @@ const (
 	TestWarehouseName2 = "terraform_test_warehouse_2"
 )
 
-var TestAccProvider *schema.Provider
-
-var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"snowflake": func() (tfprotov6.ProviderServer, error) {
-		return tf5to6server.UpgradeServer(
-			context.Background(),
-			TestAccProvider.GRPCProvider,
-		)
-	},
-}
+var (
+	TestAccProvider *schema.Provider
+	v5Server        tfprotov5.ProviderServer
+	v6Server        tfprotov6.ProviderServer
+)
 
 func init() {
 	TestAccProvider = provider.Provider()
+	v5Server = TestAccProvider.GRPCProvider()
+	var err error
+	v6Server, err = tf5to6server.UpgradeServer(
+		context.Background(),
+		func() tfprotov5.ProviderServer {
+			return v5Server
+		},
+	)
+	if err != nil {
+		log.Panicf("Cannot upgrade server from proto v5 to proto v6, failing, err: %v", err)
+	}
+	_ = testAccProtoV6ProviderFactoriesNew
 }
 
-func TestAccProviders() map[string]*schema.Provider {
-	return map[string]*schema.Provider{
-		"snowflake": provider.Provider(),
-	}
+var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"snowflake": func() (tfprotov6.ProviderServer, error) {
+		return v6Server, nil
+	},
+}
+
+// if we do not reuse the created objects there is no `Previously configured provider being re-configured.` warning
+// currently left for possible usage after other improvements
+var testAccProtoV6ProviderFactoriesNew = map[string]func() (tfprotov6.ProviderServer, error){
+	"snowflake": func() (tfprotov6.ProviderServer, error) {
+		return tf5to6server.UpgradeServer(
+			context.Background(),
+			provider.Provider().GRPCProvider,
+		)
+	},
 }
 
 var once sync.Once
@@ -97,13 +117,5 @@ func ConfigurationSameAsStepN(step int) func(config.TestStepConfigRequest) strin
 func ConfigurationDirectory(directory string) func(config.TestStepConfigRequest) string {
 	return func(req config.TestStepConfigRequest) string {
 		return filepath.Join("testdata", directory)
-	}
-}
-
-// ConfigurationInnerDirectory is similar to ConfigurationSameAsStepN, but instead of index-based directories,
-// you can choose a particular one by name.
-func ConfigurationInnerDirectory(innerDirectory string) func(config.TestStepConfigRequest) string {
-	return func(req config.TestStepConfigRequest) string {
-		return filepath.Join("testdata", req.TestName, innerDirectory)
 	}
 }

@@ -5,18 +5,17 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/snowflakedb/gosnowflake"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 func init() {
@@ -572,7 +571,22 @@ func getDataSources() map[string]*schema.Resource {
 	return dataSources
 }
 
+var (
+	configuredClient     *sdk.Client
+	configureClientError error //nolint:errname
+)
+
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
+	// hacky way to speed up our acceptance tests
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+		if configuredClient != nil {
+			return &provider.Context{Client: configuredClient}, nil
+		}
+		if configureClientError != nil {
+			return nil, configureClientError
+		}
+	}
+
 	config := &gosnowflake.Config{
 		Application: "terraform-provider-snowflake",
 	}
@@ -775,14 +789,11 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		}
 	}
 
-	client, err := sdk.NewClient(config)
-	if err != nil {
-		return nil, err
+	configuredClient, configureClientError = sdk.NewClient(config)
+
+	if configureClientError != nil {
+		return nil, configureClientError
 	}
 
-	providerContext := &provider.Context{
-		Client: client,
-	}
-
-	return providerContext, nil
+	return &provider.Context{Client: configuredClient}, nil
 }

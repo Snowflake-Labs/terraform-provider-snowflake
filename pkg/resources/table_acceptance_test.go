@@ -452,6 +452,7 @@ resource "snowflake_table" "test_table" {
 		type = "VARCHAR(16)"
 	}
 }
+
 resource "snowflake_object_parameter" "data_retention_in_time" {
 	key = "DATA_RETENTION_TIME_IN_DAYS"
 	value = "30"
@@ -461,6 +462,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 		database = "%s"
 		schema = "%s"
 	}
+	depends_on = [snowflake_table.test_table]
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
@@ -488,6 +490,7 @@ resource "snowflake_table" "test_table" {
 		]
 	}
 }
+
 resource "snowflake_object_parameter" "data_retention_in_time" {
 	key = "DATA_RETENTION_TIME_IN_DAYS"
 	value = "30"
@@ -497,6 +500,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 		database = "%s"
 		schema = "%s"
 	}
+	depends_on = [snowflake_table.test_table]
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
@@ -532,6 +536,7 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 		database = "%s"
 		schema = "%s"
 	}
+	depends_on = [snowflake_table.test_table]
 }
 `
 	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)

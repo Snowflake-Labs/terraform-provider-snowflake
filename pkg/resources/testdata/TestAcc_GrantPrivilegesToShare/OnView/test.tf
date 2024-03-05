@@ -40,4 +40,5 @@ resource "snowflake_grant_privileges_to_share" "test" {
   to_share   = snowflake_share.test.name
   privileges = var.privileges
   on_view    = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\".\"${snowflake_view.test.name}\""
+  depends_on = [snowflake_grant_privileges_to_share.test_setup]
 }

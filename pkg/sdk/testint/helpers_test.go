@@ -634,7 +634,8 @@ func createFailoverGroupWithOptions(t *testing.T, client *sdk.Client, objectType
 
 func createShare(t *testing.T, client *sdk.Client) (*sdk.Share, func()) {
 	t.Helper()
-	id := sdk.RandomAccountObjectIdentifier()
+	// TODO(SNOW-1058419): Try with identifier containing dot during identifiers rework
+	id := sdk.RandomAlphanumericAccountObjectIdentifier()
 	return createShareWithOptions(t, client, id, &sdk.CreateShareOptions{})
 }
 
