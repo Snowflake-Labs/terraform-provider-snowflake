@@ -2,9 +2,10 @@ package resources
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"strings"
 )
 
 type GrantOwnershipTargetRoleKind string

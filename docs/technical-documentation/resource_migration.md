@@ -46,7 +46,7 @@ resource "snowflake_grant_privileges_to_account_role" "new_resource" {
   depends_on = [snowflake_database.test, snowflake_role.a, snowflake_role.b]
   for_each   = toset([snowflake_role.a.name, snowflake_role.b.name])
   privileges = ["USAGE"]
-  role_name  = each.key
+  account_role_name  = each.key
   on_account_object {
     object_type = "DATABASE"
     object_name = snowflake_database.test.name

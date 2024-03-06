@@ -1,9 +1,10 @@
 package resources
 
 import (
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestParseGrantOwnershipId(t *testing.T) {

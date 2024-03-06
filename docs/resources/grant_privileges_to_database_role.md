@@ -217,8 +217,8 @@ Required:
 
 Optional:
 
-- `in_database` (String)
-- `in_schema` (String)
+- `in_database` (String) TODO
+- `in_schema` (String) TODO
 
 
 <a id="nestedblock--on_schema_object--future"></a>
@@ -230,8 +230,8 @@ Required:
 
 Optional:
 
-- `in_database` (String)
-- `in_schema` (String)
+- `in_database` (String) TODO
+- `in_schema` (String) TODO
 
 ## Import
 
