@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.87.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.0...v0.87.1) (2024-03-06)
+
+
+### 🔧 **Misc**
+
+* Add deprecated resources/datasources to the main documentation page ([#2581](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2581)) ([68bbf4f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/68bbf4f4f89ed86d1a1deaf7145c9c13b0c7dff3))
+* Add deprecation message to docs ([#2578](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2578)) ([3675d6d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3675d6d6ad0bfa6f901d98686165a2297e6256ba))
+* Add Terraform setup to the testing pipeline ([#2579](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2579)) ([216e35a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/216e35a8364a66f85e2c77abae0c3a587a493687))
+* Chore use get or skip in other tests ([#2570](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2570)) ([2829b90](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2829b9053e4123805b8f8e58b3223c6603d0f616))
+* modify provider context to pass snowflake client instead of db connection ([#2577](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2577)) ([e7fd4ef](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e7fd4efde121d82eb278f32938c0aa612c13e55b))
+* Speed up tests ([#2580](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2580)) ([f003715](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f003715b32c73e24b9c62c79c5436f058b127e9c))
+
+
+### 🐛 **Bug fixes:**
+
+* file_format validate() for field_optionally_enclosed_by ([#2575](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2575)) ([5da5d93](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5da5d9369e79809ae9dc94830ea2c87b574d687c))
+* Fix import for account parameter ([#2594](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2594)) ([cac884c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/cac884c9f694aeb21476ed5541e579e48d226aea)), closes [#2573](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2573)
+* support snowflake application as database ([#2596](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2596)) ([b9a4a19](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b9a4a19d59866a7f82d7ff50a884d4ac1de8ce04))
+* tag identifiers problems ([#2534](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2534)) ([3c300e1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3c300e1f7a0ce7159eb3722f4f04415fdf051757))
+
 ## [0.87.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.86.0...v0.87.0) (2024-02-28)
 
 
