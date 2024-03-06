@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"log"
 	"strings"
 
@@ -292,9 +293,14 @@ func CreateGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 	id := createGrantOwnershipIdFromSchema(d)
 	logging.DebugLogger.Printf("[DEBUG] created identifier from schema: %s", id.String())
 
-	err := client.Grants.GrantOwnership(
+	grantOn, err := getOwnershipGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = client.Grants.GrantOwnership(
 		ctx,
-		getOwnershipGrantOn(d),
+		grantOn,
 		getOwnershipGrantTo(d),
 		getOwnershipGrantOpts(id),
 	)
@@ -330,13 +336,16 @@ func DeleteGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// TODO: Prepare a special case for on_future branch, because then we should call `revoke ownership on future from ...`
 
-	grantOwnershipOn := getOwnershipGrantOn(d)
+	grantOn, err := getOwnershipGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	if grantOwnershipOn.Future != nil {
+	if grantOn.Future != nil {
 	} else {
 		err = client.Grants.GrantOwnership(
 			ctx,
-			grantOwnershipOn,
+			grantOn,
 			getOwnershipGrantTo(d),
 			getOwnershipGrantOpts(id),
 		)
@@ -432,7 +441,12 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 	return nil
 }
 
-func getOnObjectIdentifier(objectType sdk.ObjectType) (sdk.ObjectIdentifier, error) {
+func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.ObjectIdentifier, error) {
+	identifier, err := helpers.DecodeSnowflakeParameterID(objectName)
+	if err != nil {
+		return nil, err
+	}
+
 	switch objectType {
 	// sdk.AccountObjectIdentifier
 	case sdk.ObjectTypeComputePool,
@@ -445,12 +459,16 @@ func getOnObjectIdentifier(objectType sdk.ObjectType) (sdk.ObjectIdentifier, err
 		sdk.ObjectTypeRole,
 		sdk.ObjectTypeUser,
 		sdk.ObjectTypeWarehouse:
-		return nil, nil
+		if _, ok := identifier.(sdk.AccountObjectIdentifier); !ok {
+			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected account object identifier", objectName))
+		}
 
 	// sdk.DatabaseObjectIdentifier
 	case sdk.ObjectTypeDatabaseRole,
 		sdk.ObjectTypeSchema:
-		return nil, nil
+		if _, ok := identifier.(sdk.DatabaseObjectIdentifier); !ok {
+			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected database object identifier", objectName))
+		}
 
 	// sdk.SchemaObjectIdentifier
 	case sdk.ObjectTypeAggregationPolicy,
@@ -482,13 +500,17 @@ func getOnObjectIdentifier(objectType sdk.ObjectType) (sdk.ObjectIdentifier, err
 		sdk.ObjectTypeTag,
 		sdk.ObjectTypeTask,
 		sdk.ObjectTypeView:
-		return nil, nil
+		if _, ok := identifier.(sdk.SchemaObjectIdentifier); !ok {
+			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected schema object identifier", objectName))
+		}
 	default:
-		return nil, nil
+		return nil, sdk.NewError(fmt.Sprintf("object_type %s is not supported, please create a feature request for the provider if given object_type should be supported", objectType))
 	}
+
+	return identifier, nil
 }
 
-func getOwnershipGrantOn(d *schema.ResourceData) sdk.OwnershipGrantOn {
+func getOwnershipGrantOn(d *schema.ResourceData) (sdk.OwnershipGrantOn, error) {
 	var ownershipGrantOn sdk.OwnershipGrantOn
 
 	on := d.Get("on").([]any)[0].(map[string]any)
@@ -499,9 +521,14 @@ func getOwnershipGrantOn(d *schema.ResourceData) sdk.OwnershipGrantOn {
 
 	switch {
 	case len(onObjectType) > 0 && len(onObjectName) > 0:
+		objectType := sdk.ObjectType(strings.ToUpper(onObjectType))
+		objectName, err := getOnObjectIdentifier(objectType, onObjectName)
+		if err != nil {
+			return ownershipGrantOn, err
+		}
 		ownershipGrantOn.Object = &sdk.Object{
-			ObjectType: sdk.ObjectType(strings.ToUpper(onObjectType)),
-			Name:       sdk.NewAccountObjectIdentifier(onObjectName), // TODO: Any identifier type
+			ObjectType: objectType,
+			Name:       objectName,
 		}
 	case len(onAll) > 0:
 		ownershipGrantOn.All = getGrantOnSchemaObjectIn(onAll[0].(map[string]any))
@@ -509,7 +536,7 @@ func getOwnershipGrantOn(d *schema.ResourceData) sdk.OwnershipGrantOn {
 		ownershipGrantOn.Future = getGrantOnSchemaObjectIn(onFuture[0].(map[string]any))
 	}
 
-	return ownershipGrantOn
+	return ownershipGrantOn, nil
 }
 
 func getOwnershipGrantTo(d *schema.ResourceData) sdk.OwnershipGrantTo {
