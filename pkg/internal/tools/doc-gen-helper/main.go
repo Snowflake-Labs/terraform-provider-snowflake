@@ -32,12 +32,12 @@ func main() {
 	for _, key := range orderedResources {
 		resource := provider.Provider().ResourcesMap[key]
 		if resource.DeprecationMessage != "" {
-			nameRelativeLink := docs.RelativeLink(key, filepath.Join("resources", strings.Replace(key, "snowflake_", "", 1)))
+			nameRelativeLink := docs.RelativeLink(key, filepath.Join("docs", "resources", strings.Replace(key, "snowflake_", "", 1)))
 
 			replacement, path, _ := docs.GetDeprecatedResourceReplacement(resource.DeprecationMessage)
 			var replacementRelativeLink string
 			if replacement != "" && path != "" {
-				replacementRelativeLink = docs.RelativeLink(replacement, filepath.Join("resources", path))
+				replacementRelativeLink = docs.RelativeLink(replacement, filepath.Join("docs", "resources", path))
 			}
 
 			deprecatedResources = append(deprecatedResources, DeprecatedResource{
@@ -57,12 +57,12 @@ func main() {
 	for _, key := range orderedDatasources {
 		datasource := provider.Provider().DataSourcesMap[key]
 		if datasource.DeprecationMessage != "" {
-			nameRelativeLink := docs.RelativeLink(key, filepath.Join("data-sources", strings.Replace(key, "snowflake_", "", 1)))
+			nameRelativeLink := docs.RelativeLink(key, filepath.Join("docs", "data-sources", strings.Replace(key, "snowflake_", "", 1)))
 
 			replacement, path, _ := docs.GetDeprecatedResourceReplacement(datasource.DeprecationMessage)
 			var replacementRelativeLink string
 			if replacement != "" && path != "" {
-				replacementRelativeLink = docs.RelativeLink(replacement, filepath.Join("data-sources", path))
+				replacementRelativeLink = docs.RelativeLink(replacement, filepath.Join("docs", "data-sources", path))
 			}
 
 			deprecatedDatasources = append(deprecatedDatasources, DeprecatedDatasource{
