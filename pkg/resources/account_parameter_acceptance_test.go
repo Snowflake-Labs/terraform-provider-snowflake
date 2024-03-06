@@ -79,3 +79,29 @@ func TestAcc_AccountParameter_REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION(t *
 		},
 	})
 }
+
+func TestAcc_AccountParameter_Issue2573(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: accountParameterBasic("TIMEZONE", "Etc/UTC"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "TIMEZONE"),
+					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "Etc/UTC"),
+				),
+			},
+			{
+				ResourceName:            "snowflake_account_parameter.p",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

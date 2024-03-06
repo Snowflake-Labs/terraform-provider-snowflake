@@ -66,6 +66,10 @@ func ReadAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error setting account parameter err = %w", err)
 	}
+	err = d.Set("key", parameter.Key)
+	if err != nil {
+		return fmt.Errorf("error setting account parameter err = %w", err)
+	}
 	return nil
 }
 
