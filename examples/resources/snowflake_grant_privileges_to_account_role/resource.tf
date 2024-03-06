@@ -69,6 +69,18 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 ## ID: "\"role_name\"|true|false|ALL|OnAccountObject|DATABASE|\"database\""
 
+# grant IMPORTED PRIVILEGES on SNOWFLAKE application
+resource "snowflake_grant_privileges_to_account_role" "example" {
+  account_role_name = snowflake_role.db_role.name
+  privileges        = ["IMPORTED PRIVILEGES"]
+  on_account_object {
+    object_type = "DATABASE" # All applications should be using DATABASE object_type
+    object_name = "SNOWFLAKE"
+  }
+}
+
+## ID: "\"role_name\"|false|false|IMPORTED PRIVILEGES|OnAccountObject|DATABASE|\"SNOWFLAKE\""
+
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_account_role" "example" {
   account_role_name = snowflake_role.db_role.name

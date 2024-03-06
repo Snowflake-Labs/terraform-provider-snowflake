@@ -419,7 +419,7 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "An error occurred when granting privileges to account role",
-				Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", id.String(), id.RoleName, err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err.Error()),
 			},
 		}
 	}
@@ -759,13 +759,23 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		}
 		if grant.GrantOption == id.WithGrantOption && grant.GranteeName.Name() == id.RoleName.Name() {
 			// Future grants do not have grantedBy, only current grants do.
-			// If grantedby is an empty string, it means terraform could not have created the grant
-			if (opts.Future == nil || !*opts.Future) && grant.GrantedBy.Name() == "" {
+			// If grantedby is an empty string, it means terraform could not have created the grant.
+			// The same goes for the default SNOWFLAKE database, but we don't want to skip in this case
+			if (opts.Future == nil || !*opts.Future) && grant.GrantedBy.Name() == "" && grant.Name.Name() != "SNOWFLAKE" {
 				continue
 			}
+
 			// grant_on is for future grants, granted_on is for current grants.
 			// They function the same way though in a test for matching the object type
-			if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
+			//
+			// To `grant privilege on application to a role` the user has to use `object_type = "DATABASE"`.
+			// It's because Snowflake treats applications as if they were databases. One exception to the rule is
+			// the default application named SNOWFLAKE that could be granted with `object_type = "APPLICATION"`.
+			// To make the logic simpler, we do not allow it and `object_type = "DATABASE"` should be used for all applications.
+			// TODO When implementing SNOW-991421 see if logic added in SNOW-887897 could be moved to the SDK to simplify the resource implementation.
+			if grantedOn == sdk.ObjectTypeDatabase && (sdk.ObjectTypeApplication == grant.GrantedOn || sdk.ObjectTypeApplication == grant.GrantOn) {
+				actualPrivileges = append(actualPrivileges, grant.Privilege)
+			} else if grantedOn == grant.GrantedOn || grantedOn == grant.GrantOn {
 				actualPrivileges = append(actualPrivileges, grant.Privilege)
 			}
 		}
