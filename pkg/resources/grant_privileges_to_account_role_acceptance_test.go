@@ -950,6 +950,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivilegesOnSnowflakeDatabase(
 		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(roleName),
 		Steps: []resource.TestStep{
 			{
+				PreConfig:       func() { createAccountRoleOutsideTerraform(t, roleName) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/ImportedPrivilegesOnSnowflakeDatabase"),
 				ConfigVariables: configVariables,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
