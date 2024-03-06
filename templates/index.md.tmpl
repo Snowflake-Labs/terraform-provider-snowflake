@@ -137,3 +137,7 @@ The Snowflake provider will use the following order of precedence when determini
 1) Provider Configuration
 2) Environment Variables
 3) Config File
+
+{{ index (split (codefile "" "examples/additional/deprecated_resources.MD") "```") 1 | trimspace }}
+
+{{ index (split (codefile "" "examples/additional/deprecated_datasources.MD") "```") 1 | trimspace }}
