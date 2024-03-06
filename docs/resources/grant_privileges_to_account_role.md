@@ -11,6 +11,8 @@ description: |-
 
 !> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).
 
+~> **Note** When granting privileges on applications (for example, the default "SNOWFLAKE" application) use `object_type = "DATABASE"` instead.
+
 # snowflake_grant_privileges_to_account_role (Resource)
 
 
@@ -88,6 +90,18 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 }
 
 ## ID: "\"role_name\"|true|false|ALL|OnAccountObject|DATABASE|\"database\""
+
+# grant IMPORTED PRIVILEGES on SNOWFLAKE application
+resource "snowflake_grant_privileges_to_account_role" "example" {
+  account_role_name = snowflake_role.db_role.name
+  privileges        = ["IMPORTED PRIVILEGES"]
+  on_account_object {
+    object_type = "DATABASE" # All applications should be using DATABASE object_type
+    object_name = "SNOWFLAKE"
+  }
+}
+
+## ID: "\"role_name\"|false|false|IMPORTED PRIVILEGES|OnAccountObject|DATABASE|\"SNOWFLAKE\""
 
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_account_role" "example" {
