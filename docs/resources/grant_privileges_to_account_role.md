@@ -11,7 +11,7 @@ description: |-
 
 !> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).
 
-~> **Note** When granting privileges on applications (for example, the default "SNOWFLAKE" application) use `object_type = "DATABASE"` instead.
+~> **Note** When granting privileges on applications (for example, the default "SNOWFLAKE" application) use `on_account_object.object_type = "DATABASE"` instead.
 
 # snowflake_grant_privileges_to_account_role (Resource)
 

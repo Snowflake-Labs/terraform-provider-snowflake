@@ -976,7 +976,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivilegesOnSnowflakeDatabase(
 	})
 }
 
-// TODO(SNOW-1213622): Add test for custom applications using on_object.object_type = "DATABASE"
+// TODO(SNOW-1213622): Add test for custom applications using on_account_object.object_type = "DATABASE"
 
 func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) {
 	nameBytes := []byte(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)))
