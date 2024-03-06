@@ -419,7 +419,7 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "An error occurred when granting privileges to account role",
-				Detail:   fmt.Sprintf("Id: %s\nDatabase role name: %s\nError: %s", id.String(), id.RoleName, err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err.Error()),
 			},
 		}
 	}
