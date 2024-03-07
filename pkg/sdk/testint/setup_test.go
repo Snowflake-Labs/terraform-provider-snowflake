@@ -2,6 +2,7 @@ package testint
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 var (
@@ -61,6 +63,7 @@ func cleanup() {
 }
 
 type integrationTestContext struct {
+	config *gosnowflake.Config
 	client *sdk.Client
 	ctx    context.Context
 
@@ -85,7 +88,16 @@ type integrationTestContext struct {
 func (itc *integrationTestContext) initialize() error {
 	log.Println("Initializing integration test context")
 
-	c, err := sdk.NewDefaultClient()
+	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default)
+	if err != nil {
+		return err
+	}
+	if defaultConfig == nil {
+		return errors.New("config is required to run integration tests")
+	}
+	itc.config = defaultConfig
+
+	c, err := sdk.NewClient(defaultConfig)
 	if err != nil {
 		return err
 	}
@@ -244,4 +256,9 @@ func testSecondarySchema(t *testing.T) *sdk.Schema {
 func testSecondaryWarehouse(t *testing.T) *sdk.Warehouse {
 	t.Helper()
 	return itc.secondaryWarehouse
+}
+
+func testConfig(t *testing.T) *gosnowflake.Config {
+	t.Helper()
+	return itc.config
 }
