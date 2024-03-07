@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/snowflakedb/gosnowflake"
@@ -41,14 +40,18 @@ func TestClient_NewClient(t *testing.T) {
 	})
 
 	t.Run("with missing config - should not care about correct env variables", func(t *testing.T) {
-		account := testenvs.GetOrSkipTest(t, testenvs.Account)
+		config, err := ProfileConfig(testprofiles.Default)
+		require.NoError(t, err)
+		require.NotNil(t, config)
+
+		account := config.Account
 		t.Setenv(snowflakeenvs.Account, account)
 
 		dir, err := os.UserHomeDir()
 		require.NoError(t, err)
 		t.Setenv(snowflakeenvs.ConfigPath, dir)
 
-		config := DefaultConfig()
+		config = DefaultConfig()
 		_, err = NewClient(config)
 		require.ErrorContains(t, err, "260000: account is empty")
 	})

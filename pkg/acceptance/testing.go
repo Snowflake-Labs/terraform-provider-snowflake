@@ -8,6 +8,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 const (
@@ -28,6 +30,7 @@ var (
 	TestAccProvider *schema.Provider
 	v5Server        tfprotov5.ProviderServer
 	v6Server        tfprotov6.ProviderServer
+	atc             acceptanceTestContext
 )
 
 func init() {
@@ -44,6 +47,26 @@ func init() {
 		log.Panicf("Cannot upgrade server from proto v5 to proto v6, failing, err: %v", err)
 	}
 	_ = testAccProtoV6ProviderFactoriesNew
+
+	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default)
+	if err != nil {
+		log.Panicf("Cannot load default config, err: %v", err)
+	}
+	if defaultConfig == nil {
+		log.Panic("Config is required to run acceptance tests")
+	}
+	atc.config = defaultConfig
+
+	client, err := sdk.NewClient(defaultConfig)
+	if err != nil {
+		log.Panicf("Cannot instantiate new client, err: %v", err)
+	}
+	atc.client = client
+}
+
+type acceptanceTestContext struct {
+	config *gosnowflake.Config
+	client *sdk.Client
 }
 
 var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
@@ -68,35 +91,31 @@ var once sync.Once
 func TestAccPreCheck(t *testing.T) {
 	// use singleton design pattern to ensure we only create these resources once
 	once.Do(func() {
-		client, err := sdk.NewDefaultClient()
-		if err != nil {
-			t.Fatal(err)
-		}
 		ctx := context.Background()
 
 		dbId := sdk.NewAccountObjectIdentifier(TestDatabaseName)
-		if err := client.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{
+		if err := atc.client.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{
 			IfNotExists: sdk.Bool(true),
 		}); err != nil {
 			t.Fatal(err)
 		}
 
 		schemaId := sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName)
-		if err := client.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{
+		if err := atc.client.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{
 			IfNotExists: sdk.Bool(true),
 		}); err != nil {
 			t.Fatal(err)
 		}
 
 		warehouseId := sdk.NewAccountObjectIdentifier(TestWarehouseName)
-		if err := client.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{
+		if err := atc.client.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{
 			IfNotExists: sdk.Bool(true),
 		}); err != nil {
 			t.Fatal(err)
 		}
 
 		warehouseId2 := sdk.NewAccountObjectIdentifier(TestWarehouseName2)
-		if err := client.Warehouses.Create(ctx, warehouseId2, &sdk.CreateWarehouseOptions{
+		if err := atc.client.Warehouses.Create(ctx, warehouseId2, &sdk.CreateWarehouseOptions{
 			IfNotExists: sdk.Bool(true),
 		}); err != nil {
 			t.Fatal(err)
@@ -118,4 +137,14 @@ func ConfigurationDirectory(directory string) func(config.TestStepConfigRequest)
 	return func(req config.TestStepConfigRequest) string {
 		return filepath.Join("testdata", directory)
 	}
+}
+
+func Client(t *testing.T) *sdk.Client {
+	t.Helper()
+	return atc.client
+}
+
+func DefaultConfig(t *testing.T) *gosnowflake.Config {
+	t.Helper()
+	return atc.config
 }

@@ -15,6 +15,9 @@ import (
 )
 
 func TestInt_FailoverGroupsCreate(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 	shareTest, shareCleanup := createShare(t, client)
@@ -138,6 +141,9 @@ func TestInt_FailoverGroupsCreate(t *testing.T) {
 }
 
 func TestInt_Issue2544(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	ctx := testContext(t)
 

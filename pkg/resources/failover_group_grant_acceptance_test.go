@@ -14,6 +14,9 @@ import (
 )
 
 func TestAcc_FailoverGroupGrant(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 

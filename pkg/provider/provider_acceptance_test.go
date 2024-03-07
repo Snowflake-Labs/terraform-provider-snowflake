@@ -17,11 +17,13 @@ import (
 )
 
 func TestAcc_Provider_configHierarchy(t *testing.T) {
-	user := testenvs.GetOrSkipTest(t, testenvs.User)
-	pass := testenvs.GetOrSkipTest(t, testenvs.Password)
-	account := testenvs.GetOrSkipTest(t, testenvs.Account)
-	role := testenvs.GetOrSkipTest(t, testenvs.Role)
-	host := testenvs.GetOrSkipTest(t, testenvs.Host)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	user := acc.DefaultConfig(t).User
+	pass := acc.DefaultConfig(t).Password
+	account := acc.DefaultConfig(t).Account
+	role := acc.DefaultConfig(t).Role
+	host := acc.DefaultConfig(t).Host
 
 	nonExistingUser := "non-existing-user"
 
@@ -109,6 +111,39 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					testenvs.AssertEnvSet(t, snowflakeenvs.Account)
 					testenvs.AssertEnvSet(t, snowflakeenvs.Role)
 					testenvs.AssertEnvSet(t, snowflakeenvs.Host)
+				},
+				Config: emptyProviderConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			// client setup is incorrect
+			{
+				Config:      providerConfig(testprofiles.IncorrectUserAndPassword),
+				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+			},
+			// in this step we simulate the situation when we want to use client configured once, but it was faulty last time
+			{
+				PreConfig: func() {
+					t.Setenv(string(testenvs.ConfigureClientOnce), "true")
 				},
 				Config: emptyProviderConfig(),
 				Check: resource.ComposeTestCheckFunc(
