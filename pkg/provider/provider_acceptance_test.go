@@ -17,11 +17,11 @@ import (
 )
 
 func TestAcc_Provider_configHierarchy(t *testing.T) {
-	user := testenvs.GetOrSkipTest(t, testenvs.User)
-	pass := testenvs.GetOrSkipTest(t, testenvs.Password)
-	account := testenvs.GetOrSkipTest(t, testenvs.Account)
-	role := testenvs.GetOrSkipTest(t, testenvs.Role)
-	host := testenvs.GetOrSkipTest(t, testenvs.Host)
+	user := acc.DefaultConfig(t).User
+	pass := acc.DefaultConfig(t).Password
+	account := acc.DefaultConfig(t).Account
+	role := acc.DefaultConfig(t).Role
+	host := acc.DefaultConfig(t).Host
 
 	nonExistingUser := "non-existing-user"
 

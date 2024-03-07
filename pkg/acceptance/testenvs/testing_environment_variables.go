@@ -9,12 +9,6 @@ import (
 type env string
 
 const (
-	User     env = "TEST_SF_TF_USER"
-	Password env = "TEST_SF_TF_PASSWORD" // #nosec G101
-	Account  env = "TEST_SF_TF_ACCOUNT"
-	Role     env = "TEST_SF_TF_ROLE"
-	Host     env = "TEST_SF_TF_HOST"
-
 	BusinessCriticalAccount env = "SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT"
 
 	TestAccountCreate          env = "TEST_SF_TF_TEST_ACCOUNT_CREATE"
