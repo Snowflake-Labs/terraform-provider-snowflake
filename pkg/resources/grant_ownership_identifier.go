@@ -117,10 +117,14 @@ func ParseGrantOwnershipId(id string) (*GrantOwnershipId, error) {
 		if len(parts) != 6 {
 			return grantOwnershipId, sdk.NewError(`grant ownership identifier should consist of 6 parts "<target_role_kind>|<role_name>|<outbound_privileges_behavior>|OnObject|<object_type>|<object_name>"`)
 		}
-		// TODO: Custom type for OnObject grant - because ObjectName can be pretty much any of the possible identifiers
+		objectType := sdk.ObjectType(parts[4])
+		objectName, err := getOnObjectIdentifier(objectType, parts[5])
+		if err != nil {
+			return nil, err
+		}
 		grantOwnershipId.Data = &OnObjectGrantOwnershipData{
-			ObjectType: sdk.ObjectType(parts[4]),
-			ObjectName: sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[5]), // TODO: Fix should accept any identifier (most likely have to handle case by case for every object type)
+			ObjectType: objectType,
+			ObjectName: objectName,
 		}
 	case OnAllGrantOwnershipKind, OnFutureGrantOwnershipKind:
 		bulkOperationGrantData := &BulkOperationGrantData{

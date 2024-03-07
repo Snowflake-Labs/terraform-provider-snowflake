@@ -106,9 +106,8 @@ func getBulkOperationGrantData(in *sdk.GrantOnSchemaObjectIn) *BulkOperationGran
 }
 
 func getGrantOnSchemaObjectIn(allOrFuture map[string]any) *sdk.GrantOnSchemaObjectIn {
-	pluralObjectType := sdk.PluralObjectType(allOrFuture["object_type_plural"].(string))
 	grantOnSchemaObjectIn := &sdk.GrantOnSchemaObjectIn{
-		PluralObjectType: pluralObjectType,
+		PluralObjectType: sdk.PluralObjectType(strings.ToUpper(allOrFuture["object_type_plural"].(string))),
 	}
 
 	if inDatabase, ok := allOrFuture["in_database"].(string); ok && len(inDatabase) > 0 {

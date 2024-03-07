@@ -107,7 +107,7 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Required:    true,
 		ForceNew:    true,
-		Description: "TODO",
+		Description: "Configures which object(s) should be granted with ownership privilege.",
 		MaxItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -290,7 +290,10 @@ func ImportGrantOwnership() schema.StateContextFunc {
 func CreateGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := createGrantOwnershipIdFromSchema(d)
+	id, err := createGrantOwnershipIdFromSchema(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	logging.DebugLogger.Printf("[DEBUG] created identifier from schema: %s", id.String())
 
 	grantOn, err := getOwnershipGrantOn(d)
@@ -334,27 +337,34 @@ func DeleteGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	// TODO: Prepare a special case for on_future branch, because then we should call `revoke ownership on future from ...`
-
 	grantOn, err := getOwnershipGrantOn(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	if grantOn.Future != nil {
+		// TODO (SNOW-1182623): Still waiting for the response on the behavior/SQL syntax we should use here
+
 	} else {
+		accountRoleName, err := client.ContextFunctions.CurrentRole(ctx)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
 		err = client.Grants.GrantOwnership(
 			ctx,
 			grantOn,
-			getOwnershipGrantTo(d),
+			sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(accountRoleName)), // TODO: What if granted role is database role
+			},
 			getOwnershipGrantOpts(id),
 		)
 		if err != nil {
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  "An error occurred when transferring ownership back to the original role",         // TODO: do we save original role on create ?
-					Detail:   fmt.Sprintf("Id: %s\nRole name: %s\nError: %s", d.Id(), id.DatabaseRoleName, err), // TODO Role name
+					Summary:  "An error occurred when transferring ownership back to the original role",
+					Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 				},
 			}
 		}
@@ -448,7 +458,6 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 	}
 
 	switch objectType {
-	// sdk.AccountObjectIdentifier
 	case sdk.ObjectTypeComputePool,
 		sdk.ObjectTypeDatabase,
 		sdk.ObjectTypeExternalVolume,
@@ -462,15 +471,11 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		if _, ok := identifier.(sdk.AccountObjectIdentifier); !ok {
 			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected account object identifier", objectName))
 		}
-
-	// sdk.DatabaseObjectIdentifier
 	case sdk.ObjectTypeDatabaseRole,
 		sdk.ObjectTypeSchema:
 		if _, ok := identifier.(sdk.DatabaseObjectIdentifier); !ok {
 			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected database object identifier", objectName))
 		}
-
-	// sdk.SchemaObjectIdentifier
 	case sdk.ObjectTypeAggregationPolicy,
 		sdk.ObjectTypeAlert,
 		sdk.ObjectTypeAuthenticationPolicy,
@@ -554,7 +559,7 @@ func getOwnershipGrantTo(d *schema.ResourceData) sdk.OwnershipGrantTo {
 }
 
 func getOwnershipGrantOpts(id *GrantOwnershipId) *sdk.GrantOwnershipOptions {
-	if id.OutboundPrivilegesBehavior != nil {
+	if id != nil && id.OutboundPrivilegesBehavior != nil {
 		outboundPrivileges := id.OutboundPrivilegesBehavior.ToOwnershipCurrentGrantsOutboundPrivileges()
 		if outboundPrivileges != nil {
 			return &sdk.GrantOwnershipOptions{
@@ -610,7 +615,7 @@ func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowG
 	return opts, grantedOn
 }
 
-func createGrantOwnershipIdFromSchema(d *schema.ResourceData) *GrantOwnershipId {
+func createGrantOwnershipIdFromSchema(d *schema.ResourceData) (*GrantOwnershipId, error) {
 	id := new(GrantOwnershipId)
 	accountRoleName, accountRoleNameOk := d.GetOk("account_role_name")
 	databaseRoleName, databaseRoleNameOk := d.GetOk("database_role_name")
@@ -643,17 +648,22 @@ func createGrantOwnershipIdFromSchema(d *schema.ResourceData) *GrantOwnershipId 
 	switch {
 	case len(objectType) > 0 && len(objectName) > 0:
 		id.Kind = OnObjectGrantOwnershipKind
+		objectType := sdk.ObjectType(objectType)
+		objectName, err := getOnObjectIdentifier(objectType, objectName)
+		if err != nil {
+			return nil, err
+		}
 		id.Data = &OnObjectGrantOwnershipData{
-			ObjectType: sdk.ObjectType(objectType),
-			ObjectName: sdk.NewAccountObjectIdentifier(objectName), // TODO: Other identifier types
+			ObjectType: objectType,
+			ObjectName: objectName,
 		}
 	case len(all) > 0:
 		id.Kind = OnAllGrantOwnershipKind
-		id.Data = getBulkOperationGrantData(getGrantOnSchemaObjectIn(all[0].(map[string]any))) // TODO Fix
+		id.Data = getBulkOperationGrantData(getGrantOnSchemaObjectIn(all[0].(map[string]any)))
 	case len(future) > 0:
 		id.Kind = OnFutureGrantOwnershipKind
-		id.Data = getBulkOperationGrantData(getGrantOnSchemaObjectIn(future[0].(map[string]any))) // TODO Fix
+		id.Data = getBulkOperationGrantData(getGrantOnSchemaObjectIn(future[0].(map[string]any)))
 	}
 
-	return id
+	return id, nil
 }

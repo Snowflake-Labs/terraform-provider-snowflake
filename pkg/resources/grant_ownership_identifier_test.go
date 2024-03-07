@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -330,3 +331,178 @@ func TestParseGrantOwnershipId(t *testing.T) {
 //		})
 //	}
 //}
+
+func TestCreateGrantOwnershipIdFromSchema(t *testing.T) {
+	testCases := []struct {
+		Name     string
+		Config   map[string]any
+		Expected GrantOwnershipId
+	}{
+		{
+			Name: "grant ownership on schema to account role with copied outbound privileges",
+			Config: map[string]any{
+				"account_role_name":   "test_acc_role_name",
+				"outbound_privileges": "COPY",
+				"on": []any{
+					map[string]any{
+						"object_type": "SCHEMA",
+						"object_name": "\"test_database\".\"test_schema\"",
+					},
+				},
+			},
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("test_acc_role_name"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(CopyOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeSchema,
+					ObjectName: sdk.NewDatabaseObjectIdentifier("test_database", "test_schema"),
+				},
+			},
+		},
+		{
+			Name: "grant ownership on schema to database role with revoked outbound privileges",
+			Config: map[string]any{
+				"database_role_name":  "\"test_database\".\"test_database_role\"",
+				"outbound_privileges": "REVOKE",
+				"on": []any{
+					map[string]any{
+						"object_type": "SCHEMA",
+						"object_name": "\"test_database\".\"test_schema\"",
+					},
+				},
+			},
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToDatabaseGrantOwnershipTargetRoleKind,
+				DatabaseRoleName:             sdk.NewDatabaseObjectIdentifier("test_database", "test_database_role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(RevokeOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeSchema,
+					ObjectName: sdk.NewDatabaseObjectIdentifier("test_database", "test_schema"),
+				},
+			},
+		},
+		{
+			Name: "grant ownership on all tables in database to account role",
+			Config: map[string]any{
+				"account_role_name": "test_acc_role",
+				"on": []any{
+					map[string]any{
+						"all": []any{
+							map[string]any{
+								"object_type_plural": "tables",
+								"in_database":        "test_database",
+							},
+						},
+					},
+				},
+			},
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("test_acc_role"),
+				Kind:                         OnAllGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InDatabaseBulkOperationGrantKind,
+					Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("test_database")),
+				},
+			},
+		},
+		{
+			Name: "grant ownership on all tables in schema to account role",
+			Config: map[string]any{
+				"account_role_name": "test_acc_role",
+				"on": []any{
+					map[string]any{
+						"all": []any{
+							map[string]any{
+								"object_type_plural": "tables",
+								"in_schema":          "\"test_database\".\"test_schema\"",
+							},
+						},
+					},
+				},
+			},
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("test_acc_role"),
+				Kind:                         OnAllGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InSchemaBulkOperationGrantKind,
+					Schema:           sdk.Pointer(sdk.NewDatabaseObjectIdentifier("test_database", "test_schema")),
+				},
+			},
+		},
+		{
+			Name: "grant ownership on future tables in database to account role",
+			Config: map[string]any{
+				"account_role_name": "test_acc_role",
+				"on": []any{
+					map[string]any{
+						"future": []any{
+							map[string]any{
+								"object_type_plural": "tables",
+								"in_database":        "test_database",
+							},
+						},
+					},
+				},
+			},
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("test_acc_role"),
+				Kind:                         OnFutureGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InDatabaseBulkOperationGrantKind,
+					Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("test_database")),
+				},
+			},
+		},
+		{
+			Name: "grant ownership on future tables in schema to account role",
+			Config: map[string]any{
+				"account_role_name": "test_acc_role",
+				"on": []any{
+					map[string]any{
+						"future": []any{
+							map[string]any{
+								"object_type_plural": "tables",
+								"in_schema":          "\"test_database\".\"test_schema\"",
+							},
+						},
+					},
+				},
+			},
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("test_acc_role"),
+				Kind:                         OnFutureGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InSchemaBulkOperationGrantKind,
+					Schema:           sdk.Pointer(sdk.NewDatabaseObjectIdentifier("test_database", "test_schema")),
+				},
+			},
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(tt.Name, func(t *testing.T) {
+			d := schema.TestResourceDataRaw(t, grantOwnershipSchema, tt.Config)
+			id, err := createGrantOwnershipIdFromSchema(d)
+			assert.NoError(t, err)
+			assert.NotNil(t, id)
+			assert.Equal(t, tt.Expected.GrantOwnershipTargetRoleKind, id.GrantOwnershipTargetRoleKind)
+			assert.Equal(t, tt.Expected.AccountRoleName, id.AccountRoleName)
+			assert.Equal(t, tt.Expected.DatabaseRoleName, id.DatabaseRoleName)
+			assert.Equal(t, tt.Expected.OutboundPrivilegesBehavior, id.OutboundPrivilegesBehavior)
+			assert.Equal(t, tt.Expected.Kind, id.Kind)
+			assert.Equal(t, tt.Expected.Data.String(), id.Data.String())
+		})
+	}
+}
