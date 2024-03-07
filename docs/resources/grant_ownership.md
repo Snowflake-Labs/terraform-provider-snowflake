@@ -225,7 +225,6 @@ Optional:
 
 ## Import
 
-
 ~> **Note** All the ..._name parts should be fully qualified names (where every part is quoted), e.g. for schema object it is `"<database_name>"."<schema_name>"."<object_name>"`
 
 Import is supported using the following syntax:
