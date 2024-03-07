@@ -121,7 +121,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 	})
 }
 
-func TestAcc_Provider_(t *testing.T) {
+func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	resource.Test(t, resource.TestCase{
@@ -135,10 +135,12 @@ func TestAcc_Provider_(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
+			// client setup is incorrect
 			{
 				Config:      providerConfig(testprofiles.IncorrectUserAndPassword),
 				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
 			},
+			// in this step we simulate the situation when we want to use client configured once, but it was faulty last time
 			{
 				PreConfig: func() {
 					t.Setenv(string(testenvs.ConfigureClientOnce), "true")
