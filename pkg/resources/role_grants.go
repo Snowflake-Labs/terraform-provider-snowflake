@@ -25,7 +25,7 @@ func RoleGrants() *schema.Resource {
 		Read:               ReadRoleGrants,
 		Delete:             DeleteRoleGrants,
 		Update:             UpdateRoleGrants,
-		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_privileges_to_account_role instead.",
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_account_role instead.",
 
 		Schema: map[string]*schema.Schema{
 			"role_name": {
