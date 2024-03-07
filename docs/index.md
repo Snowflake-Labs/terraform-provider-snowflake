@@ -242,7 +242,7 @@ The Snowflake provider will use the following order of precedence when determini
 - [snowflake_pipe_grant](./docs/resources/pipe_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
 - [snowflake_procedure_grant](./docs/resources/procedure_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
 - [snowflake_resource_monitor_grant](./docs/resources/resource_monitor_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
-- [snowflake_role_grants](./docs/resources/role_grants) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
+- [snowflake_role_grants](./docs/resources/role_grants) - use [snowflake_grant_account_role](./docs/resources/grant_account_role) instead
 - [snowflake_row_access_policy_grant](./docs/resources/row_access_policy_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
 - [snowflake_schema_grant](./docs/resources/schema_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
 - [snowflake_sequence_grant](./docs/resources/sequence_grant) - use [snowflake_grant_privileges_to_account_role](./docs/resources/grant_privileges_to_account_role) instead
