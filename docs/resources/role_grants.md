@@ -2,12 +2,12 @@
 page_title: "snowflake_role_grants Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+
 ---
 
 # snowflake_role_grants (Resource)
 
-~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use [snowflake_grant_privileges_to_account_role](./grant_privileges_to_account_role) instead. <deprecation>
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use [snowflake_grant_account_role](./grant_account_role) instead. <deprecation>
 
 ## Example Usage
 
