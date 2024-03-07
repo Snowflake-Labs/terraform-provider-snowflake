@@ -1,8 +1,9 @@
 package resources
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +44,7 @@ func TestParseGrantOwnershipId(t *testing.T) {
 		//			ObjectName: sdk.NewDatabaseObjectIdentifier("database-name", "schema-name"),
 		//		},
 		//	},
-		//},
+		// },
 		// TODO: Won't work because we can expect one type of identifiers right now (adjust to chose id case-by-case based on object type)
 		{
 			Name:       "grant ownership on schema to database role",
@@ -147,16 +148,16 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			Identifier: `ToAccountRole|"account-role"|COPY|OnAll|TABLES|InvalidOption|"some-identifier"`,
 			Error:      "invalid BulkOperationGrantKind: InvalidOption, valid options are InDatabase | InSchema",
 		},
-		//{
+		// {
 		//	Name:       "TODO(panic because of bad identifiers): validation: OnAll in database - missing database identifier",
 		//	Identifier: `ToAccountRole|"account-role"|COPY|OnAll|InvalidTarget|InDatabase|`,
 		//	Error:      "TODO",
-		//},
-		//{
+		// },
+		// {
 		//	Name:       "TODO(panic because of bad identifiers): validation: OnAll in database - missing schema identifier",
 		//	Identifier: `ToAccountRole|"account-role"|COPY|OnAll|InvalidTarget|InSchema|`,
 		//	Error:      "TODO",
-		//},
+		// },
 		{
 			Name:       "validation: not enough parts for OnFuture kind",
 			Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|TABLES`,
@@ -167,16 +168,16 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|TABLES|InvalidOption|"some-identifier"`,
 			Error:      "invalid BulkOperationGrantKind: InvalidOption, valid options are InDatabase | InSchema",
 		},
-		//{
+		// {
 		//	Name:       "TODO(panic because of bad identifiers): validation: OnFuture in database - missing database identifier",
 		//	Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|InvalidTarget|InDatabase|`,
 		//	Error:      "TODO",
-		//},
-		//{
+		// },
+		// {
 		//	Name:       "TODO(panic because of bad identifiers): validation: OnFuture in database - missing schema identifier",
 		//	Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|InvalidTarget|InSchema|`,
 		//	Error:      "TODO",
-		//},
+		// },
 	}
 
 	for _, tt := range testCases {
@@ -193,7 +194,7 @@ func TestParseGrantOwnershipId(t *testing.T) {
 	}
 }
 
-//func TestGrantOwnershipIdString(t *testing.T) {
+// func TestGrantOwnershipIdString(t *testing.T) {
 //	testCases := []struct {
 //		Name       string
 //		Identifier GrantPrivilegesToAccountRoleId

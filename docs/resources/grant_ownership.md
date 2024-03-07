@@ -16,7 +16,7 @@ description: |-
 
 ### Required
 
-- `on` (Block List, Min: 1, Max: 1) TODO (see [below for nested schema](#nestedblock--on))
+- `on` (Block List, Min: 1, Max: 1) Configures which object(s) should be granted with ownership privilege. (see [below for nested schema](#nestedblock--on))
 
 ### Optional
 

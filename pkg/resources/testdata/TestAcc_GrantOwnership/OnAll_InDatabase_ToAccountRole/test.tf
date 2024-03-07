@@ -7,14 +7,14 @@ resource "snowflake_database" "test" {
 }
 
 resource "snowflake_schema" "test" {
-  name = var.schema_name
+  name     = var.schema_name
   database = snowflake_database.test.name
 }
 
 resource "snowflake_table" "test" {
-  name = var.table_name
+  name     = var.table_name
   database = snowflake_database.test.name
-  schema = snowflake_schema.test.name
+  schema   = snowflake_schema.test.name
 
   column {
     name = "id"
@@ -23,9 +23,9 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_table" "test2" {
-  name = var.second_table_name
+  name     = var.second_table_name
   database = snowflake_database.test.name
-  schema = snowflake_schema.test.name
+  schema   = snowflake_schema.test.name
 
   column {
     name = "id"
@@ -34,7 +34,7 @@ resource "snowflake_table" "test2" {
 }
 
 resource "snowflake_grant_ownership" "test" {
-  depends_on = [snowflake_table.test, snowflake_table.test2]
+  depends_on        = [snowflake_table.test, snowflake_table.test2]
   account_role_name = snowflake_role.test.name
   on {
     all {

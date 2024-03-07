@@ -3,9 +3,10 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -344,7 +345,6 @@ func DeleteGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if grantOn.Future != nil {
 		// TODO (SNOW-1182623): Still waiting for the response on the behavior/SQL syntax we should use here
-
 	} else {
 		accountRoleName, err := client.ContextFunctions.CurrentRole(ctx)
 		if err != nil {
@@ -368,7 +368,6 @@ func DeleteGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 				},
 			}
 		}
-
 	}
 
 	d.SetId("")
