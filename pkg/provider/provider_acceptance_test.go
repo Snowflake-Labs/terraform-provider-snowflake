@@ -121,6 +121,37 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 	})
 }
 
+func TestAcc_Provider_(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      providerConfig(testprofiles.IncorrectUserAndPassword),
+				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+			},
+			{
+				PreConfig: func() {
+					t.Setenv(string(testenvs.ConfigureClientOnce), "true")
+				},
+				Config: emptyProviderConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
+				),
+			},
+		},
+	})
+}
+
 func emptyProviderConfig() string {
 	return `
 provider "snowflake" {

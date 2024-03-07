@@ -782,11 +782,20 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		}
 	}
 
-	configuredClient, configureClientError = sdk.NewClient(config)
+	cl, clErr := sdk.NewClient(config)
 
-	if configureClientError != nil {
-		return nil, configureClientError
+	// needed for tests verifying different provider setups
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+		configuredClient = cl
+		configureClientError = clErr
+	} else {
+		configuredClient = nil
+		configureClientError = nil
 	}
 
-	return &provider.Context{Client: configuredClient}, nil
+	if clErr != nil {
+		return nil, clErr
+	}
+
+	return &provider.Context{Client: cl}, nil
 }
