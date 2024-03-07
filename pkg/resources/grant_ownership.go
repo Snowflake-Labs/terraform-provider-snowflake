@@ -108,7 +108,7 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Configures which object(s) should be granted with ownership privilege.",
+		Description: "Configures which object(s) should transfer their ownership to the specified role.",
 		MaxItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -351,11 +351,12 @@ func DeleteGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 			return diag.FromErr(err)
 		}
 
-		err = client.Grants.GrantOwnership(
+		err = client.Grants.GrantOwnership( // TODO: Should we always set outbound privileges to COPY in delete operation or set it to the config value?
 			ctx,
 			grantOn,
 			sdk.OwnershipGrantTo{
-				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(accountRoleName)), // TODO: What if granted role is database role
+				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(accountRoleName)), // TODO: What if current role is database role (not a common but possible case)
+				// DatabaseRoleName: TODO: handle later
 			},
 			getOwnershipGrantOpts(id),
 		)
@@ -394,7 +395,6 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	client := meta.(*provider.Context).Client
 
-	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
 		return diag.Diagnostics{
@@ -586,7 +586,7 @@ func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowG
 				Name:       data.ObjectName,
 			},
 		}
-	case OnAllGrantOwnershipKind: // TODO: discuss if we want to let users do this (lose control over ownership for all objects in x)
+	case OnAllGrantOwnershipKind: // TODO: discuss if we want to let users do this (lose control over ownership for all objects in x during delete operation - we can also add a flag that would skip delete operation when on_all is set)
 		switch data := id.Data.(*BulkOperationGrantData); data.Kind {
 		case InDatabaseBulkOperationGrantKind:
 			log.Printf("[INFO] Show with on.all option is skipped. No changes in ownership on all %s in database %s in Snowflake will be detected.", data.ObjectNamePlural, data.Database)

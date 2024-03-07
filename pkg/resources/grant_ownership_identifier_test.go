@@ -30,22 +30,34 @@ func TestParseGrantOwnershipId(t *testing.T) {
 				},
 			},
 		},
-		// TODO: Won't work because we can expect one type of identifiers right now (adjust to chose id case-by-case based on object type)
-		//{
-		//	Name:       "grant ownership on schema to account role",
-		//	Identifier: `ToAccountRole|"account-role"|COPY|OnObject|SCHEMA|"database-name"."schema-name"`,
-		//	Expected: GrantOwnershipId{
-		//		GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
-		//		AccountRoleName:              sdk.NewAccountObjectIdentifier("account-role"),
-		//		OutboundPrivilegesBehavior:   sdk.Pointer(CopyOutboundPrivilegesBehavior),
-		//		Kind:                         OnObjectGrantOwnershipKind,
-		//		Data: &OnObjectGrantOwnershipData{
-		//			ObjectType: sdk.ObjectTypeSchema,
-		//			ObjectName: sdk.NewDatabaseObjectIdentifier("database-name", "schema-name"),
-		//		},
-		//	},
-		// },
-		// TODO: Won't work because we can expect one type of identifiers right now (adjust to chose id case-by-case based on object type)
+		{
+			Name:       "grant ownership on schema to account role",
+			Identifier: `ToAccountRole|"account-role"|COPY|OnObject|SCHEMA|"database-name"."schema-name"`,
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("account-role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(CopyOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeSchema,
+					ObjectName: sdk.NewDatabaseObjectIdentifier("database-name", "schema-name"),
+				},
+			},
+		},
+		{
+			Name:       "grant ownership on table to account role",
+			Identifier: `ToAccountRole|"account-role"|COPY|OnObject|TABLE|"database-name"."schema-name"."table-name"`,
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("account-role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(CopyOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeTable,
+					ObjectName: sdk.NewSchemaObjectIdentifier("database-name", "schema-name", "table-name"),
+				},
+			},
+		},
 		{
 			Name:       "grant ownership on schema to database role",
 			Identifier: `ToDatabaseRole|"database-name"."database-role"|REVOKE|OnObject|SCHEMA|"database-name"."schema-name"`,
@@ -149,12 +161,12 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			Error:      "invalid BulkOperationGrantKind: InvalidOption, valid options are InDatabase | InSchema",
 		},
 		// {
-		//	Name:       "TODO(panic because of bad identifiers): validation: OnAll in database - missing database identifier",
+		//	Name:       "TODO(SNOW-999049 - no error because of bad identifiers): validation: OnAll in database - missing database identifier",
 		//	Identifier: `ToAccountRole|"account-role"|COPY|OnAll|InvalidTarget|InDatabase|`,
 		//	Error:      "TODO",
 		// },
 		// {
-		//	Name:       "TODO(panic because of bad identifiers): validation: OnAll in database - missing schema identifier",
+		//	Name:       "TODO(SNOW-999049 - panic because of bad identifiers): validation: OnAll in database - missing schema identifier",
 		//	Identifier: `ToAccountRole|"account-role"|COPY|OnAll|InvalidTarget|InSchema|`,
 		//	Error:      "TODO",
 		// },
@@ -169,12 +181,12 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			Error:      "invalid BulkOperationGrantKind: InvalidOption, valid options are InDatabase | InSchema",
 		},
 		// {
-		//	Name:       "TODO(panic because of bad identifiers): validation: OnFuture in database - missing database identifier",
+		//	Name:       "TODO(SNOW-999049 - no error because of bad identifiers): validation: OnFuture in database - missing database identifier",
 		//	Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|InvalidTarget|InDatabase|`,
 		//	Error:      "TODO",
 		// },
 		// {
-		//	Name:       "TODO(panic because of bad identifiers): validation: OnFuture in database - missing schema identifier",
+		//	Name:       "TODO(SNOW-999049 - panic because of bad identifiers): validation: OnFuture in database - missing schema identifier",
 		//	Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|InvalidTarget|InSchema|`,
 		//	Error:      "TODO",
 		// },
@@ -186,7 +198,8 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			id, err := ParseGrantOwnershipId(tt.Identifier)
 			if tt.Error == "" {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.Expected, id)
+				assert.NotNil(t, id)
+				assert.Equal(t, tt.Expected, *id)
 			} else {
 				assert.ErrorContains(t, err, tt.Error)
 			}
@@ -194,144 +207,119 @@ func TestParseGrantOwnershipId(t *testing.T) {
 	}
 }
 
-// func TestGrantOwnershipIdString(t *testing.T) {
-//	testCases := []struct {
-//		Name       string
-//		Identifier GrantPrivilegesToAccountRoleId
-//		Expected   string
-//		Error      string
-//	}{
-//		{
-//			Name: "grant account role on account",
-//			Identifier: GrantPrivilegesToAccountRoleId{
-//				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
-//				WithGrantOption: true,
-//				AllPrivileges:   true,
-//				Kind:            OnAccountAccountRoleGrantKind,
-//				AlwaysApply:     true,
-//				Data:            new(OnAccountGrantData),
-//			},
-//			Expected: `"account-role"|true|true|ALL|OnAccount`,
-//		},
-//		{
-//			Name: "grant account role on account object",
-//			Identifier: GrantPrivilegesToAccountRoleId{
-//				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
-//				WithGrantOption: true,
-//				AllPrivileges:   true,
-//				Kind:            OnAccountObjectAccountRoleGrantKind,
-//				AlwaysApply:     true,
-//				Data: &OnAccountObjectGrantData{
-//					ObjectType: sdk.ObjectTypeDatabase,
-//					ObjectName: sdk.NewAccountObjectIdentifier("database-name"),
-//				},
-//			},
-//			Expected: `"account-role"|true|true|ALL|OnAccountObject|DATABASE|"database-name"`,
-//		},
-//		{
-//			Name: "grant account role on schema on schema",
-//			Identifier: GrantPrivilegesToAccountRoleId{
-//				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
-//				WithGrantOption: false,
-//				Privileges:      []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
-//				Kind:            OnSchemaAccountRoleGrantKind,
-//				Data: &OnSchemaGrantData{
-//					Kind:       OnSchemaSchemaGrantKind,
-//					SchemaName: sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database-name", "schema-name")),
-//				},
-//			},
-//			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnSchema|"database-name"."schema-name"`,
-//		},
-//		{
-//			Name: "grant account role on all schemas in database",
-//			Identifier: GrantPrivilegesToAccountRoleId{
-//				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
-//				WithGrantOption: false,
-//				Privileges:      []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
-//				Kind:            OnSchemaAccountRoleGrantKind,
-//				Data: &OnSchemaGrantData{
-//					Kind:         OnAllSchemasInDatabaseSchemaGrantKind,
-//					DatabaseName: sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name")),
-//				},
-//			},
-//			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase|"database-name"`,
-//		},
-//		{
-//			Name: "grant account role on future schemas in database",
-//			Identifier: GrantPrivilegesToAccountRoleId{
-//				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
-//				WithGrantOption: false,
-//				Privileges:      []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
-//				Kind:            OnSchemaAccountRoleGrantKind,
-//				Data: &OnSchemaGrantData{
-//					Kind:         OnFutureSchemasInDatabaseSchemaGrantKind,
-//					DatabaseName: sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name")),
-//				},
-//			},
-//			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnFutureSchemasInDatabase|"database-name"`,
-//		},
-//		{
-//			Name: "grant account role on schema object on object",
-//			Identifier: GrantPrivilegesToAccountRoleId{
-//				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
-//				WithGrantOption: false,
-//				Privileges:      []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
-//				Kind:            OnSchemaObjectAccountRoleGrantKind,
-//				Data: &OnSchemaObjectGrantData{
-//					Kind: OnObjectSchemaObjectGrantKind,
-//					Object: &sdk.Object{
-//						ObjectType: sdk.ObjectTypeTable,
-//						Name:       sdk.NewSchemaObjectIdentifier("database-name", "schema-name", "table-name"),
-//					},
-//				},
-//			},
-//			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE|"database-name"."schema-name"."table-name"`,
-//		},
-//		{
-//			Name: "grant account role on schema object on all tables in database",
-//			Identifier: GrantPrivilegesToAccountRoleId{
-//				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
-//				WithGrantOption: false,
-//				Privileges:      []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
-//				Kind:            OnSchemaObjectAccountRoleGrantKind,
-//				Data: &OnSchemaObjectGrantData{
-//					Kind: OnAllSchemaObjectGrantKind,
-//					OnAllOrFuture: &BulkOperationGrantData{
-//						ObjectNamePlural: sdk.PluralObjectTypeTables,
-//						Kind:             InDatabaseBulkOperationGrantKind,
-//						Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("database-name")),
-//					},
-//				},
-//			},
-//			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase|"database-name"`,
-//		},
-//		{
-//			Name: "grant account role on schema object on all tables in schema",
-//			Identifier: GrantPrivilegesToAccountRoleId{
-//				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
-//				WithGrantOption: false,
-//				Privileges:      []string{"CREATE SCHEMA", "USAGE", "MONITOR"},
-//				Kind:            OnSchemaObjectAccountRoleGrantKind,
-//				Data: &OnSchemaObjectGrantData{
-//					Kind: OnAllSchemaObjectGrantKind,
-//					OnAllOrFuture: &BulkOperationGrantData{
-//						ObjectNamePlural: sdk.PluralObjectTypeTables,
-//						Kind:             InSchemaBulkOperationGrantKind,
-//						Schema:           sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database-name", "schema-name")),
-//					},
-//				},
-//			},
-//			Expected: `"account-role"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InSchema|"database-name"."schema-name"`,
-//		},
-//	}
-//
-//	for _, tt := range testCases {
-//		tt := tt
-//		t.Run(tt.Name, func(t *testing.T) {
-//			assert.Equal(t, tt.Expected, tt.Identifier.String())
-//		})
-//	}
-//}
+func TestGrantOwnershipIdString(t *testing.T) {
+	testCases := []struct {
+		Name       string
+		Identifier GrantOwnershipId
+		Expected   string
+		Error      string
+	}{
+		{
+			Name: "grant ownership on database to account role",
+			Identifier: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("account_role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(CopyOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeDatabase,
+					ObjectName: sdk.NewAccountObjectIdentifier("database_name"),
+				},
+			},
+			Expected: `ToAccountRole|"account_role"|COPY|OnObject|DATABASE|"database_name"`,
+		},
+		{
+			Name: "grant ownership on schema to account role",
+			Identifier: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("account_role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(RevokeOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeSchema,
+					ObjectName: sdk.NewDatabaseObjectIdentifier("database_name", "schema_name"),
+				},
+			},
+			Expected: `ToAccountRole|"account_role"|REVOKE|OnObject|SCHEMA|"database_name"."schema_name"`,
+		},
+		{
+			Name: "grant ownership on table to account role",
+			Identifier: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("account_role"),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeTable,
+					ObjectName: sdk.NewSchemaObjectIdentifier("database_name", "schema_name", "table_name"),
+				},
+			},
+			Expected: `ToAccountRole|"account_role"||OnObject|TABLE|"database_name"."schema_name"."table_name"`,
+		},
+		{
+			Name: "grant ownership on all tables in database to database role",
+			Identifier: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToDatabaseGrantOwnershipTargetRoleKind,
+				DatabaseRoleName:             sdk.NewDatabaseObjectIdentifier("database_name", "database_role_name"),
+				Kind:                         OnAllGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InDatabaseBulkOperationGrantKind,
+					Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("database_name")),
+				},
+			},
+			Expected: `ToDatabaseRole|"database_name"."database_role_name"||OnAll|TABLES|InDatabase|"database_name"`,
+		},
+		{
+			Name: "grant ownership on all tables in schema to database role",
+			Identifier: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToDatabaseGrantOwnershipTargetRoleKind,
+				DatabaseRoleName:             sdk.NewDatabaseObjectIdentifier("database_name", "database_role_name"),
+				Kind:                         OnAllGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InSchemaBulkOperationGrantKind,
+					Schema:           sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database_name", "schema_name")),
+				},
+			},
+			Expected: `ToDatabaseRole|"database_name"."database_role_name"||OnAll|TABLES|InSchema|"database_name"."schema_name"`,
+		},
+		{
+			Name: "grant ownership on future tables in database to database role",
+			Identifier: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToDatabaseGrantOwnershipTargetRoleKind,
+				DatabaseRoleName:             sdk.NewDatabaseObjectIdentifier("database_name", "database_role_name"),
+				Kind:                         OnFutureGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InDatabaseBulkOperationGrantKind,
+					Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("database_name")),
+				},
+			},
+			Expected: `ToDatabaseRole|"database_name"."database_role_name"||OnFuture|TABLES|InDatabase|"database_name"`,
+		},
+		{
+			Name: "grant ownership on future tables in schema to database role",
+			Identifier: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToDatabaseGrantOwnershipTargetRoleKind,
+				DatabaseRoleName:             sdk.NewDatabaseObjectIdentifier("database_name", "database_role_name"),
+				Kind:                         OnFutureGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InSchemaBulkOperationGrantKind,
+					Schema:           sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database_name", "schema_name")),
+				},
+			},
+			Expected: `ToDatabaseRole|"database_name"."database_role_name"||OnFuture|TABLES|InSchema|"database_name"."schema_name"`,
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(tt.Name, func(t *testing.T) {
+			assert.Equal(t, tt.Expected, tt.Identifier.String())
+		})
+	}
+}
 
 func TestCreateGrantOwnershipIdFromSchema(t *testing.T) {
 	testCases := []struct {
