@@ -17,6 +17,8 @@ import (
 )
 
 func TestAcc_Provider_configHierarchy(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	user := acc.DefaultConfig(t).User
 	pass := acc.DefaultConfig(t).Password
 	account := acc.DefaultConfig(t).Account
