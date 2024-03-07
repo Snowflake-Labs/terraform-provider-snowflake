@@ -14,6 +14,9 @@ import (
 )
 
 func TestAcc_FailoverGroupBasic(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
@@ -49,6 +52,9 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 }
 
 func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
@@ -87,6 +93,9 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 }
 
 func TestAcc_FailoverGroupInterval(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
@@ -183,6 +192,9 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 }
 
 func TestAcc_FailoverGroup_issue2517(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
@@ -211,6 +223,9 @@ func TestAcc_FailoverGroup_issue2517(t *testing.T) {
 }
 
 func TestAcc_FailoverGroup_issue2544(t *testing.T) {
+	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	randomCharacters := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
