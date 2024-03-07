@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.87.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.1...v0.87.2) (2024-03-07)
+
+
+### 🐛 **Bug fixes:**
+
+* Add missing path ([#2597](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2597)) ([41865d9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/41865d95a0936be351eed7c024f38f3803581cb8))
+* Fix the deprecation message for snowflake_role_grants ([#2602](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2602)) ([5d9c1a8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5d9c1a8324af388602cfddf78338e902a71e9d8e))
+
 ## [0.87.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.0...v0.87.1) (2024-03-06)
 
 
