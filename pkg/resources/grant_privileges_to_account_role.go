@@ -510,20 +510,63 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 			if len(privilegesToAdd) > 0 {
 				logging.DebugLogger.Printf("[DEBUG] Granting privileges: %v", privilegesToAdd)
-				err = client.Grants.GrantPrivilegesToAccountRole(
-					ctx,
-					getAccountRolePrivileges(
-						false,
-						privilegesToAdd,
-						id.Kind == OnAccountAccountRoleGrantKind,
-						id.Kind == OnAccountObjectAccountRoleGrantKind,
-						id.Kind == OnSchemaAccountRoleGrantKind,
-						id.Kind == OnSchemaObjectAccountRoleGrantKind,
-					),
-					grantOn,
-					id.RoleName,
-					new(sdk.GrantPrivilegesToAccountRoleOptions),
-				)
+				if !id.WithGrantOption {
+					err = client.Grants.RevokePrivilegesFromAccountRole(
+						ctx,
+						getAccountRolePrivileges(
+							false,
+							privilegesToAdd,
+							id.Kind == OnAccountAccountRoleGrantKind,
+							id.Kind == OnAccountObjectAccountRoleGrantKind,
+							id.Kind == OnSchemaAccountRoleGrantKind,
+							id.Kind == OnSchemaObjectAccountRoleGrantKind,
+						),
+						grantOn,
+						id.RoleName,
+						new(sdk.RevokePrivilegesFromAccountRoleOptions),
+					)
+					if err != nil {
+						return diag.Diagnostics{
+							diag.Diagnostic{
+								Severity: diag.Error,
+								Summary:  "Failed to revoke privileges to add",
+								Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
+							},
+						}
+					}
+
+					err = client.Grants.GrantPrivilegesToAccountRole(
+						ctx,
+						getAccountRolePrivileges(
+							false,
+							privilegesToAdd,
+							id.Kind == OnAccountAccountRoleGrantKind,
+							id.Kind == OnAccountObjectAccountRoleGrantKind,
+							id.Kind == OnSchemaAccountRoleGrantKind,
+							id.Kind == OnSchemaObjectAccountRoleGrantKind,
+						),
+						grantOn,
+						id.RoleName,
+						new(sdk.GrantPrivilegesToAccountRoleOptions),
+					)
+				} else {
+					err = client.Grants.GrantPrivilegesToAccountRole(
+						ctx,
+						getAccountRolePrivileges(
+							false,
+							privilegesToAdd,
+							id.Kind == OnAccountAccountRoleGrantKind,
+							id.Kind == OnAccountObjectAccountRoleGrantKind,
+							id.Kind == OnSchemaAccountRoleGrantKind,
+							id.Kind == OnSchemaObjectAccountRoleGrantKind,
+						),
+						grantOn,
+						id.RoleName,
+						&sdk.GrantPrivilegesToAccountRoleOptions{
+							WithGrantOption: sdk.Bool(true),
+						},
+					)
+				}
 				if err != nil {
 					return diag.Diagnostics{
 						diag.Diagnostic{
