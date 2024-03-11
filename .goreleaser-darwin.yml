@@ -1,17 +1,8 @@
 builds:
 - env:
-  - >-
-    {{- if or (eq .Os "darwin") (eq .Os "windows") -}}
-      CGO_ENABLED=1
-    {{- else -}}
-      CGO_ENABLED=0
-    {{- end -}}
+    - CGO_ENABLED=1
   goos:
-    - {{ .Os }}
-    - >-
-      {{- if (eq .Os "linux") -}}
-        freebsd
-      {{- else -}}
+    - darwin
   goarch:
     - amd64
     - arm64
