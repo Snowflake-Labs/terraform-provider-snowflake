@@ -1,3 +1,4 @@
+name: release
 on:
   push:
     branches:
@@ -5,10 +6,12 @@ on:
     tags:
       - '*'
 
-name: release-please
 jobs:
   release-please:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/github-script@v6
         id: configure-changelog
@@ -20,52 +23,141 @@ jobs:
               {type: "chore", section: "🔧 **Misc**", hidden: false},
               {type: "fix", section: "🐛 **Bug fixes:**", hidden: false},
             ]
-
             return JSON.stringify(changelogTypes)
+
       # See https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
       # For why we need to generate a token and not use the default
-      - name: Generate token
-        id: generate_token
-        uses: chanzuckerberg/github-app-token@v1.1.4
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@v1
         with:
-          app_id: ${{ secrets.CZI_RELEASE_PLEASE_APP_ID }}
-          private_key: ${{ secrets.CZI_RELEASE_PLEASE_PK }}
+          app-id: ${{ secrets.CZI_RELEASE_PLEASE_APP_ID }}
+          private-key: ${{ secrets.CZI_RELEASE_PLEASE_PK }}
 
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v5
-        with:
-          # These secrets will need to be configured for the repository:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: release please
+      - name: Release please
         uses: google-github-actions/release-please-action@v3
         id: release
         with:
           release-type: simple
           bump-minor-pre-major: true
           changelog-types: ${{ steps.configure-changelog.outputs.result }}
-          token: ${{ steps.generate_token.outputs.token }}
+          token: ${{ steps.create-token.outputs.token }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         # we need to fetch all history and tags
         # so we build the proper version
         with:
           fetch-depth: 0
-        if: ${{ steps.release.outputs.release_created }}
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
-        if: ${{ steps.release.outputs.release_created }}
 
-      - name: Run GoReleaser
+      - name: Run GoReleaser for linux
+        if: matrix.os == 'ubuntu-latest'
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
-          args: release --rm-dist --verbose
+          args: release --config .goreleaser.yml --clean
         env:
-          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-        if: ${{ steps.release.outputs.release_created }}
+          GITHUB_TOKEN: ${{ steps.create-token.outputs.token }}
+
+      - name: Run GoReleaser for windows
+        if: matrix.os == 'windows-latest'
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --config .goreleaser.yml --clean
+        env:
+          GITHUB_TOKEN: ${{ steps.create-token.outputs.token }}
+
+      - name: Run GoReleaser for darwin
+        if: matrix.os == 'macos-latest'
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --config .goreleaser.yml --clean
+        env:
+          GITHUB_TOKEN: ${{ steps.create-token.outputs.token }}
+
+  sha256sums-and-gpg-signature:
+    needs: release-please
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CZI_RELEASE_PLEASE_APP_ID }}
+          private-key: ${{ secrets.CZI_RELEASE_PLEASE_PK }}
+
+      - name: Import GPG key
+        id: gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          # These secrets will need to be configured for the repository:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Download all published archives
+        uses: robinraju/release-downloader@v1.9
+        with:
+          repository: ${{ github.repository }}
+          tag: ${{ github.ref_name }}
+          fileName: "*.zip"
+          out-file-path: "artifacts"
+
+      - name: Generate the sha256 checksums and GPG signature
+        id: generate
+        run: |
+          #!/bin/bash
+          cp terraform-registry-manifest.json artifacts/terraform-registry-manifest.json
+
+          cd artifacts
+          # generate the sha256 checksums
+          version=$(echo ${{ github.ref_name }} | sed -e 's/v//')
+          prefix=${{ github.event.repository.name }}_${version}
+          checksums=${prefix}_SHA256SUMS
+          for file in `ls *.zip`; do
+            sha256sum ${file} >> ${checksums}
+          done
+
+          # sha256sum the manifest
+          sha256sum terraform-registry-manifest.json >> ${checksums}
+          manifest=${prefix}_manifest.json
+          mv terraform-registry-manifest.json ${manifest}
+
+          # generate the GPG signature
+          gpg --batch --local-user ${{ steps.gpg.outputs.fingerprint }} --output ${checksums}.sig --detach-sign ${checksums}
+
+          echo "checksums=${checksums}" >> $GITHUB_OUTPUT
+          echo "signature=${checksums}.sig" >> $GITHUB_OUTPUT
+          echo "manifest=${manifest}" >> $GITHUB_OUTPUT
+
+      - name: Upload the sha256 checksums
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ steps.create-token.outputs.token }}
+          file: artifacts/${{ steps.generate.outputs.checksums }}
+          asset_name: ${{ steps.generate.outputs.checksums }}
+          tag: ${{ github.ref }}
+
+      - name: Upload the GPG signature
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ steps.create-token.outputs.token }}
+          file: artifacts/${{ steps.generate.outputs.signature }}
+          asset_name: ${{ steps.generate.outputs.signature }}
+          tag: ${{ github.ref }}
+
+      - name: Upload the manifest
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ steps.create-token.outputs.token }}
+          file: artifacts/${{ steps.generate.outputs.manifest }}
+          asset_name: ${{ steps.generate.outputs.manifest }}
+          tag: ${{ github.ref }}

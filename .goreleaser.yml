@@ -1,18 +1,19 @@
 builds:
 - env:
-    - CGO_ENABLED=0
+  - >-
+    {{- if or (eq .Os "darwin") (eq .Os "windows") -}}
+      CGO_ENABLED=1
+    {{- else -}}
+      CGO_ENABLED=0
+    {{- end -}}
   goos:
-    - windows
-    - linux
-    - darwin
-    - freebsd
+    - {{ .Os }}
   goarch:
     - amd64
     - arm64
     - '386'
   flags:
     - -trimpath
-  ignore:
   binary: '{{ .ProjectName }}_v{{ .Version }}'
 
 archives:
@@ -20,27 +21,4 @@ archives:
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 
 checksum:
-  extra_files:
-    - glob: 'terraform-registry-manifest.json'
-      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
-  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
-  algorithm: sha256
-
-signs:
-  - artifacts: checksum
-    args:
-      - "--batch"
-      - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}"
-      - "--output"
-      - "${signature}"
-      - "--detach-sign"
-      - "${artifact}"
-
-release:
-  github:
-    owner: Snowflake-Labs
-    name: terraform-provider-snowflake
-  extra_files:
-    - glob: 'terraform-registry-manifest.json'
-      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+  disable: true
