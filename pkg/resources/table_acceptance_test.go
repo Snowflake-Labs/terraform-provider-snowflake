@@ -1844,6 +1844,57 @@ resource "snowflake_table" "test_table" {
 `, name, databaseName, schemaName)
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2588 is fixed
+func TestAcc_ColumnTypeChangeWithNonTextType(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: tableConfigWithNumberColumnType(accName, acc.TestDatabaseName, acc.TestSchemaName, "NUMBER(38,0)"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "id"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(38,0)"),
+				),
+			},
+			{
+				Config: tableConfigWithNumberColumnType(accName, acc.TestDatabaseName, acc.TestSchemaName, "NUMBER(36,0)"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "id"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(36,0)"),
+				),
+			},
+		},
+	})
+}
+
+func tableConfigWithNumberColumnType(name string, databaseName string, schemaName string, columnType string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test_table" {
+	name                = "%[1]s"
+	database            = "%[2]s"
+	schema              = "%[3]s"
+
+	column {
+		name = "id"
+		type = "%[4]s"
+	}
+}
+`, name, databaseName, schemaName, columnType)
+}
+
 func checkDatabaseSchemaAndTableDataRetentionTime(id sdk.SchemaObjectIdentifier, expectedDatabaseRetentionDays int, expectedSchemaRetentionDays int, expectedTableRetentionsDays int) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
 		client := acc.TestAccProvider.Meta().(*provider.Context).Client

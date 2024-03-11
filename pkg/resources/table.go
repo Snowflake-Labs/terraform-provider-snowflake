@@ -818,7 +818,11 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		}
 		for _, cA := range changed {
 			if cA.changedDataType || cA.changedCollate {
-				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType))).WithCollate(sdk.String(cA.newColumn.collate))})))
+				var newCollation *string
+				if sdk.IsStringType(cA.newColumn.dataType) && cA.newColumn.collate != "" {
+					newCollation = sdk.String(cA.newColumn.collate)
+				}
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType))).WithCollate(newCollation)})))
 				if err != nil {
 					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
 				}
