@@ -7,11 +7,11 @@ builds:
       CGO_ENABLED=0
     {{- end -}}
   goos:
-  - {{ .Os }}
-  - >-
-    {{- if (eq .Os "linux") -}}
-      freebsd
-    {{- else -}}
+    - {{ .Os }}
+    - >-
+      {{- if (eq .Os "linux") -}}
+        freebsd
+      {{- else -}}
   goarch:
     - amd64
     - arm64
