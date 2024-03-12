@@ -17,6 +17,62 @@ var (
 	_ validatable = new(ShowGrantOptions)
 )
 
+var validGrantOwnershipObjectTypes = []ObjectType{
+	ObjectTypeAggregationPolicy,
+	ObjectTypeAlert,
+	ObjectTypeAuthenticationPolicy,
+	ObjectTypeComputePool,
+	ObjectTypeDatabase,
+	ObjectTypeDatabaseRole,
+	ObjectTypeDynamicTable,
+	ObjectTypeEventTable,
+	ObjectTypeExternalTable,
+	ObjectTypeExternalVolume,
+	ObjectTypeFailoverGroup,
+	ObjectTypeFileFormat,
+	ObjectTypeFunction,
+	ObjectTypeHybridTable,
+	ObjectTypeIcebergTable,
+	ObjectTypeImageRepository,
+	ObjectTypeIntegration,
+	ObjectTypeMaterializedView,
+	ObjectTypeNetworkPolicy,
+	ObjectTypeNetworkRule,
+	ObjectTypePackagesPolicy,
+	ObjectTypePipe,
+	ObjectTypeProcedure,
+	ObjectTypeMaskingPolicy,
+	ObjectTypePasswordPolicy,
+	ObjectTypeProjectionPolicy,
+	ObjectTypeReplicationGroup,
+	ObjectTypeRole,
+	ObjectTypeRowAccessPolicy,
+	ObjectTypeSchema,
+	ObjectTypeSessionPolicy,
+	ObjectTypeSecret,
+	ObjectTypeSequence,
+	ObjectTypeStage,
+	ObjectTypeStream,
+	ObjectTypeTable,
+	ObjectTypeTag,
+	ObjectTypeTask,
+	ObjectTypeUser,
+	ObjectTypeView,
+	ObjectTypeWarehouse,
+}
+
+var (
+	ValidGrantOwnershipObjectTypesString       = make([]string, len(validGrantOwnershipObjectTypes))
+	ValidGrantOwnershipPluralObjectTypesString = make([]string, len(validGrantOwnershipObjectTypes))
+)
+
+func init() {
+	for i, objectType := range validGrantOwnershipObjectTypes {
+		ValidGrantOwnershipObjectTypesString[i] = objectType.String()
+		ValidGrantOwnershipPluralObjectTypesString[i] = objectType.Plural().String()
+	}
+}
+
 func (opts *GrantPrivilegesToAccountRoleOptions) validate() error {
 	if opts == nil {
 		return errors.Join(ErrNilOptions)

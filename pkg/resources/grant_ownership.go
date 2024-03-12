@@ -16,61 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var validGrantOwnershipObjectTypes = []sdk.ObjectType{
-	sdk.ObjectTypeAggregationPolicy,
-	sdk.ObjectTypeAlert,
-	sdk.ObjectTypeAuthenticationPolicy,
-	sdk.ObjectTypeComputePool,
-	sdk.ObjectTypeDatabase,
-	sdk.ObjectTypeDatabaseRole,
-	sdk.ObjectTypeDynamicTable,
-	sdk.ObjectTypeEventTable,
-	sdk.ObjectTypeExternalTable,
-	sdk.ObjectTypeExternalVolume,
-	sdk.ObjectTypeFailoverGroup,
-	sdk.ObjectTypeFileFormat,
-	sdk.ObjectTypeFunction,
-	sdk.ObjectTypeHybridTable,
-	sdk.ObjectTypeIcebergTable,
-	sdk.ObjectTypeImageRepository,
-	sdk.ObjectTypeIntegration,
-	sdk.ObjectTypeMaterializedView,
-	sdk.ObjectTypeNetworkPolicy,
-	sdk.ObjectTypeNetworkRule,
-	sdk.ObjectTypePackagesPolicy,
-	sdk.ObjectTypePipe,
-	sdk.ObjectTypeProcedure,
-	sdk.ObjectTypeMaskingPolicy,
-	sdk.ObjectTypePasswordPolicy,
-	sdk.ObjectTypeProjectionPolicy,
-	sdk.ObjectTypeRole,
-	sdk.ObjectTypeRowAccessPolicy,
-	sdk.ObjectTypeSchema,
-	sdk.ObjectTypeSessionPolicy,
-	sdk.ObjectTypeSecret,
-	sdk.ObjectTypeSequence,
-	sdk.ObjectTypeStage,
-	sdk.ObjectTypeStream,
-	sdk.ObjectTypeTable,
-	sdk.ObjectTypeTag,
-	sdk.ObjectTypeTask,
-	sdk.ObjectTypeUser,
-	sdk.ObjectTypeView,
-	sdk.ObjectTypeWarehouse,
-}
-
-var (
-	validGrantOwnershipObjectTypesString       = make([]string, len(validGrantOwnershipObjectTypes))
-	validGrantOwnershipPluralObjectTypesString = make([]string, len(validGrantOwnershipObjectTypes))
-)
-
-func init() {
-	for i, objectType := range validGrantOwnershipObjectTypes {
-		validGrantOwnershipObjectTypesString[i] = objectType.String()
-		validGrantOwnershipPluralObjectTypesString[i] = objectType.Plural().String()
-	}
-}
-
 var grantOwnershipSchema = map[string]*schema.Schema{
 	"account_role_name": {
 		Type:             schema.TypeString,
@@ -98,7 +43,7 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role. Available options are: REVOKE for removing existing privileges and COPY to transfer them with ownership.",
+		Description: "Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role. Available options are: REVOKE for removing existing privileges and COPY to transfer them with ownership. For more information head over to [Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#optional-parameters).",
 		ValidateFunc: validation.StringInSlice([]string{
 			"COPY",
 			"REVOKE",
@@ -116,11 +61,11 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					ForceNew:    true,
-					Description: "Specifies the type of object on which you are transferring ownership. Available values are: AGGREGATION POLICY | ALERT | AUTHENTICATION POLICY | COMPUTE POOL | DATABASE | DATABASE ROLE | DYNAMIC TABLE | EVENT TABLE | EXTERNAL TABLE | EXTERNAL VOLUME | FAILOVER GROUP | FILE FORMAT | FUNCTION | HYBRID TABLE | ICEBERG TABLE | IMAGE REPOSITORY | INTEGRATION | MATERIALIZED VIEW | NETWORK POLICY | NETWORK RULE | PACKAGES POLICY | PIPE | PROCEDURE | MASKING POLICY | PASSWORD POLICY | PROJECTION POLICY | REPLICATION GROUP | ROLE | ROW ACCESS POLICY | SCHEMA | SESSION POLICY | SECRET | SEQUENCE | STAGE | STREAM | TABLE | TAG | TASK | USER | VIEW | WAREHOUSE",
+					Description: fmt.Sprintf("Specifies the type of object on which you are transferring ownership. Available values are: %s", strings.Join(sdk.ValidGrantOwnershipObjectTypesString, " | ")),
 					RequiredWith: []string{
 						"on.0.object_name",
 					},
-					ValidateFunc: validation.StringInSlice(validGrantOwnershipObjectTypesString, true),
+					ValidateFunc: validation.StringInSlice(sdk.ValidGrantOwnershipObjectTypesString, true),
 				},
 				"object_name": {
 					Type:        schema.TypeString,
@@ -177,8 +122,8 @@ func grantOwnershipBulkOperationSchema(branchName string) map[string]*schema.Sch
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
-			Description:  "Specifies the type of object in plural form on which you are transferring ownership. Available values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | COMPUTE POOLS | DATABASES | DATABASE ROLES | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | EXTERNAL VOLUMES | FAILOVER GROUPS | FILE FORMATS | FUNCTIONS | HYBRID TABLES | ICEBERG TABLES | IMAGE REPOSITORIES | INTEGRATIONS | MATERIALIZED VIEWS | NETWORK POLICIES | NETWORK RULES | PACKAGES POLICIES | PIPES | PROCEDURES | MASKING POLICIES | PASSWORD POLICIES | PROJECTION POLICIES | REPLICATION GROUPS | ROLES | ROW ACCESS POLICIES | SCHEMAS | SESSION POLICIES | SECRETS | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | USERS | VIEWS | WAREHOUSES",
-			ValidateFunc: validation.StringInSlice(validGrantOwnershipPluralObjectTypesString, true),
+			Description:  fmt.Sprintf("Specifies the type of object in plural form on which you are transferring ownership. Available values are: %s. For more information head over to [Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters).", strings.Join(sdk.ValidGrantOwnershipPluralObjectTypesString, " | ")),
+			ValidateFunc: validation.StringInSlice(sdk.ValidGrantOwnershipPluralObjectTypesString, true),
 		},
 		"in_database": {
 			Type:             schema.TypeString,
@@ -208,6 +153,7 @@ func grantOwnershipBulkOperationSchema(branchName string) map[string]*schema.Sch
 func GrantOwnership() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateGrantOwnership,
+		// There's no Update, because every field is marked as ForceNew
 		DeleteContext: DeleteGrantOwnership,
 		ReadContext:   ReadGrantOwnership,
 
@@ -304,7 +250,7 @@ func CreateGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 
 	err = client.Grants.GrantOwnership(
 		ctx,
-		grantOn,
+		*grantOn,
 		getOwnershipGrantTo(d),
 		getOwnershipGrantOpts(id),
 	)
@@ -353,10 +299,9 @@ func DeleteGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 
 		err = client.Grants.GrantOwnership( // TODO: Should we always set outbound privileges to COPY in delete operation or set it to the config value?
 			ctx,
-			grantOn,
+			*grantOn,
 			sdk.OwnershipGrantTo{
-				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(accountRoleName)), // TODO: What if current role is database role (not a common but possible case)
-				// DatabaseRoleName: TODO: handle later
+				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(accountRoleName)),
 			},
 			getOwnershipGrantOpts(id),
 		)
@@ -450,6 +395,7 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 	return nil
 }
 
+// TODO(SNOW-1229218): Make sdk.ObjectType + string objectName to sdk.ObjectIdentifier mapping available in the sdk (for all object types).
 func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.ObjectIdentifier, error) {
 	identifier, err := helpers.DecodeSnowflakeParameterID(objectName)
 	if err != nil {
@@ -467,9 +413,7 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeRole,
 		sdk.ObjectTypeUser,
 		sdk.ObjectTypeWarehouse:
-		if _, ok := identifier.(sdk.AccountObjectIdentifier); !ok {
-			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected account object identifier", objectName))
-		}
+		return sdk.NewAccountObjectIdentifier(objectName), nil
 	case sdk.ObjectTypeDatabaseRole,
 		sdk.ObjectTypeSchema:
 		if _, ok := identifier.(sdk.DatabaseObjectIdentifier); !ok {
@@ -514,8 +458,8 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 	return identifier, nil
 }
 
-func getOwnershipGrantOn(d *schema.ResourceData) (sdk.OwnershipGrantOn, error) {
-	var ownershipGrantOn sdk.OwnershipGrantOn
+func getOwnershipGrantOn(d *schema.ResourceData) (*sdk.OwnershipGrantOn, error) {
+	ownershipGrantOn := new(sdk.OwnershipGrantOn)
 
 	on := d.Get("on").([]any)[0].(map[string]any)
 	onObjectType := on["object_type"].(string)
@@ -528,7 +472,7 @@ func getOwnershipGrantOn(d *schema.ResourceData) (sdk.OwnershipGrantOn, error) {
 		objectType := sdk.ObjectType(strings.ToUpper(onObjectType))
 		objectName, err := getOnObjectIdentifier(objectType, onObjectName)
 		if err != nil {
-			return ownershipGrantOn, err
+			return nil, err
 		}
 		ownershipGrantOn.Object = &sdk.Object{
 			ObjectType: objectType,
@@ -558,18 +502,18 @@ func getOwnershipGrantTo(d *schema.ResourceData) sdk.OwnershipGrantTo {
 }
 
 func getOwnershipGrantOpts(id *GrantOwnershipId) *sdk.GrantOwnershipOptions {
+	opts := new(sdk.GrantOwnershipOptions)
+
 	if id != nil && id.OutboundPrivilegesBehavior != nil {
 		outboundPrivileges := id.OutboundPrivilegesBehavior.ToOwnershipCurrentGrantsOutboundPrivileges()
 		if outboundPrivileges != nil {
-			return &sdk.GrantOwnershipOptions{
-				CurrentGrants: &sdk.OwnershipCurrentGrants{
-					OutboundPrivileges: *outboundPrivileges,
-				},
+			opts.CurrentGrants = &sdk.OwnershipCurrentGrants{
+				OutboundPrivileges: *outboundPrivileges,
 			}
 		}
 	}
 
-	return new(sdk.GrantOwnershipOptions)
+	return opts
 }
 
 func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowGrantOptions, sdk.ObjectType) {

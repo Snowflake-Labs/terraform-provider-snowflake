@@ -620,7 +620,7 @@ func createFailoverGroup(t *testing.T, client *sdk.Client) (*sdk.FailoverGroup, 
 
 func createFailoverGroupWithOptions(t *testing.T, client *sdk.Client, objectTypes []sdk.PluralObjectType, allowedAccounts []sdk.AccountIdentifier, opts *sdk.CreateFailoverGroupOptions) (*sdk.FailoverGroup, func()) {
 	t.Helper()
-	id := sdk.NewAccountObjectIdentifier(random.AlphaN(20))
+	id := sdk.RandomAlphanumericAccountObjectIdentifier()
 	ctx := context.Background()
 	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, opts)
 	require.NoError(t, err)

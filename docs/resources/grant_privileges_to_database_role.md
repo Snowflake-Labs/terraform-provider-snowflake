@@ -217,8 +217,8 @@ Required:
 
 Optional:
 
-- `in_database` (String) TODO
-- `in_schema` (String) TODO
+- `in_database` (String) The fully qualified name of the database.
+- `in_schema` (String) The fully qualified name of the schema.
 
 
 <a id="nestedblock--on_schema_object--future"></a>
@@ -230,8 +230,8 @@ Required:
 
 Optional:
 
-- `in_database` (String) TODO
-- `in_schema` (String) TODO
+- `in_database` (String) The fully qualified name of the database.
+- `in_schema` (String) The fully qualified name of the schema.
 
 ## Import
 

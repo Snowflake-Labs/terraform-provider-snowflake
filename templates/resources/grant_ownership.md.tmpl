@@ -10,11 +10,14 @@ description: |-
 {{- end }}
 ---
 
+{{/* TODO: Cannot mark the documentation page as draft, so remove this after the resource is available */}}
+!> **Warning** We're in a process of implementing this resource, so it's not available yet.
+
 ~> **Note** This is a preview resource. It's ready for general use. In case of any errors, please file an issue in our GitHub repository.
+~> **Note** For more details about granting ownership, please visit [`GRANT OWNERSHIP` Snowflake documentation page](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership).
 
 {{/* TODO: Add note on how on_future works - could be also added to other grant resources with on_future option */}}
 {{/* TODO: Add warnings If on_all option will be available - during delete user could transfer ownership of not intended objects due to it's nature */}}
-!> **Warning** Be careful when using `always_apply` field. It will always produce a plan (even when no changes were made) and can be harmful in some setups. For more details why we decided to introduce it to go our document explaining those design decisions (coming soon).
 
 # {{.Name}} ({{.Type}})
 
@@ -45,48 +48,4 @@ where:
 
 It has varying number of parts, depending on grant_type. All the possible types are:
 
-### OnObject
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnObject|<object_type>|<object_name>"`
-
-### OnAll
-
-OnAll contains inner types for all options.
-
-#### InDatabase
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<plural_object_type>|InDatabase|<database_name>"`
-
-#### InSchema
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<plural_object_type>|InSchema|<schema_name>"`
-
-### OnAll
-
-OnFuture contains inner types for all options.
-
-#### InDatabase
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<plural_object_type>|InDatabase|<database_name>"`
-
-#### InSchema
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<plural_object_type>|InSchema|<schema_name>"`
-
-### Import examples
-
-#### OnObject on Schema ToAccountRole
-`terraform import "ToAccountRole|\"account_role\"|COPY|OnObject|SCHEMA|\"database_name\".\"schema_name\""`
-
-#### OnObject on Schema ToDatabaseRole
-`terraform import "ToDatabaseRole|\"database_name\".\"database_role_name\"|COPY|OnObject|SCHEMA|\"database_name\".\"schema_name\""`
-
-#### OnObject on Table
-`terraform import "ToAccountRole|\"account_role\"|COPY|OnObject|TABLE|\"database_name\".\"schema_name\".\"table_name\""`
-
-#### OnAll InDatabase
-`terraform import "ToAccountRole|\"account_role\"|REVOKE|OnAll|TABLES|InDatabase|\"database_name\""`
-
-#### OnAll InSchema
-`terraform import "ToAccountRole|\"account_role\"||OnAll|TABLES|InSchema|\"database_name\".\"schema_name\""`
-
-#### OnFuture InDatabase
-`terraform import "ToAccountRole|\"account_role\"||OnFuture|TABLES|InDatabase|\"database_name\""`
-
-#### OnFuture InSchema
-`terraform import "ToAccountRole|\"account_role\"|COPY|OnFuture|TABLES|InSchema|\"database_name\".\"schema_name\""`
+{{ index (split (codefile "" .ImportFile) "```") 1 | trimspace }}

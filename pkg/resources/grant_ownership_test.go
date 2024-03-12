@@ -53,6 +53,12 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 			Expected:   sdk.NewSchemaObjectIdentifier("test_database", "test_schema", "test_table"),
 		},
 		{
+			Name:       "account object identifier with dots",
+			ObjectType: sdk.ObjectTypeDatabase,
+			ObjectName: "database.name.with.dots",
+			Expected:   sdk.NewAccountObjectIdentifier("database.name.with.dots"),
+		},
+		{
 			Name:       "validation - valid identifier",
 			ObjectType: sdk.ObjectTypeDatabase,
 			ObjectName: "to.many.parts.in.this.identifier",
@@ -63,12 +69,6 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 			ObjectType: sdk.ObjectTypeShare,
 			ObjectName: "some_share",
 			Error:      "object_type SHARE is not supported",
-		},
-		{
-			Name:       "validation - invalid account object identifier",
-			ObjectType: sdk.ObjectTypeDatabase,
-			ObjectName: "test_database.test_schema",
-			Error:      "invalid object_name test_database.test_schema, expected account object identifier",
 		},
 		{
 			Name:       "validation - invalid database object identifier",
@@ -261,7 +261,8 @@ func TestGetOwnershipGrantOn(t *testing.T) {
 			grantOn, err := getOwnershipGrantOn(d)
 			if tt.Error == "" {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.Expected, grantOn)
+				assert.NotNil(t, grantOn)
+				assert.Equal(t, tt.Expected, *grantOn)
 			} else {
 				assert.ErrorContains(t, err, tt.Error)
 			}
@@ -393,13 +394,11 @@ func TestPrepareShowGrantsRequestForGrantOwnership(t *testing.T) {
 	}
 }
 
-func TestGetOwnershipGrantTo(t *testing.T) {
+func TestValidAccountRoleNameGetOwnershipGrantTo(t *testing.T) {
 	testCases := []struct {
-		Name         string
-		AccountRole  *string
-		DatabaseRole *string
-		Expected     sdk.OwnershipGrantTo
-		ExpectPanic  bool
+		Name        string
+		AccountRole *string
+		Expected    sdk.OwnershipGrantTo
 	}{
 		{
 			Name:        "account role name",
@@ -416,6 +415,33 @@ func TestGetOwnershipGrantTo(t *testing.T) {
 			},
 		},
 		{
+			Name:        "account role name - with dots",
+			AccountRole: sdk.String("account.role.with.dots"),
+			Expected: sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier("account.role.with.dots")),
+			},
+		},
+	}
+
+	for _, tt := range testCases {
+		tt := tt
+		t.Run(tt.Name, func(t *testing.T) {
+			grantTo := getOwnershipGrantTo(schema.TestResourceDataRaw(t, grantOwnershipSchema, map[string]any{
+				"account_role_name": *tt.AccountRole,
+			}))
+
+			assert.Equal(t, *tt.Expected.AccountRoleName, *grantTo.AccountRoleName)
+		})
+	}
+}
+
+func TestValidDatabaseRoleNameGetOwnershipGrantTo(t *testing.T) {
+	testCases := []struct {
+		Name         string
+		DatabaseRole *string
+		Expected     sdk.OwnershipGrantTo
+	}{
+		{
 			Name:         "database role name",
 			DatabaseRole: sdk.String("test_database.database_role_name"),
 			Expected: sdk.OwnershipGrantTo{
@@ -429,45 +455,31 @@ func TestGetOwnershipGrantTo(t *testing.T) {
 				DatabaseRoleName: sdk.Pointer(sdk.NewDatabaseObjectIdentifier("test_database", "database_role_name")),
 			},
 		},
-		{
-			Name:        "validation - incorrect account role name",
-			AccountRole: sdk.String("database_name.account_role_name"),
-			ExpectPanic: true,
-		},
-		{
-			Name:         "validation - incorrect database role name",
-			DatabaseRole: sdk.String("database_name.schema_name.database_role_name"),
-			ExpectPanic:  true,
-		},
 	}
 
 	for _, tt := range testCases {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
-			config := make(map[string]any)
-			if tt.AccountRole != nil {
-				config["account_role_name"] = *tt.AccountRole
-			}
-			if tt.DatabaseRole != nil {
-				config["database_role_name"] = *tt.DatabaseRole
-			}
-			d := schema.TestResourceDataRaw(t, grantOwnershipSchema, config)
+			grantTo := getOwnershipGrantTo(schema.TestResourceDataRaw(t, grantOwnershipSchema, map[string]any{
+				"database_role_name": *tt.DatabaseRole,
+			}))
 
-			defer func() {
-				if err := recover(); err != nil {
-					assert.True(t, tt.ExpectPanic)
-				}
-			}()
-			grantTo := getOwnershipGrantTo(d)
-
-			if tt.Expected.AccountRoleName != nil {
-				assert.Equal(t, *tt.Expected.AccountRoleName, *grantTo.AccountRoleName)
-			}
-			if tt.Expected.DatabaseRoleName != nil {
-				assert.Equal(t, *tt.Expected.DatabaseRoleName, *grantTo.DatabaseRoleName)
-			}
+			assert.Equal(t, *tt.Expected.DatabaseRoleName, *grantTo.DatabaseRoleName)
 		})
 	}
+}
+
+func TestInvalidDatabaseRoleGetOwnershipGrantTo(t *testing.T) {
+	d := schema.TestResourceDataRaw(t, grantOwnershipSchema, map[string]any{
+		"database_role_name": "account_role_name",
+	})
+
+	defer func() {
+		if err := recover(); err != nil {
+			assert.ErrorContains(t, err.(error), "index out of range")
+		}
+	}()
+	_ = getOwnershipGrantTo(d)
 }
 
 func TestGetOwnershipGrantOpts(t *testing.T) {
