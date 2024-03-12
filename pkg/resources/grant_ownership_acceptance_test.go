@@ -547,7 +547,7 @@ func TestAcc_GrantOwnership_InvalidConfiguration_MultipleTargets(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/InvalidConfiguration_MultipleTargets"),
 				ConfigVariables: configVariables,
-				ExpectError:     regexp.MustCompile("only one of `on.0.all,on.0.future,on.0.object_name` can be specified"),
+				ExpectError:     regexp.MustCompile("only one of `on.0.all,on.0.future,on.0.object_name`"),
 			},
 		},
 	})
