@@ -1,0 +1,20 @@
+builds:
+- env:
+    - CGO_ENABLED=0
+  goos:
+    - linux
+    - freebsd
+  goarch:
+    - amd64
+    - arm64
+    - '386'
+  flags:
+    - -trimpath
+  binary: '{{ .ProjectName }}_v{{ .Version }}'
+
+archives:
+  - format: zip
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+
+checksum:
+  disable: true
