@@ -474,12 +474,9 @@ func TestInvalidDatabaseRoleGetOwnershipGrantTo(t *testing.T) {
 		"database_role_name": "account_role_name",
 	})
 
-	defer func() {
-		if err := recover(); err != nil {
-			assert.ErrorContains(t, err.(error), "index out of range")
-		}
-	}()
-	_ = getOwnershipGrantTo(d)
+	assert.Panics(t, func() {
+		_ = getOwnershipGrantTo(d)
+	})
 }
 
 func TestGetOwnershipGrantOpts(t *testing.T) {
