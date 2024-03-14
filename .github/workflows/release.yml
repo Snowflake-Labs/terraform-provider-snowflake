@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - cgo-enabled-fix-alt
+      - main
     tags:
       - '*'
 
