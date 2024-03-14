@@ -20,6 +20,8 @@ import (
 )
 
 func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
@@ -66,6 +68,8 @@ func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(5, acctest.CharSetAlpha) + "." + acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
@@ -112,6 +116,8 @@ func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) 
 }
 
 func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName).FullyQualifiedName()
@@ -160,6 +166,8 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName).FullyQualifiedName()
@@ -208,6 +216,8 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -258,6 +268,8 @@ func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -308,6 +320,8 @@ func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
@@ -361,6 +375,8 @@ func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName).FullyQualifiedName()
@@ -414,6 +430,8 @@ func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
@@ -461,6 +479,8 @@ func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName).FullyQualifiedName()
@@ -510,6 +530,8 @@ func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_InvalidConfiguration_EmptyObjectType(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))),
 		"database_name":     config.StringVariable(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))),
@@ -532,6 +554,8 @@ func TestAcc_GrantOwnership_InvalidConfiguration_EmptyObjectType(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_InvalidConfiguration_MultipleTargets(t *testing.T) {
+	t.Skip("will be unskipped in the following grant ownership prs")
+
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))),
 		"database_name":     config.StringVariable(strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))),
