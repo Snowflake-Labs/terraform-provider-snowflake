@@ -217,8 +217,8 @@ Required:
 
 Optional:
 
-- `in_database` (String)
-- `in_schema` (String)
+- `in_database` (String) The fully qualified name of the database.
+- `in_schema` (String) The fully qualified name of the schema.
 
 
 <a id="nestedblock--on_schema_object--future"></a>
@@ -230,12 +230,12 @@ Required:
 
 Optional:
 
-- `in_database` (String)
-- `in_schema` (String)
+- `in_database` (String) The fully qualified name of the database.
+- `in_schema` (String) The fully qualified name of the schema.
 
 ## Import
 
-~> **Note** All the ..._name parts should be fully qualified names, e.g. for database object it is `"<database_name>"."<object_name>"`
+~> **Note** All the ..._name parts should be fully qualified names (where every part is quoted), e.g. for database object it is `"<database_name>"."<object_name>"`
 ~> **Note** To import all_privileges write ALL or ALL PRIVILEGES in place of `<privileges>`
 
 Import is supported using the following syntax:

@@ -55,14 +55,7 @@ func (d *OnSchemaObjectGrantData) String() string {
 	case OnObjectSchemaObjectGrantKind:
 		parts = append(parts, fmt.Sprintf("%s|%s", d.Object.ObjectType, d.Object.Name.FullyQualifiedName()))
 	case OnAllSchemaObjectGrantKind, OnFutureSchemaObjectGrantKind:
-		parts = append(parts, d.OnAllOrFuture.ObjectNamePlural.String())
-		parts = append(parts, string(d.OnAllOrFuture.Kind))
-		switch d.OnAllOrFuture.Kind {
-		case InDatabaseBulkOperationGrantKind:
-			parts = append(parts, d.OnAllOrFuture.Database.FullyQualifiedName())
-		case InSchemaBulkOperationGrantKind:
-			parts = append(parts, d.OnAllOrFuture.Schema.FullyQualifiedName())
-		}
+		parts = append(parts, d.OnAllOrFuture.String())
 	}
 	return strings.Join(parts, helpers.IDDelimiter)
 }
@@ -79,6 +72,19 @@ type BulkOperationGrantData struct {
 	Kind             BulkOperationGrantKind
 	Database         *sdk.AccountObjectIdentifier
 	Schema           *sdk.DatabaseObjectIdentifier
+}
+
+func (d *BulkOperationGrantData) String() string {
+	var parts []string
+	parts = append(parts, d.ObjectNamePlural.String())
+	parts = append(parts, string(d.Kind))
+	switch d.Kind {
+	case InDatabaseBulkOperationGrantKind:
+		parts = append(parts, d.Database.FullyQualifiedName())
+	case InSchemaBulkOperationGrantKind:
+		parts = append(parts, d.Schema.FullyQualifiedName())
+	}
+	return strings.Join(parts, helpers.IDDelimiter)
 }
 
 func getBulkOperationGrantData(in *sdk.GrantOnSchemaObjectIn) *BulkOperationGrantData {
@@ -100,9 +106,8 @@ func getBulkOperationGrantData(in *sdk.GrantOnSchemaObjectIn) *BulkOperationGran
 }
 
 func getGrantOnSchemaObjectIn(allOrFuture map[string]any) *sdk.GrantOnSchemaObjectIn {
-	pluralObjectType := sdk.PluralObjectType(allOrFuture["object_type_plural"].(string))
 	grantOnSchemaObjectIn := &sdk.GrantOnSchemaObjectIn{
-		PluralObjectType: pluralObjectType,
+		PluralObjectType: sdk.PluralObjectType(strings.ToUpper(allOrFuture["object_type_plural"].(string))),
 	}
 
 	if inDatabase, ok := allOrFuture["in_database"].(string); ok && len(inDatabase) > 0 {
