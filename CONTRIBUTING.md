@@ -101,7 +101,7 @@ For further instructions, please check the official [Terraform Plugin Developmen
 ## Contributing
 
 We use [Conventional Commits](https://www.conventionalcommits.org/) for commit message formatting and PR titles. Please try to adhere to the standard.
-Refer to the [regular expression](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/.github/workflows/titleLint.yml#L17) for PR title validation.
+Refer to the [regular expression](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/.github/workflows/title-lint.yml#L17) for PR title validation.
 
 ## Releasing
 
