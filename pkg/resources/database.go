@@ -19,11 +19,13 @@ var databaseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
 		Required: true,
+		Description: "Specifies the identifier for the database; must be unique database name.",
 	},
 	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "",
+		Description: "Specifies a comment for the database.",
 	},
 	"is_transient": {
 		Type:        schema.TypeBool,
