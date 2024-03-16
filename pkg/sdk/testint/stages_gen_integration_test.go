@@ -346,6 +346,11 @@ func TestInt_Stages(t *testing.T) {
 		stage, err := client.Stages.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assertStage(t, stage, id, "EXTERNAL", "Updated comment", "AWS", awsBucketUrl, s3StorageIntegration.Name)
+
+		props, err := client.Stages.Describe(ctx, id)
+
+		require.NoError(t, err)
+		require.NotNil(t, props)
 	})
 
 	t.Run("AlterExternalGCSStage", func(t *testing.T) {

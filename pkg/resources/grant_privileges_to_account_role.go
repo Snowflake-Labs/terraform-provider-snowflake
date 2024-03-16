@@ -419,7 +419,7 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "An error occurred when granting privileges to account role",
-				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err),
 			},
 		}
 	}
@@ -440,7 +440,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to parse internal identifier",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 			},
 		}
 	}
@@ -465,7 +465,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 					diag.Diagnostic{
 						Severity: diag.Error,
 						Summary:  "Failed to revoke all privileges",
-						Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+						Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 					},
 				}
 			}
@@ -529,7 +529,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 						diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "Failed to grant added privileges",
-							Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
+							Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err),
 						},
 					}
 				}
@@ -556,7 +556,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 						diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "Failed to revoke removed privileges",
-							Detail:   fmt.Sprintf("Id: %s\nPrivileges to remove: %v\nError: %s", d.Id(), privilegesToRemove, err.Error()),
+							Detail:   fmt.Sprintf("Id: %s\nPrivileges to remove: %v\nError: %s", d.Id(), privilegesToRemove, err),
 						},
 					}
 				}
@@ -585,7 +585,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 					diag.Diagnostic{
 						Severity: diag.Error,
 						Summary:  "Failed to grant all privileges",
-						Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+						Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 					},
 				}
 			}
@@ -614,7 +614,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 				diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "Always apply. An error occurred when granting privileges to account role",
-					Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", d.Id(), id.RoleName, err.Error()),
+					Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", d.Id(), id.RoleName, err),
 				},
 			}
 		}
@@ -636,7 +636,7 @@ func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to parse internal identifier",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 			},
 		}
 	}
@@ -654,7 +654,7 @@ func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "An error occurred when revoking privileges from account role",
-				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", d.Id(), id.RoleName.FullyQualifiedName(), err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", d.Id(), id.RoleName.FullyQualifiedName(), err),
 			},
 		}
 	}
@@ -672,7 +672,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to parse internal identifier",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 			},
 		}
 	}
@@ -695,7 +695,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 				diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "Failed to generate UUID",
-					Detail:   fmt.Sprintf("Original error: %s", err.Error()),
+					Detail:   fmt.Sprintf("Original error: %s", err),
 				},
 			}
 		}
@@ -706,7 +706,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 				diag.Diagnostic{
 					Severity: diag.Error,
 					Summary:  "Error setting always_apply_trigger for database role",
-					Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+					Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 				},
 			}
 		}
@@ -731,7 +731,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to retrieve grants",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 			},
 		}
 	}
@@ -794,7 +794,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Error setting privileges for account role",
-				Detail:   fmt.Sprintf("Id: %s\nPrivileges: %v\nError: %s", d.Id(), actualPrivileges, err.Error()),
+				Detail:   fmt.Sprintf("Id: %s\nPrivileges: %v\nError: %s", d.Id(), actualPrivileges, err),
 			},
 		}
 	}
