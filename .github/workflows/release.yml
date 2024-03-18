@@ -5,10 +5,10 @@ on:
     tags:
       - '*'
 
-name: release-please
+name: release
 jobs:
   release-please:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/github-script@v6
         id: configure-changelog
@@ -20,16 +20,15 @@ jobs:
               {type: "chore", section: "🔧 **Misc**", hidden: false},
               {type: "fix", section: "🐛 **Bug fixes:**", hidden: false},
             ]
-
             return JSON.stringify(changelogTypes)
       # See https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
       # For why we need to generate a token and not use the default
-      - name: Generate token
-        id: generate_token
-        uses: chanzuckerberg/github-app-token@v1.1.4
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@v1
         with:
-          app_id: ${{ secrets.CZI_RELEASE_PLEASE_APP_ID }}
-          private_key: ${{ secrets.CZI_RELEASE_PLEASE_PK }}
+          app-id: ${{ secrets.CZI_RELEASE_PLEASE_APP_ID }}
+          private-key: ${{ secrets.CZI_RELEASE_PLEASE_PK }}
 
       - name: Import GPG key
         id: import_gpg
@@ -39,33 +38,30 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: release please
+      - name: Release please
         uses: google-github-actions/release-please-action@v3
         id: release
         with:
           release-type: simple
           bump-minor-pre-major: true
           changelog-types: ${{ steps.configure-changelog.outputs.result }}
-          token: ${{ steps.generate_token.outputs.token }}
+          token: ${{ steps.create-token.outputs.token }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         # we need to fetch all history and tags
         # so we build the proper version
         with:
           fetch-depth: 0
-        if: ${{ steps.release.outputs.release_created }}
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
-        if: ${{ steps.release.outputs.release_created }}
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
-          args: release --rm-dist --verbose
+          args: release --clean --verbose
         env:
-          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.create-token.outputs.token }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-        if: ${{ steps.release.outputs.release_created }}
