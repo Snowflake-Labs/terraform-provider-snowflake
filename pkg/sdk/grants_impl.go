@@ -205,6 +205,39 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 	}
 	opts.On = on
 	opts.To = to
+
+	// TODO: Suspend / Pause Pipes / Tasks before granting ownership (and restore the state before the transfer)
+	if on.Object != nil && on.Object.ObjectType == ObjectTypePipe {
+
+	}
+	if on.Object != nil && on.Object.ObjectType == ObjectTypeTask {
+
+	}
+
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
+	// to every Pipe one by one.
+	if on.All != nil && on.All.PluralObjectType == PluralObjectTypePipes {
+		return v.runOnAllPipes(
+			ctx,
+			on.All.InDatabase,
+			on.All.InSchema,
+			func(pipe Pipe) error {
+				return v.client.Grants.GrantOwnership(
+					ctx,
+					OwnershipGrantOn{
+						Object: &Object{
+							ObjectType: ObjectTypePipe,
+							Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+						},
+					},
+					to,
+					opts,
+				)
+			},
+		)
+	}
+
 	return validateAndExec(v.client, ctx, opts)
 }
 

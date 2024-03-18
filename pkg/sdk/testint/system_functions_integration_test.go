@@ -44,3 +44,26 @@ func TestInt_GetTag(t *testing.T) {
 		assert.Equal(t, "", s)
 	})
 }
+
+func TestInt_PipeStatus(t *testing.T) {
+	client := testClient(t)
+
+	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), random.AlphaN(20))
+	t.Cleanup(schemaCleanup)
+
+	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+	t.Cleanup(tableCleanup)
+
+	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+	t.Cleanup(stageCleanup)
+
+	copyStatement := createPipeCopyStatement(t, table, stage)
+	pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+	t.Cleanup(pipeCleanup)
+
+	pipeExecutionState, err := client.SystemFunctions.PipeStatus(pipe.ID())
+	require.NoError(t, err)
+
+	_ = pipeExecutionState
+
+}
