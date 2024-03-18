@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"context"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -63,7 +64,30 @@ func TestInt_PipeStatus(t *testing.T) {
 
 	pipeExecutionState, err := client.SystemFunctions.PipeStatus(pipe.ID())
 	require.NoError(t, err)
+	require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
 
-	_ = pipeExecutionState
+	// Pause the pipe
+	ctx := context.Background()
+	err = client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
+		Set: &sdk.PipeSet{
+			PipeExecutionPaused: sdk.Bool(true),
+		},
+	})
+	require.NoError(t, err)
 
+	pipeExecutionState, err = client.SystemFunctions.PipeStatus(pipe.ID())
+	require.NoError(t, err)
+	require.Equal(t, sdk.PausedPipeExecutionState, pipeExecutionState)
+
+	// Unpause the pipe
+	err = client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
+		Set: &sdk.PipeSet{
+			PipeExecutionPaused: sdk.Bool(false),
+		},
+	})
+	require.NoError(t, err)
+
+	pipeExecutionState, err = client.SystemFunctions.PipeStatus(pipe.ID())
+	require.NoError(t, err)
+	require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
 }

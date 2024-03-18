@@ -64,10 +64,14 @@ func (c *systemFunctions) PipeStatus(pipeId SchemaObjectIdentifier) (PipeExecuti
 		return "", err
 	}
 
-	pipeStatus := make(map[string]any)
-	err = json.Unmarshal([]byte(row.PipeStatus), pipeStatus)
+	var pipeStatus map[string]any
+	err = json.Unmarshal([]byte(row.PipeStatus), &pipeStatus)
 	if err != nil {
 		return "", err
+	}
+
+	if _, ok := pipeStatus["executionState"]; !ok {
+		return "", NewError(fmt.Sprintf("executionState key not found in: %s", pipeStatus))
 	}
 
 	return PipeExecutionState(pipeStatus["executionState"].(string)), nil

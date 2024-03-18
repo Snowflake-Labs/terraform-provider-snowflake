@@ -199,7 +199,7 @@ func (v *grants) RevokePrivilegeFromShare(ctx context.Context, privileges []Obje
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to OwnershipGrantTo, opts *GrantOwnershipOptions) error {
+func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to OwnershipGrantTo, opts *GrantOwnershipOptions) (err error) {
 	if opts == nil {
 		opts = &GrantOwnershipOptions{}
 	}
@@ -207,12 +207,66 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 	opts.To = to
 
 	// TODO: Suspend / Pause Pipes / Tasks before granting ownership (and restore the state before the transfer)
+
+	// Pausing/UnPausing pipe
 	if on.Object != nil && on.Object.ObjectType == ObjectTypePipe {
+		pipeExecutionState, err := v.client.SystemFunctions.PipeStatus(on.Object.Name.(SchemaObjectIdentifier))
+		if err != nil {
+			return err
+		}
 
+		if pipeExecutionState == RunningPipeExecutionState {
+			err = v.client.Pipes.Alter(ctx, on.Object.Name.(SchemaObjectIdentifier), &AlterPipeOptions{
+				Set: &PipeSet{
+					PipeExecutionPaused: Bool(true),
+				},
+			})
+			if err != nil {
+				return err
+			}
+
+			// TODO: refactor
+			defer func() {
+				unpauseErr := v.client.Pipes.Alter(ctx, on.Object.Name.(SchemaObjectIdentifier), &AlterPipeOptions{
+					Set: &PipeSet{
+						PipeExecutionPaused: Bool(false),
+					},
+				})
+				if err != nil {
+					err = errors.Join(err, unpauseErr)
+				} else {
+					err = unpauseErr
+				}
+			}()
+		}
 	}
+
+	// Suspending/Resuming task
 	if on.Object != nil && on.Object.ObjectType == ObjectTypeTask {
+		task, err := v.client.Tasks.ShowByID(ctx, on.Object.Name.(SchemaObjectIdentifier))
+		if err != nil {
+			return err
+		}
 
+		if task.State == TaskStateStarted {
+			err = v.client.Tasks.Alter(ctx, NewAlterTaskRequest(on.Object.Name.(SchemaObjectIdentifier)).WithSuspend(Bool(true)))
+			if err != nil {
+				return err
+			}
+
+			// TODO: refactor
+			defer func() {
+				unpauseErr := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(on.Object.Name.(SchemaObjectIdentifier)).WithResume(Bool(true)))
+				if err != nil {
+					err = errors.Join(err, unpauseErr)
+				} else {
+					err = unpauseErr
+				}
+			}()
+		}
 	}
+
+	// TODO: Handle tasks pipes on ALL
 
 	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
 	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
@@ -236,6 +290,11 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 				)
 			},
 		)
+	}
+
+	if on.All != nil && on.All.PluralObjectType == PluralObjectTypeTasks {
+		// TODO: no errors when resumed multiple times (same for suspend)
+		// TODO: Figure out which tasks should be resumed after ownership transfer
 	}
 
 	return validateAndExec(v.client, ctx, opts)
