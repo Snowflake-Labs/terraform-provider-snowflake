@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.87.3-pre](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.2...v0.87.3-pre) (2024-03-18)
+
+
+### 🎉 **What's new:**
+
+* Add snowflake grant ownership resource ([#2604](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2604)) ([bfadd24](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/bfadd243a70f1df99426d99c265a12befa93f5e6)), closes [#2549](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2549) [#2199](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2199) [#2084](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2084) [#1942](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1942) [#1875](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1875)
+
+
+### 🔧 **Misc**
+
+* Fix env variables for tests ([#2603](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2603)) ([8bc2437](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8bc24378c6fb233151be1f414ecf9ae768c6a255))
+* release 0.87.3-pre ([a2be7b9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a2be7b90d288be52e3ee1556d7127d320cf13f15))
+
+
+### 🐛 **Bug fixes:**
+
+* alter table column data type ([#2607](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2607)) ([538b6dc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/538b6dc1048a5ccf6d08c1ad8eca520d1e4477fd))
+* cgo goreleaser alt solution ([#2613](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2613)) ([5d31856](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5d31856a25fb5b7520a390b98202d741c75600a0))
+
 ## [0.87.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.1...v0.87.2) (2024-03-07)
 
 
