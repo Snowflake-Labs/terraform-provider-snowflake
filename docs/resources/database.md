@@ -49,7 +49,7 @@ resource "snowflake_database" "from_share" {
 
 ### Required
 
-- `name` (String) Specifies the identifier for the database; must be unique database name.
+- `name` (String) Specifies the identifier for the database; must be unique for your account.
 
 ### Optional
 

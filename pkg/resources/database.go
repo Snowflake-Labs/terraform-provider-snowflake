@@ -19,7 +19,7 @@ var databaseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
 		Required: true,
-		Description: "Specifies the identifier for the database; must be unique database name.",
+		Description: "Specifies the identifier for the database; must be unique for your account.",
 	},
 	"comment": {
 		Type:     schema.TypeString,
