@@ -87,7 +87,7 @@ const (
 	OwnershipTransferCheckOverrideForceResumePipeOption ForceResumePipeOption = "OWNERSHIP_TRANSFER_CHECK_OVERRIDE"
 )
 
-// TODO Check options
+// TODO Test
 func (c *systemFunctions) PipeForceResume(pipeId SchemaObjectIdentifier, options []ForceResumePipeOption) error {
 	ctx := context.Background()
 	var functionOpts string

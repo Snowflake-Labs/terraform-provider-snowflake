@@ -91,3 +91,7 @@ func TestInt_PipeStatus(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
 }
+
+func TestInt_PipeForceResume(t *testing.T) {
+
+}

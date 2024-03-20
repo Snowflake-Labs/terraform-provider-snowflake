@@ -786,7 +786,6 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	})
 }
 
-// TODO: add new test cases
 func TestInt_GrantOwnership(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -1019,6 +1018,15 @@ func TestInt_GrantOwnership(t *testing.T) {
 		secondPipeExecutionState, err = client.SystemFunctions.PipeStatus(secondPipe.ID())
 		require.NoError(t, err)
 		require.Equal(t, sdk.RunningPipeExecutionState, secondPipeExecutionState)
+	})
+
+	t.Run("on object from unprivileged role", func(t *testing.T) {
+
+	})
+
+	// TODO: Check what happens when unprivileged role (without ownership and operate privileges) tries to move the ownership of a pipe
+	t.Run("on pipe from unprivileged role", func(t *testing.T) {
+
 	})
 }
 

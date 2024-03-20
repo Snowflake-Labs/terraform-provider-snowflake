@@ -16,22 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// TODO list
-// [ ] Add edge cases and test them (and if needed describe them in the documentation and add examples)
-// [ ] Test outside of Terraform interactions to see how it behaves in different situations + test different cases where the Delete operation may struggle with
-// [ ] On Delete it should transfer it to the original role ?
-// [ ] There should be param to return ownership to the passed role, otherwise current role will be the owner
-// [ ] Add deprecation messages to old grant resources specifically made for granting ownership
-// [x] On Create if force ownership transfer even though you are not the owner of the resource
-// [ ] Can create a test where used role is not privileged enough to transfer ownership
-// [x] Add setId("") in read and forcefully grant ownership in Create operation
-
 var grantOwnershipSchema = map[string]*schema.Schema{
 	"account_role_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "The fully qualified name of the account role to which privileges will be granted. 123",
+		Description:      "The fully qualified name of the account role to which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		ExactlyOneOf: []string{
 			"account_role_name",
