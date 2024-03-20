@@ -93,5 +93,79 @@ func TestInt_PipeStatus(t *testing.T) {
 }
 
 func TestInt_PipeForceResume(t *testing.T) {
+	client := testClient(t)
 
+	role, roleCleanup := createRole(t, client)
+	t.Cleanup(roleCleanup)
+
+	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), random.AlphaN(20))
+	t.Cleanup(schemaCleanup)
+
+	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+	t.Cleanup(tableCleanup)
+
+	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
+	t.Cleanup(stageCleanup)
+
+	copyStatement := createPipeCopyStatement(t, table, stage)
+	pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+	t.Cleanup(pipeCleanup)
+
+	pipeExecutionState, err := client.SystemFunctions.PipeStatus(pipe.ID())
+	require.NoError(t, err)
+	require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
+
+	ctx := context.Background()
+	err = client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
+		Set: &sdk.PipeSet{
+			PipeExecutionPaused: sdk.Bool(true),
+		},
+	})
+	require.NoError(t, err)
+
+	// Move the ownership to the role and back to the currently used role by the client
+	err = client.Grants.GrantOwnership(
+		ctx,
+		sdk.OwnershipGrantOn{
+			Object: &sdk.Object{
+				ObjectType: sdk.ObjectTypePipe,
+				Name:       pipe.ID(),
+			},
+		},
+		sdk.OwnershipGrantTo{
+			AccountRoleName: sdk.Pointer(role.ID()),
+		},
+		new(sdk.GrantOwnershipOptions),
+	)
+	require.NoError(t, err)
+
+	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
+	require.NoError(t, err)
+
+	err = client.Grants.GrantOwnership(
+		ctx,
+		sdk.OwnershipGrantOn{
+			Object: &sdk.Object{
+				ObjectType: sdk.ObjectTypePipe,
+				Name:       pipe.ID(),
+			},
+		},
+		sdk.OwnershipGrantTo{
+			AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole)),
+		},
+		new(sdk.GrantOwnershipOptions),
+	)
+	require.NoError(t, err)
+
+	// Try to resume with ALTER (error)
+	err = client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
+		Set: &sdk.PipeSet{
+			PipeExecutionPaused: sdk.Bool(false),
+		},
+	})
+	require.Error(t, err)
+
+	// Resume with system func (success)
+	err = client.SystemFunctions.PipeForceResume(pipe.ID(), nil)
+	require.NoError(t, err)
 }
