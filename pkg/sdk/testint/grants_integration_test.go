@@ -1019,15 +1019,6 @@ func TestInt_GrantOwnership(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, sdk.RunningPipeExecutionState, secondPipeExecutionState)
 	})
-
-	t.Run("on object from unprivileged role", func(t *testing.T) {
-
-	})
-
-	// TODO: Check what happens when unprivileged role (without ownership and operate privileges) tries to move the ownership of a pipe
-	t.Run("on pipe from unprivileged role", func(t *testing.T) {
-
-	})
 }
 
 func TestInt_ShowGrants(t *testing.T) {
