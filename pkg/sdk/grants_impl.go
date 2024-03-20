@@ -3,8 +3,9 @@ package sdk
 import (
 	"context"
 	"errors"
-
+	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
+	"slices"
 )
 
 var _ Grants = (*grants)(nil)
@@ -210,35 +211,7 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 
 	// Pausing/UnPausing pipe
 	if on.Object != nil && on.Object.ObjectType == ObjectTypePipe {
-		pipeExecutionState, err := v.client.SystemFunctions.PipeStatus(on.Object.Name.(SchemaObjectIdentifier))
-		if err != nil {
-			return err
-		}
-
-		if pipeExecutionState == RunningPipeExecutionState {
-			err = v.client.Pipes.Alter(ctx, on.Object.Name.(SchemaObjectIdentifier), &AlterPipeOptions{
-				Set: &PipeSet{
-					PipeExecutionPaused: Bool(true),
-				},
-			})
-			if err != nil {
-				return err
-			}
-
-			// TODO: refactor
-			defer func() {
-				unpauseErr := v.client.Pipes.Alter(ctx, on.Object.Name.(SchemaObjectIdentifier), &AlterPipeOptions{
-					Set: &PipeSet{
-						PipeExecutionPaused: Bool(false),
-					},
-				})
-				if err != nil {
-					err = errors.Join(err, unpauseErr)
-				} else {
-					err = unpauseErr
-				}
-			}()
-		}
+		return v.grantOwnershipOnPipe(ctx, on.Object.Name.(SchemaObjectIdentifier), opts)
 	}
 
 	// Suspending/Resuming task
@@ -249,10 +222,11 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 		}
 
 		if task.State == TaskStateStarted {
-			err = v.client.Tasks.Alter(ctx, NewAlterTaskRequest(on.Object.Name.(SchemaObjectIdentifier)).WithSuspend(Bool(true)))
-			if err != nil {
-				return err
-			}
+			// TODO: Suspend is implicit in this case
+			// err = v.client.Tasks.Alter(ctx, NewAlterTaskRequest(on.Object.Name.(SchemaObjectIdentifier)).WithSuspend(Bool(true)))
+			// if err != nil {
+			//   return err
+			// }
 
 			// TODO: refactor
 			defer func() {
@@ -265,8 +239,6 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 			}()
 		}
 	}
-
-	// TODO: Handle tasks pipes on ALL
 
 	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
 	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
@@ -295,6 +267,27 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 	if on.All != nil && on.All.PluralObjectType == PluralObjectTypeTasks {
 		// TODO: no errors when resumed multiple times (same for suspend)
 		// TODO: Figure out which tasks should be resumed after ownership transfer
+		tasksToResume := make([]Task, 0)
+
+		// Save tasks to resume
+		_ = v.runOnAllTasks(ctx, on.All.InDatabase, on.All.InSchema, func(task Task) error {
+			if task.State == TaskStateStarted {
+				tasksToResume = append(tasksToResume, task)
+			}
+			return nil
+		})
+
+		// Grant ownership in bulk
+		grantErrs := validateAndExec(v.client, ctx, opts)
+		// TODO: Handle err
+
+		// Resume marked tasks
+		resumeErrs := runOnAll(tasksToResume, func(task Task) error {
+			return v.client.Tasks.Alter(ctx, NewAlterTaskRequest(task.ID()).WithResume(Bool(true)))
+		})
+		// TODO: Handle err
+
+		return errors.Join(grantErrs, resumeErrs)
 	}
 
 	return validateAndExec(v.client, ctx, opts)
@@ -318,6 +311,138 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 	return resultList, nil
 }
 
+// grant on pipe sequence
+// - get current role (needed to grant operate privilege later on)
+// - grant operate on pipe if not granted (it will error our otherwise)
+// - get pipe status (running or paused)
+// - if pipe is running, stop the pipe
+// - revoke operate (it may affect grant ownership call)
+// - grant ownership
+// - if pipe was previously running
+//   - grant operate on pipe to current role
+//   - unpause the pipe with system function
+//   - revoke operate on pipe from current role
+func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectIdentifier, opts *GrantOwnershipOptions) error {
+	currentRole, err := v.client.ContextFunctions.CurrentRole(ctx)
+	if err != nil {
+		return err
+	}
+	currentRoleName := NewAccountObjectIdentifier(currentRole)
+
+	currentGrants, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+		On: &ShowGrantsOn{
+			Object: &Object{
+				ObjectType: ObjectTypePipe,
+				Name:       pipeId,
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	containsOperatePrivilege := slices.ContainsFunc(currentGrants, func(grant Grant) bool {
+		return grant.Privilege == SchemaObjectPrivilegeOperate.String() && grant.GranteeName == currentRoleName
+	})
+
+	var revokeOperate func() error
+	if !containsOperatePrivilege {
+		revokeOperate, err = v.grantOperateOnPipeTemporarily(ctx, pipeId, currentRoleName)
+		if err != nil {
+			return err
+		}
+	}
+
+	// TODO: Above grant needed ?
+	originalPipeExecutionState, err := v.client.SystemFunctions.PipeStatus(pipeId)
+	if err != nil {
+		return err
+	}
+
+	if originalPipeExecutionState == RunningPipeExecutionState {
+		if err := v.client.Pipes.Alter(ctx, pipeId, &AlterPipeOptions{
+			Set: &PipeSet{
+				PipeExecutionPaused: Bool(true),
+			},
+		}); err != nil {
+			return err
+		}
+	}
+
+	if !containsOperatePrivilege {
+		if err := revokeOperate(); err != nil {
+			return err
+		}
+	}
+
+	if err := validateAndExec(v.client, ctx, opts); err != nil {
+		return err
+	}
+
+	// To unpause a pipe, we need to do two things:
+	// 	1. Get privileges to do it. After granting ownership, we lose privileges to do anything with the pipe.
+	// 	2. Call system function to forcefully unpause it, because that's the only way to do it after ownership transfer.
+	if originalPipeExecutionState == RunningPipeExecutionState {
+		// TODO: cannot resume normally, because
+		// 	Upsi #1 - Insufficient privileges
+		// 	Upsi #2 - Pipe cannot be resumed as ownership had changed. Resuming pipe may load files inserted by previous owner into table. To force resume pipe use SYSTEM$PIPE_FORCE_RESUME('')
+
+		revokeOperate, err := v.grantOperateOnPipeTemporarily(ctx, pipeId, currentRoleName)
+		if err != nil {
+			return err
+		}
+
+		// TODO: check if options need to be passed
+		if _, err = v.client.exec(ctx, fmt.Sprintf("SELECT SYSTEM$PIPE_FORCE_RESUME('%s'), 'staleness_check_override, ownership_transfer_check_override'", pipeId.FullyQualifiedName())); err != nil {
+			return err
+		}
+
+		if err := revokeOperate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (v *grants) grantOperateOnPipeTemporarily(ctx context.Context, pipeId SchemaObjectIdentifier, currentRole AccountObjectIdentifier) (func() error, error) {
+	return v.grantTemporarily(
+		ctx,
+		&AccountRoleGrantPrivileges{
+			SchemaObjectPrivileges: []SchemaObjectPrivilege{
+				SchemaObjectPrivilegeOperate,
+			},
+		},
+		&AccountRoleGrantOn{
+			SchemaObject: &GrantOnSchemaObject{
+				SchemaObject: &Object{
+					ObjectType: ObjectTypePipe,
+					Name:       pipeId,
+				},
+			},
+		},
+		currentRole,
+	)
+}
+
+func (v *grants) grantTemporarily(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, accountRoleName AccountObjectIdentifier) (func() error, error) {
+	return func() error {
+			return v.client.Grants.RevokePrivilegesFromAccountRole(
+				ctx,
+				privileges,
+				on,
+				accountRoleName,
+				new(RevokePrivilegesFromAccountRoleOptions),
+			)
+		}, v.client.Grants.GrantPrivilegesToAccountRole(
+			ctx,
+			privileges,
+			on,
+			accountRoleName,
+			new(GrantPrivilegesToAccountRoleOptions),
+		)
+}
+
 func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIdentifier, inSchema *DatabaseObjectIdentifier, command func(Pipe) error) error {
 	var in *In
 	switch {
@@ -336,12 +461,36 @@ func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIde
 		return err
 	}
 
-	var errs []error
-	for _, pipe := range pipes {
-		if err := command(pipe); err != nil {
-			errs = append(errs, err)
+	return runOnAll(pipes, command)
+}
+
+func (v *grants) runOnAllTasks(ctx context.Context, inDatabase *AccountObjectIdentifier, inSchema *DatabaseObjectIdentifier, command func(Task) error) error {
+	var in *In
+	switch {
+	case inDatabase != nil:
+		in = &In{
+			Database: *inDatabase,
+		}
+	case inSchema != nil:
+		in = &In{
+			Schema: *inSchema,
 		}
 	}
 
+	tasks, err := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(in))
+	if err != nil {
+		return err
+	}
+
+	return runOnAll(tasks, command)
+}
+
+func runOnAll[T any](collection []T, command func(T) error) error {
+	var errs []error
+	for _, element := range collection {
+		if err := command(element); err != nil {
+			errs = append(errs, err)
+		}
+	}
 	return errors.Join(errs...)
 }
