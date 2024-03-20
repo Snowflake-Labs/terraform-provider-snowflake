@@ -737,13 +737,21 @@ func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
 
 func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
 	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	stageName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	pipeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	secondPipeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
-
-	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleName),
 		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"stage":             config.StringVariable(stageName),
+		"table":             config.StringVariable(tableName),
+		"pipe":              config.StringVariable(pipeName),
+		"second_pipe":       config.StringVariable(secondPipeName),
 	}
 	resourceName := "snowflake_grant_ownership.test"
 
@@ -759,9 +767,13 @@ func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleName),
-					resource.TestCheckResourceAttr(resourceName, "on.0.all.0.object_type_plural", string(sdk.PluralObjectTypePipes)),
-					resource.TestCheckResourceAttr(resourceName, "on.0.all.0.in_database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnAll|PIPES|InDatabase|%s", accountRoleFullyQualifiedName, databaseFullyQualifiedName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnAll|PIPES|InSchema|%s", accountRoleFullyQualifiedName, schemaFullyQualifiedName)),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						To: &sdk.ShowGrantsTo{
+							Role: sdk.NewAccountObjectIdentifier(accountRoleName),
+						},
+						// TODO: Fix this identifier
+					}, sdk.ObjectTypePipe, accountRoleName, fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, pipeName), fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, secondPipeName)),
 				),
 			},
 			{
