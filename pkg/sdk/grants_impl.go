@@ -207,37 +207,9 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 	opts.On = on
 	opts.To = to
 
-	// TODO: Suspend / Pause Pipes / Tasks before granting ownership (and restore the state before the transfer)
-
 	// Pausing/UnPausing pipe
 	if on.Object != nil && on.Object.ObjectType == ObjectTypePipe {
 		return v.grantOwnershipOnPipe(ctx, on.Object.Name.(SchemaObjectIdentifier), opts)
-	}
-
-	// Suspending/Resuming task
-	if on.Object != nil && on.Object.ObjectType == ObjectTypeTask {
-		task, err := v.client.Tasks.ShowByID(ctx, on.Object.Name.(SchemaObjectIdentifier))
-		if err != nil {
-			return err
-		}
-
-		if task.State == TaskStateStarted {
-			// TODO: Suspend is implicit in this case
-			// err = v.client.Tasks.Alter(ctx, NewAlterTaskRequest(on.Object.Name.(SchemaObjectIdentifier)).WithSuspend(Bool(true)))
-			// if err != nil {
-			//   return err
-			// }
-
-			// TODO: refactor
-			defer func() {
-				unpauseErr := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(on.Object.Name.(SchemaObjectIdentifier)).WithResume(Bool(true)))
-				if err != nil {
-					err = errors.Join(err, unpauseErr)
-				} else {
-					err = unpauseErr
-				}
-			}()
-		}
 	}
 
 	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
@@ -264,32 +236,6 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 		)
 	}
 
-	if on.All != nil && on.All.PluralObjectType == PluralObjectTypeTasks {
-		// TODO: no errors when resumed multiple times (same for suspend)
-		// TODO: Figure out which tasks should be resumed after ownership transfer
-		tasksToResume := make([]Task, 0)
-
-		// Save tasks to resume
-		_ = v.runOnAllTasks(ctx, on.All.InDatabase, on.All.InSchema, func(task Task) error {
-			if task.State == TaskStateStarted {
-				tasksToResume = append(tasksToResume, task)
-			}
-			return nil
-		})
-
-		// Grant ownership in bulk
-		grantErrs := validateAndExec(v.client, ctx, opts)
-		// TODO: Handle err
-
-		// Resume marked tasks
-		resumeErrs := runOnAll(tasksToResume, func(task Task) error {
-			return v.client.Tasks.Alter(ctx, NewAlterTaskRequest(task.ID()).WithResume(Bool(true)))
-		})
-		// TODO: Handle err
-
-		return errors.Join(grantErrs, resumeErrs)
-	}
-
 	return validateAndExec(v.client, ctx, opts)
 }
 
@@ -311,7 +257,7 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 	return resultList, nil
 }
 
-// grant on pipe sequence
+// grant on pipe sequence (at worst 9 operations)
 // - get current role (needed to grant operate privilege later on)
 // - grant operate on pipe if not granted (it will error our otherwise)
 // - get pipe status (running or paused)
@@ -462,27 +408,6 @@ func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIde
 	}
 
 	return runOnAll(pipes, command)
-}
-
-func (v *grants) runOnAllTasks(ctx context.Context, inDatabase *AccountObjectIdentifier, inSchema *DatabaseObjectIdentifier, command func(Task) error) error {
-	var in *In
-	switch {
-	case inDatabase != nil:
-		in = &In{
-			Database: *inDatabase,
-		}
-	case inSchema != nil:
-		in = &In{
-			Schema: *inSchema,
-		}
-	}
-
-	tasks, err := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(in))
-	if err != nil {
-		return err
-	}
-
-	return runOnAll(tasks, command)
 }
 
 func runOnAll[T any](collection []T, command func(T) error) error {

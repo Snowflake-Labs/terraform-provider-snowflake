@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"strings"
 )
 
 type SystemFunctions interface {
 	GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (string, error)
 	PipeStatus(pipeId SchemaObjectIdentifier) (PipeExecutionState, error)
+	PipeForceResume(pipeId SchemaObjectIdentifier, options []ForceResumePipeOption) error
 }
 
 var _ SystemFunctions = (*systemFunctions)(nil)
@@ -75,4 +78,23 @@ func (c *systemFunctions) PipeStatus(pipeId SchemaObjectIdentifier) (PipeExecuti
 	}
 
 	return PipeExecutionState(pipeStatus["executionState"].(string)), nil
+}
+
+type ForceResumePipeOption string
+
+const (
+	StalenessCheckOverrideForceResumePipeOption         ForceResumePipeOption = "STALENESS_CHECK_OVERRIDE"
+	OwnershipTransferCheckOverrideForceResumePipeOption ForceResumePipeOption = "OWNERSHIP_TRANSFER_CHECK_OVERRIDE"
+)
+
+// TODO Check options
+func (c *systemFunctions) PipeForceResume(pipeId SchemaObjectIdentifier, options []ForceResumePipeOption) error {
+	ctx := context.Background()
+	var functionOpts string
+	if len(options) > 0 {
+		stringOptions := collections.Map(options, collections.CastToString[ForceResumePipeOption])
+		functionOpts = fmt.Sprintf(", '%s'", strings.Join(stringOptions, ","))
+	}
+	_, err := c.client.exec(ctx, fmt.Sprintf("SELECT SYSTEM$PIPE_FORCE_RESUME('%s')%s", pipeId.FullyQualifiedName(), functionOpts))
+	return err
 }

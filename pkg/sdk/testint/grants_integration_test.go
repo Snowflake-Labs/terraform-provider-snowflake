@@ -1020,12 +1020,6 @@ func TestInt_GrantOwnership(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, sdk.RunningPipeExecutionState, secondPipeExecutionState)
 	})
-
-	t.Run("on task", func(t *testing.T) {
-	})
-
-	t.Run("on all tasks", func(t *testing.T) {
-	})
 }
 
 func TestInt_ShowGrants(t *testing.T) {
