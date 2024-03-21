@@ -206,7 +206,6 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 	opts.On = on
 	opts.To = to
 
-	// Pausing/UnPausing pipe
 	if on.Object != nil && on.Object.ObjectType == ObjectTypePipe {
 		return v.grantOwnershipOnPipe(ctx, on.Object.Name.(SchemaObjectIdentifier), opts)
 	}
