@@ -19,11 +19,13 @@ var databaseSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
 		Required: true,
+		Description: "Specifies the identifier for the database; must be unique for your account.",
 	},
 	"comment": {
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "",
+		Description: "Specifies a comment for the database.",
 	},
 	"is_transient": {
 		Type:        schema.TypeBool,
@@ -36,7 +38,7 @@ var databaseSchema = map[string]*schema.Schema{
 		Type:         schema.TypeInt,
 		Optional:     true,
 		Default:      -1,
-		Description:  "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database. Default value for this field is set to -1, which is a fallback to use Snowflake default. For more information, see Understanding & Using Time Travel.",
+		Description:  "Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database. Default value for this field is set to -1, which is a fallback to use Snowflake default. For more information, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).",
 		ValidateFunc: validation.IntBetween(-1, 90),
 	},
 	"from_share": {
@@ -56,7 +58,7 @@ var databaseSchema = map[string]*schema.Schema{
 	},
 	"from_replica": {
 		Type:          schema.TypeString,
-		Description:   "Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of \"<organization_name>\".\"<account_name>\".\"<db_name>\". An example would be: \"myorg1\".\"account1\".\"db1\"",
+		Description:   "Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<db_name>\"`. An example would be: `\"myorg1\".\"account1\".\"db1\"`",
 		Optional:      true,
 		ForceNew:      true,
 		ConflictsWith: []string{"from_share", "from_database"},
