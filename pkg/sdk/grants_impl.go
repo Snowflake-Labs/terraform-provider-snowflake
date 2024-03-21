@@ -3,8 +3,9 @@ package sdk
 import (
 	"context"
 	"errors"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"slices"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
 
 var _ Grants = (*grants)(nil)

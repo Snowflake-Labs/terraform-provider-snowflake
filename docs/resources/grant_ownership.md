@@ -20,7 +20,7 @@ description: |-
 
 ### Optional
 
-- `account_role_name` (String) The fully qualified name of the account role to which privileges will be granted. 123
+- `account_role_name` (String) The fully qualified name of the account role to which privileges will be granted.
 - `database_role_name` (String) The fully qualified name of the database role to which privileges will be granted.
 - `outbound_privileges` (String) Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role. Available options are: REVOKE for removing existing privileges and COPY to transfer them with ownership. For more information head over to [Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#optional-parameters).
 

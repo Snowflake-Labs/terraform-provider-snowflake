@@ -3,11 +3,12 @@ package resources_test
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"regexp"
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"

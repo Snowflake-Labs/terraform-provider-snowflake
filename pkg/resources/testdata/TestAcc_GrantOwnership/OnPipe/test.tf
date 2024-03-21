@@ -20,9 +20,9 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_pipe" "test" {
-  database = var.database
-  schema   = var.schema
-  name     = var.pipe
+  database       = var.database
+  schema         = var.schema
+  name           = var.pipe
   copy_statement = "copy into \"${snowflake_table.test.database}\".\"${snowflake_table.test.schema}\".\"${snowflake_table.test.name}\"(ID) from @\"${snowflake_stage.test.database}\".\"${snowflake_stage.test.schema}\".\"${snowflake_stage.test.name}\""
 }
 
