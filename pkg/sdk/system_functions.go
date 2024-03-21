@@ -91,7 +91,7 @@ func (c *systemFunctions) PipeForceResume(pipeId SchemaObjectIdentifier, options
 	ctx := context.Background()
 	var functionOpts string
 	if len(options) > 0 {
-		stringOptions := collections.Map(options, collections.CastToString[ForceResumePipeOption])
+		stringOptions := collections.Map(options, func(opt ForceResumePipeOption) string { return string(opt) })
 		functionOpts = fmt.Sprintf(", '%s'", strings.Join(stringOptions, ","))
 	}
 	_, err := c.client.exec(ctx, fmt.Sprintf("SELECT SYSTEM$PIPE_FORCE_RESUME('%s')%s", pipeId.FullyQualifiedName(), functionOpts))

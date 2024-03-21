@@ -22,7 +22,3 @@ func Map[T any, R any](collection []T, mapper func(T) R) []R {
 	}
 	return result
 }
-
-func CastToString[T ~string](stringValue T) string {
-	return string(stringValue)
-}
