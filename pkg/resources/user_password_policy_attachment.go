@@ -78,13 +78,20 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
+	passwordPolicyReferences := make([]sdk.PolicyReference, 0)
+	for _, policyReference := range policyReferences {
+		if policyReference.PolicyKind == "PASSWORD_POLICY" {
+			passwordPolicyReferences = append(passwordPolicyReferences, policyReference)
+		}
+	}
+
 	// Note: this should never happen, but just in case: so far, Snowflake only allows one Password Policy per user.
-	if len(policyReferences) > 1 {
+	if len(passwordPolicyReferences) > 1 {
 		return fmt.Errorf("internal error: multiple policy references attached to a user. This should never happen")
 	}
 
 	// Note: this means the resource has been deleted outside of Terraform.
-	if len(policyReferences) == 0 {
+	if len(passwordPolicyReferences) == 0 {
 		d.SetId("")
 		return nil
 	}
@@ -95,9 +102,9 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 	if err := d.Set(
 		"password_policy_name",
 		sdk.NewSchemaObjectIdentifier(
-			*policyReferences[0].PolicyDb,
-			*policyReferences[0].PolicySchema,
-			policyReferences[0].PolicyName,
+			*passwordPolicyReferences[0].PolicyDb,
+			*passwordPolicyReferences[0].PolicySchema,
+			passwordPolicyReferences[0].PolicyName,
 		).FullyQualifiedName()); err != nil {
 		return err
 	}
