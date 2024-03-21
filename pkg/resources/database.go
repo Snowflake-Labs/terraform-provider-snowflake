@@ -17,14 +17,14 @@ import (
 
 var databaseSchema = map[string]*schema.Schema{
 	"name": {
-		Type:     schema.TypeString,
-		Required: true,
+		Type:        schema.TypeString,
+		Required:    true,
 		Description: "Specifies the identifier for the database; must be unique for your account.",
 	},
 	"comment": {
-		Type:     schema.TypeString,
-		Optional: true,
-		Default:  "",
+		Type:        schema.TypeString,
+		Optional:    true,
+		Default:     "",
 		Description: "Specifies a comment for the database.",
 	},
 	"is_transient": {
