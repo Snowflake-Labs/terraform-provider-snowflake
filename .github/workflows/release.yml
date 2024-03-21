@@ -52,10 +52,12 @@ jobs:
         # so we build the proper version
         with:
           fetch-depth: 0
+        if: ${{ steps.release.outputs.release_created }}
 
       - uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
+        if: ${{ steps.release.outputs.release_created }}
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
@@ -65,3 +67,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.create-token.outputs.token }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+        if: ${{ steps.release.outputs.release_created }}
