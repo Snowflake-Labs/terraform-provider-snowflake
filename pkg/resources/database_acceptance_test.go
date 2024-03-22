@@ -489,3 +489,26 @@ func checkAccountAndDatabaseDataRetentionTime(id sdk.AccountObjectIdentifier, ex
 		return nil
 	}
 }
+
+func createTemporaryDatabaseOutsideTerraform(t *testing.T, name string) func() {
+	t.Helper()
+	client, err := sdk.NewDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+
+	if err := client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(name), new(sdk.CreateDatabaseOptions)); err != nil {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return func() {
+		if err := client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(name), new(sdk.DropDatabaseOptions)); err != nil {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+}
