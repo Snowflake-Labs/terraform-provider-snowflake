@@ -553,7 +553,7 @@ type AccountParametersUnset struct {
 	ExternalOAuthAddPrivilegedRolesToBlockedList *bool `ddl:"keyword" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	InitialReplicationSizeLimitInTB              *bool `ddl:"keyword" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
 	MinDataRetentionTimeInDays                   *bool `ddl:"keyword" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
-	NetworkPolicy                                *bool `ddl:"keyword,single_quotes" sql:"NETWORK_POLICY"`
+	NetworkPolicy                                *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 	PeriodicDataRekeying                         *bool `ddl:"keyword" sql:"PERIODIC_DATA_REKEYING"`
 	PreventUnloadToInlineURL                     *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
 	PreventUnloadToInternalStages                *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
@@ -811,7 +811,7 @@ type ObjectParametersUnset struct {
 	PipeExecutionPaused                 *bool `ddl:"keyword" sql:"PIPE_EXECUTION_PAUSED"`
 	PreventUnloadToInternalStages       *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
 	StatementQueuedTimeoutInSeconds     *bool `ddl:"keyword" sql:"STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"`
-	NetworkPolicy                       *bool `ddl:"keyword,single_quotes" sql:"NETWORK_POLICY"`
+	NetworkPolicy                       *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 	ShareRestrictions                   *bool `ddl:"keyword" sql:"SHARE_RESTRICTIONS"`
 	SuspendTaskAfterNumFailures         *bool `ddl:"keyword" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
 	TraceLevel                          *bool `ddl:"keyword" sql:"TRACE_LEVEL"`
