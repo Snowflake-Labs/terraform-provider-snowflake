@@ -446,6 +446,10 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	}
 	logging.DebugLogger.Printf("[DEBUG] Parsed identifier to %s", id.String())
 
+	if d.HasChange("with_grant_option") {
+		id.WithGrantOption = d.Get("with_grant_option").(bool)
+	}
+
 	// handle all_privileges -> privileges change (revoke all privileges)
 	if d.HasChange("all_privileges") {
 		_, allPrivileges := d.GetChange("all_privileges")
@@ -510,39 +514,21 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 			if len(privilegesToAdd) > 0 {
 				logging.DebugLogger.Printf("[DEBUG] Granting privileges: %v", privilegesToAdd)
+				privilegesToGrant := getAccountRolePrivileges(
+					false,
+					privilegesToAdd,
+					id.Kind == OnAccountAccountRoleGrantKind,
+					id.Kind == OnAccountObjectAccountRoleGrantKind,
+					id.Kind == OnSchemaAccountRoleGrantKind,
+					id.Kind == OnSchemaObjectAccountRoleGrantKind,
+				)
+
 				if id.WithGrantOption {
-					err = client.Grants.GrantPrivilegesToAccountRole(
-						ctx,
-						getAccountRolePrivileges(
-							false,
-							privilegesToAdd,
-							id.Kind == OnAccountAccountRoleGrantKind,
-							id.Kind == OnAccountObjectAccountRoleGrantKind,
-							id.Kind == OnSchemaAccountRoleGrantKind,
-							id.Kind == OnSchemaObjectAccountRoleGrantKind,
-						),
-						grantOn,
-						id.RoleName,
-						&sdk.GrantPrivilegesToAccountRoleOptions{
-							WithGrantOption: sdk.Bool(true),
-						},
-					)
+					err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, &sdk.GrantPrivilegesToAccountRoleOptions{
+						WithGrantOption: sdk.Bool(true),
+					})
 				} else {
-					err = client.Grants.RevokePrivilegesFromAccountRole(
-						ctx,
-						getAccountRolePrivileges(
-							false,
-							privilegesToAdd,
-							id.Kind == OnAccountAccountRoleGrantKind,
-							id.Kind == OnAccountObjectAccountRoleGrantKind,
-							id.Kind == OnSchemaAccountRoleGrantKind,
-							id.Kind == OnSchemaObjectAccountRoleGrantKind,
-						),
-						grantOn,
-						id.RoleName,
-						new(sdk.RevokePrivilegesFromAccountRoleOptions),
-					)
-					if err != nil {
+					if err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, new(sdk.RevokePrivilegesFromAccountRoleOptions)); err != nil {
 						return diag.Diagnostics{
 							diag.Diagnostic{
 								Severity: diag.Error,
@@ -552,20 +538,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 						}
 					}
 
-					err = client.Grants.GrantPrivilegesToAccountRole(
-						ctx,
-						getAccountRolePrivileges(
-							false,
-							privilegesToAdd,
-							id.Kind == OnAccountAccountRoleGrantKind,
-							id.Kind == OnAccountObjectAccountRoleGrantKind,
-							id.Kind == OnSchemaAccountRoleGrantKind,
-							id.Kind == OnSchemaObjectAccountRoleGrantKind,
-						),
-						grantOn,
-						id.RoleName,
-						new(sdk.GrantPrivilegesToAccountRoleOptions),
-					)
+					err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, new(sdk.GrantPrivilegesToAccountRoleOptions))
 				}
 				if err != nil {
 					return diag.Diagnostics{

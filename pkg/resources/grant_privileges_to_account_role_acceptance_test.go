@@ -1060,62 +1060,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
 }
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
-func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerraform_WithoutGrantOptions(t *testing.T) {
-	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
-	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-
-	configVariables := config.Variables{
-		"name":       config.StringVariable(roleName),
-		"table_name": config.StringVariable(tableName),
-		"privileges": config.ListVariable(
-			config.StringVariable(sdk.SchemaObjectPrivilegeTruncate.String()),
-		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
-		"with_grant_option": config.BoolVariable(false),
-	}
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() { createAccountRoleOutsideTerraform(t, name) },
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
-				ConfigVariables: configVariables,
-			},
-			{
-				PreConfig: func() {
-					revokeAndGrantPrivilegesOnTableToAccount(
-						t, name,
-						sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName),
-						[]sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeTruncate},
-						true,
-					)
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
-				ConfigVariables: configVariables,
-			},
-		},
-	})
-}
-
-// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
 func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerraform_WithGrantOptions(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
@@ -1152,7 +1096,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 			},
 			{
 				PreConfig: func() {
-					revokeAndGrantPrivilegesOnTableToAccount(
+					revokeAndGrantPrivilegesOnTableToAccountRole(
 						t, name,
 						sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName),
 						[]sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeTruncate},
@@ -1171,7 +1115,63 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 	})
 }
 
-func revokeAndGrantPrivilegesOnTableToAccount(
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
+func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerraform_WithoutGrantOptions(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	configVariables := config.Variables{
+		"name":       config.StringVariable(roleName),
+		"table_name": config.StringVariable(tableName),
+		"privileges": config.ListVariable(
+			config.StringVariable(sdk.SchemaObjectPrivilegeTruncate.String()),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"with_grant_option": config.BoolVariable(false),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() { createAccountRoleOutsideTerraform(t, name) },
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig: func() {
+					revokeAndGrantPrivilegesOnTableToAccountRole(
+						t, name,
+						sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName),
+						[]sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeTruncate},
+						true,
+					)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
+				ConfigVariables: configVariables,
+			},
+		},
+	})
+}
+
+func revokeAndGrantPrivilegesOnTableToAccountRole(
 	t *testing.T,
 	accountRoleName string,
 	tableName sdk.SchemaObjectIdentifier,
