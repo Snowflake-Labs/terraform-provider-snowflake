@@ -46,7 +46,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -97,7 +97,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -148,7 +148,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -216,7 +216,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -266,7 +266,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnFutureSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -319,7 +319,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -368,7 +368,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPriv
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				ExpectError:     regexp.MustCompile("Unsupported privilege 'OWNERSHIP'"),
@@ -403,7 +403,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -454,7 +454,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllPipes"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -506,7 +506,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -642,7 +642,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges/privileges"),
 				ConfigVariables: configVariables(false, []sdk.AccountObjectPrivilege{
 					sdk.AccountObjectPrivilegeCreateSchema,
@@ -734,7 +734,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/privileges"),
 				ConfigVariables: configVariables(false, []string{
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
@@ -810,7 +810,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
 				ConfigVariables: configVariables(false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -930,13 +930,55 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 }
 
 func createDatabaseRoleOutsideTerraform(t *testing.T, name string) {
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
+func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"name":     config.StringVariable(name),
+		"database": config.StringVariable(databaseName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"with_grant_option": config.BoolVariable(true),
+	}
+
+	var databaseCleanup func()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					databaseCleanup = createTemporaryDatabaseOutsideTerraform(t, databaseName)
+					createDatabaseRoleOutsideTerraform(t, databaseName, name)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig:       func() { databaseCleanup() },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+				// The error occurs in the Create operation, indicating the Read operation removed resource from the state.
+				ExpectError: regexp.MustCompile("An error occurred when granting privileges to database role"),
+			},
+		},
+	})
+}
+
+func createDatabaseRoleOutsideTerraform(t *testing.T, databaseName string, name string) {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
-	databaseRoleId := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name)
+	databaseRoleId := sdk.NewDatabaseObjectIdentifier(databaseName, name)
 	if err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(databaseRoleId).WithOrReplace(true)); err != nil {
 		t.Fatal(fmt.Errorf("error database role (%s): %w", databaseRoleId.FullyQualifiedName(), err))
 	}

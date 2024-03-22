@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -831,6 +832,11 @@ func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn 
 	grants, err := client.Grants.Show(ctx, opts)
 	logging.DebugLogger.Printf("[DEBUG] After showing grants: err = %v", err)
 	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			log.Printf("[DEBUG] Failed to show grants: %s. Marking object as removed.", err)
+			return nil
+		}
 		return fmt.Errorf("error retrieving grants for account role: %w", err)
 	}
 

@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -643,6 +644,16 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 	client := meta.(*provider.Context).Client
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve grants. Object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+				},
+			}
+		}
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
