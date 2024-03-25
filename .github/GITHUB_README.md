@@ -24,7 +24,6 @@ Next, ensure you have secrets that would have been set on the environment of the
 GITHUB_TOKEN="<github_access_token_goes_here"
 GPG_PASSPHRASE="<gpg_password_goes_here>"
 GPG_PRIVATE_KEY="<gpg_private_key_goes_here"
-
 ```
 
 ## Run specific workflow
