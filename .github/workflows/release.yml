@@ -59,7 +59,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
-          args: release --config .goreleaser.yml --clean
+          args: release --config .goreleaser-linux.yml --clean
         env:
           GITHUB_TOKEN: ${{ steps.create-token.outputs.token }}
 
