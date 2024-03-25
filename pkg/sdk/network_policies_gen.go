@@ -13,13 +13,15 @@ type NetworkPolicies interface {
 
 // CreateNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-network-policy.
 type CreateNetworkPolicyOptions struct {
-	create        bool                    `ddl:"static" sql:"CREATE"`
-	OrReplace     *bool                   `ddl:"keyword" sql:"OR REPLACE"`
-	networkPolicy bool                    `ddl:"static" sql:"NETWORK POLICY"`
-	name          AccountObjectIdentifier `ddl:"identifier"`
-	AllowedIpList []IP                    `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
-	BlockedIpList []IP                    `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
-	Comment       *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create                 bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace              *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	networkPolicy          bool                     `ddl:"static" sql:"NETWORK POLICY"`
+	name                   AccountObjectIdentifier  `ddl:"identifier"`
+	AllowedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"ALLOWED_NETWORK_RULE_LIST"`
+	BlockedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"BLOCKED_NETWORK_RULE_LIST"`
+	AllowedIpList          []IP                     `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList          []IP                     `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
+	Comment                *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type IP struct {
@@ -33,14 +35,28 @@ type AlterNetworkPolicyOptions struct {
 	IfExists      *bool                    `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier  `ddl:"identifier"`
 	Set           *NetworkPolicySet        `ddl:"keyword" sql:"SET"`
+	Add           *AddNetworkRule          `ddl:"keyword" sql:"ADD"`
+	Remove        *RemoveNetworkRule       `ddl:"keyword" sql:"REMOVE"`
 	UnsetComment  *bool                    `ddl:"keyword" sql:"UNSET COMMENT"`
 	RenameTo      *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 }
 
 type NetworkPolicySet struct {
-	AllowedIpList []IP    `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
-	BlockedIpList []IP    `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
-	Comment       *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	AllowedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"ALLOWED_NETWORK_RULE_LIST"`
+	BlockedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"BLOCKED_NETWORK_RULE_LIST"`
+	AllowedIpList          []IP                     `ddl:"parameter,parentheses" sql:"ALLOWED_IP_LIST"`
+	BlockedIpList          []IP                     `ddl:"parameter,parentheses" sql:"BLOCKED_IP_LIST"`
+	Comment                *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+}
+
+type AddNetworkRule struct {
+	AllowedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"ALLOWED_NETWORK_RULE_LIST"`
+	BlockedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"BLOCKED_NETWORK_RULE_LIST"`
+}
+
+type RemoveNetworkRule struct {
+	AllowedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"ALLOWED_NETWORK_RULE_LIST"`
+	BlockedNetworkRuleList []SchemaObjectIdentifier `ddl:"parameter,parentheses" sql:"BLOCKED_NETWORK_RULE_LIST"`
 }
 
 // DropNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-network-policy.
@@ -58,19 +74,23 @@ type ShowNetworkPolicyOptions struct {
 }
 
 type showNetworkPolicyDBRow struct {
-	CreatedOn              string `db:"created_on"`
-	Name                   string `db:"name"`
-	Comment                string `db:"comment"`
-	EntriesInAllowedIpList int    `db:"entries_in_allowed_ip_list"`
-	EntriesInBlockedIpList int    `db:"entries_in_blocked_ip_list"`
+	CreatedOn                    string `db:"created_on"`
+	Name                         string `db:"name"`
+	Comment                      string `db:"comment"`
+	EntriesInAllowedIpList       int    `db:"entries_in_allowed_ip_list"`
+	EntriesInBlockedIpList       int    `db:"entries_in_blocked_ip_list"`
+	EntriesInAllowedNetworkRules int    `db:"entries_in_allowed_network_rules"`
+	EntriesInBlockedNetworkRules int    `db:"entries_in_blocked_network_rules"`
 }
 
 type NetworkPolicy struct {
-	CreatedOn              string
-	Name                   string
-	Comment                string
-	EntriesInAllowedIpList int
-	EntriesInBlockedIpList int
+	CreatedOn                    string
+	Name                         string
+	Comment                      string
+	EntriesInAllowedIpList       int
+	EntriesInBlockedIpList       int
+	EntriesInAllowedNetworkRules int
+	EntriesInBlockedNetworkRules int
 }
 
 // DescribeNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy.
