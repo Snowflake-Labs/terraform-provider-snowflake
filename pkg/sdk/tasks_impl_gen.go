@@ -67,14 +67,14 @@ func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error 
 	return validateAndExec(v.client, ctx, opts)
 }
 
-// TemporarilySuspendRootTasks takes in the task id for which root tasks will be searched. Then, for all root tasks,
-// check if the task is started, if yes, then suspend it and add to the list of tasks to resume.
+// TemporarilySuspendRootTasks takes in the depId for which root tasks will be searched. Then, for all root tasks,
+// check if the task is started. If it is, then suspend it and add to the list of tasks to resume only if the root task name
+// is not that same as taskId name.
 //
 // Returns:
 // A callback function to resume all the suspended root tasks.
 // An error joined from all the suspend calls, nil if no error was returned during by task suspending calls.
-// TODO: Explain input parameters (especially what is depId)
-func (v *tasks) TemporarilySuspendRootTasks(ctx context.Context, depId SchemaObjectIdentifier, id SchemaObjectIdentifier) (func() error, error) {
+func (v *tasks) TemporarilySuspendRootTasks(ctx context.Context, depId SchemaObjectIdentifier, taskId SchemaObjectIdentifier) (func() error, error) {
 	rootTasks, err := GetRootTasks(v.client.Tasks, ctx, depId)
 	if err != nil {
 		return func() error { return nil }, err
@@ -84,17 +84,15 @@ func (v *tasks) TemporarilySuspendRootTasks(ctx context.Context, depId SchemaObj
 	suspendErrs := make([]error, 0)
 
 	for _, rootTask := range rootTasks {
-		// if a root task is started, then it needs to be suspended before the child tasks can be created
-		// TODO: Should id comp stay only in resume (like it used to) or could be left here?
+		// If a root task is started, then it needs to be suspended before the child tasks can be created
 		if rootTask.IsStarted() {
 			err := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(rootTask.ID()).WithSuspend(Bool(true)))
 			if err != nil {
 				log.Printf("[WARN] failed to suspend task %s", rootTask.ID().FullyQualifiedName())
 			}
 
-			// TODO: Understand why
-			// resume the task after modifications are complete as long as it is not a standalone task
-			if rootTask.Name != id.Name() {
+			// Resume the task after modifications are complete as long as it is not a standalone task
+			if rootTask.Name != taskId.Name() {
 				tasksToResume = append(tasksToResume, rootTask.ID())
 			}
 			suspendErrs = append(suspendErrs, err)

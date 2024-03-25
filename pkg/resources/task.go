@@ -353,7 +353,6 @@ func CreateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 			if suspendErrs != nil {
 				return suspendErrs
 			}
-			// This can affect the read?
 			defer func() {
 				resumeErr := resumeSuspended()
 				if returnedErr != nil {
@@ -415,7 +414,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 	if err != nil {
 		return err
 	}
-	// TODO: This can affect the read?
 	defer func() {
 		resumeErr := resumeSuspended()
 		if returnedErr != nil {
@@ -666,7 +664,6 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 		}
 	}
 
-	// TODO Desc
 	enabled := d.Get("enabled").(bool)
 	if enabled {
 		if waitForTaskStart(ctx, client, taskId) != nil {
@@ -674,12 +671,10 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 		}
 	} else {
 		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSuspend(sdk.Bool(true))); err != nil {
-			log.Printf("[WARN] failed to suspend task %s", taskId.FullyQualifiedName())
-			// TODO: Should it return anything or error ?????
-			// Previously it returned, but it's saying it's a warning
-			// return fmt.Errorf("[WARN] failed to suspend task %s", taskId.FullyQualifiedName())
+			return fmt.Errorf("failed to suspend task %s", taskId.FullyQualifiedName())
 		}
 	}
+
 	return ReadTask(d, meta)
 }
 
