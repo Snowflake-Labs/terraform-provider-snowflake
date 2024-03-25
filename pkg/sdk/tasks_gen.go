@@ -14,6 +14,7 @@ type Tasks interface {
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Execute(ctx context.Context, request *ExecuteTaskRequest) error
+	TemporarilySuspendRootTasks(ctx context.Context, depId SchemaObjectIdentifier, id SchemaObjectIdentifier) (func() error, error)
 }
 
 // CreateTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-task.

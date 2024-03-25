@@ -592,4 +592,30 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.Execute(ctx, executeRequest)
 		require.NoError(t, err)
 	})
+
+	t.Run("temporarily suspend root tasks", func(t *testing.T) {
+		rootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		task := createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
+
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))))
+		t.Cleanup(func() {
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(sdk.Bool(true))))
+		})
+
+		resumeRoots, err := client.Tasks.TemporarilySuspendRootTasks(ctx, task.ID(), task.ID())
+		require.NoError(t, err)
+
+		rt, err := client.Tasks.ShowByID(ctx, rootTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateSuspended, rt.State)
+
+		require.NoError(t, resumeRoots())
+
+		rt, err = client.Tasks.ShowByID(ctx, rootTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateStarted, rt.State)
+	})
 }
