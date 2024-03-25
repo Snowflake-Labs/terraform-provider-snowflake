@@ -349,16 +349,16 @@ func CreateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0)
 		for _, dep := range after {
 			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
-			resumeSuspended, suspendErrs := client.Tasks.TemporarilySuspendRootTasks(ctx, precedingTaskId, taskId)
-			if suspendErrs != nil {
-				return suspendErrs
+			resumeSuspended, err := client.Tasks.TemporarilySuspendRootTasks(ctx, precedingTaskId, taskId)
+			if err != nil {
+				return err
 			}
 			defer func() {
-				resumeErr := resumeSuspended()
+				err := resumeSuspended()
 				if returnedErr != nil {
-					returnedErr = errors.Join(returnedErr, resumeErr)
+					returnedErr = errors.Join(returnedErr, err)
 				} else {
-					returnedErr = resumeErr
+					returnedErr = err
 				}
 			}()
 			precedingTasks = append(precedingTasks, precedingTaskId)
@@ -415,11 +415,11 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 		return err
 	}
 	defer func() {
-		resumeErr := resumeSuspended()
+		err := resumeSuspended()
 		if returnedErr != nil {
-			returnedErr = errors.Join(returnedErr, resumeErr)
+			returnedErr = errors.Join(returnedErr, err)
 		} else {
-			returnedErr = resumeErr
+			returnedErr = err
 		}
 	}()
 
@@ -514,11 +514,11 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 					return err
 				}
 				defer func() {
-					resumeErr := resumeSuspended()
+					err := resumeSuspended()
 					if returnedErr != nil {
-						returnedErr = errors.Join(returnedErr, resumeErr)
+						returnedErr = errors.Join(returnedErr, err)
 					} else {
-						returnedErr = resumeErr
+						returnedErr = err
 					}
 				}()
 			}
