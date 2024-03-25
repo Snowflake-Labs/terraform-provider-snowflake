@@ -350,17 +350,10 @@ func CreateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 		for _, dep := range after {
 			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
 			resumeSuspended, err := client.Tasks.TemporarilySuspendRootTasks(ctx, precedingTaskId, taskId)
+			defer func() { returnedErr = errors.Join(returnedErr, resumeSuspended()) }()
 			if err != nil {
 				return err
 			}
-			defer func() {
-				err := resumeSuspended()
-				if returnedErr != nil {
-					returnedErr = errors.Join(returnedErr, err)
-				} else {
-					returnedErr = err
-				}
-			}()
 			precedingTasks = append(precedingTasks, precedingTaskId)
 		}
 		createRequest.WithAfter(precedingTasks)
@@ -411,17 +404,10 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	resumeSuspended, err := client.Tasks.TemporarilySuspendRootTasks(ctx, taskId, taskId)
+	defer func() { returnedErr = errors.Join(returnedErr, resumeSuspended()) }()
 	if err != nil {
 		return err
 	}
-	defer func() {
-		err := resumeSuspended()
-		if returnedErr != nil {
-			returnedErr = errors.Join(returnedErr, err)
-		} else {
-			returnedErr = err
-		}
-	}()
 
 	if d.HasChange("warehouse") {
 		newWarehouse := d.Get("warehouse")
@@ -510,17 +496,10 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 		if len(toAdd) > 0 {
 			for _, depId := range toAdd {
 				resumeSuspended, err := client.Tasks.TemporarilySuspendRootTasks(ctx, depId, taskId)
+				defer func() { returnedErr = errors.Join(returnedErr, resumeSuspended()) }()
 				if err != nil {
 					return err
 				}
-				defer func() {
-					err := resumeSuspended()
-					if returnedErr != nil {
-						returnedErr = errors.Join(returnedErr, err)
-					} else {
-						returnedErr = err
-					}
-				}()
 			}
 
 			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithAddAfter(toAdd)); err != nil {
