@@ -88,6 +88,10 @@ type Streamlit struct {
 	OwnerRoleType  string
 }
 
+func (v *Streamlit) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
 // DescribeStreamlitOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-streamlit.
 type DescribeStreamlitOptions struct {
 	describe  bool                   `ddl:"static" sql:"DESCRIBE"`

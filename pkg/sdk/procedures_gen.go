@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 type Procedures interface {
@@ -234,6 +235,12 @@ type Procedure struct {
 	IsTableFunction    bool
 	ValidForClustering bool
 	IsSecure           bool
+}
+
+func (v *Procedure) ID() SchemaObjectIdentifier {
+	database := strings.Trim(v.CatalogName, "\"")
+	schema := strings.Trim(v.SchemaName, "\"")
+	return NewSchemaObjectIdentifier(database, schema, v.Name)
 }
 
 // DescribeProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-procedure.

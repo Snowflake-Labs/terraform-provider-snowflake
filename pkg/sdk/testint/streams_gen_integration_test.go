@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -421,5 +422,52 @@ func TestInt_Streams(t *testing.T) {
 		assert.Equal(t, table.ID().FullyQualifiedName(), *s.TableName)
 		assert.Equal(t, "Table", *s.SourceType)
 		assert.Equal(t, "DEFAULT", *s.Mode)
+	})
+}
+
+func TestInt_StreamsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	table, cleanupTable := createTable(t, client, databaseTest, schemaTest)
+	t.Cleanup(cleanupTable)
+
+	cleanupStreamHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createStreamHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.Streams.CreateOnTable(ctx, sdk.NewCreateStreamOnTableRequest(id, table.ID()))
+		require.NoError(t, err)
+		t.Cleanup(cleanupStreamHandle(id))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createStreamHandle(t, id1)
+		createStreamHandle(t, id2)
+
+		e1, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id1))
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id2))
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

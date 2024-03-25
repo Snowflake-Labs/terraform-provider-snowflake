@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -154,5 +155,55 @@ func TestInt_Streamlits(t *testing.T) {
 		require.Equal(t, stage.Location(), detail.RootLocation)
 		require.Empty(t, detail.Title)
 		require.Empty(t, detail.QueryWarehouse)
+	})
+}
+
+func TestInt_StreamlitsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	cleanupStreamlitHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.Streamlits.Drop(ctx, sdk.NewDropStreamlitRequest(id).WithIfExists(sdk.Bool(true)))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createStreamlitHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier, stage *sdk.Stage, mainFile string) {
+		t.Helper()
+
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile)
+		err := client.Streamlits.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupStreamlitHandle(t, id))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		t.Cleanup(cleanupStage)
+		manifest := "manifest.yml"
+
+		createStreamlitHandle(t, id1, stage, manifest)
+		createStreamlitHandle(t, id2, stage, manifest)
+
+		e1, err := client.Streamlits.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Streamlits.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }
