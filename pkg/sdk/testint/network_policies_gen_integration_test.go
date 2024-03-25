@@ -110,14 +110,14 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 	t.Run("Alter - set allowed network rule list", func(t *testing.T) {
 		allowedNetworkRule := createNetworkRuleHandle(t, client)
-
+		allowedNetworkRule2 := createNetworkRuleHandle(t, client)
 		req := defaultCreateRequest()
 		err, dropNetworkPolicy := createNetworkPolicy(t, client, req)
 		require.NoError(t, err)
 		t.Cleanup(dropNetworkPolicy)
 
 		err = client.NetworkPolicies.Alter(ctx, sdk.NewAlterNetworkPolicyRequest(req.GetName()).
-			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedNetworkRuleList([]sdk.SchemaObjectIdentifier{allowedNetworkRule})))
+			WithSet(sdk.NewNetworkPolicySetRequest().WithAllowedNetworkRuleList([]sdk.SchemaObjectIdentifier{allowedNetworkRule, allowedNetworkRule2})))
 		require.NoError(t, err)
 
 		np, err := client.NetworkPolicies.ShowByID(ctx, req.GetName())
