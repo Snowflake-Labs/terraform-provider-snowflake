@@ -48,6 +48,22 @@ func TestAcc_Schema(t *testing.T) {
 					checkBool("snowflake_schema.test", "is_managed", false),
 				),
 			},
+			// UPDATE COMMENT (proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2606)
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"name":     config.StringVariable(name),
+					"database": config.StringVariable(acc.TestDatabaseName),
+					"comment":  config.StringVariable(""),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_schema.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_schema.test", "comment", ""),
+					checkBool("snowflake_schema.test", "is_transient", false),
+					checkBool("snowflake_schema.test", "is_managed", false),
+				),
+			},
 		},
 	})
 }

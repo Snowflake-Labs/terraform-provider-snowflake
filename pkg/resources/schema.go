@@ -197,13 +197,24 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
-		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			Set: &sdk.SchemaSet{
-				Comment: sdk.String(comment.(string)),
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("error updating schema comment on %v err = %w", d.Id(), err)
+		if comment != "" {
+			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+				Set: &sdk.SchemaSet{
+					Comment: sdk.String(comment.(string)),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error updating schema comment on %v err = %w", d.Id(), err)
+			}
+		} else {
+			err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+				Unset: &sdk.SchemaUnset{
+					Comment: sdk.Bool(true),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error updating schema comment on %v err = %w", d.Id(), err)
+			}
 		}
 	}
 
