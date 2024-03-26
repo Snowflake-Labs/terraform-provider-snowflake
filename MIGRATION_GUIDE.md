@@ -4,6 +4,11 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.87.0 ➞ v0.88.0
+### snowflake_procedure resource changes
+#### *(behavior change)* Execute as validation added
+From now on, the `snowflake_procedure`'s `execute_as` parameter allows only two values: OWNER and CALLER (case-insensitive). Setting other values earlier resulted in falling back to the Snowflake default (currently OWNER) and creating a permadiff.
+
 ## v0.86.0 ➞ v0.87.0
 ### snowflake_database resource changes
 #### *(behavior change)* External object identifier changes
