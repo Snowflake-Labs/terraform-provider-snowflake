@@ -118,10 +118,11 @@ func TestAcc_Procedure_complex(t *testing.T) {
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":     config.StringVariable(name),
-			"database": config.StringVariable(acc.TestDatabaseName),
-			"schema":   config.StringVariable(acc.TestSchemaName),
-			"comment":  config.StringVariable("Terraform acceptance test"),
+			"name":       config.StringVariable(name),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"comment":    config.StringVariable("Terraform acceptance test"),
+			"execute_as": config.StringVariable("CALLER"),
 		}
 	}
 	variableSet2 := m()
