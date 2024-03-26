@@ -415,6 +415,39 @@ func TestAcc_View_copyGrants(t *testing.T) {
 	})
 }
 
+func TestAcc_View_Issue2640(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	part1 := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	part2 := "SELECT ROLE_OWNER, ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckViewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: viewConfigWithMultilineUnionStatement(acc.TestDatabaseName, acc.TestSchemaName, accName, part1, part2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "statement", fmt.Sprintf("%s\n\tunion\n%s\n", part1, part2)),
+					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:            "snowflake_view.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"or_replace"},
+			},
+		},
+	})
+}
+
 func viewConfigWithGrants(databaseName string, schemaName string, tableName string, viewName string, selectStatement string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "table" {
@@ -497,6 +530,21 @@ resource "snowflake_view" "test" {
   or_replace = %[5]t
 }
 	`, databaseName, schemaName, name, selectStatement, orReplace)
+}
+
+func viewConfigWithMultilineUnionStatement(databaseName string, schemaName string, name string, part1 string, part2 string) string {
+	return fmt.Sprintf(`
+resource "snowflake_view" "test" {
+  name = "%[3]s"
+  database = "%[1]s"
+  schema = "%[2]s"
+  statement = <<-SQL
+%[4]s
+	union
+%[5]s
+SQL
+}
+	`, databaseName, schemaName, name, part1, part2)
 }
 
 func testAccCheckViewDestroy(s *terraform.State) error {
