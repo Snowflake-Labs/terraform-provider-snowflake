@@ -107,6 +107,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 			return fmt.Errorf("ROWS_PER_RESULTSET session parameter is an integer, got %v", value)
 		}
 		sessionParameters.RowsPerResultset = Pointer(v)
+	case SessionParameterS3StageVpceDnsName:
+		sessionParameters.S3StageVpceDnsName = &value
 	case SessionParameterSimulatedDataSharingConsumer:
 		sessionParameters.SimulatedDataSharingConsumer = &value
 	case SessionParameterStatementTimeoutInSeconds:
