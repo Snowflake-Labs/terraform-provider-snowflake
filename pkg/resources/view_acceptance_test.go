@@ -7,16 +7,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -416,9 +416,10 @@ func TestAcc_View_copyGrants(t *testing.T) {
 }
 
 func TestAcc_View_Issue2640(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	part1 := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	part2 := "SELECT ROLE_OWNER, ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -429,16 +430,30 @@ func TestAcc_View_Issue2640(t *testing.T) {
 		CheckDestroy: testAccCheckViewDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfigWithMultilineUnionStatement(acc.TestDatabaseName, acc.TestSchemaName, accName, part1, part2),
+				Config: viewConfigWithMultilineUnionStatement(acc.TestDatabaseName, acc.TestSchemaName, viewName, part1, part2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", viewName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "statement", fmt.Sprintf("%s\n\tunion\n%s\n", part1, part2)),
 					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
 				),
 			},
-			// IMPORT
+			// try to import secure view without being its owner (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2640)
 			{
+				PreConfig: func() {
+					createAccountRoleOutsideTerraform(t, roleName)
+					registerAccountRoleCleanup(t, roleName)
+					alterViewOwnershipExternally(t, viewName, roleName)
+				},
+				ResourceName: "snowflake_view.test",
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("`text` is missing; if the view is secure then the role used by the provider must own the view"),
+			},
+			// import with the proper role
+			{
+				PreConfig: func() {
+					alterViewOwnershipExternally(t, viewName, "ACCOUNTADMIN")
+				},
 				ResourceName:            "snowflake_view.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -543,6 +558,7 @@ resource "snowflake_view" "test" {
 	union
 %[5]s
 SQL
+  is_secure = true
 }
 	`, databaseName, schemaName, name, part1, part2)
 }
@@ -571,5 +587,51 @@ func alterViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query
 	ctx := context.Background()
 
 	err = client.Views.Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
+	require.NoError(t, err)
+}
+
+func registerAccountRoleCleanup(t *testing.T, roleName string) {
+	t.Helper()
+
+	roleId := sdk.NewAccountObjectIdentifier(roleName)
+
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
+	ctx := context.Background()
+
+	t.Cleanup(func() {
+		t.Logf("dropping account role (%s)", roleName)
+		// We remove the role, so the ownership will be changed back. The view will be deleted with db cleanup.
+		err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId).WithIfExists(true))
+		if err != nil {
+			t.Logf("failed to drop account role (%s), err = %s\n", roleName, err.Error())
+		}
+		assert.Nil(t, err)
+	})
+}
+
+func alterViewOwnershipExternally(t *testing.T, viewName string, roleName string) {
+	t.Helper()
+
+	viewId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, viewName)
+	roleId := sdk.NewAccountObjectIdentifier(roleName)
+
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
+	ctx := context.Background()
+
+	on := sdk.OwnershipGrantOn{
+		Object: &sdk.Object{
+			ObjectType: sdk.ObjectTypeView,
+			Name:       viewId,
+		},
+	}
+	to := sdk.OwnershipGrantTo{
+		AccountRoleName: &roleId,
+	}
+	currentGrants := sdk.OwnershipCurrentGrants{
+		OutboundPrivileges: sdk.Revoke,
+	}
+	err = client.Grants.GrantOwnership(ctx, on, to, &sdk.GrantOwnershipOptions{CurrentGrants: &currentGrants})
 	require.NoError(t, err)
 }
