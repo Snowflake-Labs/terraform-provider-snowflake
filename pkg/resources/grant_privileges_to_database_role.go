@@ -219,7 +219,7 @@ var grantPrivilegesOnDatabaseRoleBulkOperationSchema = map[string]*schema.Schema
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToPluralObjectTypesString, " | ")),
+		Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values for ALL are: %s. For FUTURE all values but %s are supported.", strings.Join(sdk.ValidGrantToPluralObjectTypesString, " | "), sdk.PluralObjectTypeStreamlits.String()),
 		ValidateDiagFunc: StringInSlice(sdk.ValidGrantToPluralObjectTypesString, true),
 	},
 	"in_database": {

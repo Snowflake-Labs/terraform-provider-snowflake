@@ -190,9 +190,9 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 							"object_type_plural": {
 								Type:             schema.TypeString,
 								Required:         true,
-								Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToPluralObjectTypesString, " | ")),
+								Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToFuturePluralObjectTypesString, " | ")),
 								ForceNew:         true,
-								ValidateDiagFunc: StringInSlice(sdk.ValidGrantToPluralObjectTypesString, true),
+								ValidateDiagFunc: StringInSlice(sdk.ValidGrantToFuturePluralObjectTypesString, true),
 							},
 							"in_database": {
 								Type:             schema.TypeString,

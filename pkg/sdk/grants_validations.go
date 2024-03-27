@@ -89,11 +89,16 @@ var validGrantToObjectTypes = []ObjectType{
 	ObjectTypeIcebergTable,
 }
 
+var invalidGrantToFutureObjectTypes = []ObjectType{
+	ObjectTypeStreamlit,
+}
+
 var (
 	ValidGrantOwnershipObjectTypesString       = make([]string, len(validGrantOwnershipObjectTypes))
 	ValidGrantOwnershipPluralObjectTypesString = make([]string, len(validGrantOwnershipObjectTypes))
 	ValidGrantToObjectTypesString              = make([]string, len(validGrantToObjectTypes))
 	ValidGrantToPluralObjectTypesString        = make([]string, len(validGrantToObjectTypes))
+	ValidGrantToFuturePluralObjectTypesString  = make([]string, 0)
 )
 
 func init() {
@@ -104,6 +109,9 @@ func init() {
 	for i, objectType := range validGrantToObjectTypes {
 		ValidGrantToObjectTypesString[i] = objectType.String()
 		ValidGrantToPluralObjectTypesString[i] = objectType.Plural().String()
+		if !slices.Contains(invalidGrantToFutureObjectTypes, objectType) {
+			ValidGrantToFuturePluralObjectTypesString = append(ValidGrantToFuturePluralObjectTypesString, objectType.Plural().String())
+		}
 	}
 }
 
