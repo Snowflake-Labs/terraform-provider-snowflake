@@ -55,7 +55,7 @@ var viewSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "Specifies that the view is secure.",
+		Description: "Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -174,16 +174,19 @@ func ReadView(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// TODO [SNOW-867235]: what do we do with these extractors (added as discussion topic)?
-	// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
-	extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
-	substringOfQuery, err := extractor.Extract()
-	if err != nil {
-		return err
-	}
-
-	if err = d.Set("statement", substringOfQuery); err != nil {
-		return err
+	if view.Text != "" {
+		// TODO [SNOW-867235]: what do we do with these extractors (added as discussion topic)?
+		// Want to only capture the SELECT part of the query because before that is the CREATE part of the view.
+		extractor := snowflake.NewViewSelectStatementExtractor(view.Text)
+		substringOfQuery, err := extractor.Extract()
+		if err != nil {
+			return err
+		}
+		if err = d.Set("statement", substringOfQuery); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("error reading view %v, err = %w, `text` is missing; if the view is secure then the role used by the provider must own the view (consult https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)", d.Id(), err)
 	}
 
 	return nil
