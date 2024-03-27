@@ -119,6 +119,9 @@ resource "snowflake_grant_privileges_to_share" "example" {
 
 - `id` (String) The ID of this resource.
 
+## Known limitations
+- Setting the `CREATE SNOWFLAKE.ML.ANOMALY_DETECTION` or `CREATE SNOWFLAKE.ML.FORECAST` privileges on schema results in a permadiff because of the probably incorrect Snowflake's behavior of `SHOW GRANTS ON <object_type> <object_name>`. More in the [comment](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651#issuecomment-2022634952).
+
 ## Import
 
 ~> **Note** All the ..._name parts should be fully qualified names, e.g. for database object it is `"<database_name>"."<object_name>"`

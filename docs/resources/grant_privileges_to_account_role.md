@@ -300,7 +300,7 @@ Optional:
 Optional:
 
 - `all` (Block List, Max: 1) Configures the privilege to be granted on all objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--all))
-- `future` (Block List, Max: 1) Configures the privilege to be granted on all objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--future))
+- `future` (Block List, Max: 1) Configures the privilege to be granted on future objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--future))
 - `object_name` (String) The fully qualified name of the object on which privileges will be granted.
 - `object_type` (String) The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW | NETWORK RULE | PACKAGES POLICY | STREAMLIT | ICEBERG TABLE
 

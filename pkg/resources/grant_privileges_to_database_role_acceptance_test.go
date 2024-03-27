@@ -877,6 +877,58 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651
+// TODO [SNOW-1270457]: This seems to be a Snowflake error, we are waiting for the confirmation. Alter the test when the behavior is fixed. Update the resource documentation (section known issues).
+func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.SchemaPrivilegeCreateSnowflakeMlAnomalyDetection)),
+			config.StringVariable(string(sdk.SchemaPrivilegeCreateSnowflakeMlForecast)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"with_grant_option": config.BoolVariable(false),
+	}
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
+
+	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	schemaName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleName),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateSnowflakeMlAnomalyDetection)),
+					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeCreateSnowflakeMlForecast)),
+					resource.TestCheckResourceAttr(resourceName, "on_schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_schema.0.schema_name", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SNOWFLAKE.ML.ANOMALY_DETECTION,CREATE SNOWFLAKE.ML.FORECAST|OnSchema|OnSchema|%s", databaseRoleName, schemaName)),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func createDatabaseRoleOutsideTerraform(t *testing.T, name string) {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()

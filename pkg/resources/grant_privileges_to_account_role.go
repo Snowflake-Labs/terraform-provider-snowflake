@@ -243,7 +243,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeList,
 					Optional:    true,
 					ForceNew:    true,
-					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
+					Description: "Configures the privilege to be granted on future objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
 						Schema: getGrantPrivilegesOnAccountRoleBulkOperationSchema(sdk.ValidGrantToFuturePluralObjectTypesString),
