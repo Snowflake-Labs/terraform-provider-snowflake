@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -147,7 +148,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					ForceNew:    true,
-					Description: "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW | NETWORK RULE | PACKAGES POLICY | ICEBERG TABLE",
+					Description: fmt.Sprintf("The object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToObjectTypesString, " | ")),
 					RequiredWith: []string{
 						"on_schema_object.0.object_name",
 					},
@@ -155,7 +156,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.all",
 						"on_schema_object.0.future",
 					},
-					ValidateDiagFunc: ValidGrantedObjectType(),
+					ValidateDiagFunc: StringInSlice(sdk.ValidGrantToObjectTypesString, true),
 				},
 				"object_name": {
 					Type:        schema.TypeString,
@@ -218,8 +219,8 @@ var grantPrivilegesOnDatabaseRoleBulkOperationSchema = map[string]*schema.Schema
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS | NETWORK RULES | PACKAGES POLICIES | ICEBERG TABLES",
-		ValidateDiagFunc: ValidGrantedPluralObjectType(),
+		Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToPluralObjectTypesString, " | ")),
+		ValidateDiagFunc: StringInSlice(sdk.ValidGrantToPluralObjectTypesString, true),
 	},
 	"in_database": {
 		Type:             schema.TypeString,

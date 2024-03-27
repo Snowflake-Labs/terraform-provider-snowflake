@@ -130,11 +130,11 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 				"object_type": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Description:      "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | ICEBERG TABLE | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW",
+					Description:      fmt.Sprintf("The object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToObjectTypesString, " | ")),
 					RequiredWith:     []string{"on_schema_object.0.object_name"},
 					ConflictsWith:    []string{"on_schema_object.0.all", "on_schema_object.0.future"},
 					ForceNew:         true,
-					ValidateDiagFunc: ValidGrantedObjectType(),
+					ValidateDiagFunc: StringInSlice(sdk.ValidGrantToObjectTypesString, true),
 				},
 				"object_name": {
 					Type:             schema.TypeString,
@@ -156,9 +156,9 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 							"object_type_plural": {
 								Type:             schema.TypeString,
 								Required:         true,
-								Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
+								Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToPluralObjectTypesString, " | ")),
 								ForceNew:         true,
-								ValidateDiagFunc: ValidGrantedPluralObjectType(),
+								ValidateDiagFunc: StringInSlice(sdk.ValidGrantToPluralObjectTypesString, true),
 							},
 							"in_database": {
 								Type:             schema.TypeString,
@@ -190,9 +190,9 @@ var grantPrivilegesToRoleSchema = map[string]*schema.Schema{
 							"object_type_plural": {
 								Type:             schema.TypeString,
 								Required:         true,
-								Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | ICEBERG TABLES | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS",
+								Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToPluralObjectTypesString, " | ")),
 								ForceNew:         true,
-								ValidateDiagFunc: ValidGrantedPluralObjectType(),
+								ValidateDiagFunc: StringInSlice(sdk.ValidGrantToPluralObjectTypesString, true),
 							},
 							"in_database": {
 								Type:             schema.TypeString,

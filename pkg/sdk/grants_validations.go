@@ -61,15 +61,49 @@ var validGrantOwnershipObjectTypes = []ObjectType{
 	ObjectTypeWarehouse,
 }
 
+var validGrantToObjectTypes = []ObjectType{
+	ObjectTypeAlert,
+	ObjectTypeDynamicTable,
+	ObjectTypeEventTable,
+	ObjectTypeFileFormat,
+	ObjectTypeFunction,
+	ObjectTypeProcedure,
+	ObjectTypeSecret,
+	ObjectTypeSequence,
+	ObjectTypePipe,
+	ObjectTypeMaskingPolicy,
+	ObjectTypePasswordPolicy,
+	ObjectTypeRowAccessPolicy,
+	ObjectTypeSessionPolicy,
+	ObjectTypeTag,
+	ObjectTypeStage,
+	ObjectTypeStream,
+	ObjectTypeTable,
+	ObjectTypeExternalTable,
+	ObjectTypeTask,
+	ObjectTypeView,
+	ObjectTypeMaterializedView,
+	ObjectTypeNetworkRule,
+	ObjectTypePackagesPolicy,
+	ObjectTypeStreamlit,
+	ObjectTypeIcebergTable,
+}
+
 var (
 	ValidGrantOwnershipObjectTypesString       = make([]string, len(validGrantOwnershipObjectTypes))
 	ValidGrantOwnershipPluralObjectTypesString = make([]string, len(validGrantOwnershipObjectTypes))
+	ValidGrantToObjectTypesString              = make([]string, len(validGrantToObjectTypes))
+	ValidGrantToPluralObjectTypesString        = make([]string, len(validGrantToObjectTypes))
 )
 
 func init() {
 	for i, objectType := range validGrantOwnershipObjectTypes {
 		ValidGrantOwnershipObjectTypesString[i] = objectType.String()
 		ValidGrantOwnershipPluralObjectTypesString[i] = objectType.Plural().String()
+	}
+	for i, objectType := range validGrantToObjectTypes {
+		ValidGrantToObjectTypesString[i] = objectType.String()
+		ValidGrantToPluralObjectTypesString[i] = objectType.Plural().String()
 	}
 }
 
