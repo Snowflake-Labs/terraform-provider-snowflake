@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -285,7 +284,7 @@ func ReadTask(d *schema.ResourceData, meta interface{}) error {
 }
 
 // CreateTask implements schema.CreateFunc.
-func CreateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
+func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
@@ -349,11 +348,16 @@ func CreateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0)
 		for _, dep := range after {
 			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
-			resumeSuspended, err := client.Tasks.TemporarilySuspendRootTasks(ctx, precedingTaskId, taskId)
-			defer func() { returnedErr = errors.Join(returnedErr, resumeSuspended()) }()
+			tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, precedingTaskId, taskId)
+			defer func() {
+				if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+					log.Printf("[WARN] failed to resume tasks: %s", err)
+				}
+			}()
 			if err != nil {
 				return err
 			}
+
 			precedingTasks = append(precedingTasks, precedingTaskId)
 		}
 		createRequest.WithAfter(precedingTasks)
@@ -397,14 +401,18 @@ func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 }
 
 // UpdateTask implements schema.UpdateFunc.
-func UpdateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
+func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	resumeSuspended, err := client.Tasks.TemporarilySuspendRootTasks(ctx, taskId, taskId)
-	defer func() { returnedErr = errors.Join(returnedErr, resumeSuspended()) }()
+	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
+	defer func() {
+		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+			log.Printf("[WARN] failed to resume tasks: %s", err)
+		}
+	}()
 	if err != nil {
 		return err
 	}
@@ -495,8 +503,12 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) (returnedErr error) {
 		}
 		if len(toAdd) > 0 {
 			for _, depId := range toAdd {
-				resumeSuspended, err := client.Tasks.TemporarilySuspendRootTasks(ctx, depId, taskId)
-				defer func() { returnedErr = errors.Join(returnedErr, resumeSuspended()) }()
+				tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, depId, taskId)
+				defer func() {
+					if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+						log.Printf("[WARN] failed to resume tasks: %s", err)
+					}
+				}()
 				if err != nil {
 					return err
 				}
@@ -664,10 +676,10 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 
 	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	resumeSuspended, err := client.Tasks.TemporarilySuspendRootTasks(ctx, taskId, taskId)
+	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
 	defer func() {
-		if err := resumeSuspended(); err != nil {
-			log.Printf("[WARN] failed to resume suspended task: %s", err)
+		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+			log.Printf("[WARN] failed to resume tasks: %s", err)
 		}
 	}()
 	if err != nil {
