@@ -16,6 +16,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// Done (doc-discuss thread):
+// - Materialized views
+
+// Won't do:
+// - External tables (cannot handle this edge case, because we have to know the auto_refresh state of the external table; it's not retrievable by SHOW or DESC commands)
+
+// TODO for later:
+// - Tasks bulk operations
+
+// TODO:
+// - Test edge cases (and not only)
+// 		- RBAC hierarchy
+// 		- Delete resource before grant ownership resource
+// 		- Pipes on bulk and individually
+// 		- Tasks on bulk
+// 		- Materialized view
+// 		- Validation (?): grant ownership of e.g. share (not possible)
+// 		- Dynamic Tables
+// 		- Database Roles
+
 var grantOwnershipSchema = map[string]*schema.Schema{
 	"account_role_name": {
 		Type:             schema.TypeString,
@@ -342,10 +362,11 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
+		d.SetId("")
 		return diag.Diagnostics{
 			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to retrieve grants",
+				Severity: diag.Warning,
+				Summary:  "Failed to retrieve grants. Marking the resource as removed.",
 				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 			},
 		}
@@ -384,12 +405,11 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if !ownershipFound {
 		d.SetId("")
-
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
-				Summary:  "Couldn't find OWNERSHIP privilege on the target object. Marking resource as removed.",
-				Detail:   fmt.Sprintf("Id: %s", id.String()),
+				Summary:  "Couldn't find OWNERSHIP privilege on the target object. Marking the resource as removed.",
+				Detail:   fmt.Sprintf("Id: %s", d.Id()),
 			},
 		}
 	}
