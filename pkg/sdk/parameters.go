@@ -349,6 +349,7 @@ const (
 	AccountParameterQueryTag                              AccountParameter = "QUERY_TAG"
 	AccountParameterQuotedIdentifiersIgnoreCase           AccountParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
 	AccountParameterRowsPerResultset                      AccountParameter = "ROWS_PER_RESULTSET"
+	AccountParameterS3StageVpceDnsName                    AccountParameter = "S3_STAGE_VPCE_DNS_NAME"
 	AccountParameterSimulatedDataSharingConsumer          AccountParameter = "SIMULATED_DATA_SHARING_CONSUMER"
 	AccountParameterStatementTimeoutInSeconds             AccountParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
 	AccountParameterStrictJSONOutput                      AccountParameter = "STRICT_JSON_OUTPUT"
@@ -409,6 +410,7 @@ const (
 	SessionParameterQueryTag                              SessionParameter = "QUERY_TAG"
 	SessionParameterQuotedIdentifiersIgnoreCase           SessionParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
 	SessionParameterRowsPerResultset                      SessionParameter = "ROWS_PER_RESULTSET"
+	SessionParameterS3StageVpceDnsName                    SessionParameter = "S3_STAGE_VPCE_DNS_NAME"
 	SessionParameterSimulatedDataSharingConsumer          SessionParameter = "SIMULATED_DATA_SHARING_CONSUMER"
 	SessionParameterStatementTimeoutInSeconds             SessionParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
 	SessionParameterStrictJSONOutput                      SessionParameter = "STRICT_JSON_OUTPUT"
@@ -480,6 +482,7 @@ const (
 	UserParameterQueryTag                              UserParameter = "QUERY_TAG"
 	UserParameterQuotedIdentifiersIgnoreCase           UserParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
 	UserParameterRowsPerResultset                      UserParameter = "ROWS_PER_RESULTSET"
+	UserParameterS3StageVpceDnsName                    UserParameter = "S3_STAGE_VPCE_DNS_NAME"
 	UserParameterSimulatedDataSharingConsumer          UserParameter = "SIMULATED_DATA_SHARING_CONSUMER"
 	UserParameterStatementTimeoutInSeconds             UserParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
 	UserParameterStrictJsonOutput                      UserParameter = "STRICT_JSON_OUTPUT"
@@ -619,6 +622,7 @@ type SessionParameters struct {
 	QueryTag                              *string                           `ddl:"parameter,single_quotes" sql:"QUERY_TAG"`
 	QuotedIdentifiersIgnoreCase           *bool                             `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
 	RowsPerResultset                      *int                              `ddl:"parameter" sql:"ROWS_PER_RESULTSET"`
+	S3StageVpceDnsName                    *string                           `ddl:"parameter,single_quotes" sql:"S3_STAGE_VPCE_DNS_NAME"`
 	SimulatedDataSharingConsumer          *string                           `ddl:"parameter,single_quotes" sql:"SIMULATED_DATA_SHARING_CONSUMER"`
 	StatementTimeoutInSeconds             *int                              `ddl:"parameter" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
 	StrictJSONOutput                      *bool                             `ddl:"parameter" sql:"STRICT_JSON_OUTPUT"`
@@ -700,6 +704,7 @@ type SessionParametersUnset struct {
 	QueryTag                              *bool `ddl:"keyword" sql:"QUERY_TAG"`
 	QuotedIdentifiersIgnoreCase           *bool `ddl:"keyword" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
 	RowsPerResultset                      *bool `ddl:"keyword" sql:"ROWS_PER_RESULTSET"`
+	S3StageVpceDnsName                    *bool `ddl:"keyword" sql:"S3_STAGE_VPCE_DNS_NAME"`
 	SimulatedDataSharingConsumer          *bool `ddl:"keyword" sql:"SIMULATED_DATA_SHARING_CONSUMER"`
 	StatementTimeoutInSeconds             *bool `ddl:"keyword" sql:"STATEMENT_TIMEOUT_IN_SECONDS"`
 	StrictJSONOutput                      *bool `ddl:"keyword" sql:"STRICT_JSON_OUTPUT"`

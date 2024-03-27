@@ -13,3 +13,7 @@ variable "schema" {
 variable "comment" {
   type = string
 }
+
+variable "execute_as" {
+  type = string
+}
