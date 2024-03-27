@@ -119,7 +119,7 @@ var procedureSchema = map[string]*schema.Schema{
 			return strings.EqualFold(old, new)
 		},
 		ValidateFunc: validation.StringInSlice([]string{"CALLER", "OWNER"}, true),
-		Description:  "Sets execute context - see caller's rights and owner's rights",
+		Description:  "Sets execution context. Allowed values are CALLER and OWNER (consult a proper section in the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-procedure#id1)). For more information see [caller's rights and owner's rights](https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-rights).",
 	},
 	"null_input_behavior": {
 		Type:     schema.TypeString,

@@ -63,7 +63,7 @@ EOT
 
 - `arguments` (Block List) List of the arguments for the procedure (see [below for nested schema](#nestedblock--arguments))
 - `comment` (String) Specifies a comment for the procedure.
-- `execute_as` (String) Sets execute context - see caller's rights and owner's rights
+- `execute_as` (String) Sets execution context. Allowed values are CALLER and OWNER (consult a proper section in the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-procedure#id1)). For more information see [caller's rights and owner's rights](https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-rights).
 - `handler` (String) The handler method for Java / Python procedures.
 - `imports` (List of String) Imports for Java / Python procedures. For Java this a list of jar files, for Python this is a list of Python files.
 - `language` (String) Specifies the language of the stored procedure code.

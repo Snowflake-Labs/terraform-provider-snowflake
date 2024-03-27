@@ -236,6 +236,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		sessionParametersUnset.QuotedIdentifiersIgnoreCase = Bool(true)
 	case SessionParameterRowsPerResultset:
 		sessionParametersUnset.RowsPerResultset = Bool(true)
+	case SessionParameterS3StageVpceDnsName:
+		sessionParametersUnset.S3StageVpceDnsName = Bool(true)
 	case SessionParameterSimulatedDataSharingConsumer:
 		sessionParametersUnset.SimulatedDataSharingConsumer = Bool(true)
 	case SessionParameterStatementTimeoutInSeconds:
