@@ -71,7 +71,7 @@ func TestInt_Streamlits(t *testing.T) {
 	})
 
 	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
-	t.Run("grant privilege to streamlits", func(t *testing.T) {
+	t.Run("grant privilege to streamlits to role", func(t *testing.T) {
 		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
 		t.Cleanup(cleanupStage)
 
@@ -133,6 +133,73 @@ func TestInt_Streamlits(t *testing.T) {
 			},
 		}
 		err = client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, role.ID(), nil)
+		require.NoError(t, err)
+	})
+
+	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
+	t.Run("grant privilege to streamlits to database role", func(t *testing.T) {
+		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
+		t.Cleanup(cleanupStage)
+
+		databaseRole, databaseRoleCleanup := createDatabaseRole(t, client, testDb(t))
+		t.Cleanup(databaseRoleCleanup)
+
+		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
+
+		comment := random.StringN(4)
+		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		mainFile := "manifest.yml"
+		request := sdk.NewCreateStreamlitRequest(id, stage.Location(), mainFile).WithComment(&comment)
+		err := client.Streamlits.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupStreamlitHandle(id))
+
+		assertStreamlit(t, id, comment, "")
+
+		privileges := &sdk.DatabaseRoleGrantPrivileges{
+			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeUsage},
+		}
+		on := &sdk.DatabaseRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				SchemaObject: &sdk.Object{
+					ObjectType: sdk.ObjectTypeStreamlit,
+					Name:       id,
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				DatabaseRole: databaseRoleId,
+			},
+		})
+		require.NoError(t, err)
+		// Expecting two grants because database role has usage on database by default
+		require.Equal(t, 2, len(grants))
+
+		on = &sdk.DatabaseRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				Future: &sdk.GrantOnSchemaObjectIn{
+					PluralObjectType: sdk.PluralObjectTypeStreamlits,
+					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "Unsupported feature 'STREAMLIT'")
+
+		on = &sdk.DatabaseRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				All: &sdk.GrantOnSchemaObjectIn{
+					PluralObjectType: sdk.PluralObjectTypeStreamlits,
+					InDatabase:       sdk.Pointer(sdk.NewAccountObjectIdentifier(TestDatabaseName)),
+				},
+			},
+		}
+		err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
 		require.NoError(t, err)
 	})
 

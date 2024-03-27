@@ -221,7 +221,7 @@ func getGrantPrivilegesOnDatabaseRoleBulkOperationSchema(validGrantToObjectTypes
 			Required:         true,
 			ForceNew:         true,
 			Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s.", strings.Join(validGrantToObjectTypes, " | ")),
-			ValidateDiagFunc: StringInSlice(sdk.ValidGrantToPluralObjectTypesString, true),
+			ValidateDiagFunc: StringInSlice(validGrantToObjectTypes, true),
 		},
 		"in_database": {
 			Type:             schema.TypeString,
