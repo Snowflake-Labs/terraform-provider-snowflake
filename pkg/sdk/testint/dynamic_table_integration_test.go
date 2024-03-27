@@ -2,6 +2,7 @@ package testint
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -185,5 +186,57 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 			require.Equal(t, 1, len(entities))
 			require.Equal(t, value, entities[0].TargetLag)
 		}
+	})
+}
+
+func TestInt_DynamicTablesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	warehouseTest, databaseTest, schemaTest := testWarehouse(t), testDb(t), testSchema(t)
+
+	cleanupDynamicTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createDynamicTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		tableTest, tableCleanup := createTable(t, client, databaseTest, schemaTest)
+		t.Cleanup(tableCleanup)
+		targetLag := sdk.TargetLag{
+			MaximumDuration: sdk.String("2 minutes"),
+		}
+		query := "select id from " + tableTest.ID().FullyQualifiedName()
+		err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(id, warehouseTest.ID(), targetLag, query).WithOrReplace(true))
+		require.NoError(t, err)
+		t.Cleanup(cleanupDynamicTableHandle(t, id))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createDynamicTableHandle(t, id1)
+		createDynamicTableHandle(t, id2)
+
+		e1, err := client.DynamicTables.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.DynamicTables.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

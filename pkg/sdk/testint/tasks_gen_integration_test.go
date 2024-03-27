@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -591,5 +592,50 @@ func TestInt_Tasks(t *testing.T) {
 		executeRequest := sdk.NewExecuteTaskRequest(task.ID())
 		err := client.Tasks.Execute(ctx, executeRequest)
 		require.NoError(t, err)
+	})
+}
+
+func TestInt_TasksShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupTaskHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createTaskHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP"))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTaskHandle(id))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createTaskHandle(t, id1)
+		createTaskHandle(t, id2)
+
+		e1, err := client.Tasks.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Tasks.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

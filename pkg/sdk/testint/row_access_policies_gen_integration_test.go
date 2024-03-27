@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -311,5 +312,50 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 		_, err := client.RowAccessPolicies.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+}
+
+func TestInt_RowAccessPoliciesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	cleanupRowAccessPolicyHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createRowAccessPolicyHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		args := sdk.NewCreateRowAccessPolicyArgsRequest(random.AlphaN(5), sdk.DataTypeVARCHAR)
+		err := client.RowAccessPolicies.Create(ctx, sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*args}, "true"))
+		require.NoError(t, err)
+		t.Cleanup(cleanupRowAccessPolicyHandle(id))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createRowAccessPolicyHandle(t, id1)
+		createRowAccessPolicyHandle(t, id2)
+
+		e1, err := client.RowAccessPolicies.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.RowAccessPolicies.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

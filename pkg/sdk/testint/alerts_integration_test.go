@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -376,5 +377,51 @@ func TestInt_AlertDrop(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, "does_not_exist")
 		err := client.Alerts.Drop(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+}
+
+func TestInt_AlertsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest, warehouseTest := testDb(t), testSchema(t), testWarehouse(t)
+	cleanupAlertHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.Alerts.Drop(ctx, id)
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createAlertHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		schedule, condition, action := "USING CRON * * * * * UTC", "SELECT 1", "SELECT 1"
+		err := client.Alerts.Create(ctx, id, warehouseTest.ID(), schedule, condition, action, &sdk.CreateAlertOptions{})
+		require.NoError(t, err)
+		t.Cleanup(cleanupAlertHandle(t, id))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createAlertHandle(t, id1)
+		createAlertHandle(t, id2)
+
+		e1, err := client.Alerts.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Alerts.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

@@ -75,6 +75,10 @@ type Sequence struct {
 	Ordered       bool
 }
 
+func (v *Sequence) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
 // DescribeSequenceOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-sequence.
 type DescribeSequenceOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"`

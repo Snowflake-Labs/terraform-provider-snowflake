@@ -298,3 +298,64 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		require.Equal(t, "(X VARCHAR)", pairs["signature"])
 	})
 }
+
+func TestInt_ExternalFunctionsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := context.Background()
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupExternalFuncionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
+		return func() {
+			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, dts).WithIfExists(sdk.Bool(true)))
+			require.NoError(t, err)
+		}
+	}
+
+	createApiIntegrationHandle := func(t *testing.T, id sdk.AccountObjectIdentifier) {
+		t.Helper()
+
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`CREATE API INTEGRATION %s API_PROVIDER = aws_api_gateway API_AWS_ROLE_ARN = 'arn:aws:iam::123456789012:role/hello_cloud_account_role' API_ALLOWED_PREFIXES = ('https://xyz.execute-api.us-west-2.amazonaws.com/production') ENABLED = true`, id.FullyQualifiedName()))
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_, err = client.ExecForTests(ctx, fmt.Sprintf(`DROP API INTEGRATION %s`, id.FullyQualifiedName()))
+			require.NoError(t, err)
+		})
+	}
+
+	createExternalFunction := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		integration := sdk.NewAccountObjectIdentifier(random.AlphaN(4))
+		createApiIntegrationHandle(t, integration)
+
+		argument := sdk.NewExternalFunctionArgumentRequest("x", sdk.DataTypeVARCHAR)
+		as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
+		request := sdk.NewCreateExternalFunctionRequest(id, sdk.DataTypeVariant, &integration, as).
+			WithOrReplace(sdk.Bool(true)).
+			WithArguments([]sdk.ExternalFunctionArgumentRequest{*argument})
+		err := client.ExternalFunctions.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupExternalFuncionHandle(id, []sdk.DataType{sdk.DataTypeVariant}))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createExternalFunction(t, id1)
+		createExternalFunction(t, id2)
+
+		e1, err := client.ExternalFunctions.ShowByID(ctx, id1, []sdk.DataType{sdk.DataTypeVARCHAR})
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.ExternalFunctions.ShowByID(ctx, id2, []sdk.DataType{sdk.DataTypeVARCHAR})
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
+	})
+}

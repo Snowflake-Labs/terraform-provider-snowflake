@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 type Functions interface {
@@ -240,6 +241,12 @@ type Function struct {
 	IsExternalFunction bool
 	Language           string
 	IsMemoizable       bool
+}
+
+func (v *Function) ID() SchemaObjectIdentifier {
+	database := strings.Trim(v.CatalogName, "\"")
+	schema := strings.Trim(v.SchemaName, "\"")
+	return NewSchemaObjectIdentifier(database, schema, v.Name)
 }
 
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.

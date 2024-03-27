@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -528,5 +529,54 @@ func TestInt_Views(t *testing.T) {
 
 		_, err := client.Views.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+}
+
+func TestInt_ViewsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	table, tableCleanup := createTable(t, client, databaseTest, schemaTest)
+	t.Cleanup(tableCleanup)
+
+	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
+
+	cleanupViewHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.Views.Drop(ctx, sdk.NewDropViewRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createViewHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.Views.Create(ctx, sdk.NewCreateViewRequest(id, sql))
+		require.NoError(t, err)
+		t.Cleanup(cleanupViewHandle(id))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createViewHandle(t, id1)
+		createViewHandle(t, id2)
+
+		e1, err := client.Views.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Views.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

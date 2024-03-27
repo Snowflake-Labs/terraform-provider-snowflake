@@ -64,6 +64,10 @@ type EventTable struct {
 	OwnerRoleType string
 }
 
+func (v *EventTable) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
 // DescribeEventTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-event-table.
 type DescribeEventTableOptions struct {
 	describe   bool                   `ddl:"static" sql:"DESCRIBE"`

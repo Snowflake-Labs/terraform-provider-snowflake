@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -407,5 +408,54 @@ func TestInt_MaterializedViews(t *testing.T) {
 
 		_, err := client.MaterializedViews.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+}
+
+func TestInt_MaterializedViewsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	table, tableCleanup := createTable(t, client, testDb(t), testSchema(t))
+	t.Cleanup(tableCleanup)
+
+	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
+	cleanupMaterializedViewHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.MaterializedViews.Drop(ctx, sdk.NewDropMaterializedViewRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createMaterializedViewHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.MaterializedViews.Create(ctx, sdk.NewCreateMaterializedViewRequest(id, sql))
+		require.NoError(t, err)
+		t.Cleanup(cleanupMaterializedViewHandle(t, id))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createMaterializedViewHandle(t, id1)
+		createMaterializedViewHandle(t, id2)
+
+		e1, err := client.MaterializedViews.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.MaterializedViews.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

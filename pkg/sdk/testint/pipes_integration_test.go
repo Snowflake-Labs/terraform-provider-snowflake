@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -348,5 +349,56 @@ func TestInt_PipeAlter(t *testing.T) {
 
 		err := itc.client.Pipes.Alter(itc.ctx, pipe.ID(), alterOptions)
 		require.NoError(t, err)
+	})
+}
+
+func TestInt_PipesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	table, tableCleanup := createTable(t, client, databaseTest, schemaTest)
+	t.Cleanup(tableCleanup)
+	stage, stageCleanup := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(6)))
+	t.Cleanup(stageCleanup)
+
+	cleanupPipeHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.Pipes.Drop(ctx, id)
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createPipeHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		statement := createPipeCopyStatement(t, table, stage)
+		err := client.Pipes.Create(ctx, id, statement, &sdk.CreatePipeOptions{})
+		require.NoError(t, err)
+		t.Cleanup(cleanupPipeHandle(t, id))
+	}
+
+	t.Run("show by id", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createPipeHandle(t, id1)
+		createPipeHandle(t, id2)
+
+		e1, err := client.Pipes.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Pipes.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }
