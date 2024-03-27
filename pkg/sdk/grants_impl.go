@@ -292,7 +292,7 @@ func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectId
 	}
 
 	canOperateOnPipe := slices.ContainsFunc(currentGrants, func(grant Grant) bool {
-		return grant.Privilege == "OWNERSHIP" || grant.Privilege == SchemaObjectPrivilegeOperate.String() && grant.GranteeName == currentRoleName
+		return grant.GranteeName == currentRoleName && (grant.Privilege == "OWNERSHIP" || grant.Privilege == SchemaObjectPrivilegeOperate.String())
 	})
 
 	var revokeOperate func() error

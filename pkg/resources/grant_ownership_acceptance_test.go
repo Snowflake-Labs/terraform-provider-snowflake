@@ -721,7 +721,7 @@ func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
 								Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(pipeFullyQualifiedName),
 							},
 						},
-						// TODO: Fix this identifier
+						// TODO(): Fix this identifier
 					}, sdk.ObjectTypePipe, accountRoleName, fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, pipeName)),
 				),
 			},
