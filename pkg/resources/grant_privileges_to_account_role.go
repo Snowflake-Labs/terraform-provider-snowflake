@@ -228,7 +228,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantPrivilegesOnAccountRoleBulkOperationSchema,
+						Schema: getGrantPrivilegesOnAccountRoleBulkOperationSchema(sdk.ValidGrantToPluralObjectTypesString),
 					},
 					ConflictsWith: []string{
 						"on_schema_object.0.object_type",
@@ -246,7 +246,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantPrivilegesOnAccountRoleBulkOperationSchema,
+						Schema: getGrantPrivilegesOnAccountRoleBulkOperationSchema(sdk.ValidGrantToFuturePluralObjectTypesString),
 					},
 					ConflictsWith: []string{
 						"on_schema_object.0.object_type",
@@ -262,26 +262,28 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 	},
 }
 
-var grantPrivilegesOnAccountRoleBulkOperationSchema = map[string]*schema.Schema{
-	"object_type_plural": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values for ALL are: %s. For FUTURE all values but %s are supported.", strings.Join(sdk.ValidGrantToPluralObjectTypesString, " | "), sdk.PluralObjectTypeStreamlits.String()),
-		ValidateDiagFunc: StringInSlice(sdk.ValidGrantToPluralObjectTypesString, true),
-	},
-	"in_database": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
-	},
-	"in_schema": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
-	},
+func getGrantPrivilegesOnAccountRoleBulkOperationSchema(validGrantToObjectTypes []string) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"object_type_plural": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s.", strings.Join(validGrantToObjectTypes, " | ")),
+			ValidateDiagFunc: StringInSlice(validGrantToObjectTypes, true),
+		},
+		"in_database": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		},
+		"in_schema": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+		},
+	}
 }
 
 func GrantPrivilegesToAccountRole() *schema.Resource {
