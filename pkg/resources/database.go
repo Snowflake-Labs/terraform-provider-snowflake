@@ -108,6 +108,13 @@ func CreateDatabase(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
 
+	cr, _ := client.ContextFunctions.CurrentRole(ctx)
+	sr, _ := client.ContextFunctions.CurrentSecondaryRoles(ctx)
+	res, _ := client.Grants.Show(ctx, &sdk.ShowGrantOptions{To: &sdk.ShowGrantsTo{Role: sr.Roles[0]}})
+	_ = cr
+	_ = res
+	_ = client.Sessions.UseSecondaryRoles(context.Background(), sdk.SecondaryRolesAll)
+
 	// Is it a Shared Database?
 	if fromShare, ok := d.GetOk("from_share"); ok {
 		account := fromShare.(map[string]interface{})["provider"].(string)
