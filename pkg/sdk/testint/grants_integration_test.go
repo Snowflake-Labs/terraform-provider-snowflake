@@ -790,6 +790,34 @@ func TestInt_GrantOwnership(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	checkOwnershipOnObjectToRole := func(t *testing.T, on sdk.OwnershipGrantOn, role string) {
+		t.Helper()
+		opts := sdk.ShowGrantOptions{}
+		switch {
+		case on.Object != nil:
+			opts.On = &sdk.ShowGrantsOn{
+				Object: on.Object,
+			}
+		case on.All != nil:
+			opts.In = &sdk.ShowGrantsIn{
+				Database: on.All.InDatabase,
+				Schema:   on.All.InSchema,
+			}
+		case on.Future != nil:
+			opts.Future = sdk.Bool(true)
+			opts.In = &sdk.ShowGrantsIn{
+				Database: on.All.InDatabase,
+				Schema:   on.All.InSchema,
+			}
+		}
+		grants, err := client.Grants.Show(ctx, &opts)
+		require.NoError(t, err)
+		_, err = collections.FindOne(grants, func(grant sdk.Grant) bool {
+			return grant.Privilege == "OWNERSHIP" && grant.GranteeName.Name() == role
+		})
+		require.NoError(t, err)
+	}
+
 	grantOwnershipBackToTheCurrentRole := func(t *testing.T, on sdk.OwnershipGrantOn) {
 		t.Helper()
 		currentRole, err := client.ContextFunctions.CurrentRole(ctx)
@@ -804,6 +832,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			new(sdk.GrantOwnershipOptions),
 		)
 		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, on, currentRole)
 	}
 
 	t.Run("on schema object to database role", func(t *testing.T) {
@@ -933,29 +962,24 @@ func TestInt_GrantOwnership(t *testing.T) {
 		role, roleCleanup := createRole(t, client)
 		t.Cleanup(roleCleanup)
 
+		onPipe := sdk.OwnershipGrantOn{
+			Object: &sdk.Object{
+				ObjectType: sdk.ObjectTypePipe,
+				Name:       pipe.ID(),
+			},
+		}
 		err = client.Grants.GrantOwnership(
 			ctx,
-			sdk.OwnershipGrantOn{
-				Object: &sdk.Object{
-					ObjectType: sdk.ObjectTypePipe,
-					Name:       pipe.ID(),
-				},
-			},
+			onPipe,
 			sdk.OwnershipGrantTo{
 				AccountRoleName: sdk.Pointer(role.ID()),
 			},
 			new(sdk.GrantOwnershipOptions),
 		)
 		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, onPipe, role.ID().Name())
 
-		grantOwnershipBackToTheCurrentRole(t,
-			sdk.OwnershipGrantOn{
-				Object: &sdk.Object{
-					ObjectType: sdk.ObjectTypePipe,
-					Name:       pipe.ID(),
-				},
-			},
-		)
+		grantOwnershipBackToTheCurrentRole(t, onPipe)
 
 		pipeExecutionState, err = client.SystemFunctions.PipeStatus(pipe.ID())
 		require.NoError(t, err)
@@ -987,29 +1011,24 @@ func TestInt_GrantOwnership(t *testing.T) {
 		role, roleCleanup := createRole(t, client)
 		t.Cleanup(roleCleanup)
 
+		onAllPipesInSchema := sdk.OwnershipGrantOn{
+			All: &sdk.GrantOnSchemaObjectIn{
+				PluralObjectType: sdk.PluralObjectTypePipes,
+				InSchema:         sdk.Pointer(testSchema(t).ID()),
+			},
+		}
 		err = client.Grants.GrantOwnership(
 			ctx,
-			sdk.OwnershipGrantOn{
-				All: &sdk.GrantOnSchemaObjectIn{
-					PluralObjectType: sdk.PluralObjectTypePipes,
-					InSchema:         sdk.Pointer(testSchema(t).ID()),
-				},
-			},
+			onAllPipesInSchema,
 			sdk.OwnershipGrantTo{
 				AccountRoleName: sdk.Pointer(role.ID()),
 			},
 			new(sdk.GrantOwnershipOptions),
 		)
 		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, onAllPipesInSchema, role.ID().Name())
 
-		grantOwnershipBackToTheCurrentRole(t,
-			sdk.OwnershipGrantOn{
-				All: &sdk.GrantOnSchemaObjectIn{
-					PluralObjectType: sdk.PluralObjectTypePipes,
-					InSchema:         sdk.Pointer(testSchema(t).ID()),
-				},
-			},
-		)
+		grantOwnershipBackToTheCurrentRole(t, onAllPipesInSchema)
 
 		pipeExecutionState, err = client.SystemFunctions.PipeStatus(pipe.ID())
 		require.NoError(t, err)

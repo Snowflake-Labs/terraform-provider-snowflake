@@ -256,18 +256,17 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 	return resultList, nil
 }
 
-// TODO (remove ?): it was only for me to grasp what has to be done in this function, but may also leave it to guide others
-// grant ownership on pipe sequence (at worst 9 operations)
-// - get current role (needed to grant operate privilege later on)
-// - grant operate on pipe if not granted (it will error our otherwise)
-// - get pipe status (running or paused)
-// - if pipe is running, stop the pipe
-// - revoke operate (it may affect grant ownership call)
-// - grant ownership
-// - if pipe was previously running
-//   - grant operate on pipe to current role
-//   - unpause the pipe with system function
-//   - revoke operate on pipe from current role
+// grantOwnershipOnPipe sequence (at worst 9 operations)
+//  1. get current role (needed to grant operate privilege later on)
+//  2. grant operate on pipe if not granted (it will error our otherwise)
+//  3. get pipe status (running or paused)
+//  4. if pipe is running, stop the pipe
+//  5. revoke operate (it may affect grant ownership call)
+//  6. grant ownership
+//  7. if pipe was previously running
+//     7.1. grant operate on pipe to current role
+//     7.2. unpause the pipe with system function
+//     7.3. revoke operate on pipe from current role
 func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectIdentifier, opts *GrantOwnershipOptions) error {
 	// To be able to call ALTER on a pipe to stop its execution,
 	// the current role has to be either the owner of this pipe or be granted with OPERATE privilege.

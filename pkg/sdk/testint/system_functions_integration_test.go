@@ -2,6 +2,7 @@ package testint
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -163,9 +164,13 @@ func TestInt_PipeForceResume(t *testing.T) {
 			PipeExecutionPaused: sdk.Bool(false),
 		},
 	})
-	require.Error(t, err)
+	require.ErrorContains(t, err, fmt.Sprintf("Pipe %s cannot be resumed as ownership had changed. Resuming pipe may load files inserted by previous owner into table. To forceresume pipe use SYSTEM$PIPE_FORCE_RESUME('%s')", pipe.Name, pipe.Name))
 
 	// Resume with system func (success)
 	err = client.SystemFunctions.PipeForceResume(pipe.ID(), nil)
 	require.NoError(t, err)
+
+	pipeExecutionState, err = client.SystemFunctions.PipeStatus(pipe.ID())
+	require.NoError(t, err)
+	require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
 }

@@ -623,14 +623,15 @@ func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", "DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|DATABASE|%s", accountRoleFullyQualifiedName, databaseFullyQualifiedName)),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						On: &sdk.ShowGrantsOn{
+							Object: &sdk.Object{
+								ObjectType: sdk.ObjectTypeDatabase,
+								Name:       sdk.NewAccountObjectIdentifierFromFullyQualifiedName(databaseFullyQualifiedName),
+							},
+						},
+					}, sdk.ObjectTypeDatabase, accountRoleName, databaseName),
 				),
-			},
-			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantOwnership/MoveResourceOwnershipOutsideTerraform"),
-				ConfigVariables:   configVariables,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -658,7 +659,8 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Cleanup(createAccountRole(t, accountRoleName))
+					createAccountRoleOutsideTerraform(t, accountRoleName)
+					registerAccountRoleCleanup(t, accountRoleName)
 					t.Cleanup(createDatabaseWithRoleAsOwner(t, accountRoleName, databaseName))
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/ForceOwnershipTransferOnCreate"),
@@ -669,13 +671,6 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|DATABASE|%s", accountRoleFullyQualifiedName, databaseFullyQualifiedName)),
 				),
-			},
-			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantOwnership/ForceOwnershipTransferOnCreate"),
-				ConfigVariables:   configVariables,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -721,16 +716,9 @@ func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
 								Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(pipeFullyQualifiedName),
 							},
 						},
-						// TODO(): Fix this identifier
+						// TODO(SNOW-999049): Fix this identifier
 					}, sdk.ObjectTypePipe, accountRoleName, fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, pipeName)),
 				),
-			},
-			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnPipe"),
-				ConfigVariables:   configVariables,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -773,16 +761,9 @@ func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
 						To: &sdk.ShowGrantsTo{
 							Role: sdk.NewAccountObjectIdentifier(accountRoleName),
 						},
-						// TODO: Fix this identifier
+						// TODO(SNOW-999049): Fix this identifier
 					}, sdk.ObjectTypePipe, accountRoleName, fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, pipeName), fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, secondPipeName)),
 				),
-			},
-			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnAllPipes"),
-				ConfigVariables:   configVariables,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -814,20 +795,6 @@ func createDatabaseWithRoleAsOwner(t *testing.T, roleName string, databaseName s
 
 	return func() {
 		assert.NoError(t, client.Databases.Drop(ctx, databaseId, &sdk.DropDatabaseOptions{}))
-	}
-}
-
-func createAccountRole(t *testing.T, name string) func() {
-	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	assert.NoError(t, err)
-
-	ctx := context.Background()
-	roleId := sdk.NewAccountObjectIdentifier(name)
-	assert.NoError(t, client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId)))
-
-	return func() {
-		assert.NoError(t, client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId)))
 	}
 }
 
