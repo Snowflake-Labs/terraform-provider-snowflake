@@ -2,12 +2,11 @@ package datasources
 
 import (
 	"context"
-	"database/sql"
+	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -305,11 +304,8 @@ func Grants() *schema.Resource {
 
 func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	db := client.GetConn().DB
 
-	var grantDetails []snowflake.GrantDetail
 	var grants []sdk.Grant
-	_ = grants
 	var err error
 	if v, ok := d.GetOk("grants_on"); ok {
 		grants, err = handleGrantsOn(ctx, client, v)
@@ -328,14 +324,14 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 	}
 
 	if v, ok := d.GetOk("future_grants_to"); ok {
-		grantDetails, err = handleFutureGrantsTo(ctx, client, v, db)
+		grants, err = handleFutureGrantsTo(ctx, client, v)
 	}
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("grants", flattenGrants(grantDetails))
+	err = d.Set("grants", flattenGrants(grants))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -454,100 +450,44 @@ func handleFutureGrantsIn(ctx context.Context, client *sdk.Client, v any) ([]sdk
 	return client.Grants.Show(ctx, opts)
 }
 
-func handleFutureGrantsTo(ctx context.Context, client *sdk.Client, v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
-	var grantDetails []snowflake.GrantDetail
-	var err error
-
+func handleFutureGrantsTo(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
+	opts := new(sdk.ShowGrantOptions)
+	opts.Future = sdk.Bool(true)
 	futureGrantsTo := v.([]interface{})[0].(map[string]interface{})
-	role := futureGrantsTo["role"].(string)
-	if role != "" {
-		grantDetails, err = snowflake.ShowFutureGrantsTo(db, "ROLE", role)
-		if err != nil {
-			return grantDetails, err
+
+	if role := futureGrantsTo["role"].(string); role != "" {
+		opts.To = &sdk.ShowGrantsTo{
+			Role: sdk.NewAccountObjectIdentifier(role),
 		}
 	}
-	return grantDetails, nil
+	if databaseRole := futureGrantsTo["database_role"].(string); databaseRole != "" {
+		databaseRoleId, err := helpers.DecodeSnowflakeParameterID(databaseRole)
+		if err != nil {
+			return nil, err
+		}
+		validDatabaseRoleId, ok := databaseRoleId.(sdk.DatabaseObjectIdentifier)
+		if !ok {
+			return nil, fmt.Errorf("incorrect database role identifier (%s)", databaseRole)
+		}
+		opts.To = &sdk.ShowGrantsTo{
+			DatabaseRole: validDatabaseRoleId,
+		}
+	}
+	return client.Grants.Show(ctx, opts)
 }
 
-func aaa() (*sdk.ShowGrantOptions, sdk.ObjectType) {
-	opts := new(sdk.ShowGrantOptions)
-	var grantedOn sdk.ObjectType
-
-	//switch id.Kind {
-	//case OnAccountObjectAccountRoleGrantKind:
-	//	data := id.Data.(*OnAccountObjectGrantData)
-	//	grantedOn = data.ObjectType
-	//	opts.On = &sdk.ShowGrantsOn{
-	//		Object: &sdk.Object{
-	//			ObjectType: data.ObjectType,
-	//			Name:       data.ObjectName,
-	//		},
-	//	}
-	//case OnSchemaAccountRoleGrantKind:
-	//	grantedOn = sdk.ObjectTypeSchema
-	//	data := id.Data.(*OnSchemaGrantData)
-	//
-	//	switch data.Kind {
-	//	case OnSchemaSchemaGrantKind:
-	//		opts.On = &sdk.ShowGrantsOn{
-	//			Object: &sdk.Object{
-	//				ObjectType: sdk.ObjectTypeSchema,
-	//				Name:       data.SchemaName,
-	//			},
-	//		}
-	//	case OnAllSchemasInDatabaseSchemaGrantKind:
-	//		log.Printf("[INFO] Show with on_schema.all_schemas_in_database option is skipped. No changes in privileges in Snowflake will be detected.")
-	//		return nil, ""
-	//	case OnFutureSchemasInDatabaseSchemaGrantKind:
-	//		opts.Future = sdk.Bool(true)
-	//		opts.In = &sdk.ShowGrantsIn{
-	//			Database: data.DatabaseName,
-	//		}
-	//	}
-	//case OnSchemaObjectAccountRoleGrantKind:
-	//	data := id.Data.(*OnSchemaObjectGrantData)
-	//
-	//	switch data.Kind {
-	//	case OnObjectSchemaObjectGrantKind:
-	//		grantedOn = data.Object.ObjectType
-	//		opts.On = &sdk.ShowGrantsOn{
-	//			Object: data.Object,
-	//		}
-	//	case OnAllSchemaObjectGrantKind:
-	//		log.Printf("[INFO] Show with on_schema_object.on_all option is skipped. No changes in privileges in Snowflake will be detected.")
-	//		return nil, ""
-	//	case OnFutureSchemaObjectGrantKind:
-	//		grantedOn = data.OnAllOrFuture.ObjectNamePlural.Singular()
-	//		opts.Future = sdk.Bool(true)
-	//
-	//		switch data.OnAllOrFuture.Kind {
-	//		case InDatabaseBulkOperationGrantKind:
-	//			opts.In = &sdk.ShowGrantsIn{
-	//				Database: data.OnAllOrFuture.Database,
-	//			}
-	//		case InSchemaBulkOperationGrantKind:
-	//			opts.In = &sdk.ShowGrantsIn{
-	//				Schema: data.OnAllOrFuture.Schema,
-	//			}
-	//		}
-	//	}
-	//}
-
-	return opts, grantedOn
-}
-
-func flattenGrants(grants []snowflake.GrantDetail) []map[string]interface{} {
+func flattenGrants(grants []sdk.Grant) []map[string]interface{} {
 	grantDetails := make([]map[string]interface{}, len(grants))
 	for i, grant := range grants {
 		grantDetails[i] = map[string]interface{}{
 			"created_on":   grant.CreatedOn.String,
-			"privilege":    grant.Privilege.String,
+			"privilege":    grant.Privilege,
 			"granted_on":   grant.GrantedOn.String,
-			"name":         grant.Name.String,
+			"name":         grant.Name.FullyQualifiedName(),
 			"granted_to":   grant.GrantedTo.String,
-			"grantee_name": grant.GranteeName.String,
-			"grant_option": grant.GrantOption.String == "true",
-			"granted_by":   grant.GrantedBy.String,
+			"grantee_name": grant.GranteeName.FullyQualifiedName(),
+			"grant_option": grant.GrantOption,
+			"granted_by":   grant.GrantedBy.FullyQualifiedName(),
 		}
 	}
 	return grantDetails
