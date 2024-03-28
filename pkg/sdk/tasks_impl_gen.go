@@ -68,8 +68,8 @@ func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error 
 }
 
 // TODO(SNOW-1277135): See if depId is necessary or could be removed
-func (v *tasks) SuspendRootTasks(ctx context.Context, depId SchemaObjectIdentifier, id SchemaObjectIdentifier) ([]SchemaObjectIdentifier, error) {
-	rootTasks, err := GetRootTasks(v.client.Tasks, ctx, depId)
+func (v *tasks) SuspendRootTasks(ctx context.Context, taskId SchemaObjectIdentifier, id SchemaObjectIdentifier) ([]SchemaObjectIdentifier, error) {
+	rootTasks, err := GetRootTasks(v.client.Tasks, ctx, taskId)
 	if err != nil {
 		return nil, err
 	}
