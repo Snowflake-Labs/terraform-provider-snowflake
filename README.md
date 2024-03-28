@@ -18,6 +18,7 @@ This is a terraform provider for managing [Snowflake](https://www.snowflake.com/
 - [Snowflake Terraform Provider](#snowflake-terraform-provider)
   - [Table of contents](#table-of-contents)
   - [Getting started](#getting-started)
+  - [Migration guide](#migration-guide)
   - [Roadmap](#roadmap)
   - [Getting Help](#getting-help)
   - [Additional debug logs for `snowflake_grant_privileges_to_role` resource](#additional-debug-logs-for-snowflake_grant_privileges_to_role-resource)
@@ -53,6 +54,10 @@ For more information on provider configuration see the [provider docs on the Ter
 Don't forget to run `terraform init` and you're ready to go! 🚀
 
 Start browsing the [registry docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) to find resources and data sources to use.
+
+## Migration guide
+
+Please check the [migration guide](./MIGRATION_GUIDE.md) when changing the version of the provider.
 
 ## Roadmap
 

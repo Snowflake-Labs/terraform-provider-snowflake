@@ -51,19 +51,15 @@ func scimIntegrationConfigAzure(name string, role string, policy string) string 
 		comment = "test comment"
 	}
 
-	resource "snowflake_account_grant" "azurecua" {
-		roles     = [snowflake_role.azure.name]
-		privilege = "CREATE USER"
+	resource "snowflake_grant_privileges_to_account_role" "azure_grants" {
+	  	account_role_name = snowflake_role.azure.name
+  		privileges        = ["CREATE USER", "CREATE ROLE"]
+		on_account        = true
 	}
 
-	resource "snowflake_account_grant" "azurecra" {
-		roles     = [snowflake_role.azure.name]
-		privilege = "CREATE ROLE"
-	}
-
-	resource "snowflake_role_grants" "azure" {
-		role_name = snowflake_role.azure.name
-		roles = ["ACCOUNTADMIN"]
+	resource "snowflake_grant_account_role" "azure" {
+		role_name        = snowflake_role.azure.name
+		parent_role_name = "ACCOUNTADMIN"
 	}
 
 	resource "snowflake_network_policy" "azure" {
@@ -77,9 +73,8 @@ func scimIntegrationConfigAzure(name string, role string, policy string) string 
 		provisioner_role = snowflake_role.azure.name
 		network_policy = snowflake_network_policy.azure.name
 		depends_on = [
-			snowflake_account_grant.azurecua,
-			snowflake_account_grant.azurecra,
-			snowflake_role_grants.azure
+			snowflake_grant_privileges_to_account_role.azure_grants,
+			snowflake_grant_account_role.azure
 		]
 	}
 	`, role, policy, name)

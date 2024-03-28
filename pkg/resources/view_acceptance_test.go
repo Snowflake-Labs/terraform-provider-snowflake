@@ -492,16 +492,17 @@ resource "snowflake_role" "test" {
   name = "test"
 }
 
-resource "snowflake_view_grant" "grant" {
-  database_name = "%[1]s"
-  schema_name = "%[2]s"
-  view_name = snowflake_view.test.name
-  privilege = "SELECT"
-  roles = [snowflake_role.test.name]
+resource "snowflake_grant_privileges_to_account_role" "grant" {
+  privileges        = ["SELECT"]
+  account_role_name = snowflake_role.test.name
+  on_schema_object {
+    object_type = "VIEW"
+    object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
+  }
 }
 
 data "snowflake_grants" "grants" {
-  depends_on = [snowflake_view_grant.grant, snowflake_view.test]
+  depends_on = [snowflake_grant_privileges_to_account_role.grant, snowflake_view.test]
   grants_on {
     object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
     object_type = "VIEW"
