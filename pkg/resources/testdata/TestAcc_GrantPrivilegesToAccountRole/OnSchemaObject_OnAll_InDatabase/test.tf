@@ -5,7 +5,7 @@ resource "snowflake_grant_privileges_to_account_role" "test" {
 
   on_schema_object {
     all {
-      object_type_plural = "TABLES"
+      object_type_plural = var.object_type_plural
       in_database        = var.database
     }
   }

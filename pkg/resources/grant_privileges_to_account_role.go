@@ -196,7 +196,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					ForceNew:    true,
-					Description: "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW | NETWORK RULE | PACKAGES POLICY | ICEBERG TABLE",
+					Description: fmt.Sprintf("The object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToObjectTypesString, " | ")),
 					RequiredWith: []string{
 						"on_schema_object.0.object_name",
 					},
@@ -204,7 +204,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.all",
 						"on_schema_object.0.future",
 					},
-					ValidateDiagFunc: ValidGrantedObjectType(),
+					ValidateDiagFunc: StringInSlice(sdk.ValidGrantToObjectTypesString, true),
 				},
 				"object_name": {
 					Type:        schema.TypeString,
@@ -228,7 +228,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantPrivilegesOnAccountRoleBulkOperationSchema,
+						Schema: getGrantPrivilegesOnAccountRoleBulkOperationSchema(sdk.ValidGrantToPluralObjectTypesString),
 					},
 					ConflictsWith: []string{
 						"on_schema_object.0.object_type",
@@ -243,10 +243,10 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeList,
 					Optional:    true,
 					ForceNew:    true,
-					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
+					Description: "Configures the privilege to be granted on future objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantPrivilegesOnAccountRoleBulkOperationSchema,
+						Schema: getGrantPrivilegesOnAccountRoleBulkOperationSchema(sdk.ValidGrantToFuturePluralObjectTypesString),
 					},
 					ConflictsWith: []string{
 						"on_schema_object.0.object_type",
@@ -262,26 +262,28 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 	},
 }
 
-var grantPrivilegesOnAccountRoleBulkOperationSchema = map[string]*schema.Schema{
-	"object_type_plural": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS | NETWORK RULES | PACKAGES POLICIES | ICEBERG TABLES",
-		ValidateDiagFunc: ValidGrantedPluralObjectType(),
-	},
-	"in_database": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
-	},
-	"in_schema": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
-	},
+func getGrantPrivilegesOnAccountRoleBulkOperationSchema(validGrantToObjectTypes []string) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"object_type_plural": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s.", strings.Join(validGrantToObjectTypes, " | ")),
+			ValidateDiagFunc: StringInSlice(validGrantToObjectTypes, true),
+		},
+		"in_database": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		},
+		"in_schema": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+		},
+	}
 }
 
 func GrantPrivilegesToAccountRole() *schema.Resource {
