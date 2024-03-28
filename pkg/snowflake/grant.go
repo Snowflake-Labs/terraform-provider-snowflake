@@ -1,13 +1,8 @@
 package snowflake
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"strings"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type grantType string
@@ -407,64 +402,4 @@ func (ge *CurrentGrantExecutable) RevokeOwnership(r string) []string {
 // Show returns the SQL that will show all grants of the grantee.
 func (ge *CurrentGrantExecutable) Show() string {
 	return fmt.Sprintf(`SHOW GRANTS OF %v "%v"`, ge.granteeType, ge.granteeName)
-}
-
-type GrantDetail struct {
-	CreatedOn   sql.NullString `db:"created_on"`
-	Privilege   sql.NullString `db:"privilege"`
-	GrantedOn   sql.NullString `db:"granted_on"`
-	Name        sql.NullString `db:"name"`
-	GrantedTo   sql.NullString `db:"granted_to"`
-	GranteeName sql.NullString `db:"grantee_name"`
-	GrantOption sql.NullString `db:"grant_option"`
-	GrantedBy   sql.NullString `db:"granted_by"`
-}
-
-func queryGrants(db *sql.DB, stmt string) ([]GrantDetail, error) {
-	rows, err := Query(db, stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	grantDetails := []GrantDetail{}
-	err = sqlx.StructScan(rows, &grantDetails)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			log.Println("[DEBUG] no grants found")
-			return nil, fmt.Errorf("unable to scan rows for %s, err = %w", stmt, err)
-		}
-		return grantDetails, err
-	}
-	return grantDetails, nil
-}
-
-func ShowGrantsOn(db *sql.DB, objectType, objectName string) ([]GrantDetail, error) {
-	stmt := fmt.Sprintf(`SHOW GRANTS ON %v %v`, objectType, objectName)
-	return queryGrants(db, stmt)
-}
-
-func ShowGrantsOnAccount(db *sql.DB) ([]GrantDetail, error) {
-	stmt := `SHOW GRANTS ON ACCOUNT`
-	return queryGrants(db, stmt)
-}
-
-func ShowGrantsTo(db *sql.DB, objectType, objectName string) ([]GrantDetail, error) {
-	stmt := fmt.Sprintf(`SHOW GRANTS TO %v "%v"`, objectType, objectName)
-	return queryGrants(db, stmt)
-}
-
-func ShowGrantsOf(db *sql.DB, objectType, objectName string) ([]GrantDetail, error) {
-	stmt := fmt.Sprintf(`SHOW GRANTS OF %v %v`, objectType, objectName)
-	return queryGrants(db, stmt)
-}
-
-func ShowFutureGrantsIn(db *sql.DB, objectType, objectName string) ([]GrantDetail, error) {
-	stmt := fmt.Sprintf(`SHOW FUTURE GRANTS IN %v %v`, objectType, objectName)
-	return queryGrants(db, stmt)
-}
-
-func ShowFutureGrantsTo(db *sql.DB, objectType, objectName string) ([]GrantDetail, error) {
-	stmt := fmt.Sprintf(`SHOW FUTURE GRANTS TO %v %v`, objectType, objectName)
-	return queryGrants(db, stmt)
 }
