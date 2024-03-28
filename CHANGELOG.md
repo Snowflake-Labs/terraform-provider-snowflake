@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.88.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.3-pre...v0.88.0) (2024-03-28)
+
+
+### 🎉 **What's new:**
+
+* Fix issues 2651 2656 ([#2659](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2659)) ([7fa09cc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7fa09cc8a296003a09c25a1e8b88f997f6307416))
+* user password policy attachment ([#2627](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2627)) ([382e49d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/382e49d7254e2422d64d00c51e341644ce614d70))
+
+
+### 🔧 **Misc**
+
+* release 0.88.0 ([02d60e0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/02d60e07dc928a8d7398ca54f0b91a259255fd99))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix handling secure views read and import ([#2655](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2655)) ([3c3ede6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3c3ede6b1a0e1c752c8435457c92db6200f0e7b6))
+* Fix issues 2606 2642 2652 2653 ([#2654](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2654)) ([4a73721](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4a73721ae890929032d70d3d831bb829711494ee))
+* Fix release workflow ([#2639](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2639)) ([dfd07e9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dfd07e934c5c3d31f1aab211368f85c80068dad6))
+* migration guide for databases created from share ([#2637](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2637)) ([f9651bc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f9651bcc9c0ec1afd6ec2e1ee258de1791a76b80))
+
 ## [0.87.3-pre](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.2...v0.87.3-pre) (2024-03-18)
 
 
