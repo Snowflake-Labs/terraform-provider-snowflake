@@ -525,11 +525,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 					id.Kind == OnSchemaObjectAccountRoleGrantKind,
 				)
 
-				if id.WithGrantOption {
-					err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, &sdk.GrantPrivilegesToAccountRoleOptions{
-						WithGrantOption: sdk.Bool(true),
-					})
-				} else {
+				if !id.WithGrantOption {
 					if err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, new(sdk.RevokePrivilegesFromAccountRoleOptions)); err != nil {
 						return diag.Diagnostics{
 							diag.Diagnostic{
@@ -539,9 +535,9 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 							},
 						}
 					}
-
-					err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, new(sdk.GrantPrivilegesToAccountRoleOptions))
 				}
+
+				err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, new(sdk.GrantPrivilegesToAccountRoleOptions))
 				if err != nil {
 					return diag.Diagnostics{
 						diag.Diagnostic{

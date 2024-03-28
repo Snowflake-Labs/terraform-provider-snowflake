@@ -451,11 +451,7 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 					id.Kind == OnSchemaObjectDatabaseRoleGrantKind,
 				)
 
-				if id.WithGrantOption {
-					err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, &sdk.GrantPrivilegesToDatabaseRoleOptions{
-						WithGrantOption: sdk.Bool(true),
-					})
-				} else {
+				if !id.WithGrantOption {
 					if err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, new(sdk.RevokePrivilegesFromDatabaseRoleOptions)); err != nil {
 						return diag.Diagnostics{
 							diag.Diagnostic{
@@ -465,10 +461,9 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 							},
 						}
 					}
-
-					err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, new(sdk.GrantPrivilegesToDatabaseRoleOptions))
 				}
 
+				err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, new(sdk.GrantPrivilegesToDatabaseRoleOptions))
 				if err != nil {
 					return diag.Diagnostics{
 						diag.Diagnostic{
