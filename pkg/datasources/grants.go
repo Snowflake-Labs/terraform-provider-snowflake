@@ -305,28 +305,28 @@ func Grants() *schema.Resource {
 func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	var grants []sdk.Grant
+	var opts *sdk.ShowGrantOptions
 	var err error
-	if v, ok := d.GetOk("grants_on"); ok {
-		grants, err = handleGrantsOn(ctx, client, v)
+	if grantsOn, ok := d.GetOk("grants_on"); ok {
+		opts, err = buildOptsForGrantsOn(grantsOn.([]interface{})[0].(map[string]interface{}))
+	}
+	if grantsTo, ok := d.GetOk("grants_to"); ok {
+		opts, err = buildOptsForGrantsTo(grantsTo.([]interface{})[0].(map[string]interface{}))
+	}
+	if grantsOf, ok := d.GetOk("grants_of"); ok {
+		opts, err = buildOptsForGrantsOf(grantsOf.([]interface{})[0].(map[string]interface{}))
+	}
+	if futureGrantsIn, ok := d.GetOk("future_grants_in"); ok {
+		opts, err = buildOptsForFutureGrantsIn(ctx, client, futureGrantsIn.([]interface{})[0].(map[string]interface{}))
+	}
+	if futureGrantsTo, ok := d.GetOk("future_grants_to"); ok {
+		opts, err = buildOptsForFutureGrantsTo(futureGrantsTo.([]interface{})[0].(map[string]interface{}))
+	}
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	if v, ok := d.GetOk("grants_to"); ok {
-		grants, err = handleGrantsTo(ctx, client, v)
-	}
-
-	if v, ok := d.GetOk("grants_of"); ok {
-		grants, err = handleGrantsOf(ctx, client, v)
-	}
-
-	if v, ok := d.GetOk("future_grants_in"); ok {
-		grants, err = handleFutureGrantsIn(ctx, client, v)
-	}
-
-	if v, ok := d.GetOk("future_grants_to"); ok {
-		grants, err = handleFutureGrantsTo(ctx, client, v)
-	}
-
+	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -335,15 +335,14 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
 	d.SetId("grants")
 	return nil
 }
 
-func handleGrantsOn(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
-	var err error
+func buildOptsForGrantsOn(grantsOn map[string]interface{}) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 
-	grantsOn := v.([]interface{})[0].(map[string]interface{})
 	objectType := grantsOn["object_type"].(string)
 	objectName := grantsOn["object_name"].(string)
 	account := grantsOn["account"].(bool)
@@ -354,7 +353,7 @@ func handleGrantsOn(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant
 		}
 	} else {
 		if objectType == "" || objectName == "" {
-			return nil, err
+			return nil, fmt.Errorf("object_type (%s) or object_name (%s) missing", objectType, objectName)
 		}
 		objectId, err := helpers.DecodeSnowflakeParameterID(objectName)
 		if err != nil {
@@ -367,12 +366,11 @@ func handleGrantsOn(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant
 			},
 		}
 	}
-	return client.Grants.Show(ctx, opts)
+	return opts, nil
 }
 
-func handleGrantsTo(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
+func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
-	grantsTo := v.([]interface{})[0].(map[string]interface{})
 
 	// TODO: add database role?
 	if application := grantsTo["application"].(string); application != "" {
@@ -398,12 +396,11 @@ func handleGrantsTo(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant
 		}
 		// TODO: unsupported IN APPLICATION PACKAGE
 	}
-	return client.Grants.Show(ctx, opts)
+	return opts, nil
 }
 
-func handleGrantsOf(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
+func buildOptsForGrantsOf(grantsOf map[string]interface{}) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
-	grantsOf := v.([]interface{})[0].(map[string]interface{})
 
 	// TODO: add database role?
 	if role := grantsOf["role"].(string); role != "" {
@@ -419,13 +416,12 @@ func handleGrantsOf(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant
 			Share: sdk.NewAccountObjectIdentifier(share),
 		}
 	}
-	return client.Grants.Show(ctx, opts)
+	return opts, nil
 }
 
-func handleFutureGrantsIn(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
+func buildOptsForFutureGrantsIn(ctx context.Context, client *sdk.Client, futureGrantsIn map[string]interface{}) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 	opts.Future = sdk.Bool(true)
-	futureGrantsIn := v.([]interface{})[0].(map[string]interface{})
 
 	if db := futureGrantsIn["database"].(string); db != "" {
 		opts.In = &sdk.ShowGrantsIn{
@@ -447,13 +443,12 @@ func handleFutureGrantsIn(ctx context.Context, client *sdk.Client, v any) ([]sdk
 			Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)),
 		}
 	}
-	return client.Grants.Show(ctx, opts)
+	return opts, nil
 }
 
-func handleFutureGrantsTo(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
+func buildOptsForFutureGrantsTo(futureGrantsTo map[string]interface{}) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 	opts.Future = sdk.Bool(true)
-	futureGrantsTo := v.([]interface{})[0].(map[string]interface{})
 
 	if role := futureGrantsTo["role"].(string); role != "" {
 		opts.To = &sdk.ShowGrantsTo{
@@ -473,7 +468,7 @@ func handleFutureGrantsTo(ctx context.Context, client *sdk.Client, v any) ([]sdk
 			DatabaseRole: validDatabaseRoleId,
 		}
 	}
-	return client.Grants.Show(ctx, opts)
+	return opts, nil
 }
 
 func flattenGrants(grants []sdk.Grant) []map[string]interface{} {
