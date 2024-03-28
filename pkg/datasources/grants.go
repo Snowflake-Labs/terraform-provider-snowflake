@@ -8,21 +8,19 @@ import (
 
 var grantsSchema = map[string]*schema.Schema{
 	"grants_on": {
-		Type:          schema.TypeList,
-		MaxItems:      1,
-		Optional:      true,
-		ConflictsWith: []string{"grants_of", "grants_to", "future_grants_in", "future_grants_to"},
-		Description:   "Lists all privileges that have been granted on an object or account",
-		ExactlyOneOf:  []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		Optional:     true,
+		Description:  "Lists all privileges that have been granted on an object or on an account.",
+		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"object_name": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					RequiredWith:  []string{"grants_on.0.object_type"},
-					Description:   "Name of object to list privileges on",
-					ConflictsWith: []string{"grants_on.0.account"},
-					AtLeastOneOf:  []string{"grants_on.0.object_name", "grants_on.0.account"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					RequiredWith: []string{"grants_on.0.object_type"},
+					ExactlyOneOf: []string{"grants_on.0.object_name", "grants_on.0.account"},
+					Description:  "Name of object to list privileges on.",
 				},
 				"object_type": {
 					Type:          schema.TypeString,
@@ -35,29 +33,51 @@ var grantsSchema = map[string]*schema.Schema{
 					Type:          schema.TypeBool,
 					Optional:      true,
 					Description:   "Object hierarchy to list privileges on. The only valid value is: ACCOUNT. Setting this attribute lists all the account-level (i.e. global) privileges that have been granted to roles.",
-					ConflictsWith: []string{"grants_on.0.object_name", "grants_on.0.object_type"},
-					AtLeastOneOf:  []string{"grants_on.0.object_name", "grants_on.0.account"},
+					ExactlyOneOf:  []string{"grants_on.0.object_name", "grants_on.0.account"},
+					ConflictsWith: []string{"grants_on.0.object_type"},
 				},
 			},
 		},
 	},
 	"grants_to": {
-		Type:          schema.TypeList,
-		MaxItems:      1,
-		Optional:      true,
-		ConflictsWith: []string{"grants_on", "grants_of", "future_grants_in", "future_grants_to"},
-		Description:   "Lists all privileges granted to the object",
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		Optional:     true,
+		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		Description:  "Lists all privileges granted to the object.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"role": {
+				"application": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all privileges and roles granted to the role",
-					ConflictsWith: []string{
+					Description: "Lists all the privileges and roles granted to the application.",
+					ExactlyOneOf: []string{
+						"grants_to.0.application",
+						"grants_to.0.application_role",
+						"grants_to.0.role",
 						"grants_to.0.user",
 						"grants_to.0.share",
 					},
+				},
+				"application_role": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Lists all the privileges and roles granted to the application role. Note: if fully qualified application role identifier is not specified, i.e. only the application role name is given, Snowflake uses the current application. If the application is not a database, this command does not return results. Consult with the proper section in the [docs](https://docs.snowflake.com/en/sql-reference/sql/show-grants#variants).",
 					ExactlyOneOf: []string{
+						"grants_to.0.application",
+						"grants_to.0.application_role",
+						"grants_to.0.role",
+						"grants_to.0.user",
+						"grants_to.0.share",
+					},
+				},
+				"role": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Lists all privileges and roles granted to the role.",
+					ExactlyOneOf: []string{
+						"grants_to.0.application",
+						"grants_to.0.application_role",
 						"grants_to.0.role",
 						"grants_to.0.user",
 						"grants_to.0.share",
@@ -66,51 +86,70 @@ var grantsSchema = map[string]*schema.Schema{
 				"user": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all the roles granted to the user. Note that the PUBLIC role, which is automatically available to every user, is not listed",
-					ConflictsWith: []string{
-						"grants_to.0.role",
-						"grants_to.0.share",
-					},
+					Description: "Lists all the roles granted to the user. Note that the PUBLIC role, which is automatically available to every user, is not listed.",
 					ExactlyOneOf: []string{
+						"grants_to.0.application",
+						"grants_to.0.application_role",
 						"grants_to.0.role",
 						"grants_to.0.user",
 						"grants_to.0.share",
 					},
 				},
 				"share": {
-					Type:        schema.TypeString,
+					Type:        schema.TypeList,
 					Optional:    true,
-					Description: "Lists all the privileges granted to the share",
-					ConflictsWith: []string{
-						"grants_to.0.role",
-						"grants_to.0.user",
-					},
+					MaxItems:    1,
+					Description: "Lists all the privileges granted to the share.",
 					ExactlyOneOf: []string{
+						"grants_to.0.application",
+						"grants_to.0.application_role",
 						"grants_to.0.role",
 						"grants_to.0.user",
 						"grants_to.0.share",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"share_name": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "Lists all of the privileges and roles granted to the specified share.",
+							},
+							"in_application_package": {
+								Type:        schema.TypeString,
+								Optional:    true,
+								Description: "Lists all of the privileges and roles granted to a share in the specified application package.",
+							},
+						},
 					},
 				},
 			},
 		},
 	},
 	"grants_of": {
-		Type:          schema.TypeList,
-		MaxItems:      1,
-		Optional:      true,
-		ConflictsWith: []string{"grants_on", "grants_to", "future_grants_in", "future_grants_to"},
-		Description:   "Lists all objects to which the given object has been granted",
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		Optional:     true,
+		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		Description:  "Lists all objects to which the given object has been granted.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"role": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all users and roles to which the role has been granted",
-					ConflictsWith: []string{
-						"grants_of.0.share",
-					},
+					Description: "Lists all users and roles to which the role has been granted.",
 					ExactlyOneOf: []string{
 						"grants_of.0.role",
+						"grants_of.0.application_role",
+						"grants_of.0.share",
+					},
+				},
+				"application_role": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Lists all the users and roles to which the application role has been granted. Note: if fully qualified application role identifier is not specified, i.e. only the application role name is given, Snowflake uses the current application. If the application is not a database, this command does not return results. Consult with the proper section in the [docs](https://docs.snowflake.com/en/sql-reference/sql/show-grants#variants).",
+					ExactlyOneOf: []string{
+						"grants_of.0.role",
+						"grants_of.0.application_role",
 						"grants_of.0.share",
 					},
 				},
@@ -118,11 +157,9 @@ var grantsSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Lists all the accounts for the share and indicates the accounts that are using the share.",
-					ConflictsWith: []string{
-						"grants_of.0.role",
-					},
 					ExactlyOneOf: []string{
 						"grants_of.0.role",
+						"grants_of.0.application_role",
 						"grants_of.0.share",
 					},
 				},
@@ -130,20 +167,17 @@ var grantsSchema = map[string]*schema.Schema{
 		},
 	},
 	"future_grants_in": {
-		Type:          schema.TypeList,
-		MaxItems:      1,
-		Optional:      true,
-		ConflictsWith: []string{"grants_on", "grants_of", "grants_to", "future_grants_to"},
-		Description:   "Lists all privileges on new (i.e. future) objects",
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		Optional:     true,
+		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		Description:  "Lists all privileges on new (i.e. future) objects.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"database": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Lists all privileges on new (i.e. future) objects of a specified type in the database granted to a role.",
-					ConflictsWith: []string{
-						"future_grants_in.0.schema",
-					},
 					ExactlyOneOf: []string{
 						"future_grants_in.0.database",
 						"future_grants_in.0.schema",
@@ -154,9 +188,6 @@ var grantsSchema = map[string]*schema.Schema{
 					MaxItems:    1,
 					Optional:    true,
 					Description: "Lists all privileges on new (i.e. future) objects of a specified type in the schema granted to a role.",
-					ConflictsWith: []string{
-						"future_grants_in.0.database",
-					},
 					ExactlyOneOf: []string{
 						"future_grants_in.0.database",
 						"future_grants_in.0.schema",
@@ -166,7 +197,7 @@ var grantsSchema = map[string]*schema.Schema{
 							"schema_name": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The name of the schema to list all privileges of new (ie. future) objects granted to",
+								Description: "The name of the schema to list all privileges of new (ie. future) objects granted to.",
 							},
 							"database_name": {
 								Type:        schema.TypeString,
@@ -180,17 +211,30 @@ var grantsSchema = map[string]*schema.Schema{
 		},
 	},
 	"future_grants_to": {
-		Type:          schema.TypeList,
-		MaxItems:      1,
-		Optional:      true,
-		ConflictsWith: []string{"grants_on", "grants_of", "grants_to", "future_grants_in"},
-		Description:   "Lists all privileges granted to the object on new (i.e. future) objects",
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		Optional:     true,
+		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		Description:  "Lists all privileges granted to the object on new (i.e. future) objects.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"role": {
 					Type:        schema.TypeString,
-					Required:    true,
+					Optional:    true,
 					Description: "Lists all privileges on new (i.e. future) objects of a specified type in a database or schema granted to the role.",
+					ExactlyOneOf: []string{
+						"future_grants_to.0.role",
+						"future_grants_to.0.database_role",
+					},
+				},
+				"database_role": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Lists all privileges on new (i.e. future) objects granted to the database role.",
+					ExactlyOneOf: []string{
+						"future_grants_to.0.role",
+						"future_grants_to.0.database_role",
+					},
 				},
 			},
 		},
@@ -203,42 +247,42 @@ var grantsSchema = map[string]*schema.Schema{
 			Schema: map[string]*schema.Schema{
 				"created_on": {
 					Type:        schema.TypeString,
-					Description: "The date and time the grant was created",
+					Description: "The date and time the grant was created.",
 					Computed:    true,
 				},
 				"privilege": {
 					Type:        schema.TypeString,
-					Description: "The privilege granted",
+					Description: "The privilege granted.",
 					Computed:    true,
 				},
 				"granted_on": {
 					Type:        schema.TypeString,
-					Description: "The object on which the privilege was granted",
+					Description: "The object on which the privilege was granted.",
 					Computed:    true,
 				},
 				"name": {
 					Type:        schema.TypeString,
-					Description: "The name of the object on which the privilege was granted",
+					Description: "The name of the object on which the privilege was granted.",
 					Computed:    true,
 				},
 				"granted_to": {
 					Type:        schema.TypeString,
-					Description: "The role to which the privilege was granted",
+					Description: "The role to which the privilege was granted.",
 					Computed:    true,
 				},
 				"grantee_name": {
 					Type:        schema.TypeString,
-					Description: "The name of the role to which the privilege was granted",
+					Description: "The name of the role to which the privilege was granted.",
 					Computed:    true,
 				},
 				"grant_option": {
 					Type:        schema.TypeBool,
-					Description: "Whether the grantee can grant the privilege to others",
+					Description: "Whether the grantee can grant the privilege to others.",
 					Computed:    true,
 				},
 				"granted_by": {
 					Type:        schema.TypeString,
-					Description: "The role that granted the privilege",
+					Description: "The role that granted the privilege.",
 					Computed:    true,
 				},
 			},
