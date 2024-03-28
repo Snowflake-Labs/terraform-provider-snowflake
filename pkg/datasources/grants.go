@@ -475,11 +475,11 @@ func flattenGrants(grants []sdk.Grant) []map[string]interface{} {
 	grantDetails := make([]map[string]interface{}, len(grants))
 	for i, grant := range grants {
 		grantDetails[i] = map[string]interface{}{
-			"created_on":   grant.CreatedOn.String,
+			"created_on":   grant.CreatedOn.String(),
 			"privilege":    grant.Privilege,
-			"granted_on":   grant.GrantedOn.String,
+			"granted_on":   grant.GrantedOn.String(),
 			"name":         grant.Name.FullyQualifiedName(),
-			"granted_to":   grant.GrantedTo.String,
+			"granted_to":   grant.GrantedTo.String(),
 			"grantee_name": grant.GranteeName.FullyQualifiedName(),
 			"grant_option": grant.GrantOption,
 			"granted_by":   grant.GrantedBy.FullyQualifiedName(),
