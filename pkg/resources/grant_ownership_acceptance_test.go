@@ -642,10 +642,10 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
 
 	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
+	newDatabaseOwningAccountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	configVariables := config.Variables{
-		"account_role_name": config.StringVariable(accountRoleName),
+		"account_role_name": config.StringVariable(newDatabaseOwningAccountRoleName),
 		"database_name":     config.StringVariable(databaseName),
 	}
 	resourceName := "snowflake_grant_ownership.test"
@@ -661,15 +661,17 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 				PreConfig: func() {
 					createAccountRoleOutsideTerraform(t, accountRoleName)
 					registerAccountRoleCleanup(t, accountRoleName)
+					createAccountRoleOutsideTerraform(t, newDatabaseOwningAccountRoleName)
+					registerAccountRoleCleanup(t, newDatabaseOwningAccountRoleName)
 					t.Cleanup(createDatabaseWithRoleAsOwner(t, accountRoleName, databaseName))
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/ForceOwnershipTransferOnCreate"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", newDatabaseOwningAccountRoleName),
 					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", "DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", databaseName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|DATABASE|%s", accountRoleFullyQualifiedName, databaseFullyQualifiedName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|\"%s\"||OnObject|DATABASE|%s", newDatabaseOwningAccountRoleName, databaseFullyQualifiedName)),
 				),
 			},
 		},
