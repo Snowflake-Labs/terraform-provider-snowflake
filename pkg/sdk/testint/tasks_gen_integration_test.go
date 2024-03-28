@@ -592,4 +592,135 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.Execute(ctx, executeRequest)
 		require.NoError(t, err)
 	})
+
+	t.Run("temporarily suspend root tasks", func(t *testing.T) {
+		rootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		task := createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
+
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))))
+		t.Cleanup(func() {
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(sdk.Bool(true))))
+		})
+
+		tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, task.ID(), task.ID())
+		require.NoError(t, err)
+		require.NotEmpty(t, tasksToResume)
+
+		rootTaskStatus, err := client.Tasks.ShowByID(ctx, rootTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateSuspended, rootTaskStatus.State)
+
+		require.NoError(t, client.Tasks.ResumeTasks(ctx, tasksToResume))
+
+		rootTaskStatus, err = client.Tasks.ShowByID(ctx, rootTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateStarted, rootTaskStatus.State)
+	})
+
+	t.Run("resume root tasks within a graph containing more than one root task", func(t *testing.T) {
+		rootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+
+		secondRootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		secondRootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(secondRootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		_ = createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID(), secondRootTask.ID()}))
+
+		require.ErrorContains(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))), "The graph has more than one root task (one without predecessors)")
+		require.ErrorContains(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(secondRootTask.ID()).WithResume(sdk.Bool(true))), "The graph has more than one root task (one without predecessors)")
+	})
+
+	t.Run("suspend root tasks temporarily with three sequentially connected tasks - last in DAG", func(t *testing.T) {
+		rootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+
+		middleTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		middleTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(middleTaskId, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
+
+		id := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		task := createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{middleTask.ID()}))
+
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(middleTask.ID()).WithResume(sdk.Bool(true))))
+		t.Cleanup(func() {
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(middleTask.ID()).WithSuspend(sdk.Bool(true))))
+		})
+
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))))
+		t.Cleanup(func() {
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(sdk.Bool(true))))
+		})
+
+		tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, task.ID(), task.ID())
+		require.NoError(t, err)
+		require.NotEmpty(t, tasksToResume)
+		require.Contains(t, tasksToResume, rootTask.ID())
+
+		rootTaskStatus, err := client.Tasks.ShowByID(ctx, rootTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateSuspended, rootTaskStatus.State)
+
+		middleTaskStatus, err := client.Tasks.ShowByID(ctx, middleTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateStarted, middleTaskStatus.State)
+
+		require.NoError(t, client.Tasks.ResumeTasks(ctx, tasksToResume))
+
+		rootTaskStatus, err = client.Tasks.ShowByID(ctx, rootTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateStarted, rootTaskStatus.State)
+
+		middleTaskStatus, err = client.Tasks.ShowByID(ctx, middleTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateStarted, middleTaskStatus.State)
+	})
+
+	t.Run("suspend root tasks temporarily with three sequentially connected tasks - middle in DAG", func(t *testing.T) {
+		rootTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+
+		middleTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		middleTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(middleTaskId, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
+
+		childTaskId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.String())
+		childTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(childTaskId, sql).WithAfter([]sdk.SchemaObjectIdentifier{middleTask.ID()}))
+
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(childTask.ID()).WithResume(sdk.Bool(true))))
+		t.Cleanup(func() {
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(childTask.ID()).WithSuspend(sdk.Bool(true))))
+		})
+
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))))
+		t.Cleanup(func() {
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(sdk.Bool(true))))
+		})
+
+		tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, middleTask.ID(), middleTask.ID())
+		require.NoError(t, err)
+		require.NotEmpty(t, tasksToResume)
+
+		rootTaskStatus, err := client.Tasks.ShowByID(ctx, rootTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateSuspended, rootTaskStatus.State)
+
+		childTaskStatus, err := client.Tasks.ShowByID(ctx, childTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateStarted, childTaskStatus.State)
+
+		require.NoError(t, client.Tasks.ResumeTasks(ctx, tasksToResume))
+
+		rootTaskStatus, err = client.Tasks.ShowByID(ctx, rootTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateStarted, rootTaskStatus.State)
+
+		childTaskStatus, err = client.Tasks.ShowByID(ctx, childTask.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.TaskStateStarted, childTaskStatus.State)
+	})
+
+	// TODO(SNOW-1277135): Create more tests with different sets of roots/children and see if the current implementation
+	// acts correctly in certain situations/edge cases.
 }

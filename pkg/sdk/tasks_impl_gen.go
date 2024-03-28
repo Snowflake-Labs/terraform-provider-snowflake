@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"log"
 	"slices"
 	"strings"
 
@@ -63,6 +65,48 @@ func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task,
 func (v *tasks) Execute(ctx context.Context, request *ExecuteTaskRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
+}
+
+// TODO(SNOW-1277135): See if depId is necessary or could be removed
+func (v *tasks) SuspendRootTasks(ctx context.Context, taskId SchemaObjectIdentifier, id SchemaObjectIdentifier) ([]SchemaObjectIdentifier, error) {
+	rootTasks, err := GetRootTasks(v.client.Tasks, ctx, taskId)
+	if err != nil {
+		return nil, err
+	}
+
+	tasksToResume := make([]SchemaObjectIdentifier, 0)
+	suspendErrs := make([]error, 0)
+
+	for _, rootTask := range rootTasks {
+		// If a root task is started, then it needs to be suspended before the child tasks can be created
+		if rootTask.IsStarted() {
+			err := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(rootTask.ID()).WithSuspend(Bool(true)))
+			if err != nil {
+				log.Printf("[WARN] failed to suspend task %s", rootTask.ID().FullyQualifiedName())
+				suspendErrs = append(suspendErrs, err)
+			}
+
+			// Resume the task after modifications are complete as long as it is not a standalone task
+			// TODO(SNOW-1277135): Document the purpose of this check and why we need different value for GetRootTasks (depId).
+			if rootTask.Name != id.Name() {
+				tasksToResume = append(tasksToResume, rootTask.ID())
+			}
+		}
+	}
+
+	return tasksToResume, errors.Join(suspendErrs...)
+}
+
+func (v *tasks) ResumeTasks(ctx context.Context, ids []SchemaObjectIdentifier) error {
+	resumeErrs := make([]error, 0)
+	for _, id := range ids {
+		err := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(id).WithResume(Bool(true)))
+		if err != nil {
+			log.Printf("[WARN] failed to resume task %s", id.FullyQualifiedName())
+			resumeErrs = append(resumeErrs, err)
+		}
+	}
+	return errors.Join(resumeErrs...)
 }
 
 // GetRootTasks is a way to get all root tasks for the given tasks.
