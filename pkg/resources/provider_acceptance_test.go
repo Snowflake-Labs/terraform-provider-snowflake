@@ -17,9 +17,10 @@ import (
 
 func TestAcc_Provider_UseSecondaryRoles(t *testing.T) {
 	providerRole := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
 	providerUseSecondaryRolesSetup(t, providerRole)
 
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	providerConfigVariables := config.Variables{
 		"profile":             config.StringVariable("default"),
 		"role":                config.StringVariable(providerRole),
@@ -45,7 +46,7 @@ func TestAcc_Provider_UseSecondaryRoles(t *testing.T) {
 
 func TestAcc_Provider_UseSecondaryRolesUnchecked(t *testing.T) {
 	providerRole := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	providerUseSecondaryRolesSetup(t, providerRole)
+	//providerUseSecondaryRolesSetup(t, providerRole)
 
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	providerConfigVariables := config.Variables{
@@ -79,6 +80,7 @@ resource "snowflake_database" "test" {
 }
 
 func providerConfig(t *testing.T, variables config.Variables) string {
+	t.Helper()
 	var builder strings.Builder
 	for k, v := range variables {
 		builder.WriteString(k)
@@ -93,7 +95,7 @@ func providerConfig(t *testing.T, variables config.Variables) string {
 }`, builder.String())
 }
 
-func providerUseSecondaryRolesSetup(t *testing.T, providerRoleName string) {
+func providerUseSecondaryRolesSetup(t *testing.T, providerRole string) {
 	t.Helper()
 
 	client, err := sdk.NewDefaultClient()
@@ -101,12 +103,25 @@ func providerUseSecondaryRolesSetup(t *testing.T, providerRoleName string) {
 
 	ctx := context.Background()
 	secondaryRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	secondaryRoleId := sdk.NewAccountObjectIdentifier(secondaryRoleName)
 
-	userName, err := client.ContextFunctions.CurrentUser(ctx)
+	providerRoleId := sdk.NewAccountObjectIdentifier(providerRole)
+
+	createTestRole(t, client, ctx, providerRole)
+	createTestRole(t, client, ctx, secondaryRoleName)
+
+	currentUserName, err := client.ContextFunctions.CurrentUser(ctx)
 	require.NoError(t, err)
 
-	createTestRole(t, client, ctx, secondaryRoleName, userName)
-	createTestRole(t, client, ctx, providerRoleName, userName)
+	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(secondaryRoleId, sdk.GrantRole{
+		User: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentUserName)),
+	}))
+	require.NoError(t, err)
+
+	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(providerRoleId, sdk.GrantRole{
+		User: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentUserName)),
+	}))
+	require.NoError(t, err)
 
 	err = client.Grants.GrantPrivilegesToAccountRole(ctx, &sdk.AccountRoleGrantPrivileges{
 		GlobalPrivileges: []sdk.GlobalPrivilege{
@@ -120,9 +135,21 @@ func providerUseSecondaryRolesSetup(t *testing.T, providerRoleName string) {
 		&sdk.GrantPrivilegesToAccountRoleOptions{},
 	)
 	require.NoError(t, err)
+
+	//err = client.Sessions.UseRole(ctx, secondaryRoleId)
+	//require.NoError(t, err)
+	//
+	//err = client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(databaseName), new(sdk.CreateDatabaseOptions))
+	//require.NoError(t, err)
+	//
+	//t.Cleanup(func() {
+	//	err = client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(databaseName), new(sdk.DropDatabaseOptions))
+	//	require.NoError(t, err)
+	//})
 }
 
-func createTestRole(t *testing.T, client *sdk.Client, ctx context.Context, roleName string, currentUserName string) {
+func createTestRole(t *testing.T, client *sdk.Client, ctx context.Context, roleName string) {
+	t.Helper()
 	id := sdk.NewAccountObjectIdentifier(roleName)
 
 	err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(id))
@@ -132,9 +159,5 @@ func createTestRole(t *testing.T, client *sdk.Client, ctx context.Context, roleN
 		err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(id))
 		require.NoError(t, err)
 	})
-
-	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(id, sdk.GrantRole{
-		User: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentUserName)),
-	}))
 	require.NoError(t, err)
 }

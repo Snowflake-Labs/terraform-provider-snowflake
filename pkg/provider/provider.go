@@ -800,17 +800,19 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		configureClientError = nil
 	}
 
+	if v, ok := s.GetOk("use_secondary_roles"); ok && v.(bool) {
+		if err := cl.Sessions.UseSecondaryRoles(context.Background(), sdk.SecondaryRolesAll); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := cl.Sessions.UseSecondaryRoles(context.Background(), sdk.SecondaryRolesNone); err != nil {
+			return nil, err
+		}
+	}
+
 	if clErr != nil {
 		return nil, clErr
 	}
 
 	return &provider.Context{Client: cl}, nil
-
-	if v, ok := s.GetOk("use_secondary_roles"); ok && v.(bool) {
-		if err := client.Sessions.UseSecondaryRoles(context.Background(), sdk.SecondaryRolesAll); err != nil {
-			return nil, err
-		}
-	}
-
-	return client.GetConn().DB, nil
 }

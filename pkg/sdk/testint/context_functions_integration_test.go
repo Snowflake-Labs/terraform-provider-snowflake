@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -185,6 +186,71 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 
 	t.Cleanup(func() {
 		err = client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(currentRole))
+		require.NoError(t, err)
+	})
+}
+
+func TestInt_RolesUseSecondaryRolesUsage(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	role, cleanupRole := createRole(t, client)
+	t.Cleanup(cleanupRole)
+
+	privilegedRole, cleanupPrivilegedRole := createRole(t, client)
+	t.Cleanup(cleanupPrivilegedRole)
+
+	user, err := client.ContextFunctions.CurrentUser(ctx)
+	require.NoError(t, err)
+	userID := sdk.NewAccountObjectIdentifier(user)
+
+	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{User: &userID}))
+	require.NoError(t, err)
+
+	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(privilegedRole.ID(), sdk.GrantRole{User: &userID}))
+	require.NoError(t, err)
+
+	err = client.Grants.GrantPrivilegesToAccountRole(ctx, &sdk.AccountRoleGrantPrivileges{
+		GlobalPrivileges: []sdk.GlobalPrivilege{
+			sdk.GlobalPrivilegeCreateDatabase,
+		},
+	},
+		&sdk.AccountRoleGrantOn{
+			Account: sdk.Bool(true),
+		},
+		privilegedRole.ID(),
+		new(sdk.GrantPrivilegesToAccountRoleOptions),
+	)
+	require.NoError(t, err)
+
+	err = client.Sessions.UseRole(ctx, role.ID())
+	require.NoError(t, err)
+
+	err = client.Sessions.UseSecondaryRoles(ctx, sdk.SecondaryRolesNone)
+	require.NoError(t, err)
+
+	err = client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(random.AlphaN(20)), new(sdk.CreateDatabaseOptions))
+	require.ErrorContains(t, err, "Insufficient privileges to operate on account 'IYA62698'")
+
+	err = client.Sessions.UseSecondaryRoles(ctx, sdk.SecondaryRolesAll)
+	require.NoError(t, err)
+
+	dbId := sdk.NewAccountObjectIdentifier(random.AlphaN(20))
+	err = client.Databases.Create(ctx, dbId, new(sdk.CreateDatabaseOptions))
+	require.NoError(t, err)
+
+	//err = client.Sessions.UseRole(ctx, privilegedRole.ID())
+	//require.NoError(t, err)
+	//
+	//err = client.Databases.Create(ctx, dbId, new(sdk.CreateDatabaseOptions))
+	//require.NoError(t, err)
+	//
+	//// Only needed for cleanup
+	//err = client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"))
+	//require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = client.Databases.Drop(ctx, dbId, new(sdk.DropDatabaseOptions))
 		require.NoError(t, err)
 	})
 }
