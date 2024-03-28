@@ -320,11 +320,11 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 	}
 
 	if v, ok := d.GetOk("grants_of"); ok {
-		grantDetails, err = handleGrantsOf(ctx, client, v, db)
+		grants, err = handleGrantsOf(ctx, client, v)
 	}
 
 	if v, ok := d.GetOk("future_grants_in"); ok {
-		grantDetails, err = handleFutureGrantsIn(ctx, client, v, db)
+		grants, err = handleFutureGrantsIn(ctx, client, v)
 	}
 
 	if v, ok := d.GetOk("future_grants_to"); ok {
@@ -376,14 +376,14 @@ func handleGrantsOn(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant
 
 func handleGrantsTo(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
 	opts := new(sdk.ShowGrantOptions)
-
 	grantsTo := v.([]interface{})[0].(map[string]interface{})
+
 	// TODO: add database role?
 	if application := grantsTo["application"].(string); application != "" {
 		// TODO: unsupported SHOW GRANTS TO APPLICATION
 	}
 	if applicationRole := grantsTo["application_role"].(string); applicationRole != "" {
-		// TODO: unsupported SHOW GRANTS TO APPLICATION
+		// TODO: unsupported SHOW GRANTS TO APPLICATION ROLE
 	}
 	if role := grantsTo["role"].(string); role != "" {
 		opts.To = &sdk.ShowGrantsTo{
@@ -405,55 +405,53 @@ func handleGrantsTo(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant
 	return client.Grants.Show(ctx, opts)
 }
 
-func handleGrantsOf(ctx context.Context, client *sdk.Client, v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
-	var grantDetails []snowflake.GrantDetail
-	var err error
-
+func handleGrantsOf(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
+	opts := new(sdk.ShowGrantOptions)
 	grantsOf := v.([]interface{})[0].(map[string]interface{})
-	role := grantsOf["role"].(string)
-	if role != "" {
-		grantDetails, err = snowflake.ShowGrantsOf(db, "ROLE", role)
-		if err != nil {
-			return grantDetails, err
+
+	// TODO: add database role?
+	if role := grantsOf["role"].(string); role != "" {
+		opts.Of = &sdk.ShowGrantsOf{
+			Role: sdk.NewAccountObjectIdentifier(role),
 		}
 	}
-	share := grantsOf["share"].(string)
-	if share != "" {
-		grantDetails, err = snowflake.ShowGrantsOf(db, "SHARE", share)
-		if err != nil {
-			return grantDetails, err
+	if applicationRole := grantsOf["application_role"].(string); applicationRole != "" {
+		// TODO: unsupported SHOW GRANTS OF APPLICATION ROLE
+	}
+	if share := grantsOf["share"].(string); share != "" {
+		opts.Of = &sdk.ShowGrantsOf{
+			Share: sdk.NewAccountObjectIdentifier(share),
 		}
 	}
-	return grantDetails, nil
+	return client.Grants.Show(ctx, opts)
 }
 
-func handleFutureGrantsIn(ctx context.Context, client *sdk.Client, v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
-	var grantDetails []snowflake.GrantDetail
-	var err error
-
+func handleFutureGrantsIn(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
+	opts := new(sdk.ShowGrantOptions)
+	opts.Future = sdk.Bool(true)
 	futureGrantsIn := v.([]interface{})[0].(map[string]interface{})
-	database := futureGrantsIn["database"].(string)
-	if database != "" {
-		grantDetails, err = snowflake.ShowFutureGrantsIn(db, "DATABASE", database)
-		if err != nil {
-			return grantDetails, err
+
+	if db := futureGrantsIn["database"].(string); db != "" {
+		opts.In = &sdk.ShowGrantsIn{
+			Database: sdk.Pointer(sdk.NewAccountObjectIdentifier(db)),
 		}
 	}
-	schema := futureGrantsIn["schema"].([]interface{})
-	if len(schema) > 0 {
-		schemaMap := schema[0].(map[string]interface{})
+	if sc := futureGrantsIn["schema"].([]interface{}); len(sc) > 0 {
+		schemaMap := sc[0].(map[string]interface{})
 		schemaName := schemaMap["schema_name"].(string)
 		databaseName := schemaMap["database_name"].(string)
-		if databaseName != "" {
-			schemaName = databaseName + "." + schemaName
+		if databaseName == "" {
+			current, err := client.ContextFunctions.CurrentDatabase(ctx)
+			if err != nil {
+				return nil, err
+			}
+			databaseName = current
 		}
-
-		grantDetails, err = snowflake.ShowFutureGrantsIn(db, "SCHEMA", schemaName)
-		if err != nil {
-			return grantDetails, err
+		opts.In = &sdk.ShowGrantsIn{
+			Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)),
 		}
 	}
-	return grantDetails, nil
+	return client.Grants.Show(ctx, opts)
 }
 
 func handleFutureGrantsTo(ctx context.Context, client *sdk.Client, v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
