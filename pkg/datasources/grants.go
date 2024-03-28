@@ -2,6 +2,7 @@ package datasources
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -15,7 +16,7 @@ var grantsSchema = map[string]*schema.Schema{
 		MaxItems:     1,
 		Optional:     true,
 		Description:  "Lists all privileges that have been granted on an object or on an account.",
-		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		ExactlyOneOf: []string{"grants_on", "grants_to", "grants_of", "future_grants_in", "future_grants_to"},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"object_name": {
@@ -46,7 +47,7 @@ var grantsSchema = map[string]*schema.Schema{
 		Type:         schema.TypeList,
 		MaxItems:     1,
 		Optional:     true,
-		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		ExactlyOneOf: []string{"grants_on", "grants_to", "grants_of", "future_grants_in", "future_grants_to"},
 		Description:  "Lists all privileges granted to the object.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -132,7 +133,7 @@ var grantsSchema = map[string]*schema.Schema{
 		Type:         schema.TypeList,
 		MaxItems:     1,
 		Optional:     true,
-		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		ExactlyOneOf: []string{"grants_on", "grants_to", "grants_of", "future_grants_in", "future_grants_to"},
 		Description:  "Lists all objects to which the given object has been granted.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -173,7 +174,7 @@ var grantsSchema = map[string]*schema.Schema{
 		Type:         schema.TypeList,
 		MaxItems:     1,
 		Optional:     true,
-		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		ExactlyOneOf: []string{"grants_on", "grants_to", "grants_of", "future_grants_in", "future_grants_to"},
 		Description:  "Lists all privileges on new (i.e. future) objects.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -217,7 +218,7 @@ var grantsSchema = map[string]*schema.Schema{
 		Type:         schema.TypeList,
 		MaxItems:     1,
 		Optional:     true,
-		ExactlyOneOf: []string{"grants_on", "grants_of", "grants_to", "future_grants_in", "future_grants_to"},
+		ExactlyOneOf: []string{"grants_on", "grants_to", "grants_of", "future_grants_in", "future_grants_to"},
 		Description:  "Lists all privileges granted to the object on new (i.e. future) objects.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -307,101 +308,27 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 	var grantDetails []snowflake.GrantDetail
 	var err error
 	if v, ok := d.GetOk("grants_on"); ok {
-		grantsOn := v.([]interface{})[0].(map[string]interface{})
-		objectType := grantsOn["object_type"].(string)
-		objectName := grantsOn["object_name"].(string)
-		account := grantsOn["account"].(bool)
-
-		if account {
-			grantDetails, err = snowflake.ShowGrantsOnAccount(db)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		} else if objectType != "" && objectName != "" {
-			grantDetails, err = snowflake.ShowGrantsOn(db, objectType, objectName)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
+		grantDetails, err = handleGrantsOn(v, db)
 	}
 
 	if v, ok := d.GetOk("grants_to"); ok {
-		grantsTo := v.([]interface{})[0].(map[string]interface{})
-		role := grantsTo["role"].(string)
-		if role != "" {
-			grantDetails, err = snowflake.ShowGrantsTo(db, "ROLE", role)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		user := grantsTo["user"].(string)
-		if user != "" {
-			grantDetails, err = snowflake.ShowGrantsTo(db, "USER", user)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		share := grantsTo["share"].(string)
-		if share != "" {
-			grantDetails, err = snowflake.ShowGrantsTo(db, "SHARE", share)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
+		grantDetails, err = handleGrantsTo(v, db)
 	}
 
 	if v, ok := d.GetOk("grants_of"); ok {
-		grantsOf := v.([]interface{})[0].(map[string]interface{})
-		role := grantsOf["role"].(string)
-		if role != "" {
-			grantDetails, err = snowflake.ShowGrantsOf(db, "ROLE", role)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		share := grantsOf["share"].(string)
-		if share != "" {
-			grantDetails, err = snowflake.ShowGrantsOf(db, "SHARE", share)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
+		grantDetails, err = handleGrantsOf(v, db)
 	}
 
 	if v, ok := d.GetOk("future_grants_in"); ok {
-		futureGrantsIn := v.([]interface{})[0].(map[string]interface{})
-		database := futureGrantsIn["database"].(string)
-		if database != "" {
-			grantDetails, err = snowflake.ShowFutureGrantsIn(db, "DATABASE", database)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		schema := futureGrantsIn["schema"].([]interface{})
-		if len(schema) > 0 {
-			schemaMap := schema[0].(map[string]interface{})
-			schemaName := schemaMap["schema_name"].(string)
-			databaseName := schemaMap["database_name"].(string)
-			if databaseName != "" {
-				schemaName = databaseName + "." + schemaName
-			}
-
-			grantDetails, err = snowflake.ShowFutureGrantsIn(db, "SCHEMA", schemaName)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
+		grantDetails, err = handleFutureGrantsIn(v, db)
 	}
 
 	if v, ok := d.GetOk("future_grants_to"); ok {
-		futureGrantsTo := v.([]interface{})[0].(map[string]interface{})
-		role := futureGrantsTo["role"].(string)
-		if role != "" {
-			grantDetails, err = snowflake.ShowFutureGrantsTo(db, "ROLE", role)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
+		grantDetails, err = handleFutureGrantsTo(v, db)
+	}
+
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	err = d.Set("grants", flattenGrants(grantDetails))
@@ -410,6 +337,124 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 	}
 	d.SetId("grants")
 	return nil
+}
+
+func handleGrantsOn(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
+	var grantDetails []snowflake.GrantDetail
+	var err error
+
+	grantsOn := v.([]interface{})[0].(map[string]interface{})
+	objectType := grantsOn["object_type"].(string)
+	objectName := grantsOn["object_name"].(string)
+	account := grantsOn["account"].(bool)
+
+	if account {
+		grantDetails, err = snowflake.ShowGrantsOnAccount(db)
+		if err != nil {
+			return grantDetails, err
+		}
+	} else if objectType != "" && objectName != "" {
+		grantDetails, err = snowflake.ShowGrantsOn(db, objectType, objectName)
+		if err != nil {
+			return grantDetails, err
+		}
+	}
+	return grantDetails, nil
+}
+
+func handleGrantsTo(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
+	var grantDetails []snowflake.GrantDetail
+	var err error
+
+	grantsTo := v.([]interface{})[0].(map[string]interface{})
+	role := grantsTo["role"].(string)
+	if role != "" {
+		grantDetails, err = snowflake.ShowGrantsTo(db, "ROLE", role)
+		if err != nil {
+			return grantDetails, err
+		}
+	}
+	user := grantsTo["user"].(string)
+	if user != "" {
+		grantDetails, err = snowflake.ShowGrantsTo(db, "USER", user)
+		if err != nil {
+			return grantDetails, err
+		}
+	}
+	share := grantsTo["share"].(string)
+	if share != "" {
+		grantDetails, err = snowflake.ShowGrantsTo(db, "SHARE", share)
+		if err != nil {
+			return grantDetails, err
+		}
+	}
+	return grantDetails, nil
+}
+
+func handleGrantsOf(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
+	var grantDetails []snowflake.GrantDetail
+	var err error
+
+	grantsOf := v.([]interface{})[0].(map[string]interface{})
+	role := grantsOf["role"].(string)
+	if role != "" {
+		grantDetails, err = snowflake.ShowGrantsOf(db, "ROLE", role)
+		if err != nil {
+			return grantDetails, err
+		}
+	}
+	share := grantsOf["share"].(string)
+	if share != "" {
+		grantDetails, err = snowflake.ShowGrantsOf(db, "SHARE", share)
+		if err != nil {
+			return grantDetails, err
+		}
+	}
+	return grantDetails, nil
+}
+
+func handleFutureGrantsIn(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
+	var grantDetails []snowflake.GrantDetail
+	var err error
+
+	futureGrantsIn := v.([]interface{})[0].(map[string]interface{})
+	database := futureGrantsIn["database"].(string)
+	if database != "" {
+		grantDetails, err = snowflake.ShowFutureGrantsIn(db, "DATABASE", database)
+		if err != nil {
+			return grantDetails, err
+		}
+	}
+	schema := futureGrantsIn["schema"].([]interface{})
+	if len(schema) > 0 {
+		schemaMap := schema[0].(map[string]interface{})
+		schemaName := schemaMap["schema_name"].(string)
+		databaseName := schemaMap["database_name"].(string)
+		if databaseName != "" {
+			schemaName = databaseName + "." + schemaName
+		}
+
+		grantDetails, err = snowflake.ShowFutureGrantsIn(db, "SCHEMA", schemaName)
+		if err != nil {
+			return grantDetails, err
+		}
+	}
+	return grantDetails, nil
+}
+
+func handleFutureGrantsTo(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
+	var grantDetails []snowflake.GrantDetail
+	var err error
+
+	futureGrantsTo := v.([]interface{})[0].(map[string]interface{})
+	role := futureGrantsTo["role"].(string)
+	if role != "" {
+		grantDetails, err = snowflake.ShowFutureGrantsTo(db, "ROLE", role)
+		if err != nil {
+			return grantDetails, err
+		}
+	}
+	return grantDetails, nil
 }
 
 func flattenGrants(grants []snowflake.GrantDetail) []map[string]interface{} {
