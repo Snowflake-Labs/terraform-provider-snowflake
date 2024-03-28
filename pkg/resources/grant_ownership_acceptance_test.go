@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
@@ -575,6 +577,250 @@ func TestAcc_GrantOwnership_InvalidConfiguration_MultipleTargets(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
+
+	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
+
+	otherAccountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	configVariables := config.Variables{
+		"account_role_name":       config.StringVariable(accountRoleName),
+		"other_account_role_name": config.StringVariable(otherAccountRoleName),
+		"database_name":           config.StringVariable(databaseName),
+	}
+	resourceName := "snowflake_grant_ownership.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/MoveResourceOwnershipOutsideTerraform"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", "DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|DATABASE|%s", accountRoleFullyQualifiedName, databaseFullyQualifiedName)),
+				),
+			},
+			{
+				PreConfig: func() {
+					moveResourceOwnershipToAccountRole(t, sdk.ObjectTypeDatabase, sdk.NewAccountObjectIdentifier(databaseName), sdk.NewAccountObjectIdentifier(otherAccountRoleName))
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/MoveResourceOwnershipOutsideTerraform"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", "DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|DATABASE|%s", accountRoleFullyQualifiedName, databaseFullyQualifiedName)),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						On: &sdk.ShowGrantsOn{
+							Object: &sdk.Object{
+								ObjectType: sdk.ObjectTypeDatabase,
+								Name:       sdk.NewAccountObjectIdentifierFromFullyQualifiedName(databaseFullyQualifiedName),
+							},
+						},
+					}, sdk.ObjectTypeDatabase, accountRoleName, databaseName),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseFullyQualifiedName := sdk.NewAccountObjectIdentifier(databaseName).FullyQualifiedName()
+
+	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newDatabaseOwningAccountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	configVariables := config.Variables{
+		"account_role_name": config.StringVariable(newDatabaseOwningAccountRoleName),
+		"database_name":     config.StringVariable(databaseName),
+	}
+	resourceName := "snowflake_grant_ownership.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					createAccountRoleOutsideTerraform(t, accountRoleName)
+					registerAccountRoleCleanup(t, accountRoleName)
+					createAccountRoleOutsideTerraform(t, newDatabaseOwningAccountRoleName)
+					registerAccountRoleCleanup(t, newDatabaseOwningAccountRoleName)
+					t.Cleanup(createDatabaseWithRoleAsOwner(t, accountRoleName, databaseName))
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/ForceOwnershipTransferOnCreate"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", newDatabaseOwningAccountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", "DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|\"%s\"||OnObject|DATABASE|%s", newDatabaseOwningAccountRoleName, databaseFullyQualifiedName)),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
+	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	stageName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	pipeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
+	pipeFullyQualifiedName := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, pipeName).FullyQualifiedName()
+
+	configVariables := config.Variables{
+		"account_role_name": config.StringVariable(accountRoleName),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"stage":             config.StringVariable(stageName),
+		"table":             config.StringVariable(tableName),
+		"pipe":              config.StringVariable(pipeName),
+	}
+	resourceName := "snowflake_grant_ownership.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnPipe"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", sdk.ObjectTypePipe.String()),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", pipeFullyQualifiedName),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|PIPE|%s", accountRoleFullyQualifiedName, pipeFullyQualifiedName)),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						On: &sdk.ShowGrantsOn{
+							Object: &sdk.Object{
+								ObjectType: sdk.ObjectTypePipe,
+								Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(pipeFullyQualifiedName),
+							},
+						},
+						// TODO(SNOW-999049): Fix this identifier
+					}, sdk.ObjectTypePipe, accountRoleName, fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, pipeName)),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
+	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	stageName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	pipeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	secondPipeName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
+	schemaFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName).FullyQualifiedName()
+
+	configVariables := config.Variables{
+		"account_role_name": config.StringVariable(accountRoleName),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"stage":             config.StringVariable(stageName),
+		"table":             config.StringVariable(tableName),
+		"pipe":              config.StringVariable(pipeName),
+		"second_pipe":       config.StringVariable(secondPipeName),
+	}
+	resourceName := "snowflake_grant_ownership.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnAllPipes"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnAll|PIPES|InSchema|%s", accountRoleFullyQualifiedName, schemaFullyQualifiedName)),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						To: &sdk.ShowGrantsTo{
+							Role: sdk.NewAccountObjectIdentifier(accountRoleName),
+						},
+						// TODO(SNOW-999049): Fix this identifier
+					}, sdk.ObjectTypePipe, accountRoleName, fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, pipeName), fmt.Sprintf("%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, secondPipeName)),
+				),
+			},
+		},
+	})
+}
+
+func createDatabaseWithRoleAsOwner(t *testing.T, roleName string, databaseName string) func() {
+	t.Helper()
+	client, err := sdk.NewDefaultClient()
+	assert.NoError(t, err)
+
+	ctx := context.Background()
+	databaseId := sdk.NewAccountObjectIdentifier(databaseName)
+	assert.NoError(t, client.Databases.Create(ctx, databaseId, &sdk.CreateDatabaseOptions{}))
+
+	err = client.Grants.GrantOwnership(
+		ctx,
+		sdk.OwnershipGrantOn{
+			Object: &sdk.Object{
+				ObjectType: sdk.ObjectTypeDatabase,
+				Name:       databaseId,
+			},
+		},
+		sdk.OwnershipGrantTo{
+			AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(roleName)),
+		},
+		new(sdk.GrantOwnershipOptions),
+	)
+	assert.NoError(t, err)
+
+	return func() {
+		assert.NoError(t, client.Databases.Drop(ctx, databaseId, &sdk.DropDatabaseOptions{}))
+	}
+}
+
+func moveResourceOwnershipToAccountRole(t *testing.T, objectType sdk.ObjectType, objectName sdk.ObjectIdentifier, accountRoleName sdk.AccountObjectIdentifier) {
+	t.Helper()
+
+	client, err := sdk.NewDefaultClient()
+	assert.NoError(t, err)
+
+	ctx := context.Background()
+	err = client.Grants.GrantOwnership(
+		ctx,
+		sdk.OwnershipGrantOn{
+			Object: &sdk.Object{
+				ObjectType: objectType,
+				Name:       objectName,
+			},
+		},
+		sdk.OwnershipGrantTo{
+			AccountRoleName: &accountRoleName,
+		},
+		new(sdk.GrantOwnershipOptions),
+	)
+	assert.NoError(t, err)
 }
 
 func checkResourceOwnershipIsGranted(opts *sdk.ShowGrantOptions, grantOn sdk.ObjectType, roleName string, objectNames ...string) func(s *terraform.State) error {

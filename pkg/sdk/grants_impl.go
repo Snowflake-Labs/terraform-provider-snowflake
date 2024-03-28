@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
@@ -205,6 +206,35 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 	}
 	opts.On = on
 	opts.To = to
+
+	if on.Object != nil && on.Object.ObjectType == ObjectTypePipe {
+		return v.grantOwnershipOnPipe(ctx, on.Object.Name.(SchemaObjectIdentifier), opts)
+	}
+
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
+	// to every Pipe one by one.
+	if on.All != nil && on.All.PluralObjectType == PluralObjectTypePipes {
+		return v.runOnAllPipes(
+			ctx,
+			on.All.InDatabase,
+			on.All.InSchema,
+			func(pipe Pipe) error {
+				return v.client.Grants.GrantOwnership(
+					ctx,
+					OwnershipGrantOn{
+						Object: &Object{
+							ObjectType: ObjectTypePipe,
+							Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+						},
+					},
+					to,
+					opts,
+				)
+			},
+		)
+	}
+
 	return validateAndExec(v.client, ctx, opts)
 }
 
@@ -226,6 +256,137 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 	return resultList, nil
 }
 
+// grantOwnershipOnPipe sequence (at worst 9 operations)
+//  1. get current role (needed to grant operate privilege later on)
+//  2. grant operate on pipe if not granted (it will error our otherwise)
+//  3. get pipe status (running or paused)
+//  4. if pipe is running, stop the pipe
+//  5. revoke operate (it may affect grant ownership call)
+//  6. grant ownership
+//  7. if pipe was previously running
+//     7.1. grant operate on pipe to current role
+//     7.2. unpause the pipe with system function
+//     7.3. revoke operate on pipe from current role
+func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectIdentifier, opts *GrantOwnershipOptions) error {
+	// To be able to call ALTER on a pipe to stop its execution,
+	// the current role has to be either the owner of this pipe or be granted with OPERATE privilege.
+	// The code below makes certain checks and takes care of making sure that the current role is privileged enough to act on the pipe and safely grant ownership.
+
+	currentRole, err := v.client.ContextFunctions.CurrentRole(ctx)
+	if err != nil {
+		return err
+	}
+	currentRoleName := NewAccountObjectIdentifier(currentRole)
+
+	currentGrants, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+		On: &ShowGrantsOn{
+			Object: &Object{
+				ObjectType: ObjectTypePipe,
+				Name:       pipeId,
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	canOperateOnPipe := slices.ContainsFunc(currentGrants, func(grant Grant) bool {
+		return grant.GranteeName == currentRoleName && (grant.Privilege == "OWNERSHIP" || grant.Privilege == SchemaObjectPrivilegeOperate.String())
+	})
+
+	var revokeOperate func() error
+	if !canOperateOnPipe {
+		revokeOperate, err = v.grantOperateOnPipeTemporarily(ctx, pipeId, currentRoleName)
+		if err != nil {
+			return err
+		}
+	}
+
+	originalPipeExecutionState, err := v.client.SystemFunctions.PipeStatus(pipeId)
+	if err != nil {
+		return err
+	}
+
+	if originalPipeExecutionState == RunningPipeExecutionState {
+		if err := v.client.Pipes.Alter(ctx, pipeId, &AlterPipeOptions{
+			Set: &PipeSet{
+				PipeExecutionPaused: Bool(true),
+			},
+		}); err != nil {
+			return err
+		}
+	}
+
+	if !canOperateOnPipe {
+		if err := revokeOperate(); err != nil {
+			return err
+		}
+	}
+
+	if err := validateAndExec(v.client, ctx, opts); err != nil {
+		return err
+	}
+
+	if originalPipeExecutionState == RunningPipeExecutionState {
+		// We cannot resume right away and "normally" through ALTER, because:
+		// 1. Insufficient privileges (the current role has to be granted with at least OPERATE privilege).
+		// 2. Snowflake throws an error whenever pipes changes its owner, and you try to unpause it. The error suggests using system function to forcefully resume the pipe.
+		revokeOperate, err := v.grantOperateOnPipeTemporarily(ctx, pipeId, currentRoleName)
+		if err != nil {
+			return err
+		}
+
+		// TODO: check if options need to be passed
+		if err := v.client.SystemFunctions.PipeForceResume(pipeId, nil); err != nil {
+			return err
+		}
+
+		if err := revokeOperate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (v *grants) grantOperateOnPipeTemporarily(ctx context.Context, pipeId SchemaObjectIdentifier, currentRole AccountObjectIdentifier) (func() error, error) {
+	return v.grantTemporarily(
+		ctx,
+		&AccountRoleGrantPrivileges{
+			SchemaObjectPrivileges: []SchemaObjectPrivilege{
+				SchemaObjectPrivilegeOperate,
+			},
+		},
+		&AccountRoleGrantOn{
+			SchemaObject: &GrantOnSchemaObject{
+				SchemaObject: &Object{
+					ObjectType: ObjectTypePipe,
+					Name:       pipeId,
+				},
+			},
+		},
+		currentRole,
+	)
+}
+
+func (v *grants) grantTemporarily(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, accountRoleName AccountObjectIdentifier) (func() error, error) {
+	return func() error {
+			return v.client.Grants.RevokePrivilegesFromAccountRole(
+				ctx,
+				privileges,
+				on,
+				accountRoleName,
+				new(RevokePrivilegesFromAccountRoleOptions),
+			)
+		}, v.client.Grants.GrantPrivilegesToAccountRole(
+			ctx,
+			privileges,
+			on,
+			accountRoleName,
+			new(GrantPrivilegesToAccountRoleOptions),
+		)
+}
+
 func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIdentifier, inSchema *DatabaseObjectIdentifier, command func(Pipe) error) error {
 	var in *In
 	switch {
@@ -244,12 +405,15 @@ func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIde
 		return err
 	}
 
+	return runOnAll(pipes, command)
+}
+
+func runOnAll[T any](collection []T, command func(T) error) error {
 	var errs []error
-	for _, pipe := range pipes {
-		if err := command(pipe); err != nil {
+	for _, element := range collection {
+		if err := command(element); err != nil {
 			errs = append(errs, err)
 		}
 	}
-
 	return errors.Join(errs...)
 }

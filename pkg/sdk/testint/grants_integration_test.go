@@ -790,6 +790,51 @@ func TestInt_GrantOwnership(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
+	checkOwnershipOnObjectToRole := func(t *testing.T, on sdk.OwnershipGrantOn, role string) {
+		t.Helper()
+		opts := sdk.ShowGrantOptions{}
+		switch {
+		case on.Object != nil:
+			opts.On = &sdk.ShowGrantsOn{
+				Object: on.Object,
+			}
+		case on.All != nil:
+			opts.In = &sdk.ShowGrantsIn{
+				Database: on.All.InDatabase,
+				Schema:   on.All.InSchema,
+			}
+		case on.Future != nil:
+			opts.Future = sdk.Bool(true)
+			opts.In = &sdk.ShowGrantsIn{
+				Database: on.All.InDatabase,
+				Schema:   on.All.InSchema,
+			}
+		}
+		grants, err := client.Grants.Show(ctx, &opts)
+		require.NoError(t, err)
+		_, err = collections.FindOne(grants, func(grant sdk.Grant) bool {
+			return grant.Privilege == "OWNERSHIP" && grant.GranteeName.Name() == role
+		})
+		require.NoError(t, err)
+	}
+
+	grantOwnershipBackToTheCurrentRole := func(t *testing.T, on sdk.OwnershipGrantOn) {
+		t.Helper()
+		currentRole, err := client.ContextFunctions.CurrentRole(ctx)
+		require.NoError(t, err)
+
+		err = client.Grants.GrantOwnership(
+			ctx,
+			on,
+			sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole)),
+			},
+			new(sdk.GrantOwnershipOptions),
+		)
+		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, on, currentRole)
+	}
+
 	t.Run("on schema object to database role", func(t *testing.T) {
 		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
 		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
@@ -897,6 +942,101 @@ func TestInt_GrantOwnership(t *testing.T) {
 		assert.Equal(t, sdk.ObjectTypeWarehouse, returnedGrants[0].GrantedOn)
 		assert.Equal(t, sdk.ObjectTypeRole, returnedGrants[0].GrantedTo)
 		assert.Equal(t, roleId, returnedGrants[0].GranteeName)
+	})
+
+	t.Run("on pipe", func(t *testing.T) {
+		table, tableCleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+		t.Cleanup(tableCleanup)
+
+		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphaN(20)))
+		t.Cleanup(stageCleanup)
+
+		copyStatement := createPipeCopyStatement(t, table, stage)
+		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		t.Cleanup(pipeCleanup)
+
+		pipeExecutionState, err := client.SystemFunctions.PipeStatus(pipe.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
+
+		role, roleCleanup := createRole(t, client)
+		t.Cleanup(roleCleanup)
+
+		onPipe := sdk.OwnershipGrantOn{
+			Object: &sdk.Object{
+				ObjectType: sdk.ObjectTypePipe,
+				Name:       pipe.ID(),
+			},
+		}
+		err = client.Grants.GrantOwnership(
+			ctx,
+			onPipe,
+			sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(role.ID()),
+			},
+			new(sdk.GrantOwnershipOptions),
+		)
+		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, onPipe, role.ID().Name())
+
+		grantOwnershipBackToTheCurrentRole(t, onPipe)
+
+		pipeExecutionState, err = client.SystemFunctions.PipeStatus(pipe.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
+	})
+
+	t.Run("on all pipes", func(t *testing.T) {
+		table, tableCleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+		t.Cleanup(tableCleanup)
+
+		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphaN(20)))
+		t.Cleanup(stageCleanup)
+
+		copyStatement := createPipeCopyStatement(t, table, stage)
+		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		t.Cleanup(pipeCleanup)
+
+		secondPipe, secondPipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
+		t.Cleanup(secondPipeCleanup)
+
+		pipeExecutionState, err := client.SystemFunctions.PipeStatus(pipe.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
+
+		secondPipeExecutionState, err := client.SystemFunctions.PipeStatus(secondPipe.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.RunningPipeExecutionState, secondPipeExecutionState)
+
+		role, roleCleanup := createRole(t, client)
+		t.Cleanup(roleCleanup)
+
+		onAllPipesInSchema := sdk.OwnershipGrantOn{
+			All: &sdk.GrantOnSchemaObjectIn{
+				PluralObjectType: sdk.PluralObjectTypePipes,
+				InSchema:         sdk.Pointer(testSchema(t).ID()),
+			},
+		}
+		err = client.Grants.GrantOwnership(
+			ctx,
+			onAllPipesInSchema,
+			sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(role.ID()),
+			},
+			new(sdk.GrantOwnershipOptions),
+		)
+		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, onAllPipesInSchema, role.ID().Name())
+
+		grantOwnershipBackToTheCurrentRole(t, onAllPipesInSchema)
+
+		pipeExecutionState, err = client.SystemFunctions.PipeStatus(pipe.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.RunningPipeExecutionState, pipeExecutionState)
+
+		secondPipeExecutionState, err = client.SystemFunctions.PipeStatus(secondPipe.ID())
+		require.NoError(t, err)
+		require.Equal(t, sdk.RunningPipeExecutionState, secondPipeExecutionState)
 	})
 }
 

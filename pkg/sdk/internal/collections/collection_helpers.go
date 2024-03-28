@@ -14,3 +14,11 @@ func FindOne[T any](collection []T, condition func(T) bool) (*T, error) {
 	}
 	return nil, ErrObjectNotFound
 }
+
+func Map[T any, R any](collection []T, mapper func(T) R) []R {
+	result := make([]R, len(collection))
+	for i, elem := range collection {
+		result[i] = mapper(elem)
+	}
+	return result
+}

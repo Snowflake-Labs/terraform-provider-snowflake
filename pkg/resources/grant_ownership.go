@@ -383,11 +383,13 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if !ownershipFound {
+		d.SetId("")
+
 		return diag.Diagnostics{
 			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Couldn't find OWNERSHIP privilege on target object",
-				Detail:   fmt.Sprintf("Id: %s", d.Id()),
+				Severity: diag.Warning,
+				Summary:  "Couldn't find OWNERSHIP privilege on the target object. Marking resource as removed.",
+				Detail:   fmt.Sprintf("Id: %s", id.String()),
 			},
 		}
 	}
