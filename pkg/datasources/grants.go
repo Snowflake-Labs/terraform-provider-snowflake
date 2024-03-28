@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -306,25 +308,27 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 	db := client.GetConn().DB
 
 	var grantDetails []snowflake.GrantDetail
+	var grants []sdk.Grant
+	_ = grants
 	var err error
 	if v, ok := d.GetOk("grants_on"); ok {
-		grantDetails, err = handleGrantsOn(v, db)
+		grants, err = handleGrantsOn(ctx, client, v)
 	}
 
 	if v, ok := d.GetOk("grants_to"); ok {
-		grantDetails, err = handleGrantsTo(v, db)
+		grants, err = handleGrantsTo(ctx, client, v)
 	}
 
 	if v, ok := d.GetOk("grants_of"); ok {
-		grantDetails, err = handleGrantsOf(v, db)
+		grantDetails, err = handleGrantsOf(ctx, client, v, db)
 	}
 
 	if v, ok := d.GetOk("future_grants_in"); ok {
-		grantDetails, err = handleFutureGrantsIn(v, db)
+		grantDetails, err = handleFutureGrantsIn(ctx, client, v, db)
 	}
 
 	if v, ok := d.GetOk("future_grants_to"); ok {
-		grantDetails, err = handleFutureGrantsTo(v, db)
+		grantDetails, err = handleFutureGrantsTo(ctx, client, v, db)
 	}
 
 	if err != nil {
@@ -339,9 +343,9 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 	return nil
 }
 
-func handleGrantsOn(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
-	var grantDetails []snowflake.GrantDetail
+func handleGrantsOn(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
 	var err error
+	opts := new(sdk.ShowGrantOptions)
 
 	grantsOn := v.([]interface{})[0].(map[string]interface{})
 	objectType := grantsOn["object_type"].(string)
@@ -349,49 +353,59 @@ func handleGrantsOn(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
 	account := grantsOn["account"].(bool)
 
 	if account {
-		grantDetails, err = snowflake.ShowGrantsOnAccount(db)
-		if err != nil {
-			return grantDetails, err
+		opts.On = &sdk.ShowGrantsOn{
+			Account: sdk.Bool(true),
 		}
-	} else if objectType != "" && objectName != "" {
-		grantDetails, err = snowflake.ShowGrantsOn(db, objectType, objectName)
+	} else {
+		if objectType == "" || objectName == "" {
+			return nil, err
+		}
+		objectId, err := helpers.DecodeSnowflakeParameterID(objectName)
 		if err != nil {
-			return grantDetails, err
+			return nil, err
+		}
+		opts.On = &sdk.ShowGrantsOn{
+			Object: &sdk.Object{
+				ObjectType: sdk.ObjectType(objectType),
+				Name:       objectId,
+			},
 		}
 	}
-	return grantDetails, nil
+	return client.Grants.Show(ctx, opts)
 }
 
-func handleGrantsTo(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
-	var grantDetails []snowflake.GrantDetail
-	var err error
+func handleGrantsTo(ctx context.Context, client *sdk.Client, v any) ([]sdk.Grant, error) {
+	opts := new(sdk.ShowGrantOptions)
 
 	grantsTo := v.([]interface{})[0].(map[string]interface{})
-	role := grantsTo["role"].(string)
-	if role != "" {
-		grantDetails, err = snowflake.ShowGrantsTo(db, "ROLE", role)
-		if err != nil {
-			return grantDetails, err
+	// TODO: add database role?
+	if application := grantsTo["application"].(string); application != "" {
+		// TODO: unsupported SHOW GRANTS TO APPLICATION
+	}
+	if applicationRole := grantsTo["application_role"].(string); applicationRole != "" {
+		// TODO: unsupported SHOW GRANTS TO APPLICATION
+	}
+	if role := grantsTo["role"].(string); role != "" {
+		opts.To = &sdk.ShowGrantsTo{
+			Role: sdk.NewAccountObjectIdentifier(role),
 		}
 	}
-	user := grantsTo["user"].(string)
-	if user != "" {
-		grantDetails, err = snowflake.ShowGrantsTo(db, "USER", user)
-		if err != nil {
-			return grantDetails, err
+	if user := grantsTo["user"].(string); user != "" {
+		opts.To = &sdk.ShowGrantsTo{
+			User: sdk.NewAccountObjectIdentifier(user),
 		}
 	}
-	share := grantsTo["share"].(string)
-	if share != "" {
-		grantDetails, err = snowflake.ShowGrantsTo(db, "SHARE", share)
-		if err != nil {
-			return grantDetails, err
+	if share := grantsTo["share"]; share != nil {
+		shareMap := share.([]interface{})[0].(map[string]interface{})
+		opts.To = &sdk.ShowGrantsTo{
+			Share: sdk.NewAccountObjectIdentifier(shareMap["share_name"].(string)),
 		}
+		// TODO: unsupported IN APPLICATION PACKAGE
 	}
-	return grantDetails, nil
+	return client.Grants.Show(ctx, opts)
 }
 
-func handleGrantsOf(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
+func handleGrantsOf(ctx context.Context, client *sdk.Client, v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
 	var grantDetails []snowflake.GrantDetail
 	var err error
 
@@ -413,7 +427,7 @@ func handleGrantsOf(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
 	return grantDetails, nil
 }
 
-func handleFutureGrantsIn(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
+func handleFutureGrantsIn(ctx context.Context, client *sdk.Client, v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
 	var grantDetails []snowflake.GrantDetail
 	var err error
 
@@ -442,7 +456,7 @@ func handleFutureGrantsIn(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
 	return grantDetails, nil
 }
 
-func handleFutureGrantsTo(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
+func handleFutureGrantsTo(ctx context.Context, client *sdk.Client, v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
 	var grantDetails []snowflake.GrantDetail
 	var err error
 
@@ -455,6 +469,73 @@ func handleFutureGrantsTo(v any, db *sql.DB) ([]snowflake.GrantDetail, error) {
 		}
 	}
 	return grantDetails, nil
+}
+
+func aaa() (*sdk.ShowGrantOptions, sdk.ObjectType) {
+	opts := new(sdk.ShowGrantOptions)
+	var grantedOn sdk.ObjectType
+
+	//switch id.Kind {
+	//case OnAccountObjectAccountRoleGrantKind:
+	//	data := id.Data.(*OnAccountObjectGrantData)
+	//	grantedOn = data.ObjectType
+	//	opts.On = &sdk.ShowGrantsOn{
+	//		Object: &sdk.Object{
+	//			ObjectType: data.ObjectType,
+	//			Name:       data.ObjectName,
+	//		},
+	//	}
+	//case OnSchemaAccountRoleGrantKind:
+	//	grantedOn = sdk.ObjectTypeSchema
+	//	data := id.Data.(*OnSchemaGrantData)
+	//
+	//	switch data.Kind {
+	//	case OnSchemaSchemaGrantKind:
+	//		opts.On = &sdk.ShowGrantsOn{
+	//			Object: &sdk.Object{
+	//				ObjectType: sdk.ObjectTypeSchema,
+	//				Name:       data.SchemaName,
+	//			},
+	//		}
+	//	case OnAllSchemasInDatabaseSchemaGrantKind:
+	//		log.Printf("[INFO] Show with on_schema.all_schemas_in_database option is skipped. No changes in privileges in Snowflake will be detected.")
+	//		return nil, ""
+	//	case OnFutureSchemasInDatabaseSchemaGrantKind:
+	//		opts.Future = sdk.Bool(true)
+	//		opts.In = &sdk.ShowGrantsIn{
+	//			Database: data.DatabaseName,
+	//		}
+	//	}
+	//case OnSchemaObjectAccountRoleGrantKind:
+	//	data := id.Data.(*OnSchemaObjectGrantData)
+	//
+	//	switch data.Kind {
+	//	case OnObjectSchemaObjectGrantKind:
+	//		grantedOn = data.Object.ObjectType
+	//		opts.On = &sdk.ShowGrantsOn{
+	//			Object: data.Object,
+	//		}
+	//	case OnAllSchemaObjectGrantKind:
+	//		log.Printf("[INFO] Show with on_schema_object.on_all option is skipped. No changes in privileges in Snowflake will be detected.")
+	//		return nil, ""
+	//	case OnFutureSchemaObjectGrantKind:
+	//		grantedOn = data.OnAllOrFuture.ObjectNamePlural.Singular()
+	//		opts.Future = sdk.Bool(true)
+	//
+	//		switch data.OnAllOrFuture.Kind {
+	//		case InDatabaseBulkOperationGrantKind:
+	//			opts.In = &sdk.ShowGrantsIn{
+	//				Database: data.OnAllOrFuture.Database,
+	//			}
+	//		case InSchemaBulkOperationGrantKind:
+	//			opts.In = &sdk.ShowGrantsIn{
+	//				Schema: data.OnAllOrFuture.Schema,
+	//			}
+	//		}
+	//	}
+	//}
+
+	return opts, grantedOn
 }
 
 func flattenGrants(grants []snowflake.GrantDetail) []map[string]interface{} {
