@@ -929,6 +929,108 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
+func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraform_WithGrantOptions(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"with_grant_option": config.BoolVariable(true),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() { createDatabaseRoleOutsideTerraform(t, name) },
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig: func() {
+					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
+						t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name),
+						acc.TestDatabaseName,
+						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
+						false,
+					)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
+func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraform_WithoutGrantOptions(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"name": config.StringVariable(name),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"with_grant_option": config.BoolVariable(false),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() { createDatabaseRoleOutsideTerraform(t, name) },
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig: func() {
+					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
+						t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name),
+						acc.TestDatabaseName,
+						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
+						true,
+					)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+		},
+	})
+}
+
 func createDatabaseRoleOutsideTerraform(t *testing.T, name string) {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
@@ -991,4 +1093,50 @@ func testAccCheckDatabaseRolePrivilegesRevoked(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
+	t *testing.T,
+	databaseRoleName sdk.DatabaseObjectIdentifier,
+	databaseName string,
+	privileges []sdk.AccountObjectPrivilege,
+	withGrantOption bool,
+) {
+	t.Helper()
+	client, err := sdk.NewDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	err = client.Grants.RevokePrivilegesFromDatabaseRole(
+		ctx,
+		&sdk.DatabaseRoleGrantPrivileges{
+			DatabasePrivileges: privileges,
+		},
+		&sdk.DatabaseRoleGrantOn{
+			Database: sdk.Pointer(sdk.NewAccountObjectIdentifier(databaseName)),
+		},
+		databaseRoleName,
+		new(sdk.RevokePrivilegesFromDatabaseRoleOptions),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = client.Grants.GrantPrivilegesToDatabaseRole(
+		ctx,
+		&sdk.DatabaseRoleGrantPrivileges{
+			DatabasePrivileges: privileges,
+		},
+		&sdk.DatabaseRoleGrantOn{
+			Database: sdk.Pointer(sdk.NewAccountObjectIdentifier(databaseName)),
+		},
+		databaseRoleName,
+		&sdk.GrantPrivilegesToDatabaseRoleOptions{
+			WithGrantOption: sdk.Bool(withGrantOption),
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
