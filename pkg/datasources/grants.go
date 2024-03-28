@@ -1,8 +1,11 @@
 package datasources
 
 import (
+	"context"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -292,12 +295,12 @@ var grantsSchema = map[string]*schema.Schema{
 
 func Grants() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadGrants,
-		Schema: grantsSchema,
+		ReadContext: ReadGrants,
+		Schema:      grantsSchema,
 	}
 }
 
-func ReadGrants(d *schema.ResourceData, meta interface{}) error {
+func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 
@@ -312,12 +315,12 @@ func ReadGrants(d *schema.ResourceData, meta interface{}) error {
 		if account {
 			grantDetails, err = snowflake.ShowGrantsOnAccount(db)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		} else if objectType != "" && objectName != "" {
 			grantDetails, err = snowflake.ShowGrantsOn(db, objectType, objectName)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -328,21 +331,21 @@ func ReadGrants(d *schema.ResourceData, meta interface{}) error {
 		if role != "" {
 			grantDetails, err = snowflake.ShowGrantsTo(db, "ROLE", role)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 		user := grantsTo["user"].(string)
 		if user != "" {
 			grantDetails, err = snowflake.ShowGrantsTo(db, "USER", user)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 		share := grantsTo["share"].(string)
 		if share != "" {
 			grantDetails, err = snowflake.ShowGrantsTo(db, "SHARE", share)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -353,14 +356,14 @@ func ReadGrants(d *schema.ResourceData, meta interface{}) error {
 		if role != "" {
 			grantDetails, err = snowflake.ShowGrantsOf(db, "ROLE", role)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 		share := grantsOf["share"].(string)
 		if share != "" {
 			grantDetails, err = snowflake.ShowGrantsOf(db, "SHARE", share)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -371,7 +374,7 @@ func ReadGrants(d *schema.ResourceData, meta interface{}) error {
 		if database != "" {
 			grantDetails, err = snowflake.ShowFutureGrantsIn(db, "DATABASE", database)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 		schema := futureGrantsIn["schema"].([]interface{})
@@ -385,7 +388,7 @@ func ReadGrants(d *schema.ResourceData, meta interface{}) error {
 
 			grantDetails, err = snowflake.ShowFutureGrantsIn(db, "SCHEMA", schemaName)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -396,14 +399,14 @@ func ReadGrants(d *schema.ResourceData, meta interface{}) error {
 		if role != "" {
 			grantDetails, err = snowflake.ShowFutureGrantsTo(db, "ROLE", role)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
 
 	err = d.Set("grants", flattenGrants(grantDetails))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("grants")
 	return nil
