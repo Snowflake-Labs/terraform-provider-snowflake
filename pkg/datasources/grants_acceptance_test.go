@@ -10,7 +10,7 @@ import (
 )
 
 // TODO: tests (examples from the correct ones):
-// - on - account
+// + on - account
 // - on - db object
 // - on - schema object
 // - on - invalid config - no attribute
@@ -36,31 +36,21 @@ import (
 // - future to - database role
 // - future to - invalid config - no attribute
 // - future to - invalid config - database role id invalid
-func TestAcc_Grants(t *testing.T) {
+func TestAcc_Grants_On_Account(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: grantsAccount(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On_Account"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_grants.g", "grants.#"),
+					resource.TestCheckResourceAttrSet("data.snowflake_grants.test", "grants.#"),
 				),
 			},
 		},
 	})
-}
-
-func grantsAccount() string {
-	s := `
-data "snowflake_grants" "g" {
-	grants_on {
-		account = true
-	}
-}
-`
-	return s
 }
