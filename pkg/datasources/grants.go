@@ -388,7 +388,7 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 			User: sdk.NewAccountObjectIdentifier(user),
 		}
 	}
-	if share := grantsTo["share"]; share != nil {
+	if share := grantsTo["share"]; share != nil && len(share.([]interface{})) > 0 {
 		shareMap := share.([]interface{})[0].(map[string]interface{})
 		opts.To = &sdk.ShowGrantsTo{
 			Share: sdk.NewAccountObjectIdentifier(shareMap["share_name"].(string)),
