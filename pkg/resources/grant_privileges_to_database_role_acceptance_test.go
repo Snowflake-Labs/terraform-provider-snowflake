@@ -556,7 +556,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_Streamlits_In
 		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables: configVariables,
 				ExpectError:     regexp.MustCompile("Unsupported feature 'STREAMLIT'"),
@@ -590,7 +590,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDat
 		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -905,7 +905,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -929,7 +929,6 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 	})
 }
 
-func createDatabaseRoleOutsideTerraform(t *testing.T, name string) {
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -954,7 +953,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					databaseCleanup = createTemporaryDatabaseOutsideTerraform(t, databaseName)
+					databaseCleanup = createDatabaseOutsideTerraform(t, databaseName)
 					createDatabaseRoleOutsideTerraform(t, databaseName, name)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
@@ -995,7 +994,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t 
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Cleanup(createTemporaryDatabaseOutsideTerraform(t, databaseName))
+					t.Cleanup(createDatabaseOutsideTerraform(t, databaseName))
 					databaseRoleCleanup = createDatabaseRoleOutsideTerraform(t, databaseName, name)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),

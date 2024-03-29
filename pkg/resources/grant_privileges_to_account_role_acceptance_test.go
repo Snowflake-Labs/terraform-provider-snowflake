@@ -1216,7 +1216,7 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t 
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					databaseCleanup = createTemporaryDatabaseOutsideTerraform(t, databaseName)
+					databaseCleanup = createDatabaseOutsideTerraform(t, databaseName)
 					createAccountRoleOutsideTerraform(t, name)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
@@ -1259,8 +1259,8 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *t
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Cleanup(createTemporaryDatabaseOutsideTerraform(t, databaseName))
-					roleCleanup = createTemporaryAccountRoleOutsideTerraform(t, name)
+					t.Cleanup(createDatabaseOutsideTerraform(t, databaseName))
+					roleCleanup = createAccountRoleOutsideTerraform(t, name)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
 				ConfigVariables: configVariables,
@@ -1338,7 +1338,7 @@ func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, sha
 	)
 }
 
-func createAccountRoleOutsideTerraform(t *testing.T, name string) {
+func createAccountRoleOutsideTerraform(t *testing.T, name string) func() {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
 	if err != nil {
@@ -1349,24 +1349,10 @@ func createAccountRoleOutsideTerraform(t *testing.T, name string) {
 	if err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId).WithOrReplace(true)); err != nil {
 		t.Fatal(fmt.Errorf("error account role (%s): %w", roleId.FullyQualifiedName(), err))
 	}
-}
-
-func createTemporaryAccountRoleOutsideTerraform(t *testing.T, name string) func() {
-	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	ctx := context.Background()
-	roleId := sdk.NewAccountObjectIdentifier(name)
-
-	if err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId)); err != nil {
-		t.Fatal(err)
-	}
 
 	return func() {
-		if err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId)); err != nil {
-			t.Fatal(err)
+		if err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId).WithIfExists(true)); err != nil {
+			t.Fatal(fmt.Errorf("error account role (%s): %w", roleId.FullyQualifiedName(), err))
 		}
 	}
 }

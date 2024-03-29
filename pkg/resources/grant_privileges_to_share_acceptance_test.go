@@ -544,7 +544,7 @@ func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					shareCleanup = createTemporaryShareOutsideTerraform(t, shareName)
+					shareCleanup = createShareOutsideTerraform(t, shareName)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnCustomShare"),
 				ConfigVariables: configVariables,
@@ -590,7 +590,7 @@ func testAccCheckSharePrivilegesRevoked() func(*terraform.State) error {
 	}
 }
 
-func createTemporaryShareOutsideTerraform(t *testing.T, name string) func() {
+func createShareOutsideTerraform(t *testing.T, name string) func() {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
 	if err != nil {

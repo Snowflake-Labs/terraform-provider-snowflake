@@ -490,7 +490,7 @@ func checkAccountAndDatabaseDataRetentionTime(id sdk.AccountObjectIdentifier, ex
 	}
 }
 
-func createTemporaryDatabaseOutsideTerraform(t *testing.T, name string) func() {
+func createDatabaseOutsideTerraform(t *testing.T, name string) func() {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
 	if err != nil {
