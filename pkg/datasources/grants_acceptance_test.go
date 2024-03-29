@@ -43,11 +43,12 @@ func checkAtLeastOneFutureGrantPresent() resource.TestCheckFunc {
 	)
 }
 
-func checkAtLeastOneGrantPresentWithoutValidations() resource.TestCheckFunc {
+func checkAtLeastOneGrantPresentLimited() resource.TestCheckFunc {
 	datasourceName := "data.snowflake_grants.test"
 	return resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
 		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.created_on"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.granted_to"),
 	)
 }
 
@@ -112,15 +113,19 @@ func getSecondaryAccountIdentifier(t *testing.T) *sdk.AccountIdentifier {
 // - to - application
 // - to - application role
 // + to - role
+// + to - database role
 // + to - user
 // + to - share
 // +/- to - share with application package
 // + to - invalid config - no attribute
 // + to - invalid config - share name missing
+// + to - invalid config - database role id invalid
 // + of - role
+// + of - database role
 // - of - application role
 // + of - share
 // + of - invalid config - no attribute
+// + of - invalid config - database role id invalid
 // + future in - database
 // + future in - schema (both db and sc present)
 // + future in - invalid config - no attribute
@@ -269,6 +274,31 @@ func TestAcc_Grants_To_Role(t *testing.T) {
 	})
 }
 
+func TestAcc_Grants_To_DatabaseRole(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"database":      config.StringVariable(databaseName),
+		"database_role": config.StringVariable(databaseRoleName),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/DatabaseRole"),
+				ConfigVariables: configVariables,
+				Check:           checkAtLeastOneGrantPresent(),
+			},
+		},
+	})
+}
+
 func TestAcc_Grants_To_User(t *testing.T) {
 	user := getCurrentUser(t)
 	configVariables := config.Variables{
@@ -286,7 +316,7 @@ func TestAcc_Grants_To_User(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/User"),
 				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresentWithoutValidations(),
+				Check:           checkAtLeastOneGrantPresentLimited(),
 			},
 		},
 	})
@@ -379,6 +409,24 @@ func TestAcc_Grants_To_Invalid_ShareNameMissing(t *testing.T) {
 	})
 }
 
+func TestAcc_Grants_To_Invalid_DatabaseRoleIdInvalid(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/Invalid/DatabaseRoleIdInvalid"),
+				PlanOnly:        true,
+				ExpectError:     regexp.MustCompile("Error: Invalid identifier type"),
+			},
+		},
+	})
+}
+
 func TestAcc_Grants_Of_Role(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -390,7 +438,32 @@ func TestAcc_Grants_Of_Role(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Role"),
-				Check:           checkAtLeastOneGrantPresentWithoutValidations(),
+				Check:           checkAtLeastOneGrantPresentLimited(),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_Of_DatabaseRole(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"database":      config.StringVariable(databaseName),
+		"database_role": config.StringVariable(databaseRoleName),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/DatabaseRole"),
+				ConfigVariables: configVariables,
+				Check:           checkAtLeastOneGrantPresentLimited(),
 			},
 		},
 	})
@@ -439,6 +512,24 @@ func TestAcc_Grants_Of_Invalid_NoAttribute(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Invalid/NoAttribute"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_Of_Invalid_DatabaseRoleIdInvalid(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Invalid/DatabaseRoleIdInvalid"),
+				PlanOnly:        true,
+				ExpectError:     regexp.MustCompile("Error: Invalid identifier type"),
 			},
 		},
 	})

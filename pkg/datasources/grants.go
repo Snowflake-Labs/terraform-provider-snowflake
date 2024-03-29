@@ -60,6 +60,7 @@ var grantsSchema = map[string]*schema.Schema{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
 						"grants_to.0.role",
+						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
 					},
@@ -72,6 +73,7 @@ var grantsSchema = map[string]*schema.Schema{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
 						"grants_to.0.role",
+						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
 					},
@@ -84,9 +86,24 @@ var grantsSchema = map[string]*schema.Schema{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
 						"grants_to.0.role",
+						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
 					},
+				},
+				"database_role": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Lists all privileges and roles granted to the database role.",
+					ExactlyOneOf: []string{
+						"grants_to.0.application",
+						"grants_to.0.application_role",
+						"grants_to.0.role",
+						"grants_to.0.database_role",
+						"grants_to.0.user",
+						"grants_to.0.share",
+					},
+					ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 				},
 				"user": {
 					Type:        schema.TypeString,
@@ -96,6 +113,7 @@ var grantsSchema = map[string]*schema.Schema{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
 						"grants_to.0.role",
+						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
 					},
@@ -109,6 +127,7 @@ var grantsSchema = map[string]*schema.Schema{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
 						"grants_to.0.role",
+						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
 					},
@@ -144,9 +163,22 @@ var grantsSchema = map[string]*schema.Schema{
 					Description: "Lists all users and roles to which the role has been granted.",
 					ExactlyOneOf: []string{
 						"grants_of.0.role",
+						"grants_of.0.database_role",
 						"grants_of.0.application_role",
 						"grants_of.0.share",
 					},
+				},
+				"database_role": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Lists all users and roles to which the database role has been granted.",
+					ExactlyOneOf: []string{
+						"grants_of.0.role",
+						"grants_of.0.database_role",
+						"grants_of.0.application_role",
+						"grants_of.0.share",
+					},
+					ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 				},
 				"application_role": {
 					Type:        schema.TypeString,
@@ -154,6 +186,7 @@ var grantsSchema = map[string]*schema.Schema{
 					Description: "Lists all the users and roles to which the application role has been granted. Note: if fully qualified application role identifier is not specified, i.e. only the application role name is given, Snowflake uses the current application. If the application is not a database, this command does not return results. Consult with the proper section in the [docs](https://docs.snowflake.com/en/sql-reference/sql/show-grants#variants).",
 					ExactlyOneOf: []string{
 						"grants_of.0.role",
+						"grants_of.0.database_role",
 						"grants_of.0.application_role",
 						"grants_of.0.share",
 					},
@@ -164,6 +197,7 @@ var grantsSchema = map[string]*schema.Schema{
 					Description: "Lists all the accounts for the share and indicates the accounts that are using the share.",
 					ExactlyOneOf: []string{
 						"grants_of.0.role",
+						"grants_of.0.database_role",
 						"grants_of.0.application_role",
 						"grants_of.0.share",
 					},
@@ -359,7 +393,6 @@ func buildOptsForGrantsOn(grantsOn map[string]interface{}) (*sdk.ShowGrantOption
 func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 
-	// TODO: add database role?
 	if application := grantsTo["application"].(string); application != "" {
 		// TODO: unsupported SHOW GRANTS TO APPLICATION
 	}
@@ -369,6 +402,11 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 	if role := grantsTo["role"].(string); role != "" {
 		opts.To = &sdk.ShowGrantsTo{
 			Role: sdk.NewAccountObjectIdentifier(role),
+		}
+	}
+	if databaseRole := grantsTo["database_role"].(string); databaseRole != "" {
+		opts.To = &sdk.ShowGrantsTo{
+			DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRole),
 		}
 	}
 	if user := grantsTo["user"].(string); user != "" {
@@ -389,10 +427,14 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 func buildOptsForGrantsOf(grantsOf map[string]interface{}) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 
-	// TODO: add database role?
 	if role := grantsOf["role"].(string); role != "" {
 		opts.Of = &sdk.ShowGrantsOf{
 			Role: sdk.NewAccountObjectIdentifier(role),
+		}
+	}
+	if databaseRole := grantsOf["database_role"].(string); databaseRole != "" {
+		opts.Of = &sdk.ShowGrantsOf{
+			DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRole),
 		}
 	}
 	if applicationRole := grantsOf["application_role"].(string); applicationRole != "" {
