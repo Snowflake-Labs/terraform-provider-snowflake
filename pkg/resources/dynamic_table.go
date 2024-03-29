@@ -133,7 +133,7 @@ var dynamicTableSchema = map[string]*schema.Schema{
 	},
 	"scheduling_state": {
 		Type:        schema.TypeString,
-		Description: "Displays RUNNING for dynamic tables that are actively scheduling refreshes and SUSPENDED for suspended dynamic tables.",
+		Description: "Displays ACTIVE for dynamic tables that are actively scheduling refreshes and SUSPENDED for suspended dynamic tables.",
 		Computed:    true,
 	},
 	"last_suspended_on": {
