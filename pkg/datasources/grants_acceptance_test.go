@@ -8,11 +8,13 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func checkAtLeastOneGrantPresent() resource.TestCheckFunc {
@@ -37,6 +39,14 @@ func checkAtLeastOneGrantPresentWithoutValidations() resource.TestCheckFunc {
 	)
 }
 
+func checkNoGrantsPresent() resource.TestCheckFunc {
+	datasourceName := "data.snowflake_grants.test"
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
+		resource.TestCheckNoResourceAttr(datasourceName, "grants.0.created_on"),
+	)
+}
+
 func getCurrentUser(t *testing.T) string {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
@@ -48,6 +58,36 @@ func getCurrentUser(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return user
+}
+
+func getSecondaryAccountIdentifier(t *testing.T) *sdk.AccountIdentifier {
+	t.Helper()
+
+	t.Helper()
+	client, err := sdk.NewDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := sdk.ProfileConfig(testprofiles.Secondary)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondaryClient, err := sdk.NewClient(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+
+	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, replicationAccount := range replicationAccounts {
+		if replicationAccount.AccountLocator == secondaryClient.GetAccountLocator() {
+			return sdk.Pointer(sdk.NewAccountIdentifier(replicationAccount.OrganizationName, replicationAccount.AccountName))
+		}
+	}
+	return nil
 }
 
 // TODO: tests (examples from the correct ones):
@@ -65,10 +105,10 @@ func getCurrentUser(t *testing.T) string {
 // +/- to - share with application package
 // + to - invalid config - no attribute
 // + to - invalid config - share name missing
-// - of - role
+// + of - role
 // - of - application role
-// - of - share
-// - of - invalid config - no attribute
+// + of - share
+// + of - invalid config - no attribute
 // - future in - database
 // - future in - schema (both db and sc present)
 // - future in - schema (only sc present)
@@ -323,6 +363,71 @@ func TestAcc_Grants_To_Invalid_ShareNameMissing(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/Invalid/ShareNameMissing"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Missing required argument"),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_Of_Role(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Role"),
+				Check:           checkAtLeastOneGrantPresentWithoutValidations(),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_Of_Share(t *testing.T) {
+	t.Skip("TestAcc_Share are skipped")
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountId := getSecondaryAccountIdentifier(t)
+	require.NotNil(t, accountId)
+
+	configVariables := config.Variables{
+		"database": config.StringVariable(databaseName),
+		"share":    config.StringVariable(shareName),
+		"account":  config.StringVariable(accountId.FullyQualifiedName()),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Share"),
+				ConfigVariables: configVariables,
+				Check:           checkNoGrantsPresent(),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_Of_Invalid_NoAttribute(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Invalid/NoAttribute"),
+				PlanOnly:        true,
+				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
 		},
 	})
