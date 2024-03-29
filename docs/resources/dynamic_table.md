@@ -59,7 +59,7 @@ resource "snowflake_dynamic_table" "dt" {
 - `owner` (String) Role that owns the dynamic table.
 - `refresh_mode_reason` (String) Explanation for why FULL refresh mode was chosen. NULL if refresh mode is not FULL.
 - `rows` (Number) Number of rows in the table.
-- `scheduling_state` (String) Displays RUNNING for dynamic tables that are actively scheduling refreshes and SUSPENDED for suspended dynamic tables.
+- `scheduling_state` (String) Displays ACTIVE for dynamic tables that are actively scheduling refreshes and SUSPENDED for suspended dynamic tables.
 
 <a id="nestedblock--target_lag"></a>
 ### Nested Schema for `target_lag`
