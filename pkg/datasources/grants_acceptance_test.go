@@ -31,6 +31,18 @@ func checkAtLeastOneGrantPresent() resource.TestCheckFunc {
 	)
 }
 
+func checkAtLeastOneFutureGrantPresent() resource.TestCheckFunc {
+	datasourceName := "data.snowflake_grants.test"
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.created_on"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.privilege"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.name"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grantee_name"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grant_option"),
+	)
+}
+
 func checkAtLeastOneGrantPresentWithoutValidations() resource.TestCheckFunc {
 	datasourceName := "data.snowflake_grants.test"
 	return resource.ComposeTestCheckFunc(
@@ -109,11 +121,10 @@ func getSecondaryAccountIdentifier(t *testing.T) *sdk.AccountIdentifier {
 // - of - application role
 // + of - share
 // + of - invalid config - no attribute
-// - future in - database
-// - future in - schema (both db and sc present)
-// - future in - schema (only sc present)
-// - future in - invalid config - no attribute
-// - future in - invalid config - schema with no schema name
+// + future in - database
+// + future in - schema (both db and sc present)
+// + future in - invalid config - no attribute
+// + future in - invalid config - schema name not fully qualified
 // - future to - role
 // - future to - database role
 // - future to - invalid config - no attribute
@@ -428,6 +439,90 @@ func TestAcc_Grants_Of_Invalid_NoAttribute(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Invalid/NoAttribute"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_FutureIn_Database(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"database": config.StringVariable(databaseName),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureIn/Database"),
+				ConfigVariables: configVariables,
+				Check:           checkAtLeastOneFutureGrantPresent(),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_FutureIn_Schema(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"database": config.StringVariable(databaseName),
+		"schema":   config.StringVariable(schemaName),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureIn/Schema"),
+				ConfigVariables: configVariables,
+				Check:           checkAtLeastOneFutureGrantPresent(),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_FutureIn_Invalid_NoAttribute(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureIn/Invalid/NoAttribute"),
+				PlanOnly:        true,
+				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_FutureIn_Invalid_SchemaNameNotFullyQualified(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureIn/Invalid/SchemaNameNotFullyQualified"),
+				PlanOnly:        true,
+				ExpectError:     regexp.MustCompile("Error: Invalid identifier type"),
 			},
 		},
 	})

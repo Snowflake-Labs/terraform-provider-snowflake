@@ -6,6 +6,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -188,28 +189,14 @@ var grantsSchema = map[string]*schema.Schema{
 					},
 				},
 				"schema": {
-					Type:        schema.TypeList,
-					MaxItems:    1,
+					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all privileges on new (i.e. future) objects of a specified type in the schema granted to a role.",
+					Description: "Lists all privileges on new (i.e. future) objects of a specified type in the schema granted to a role. Schema must be a fully qualified name (\"&lt;db_name&gt;\".\"&lt;schema_name&gt;\").",
 					ExactlyOneOf: []string{
 						"future_grants_in.0.database",
 						"future_grants_in.0.schema",
 					},
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"schema_name": {
-								Type:        schema.TypeString,
-								Required:    true,
-								Description: "The name of the schema to list all privileges of new (ie. future) objects granted to.",
-							},
-							"database_name": {
-								Type:        schema.TypeString,
-								Optional:    true,
-								Description: "The database in which the scehma resides. Optional when querying a schema in the current database.",
-							},
-						},
-					},
+					ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 				},
 			},
 		},
@@ -316,7 +303,7 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 		opts, err = buildOptsForGrantsOf(grantsOf.([]interface{})[0].(map[string]interface{}))
 	}
 	if futureGrantsIn, ok := d.GetOk("future_grants_in"); ok {
-		opts, err = buildOptsForFutureGrantsIn(ctx, client, futureGrantsIn.([]interface{})[0].(map[string]interface{}))
+		opts, err = buildOptsForFutureGrantsIn(futureGrantsIn.([]interface{})[0].(map[string]interface{}))
 	}
 	if futureGrantsTo, ok := d.GetOk("future_grants_to"); ok {
 		opts, err = buildOptsForFutureGrantsTo(futureGrantsTo.([]interface{})[0].(map[string]interface{}))
@@ -418,7 +405,7 @@ func buildOptsForGrantsOf(grantsOf map[string]interface{}) (*sdk.ShowGrantOption
 	return opts, nil
 }
 
-func buildOptsForFutureGrantsIn(ctx context.Context, client *sdk.Client, futureGrantsIn map[string]interface{}) (*sdk.ShowGrantOptions, error) {
+func buildOptsForFutureGrantsIn(futureGrantsIn map[string]interface{}) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 	opts.Future = sdk.Bool(true)
 
@@ -427,19 +414,9 @@ func buildOptsForFutureGrantsIn(ctx context.Context, client *sdk.Client, futureG
 			Database: sdk.Pointer(sdk.NewAccountObjectIdentifier(db)),
 		}
 	}
-	if sc := futureGrantsIn["schema"].([]interface{}); len(sc) > 0 {
-		schemaMap := sc[0].(map[string]interface{})
-		schemaName := schemaMap["schema_name"].(string)
-		databaseName := schemaMap["database_name"].(string)
-		if databaseName == "" {
-			current, err := client.ContextFunctions.CurrentDatabase(ctx)
-			if err != nil {
-				return nil, err
-			}
-			databaseName = current
-		}
+	if sc := futureGrantsIn["schema"].(string); sc != "" {
 		opts.In = &sdk.ShowGrantsIn{
-			Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)),
+			Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(sc)),
 		}
 	}
 	return opts, nil
