@@ -565,9 +565,41 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 	}
 }
 
+func useRole(t *testing.T, client *sdk.Client, roleName string) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
+	require.NoError(t, err)
+
+	err = client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(roleName))
+	require.NoError(t, err)
+
+	return func() {
+		err = client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(currentRole))
+		require.NoError(t, err)
+	}
+}
+
 func createRole(t *testing.T, client *sdk.Client) (*sdk.Role, func()) {
 	t.Helper()
 	return createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
+}
+
+func createRoleGrantedToCurrentUser(t *testing.T, client *sdk.Client) (*sdk.Role, func()) {
+	t.Helper()
+	role, roleCleanup := createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
+
+	ctx := context.Background()
+	currentUser, err := client.ContextFunctions.CurrentUser(ctx)
+	require.NoError(t, err)
+
+	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{
+		User: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentUser)),
+	}))
+	require.NoError(t, err)
+
+	return role, roleCleanup
 }
 
 func createRoleWithRequest(t *testing.T, client *sdk.Client, req *sdk.CreateRoleRequest) (*sdk.Role, func()) {
