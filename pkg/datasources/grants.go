@@ -140,11 +140,11 @@ var grantsSchema = map[string]*schema.Schema{
 								Description: "Lists all of the privileges and roles granted to the specified share.",
 							},
 							// TODO [SNOW-1284382]: Uncomment after SHOW GRANTS TO SHARE <share_name> IN APPLICATION PACKAGE <app_package_name> syntax starts working.
-							//"in_application_package": {
+							// "in_application_package": {
 							//	Type:        schema.TypeString,
 							//	Optional:    true,
 							//	Description: "Lists all of the privileges and roles granted to a share in the specified application package.",
-							//},
+							// },
 						},
 					},
 				},
@@ -429,9 +429,9 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 			},
 		}
 		// TODO [SNOW-1284382]: Uncomment after SHOW GRANTS TO SHARE <share_name> IN APPLICATION PACKAGE <app_package_name> syntax starts working.
-		//if inApplicationPackage := shareMap["in_application_package"]; inApplicationPackage != "" {
+		// if inApplicationPackage := shareMap["in_application_package"]; inApplicationPackage != "" {
 		//	opts.To.Share.InApplicationPackage = sdk.Pointer(sdk.NewAccountObjectIdentifier(inApplicationPackage.(string)))
-		//}
+		// }
 	}
 	return opts, nil
 }
