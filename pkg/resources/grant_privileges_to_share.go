@@ -306,6 +306,17 @@ func ReadGrantPrivilegesToShare(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	client := meta.(*provider.Context).Client
+	if _, err := client.Shares.ShowByID(ctx, id.ShareName); err != nil && errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Failed to retrieve share. Marking the resource as removed.",
+				Detail:   fmt.Sprintf("Id: %s", d.Id()),
+			},
+		}
+	}
+
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {

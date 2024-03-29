@@ -1226,7 +1226,7 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t 
 				PreConfig:       func() { databaseCleanup() },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
 				ConfigVariables: configVariables,
-				// The error occurs in the Create operation, indicating the Read operation removed resource from the state.
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
 				ExpectError: regexp.MustCompile("An error occurred when granting privileges to account role"),
 			},
 		},
@@ -1265,12 +1265,11 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *t
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
 				ConfigVariables: configVariables,
 			},
-			// TODO: Handle Update errors (and setId if not found)
 			{
 				PreConfig:       func() { roleCleanup() },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
 				ConfigVariables: configVariables,
-				// The error occurs in the Create operation, indicating the Read operation removed resource from the state.
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
 				ExpectError: regexp.MustCompile("An error occurred when granting privileges to account role"),
 			},
 		},

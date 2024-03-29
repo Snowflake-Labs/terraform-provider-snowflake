@@ -464,16 +464,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			)
 
 			if err != nil {
-				if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-					d.SetId("")
-					return diag.Diagnostics{
-						diag.Diagnostic{
-							Severity: diag.Warning,
-							Summary:  "Failed to revoke all privileges. Object not found. Marking the resource as removed.",
-							Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
-						},
-					}
-				}
 				return diag.Diagnostics{
 					diag.Diagnostic{
 						Severity: diag.Error,
@@ -538,16 +528,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 					new(sdk.GrantPrivilegesToAccountRoleOptions),
 				)
 				if err != nil {
-					if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-						d.SetId("")
-						return diag.Diagnostics{
-							diag.Diagnostic{
-								Severity: diag.Warning,
-								Summary:  "Failed to grant added privileges. Object not found. Marking the resource as removed.",
-								Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
-							},
-						}
-					}
 					return diag.Diagnostics{
 						diag.Diagnostic{
 							Severity: diag.Error,
@@ -575,16 +555,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 					new(sdk.RevokePrivilegesFromAccountRoleOptions),
 				)
 				if err != nil {
-					if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-						d.SetId("")
-						return diag.Diagnostics{
-							diag.Diagnostic{
-								Severity: diag.Warning,
-								Summary:  "Failed to revoke removed privileges. Object not found. Marking the resource as removed.",
-								Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
-							},
-						}
-					}
 					return diag.Diagnostics{
 						diag.Diagnostic{
 							Severity: diag.Error,
@@ -614,16 +584,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			)
 
 			if err != nil {
-				if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-					d.SetId("")
-					return diag.Diagnostics{
-						diag.Diagnostic{
-							Severity: diag.Warning,
-							Summary:  "Failed to grant all privileges. Object not found. Marking the resource as removed.",
-							Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
-						},
-					}
-				}
 				return diag.Diagnostics{
 					diag.Diagnostic{
 						Severity: diag.Error,
@@ -767,6 +727,17 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 
 	client := meta.(*provider.Context).Client
 
+	if _, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(id.RoleName)); err != nil && err.Error() == "object does not exist" {
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Failed to retrieve account role. Marking the resource as removed.",
+				Detail:   fmt.Sprintf("Id: %s", d.Id()),
+			},
+		}
+	}
+
 	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
@@ -775,8 +746,8 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary:  "Failed to retrieve grants. Object not found. Marking the resource as removed.",
-					Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+					Summary:  "Failed to retrieve grants. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s", d.Id()),
 				},
 			}
 		}

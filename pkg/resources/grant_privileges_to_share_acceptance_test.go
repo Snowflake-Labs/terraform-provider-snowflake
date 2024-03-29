@@ -522,7 +522,7 @@ func TestAcc_GrantPrivilegesToShare_NoOnOption(t *testing.T) {
 }
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
-func TestAcc_GrantPrivilegesToShare_RemoveGrantedObjectOutsideTerraform(t *testing.T) {
+func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
@@ -553,14 +553,7 @@ func TestAcc_GrantPrivilegesToShare_RemoveGrantedObjectOutsideTerraform(t *testi
 				PreConfig:       func() { shareCleanup() },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnCustomShare"),
 				ConfigVariables: configVariables,
-				// The error occurs in the Update operation
-				ExpectError: regexp.MustCompile("Failed to grant added privileges. Object not found. Marking the resource as removed."),
-			},
-			{
-				PreConfig:       func() { shareCleanup() },
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnCustomShare"),
-				ConfigVariables: configVariables,
-				// The error occurs in the Update operation, indicating the Read operation removed resource from the state.
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
 				ExpectError: regexp.MustCompile("An error occurred when granting privileges to share"),
 			},
 		},

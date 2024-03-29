@@ -964,14 +964,55 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t
 				PreConfig:       func() { databaseCleanup() },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
-				// The error occurs in the Create operation, indicating the Read operation removed resource from the state.
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
 				ExpectError: regexp.MustCompile("An error occurred when granting privileges to database role"),
 			},
 		},
 	})
 }
 
-func createDatabaseRoleOutsideTerraform(t *testing.T, databaseName string, name string) {
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
+func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"name":     config.StringVariable(name),
+		"database": config.StringVariable(databaseName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"with_grant_option": config.BoolVariable(true),
+	}
+
+	var databaseRoleCleanup func()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Cleanup(createTemporaryDatabaseOutsideTerraform(t, databaseName))
+					databaseRoleCleanup = createDatabaseRoleOutsideTerraform(t, databaseName, name)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig:       func() { databaseRoleCleanup() },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
+				ConfigVariables: configVariables,
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
+				ExpectError: regexp.MustCompile("An error occurred when granting privileges to database role"),
+			},
+		},
+	})
+}
+
+func createDatabaseRoleOutsideTerraform(t *testing.T, databaseName string, name string) func() {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
 	if err != nil {
@@ -981,6 +1022,12 @@ func createDatabaseRoleOutsideTerraform(t *testing.T, databaseName string, name 
 	databaseRoleId := sdk.NewDatabaseObjectIdentifier(databaseName, name)
 	if err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(databaseRoleId).WithOrReplace(true)); err != nil {
 		t.Fatal(fmt.Errorf("error database role (%s): %w", databaseRoleId.FullyQualifiedName(), err))
+	}
+
+	return func() {
+		if err := client.DatabaseRoles.Drop(ctx, sdk.NewDropDatabaseRoleRequest(databaseRoleId).WithIfExists(true)); err != nil {
+			t.Fatal(fmt.Errorf("error database role (%s): %w", databaseRoleId.FullyQualifiedName(), err))
+		}
 	}
 }
 
