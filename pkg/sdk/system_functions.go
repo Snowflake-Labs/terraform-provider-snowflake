@@ -12,6 +12,8 @@ import (
 type SystemFunctions interface {
 	GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (string, error)
 	PipeStatus(pipeId SchemaObjectIdentifier) (PipeExecutionState, error)
+	// PipeForceResume unpauses a pipe after ownership transfer. Snowflake will throw an error whenever a pipe changes its owner,
+	// and someone tries to unpause it. To unpause a pipe after ownership transfer, this system function has to be called instead of ALTER PIPE.
 	PipeForceResume(pipeId SchemaObjectIdentifier, options []ForceResumePipeOption) error
 }
 

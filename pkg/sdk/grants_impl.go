@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
 	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -256,22 +258,22 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 	return resultList, nil
 }
 
-// grantOwnershipOnPipe sequence (at worst 9 operations)
-//  1. get current role (needed to grant operate privilege later on)
-//  2. grant operate on pipe if not granted (it will error our otherwise)
-//  3. get pipe status (running or paused)
-//  4. if pipe is running, stop the pipe
-//  5. revoke operate (it may affect grant ownership call)
-//  6. grant ownership
-//  7. if pipe was previously running
-//     7.1. grant operate on pipe to current role
-//     7.2. unpause the pipe with system function
-//     7.3. revoke operate on pipe from current role
+// grantOwnershipOnPipe execution sequence
+//  1. Get the current role.
+//  2. Show grants on the pipe.
+//  3. See if the current role can "operate" on the pipe (has either OPERATE or OWNERSHIP privileges granted).
+//  4. If the current role can "operate" on the pipe.
+//     4.1. Check the current execution status of the pipe.
+//     4.2. Pause the pipe execution if it's running.
+//  5. If it cannot, try to proceed with the grant ownership in case the pipe is already paused.
+//  6. Grant ownership.
+//  7. If the current role could "operate" on the pipe, and the ownership was granted with COPY CURRENT GRANTS option.
+//     6.1. Resume with the use of system function.
+//  8. If it couldn't, notify the user that the pipe has to be resumed manually with the use of system function.
 func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectIdentifier, opts *GrantOwnershipOptions) error {
 	// To be able to call ALTER on a pipe to stop its execution,
 	// the current role has to be either the owner of this pipe or be granted with OPERATE privilege.
 	// The code below makes certain checks and takes care of making sure that the current role is privileged enough to act on the pipe and safely grant ownership.
-
 	currentRole, err := v.client.ContextFunctions.CurrentRole(ctx)
 	if err != nil {
 		return err
@@ -294,79 +296,41 @@ func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectId
 		return grant.GranteeName == currentRoleName && (grant.Privilege == "OWNERSHIP" || grant.Privilege == SchemaObjectPrivilegeOperate.String())
 	})
 
-	var revokeOperate func() error
-	if !canOperateOnPipe {
-		revokeOperate, err = v.grantOperateOnPipeTemporarily(ctx, pipeId, currentRoleName)
+	var originalPipeExecutionState *PipeExecutionState
+	if canOperateOnPipe {
+		pipeExecutionState, err := v.client.SystemFunctions.PipeStatus(pipeId)
 		if err != nil {
 			return err
 		}
-	}
+		originalPipeExecutionState = &pipeExecutionState
 
-	originalPipeExecutionState, err := v.client.SystemFunctions.PipeStatus(pipeId)
-	if err != nil {
-		return err
-	}
-
-	if originalPipeExecutionState == RunningPipeExecutionState {
-		if err := v.client.Pipes.Alter(ctx, pipeId, &AlterPipeOptions{
-			Set: &PipeSet{
-				PipeExecutionPaused: Bool(true),
-			},
-		}); err != nil {
-			return err
+		if pipeExecutionState == RunningPipeExecutionState {
+			if err := v.client.Pipes.Alter(ctx, pipeId, &AlterPipeOptions{
+				Set: &PipeSet{
+					PipeExecutionPaused: Bool(true),
+				},
+			}); err != nil {
+				return err
+			}
 		}
-	}
-
-	if !canOperateOnPipe {
-		if err := revokeOperate(); err != nil {
-			return err
-		}
+	} else {
+		// We cannot "operate" on the pipe, but we can try to grant ownership in a case where the pipe is already paused.
+		fmt.Printf("[DEBUG] Insufficient permissions to check the status of the pipe: %s, and pause it if it's in running state. Trying to proceed with ownership transfer...", pipeId.FullyQualifiedName())
 	}
 
 	if err := validateAndExec(v.client, ctx, opts); err != nil {
 		return err
 	}
 
-	if originalPipeExecutionState == RunningPipeExecutionState {
-		// We cannot resume right away and "normally" through ALTER, because:
-		// 1. Insufficient privileges (the current role has to be granted with at least OPERATE privilege).
-		// 2. Snowflake throws an error whenever pipes changes its owner, and you try to unpause it. The error suggests using system function to forcefully resume the pipe.
-		revokeOperate, err := v.grantOperateOnPipeTemporarily(ctx, pipeId, currentRoleName)
-		if err != nil {
-			return err
-		}
-
-		// TODO: check if options need to be passed
+	if canOperateOnPipe && opts.CurrentGrants != nil && opts.CurrentGrants.OutboundPrivileges == Copy && originalPipeExecutionState != nil && *originalPipeExecutionState == RunningPipeExecutionState {
 		if err := v.client.SystemFunctions.PipeForceResume(pipeId, nil); err != nil {
 			return err
 		}
-
-		if err := revokeOperate(); err != nil {
-			return err
-		}
+	} else {
+		log.Printf("[WARN] Insufficient privileges to resume the pipe: %s. Resume has to be done manually with the use of SELECT SYSTEM$PIPE_FORCE_RESUME system function.", pipeId.FullyQualifiedName())
 	}
 
 	return nil
-}
-
-func (v *grants) grantOperateOnPipeTemporarily(ctx context.Context, pipeId SchemaObjectIdentifier, currentRole AccountObjectIdentifier) (func() error, error) {
-	return v.grantTemporarily(
-		ctx,
-		&AccountRoleGrantPrivileges{
-			SchemaObjectPrivileges: []SchemaObjectPrivilege{
-				SchemaObjectPrivilegeOperate,
-			},
-		},
-		&AccountRoleGrantOn{
-			SchemaObject: &GrantOnSchemaObject{
-				SchemaObject: &Object{
-					ObjectType: ObjectTypePipe,
-					Name:       pipeId,
-				},
-			},
-		},
-		currentRole,
-	)
 }
 
 func (v *grants) grantTemporarily(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, accountRoleName AccountObjectIdentifier) (func() error, error) {
