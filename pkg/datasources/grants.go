@@ -226,6 +226,7 @@ var grantsSchema = map[string]*schema.Schema{
 						"future_grants_to.0.role",
 						"future_grants_to.0.database_role",
 					},
+					ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 				},
 			},
 		},
@@ -432,16 +433,8 @@ func buildOptsForFutureGrantsTo(futureGrantsTo map[string]interface{}) (*sdk.Sho
 		}
 	}
 	if databaseRole := futureGrantsTo["database_role"].(string); databaseRole != "" {
-		databaseRoleId, err := helpers.DecodeSnowflakeParameterID(databaseRole)
-		if err != nil {
-			return nil, err
-		}
-		validDatabaseRoleId, ok := databaseRoleId.(sdk.DatabaseObjectIdentifier)
-		if !ok {
-			return nil, fmt.Errorf("incorrect database role identifier (%s)", databaseRole)
-		}
 		opts.To = &sdk.ShowGrantsTo{
-			DatabaseRole: validDatabaseRoleId,
+			DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRole),
 		}
 	}
 	return opts, nil

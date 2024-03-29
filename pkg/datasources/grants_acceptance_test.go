@@ -125,10 +125,10 @@ func getSecondaryAccountIdentifier(t *testing.T) *sdk.AccountIdentifier {
 // + future in - schema (both db and sc present)
 // + future in - invalid config - no attribute
 // + future in - invalid config - schema name not fully qualified
-// - future to - role
-// - future to - database role
-// - future to - invalid config - no attribute
-// - future to - invalid config - database role id invalid
+// + future to - role
+// + future to - database role
+// + future to - invalid config - no attribute
+// + future to - invalid config - database role id invalid
 func TestAcc_Grants_On_Account(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -521,6 +521,90 @@ func TestAcc_Grants_FutureIn_Invalid_SchemaNameNotFullyQualified(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureIn/Invalid/SchemaNameNotFullyQualified"),
+				PlanOnly:        true,
+				ExpectError:     regexp.MustCompile("Error: Invalid identifier type"),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_FutureTo_Role(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"database": config.StringVariable(databaseName),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureTo/Role"),
+				ConfigVariables: configVariables,
+				Check:           checkAtLeastOneFutureGrantPresent(),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_FutureTo_DatabaseRole(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"database":      config.StringVariable(databaseName),
+		"database_role": config.StringVariable(databaseRoleName),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureTo/DatabaseRole"),
+				ConfigVariables: configVariables,
+				Check:           checkAtLeastOneFutureGrantPresent(),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_FutureTo_Invalid_NoAttribute(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureTo/Invalid/NoAttribute"),
+				PlanOnly:        true,
+				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_FutureTo_Invalid_DatabaseRoleIdInvalid(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureTo/Invalid/DatabaseRoleIdInvalid"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Invalid identifier type"),
 			},
