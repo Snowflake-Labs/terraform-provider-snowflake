@@ -70,12 +70,10 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:      "snowflake_file_format.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"enable_multiple_grants", // feature flag attribute not defined in Snowflake, can't be imported
-				},
+				ResourceName:            "snowflake_file_format.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
