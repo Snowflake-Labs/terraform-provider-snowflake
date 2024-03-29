@@ -396,7 +396,9 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 	opts := new(sdk.ShowGrantOptions)
 
 	if application := grantsTo["application"].(string); application != "" {
-		// TODO: unsupported SHOW GRANTS TO APPLICATION
+		opts.To = &sdk.ShowGrantsTo{
+			Application: sdk.NewAccountObjectIdentifier(application),
+		}
 	}
 	if applicationRole := grantsTo["application_role"].(string); applicationRole != "" {
 		opts.To = &sdk.ShowGrantsTo{
