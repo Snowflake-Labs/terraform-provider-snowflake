@@ -66,7 +66,7 @@ func TestAcc_Grants_On_Account(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On_Account"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/Account"),
 				Check:           checkAtLeastOneGrantPresent(),
 			},
 		},
@@ -87,7 +87,7 @@ func TestAcc_Grants_On_AccountObject(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On_AccountObject"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/AccountObject"),
 				ConfigVariables: configVariables,
 				Check:           checkAtLeastOneGrantPresent(),
 			},
@@ -110,7 +110,7 @@ func TestAcc_Grants_On_DatabaseObject(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On_DatabaseObject"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/DatabaseObject"),
 				ConfigVariables: configVariables,
 				Check:           checkAtLeastOneGrantPresent(),
 			},
@@ -135,7 +135,7 @@ func TestAcc_Grants_On_SchemaObject(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On_SchemaObject"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/SchemaObject"),
 				ConfigVariables: configVariables,
 				Check:           checkAtLeastOneGrantPresent(),
 			},
@@ -153,7 +153,7 @@ func TestAcc_Grants_On_Invalid_NoAttribute(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On_Invalid_NoAttribute"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/Invalid/NoAttribute"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
@@ -171,7 +171,7 @@ func TestAcc_Grants_On_Invalid_MissingObjectType(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On_Invalid_MissingObjectType"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/Invalid/MissingObjectType"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Missing required argument"),
 			},
