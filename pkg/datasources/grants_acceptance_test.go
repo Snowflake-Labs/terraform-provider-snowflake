@@ -120,12 +120,14 @@ func getSecondaryAccountIdentifier(t *testing.T) *sdk.AccountIdentifier {
 // + to - invalid config - no attribute
 // + to - invalid config - share name missing
 // + to - invalid config - database role id invalid
+// + to - invalid config - application role id invalid
 // + of - role
 // + of - database role
 // - of - application role
 // + of - share
 // + of - invalid config - no attribute
 // + of - invalid config - database role id invalid
+// + of - invalid config - application role id invalid
 // + future in - database
 // + future in - schema (both db and sc present)
 // + future in - invalid config - no attribute
@@ -427,6 +429,24 @@ func TestAcc_Grants_To_Invalid_DatabaseRoleIdInvalid(t *testing.T) {
 	})
 }
 
+func TestAcc_Grants_To_Invalid_ApplicationRoleIdInvalid(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/Invalid/ApplicationRoleIdInvalid"),
+				PlanOnly:        true,
+				ExpectError:     regexp.MustCompile("Error: Invalid identifier type"),
+			},
+		},
+	})
+}
+
 func TestAcc_Grants_Of_Role(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -528,6 +548,24 @@ func TestAcc_Grants_Of_Invalid_DatabaseRoleIdInvalid(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Invalid/DatabaseRoleIdInvalid"),
+				PlanOnly:        true,
+				ExpectError:     regexp.MustCompile("Error: Invalid identifier type"),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_Of_Invalid_ApplicationRoleIdInvalid(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Invalid/ApplicationRoleIdInvalid"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Invalid identifier type"),
 			},

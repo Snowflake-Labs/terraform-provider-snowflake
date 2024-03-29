@@ -68,7 +68,7 @@ var grantsSchema = map[string]*schema.Schema{
 				"application_role": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all the privileges and roles granted to the application role. Note: if fully qualified application role identifier is not specified, i.e. only the application role name is given, Snowflake uses the current application. If the application is not a database, this command does not return results. Consult with the proper section in the [docs](https://docs.snowflake.com/en/sql-reference/sql/show-grants#variants).",
+					Description: "Lists all the privileges and roles granted to the application role. Must be a fully qualified name (\"&lt;app_name&gt;\".\"&lt;app_role_name&gt;\").",
 					ExactlyOneOf: []string{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
@@ -77,6 +77,7 @@ var grantsSchema = map[string]*schema.Schema{
 						"grants_to.0.user",
 						"grants_to.0.share",
 					},
+					ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 				},
 				"role": {
 					Type:        schema.TypeString,
@@ -94,7 +95,7 @@ var grantsSchema = map[string]*schema.Schema{
 				"database_role": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all privileges and roles granted to the database role.",
+					Description: "Lists all privileges and roles granted to the database role. Must be a fully qualified name (\"&lt;db_name&gt;\".\"&lt;database_role_name&gt;\").",
 					ExactlyOneOf: []string{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
@@ -171,7 +172,7 @@ var grantsSchema = map[string]*schema.Schema{
 				"database_role": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all users and roles to which the database role has been granted.",
+					Description: "Lists all users and roles to which the database role has been granted. Must be a fully qualified name (\"&lt;db_name&gt;\".\"&lt;database_role_name&gt;\").",
 					ExactlyOneOf: []string{
 						"grants_of.0.role",
 						"grants_of.0.database_role",
@@ -183,13 +184,14 @@ var grantsSchema = map[string]*schema.Schema{
 				"application_role": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all the users and roles to which the application role has been granted. Note: if fully qualified application role identifier is not specified, i.e. only the application role name is given, Snowflake uses the current application. If the application is not a database, this command does not return results. Consult with the proper section in the [docs](https://docs.snowflake.com/en/sql-reference/sql/show-grants#variants).",
+					Description: "Lists all the users and roles to which the application role has been granted. Must be a fully qualified name (\"&lt;db_name&gt;\".\"&lt;database_role_name&gt;\").",
 					ExactlyOneOf: []string{
 						"grants_of.0.role",
 						"grants_of.0.database_role",
 						"grants_of.0.application_role",
 						"grants_of.0.share",
 					},
+					ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 				},
 				"share": {
 					Type:        schema.TypeString,
@@ -255,7 +257,7 @@ var grantsSchema = map[string]*schema.Schema{
 				"database_role": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all privileges on new (i.e. future) objects granted to the database role.",
+					Description: "Lists all privileges on new (i.e. future) objects granted to the database role. Must be a fully qualified name (\"&lt;db_name&gt;\".\"&lt;database_role_name&gt;\").",
 					ExactlyOneOf: []string{
 						"future_grants_to.0.role",
 						"future_grants_to.0.database_role",
@@ -397,7 +399,9 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 		// TODO: unsupported SHOW GRANTS TO APPLICATION
 	}
 	if applicationRole := grantsTo["application_role"].(string); applicationRole != "" {
-		// TODO: unsupported SHOW GRANTS TO APPLICATION ROLE
+		opts.To = &sdk.ShowGrantsTo{
+			ApplicationRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(applicationRole),
+		}
 	}
 	if role := grantsTo["role"].(string); role != "" {
 		opts.To = &sdk.ShowGrantsTo{
@@ -438,7 +442,9 @@ func buildOptsForGrantsOf(grantsOf map[string]interface{}) (*sdk.ShowGrantOption
 		}
 	}
 	if applicationRole := grantsOf["application_role"].(string); applicationRole != "" {
-		// TODO: unsupported SHOW GRANTS OF APPLICATION ROLE
+		opts.Of = &sdk.ShowGrantsOf{
+			ApplicationRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(applicationRole),
+		}
 	}
 	if share := grantsOf["share"].(string); share != "" {
 		opts.Of = &sdk.ShowGrantsOf{

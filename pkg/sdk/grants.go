@@ -176,16 +176,18 @@ type ShowGrantsOn struct {
 }
 
 type ShowGrantsTo struct {
-	Role         AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
-	User         AccountObjectIdentifier  `ddl:"identifier" sql:"USER"`
-	Share        AccountObjectIdentifier  `ddl:"identifier" sql:"SHARE"`
-	DatabaseRole DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
+	ApplicationRole DatabaseObjectIdentifier `ddl:"identifier" sql:"APPLICATION ROLE"`
+	Role            AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
+	User            AccountObjectIdentifier  `ddl:"identifier" sql:"USER"`
+	Share           AccountObjectIdentifier  `ddl:"identifier" sql:"SHARE"`
+	DatabaseRole    DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
 }
 
 type ShowGrantsOf struct {
-	Role         AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
-	DatabaseRole DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
-	Share        AccountObjectIdentifier  `ddl:"identifier" sql:"SHARE"`
+	ApplicationRole DatabaseObjectIdentifier `ddl:"identifier" sql:"APPLICATION ROLE"`
+	Role            AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
+	DatabaseRole    DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
+	Share           AccountObjectIdentifier  `ddl:"identifier" sql:"SHARE"`
 }
 
 type grantRow struct {
