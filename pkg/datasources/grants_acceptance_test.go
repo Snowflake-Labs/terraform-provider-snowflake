@@ -17,92 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func checkAtLeastOneGrantPresent() resource.TestCheckFunc {
-	datasourceName := "data.snowflake_grants.test"
-	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.created_on"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.privilege"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.granted_on"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.name"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.granted_to"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grantee_name"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grant_option"),
-	)
-}
-
-func checkAtLeastOneFutureGrantPresent() resource.TestCheckFunc {
-	datasourceName := "data.snowflake_grants.test"
-	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.created_on"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.privilege"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.name"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grantee_name"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grant_option"),
-	)
-}
-
-func checkAtLeastOneGrantPresentLimited() resource.TestCheckFunc {
-	datasourceName := "data.snowflake_grants.test"
-	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.created_on"),
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.granted_to"),
-	)
-}
-
-func checkNoGrantsPresent() resource.TestCheckFunc {
-	datasourceName := "data.snowflake_grants.test"
-	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
-		resource.TestCheckNoResourceAttr(datasourceName, "grants.0.created_on"),
-	)
-}
-
-func getCurrentUser(t *testing.T) string {
-	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	user, err := client.ContextFunctions.CurrentUser(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	return user
-}
-
-func getSecondaryAccountIdentifier(t *testing.T) *sdk.AccountIdentifier {
-	t.Helper()
-
-	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-	cfg, err := sdk.ProfileConfig(testprofiles.Secondary)
-	if err != nil {
-		t.Fatal(err)
-	}
-	secondaryClient, err := sdk.NewClient(cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ctx := context.Background()
-
-	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, replicationAccount := range replicationAccounts {
-		if replicationAccount.AccountLocator == secondaryClient.GetAccountLocator() {
-			return sdk.Pointer(sdk.NewAccountIdentifier(replicationAccount.OrganizationName, replicationAccount.AccountName))
-		}
-	}
-	return nil
-}
-
 // TODO: tests (examples from the correct ones):
 // +/- to - share with application package
 func TestAcc_Grants_On_Account(t *testing.T) {
@@ -473,10 +387,41 @@ func TestAcc_Grants_Of_ApplicationRole(t *testing.T) {
 	t.Skip("Skipped until snowflake_application and snowflake_application_role resources are introduced. Currently, behavior tested in application_roles_gen_integration_test.go.")
 }
 
+// TODO [SNOW-1284394]: Unskip the test
 func TestAcc_Grants_Of_Share(t *testing.T) {
 	t.Skip("TestAcc_Share are skipped")
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	getSecondaryAccountIdentifier := func(t *testing.T) *sdk.AccountIdentifier {
+		t.Helper()
+
+		client, err := sdk.NewDefaultClient()
+		if err != nil {
+			t.Fatal(err)
+		}
+		cfg, err := sdk.ProfileConfig(testprofiles.Secondary)
+		if err != nil {
+			t.Fatal(err)
+		}
+		secondaryClient, err := sdk.NewClient(cfg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx := context.Background()
+
+		replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, replicationAccount := range replicationAccounts {
+			if replicationAccount.AccountLocator == secondaryClient.GetAccountLocator() {
+				return sdk.Pointer(sdk.NewAccountIdentifier(replicationAccount.OrganizationName, replicationAccount.AccountName))
+			}
+		}
+		return nil
+	}
+
 	accountId := getSecondaryAccountIdentifier(t)
 	require.NotNil(t, accountId)
 
@@ -485,6 +430,7 @@ func TestAcc_Grants_Of_Share(t *testing.T) {
 		"share":    config.StringVariable(shareName),
 		"account":  config.StringVariable(accountId.FullyQualifiedName()),
 	}
+	datasourceName := "data.snowflake_grants.test"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -497,7 +443,10 @@ func TestAcc_Grants_Of_Share(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Share"),
 				ConfigVariables: configVariables,
-				Check:           checkNoGrantsPresent(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
+					resource.TestCheckNoResourceAttr(datasourceName, "grants.0.created_on"),
+				),
 			},
 		},
 	})
@@ -723,4 +672,52 @@ func TestAcc_Grants_FutureTo_Invalid_DatabaseRoleIdInvalid(t *testing.T) {
 			},
 		},
 	})
+}
+
+func checkAtLeastOneGrantPresent() resource.TestCheckFunc {
+	datasourceName := "data.snowflake_grants.test"
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.created_on"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.privilege"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.granted_on"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.name"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.granted_to"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grantee_name"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grant_option"),
+	)
+}
+
+func checkAtLeastOneFutureGrantPresent() resource.TestCheckFunc {
+	datasourceName := "data.snowflake_grants.test"
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.created_on"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.privilege"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.name"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grantee_name"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.grant_option"),
+	)
+}
+
+func checkAtLeastOneGrantPresentLimited() resource.TestCheckFunc {
+	datasourceName := "data.snowflake_grants.test"
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.#"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.created_on"),
+		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.granted_to"),
+	)
+}
+
+func getCurrentUser(t *testing.T) string {
+	t.Helper()
+	client, err := sdk.NewDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	user, err := client.ContextFunctions.CurrentUser(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	return user
 }
