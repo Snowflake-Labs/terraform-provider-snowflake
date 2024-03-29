@@ -17,8 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: tests (examples from the correct ones):
-// +/- to - share with application package
 func TestAcc_Grants_On_Account(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -242,30 +240,9 @@ func TestAcc_Grants_To_Share(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1284382]: Implement after SHOW GRANTS TO SHARE <share_name> IN APPLICATION PACKAGE <app_package_name> syntax starts working.
 func TestAcc_Grants_To_ShareWithApplicationPackage(t *testing.T) {
-	t.Skip("No SDK support yet")
-	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
-		"share":    config.StringVariable(shareName),
-	}
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: nil,
-		Steps: []resource.TestStep{
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/ShareWithApplicationPackage"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
-			},
-		},
-	})
+	t.Skip("Skipped until SHOW GRANTS TO SHARE <share_name> IN APPLICATION PACKAGE <app_package_name> syntax starts working.")
 }
 
 func TestAcc_Grants_To_Invalid_NoAttribute(t *testing.T) {

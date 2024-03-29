@@ -139,11 +139,12 @@ var grantsSchema = map[string]*schema.Schema{
 								Required:    true,
 								Description: "Lists all of the privileges and roles granted to the specified share.",
 							},
-							"in_application_package": {
-								Type:        schema.TypeString,
-								Optional:    true,
-								Description: "Lists all of the privileges and roles granted to a share in the specified application package.",
-							},
+							// TODO [SNOW-1284382]: Uncomment after SHOW GRANTS TO SHARE <share_name> IN APPLICATION PACKAGE <app_package_name> syntax starts working.
+							//"in_application_package": {
+							//	Type:        schema.TypeString,
+							//	Optional:    true,
+							//	Description: "Lists all of the privileges and roles granted to a share in the specified application package.",
+							//},
 						},
 					},
 				},
@@ -423,9 +424,14 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 	if share := grantsTo["share"]; share != nil && len(share.([]interface{})) > 0 {
 		shareMap := share.([]interface{})[0].(map[string]interface{})
 		opts.To = &sdk.ShowGrantsTo{
-			Share: sdk.NewAccountObjectIdentifier(shareMap["share_name"].(string)),
+			Share: &sdk.ShowGrantsToShare{
+				Name: sdk.NewAccountObjectIdentifier(shareMap["share_name"].(string)),
+			},
 		}
-		// TODO: unsupported IN APPLICATION PACKAGE
+		// TODO [SNOW-1284382]: Uncomment after SHOW GRANTS TO SHARE <share_name> IN APPLICATION PACKAGE <app_package_name> syntax starts working.
+		//if inApplicationPackage := shareMap["in_application_package"]; inApplicationPackage != "" {
+		//	opts.To.Share.InApplicationPackage = sdk.Pointer(sdk.NewAccountObjectIdentifier(inApplicationPackage.(string)))
+		//}
 	}
 	return opts, nil
 }

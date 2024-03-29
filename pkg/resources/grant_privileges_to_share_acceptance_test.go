@@ -533,7 +533,9 @@ func testAccCheckSharePrivilegesRevoked() func(*terraform.State) error {
 			id := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["to_share"])
 			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 				To: &sdk.ShowGrantsTo{
-					Share: sdk.NewAccountObjectIdentifier(id.Name()),
+					Share: &sdk.ShowGrantsToShare{
+						Name: sdk.NewAccountObjectIdentifier(id.Name()),
+					},
 				},
 			})
 			if err != nil {

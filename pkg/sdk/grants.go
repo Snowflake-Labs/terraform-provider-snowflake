@@ -180,8 +180,13 @@ type ShowGrantsTo struct {
 	ApplicationRole DatabaseObjectIdentifier `ddl:"identifier" sql:"APPLICATION ROLE"`
 	Role            AccountObjectIdentifier  `ddl:"identifier" sql:"ROLE"`
 	User            AccountObjectIdentifier  `ddl:"identifier" sql:"USER"`
-	Share           AccountObjectIdentifier  `ddl:"identifier" sql:"SHARE"`
+	Share           *ShowGrantsToShare       `ddl:"-"`
 	DatabaseRole    DatabaseObjectIdentifier `ddl:"identifier" sql:"DATABASE ROLE"`
+}
+
+type ShowGrantsToShare struct {
+	Name                 AccountObjectIdentifier  `ddl:"identifier" sql:"SHARE"`
+	InApplicationPackage *AccountObjectIdentifier `ddl:"identifier" sql:"IN APPLICATION PACKAGE"`
 }
 
 type ShowGrantsOf struct {
