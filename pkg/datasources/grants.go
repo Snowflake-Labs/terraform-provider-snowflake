@@ -28,11 +28,10 @@ var grantsSchema = map[string]*schema.Schema{
 					Description:  "Name of object to list privileges on.",
 				},
 				"object_type": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					RequiredWith:  []string{"grants_on.0.object_name"},
-					Description:   "Type of object to list privileges on.",
-					ConflictsWith: []string{"grants_on.0.account"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					RequiredWith: []string{"grants_on.0.object_name"},
+					Description:  "Type of object to list privileges on.",
 				},
 				"account": {
 					Type:          schema.TypeBool,
