@@ -104,38 +104,7 @@ func getSecondaryAccountIdentifier(t *testing.T) *sdk.AccountIdentifier {
 }
 
 // TODO: tests (examples from the correct ones):
-// + on - account
-// + on - account object
-// + on - db object
-// + on - schema object
-// + on - invalid config - no attribute
-// + on - invalid config - missing object type or name
-// - to - application
-// - to - application role
-// + to - role
-// + to - database role
-// + to - user
-// + to - share
 // +/- to - share with application package
-// + to - invalid config - no attribute
-// + to - invalid config - share name missing
-// + to - invalid config - database role id invalid
-// + to - invalid config - application role id invalid
-// + of - role
-// + of - database role
-// - of - application role
-// + of - share
-// + of - invalid config - no attribute
-// + of - invalid config - database role id invalid
-// + of - invalid config - application role id invalid
-// + future in - database
-// + future in - schema (both db and sc present)
-// + future in - invalid config - no attribute
-// + future in - invalid config - schema name not fully qualified
-// + future to - role
-// + future to - database role
-// + future to - invalid config - no attribute
-// + future to - invalid config - database role id invalid
 func TestAcc_Grants_On_Account(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -257,6 +226,16 @@ func TestAcc_Grants_On_Invalid_MissingObjectType(t *testing.T) {
 			},
 		},
 	})
+}
+
+// TODO [SNOW-1284382]: Implement after snowflake_application and snowflake_application_role resources are introduced.
+func TestAcc_Grants_To_Application(t *testing.T) {
+	t.Skip("Skipped until snowflake_application and snowflake_application_role resources are introduced. Currently, behavior tested in application_roles_gen_integration_test.go.")
+}
+
+// TODO [SNOW-1284382]: Implement after snowflake_application and snowflake_application_role resources are introduced.
+func TestAcc_Grants_To_ApplicationRole(t *testing.T) {
+	t.Skip("Skipped until snowflake_application and snowflake_application_role resources are introduced. Currently, behavior tested in application_roles_gen_integration_test.go.")
 }
 
 func TestAcc_Grants_To_Role(t *testing.T) {
@@ -487,6 +466,11 @@ func TestAcc_Grants_Of_DatabaseRole(t *testing.T) {
 			},
 		},
 	})
+}
+
+// TODO [SNOW-1284382]: Implement after snowflake_application and snowflake_application_role resources are introduced.
+func TestAcc_Grants_Of_ApplicationRole(t *testing.T) {
+	t.Skip("Skipped until snowflake_application and snowflake_application_role resources are introduced. Currently, behavior tested in application_roles_gen_integration_test.go.")
 }
 
 func TestAcc_Grants_Of_Share(t *testing.T) {
