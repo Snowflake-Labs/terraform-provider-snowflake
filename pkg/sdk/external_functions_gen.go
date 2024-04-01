@@ -3,7 +3,6 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"strings"
 )
 
 type ExternalFunctions interface {
@@ -134,9 +133,7 @@ type ExternalFunction struct {
 }
 
 func (v *ExternalFunction) ID() SchemaObjectIdentifier {
-	database := strings.Trim(v.CatalogName, "\"")
-	schema := strings.Trim(v.SchemaName, "\"")
-	return NewSchemaObjectIdentifier(database, schema, v.Name)
+	return NewSchemaObjectIdentifier(v.CatalogName, v.SchemaName, v.Name)
 }
 
 // DescribeExternalFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.

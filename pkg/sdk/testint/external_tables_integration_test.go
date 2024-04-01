@@ -421,7 +421,7 @@ func TestInt_ExternalTablesShowByID(t *testing.T) {
 	ctx := testContext(t)
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	stage := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, "EXTERNAL_TABLE_STAGE")
+	stage := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(6))
 	_, stageCleanup := createStageWithURL(t, client, stage, nycWeatherDataURL)
 	t.Cleanup(stageCleanup)
 
@@ -446,7 +446,7 @@ func TestInt_ExternalTablesShowByID(t *testing.T) {
 		t.Cleanup(cleanupExternalTableHandle(t, id))
 	}
 
-	t.Run("show by id", func(t *testing.T) {
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
 		t.Cleanup(schemaCleanup)
 

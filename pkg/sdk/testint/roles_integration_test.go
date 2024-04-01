@@ -221,7 +221,7 @@ func TestInt_Roles(t *testing.T) {
 		assert.Equal(t, "USER", roles[0].Name)
 	})
 
-	t.Run("show by id", func(t *testing.T) {
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		role, cleanup := createRole(t, client)
 		t.Cleanup(cleanup)
 

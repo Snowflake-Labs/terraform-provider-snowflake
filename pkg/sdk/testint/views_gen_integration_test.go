@@ -560,7 +560,7 @@ func TestInt_ViewsShowByID(t *testing.T) {
 		t.Cleanup(cleanupViewHandle(id))
 	}
 
-	t.Run("show by id", func(t *testing.T) {
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
 		t.Cleanup(schemaCleanup)
 

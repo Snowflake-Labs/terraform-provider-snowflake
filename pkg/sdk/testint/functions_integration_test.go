@@ -491,7 +491,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		t.Cleanup(cleanupFunctionHandle(id, []sdk.DataType{sdk.DataTypeFloat}))
 	}
 
-	t.Run("show by id", func(t *testing.T) {
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
 		t.Cleanup(schemaCleanup)
 
