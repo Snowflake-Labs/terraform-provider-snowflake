@@ -876,7 +876,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		err = client.Grants.GrantPrivilegesToAccountRole(
 			ctx,
 			&sdk.AccountRoleGrantPrivileges{
-				SchemaPrivileges: []sdk.SchemaPrivilege{sdk.SchemaPrivilegeUsage, sdk.SchemaPrivilegeCreatePipe},
+				SchemaPrivileges: []sdk.SchemaPrivilege{sdk.SchemaPrivilegeUsage, sdk.SchemaPrivilegeCreatePipe, sdk.SchemaPrivilegeCreateTask},
 			},
 			&sdk.AccountRoleGrantOn{
 				Schema: &sdk.GrantOnSchema{
@@ -931,6 +931,27 @@ func TestInt_GrantOwnership(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	grantTaskRole := func(t *testing.T, role *sdk.Role) {
+		t.Helper()
+
+		grantDatabaseAndSchemaUsage(t, role)
+
+		err := client.Grants.GrantPrivilegesToAccountRole(
+			ctx,
+			&sdk.AccountRoleGrantPrivileges{
+				AccountObjectPrivileges: []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage},
+			},
+			&sdk.AccountRoleGrantOn{
+				AccountObject: &sdk.GrantOnAccountObject{
+					Warehouse: sdk.Pointer(testWarehouse(t).ID()),
+				},
+			},
+			role.ID(),
+			new(sdk.GrantPrivilegesToAccountRoleOptions),
+		)
+		require.NoError(t, err)
+	}
+
 	makeAccountRoleOperableOnPipe := func(t *testing.T, grantingRole string, pipe *sdk.Pipe) {
 		t.Helper()
 
@@ -953,13 +974,21 @@ func TestInt_GrantOwnership(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	ownershipGrantOnPipe := func(p *sdk.Pipe) sdk.OwnershipGrantOn {
+	ownershipGrantOnObject := func(objectType sdk.ObjectType, identifier sdk.ObjectIdentifier) sdk.OwnershipGrantOn {
 		return sdk.OwnershipGrantOn{
 			Object: &sdk.Object{
-				ObjectType: sdk.ObjectTypePipe,
-				Name:       p.ID(),
+				ObjectType: objectType,
+				Name:       identifier,
 			},
 		}
+	}
+
+	ownershipGrantOnPipe := func(pipe *sdk.Pipe) sdk.OwnershipGrantOn {
+		return ownershipGrantOnObject(sdk.ObjectTypePipe, pipe.ID())
+	}
+
+	ownershipGrantOnTask := func(task *sdk.Task) sdk.OwnershipGrantOn {
+		return ownershipGrantOnObject(sdk.ObjectTypeTask, task.ID())
 	}
 
 	t.Run("on schema object to database role", func(t *testing.T) {
@@ -1677,6 +1706,152 @@ func TestInt_GrantOwnership(t *testing.T) {
 		secondPipeExecutionState, err = client.SystemFunctions.PipeStatus(secondPipe.ID())
 		require.NoError(t, err)
 		require.Equal(t, sdk.PausedPipeExecutionState, secondPipeExecutionState)
+	})
+
+	t.Run("on task - with ownership", func(t *testing.T) {
+		task, taskCleanup := createTask(t, client, testDb(t), testSchema(t))
+		t.Cleanup(taskCleanup)
+
+		role, roleCleanup := createRole(t, client)
+		t.Cleanup(roleCleanup)
+
+		err := client.Grants.GrantOwnership(
+			ctx,
+			ownershipGrantOnTask(task),
+			sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(role.ID()),
+			},
+			new(sdk.GrantOwnershipOptions),
+		)
+		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID().Name())
+	})
+
+	t.Run("on task - without ownership", func(t *testing.T) {
+		taskRole, taskRoleCleanup := createRoleGrantedToCurrentUser(t, client)
+		t.Cleanup(taskRoleCleanup)
+
+		role, roleCleanup := createRoleGrantedToCurrentUser(t, client)
+		t.Cleanup(roleCleanup)
+
+		// Role needs usage on the database and schema to later be able to remove task in the cleanup
+		grantDatabaseAndSchemaUsage(t, role)
+
+		// grantTaskRole grants the necessary privileges to a role to be able to create task
+		grantTaskRole(t, taskRole)
+
+		// Use a previously prepared role to create a task
+		usePreviousRole := useRole(t, client, taskRole.Name)
+
+		taskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
+		withWarehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
+		task, taskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(taskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq))
+		t.Cleanup(taskCleanup)
+
+		usePreviousRole()
+
+		t.Cleanup(func() {
+			currentRole, err := client.ContextFunctions.CurrentRole(ctx)
+			require.NoError(t, err)
+
+			grantOwnershipToRole(t, currentRole, ownershipGrantOnTask(task))
+		})
+
+		err := client.Grants.GrantOwnership(
+			ctx,
+			ownershipGrantOnTask(task),
+			sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(role.ID()),
+			},
+			new(sdk.GrantOwnershipOptions),
+		)
+		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID().Name())
+	})
+
+	t.Run("on all tasks -  with ownership", func(t *testing.T) {
+		task, taskCleanup := createTask(t, client, testDb(t), testSchema(t))
+		t.Cleanup(taskCleanup)
+
+		secondTask, secondTaskCleanup := createTask(t, client, testDb(t), testSchema(t))
+		t.Cleanup(secondTaskCleanup)
+
+		role, roleCleanup := createRole(t, client)
+		t.Cleanup(roleCleanup)
+
+		onAllTasks := sdk.OwnershipGrantOn{
+			All: &sdk.GrantOnSchemaObjectIn{
+				PluralObjectType: sdk.PluralObjectTypeTasks,
+				InSchema:         sdk.Pointer(testSchema(t).ID()),
+			},
+		}
+		err := client.Grants.GrantOwnership(
+			ctx,
+			onAllTasks,
+			sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(role.ID()),
+			},
+			new(sdk.GrantOwnershipOptions),
+		)
+		require.NoError(t, err)
+
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(secondTask), role.ID().Name())
+	})
+
+	t.Run("on all tasks -  without ownership", func(t *testing.T) {
+		taskRole, taskRoleCleanup := createRoleGrantedToCurrentUser(t, client)
+		t.Cleanup(taskRoleCleanup)
+
+		role, roleCleanup := createRoleGrantedToCurrentUser(t, client)
+		t.Cleanup(roleCleanup)
+
+		// Role needs usage on the database and schema to later be able to remove task in the cleanup
+		grantDatabaseAndSchemaUsage(t, role)
+
+		// grantTaskRole grants the necessary privileges to a role to be able to create task
+		grantTaskRole(t, taskRole)
+
+		// Use a previously prepared role to create a task
+		usePreviousRole := useRole(t, client, taskRole.Name)
+
+		taskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
+		withWarehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
+		task, taskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(taskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq))
+		t.Cleanup(taskCleanup)
+
+		secondTaskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
+		secondTask, secondTaskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(secondTaskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq))
+		t.Cleanup(secondTaskCleanup)
+
+		usePreviousRole()
+
+		t.Cleanup(func() {
+			currentRole, err := client.ContextFunctions.CurrentRole(ctx)
+			require.NoError(t, err)
+
+			grantOwnershipToRole(t, currentRole, ownershipGrantOnTask(task))
+			grantOwnershipToRole(t, currentRole, ownershipGrantOnTask(secondTask))
+		})
+
+		onAllTasks := sdk.OwnershipGrantOn{
+			All: &sdk.GrantOnSchemaObjectIn{
+				PluralObjectType: sdk.PluralObjectTypeTasks,
+				InSchema:         sdk.Pointer(testSchema(t).ID()),
+			},
+		}
+		err := client.Grants.GrantOwnership(
+			ctx,
+			onAllTasks,
+			sdk.OwnershipGrantTo{
+				AccountRoleName: sdk.Pointer(role.ID()),
+			},
+			new(sdk.GrantOwnershipOptions),
+		)
+		require.NoError(t, err)
+
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID().Name())
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(secondTask), role.ID().Name())
 	})
 }
 
