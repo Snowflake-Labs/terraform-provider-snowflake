@@ -70,10 +70,9 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:            "snowflake_file_format.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      "snowflake_file_format.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
