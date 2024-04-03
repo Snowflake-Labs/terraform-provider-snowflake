@@ -213,6 +213,10 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 		return v.grantOwnershipOnPipe(ctx, on.Object.Name.(SchemaObjectIdentifier), opts)
 	}
 
+	if on.Object != nil && on.Object.ObjectType == ObjectTypeTask {
+		return v.grantOwnershipOnTask(ctx, on.Object.Name.(SchemaObjectIdentifier), opts)
+	}
+
 	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
 	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
 	// to every Pipe one by one.
@@ -235,6 +239,31 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 				)
 			},
 		)
+	}
+
+	// To grant ownership of a task in Snowflake, it (and its root) has to be suspended before
+	// and resume after (only if it was previously running). To simplify the logic, every task
+	// will be granted individually where the suspension/resume logic is applied.
+	if on.All != nil && on.All.PluralObjectType == PluralObjectTypeTasks {
+		return v.runOnAllTasks(
+			ctx,
+			on.All.InDatabase,
+			on.All.InSchema,
+			func(task Task) error {
+				return v.client.Grants.GrantOwnership(
+					ctx,
+					OwnershipGrantOn{
+						Object: &Object{
+							ObjectType: ObjectTypeTask,
+							Name:       NewSchemaObjectIdentifier(task.DatabaseName, task.SchemaName, task.Name),
+						},
+					},
+					to,
+					opts,
+				)
+			},
+		)
+
 	}
 
 	return validateAndExec(v.client, ctx, opts)
@@ -344,6 +373,39 @@ func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectId
 	return nil
 }
 
+func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectIdentifier, opts *GrantOwnershipOptions) error {
+	// 1. Suspend task roots.
+	tasksToResume, err := v.client.Tasks.SuspendRootTasks(ctx, taskId, taskId) // params ??
+	if err != nil {
+		return err
+	}
+
+	// 2. Grant ownership on the task.
+	if err := validateAndExec(v.client, ctx, opts); err != nil {
+		return err
+	}
+
+	// 3. Resume tasks.
+	if len(tasksToResume) > 0 {
+		err = v.client.Tasks.ResumeTasks(ctx, tasksToResume)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// TODO: consider (describe in the pr)
+//func (v *grants) grantOwnershipOnAllTasks(ctx context.Context, opts *GrantOwnershipOptions) error {
+// grant on all tasks
+// 1. grant ownership on all tasks (Snowflake will suspend automatically)
+// 2. go through tasks in [database|schema]
+// 3. resume w if here last_suspended_reason was equal to "GRANT_OWNERSHIP" (have to resume parent first)
+// or
+//return nil
+//}
+
 func (v *grants) grantTemporarily(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, accountRoleName AccountObjectIdentifier) (func() error, error) {
 	return func() error {
 			return v.client.Grants.RevokePrivilegesFromAccountRole(
@@ -381,6 +443,27 @@ func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIde
 	}
 
 	return runOnAll(pipes, command)
+}
+
+func (v *grants) runOnAllTasks(ctx context.Context, inDatabase *AccountObjectIdentifier, inSchema *DatabaseObjectIdentifier, command func(Task) error) error {
+	var in *In
+	switch {
+	case inDatabase != nil:
+		in = &In{
+			Database: *inDatabase,
+		}
+	case inSchema != nil:
+		in = &In{
+			Schema: *inSchema,
+		}
+	}
+
+	tasks, err := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(in))
+	if err != nil {
+		return err
+	}
+
+	return runOnAll(tasks, command)
 }
 
 func runOnAll[T any](collection []T, command func(T) error) error {
