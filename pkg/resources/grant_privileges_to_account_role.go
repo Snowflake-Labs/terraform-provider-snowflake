@@ -537,7 +537,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 					}
 				}
 
-				err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, new(sdk.GrantPrivilegesToAccountRoleOptions))
+				err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, &sdk.GrantPrivilegesToAccountRoleOptions{WithGrantOption: sdk.Bool(id.WithGrantOption)})
 				if err != nil {
 					return diag.Diagnostics{
 						diag.Diagnostic{
