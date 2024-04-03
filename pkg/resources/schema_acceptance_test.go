@@ -454,6 +454,8 @@ func testAccCheckSchemaDestroy(s *terraform.State) error {
 }
 
 func removeSchemaOutsideOfTerraform(t *testing.T, databaseName string, schemaName string) {
+	t.Helper()
+
 	client, err := sdk.NewDefaultClient()
 	require.NoError(t, err)
 	ctx := context.Background()

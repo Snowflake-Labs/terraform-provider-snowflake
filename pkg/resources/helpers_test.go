@@ -3,10 +3,11 @@ package resources_test
 import (
 	"context"
 	"fmt"
-	tfjson "github.com/hashicorp/terraform-json"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"slices"
 	"testing"
+
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
