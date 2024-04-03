@@ -380,6 +380,10 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	if d.HasChange("with_grant_option") {
+		id.WithGrantOption = d.Get("with_grant_option").(bool)
+	}
+
 	// handle all_privileges -> privileges change (revoke all privileges)
 	if d.HasChange("all_privileges") {
 		_, allPrivileges := d.GetChange("all_privileges")
@@ -440,19 +444,27 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 			grantOn := getDatabaseRoleGrantOn(d)
 
 			if len(privilegesToAdd) > 0 {
-				err = client.Grants.GrantPrivilegesToDatabaseRole(
-					ctx,
-					getDatabaseRolePrivileges(
-						false,
-						privilegesToAdd,
-						id.Kind == OnDatabaseDatabaseRoleGrantKind,
-						id.Kind == OnSchemaDatabaseRoleGrantKind,
-						id.Kind == OnSchemaObjectDatabaseRoleGrantKind,
-					),
-					grantOn,
-					id.DatabaseRoleName,
-					new(sdk.GrantPrivilegesToDatabaseRoleOptions),
+				privilegesToGrant := getDatabaseRolePrivileges(
+					false,
+					privilegesToAdd,
+					id.Kind == OnDatabaseDatabaseRoleGrantKind,
+					id.Kind == OnSchemaDatabaseRoleGrantKind,
+					id.Kind == OnSchemaObjectDatabaseRoleGrantKind,
 				)
+
+				if !id.WithGrantOption {
+					if err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, new(sdk.RevokePrivilegesFromDatabaseRoleOptions)); err != nil {
+						return diag.Diagnostics{
+							diag.Diagnostic{
+								Severity: diag.Error,
+								Summary:  "Failed to revoke privileges to add",
+								Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
+							},
+						}
+					}
+				}
+
+				err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, &sdk.GrantPrivilegesToDatabaseRoleOptions{WithGrantOption: sdk.Bool(id.WithGrantOption)})
 				if err != nil {
 					return diag.Diagnostics{
 						diag.Diagnostic{

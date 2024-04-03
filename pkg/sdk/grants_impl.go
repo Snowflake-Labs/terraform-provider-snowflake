@@ -3,6 +3,9 @@ package sdk
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
+	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
@@ -205,6 +208,35 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 	}
 	opts.On = on
 	opts.To = to
+
+	if on.Object != nil && on.Object.ObjectType == ObjectTypePipe {
+		return v.grantOwnershipOnPipe(ctx, on.Object.Name.(SchemaObjectIdentifier), opts)
+	}
+
+	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
+	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
+	// to every Pipe one by one.
+	if on.All != nil && on.All.PluralObjectType == PluralObjectTypePipes {
+		return v.runOnAllPipes(
+			ctx,
+			on.All.InDatabase,
+			on.All.InSchema,
+			func(pipe Pipe) error {
+				return v.client.Grants.GrantOwnership(
+					ctx,
+					OwnershipGrantOn{
+						Object: &Object{
+							ObjectType: ObjectTypePipe,
+							Name:       NewSchemaObjectIdentifier(pipe.DatabaseName, pipe.SchemaName, pipe.Name),
+						},
+					},
+					to,
+					opts,
+				)
+			},
+		)
+	}
+
 	return validateAndExec(v.client, ctx, opts)
 }
 
@@ -226,6 +258,110 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 	return resultList, nil
 }
 
+// grantOwnershipOnPipe execution sequence
+//  1. Get the current role.
+//  2. Show grants on the pipe.
+//  3. See if the current role can "operate" on the pipe (has either OPERATE or OWNERSHIP privileges granted).
+//  4. If the current role can "operate" on the pipe.
+//     4.1. Check the current execution status of the pipe.
+//     4.2. Pause the pipe execution if it's running.
+//  5. If it cannot, try to proceed with the grant ownership in case the pipe is already paused.
+//  6. Grant ownership.
+//  7. If the current role could "operate" on the pipe, and the ownership was granted with COPY CURRENT GRANTS option.
+//     6.1. Resume with the use of system function.
+//  8. If it couldn't, notify the user that the pipe has to be resumed manually with the use of system function.
+func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectIdentifier, opts *GrantOwnershipOptions) error {
+	currentRole, err := v.client.ContextFunctions.CurrentRole(ctx)
+	if err != nil {
+		return err
+	}
+	currentRoleName := NewAccountObjectIdentifier(currentRole)
+
+	currentGrants, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+		On: &ShowGrantsOn{
+			Object: &Object{
+				ObjectType: ObjectTypePipe,
+				Name:       pipeId,
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	isGrantedWithPrivilege := func(privilege string) bool {
+		return slices.ContainsFunc(currentGrants, func(grant Grant) bool {
+			return grant.GranteeName == currentRoleName &&
+				grant.GrantedOn == ObjectTypePipe &&
+				grant.Privilege == privilege
+		})
+	}
+	// To be able to call ALTER on a pipe to stop its execution,
+	// the current role has to be either the owner (OWNERSHIP privilege) of this pipe or be granted with OPERATE privilege.
+	// MONITOR privilege is also needed to be able to check the current pipe execution state.
+	canOperateOnPipe := isGrantedWithPrivilege(SchemaObjectPrivilegeOperate.String())
+	canMonitorPipe := isGrantedWithPrivilege(SchemaObjectPrivilegeMonitor.String())
+	hasOwnershipOnPipe := isGrantedWithPrivilege("OWNERSHIP")
+
+	var originalPipeExecutionState *PipeExecutionState
+	if hasOwnershipOnPipe || (canOperateOnPipe && canMonitorPipe) {
+		pipeExecutionState, err := v.client.SystemFunctions.PipeStatus(pipeId)
+		if err != nil {
+			return err
+		}
+		originalPipeExecutionState = &pipeExecutionState
+
+		if pipeExecutionState == RunningPipeExecutionState {
+			if err := v.client.Pipes.Alter(ctx, pipeId, &AlterPipeOptions{
+				Set: &PipeSet{
+					PipeExecutionPaused: Bool(true),
+				},
+			}); err != nil {
+				return err
+			}
+		}
+	} else {
+		fmt.Printf("[DEBUG] Insufficient permissions to check the status of the pipe (MONITOR privilege): %s, and pause it if it's in running state (OPERATE privilege). Trying to proceed with ownership transfer...", pipeId.FullyQualifiedName())
+	}
+
+	if err := validateAndExec(v.client, ctx, opts); err != nil {
+		return err
+	}
+
+	// If:
+	// - The current role was granted with OPERATE privilege before ownership transfer.
+	// - GRANT OWNERSHIP command was run with COPY CURRENT GRANTS option.
+	// - The pipe was previously running.
+	// We can safely use the PIPE_FORCE_RESUME system function to resume the pipe after successful ownership transfer.
+	if canOperateOnPipe && opts.CurrentGrants != nil && opts.CurrentGrants.OutboundPrivileges == Copy && originalPipeExecutionState != nil && *originalPipeExecutionState == RunningPipeExecutionState {
+		if err := v.client.SystemFunctions.PipeForceResume(pipeId, nil); err != nil {
+			return err
+		}
+	} else {
+		log.Printf("[WARN] Insufficient privileges to resume the pipe: %s. Resume has to be done manually with the use of SELECT SYSTEM$PIPE_FORCE_RESUME system function.", pipeId.FullyQualifiedName())
+	}
+
+	return nil
+}
+
+func (v *grants) grantTemporarily(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, accountRoleName AccountObjectIdentifier) (func() error, error) {
+	return func() error {
+			return v.client.Grants.RevokePrivilegesFromAccountRole(
+				ctx,
+				privileges,
+				on,
+				accountRoleName,
+				new(RevokePrivilegesFromAccountRoleOptions),
+			)
+		}, v.client.Grants.GrantPrivilegesToAccountRole(
+			ctx,
+			privileges,
+			on,
+			accountRoleName,
+			new(GrantPrivilegesToAccountRoleOptions),
+		)
+}
+
 func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIdentifier, inSchema *DatabaseObjectIdentifier, command func(Pipe) error) error {
 	var in *In
 	switch {
@@ -244,12 +380,15 @@ func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIde
 		return err
 	}
 
+	return runOnAll(pipes, command)
+}
+
+func runOnAll[T any](collection []T, command func(T) error) error {
 	var errs []error
-	for _, pipe := range pipes {
-		if err := command(pipe); err != nil {
+	for _, element := range collection {
+		if err := command(element); err != nil {
 			errs = append(errs, err)
 		}
 	}
-
 	return errors.Join(errs...)
 }

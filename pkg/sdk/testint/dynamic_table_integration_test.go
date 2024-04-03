@@ -132,7 +132,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 		entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(dynamicTable.Name)}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(entities))
-		require.Equal(t, sdk.DynamicTableSchedulingStateRunning, entities[0].SchedulingState)
+		require.Equal(t, sdk.DynamicTableSchedulingStateActive, entities[0].SchedulingState)
 
 		err = client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSuspend(sdk.Bool(true)))
 		require.NoError(t, err)
@@ -148,7 +148,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 		entities, err = client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(dynamicTable.Name)}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(entities))
-		require.Equal(t, sdk.DynamicTableSchedulingStateRunning, entities[0].SchedulingState)
+		require.Equal(t, sdk.DynamicTableSchedulingStateActive, entities[0].SchedulingState)
 	})
 
 	t.Run("alter with refresh", func(t *testing.T) {
