@@ -452,7 +452,9 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 				)
 
 				if !id.WithGrantOption {
-					if err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, new(sdk.RevokePrivilegesFromDatabaseRoleOptions)); err != nil {
+					if err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, privilegesToGrant, grantOn, id.DatabaseRoleName, &sdk.RevokePrivilegesFromDatabaseRoleOptions{
+						GrantOptionFor: sdk.Bool(true),
+					}); err != nil {
 						return diag.Diagnostics{
 							diag.Diagnostic{
 								Severity: diag.Error,
