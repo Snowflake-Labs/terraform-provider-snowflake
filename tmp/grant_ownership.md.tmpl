@@ -29,6 +29,22 @@ description: |-
 {{ tffile (printf "examples/resources/%s/resource.tf" .Name)}}
 {{- end }}
 
+## Granting ownership on pipes
+To transfer ownership of a pipe, there must be additional conditions met. Otherwise, additional manual work
+will be needed afterward or in some cases, the ownership won't be transferred (resulting in error).
+
+To transfer ownership of a pipe(s) **fully automatically**, one of the following conditions has to be met:
+- OPERATE and MONITOR privileges are granted to the current role on the pipe(s) and `outbound_privileges` field is set to `COPY`.
+- The pipe(s) running status is paused (additional privileges and fields set are needed to pause and resume the pipe before and after ownership transfer. If it's already paused, nothing additional is needed and the pipe will remain paused after the ownership transfer).
+
+To transfer ownership of a pipe(s) **semi-automatically** you have to:
+1. Pause the pipe(s) you want to transfer ownership of (using [ALTER PIPE](https://docs.snowflake.com/en/sql-reference/sql/alter-pipe#syntax); see PIPE_EXECUTION_PAUSED).
+2. Create Terraform configuration with the `snowflake_grant_ownership` resource and perform ownership transfer with the `terraform apply`.
+3. To resume the pipe(s) after ownership transfer use [PIPE_FORCE_RESUME system function](https://docs.snowflake.com/en/sql-reference/functions/system_pipe_force_resume).
+
+## Granting ownership on tasks
+{{/* TODO: In next pr */}}
+
 {{ .SchemaMarkdown | trimspace }}
 
 ## Import

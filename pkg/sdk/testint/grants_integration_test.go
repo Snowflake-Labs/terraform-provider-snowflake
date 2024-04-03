@@ -1100,8 +1100,8 @@ func TestInt_GrantOwnership(t *testing.T) {
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
 		t.Cleanup(func() {
 			usePreviousRole = useRole(t, client, role.Name)
+			defer usePreviousRole()
 			pipeCleanup()
-			usePreviousRole()
 		})
 
 		// Grant MONITOR and OPERATE privileges to the role.
@@ -1163,8 +1163,8 @@ func TestInt_GrantOwnership(t *testing.T) {
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
 		t.Cleanup(func() {
 			usePreviousRole = useRole(t, client, role.Name)
+			defer usePreviousRole()
 			pipeCleanup()
-			usePreviousRole()
 		})
 
 		// Grant MONITOR and OPERATE privileges to the role.
@@ -1223,8 +1223,8 @@ func TestInt_GrantOwnership(t *testing.T) {
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
 		t.Cleanup(func() {
 			usePreviousRole = useRole(t, client, pipeRole.Name)
+			defer usePreviousRole()
 			pipeCleanup()
-			usePreviousRole()
 		})
 
 		err := client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
@@ -1269,8 +1269,8 @@ func TestInt_GrantOwnership(t *testing.T) {
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
 		t.Cleanup(func() {
 			usePreviousRole = useRole(t, client, role.Name)
+			defer usePreviousRole()
 			pipeCleanup()
-			usePreviousRole()
 		})
 
 		err := client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
