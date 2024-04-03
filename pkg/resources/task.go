@@ -348,24 +348,16 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0)
 		for _, dep := range after {
 			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
-			rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, precedingTaskId)
+			tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, precedingTaskId, taskId)
+			defer func() {
+				if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+					log.Printf("[WARN] failed to resume tasks: %s", err)
+				}
+			}()
 			if err != nil {
 				return err
 			}
-			for _, rootTask := range rootTasks {
-				// if a root task is started, then it needs to be suspended before the child tasks can be created
-				if rootTask.IsStarted() {
-					err := suspendTask(ctx, client, rootTask.ID())
-					if err != nil {
-						return err
-					}
 
-					// resume the task after modifications are complete as long as it is not a standalone task
-					if !(rootTask.Name == name) {
-						defer func(identifier sdk.SchemaObjectIdentifier) { _ = resumeTask(ctx, client, identifier) }(rootTask.ID())
-					}
-				}
-			}
 			precedingTasks = append(precedingTasks, precedingTaskId)
 		}
 		createRequest.WithAfter(precedingTasks)
@@ -392,7 +384,7 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 }
 
 func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	err := resumeTask(ctx, client, id)
+	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithResume(sdk.Bool(true)))
 	if err != nil {
 		return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err)
 	}
@@ -408,22 +400,6 @@ func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 	})
 }
 
-func suspendTask(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(sdk.Bool(true)))
-	if err != nil {
-		log.Printf("[WARN] failed to suspend task %s", id.FullyQualifiedName())
-	}
-	return err
-}
-
-func resumeTask(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithResume(sdk.Bool(true)))
-	if err != nil {
-		log.Printf("[WARN] failed to resume task %s", id.FullyQualifiedName())
-	}
-	return err
-}
-
 // UpdateTask implements schema.UpdateFunc.
 func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
@@ -431,23 +407,14 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, taskId)
+	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
+	defer func() {
+		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+			log.Printf("[WARN] failed to resume tasks: %s", err)
+		}
+	}()
 	if err != nil {
 		return err
-	}
-	for _, rootTask := range rootTasks {
-		// if a root task is started, then it needs to be suspended before the child tasks can be created
-		if rootTask.IsStarted() {
-			err := suspendTask(ctx, client, rootTask.ID())
-			if err != nil {
-				return err
-			}
-
-			// resume the task after modifications are complete as long as it is not a standalone task
-			if !(rootTask.Name == taskId.Name()) {
-				defer func(identifier sdk.SchemaObjectIdentifier) { _ = resumeTask(ctx, client, identifier) }(rootTask.ID())
-			}
-		}
 	}
 
 	if d.HasChange("warehouse") {
@@ -497,7 +464,9 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("after") {
 		// making changes to after require suspending the current task
-		if err := suspendTask(ctx, client, taskId); err != nil {
+		// (the task will be brought up to the correct running state in the "enabled" check at the bottom of Update function).
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSuspend(sdk.Bool(true)))
+		if err != nil {
 			return fmt.Errorf("error suspending task %s, err: %w", taskId.FullyQualifiedName(), err)
 		}
 
@@ -532,29 +501,19 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 				toAdd = append(toAdd, sdk.NewSchemaObjectIdentifier(taskId.DatabaseName(), taskId.SchemaName(), dep))
 			}
 		}
-		// TODO [SNOW-1007541]: for now leaving old copy-pasted implementation; extract function for task suspension in following change
 		if len(toAdd) > 0 {
-			// need to suspend any new root tasks from dependencies before adding them
-			for _, dep := range toAdd {
-				rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, dep)
+			for _, depId := range toAdd {
+				tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, depId, taskId)
+				defer func() {
+					if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+						log.Printf("[WARN] failed to resume tasks: %s", err)
+					}
+				}()
 				if err != nil {
 					return err
 				}
-				for _, rootTask := range rootTasks {
-					// if a root task is started, then it needs to be suspended before the child tasks can be created
-					if rootTask.IsStarted() {
-						err := suspendTask(ctx, client, rootTask.ID())
-						if err != nil {
-							return err
-						}
-
-						// resume the task after modifications are complete as long as it is not a standalone task
-						if !(rootTask.Name == taskId.Name()) {
-							defer func(identifier sdk.SchemaObjectIdentifier) { _ = resumeTask(ctx, client, identifier) }(rootTask.ID())
-						}
-					}
-				}
 			}
+
 			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithAddAfter(toAdd)); err != nil {
 				return fmt.Errorf("error adding after dependencies from task %s", taskId.FullyQualifiedName())
 			}
@@ -702,10 +661,11 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] failed to resume task %s", taskId.FullyQualifiedName())
 		}
 	} else {
-		if suspendTask(ctx, client, taskId) != nil {
-			return fmt.Errorf("[WARN] failed to suspend task %s", taskId.FullyQualifiedName())
+		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSuspend(sdk.Bool(true))); err != nil {
+			return fmt.Errorf("failed to suspend task %s", taskId.FullyQualifiedName())
 		}
 	}
+
 	return ReadTask(d, meta)
 }
 
@@ -716,23 +676,14 @@ func DeleteTask(d *schema.ResourceData, meta interface{}) error {
 
 	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, taskId)
+	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
+	defer func() {
+		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+			log.Printf("[WARN] failed to resume tasks: %s", err)
+		}
+	}()
 	if err != nil {
 		return err
-	}
-	for _, rootTask := range rootTasks {
-		// if a root task is started, then it needs to be suspended before the child tasks can be created
-		if rootTask.IsStarted() {
-			err := suspendTask(ctx, client, rootTask.ID())
-			if err != nil {
-				return err
-			}
-
-			// resume the task after modifications are complete as long as it is not a standalone task
-			if !(rootTask.Name == taskId.Name()) {
-				defer func(identifier sdk.SchemaObjectIdentifier) { _ = resumeTask(ctx, client, identifier) }(rootTask.ID())
-			}
-		}
 	}
 
 	dropRequest := sdk.NewDropTaskRequest(taskId)
