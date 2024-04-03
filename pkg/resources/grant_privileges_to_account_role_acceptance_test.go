@@ -1190,6 +1190,174 @@ func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
+func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerraform_WithGrantOptions(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	configVariables := config.Variables{
+		"name":       config.StringVariable(roleName),
+		"table_name": config.StringVariable(tableName),
+		"privileges": config.ListVariable(
+			config.StringVariable(sdk.SchemaObjectPrivilegeTruncate.String()),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"with_grant_option": config.BoolVariable(true),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() { createAccountRoleOutsideTerraform(t, name) },
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig: func() {
+					revokeAndGrantPrivilegesOnTableToAccountRole(
+						t, name,
+						sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName),
+						[]sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeTruncate},
+						false,
+					)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
+				ConfigVariables: configVariables,
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
+func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerraform_WithoutGrantOptions(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
+	tableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	configVariables := config.Variables{
+		"name":       config.StringVariable(roleName),
+		"table_name": config.StringVariable(tableName),
+		"privileges": config.ListVariable(
+			config.StringVariable(sdk.SchemaObjectPrivilegeTruncate.String()),
+		),
+		"database":          config.StringVariable(acc.TestDatabaseName),
+		"schema":            config.StringVariable(acc.TestSchemaName),
+		"with_grant_option": config.BoolVariable(false),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() { createAccountRoleOutsideTerraform(t, name) },
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig: func() {
+					revokeAndGrantPrivilegesOnTableToAccountRole(
+						t, name,
+						sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName),
+						[]sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeTruncate},
+						true,
+					)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
+				ConfigVariables: configVariables,
+			},
+		},
+	})
+}
+
+func revokeAndGrantPrivilegesOnTableToAccountRole(
+	t *testing.T,
+	accountRoleName string,
+	tableName sdk.SchemaObjectIdentifier,
+	privileges []sdk.SchemaObjectPrivilege,
+	withGrantOption bool,
+) {
+	t.Helper()
+	client, err := sdk.NewDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	err = client.Grants.RevokePrivilegesFromAccountRole(
+		ctx,
+		&sdk.AccountRoleGrantPrivileges{
+			SchemaObjectPrivileges: privileges,
+		},
+		&sdk.AccountRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				SchemaObject: &sdk.Object{
+					ObjectType: sdk.ObjectTypeTable,
+					Name:       tableName,
+				},
+			},
+		},
+		sdk.NewAccountObjectIdentifier(accountRoleName),
+		new(sdk.RevokePrivilegesFromAccountRoleOptions),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = client.Grants.GrantPrivilegesToAccountRole(
+		ctx,
+		&sdk.AccountRoleGrantPrivileges{
+			SchemaObjectPrivileges: privileges,
+		},
+		&sdk.AccountRoleGrantOn{
+			SchemaObject: &sdk.GrantOnSchemaObject{
+				SchemaObject: &sdk.Object{
+					ObjectType: sdk.ObjectTypeTable,
+					Name:       tableName,
+				},
+			},
+		},
+		sdk.NewAccountObjectIdentifier(accountRoleName),
+		&sdk.GrantPrivilegesToAccountRoleOptions{
+			WithGrantOption: sdk.Bool(withGrantOption),
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func getSecondaryAccountName(t *testing.T) (string, error) {
 	t.Helper()
 	config, err := sdk.ProfileConfig(testprofiles.Secondary)
