@@ -12,6 +12,14 @@ From now on, the `snowflake_procedure`'s `execute_as` parameter allows only two 
 ### snowflake_grants datasource changes
 `snowflake_grants` datasource was refreshed as part of the ongoing [Grants Redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#redesigning-grants).
 
+#### *(behavior change)* role fields renames
+To be aligned with the convention in other grant resources, `role` was renamed to `account_role` for the following fields:
+- `grants_to.role`
+- `grants_of.role`
+- `future_grants_to.role`.
+
+To migrate simply change `role` to `account_role` in the aforementioned fields.
+
 #### *(behavior change)* grants_to.share type change
 `grants_to.share` was a text field. Because Snowflake introduced new syntax `SHOW GRANTS TO SHARE <share_name> IN APPLICATION PACKAGE <app_package_name>` (check more in the [docs](https://docs.snowflake.com/en/sql-reference/sql/show-grants#variants)) the type was changed to object. To migrate simply change:
 ```terraform
@@ -75,7 +83,7 @@ No migration work is needed here.
 No migration work is needed here.
 
 #### *(documentation)* improvements
-Descriptions of attributes were altered. More examples were added (both for old nd new features).
+Descriptions of attributes were altered. More examples were added (both for old and new features).
 
 ## v0.86.0 ➞ v0.87.0
 ### snowflake_database resource changes

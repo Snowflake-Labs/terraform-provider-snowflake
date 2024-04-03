@@ -65,10 +65,10 @@ data "snowflake_grants" "example_to_application_role" {
   }
 }
 
-# role
+# account role
 data "snowflake_grants" "example_to_role" {
   grants_to {
-    role = "some_role"
+    account_role = "some_role"
   }
 }
 
@@ -113,10 +113,10 @@ data "snowflake_grants" "example_of_database_role" {
   }
 }
 
-# role
+# account role
 data "snowflake_grants" "example_of_role" {
   grants_of {
-    role = "some_role"
+    account_role = "some_role"
   }
 }
 
@@ -149,10 +149,10 @@ data "snowflake_grants" "example_future_in_schema" {
 ### SHOW FUTURE GRANTS TO ...
 ##################################
 
-# role
+# account role
 data "snowflake_grants" "example_future_to_role" {
   future_grants_to {
-    role = "some_role"
+    account_role = "some_role"
   }
 }
 
@@ -194,8 +194,8 @@ Optional:
 
 Optional:
 
+- `account_role` (String) Lists all privileges on new (i.e. future) objects of a specified type in a database or schema granted to the account role.
 - `database_role` (String) Lists all privileges on new (i.e. future) objects granted to the database role. Must be a fully qualified name ("&lt;db_name&gt;"."&lt;database_role_name&gt;").
-- `role` (String) Lists all privileges on new (i.e. future) objects of a specified type in a database or schema granted to the role.
 
 
 <a id="nestedblock--grants_of"></a>
@@ -203,9 +203,9 @@ Optional:
 
 Optional:
 
+- `account_role` (String) Lists all users and roles to which the account role has been granted.
 - `application_role` (String) Lists all the users and roles to which the application role has been granted. Must be a fully qualified name ("&lt;db_name&gt;"."&lt;database_role_name&gt;").
 - `database_role` (String) Lists all users and roles to which the database role has been granted. Must be a fully qualified name ("&lt;db_name&gt;"."&lt;database_role_name&gt;").
-- `role` (String) Lists all users and roles to which the role has been granted.
 - `share` (String) Lists all the accounts for the share and indicates the accounts that are using the share.
 
 
@@ -224,10 +224,10 @@ Optional:
 
 Optional:
 
+- `account_role` (String) Lists all privileges and roles granted to the role.
 - `application` (String) Lists all the privileges and roles granted to the application.
 - `application_role` (String) Lists all the privileges and roles granted to the application role. Must be a fully qualified name ("&lt;app_name&gt;"."&lt;app_role_name&gt;").
 - `database_role` (String) Lists all privileges and roles granted to the database role. Must be a fully qualified name ("&lt;db_name&gt;"."&lt;database_role_name&gt;").
-- `role` (String) Lists all privileges and roles granted to the role.
 - `share` (Block List, Max: 1) Lists all the privileges granted to the share. (see [below for nested schema](#nestedblock--grants_to--share))
 - `user` (String) Lists all the roles granted to the user. Note that the PUBLIC role, which is automatically available to every user, is not listed.
 

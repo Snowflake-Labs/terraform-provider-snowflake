@@ -35,11 +35,10 @@ var grantsSchema = map[string]*schema.Schema{
 					Description:  "Type of object to list privileges on.",
 				},
 				"account": {
-					Type:          schema.TypeBool,
-					Optional:      true,
-					Description:   "Object hierarchy to list privileges on. The only valid value is: ACCOUNT. Setting this attribute lists all the account-level (i.e. global) privileges that have been granted to roles.",
-					ExactlyOneOf:  []string{"grants_on.0.object_name", "grants_on.0.account"},
-					ConflictsWith: []string{"grants_on.0.object_type"},
+					Type:         schema.TypeBool,
+					Optional:     true,
+					Description:  "Object hierarchy to list privileges on. The only valid value is: ACCOUNT. Setting this attribute lists all the account-level (i.e. global) privileges that have been granted to roles.",
+					ExactlyOneOf: []string{"grants_on.0.object_name", "grants_on.0.account"},
 				},
 			},
 		},
@@ -59,7 +58,7 @@ var grantsSchema = map[string]*schema.Schema{
 					ExactlyOneOf: []string{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
-						"grants_to.0.role",
+						"grants_to.0.account_role",
 						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
@@ -72,21 +71,21 @@ var grantsSchema = map[string]*schema.Schema{
 					ExactlyOneOf: []string{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
-						"grants_to.0.role",
+						"grants_to.0.account_role",
 						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
 					},
 					ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 				},
-				"role": {
+				"account_role": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Lists all privileges and roles granted to the role.",
 					ExactlyOneOf: []string{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
-						"grants_to.0.role",
+						"grants_to.0.account_role",
 						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
@@ -99,7 +98,7 @@ var grantsSchema = map[string]*schema.Schema{
 					ExactlyOneOf: []string{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
-						"grants_to.0.role",
+						"grants_to.0.account_role",
 						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
@@ -113,7 +112,7 @@ var grantsSchema = map[string]*schema.Schema{
 					ExactlyOneOf: []string{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
-						"grants_to.0.role",
+						"grants_to.0.account_role",
 						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
@@ -127,7 +126,7 @@ var grantsSchema = map[string]*schema.Schema{
 					ExactlyOneOf: []string{
 						"grants_to.0.application",
 						"grants_to.0.application_role",
-						"grants_to.0.role",
+						"grants_to.0.account_role",
 						"grants_to.0.database_role",
 						"grants_to.0.user",
 						"grants_to.0.share",
@@ -159,12 +158,12 @@ var grantsSchema = map[string]*schema.Schema{
 		Description:  "Lists all objects to which the given object has been granted.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"role": {
+				"account_role": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all users and roles to which the role has been granted.",
+					Description: "Lists all users and roles to which the account role has been granted.",
 					ExactlyOneOf: []string{
-						"grants_of.0.role",
+						"grants_of.0.account_role",
 						"grants_of.0.database_role",
 						"grants_of.0.application_role",
 						"grants_of.0.share",
@@ -175,7 +174,7 @@ var grantsSchema = map[string]*schema.Schema{
 					Optional:    true,
 					Description: "Lists all users and roles to which the database role has been granted. Must be a fully qualified name (\"&lt;db_name&gt;\".\"&lt;database_role_name&gt;\").",
 					ExactlyOneOf: []string{
-						"grants_of.0.role",
+						"grants_of.0.account_role",
 						"grants_of.0.database_role",
 						"grants_of.0.application_role",
 						"grants_of.0.share",
@@ -187,7 +186,7 @@ var grantsSchema = map[string]*schema.Schema{
 					Optional:    true,
 					Description: "Lists all the users and roles to which the application role has been granted. Must be a fully qualified name (\"&lt;db_name&gt;\".\"&lt;database_role_name&gt;\").",
 					ExactlyOneOf: []string{
-						"grants_of.0.role",
+						"grants_of.0.account_role",
 						"grants_of.0.database_role",
 						"grants_of.0.application_role",
 						"grants_of.0.share",
@@ -199,7 +198,7 @@ var grantsSchema = map[string]*schema.Schema{
 					Optional:    true,
 					Description: "Lists all the accounts for the share and indicates the accounts that are using the share.",
 					ExactlyOneOf: []string{
-						"grants_of.0.role",
+						"grants_of.0.account_role",
 						"grants_of.0.database_role",
 						"grants_of.0.application_role",
 						"grants_of.0.share",
@@ -246,12 +245,12 @@ var grantsSchema = map[string]*schema.Schema{
 		Description:  "Lists all privileges granted to the object on new (i.e. future) objects.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"role": {
+				"account_role": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Lists all privileges on new (i.e. future) objects of a specified type in a database or schema granted to the role.",
+					Description: "Lists all privileges on new (i.e. future) objects of a specified type in a database or schema granted to the account role.",
 					ExactlyOneOf: []string{
-						"future_grants_to.0.role",
+						"future_grants_to.0.account_role",
 						"future_grants_to.0.database_role",
 					},
 				},
@@ -260,7 +259,7 @@ var grantsSchema = map[string]*schema.Schema{
 					Optional:    true,
 					Description: "Lists all privileges on new (i.e. future) objects granted to the database role. Must be a fully qualified name (\"&lt;db_name&gt;\".\"&lt;database_role_name&gt;\").",
 					ExactlyOneOf: []string{
-						"future_grants_to.0.role",
+						"future_grants_to.0.account_role",
 						"future_grants_to.0.database_role",
 					},
 					ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
@@ -326,25 +325,25 @@ func Grants() *schema.Resource {
 	}
 }
 
-func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadGrants(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	var opts *sdk.ShowGrantOptions
 	var err error
 	if grantsOn, ok := d.GetOk("grants_on"); ok {
-		opts, err = buildOptsForGrantsOn(grantsOn.([]interface{})[0].(map[string]interface{}))
+		opts, err = buildOptsForGrantsOn(grantsOn.([]any)[0].(map[string]any))
 	}
 	if grantsTo, ok := d.GetOk("grants_to"); ok {
-		opts, err = buildOptsForGrantsTo(grantsTo.([]interface{})[0].(map[string]interface{}))
+		opts, err = buildOptsForGrantsTo(grantsTo.([]any)[0].(map[string]any))
 	}
 	if grantsOf, ok := d.GetOk("grants_of"); ok {
-		opts, err = buildOptsForGrantsOf(grantsOf.([]interface{})[0].(map[string]interface{}))
+		opts, err = buildOptsForGrantsOf(grantsOf.([]any)[0].(map[string]any))
 	}
 	if futureGrantsIn, ok := d.GetOk("future_grants_in"); ok {
-		opts, err = buildOptsForFutureGrantsIn(futureGrantsIn.([]interface{})[0].(map[string]interface{}))
+		opts, err = buildOptsForFutureGrantsIn(futureGrantsIn.([]any)[0].(map[string]any))
 	}
 	if futureGrantsTo, ok := d.GetOk("future_grants_to"); ok {
-		opts, err = buildOptsForFutureGrantsTo(futureGrantsTo.([]interface{})[0].(map[string]interface{}))
+		opts, err = buildOptsForFutureGrantsTo(futureGrantsTo.([]any)[0].(map[string]any))
 	}
 	if err != nil {
 		return diag.FromErr(err)
@@ -355,7 +354,7 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("grants", flattenGrants(grants))
+	err = d.Set("grants", convertGrants(grants))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -364,7 +363,7 @@ func ReadGrants(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 	return nil
 }
 
-func buildOptsForGrantsOn(grantsOn map[string]interface{}) (*sdk.ShowGrantOptions, error) {
+func buildOptsForGrantsOn(grantsOn map[string]any) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 
 	objectType := grantsOn["object_type"].(string)
@@ -393,7 +392,7 @@ func buildOptsForGrantsOn(grantsOn map[string]interface{}) (*sdk.ShowGrantOption
 	return opts, nil
 }
 
-func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOptions, error) {
+func buildOptsForGrantsTo(grantsTo map[string]any) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 
 	if application := grantsTo["application"].(string); application != "" {
@@ -406,9 +405,9 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 			ApplicationRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(applicationRole),
 		}
 	}
-	if role := grantsTo["role"].(string); role != "" {
+	if accountRole := grantsTo["account_role"].(string); accountRole != "" {
 		opts.To = &sdk.ShowGrantsTo{
-			Role: sdk.NewAccountObjectIdentifier(role),
+			Role: sdk.NewAccountObjectIdentifier(accountRole),
 		}
 	}
 	if databaseRole := grantsTo["database_role"].(string); databaseRole != "" {
@@ -421,8 +420,8 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 			User: sdk.NewAccountObjectIdentifier(user),
 		}
 	}
-	if share := grantsTo["share"]; share != nil && len(share.([]interface{})) > 0 {
-		shareMap := share.([]interface{})[0].(map[string]interface{})
+	if share := grantsTo["share"]; share != nil && len(share.([]any)) > 0 {
+		shareMap := share.([]any)[0].(map[string]any)
 		opts.To = &sdk.ShowGrantsTo{
 			Share: &sdk.ShowGrantsToShare{
 				Name: sdk.NewAccountObjectIdentifier(shareMap["share_name"].(string)),
@@ -436,12 +435,12 @@ func buildOptsForGrantsTo(grantsTo map[string]interface{}) (*sdk.ShowGrantOption
 	return opts, nil
 }
 
-func buildOptsForGrantsOf(grantsOf map[string]interface{}) (*sdk.ShowGrantOptions, error) {
+func buildOptsForGrantsOf(grantsOf map[string]any) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 
-	if role := grantsOf["role"].(string); role != "" {
+	if accountRole := grantsOf["account_role"].(string); accountRole != "" {
 		opts.Of = &sdk.ShowGrantsOf{
-			Role: sdk.NewAccountObjectIdentifier(role),
+			Role: sdk.NewAccountObjectIdentifier(accountRole),
 		}
 	}
 	if databaseRole := grantsOf["database_role"].(string); databaseRole != "" {
@@ -462,7 +461,7 @@ func buildOptsForGrantsOf(grantsOf map[string]interface{}) (*sdk.ShowGrantOption
 	return opts, nil
 }
 
-func buildOptsForFutureGrantsIn(futureGrantsIn map[string]interface{}) (*sdk.ShowGrantOptions, error) {
+func buildOptsForFutureGrantsIn(futureGrantsIn map[string]any) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 	opts.Future = sdk.Bool(true)
 
@@ -479,13 +478,13 @@ func buildOptsForFutureGrantsIn(futureGrantsIn map[string]interface{}) (*sdk.Sho
 	return opts, nil
 }
 
-func buildOptsForFutureGrantsTo(futureGrantsTo map[string]interface{}) (*sdk.ShowGrantOptions, error) {
+func buildOptsForFutureGrantsTo(futureGrantsTo map[string]any) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 	opts.Future = sdk.Bool(true)
 
-	if role := futureGrantsTo["role"].(string); role != "" {
+	if accountRole := futureGrantsTo["account_role"].(string); accountRole != "" {
 		opts.To = &sdk.ShowGrantsTo{
-			Role: sdk.NewAccountObjectIdentifier(role),
+			Role: sdk.NewAccountObjectIdentifier(accountRole),
 		}
 	}
 	if databaseRole := futureGrantsTo["database_role"].(string); databaseRole != "" {
@@ -496,10 +495,10 @@ func buildOptsForFutureGrantsTo(futureGrantsTo map[string]interface{}) (*sdk.Sho
 	return opts, nil
 }
 
-func flattenGrants(grants []sdk.Grant) []map[string]interface{} {
-	grantDetails := make([]map[string]interface{}, len(grants))
+func convertGrants(grants []sdk.Grant) []map[string]any {
+	grantDetails := make([]map[string]any, len(grants))
 	for i, grant := range grants {
-		grantDetails[i] = map[string]interface{}{
+		grantDetails[i] = map[string]any{
 			"created_on":   grant.CreatedOn.String(),
 			"privilege":    grant.Privilege,
 			"granted_on":   grant.GrantedOn.String(),

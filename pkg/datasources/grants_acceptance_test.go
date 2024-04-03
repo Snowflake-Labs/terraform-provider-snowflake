@@ -150,7 +150,7 @@ func TestAcc_Grants_To_ApplicationRole(t *testing.T) {
 	t.Skip("Skipped until snowflake_application and snowflake_application_role resources are introduced. Currently, behavior tested in application_roles_gen_integration_test.go.")
 }
 
-func TestAcc_Grants_To_Role(t *testing.T) {
+func TestAcc_Grants_To_AccountRole(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -160,7 +160,7 @@ func TestAcc_Grants_To_Role(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/Role"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/AccountRole"),
 				Check:           checkAtLeastOneGrantPresent(),
 			},
 		},
@@ -317,7 +317,7 @@ func TestAcc_Grants_To_Invalid_ApplicationRoleIdInvalid(t *testing.T) {
 	})
 }
 
-func TestAcc_Grants_Of_Role(t *testing.T) {
+func TestAcc_Grants_Of_AccountRole(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -327,7 +327,7 @@ func TestAcc_Grants_Of_Role(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/Role"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/Of/AccountRole"),
 				Check:           checkAtLeastOneGrantPresentLimited(),
 			},
 		},
@@ -567,7 +567,7 @@ func TestAcc_Grants_FutureIn_Invalid_SchemaNameNotFullyQualified(t *testing.T) {
 	})
 }
 
-func TestAcc_Grants_FutureTo_Role(t *testing.T) {
+func TestAcc_Grants_FutureTo_AccountRole(t *testing.T) {
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	configVariables := config.Variables{
 		"database": config.StringVariable(databaseName),
@@ -582,7 +582,7 @@ func TestAcc_Grants_FutureTo_Role(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureTo/Role"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/FutureTo/AccountRole"),
 				ConfigVariables: configVariables,
 				Check:           checkAtLeastOneFutureGrantPresent(),
 			},

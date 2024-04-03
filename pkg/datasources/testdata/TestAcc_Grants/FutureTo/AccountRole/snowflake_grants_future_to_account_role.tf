@@ -17,6 +17,6 @@ data "snowflake_grants" "test" {
   depends_on = [snowflake_grant_privileges_to_account_role.test]
 
   future_grants_to {
-    role = data.snowflake_current_role.test.name
+    account_role = data.snowflake_current_role.test.name
   }
 }

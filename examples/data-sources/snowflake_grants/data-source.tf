@@ -51,10 +51,10 @@ data "snowflake_grants" "example_to_application_role" {
   }
 }
 
-# role
+# account role
 data "snowflake_grants" "example_to_role" {
   grants_to {
-    role = "some_role"
+    account_role = "some_role"
   }
 }
 
@@ -99,10 +99,10 @@ data "snowflake_grants" "example_of_database_role" {
   }
 }
 
-# role
+# account role
 data "snowflake_grants" "example_of_role" {
   grants_of {
-    role = "some_role"
+    account_role = "some_role"
   }
 }
 
@@ -135,10 +135,10 @@ data "snowflake_grants" "example_future_in_schema" {
 ### SHOW FUTURE GRANTS TO ...
 ##################################
 
-# role
+# account role
 data "snowflake_grants" "example_future_to_role" {
   future_grants_to {
-    role = "some_role"
+    account_role = "some_role"
   }
 }
 
