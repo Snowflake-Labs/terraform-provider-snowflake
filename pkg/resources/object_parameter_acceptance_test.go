@@ -52,6 +52,27 @@ func TestAcc_ObjectParameterAccount(t *testing.T) {
 	})
 }
 
+func TestAcc_UserParameter(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: userParameterConfigBasic("ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR", "true", acc.TestUserName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "true"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "on_account", "false"),
+				),
+			},
+		},
+	})
+}
+
 func objectParameterConfigOnAccount(key, value string) string {
 	s := `
 resource "snowflake_object_parameter" "p" {
@@ -75,4 +96,18 @@ resource "snowflake_object_parameter" "p" {
 }
 `
 	return fmt.Sprintf(s, key, value, databaseName)
+}
+
+func userParameterConfigBasic(key, value, username string) string {
+	s := `
+resource "snowflake_object_parameter" "p" {
+	key = "%s"
+	value = "%s"
+	object_type = "USER"
+	object_identifier {
+		name = "%s"
+	}
+}
+`
+	return fmt.Sprintf(s, key, value, username)
 }
