@@ -3,16 +3,16 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_task" "test" {
-  database       = var.database
-  schema         = var.schema
-  name           = var.task
+  database      = var.database
+  schema        = var.schema
+  name          = var.task
   sql_statement = "SELECT CURRENT_TIMESTAMP"
 }
 
 resource "snowflake_task" "second_test" {
-  database       = var.database
-  schema         = var.schema
-  name           = var.second_task
+  database      = var.database
+  schema        = var.schema
+  name          = var.second_task
   sql_statement = "SELECT CURRENT_TIMESTAMP"
 }
 

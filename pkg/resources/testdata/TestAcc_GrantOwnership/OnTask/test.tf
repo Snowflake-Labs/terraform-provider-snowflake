@@ -3,9 +3,9 @@ resource "snowflake_role" "test" {
 }
 
 resource "snowflake_task" "test" {
-  database       = var.database
-  schema         = var.schema
-  name           = var.task
+  database      = var.database
+  schema        = var.schema
+  name          = var.task
   sql_statement = "SELECT CURRENT_TIMESTAMP"
 }
 
