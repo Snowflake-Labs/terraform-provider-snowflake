@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"log"
 	"slices"
 
@@ -263,7 +264,6 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 				)
 			},
 		)
-
 	}
 
 	return validateAndExec(v.client, ctx, opts)
@@ -374,37 +374,73 @@ func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectId
 }
 
 func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectIdentifier, opts *GrantOwnershipOptions) error {
-	// 1. Suspend task roots.
-	tasksToResume, err := v.client.Tasks.SuspendRootTasks(ctx, taskId, taskId) // params ??
+	currentGrants, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+		On: &ShowGrantsOn{
+			Object: &Object{
+				ObjectType: ObjectTypeTask,
+				Name:       taskId,
+			},
+		},
+	})
 	if err != nil {
 		return err
 	}
 
-	// 2. Grant ownership on the task.
+	currentRole, err := v.client.ContextFunctions.CurrentRole(ctx)
+	if err != nil {
+		return err
+	}
+	currentRoleName := NewAccountObjectIdentifier(currentRole)
+
+	currentTask, err := v.client.Tasks.ShowByID(ctx, taskId)
+	if err != nil {
+		return err
+	}
+
+	isGrantedWithPrivilege := func(privilege string) bool {
+		return slices.ContainsFunc(currentGrants, func(grant Grant) bool {
+			return grant.GranteeName == currentRoleName &&
+				grant.GrantedOn == ObjectTypeTask &&
+				grant.Privilege == privilege
+		})
+	}
+	canOperateOnTask := isGrantedWithPrivilege(SchemaObjectPrivilegeOperate.String())
+	canExecuteTask := isGrantedWithPrivilege(GlobalPrivilegeExecuteTask.String())
+
+	var tasksToResume []SchemaObjectIdentifier
+	if canOperateOnTask {
+		tasksToResume, err = v.client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Printf("[WARN] Insufficient privileges to operate on task: %s (OPERATE privilege). Trying to proceed with ownership transfer...", taskId.FullyQualifiedName())
+	}
+
 	if err := validateAndExec(v.client, ctx, opts); err != nil {
 		return err
 	}
 
-	// 3. Resume tasks.
+	if currentTask.State == TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(id SchemaObjectIdentifier) bool {
+		return id.FullyQualifiedName() == currentTask.ID().FullyQualifiedName()
+	}) {
+		tasksToResume = append(tasksToResume, currentTask.ID())
+	}
+
 	if len(tasksToResume) > 0 {
-		err = v.client.Tasks.ResumeTasks(ctx, tasksToResume)
-		if err != nil {
-			return err
+		if canExecuteTask {
+			err = v.client.Tasks.ResumeTasks(ctx, tasksToResume)
+			if err != nil {
+				return err
+			}
+		} else {
+			tasksToResumeString := collections.Map(tasksToResume, func(id SchemaObjectIdentifier) string { return id.FullyQualifiedName() })
+			log.Printf("[WARN] Insufficient privileges to resume tasks: %v (EXECUTE TASK privilege). Tasks have to be resumed manually.", tasksToResumeString)
 		}
 	}
 
 	return nil
 }
-
-// TODO: consider (describe in the pr)
-//func (v *grants) grantOwnershipOnAllTasks(ctx context.Context, opts *GrantOwnershipOptions) error {
-// grant on all tasks
-// 1. grant ownership on all tasks (Snowflake will suspend automatically)
-// 2. go through tasks in [database|schema]
-// 3. resume w if here last_suspended_reason was equal to "GRANT_OWNERSHIP" (have to resume parent first)
-// or
-//return nil
-//}
 
 func (v *grants) grantTemporarily(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, accountRoleName AccountObjectIdentifier) (func() error, error) {
 	return func() error {
