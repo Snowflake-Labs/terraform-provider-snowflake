@@ -16,26 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// Done (doc-discuss thread):
-// - Materialized views
-
-// Won't do:
-// - External tables (cannot handle this edge case, because we have to know the auto_refresh state of the external table; it's not retrievable by SHOW or DESC commands)
-
-// TODO for later:
-// - Tasks bulk operations
-
-// TODO:
-// - Test edge cases (and not only)
-// 		- RBAC hierarchy
-// 		- Delete resource before grant ownership resource
-// 		- Pipes on bulk and individually
-// 		- Tasks on bulk
-// 		- Materialized view
-// 		- Validation (?): grant ownership of e.g. share (not possible)
-// 		- Dynamic Tables
-// 		- Database Roles
-
 var grantOwnershipSchema = map[string]*schema.Schema{
 	"account_role_name": {
 		Type:             schema.TypeString,
