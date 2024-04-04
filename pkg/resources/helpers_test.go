@@ -555,13 +555,13 @@ func updateAccountParameter(t *testing.T, client *sdk.Client, parameter sdk.Acco
 	}
 }
 
-type PlanCheck func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse)
+type planCheck func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse)
 
-func (fn PlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+func (fn planCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
 	fn(ctx, req, resp)
 }
 
-func ExpectsCreatePlan(resourceAddress string) PlanCheck {
+func expectsCreatePlan(resourceAddress string) planCheck {
 	return func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
 		for _, rc := range req.Plan.ResourceChanges {
 			if rc.Address == resourceAddress && rc.Change != nil && slices.Contains(rc.Change.Actions, tfjson.ActionCreate) {

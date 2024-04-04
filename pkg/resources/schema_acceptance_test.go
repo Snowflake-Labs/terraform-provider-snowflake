@@ -336,7 +336,7 @@ func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				RefreshPlanChecks: resource.RefreshPlanChecks{
 					PostRefresh: []plancheck.PlanCheck{
-						ExpectsCreatePlan("snowflake_schema.test"),
+						expectsCreatePlan("snowflake_schema.test"),
 					},
 				},
 			},
