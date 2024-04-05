@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -738,9 +739,31 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 
 	client := meta.(*provider.Context).Client
 
+	// TODO(SNOW-891217): Use custom error. Right now, "object does not exist" error is hidden in sdk/internal/collections package
+	if _, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(id.RoleName)); err != nil && err.Error() == "object does not exist" {
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Failed to retrieve account role. Marking the resource as removed.",
+				Detail:   fmt.Sprintf("Id: %s", d.Id()),
+			},
+		}
+	}
+
 	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve grants. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s", d.Id()),
+				},
+			}
+		}
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,

@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -653,8 +654,30 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 	}
 
 	client := meta.(*provider.Context).Client
+	// TODO(SNOW-891217): Use custom error. Right now, "object does not exist" error is hidden in sdk/internal/collections package
+	if _, err := client.DatabaseRoles.ShowByID(ctx, id.DatabaseRoleName); err != nil && err.Error() == "object does not exist" {
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Failed to retrieve database role. Marking the resource as removed.",
+				Detail:   fmt.Sprintf("Id: %s", d.Id()),
+			},
+		}
+	}
+
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve grants. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s", d.Id()),
+				},
+			}
+		}
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,

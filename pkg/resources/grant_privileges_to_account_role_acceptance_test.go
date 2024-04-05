@@ -450,7 +450,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivi
 		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				ExpectError:     regexp.MustCompile("Unsupported privilege 'OWNERSHIP'"),
@@ -1358,6 +1358,92 @@ func revokeAndGrantPrivilegesOnTableToAccountRole(
 	}
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
+func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"name":     config.StringVariable(roleName),
+		"database": config.StringVariable(databaseName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateDatabaseRole)),
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"with_grant_option": config.BoolVariable(true),
+	}
+
+	var databaseCleanup func()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					databaseCleanup = createDatabaseOutsideTerraform(t, databaseName)
+					createAccountRoleOutsideTerraform(t, name)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig:       func() { databaseCleanup() },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
+				ConfigVariables: configVariables,
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
+				ExpectError: regexp.MustCompile("An error occurred when granting privileges to account role"),
+			},
+		},
+	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
+func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	roleName := sdk.NewAccountObjectIdentifier(name).FullyQualifiedName()
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := config.Variables{
+		"name":     config.StringVariable(roleName),
+		"database": config.StringVariable(databaseName),
+		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateDatabaseRole)),
+			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
+		),
+		"with_grant_option": config.BoolVariable(true),
+	}
+
+	var roleCleanup func()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Cleanup(createDatabaseOutsideTerraform(t, databaseName))
+					roleCleanup = createAccountRoleOutsideTerraform(t, name)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig:       func() { roleCleanup() },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
+				ConfigVariables: configVariables,
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
+				ExpectError: regexp.MustCompile("An error occurred when granting privileges to account role"),
+			},
+		},
+	})
+}
+
 func getSecondaryAccountName(t *testing.T) (string, error) {
 	t.Helper()
 	config, err := sdk.ProfileConfig(testprofiles.Secondary)
@@ -1420,7 +1506,7 @@ func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, sha
 	)
 }
 
-func createAccountRoleOutsideTerraform(t *testing.T, name string) {
+func createAccountRoleOutsideTerraform(t *testing.T, name string) func() {
 	t.Helper()
 	client, err := sdk.NewDefaultClient()
 	if err != nil {
@@ -1430,6 +1516,12 @@ func createAccountRoleOutsideTerraform(t *testing.T, name string) {
 	roleId := sdk.NewAccountObjectIdentifier(name)
 	if err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId).WithOrReplace(true)); err != nil {
 		t.Fatal(fmt.Errorf("error account role (%s): %w", roleId.FullyQualifiedName(), err))
+	}
+
+	return func() {
+		if err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId).WithIfExists(true)); err != nil {
+			t.Fatal(fmt.Errorf("error account role (%s): %w", roleId.FullyQualifiedName(), err))
+		}
 	}
 }
 

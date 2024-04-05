@@ -1,6 +1,7 @@
 package architests
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/architest"
@@ -25,7 +26,7 @@ func TestArchCheck_AcceptanceTests_Resources(t *testing.T) {
 	})
 
 	t.Run("there are no acceptance tests in other test files in the directory", func(t *testing.T) {
-		otherTestFiles := resourcesFiles.Filter(architest.FileNameFilterWithExclusionsProvider(architest.TestFileRegex, architest.AcceptanceTestFileRegex))
+		otherTestFiles := resourcesFiles.Filter(architest.FileNameFilterWithExclusionsProvider(architest.TestFileRegex, architest.AcceptanceTestFileRegex, regexp.MustCompile("helpers_test.go")))
 
 		otherTestFiles.All(func(file *architest.File) {
 			file.ExportedMethods().All(func(method *architest.Method) {

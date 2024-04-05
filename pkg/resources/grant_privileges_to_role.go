@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -827,10 +828,21 @@ func setRolePrivilegeOptions(privileges []string, allPrivileges bool, onAccount 
 }
 
 func readRoleGrantPrivileges(ctx context.Context, client *sdk.Client, grantedOn sdk.ObjectType, id GrantPrivilegesToRoleID, opts *sdk.ShowGrantOptions, d *schema.ResourceData) error {
+	if _, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(sdk.NewAccountObjectIdentifier(id.RoleName))); err != nil && err.Error() == "object does not exist" {
+		d.SetId("")
+		log.Printf("[DEBUG] Failed to retrieve account role. Marking the resource as removed.")
+		return nil
+	}
+
 	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)
 	logging.DebugLogger.Printf("[DEBUG] After showing grants: err = %v", err)
 	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			log.Printf("[DEBUG] Failed to show grants: %s. Marking object as removed.", err)
+			return nil
+		}
 		return fmt.Errorf("error retrieving grants for account role: %w", err)
 	}
 

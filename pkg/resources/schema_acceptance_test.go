@@ -3,6 +3,7 @@ package resources_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -308,6 +309,76 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 	})
 }
 
+func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
+	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := map[string]config.Variable{
+		"schema_name":   config.StringVariable(schemaName),
+		"database_name": config.StringVariable(acc.TestDatabaseName),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_RemoveOutsideOfTerraform"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig: func() {
+					removeSchemaOutsideOfTerraform(t, acc.TestDatabaseName, schemaName)
+				},
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						expectsCreatePlan("snowflake_schema.test"),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := map[string]config.Variable{
+		"schema_name":   config.StringVariable(schemaName),
+		"database_name": config.StringVariable(databaseName),
+	}
+
+	cleanupDatabase := createDatabaseOutsideTerraform(t, databaseName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_RemoveOutsideOfTerraform"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig: func() {
+					cleanupDatabase()
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_RemoveOutsideOfTerraform"),
+				ConfigVariables: configVariables,
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
+				ExpectError: regexp.MustCompile("error creating schema"),
+			},
+		},
+	})
+}
+
 func checkDatabaseAndSchemaDataRetentionTime(id sdk.DatabaseObjectIdentifier, expectedDatabaseRetentionsDays int, expectedSchemaRetentionDays int) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
 		client := acc.TestAccProvider.Meta().(*provider.Context).Client
@@ -380,4 +451,15 @@ func testAccCheckSchemaDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func removeSchemaOutsideOfTerraform(t *testing.T, databaseName string, schemaName string) {
+	t.Helper()
+
+	client, err := sdk.NewDefaultClient()
+	require.NoError(t, err)
+	ctx := context.Background()
+
+	err = client.Schemas.Drop(ctx, sdk.NewDatabaseObjectIdentifier(databaseName, schemaName), new(sdk.DropSchemaOptions))
+	require.NoError(t, err)
 }
