@@ -595,6 +595,12 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
+					grantOwnershipToTheCurrentRole(t, sdk.OwnershipGrantOn{
+						Object: &sdk.Object{
+							ObjectType: sdk.ObjectTypeDatabase,
+							Name:       sdk.NewAccountObjectIdentifier(databaseName),
+						},
+					})
 					cleanupDatabase()
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Database_ToAccountRole_NoDatabaseResource"),
@@ -782,6 +788,7 @@ provider "snowflake" {
 }
 
 resource "snowflake_schema" "test" {
+  depends_on = [snowflake_role.test]
   provider = snowflake.secondary
   database = snowflake_database.test.name
   name     = "%s"
@@ -1091,22 +1098,28 @@ func createDatabase(t *testing.T, name string) func() {
 	assert.NoError(t, client.Databases.Create(ctx, roleId, new(sdk.CreateDatabaseOptions)))
 
 	return func() {
-		currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-		assert.NoError(t, err)
-		err = client.Grants.GrantOwnership(ctx, sdk.OwnershipGrantOn{
-			Object: &sdk.Object{
-				ObjectType: sdk.ObjectTypeDatabase,
-				Name:       roleId,
-			},
-		},
-			sdk.OwnershipGrantTo{
-				AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole)),
-			},
-			new(sdk.GrantOwnershipOptions),
-		)
-		assert.NoError(t, err)
 		assert.NoError(t, client.Databases.Drop(ctx, roleId, new(sdk.DropDatabaseOptions)))
 	}
+}
+
+func grantOwnershipToTheCurrentRole(t *testing.T, on sdk.OwnershipGrantOn) {
+	t.Helper()
+	client, err := sdk.NewDefaultClient()
+	assert.NoError(t, err)
+
+	ctx := context.Background()
+	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
+	assert.NoError(t, err)
+
+	err = client.Grants.GrantOwnership(
+		ctx,
+		on,
+		sdk.OwnershipGrantTo{
+			AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentRole)),
+		},
+		new(sdk.GrantOwnershipOptions),
+	)
+	assert.NoError(t, err)
 }
 
 func getCurrentUser(t *testing.T) string {
