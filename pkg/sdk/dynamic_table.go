@@ -17,8 +17,7 @@ type DynamicTables interface {
 
 // createDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-dynamic-table
 type createDynamicTableOptions struct {
-	create       bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace    *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	create       bool                     `ddl:"static" sql:"CREATE OR REPLACE"`
 	dynamicTable bool                     `ddl:"static" sql:"DYNAMIC TABLE"`
 	name         SchemaObjectIdentifier   `ddl:"identifier"`
 	targetLag    TargetLag                `ddl:"parameter,no_quotes" sql:"TARGET_LAG"`

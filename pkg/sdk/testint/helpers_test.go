@@ -220,7 +220,7 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	query := "select id from " + table.ID().FullyQualifiedName()
 	comment := random.Comment()
 	ctx := context.Background()
-	err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouse.ID(), targetLag, query).WithOrReplace(true).WithComment(&comment))
+	err := client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(name, warehouse.ID(), targetLag, query).WithComment(&comment))
 	require.NoError(t, err)
 	entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(name.Name())}).WithIn(&sdk.In{Schema: schema.ID()}))
 	require.NoError(t, err)

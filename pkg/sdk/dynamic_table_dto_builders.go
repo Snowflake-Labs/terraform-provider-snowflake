@@ -14,11 +14,6 @@ func NewCreateDynamicTableRequest(
 	return &s
 }
 
-func (s *CreateDynamicTableRequest) WithOrReplace(orReplace bool) *CreateDynamicTableRequest {
-	s.orReplace = orReplace
-	return s
-}
-
 func (s *CreateDynamicTableRequest) WithComment(comment *string) *CreateDynamicTableRequest {
 	s.comment = comment
 	return s

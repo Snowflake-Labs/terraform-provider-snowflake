@@ -10,8 +10,6 @@ var (
 )
 
 type CreateDynamicTableRequest struct {
-	orReplace bool
-
 	name      SchemaObjectIdentifier  // required
 	warehouse AccountObjectIdentifier // required
 	targetLag TargetLag               // required

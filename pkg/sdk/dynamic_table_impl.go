@@ -57,7 +57,6 @@ func (v *dynamicTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier)
 
 func (s *CreateDynamicTableRequest) toOpts() *createDynamicTableOptions {
 	return &createDynamicTableOptions{
-		OrReplace:   Bool(s.orReplace),
 		name:        s.name,
 		warehouse:   s.warehouse,
 		targetLag:   s.targetLag,
