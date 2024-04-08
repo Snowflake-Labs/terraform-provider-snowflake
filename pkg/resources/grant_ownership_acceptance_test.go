@@ -716,6 +716,8 @@ func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_RoleBasedAccessControlUseCase(t *testing.T) {
+	t.Skip("Will be un-skipped in SNOW-1313849")
+
 	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
