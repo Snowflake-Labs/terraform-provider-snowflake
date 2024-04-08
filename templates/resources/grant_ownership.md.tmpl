@@ -42,8 +42,13 @@ To transfer ownership of a pipe(s) **semi-automatically** you have to:
 2. Create Terraform configuration with the `snowflake_grant_ownership` resource and perform ownership transfer with the `terraform apply`.
 3. To resume the pipe(s) after ownership transfer use [PIPE_FORCE_RESUME system function](https://docs.snowflake.com/en/sql-reference/functions/system_pipe_force_resume).
 
-## Granting ownership on tasks
+{{/*## Granting ownership on tasks*/}}
 {{/* TODO: In next pr */}}
+
+## Granting ownership on external tables
+Transferring ownership on an external table or its parent database blocks automatic refreshes of the table metadata by setting the `AUTO_REFRESH` property to `FALSE`.
+Right now, there's no way to check the `AUTO_REFRESH` state of the external table and because of that, a manual step is required after ownership transfer.
+To set the `AUTO_REFRESH` property back to `TRUE` (after you transfer ownership), use the [ALTER EXTERNAL TABLE](https://docs.snowflake.com/en/sql-reference/sql/alter-external-table) command.
 
 {{ .SchemaMarkdown | trimspace }}
 

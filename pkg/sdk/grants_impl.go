@@ -206,6 +206,7 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 	if opts == nil {
 		opts = &GrantOwnershipOptions{}
 	}
+
 	opts.On = on
 	opts.To = to
 
