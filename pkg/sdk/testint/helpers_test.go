@@ -925,5 +925,6 @@ func createTaskWithRequest(t *testing.T, client *sdk.Client, request *sdk.Create
 func createTask(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Task, func()) {
 	t.Helper()
 	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, random.AlphaN(20))
-	return createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP"))
+	warehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
+	return createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP").WithSchedule(sdk.String("60 minutes")).WithWarehouse(warehouseReq))
 }
