@@ -6,14 +6,10 @@ description: |-
   
 ---
 
-
-!> **Warning** We're in a process of implementing this resource, so it's not available yet.
-
 ~> **Note** This is a preview resource. It's ready for general use. In case of any errors, please file an issue in our GitHub repository.
 ~> **Note** For more details about granting ownership, please visit [`GRANT OWNERSHIP` Snowflake documentation page](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership).
 
-
-
+!> **Warning** Grant ownership resource still has some limitations. Delete operation is not implemented for on_future grants (you have to remove the config and then revoke ownership grant on future X manually).
 
 # snowflake_grant_ownership (Resource)
 
@@ -196,7 +192,7 @@ If originally the first owner won't be granted with OPERATE, USAGE (on the wareh
 
 ## Granting ownership on all tasks in database/schema
 Granting ownership on all tasks requires less privileges than granting ownership on one task, because it does a little bit less and requires additional work to be done after.
-The only thing you have to take care of is to resume tasks after grant ownership transfer. If your tasks are managed by the Snowflake Terraform Plugin, this should
+The only thing you have to take care of is to resume tasks after grant ownership transfer. If all of your tasks are managed by the Snowflake Terraform Plugin, this should
 be as simple as running `terraform apply` second time (assuming the currently used role is privileged enough to be able to resume the tasks).
 If your tasks are not managed by the Snowflake Terraform Plugin, you should resume them yourself manually.
 
