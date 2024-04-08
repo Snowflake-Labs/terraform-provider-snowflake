@@ -1642,7 +1642,6 @@ func TestInt_GrantOwnership(t *testing.T) {
 		currentSecondTask, err = client.Tasks.ShowByID(ctx, secondTask.ID())
 		require.NoError(t, err)
 		require.Equal(t, sdk.TaskStateSuspended, currentSecondTask.State)
-
 	})
 
 	t.Run("on all tasks - with operate", func(t *testing.T) {
