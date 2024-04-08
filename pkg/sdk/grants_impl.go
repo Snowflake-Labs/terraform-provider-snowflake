@@ -242,30 +242,6 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 		)
 	}
 
-	// To grant ownership of a task in Snowflake, it (and its root) has to be suspended before
-	// and resume after (only if it was previously running). To simplify the logic, every task
-	// will be granted individually where the suspension/resume logic is applied.
-	if on.All != nil && on.All.PluralObjectType == PluralObjectTypeTasks {
-		return v.runOnAllTasks(
-			ctx,
-			on.All.InDatabase,
-			on.All.InSchema,
-			func(task Task) error {
-				return v.client.Grants.GrantOwnership(
-					ctx,
-					OwnershipGrantOn{
-						Object: &Object{
-							ObjectType: ObjectTypeTask,
-							Name:       NewSchemaObjectIdentifier(task.DatabaseName, task.SchemaName, task.Name),
-						},
-					},
-					to,
-					opts,
-				)
-			},
-		)
-	}
-
 	return validateAndExec(v.client, ctx, opts)
 }
 
@@ -440,15 +416,9 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 		log.Printf("[WARN] Insufficient privileges to operate on task: %s (OPERATE privilege). Trying to proceed with ownership transfer...", taskId.FullyQualifiedName())
 	}
 
-	tasksBefore, _ := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(taskId.databaseName, taskId.schemaName)}))
-	_ = tasksBefore
-
 	if err := validateAndExec(v.client, ctx, opts); err != nil {
 		return err
 	}
-
-	tasksAfter, _ := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(taskId.databaseName, taskId.schemaName)}))
-	_ = tasksAfter
 
 	if currentTask.State == TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(id SchemaObjectIdentifier) bool {
 		return id.FullyQualifiedName() == currentTask.ID().FullyQualifiedName()
