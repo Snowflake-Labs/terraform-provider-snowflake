@@ -227,16 +227,15 @@ func ReadMaskingPolicy(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	signature := []map[string]interface{}{}
+	columns := []map[string]interface{}{}
 	for _, s := range maskingPolicyDetails.Signature {
-		signature = append(signature, map[string]interface{}{
-			"column": []map[string]interface{}{
-				{
-					"name": s.Name,
-					"type": s.Type,
-				},
-			},
+		columns = append(columns, map[string]interface{}{
+			"name": s.Name,
+			"type": s.Type,
 		})
+	}
+	signature := []map[string]interface{}{
+		{"column": columns},
 	}
 	if err := d.Set("signature", signature); err != nil {
 		return err
