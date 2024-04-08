@@ -6,11 +6,239 @@ description: |-
   
 ---
 
+~> **Note** This is a preview resource. It's ready for general use. In case of any errors, please file an issue in our GitHub repository.
+~> **Note** For more details about granting ownership, please visit [`GRANT OWNERSHIP` Snowflake documentation page](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership).
+
+!> **Warning** Grant ownership resource still has some limitations. Delete operation is not implemented for on_future grants (you have to remove the config and then revoke ownership grant on future X manually).
+
 # snowflake_grant_ownership (Resource)
 
 
 
+## Example Usage
 
+```terraform
+##################################
+### on object to account role
+##################################
+
+resource "snowflake_role" "test" {
+  name = "test_role"
+}
+
+resource "snowflake_database" "test" {
+  name = "test_database"
+}
+
+resource "snowflake_schema" "test" {
+  name     = "test_schema"
+  database = snowflake_database.test.name
+}
+
+resource "snowflake_grant_ownership" "test" {
+  account_role_name   = snowflake_role.test.name
+  outbound_privileges = "COPY"
+  on {
+    object_type = "SCHEMA"
+    object_name = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
+  }
+}
+
+##################################
+### on object to database role
+##################################
+
+resource "snowflake_database" "test" {
+  name = "test_database"
+}
+
+resource "snowflake_schema" "test" {
+  name     = "test_schema"
+  database = snowflake_database.test.name
+}
+
+resource "snowflake_database_role" "test" {
+  name     = "test_database_role"
+  database = snowflake_database.test.name
+}
+
+resource "snowflake_grant_ownership" "test" {
+  database_role_name  = "\"${snowflake_database_role.test.database}\".\"${snowflake_database_role.test.name}\""
+  outbound_privileges = "REVOKE"
+  on {
+    object_type = "SCHEMA"
+    object_name = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
+  }
+}
+
+##################################
+### on all tables in database to account role
+##################################
+
+resource "snowflake_role" "test" {
+  name = "test_role"
+}
+
+resource "snowflake_database" "test" {
+  name = "test_database"
+}
+
+resource "snowflake_grant_ownership" "test" {
+  account_role_name = snowflake_role.test.name
+  on {
+    all {
+      plural_object_type = "TABLES"
+      in_database        = snowflake_database.test.name
+    }
+  }
+}
+
+##################################
+### on all tables in schema to account role
+##################################
+
+resource "snowflake_role" "test" {
+  name = "test_role"
+}
+
+resource "snowflake_database" "test" {
+  name = "test_database"
+}
+
+resource "snowflake_schema" "test" {
+  name     = "test_schema"
+  database = snowflake_database.test.name
+}
+
+resource "snowflake_grant_ownership" "test" {
+  account_role_name = snowflake_role.test.name
+  on {
+    all {
+      plural_object_type = "TABLES"
+      in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
+    }
+  }
+}
+
+##################################
+### on future tables in database to account role
+##################################
+
+resource "snowflake_role" "test" {
+  name = "test_role"
+}
+
+resource "snowflake_database" "test" {
+  name = "test_database"
+}
+
+resource "snowflake_grant_ownership" "test" {
+  account_role_name = snowflake_role.test.name
+  on {
+    future {
+      plural_object_type = "TABLES"
+      in_database        = snowflake_database.test.name
+    }
+  }
+}
+
+##################################
+### on future tables in schema to account role
+##################################
+
+resource "snowflake_role" "test" {
+  name = "test_role"
+}
+
+resource "snowflake_database" "test" {
+  name = "test_database"
+}
+
+resource "snowflake_schema" "test" {
+  name     = "test_schema"
+  database = snowflake_database.test.name
+}
+
+resource "snowflake_grant_ownership" "test" {
+  account_role_name = snowflake_role.test.name
+  on {
+    future {
+      plural_object_type = "TABLES"
+      in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
+    }
+  }
+}
+
+##################################
+### RoleBasedAccessControl (RBAC example)
+##################################
+
+resource "snowflake_role" "test" {
+  name = "role"
+}
+
+resource "snowflake_database" "test" {
+  name = "database"
+}
+
+resource "snowflake_grant_ownership" "test" {
+  account_role_name = snowflake_role.test.name
+  on {
+    object_type = "DATABASE"
+    object_name = snowflake_database.test.name
+  }
+}
+
+resource "snowflake_grant_account_role" "test" {
+  role_name = snowflake_role.test.name
+  user_name = "username"
+}
+
+provider "snowflake" {
+  profile = "default"
+  alias   = "secondary"
+  role    = snowflake_role.test.name
+}
+
+## With ownership on the database, the secondary provider is able to create schema on it without any additional privileges.
+resource "snowflake_schema" "test" {
+  depends_on = [snowflake_grant_ownership.test, snowflake_grant_account_role.test]
+  provider   = snowflake.secondary
+  database   = snowflake_database.test.name
+  name       = "schema"
+}
+```
+
+## Granting ownership on pipes
+To transfer ownership of a pipe, there must be additional conditions met. Otherwise, additional manual work
+will be needed afterward or in some cases, the ownership won't be transferred (resulting in error).
+
+To transfer ownership of a pipe(s) **fully automatically**, one of the following conditions has to be met:
+- OPERATE and MONITOR privileges are granted to the current role on the pipe(s) and `outbound_privileges` field is set to `COPY`.
+- The pipe(s) running status is paused (additional privileges and fields set are needed to pause and resume the pipe before and after ownership transfer. If it's already paused, nothing additional is needed and the pipe will remain paused after the ownership transfer).
+
+To transfer ownership of a pipe(s) **semi-automatically** you have to:
+1. Pause the pipe(s) you want to transfer ownership of (using [ALTER PIPE](https://docs.snowflake.com/en/sql-reference/sql/alter-pipe#syntax); see PIPE_EXECUTION_PAUSED).
+2. Create Terraform configuration with the `snowflake_grant_ownership` resource and perform ownership transfer with the `terraform apply`.
+3. To resume the pipe(s) after ownership transfer use [PIPE_FORCE_RESUME system function](https://docs.snowflake.com/en/sql-reference/functions/system_pipe_force_resume).
+
+## Granting ownership on task
+Granting ownership on single task requires:
+- Either OWNERSHIP or OPERATE privilege to suspend the task (and its root)
+- Role that will be granted ownership has to have USAGE granted on the warehouse assigned to the task, as well as EXECUTE TASK granted globally
+- The outbound privileges set to `outbound_privileges = "COPY"` if you want to move grants automatically to the owner (also enables the provider to resume the task automatically)
+If originally the first owner won't be granted with OPERATE, USAGE (on the warehouse), EXECUTE TASK (on the account), and outbound privileges won't be set to `COPY`, then you have to resume suspended tasks manually.
+
+## Granting ownership on all tasks in database/schema
+Granting ownership on all tasks requires less privileges than granting ownership on one task, because it does a little bit less and requires additional work to be done after.
+The only thing you have to take care of is to resume tasks after grant ownership transfer. If all of your tasks are managed by the Snowflake Terraform Plugin, this should
+be as simple as running `terraform apply` second time (assuming the currently used role is privileged enough to be able to resume the tasks).
+If your tasks are not managed by the Snowflake Terraform Plugin, you should resume them yourself manually.
+
+## Granting ownership on external tables
+Transferring ownership on an external table or its parent database blocks automatic refreshes of the table metadata by setting the `AUTO_REFRESH` property to `FALSE`.
+Right now, there's no way to check the `AUTO_REFRESH` state of the external table and because of that, a manual step is required after ownership transfer.
+To set the `AUTO_REFRESH` property back to `TRUE` (after you transfer ownership), use the [ALTER EXTERNAL TABLE](https://docs.snowflake.com/en/sql-reference/sql/alter-external-table) command.
 
 <!-- schema generated by tfplugindocs -->
 ## Schema
