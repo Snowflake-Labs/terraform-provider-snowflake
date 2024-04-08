@@ -343,10 +343,11 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
+		d.SetId("")
 		return diag.Diagnostics{
 			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to retrieve grants",
+				Severity: diag.Warning,
+				Summary:  "Failed to retrieve grants. Marking the resource as removed.",
 				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 			},
 		}
@@ -385,12 +386,11 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if !ownershipFound {
 		d.SetId("")
-
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
-				Summary:  "Couldn't find OWNERSHIP privilege on the target object. Marking resource as removed.",
-				Detail:   fmt.Sprintf("Id: %s", id.String()),
+				Summary:  "Couldn't find OWNERSHIP privilege on the target object. Marking the resource as removed.",
+				Detail:   fmt.Sprintf("Id: %s", d.Id()),
 			},
 		}
 	}

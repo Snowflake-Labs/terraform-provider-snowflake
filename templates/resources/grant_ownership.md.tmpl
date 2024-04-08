@@ -51,6 +51,11 @@ The only thing you have to take care of is to resume tasks after grant ownership
 be as simple as running `terraform apply` second time (assuming the currently used role is privileged enough to be able to resume the tasks).
 If your tasks are not managed by the Snowflake Terraform Plugin, you should resume them yourself manually.
 
+## Granting ownership on external tables
+Transferring ownership on an external table or its parent database blocks automatic refreshes of the table metadata by setting the `AUTO_REFRESH` property to `FALSE`.
+Right now, there's no way to check the `AUTO_REFRESH` state of the external table and because of that, a manual step is required after ownership transfer.
+To set the `AUTO_REFRESH` property back to `TRUE` (after you transfer ownership), use the [ALTER EXTERNAL TABLE](https://docs.snowflake.com/en/sql-reference/sql/alter-external-table) command.
+
 {{ .SchemaMarkdown | trimspace }}
 
 ## Import
