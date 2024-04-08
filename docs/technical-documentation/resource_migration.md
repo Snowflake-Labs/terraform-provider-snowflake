@@ -15,6 +15,8 @@ resource "snowflake_database_grant" "old_resource" {
 }
 ```
 
+> **Important note:** **Always** save your state, before any state manipulation, so in case of failed migration, you will be able to recover from having incorrect state files.
+
 #### 1. terraform list
 
 First, we need to list all the grant resources that will need to be migrated.
