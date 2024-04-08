@@ -782,6 +782,7 @@ func TestAcc_GrantOwnership_OnTask(t *testing.T) {
 		"database":          config.StringVariable(acc.TestDatabaseName),
 		"schema":            config.StringVariable(acc.TestSchemaName),
 		"task":              config.StringVariable(taskName),
+		"warehouse":         config.StringVariable(acc.TestWarehouseName),
 	}
 	resourceName := "snowflake_grant_ownership.test"
 

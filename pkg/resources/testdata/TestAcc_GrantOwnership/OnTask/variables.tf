@@ -13,3 +13,7 @@ variable "schema" {
 variable "task" {
   type = string
 }
+
+variable "warehouse" {
+  type = string
+}
