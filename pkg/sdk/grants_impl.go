@@ -441,15 +441,9 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 		log.Printf("[WARN] Insufficient privileges to operate on task: %s (OPERATE privilege). Trying to proceed with ownership transfer...", taskId.FullyQualifiedName())
 	}
 
-	tasksBefore, _ := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(taskId.databaseName, taskId.schemaName)}))
-	_ = tasksBefore
-
 	if err := validateAndExec(v.client, ctx, opts); err != nil {
 		return err
 	}
-
-	tasksAfter, _ := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(taskId.databaseName, taskId.schemaName)}))
-	_ = tasksAfter
 
 	if currentTask.State == TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(id SchemaObjectIdentifier) bool {
 		return id.FullyQualifiedName() == currentTask.ID().FullyQualifiedName()
