@@ -715,16 +715,6 @@ func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
 	})
 }
 
-func TestAcc_GrantOwnership_OnTasks(t *testing.T) {
-	t.Skip("will be unskipped in the following grant ownership prs")
-	// 		- Tasks on bulk
-}
-
-func TestAcc_GrantOwnership_OnAllTasks(t *testing.T) {
-	t.Skip("will be unskipped in the following grant ownership prs")
-	// 		- Tasks on bulk
-}
-
 func TestAcc_GrantOwnership_RoleBasedAccessControlUseCase(t *testing.T) {
 	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -788,7 +778,7 @@ provider "snowflake" {
 }
 
 resource "snowflake_schema" "test" {
-  depends_on = [snowflake_role.test]
+  depends_on = [snowflake_grant_ownership.test, snowflake_grant_account_role.test]
   provider = snowflake.secondary
   database = snowflake_database.test.name
   name     = "%s"

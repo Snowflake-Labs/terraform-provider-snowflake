@@ -206,9 +206,10 @@ provider "snowflake" {
 
 ## With ownership on the database, the secondary provider is able to create schema on it without any additional privileges.
 resource "snowflake_schema" "test" {
-  provider = snowflake.secondary
-  database = snowflake_database.test.name
-  name     = "schema"
+  depends_on = [snowflake_grant_ownership.test, snowflake_grant_account_role.test]
+  provider   = snowflake.secondary
+  database   = snowflake_database.test.name
+  name       = "schema"
 }
 ```
 
