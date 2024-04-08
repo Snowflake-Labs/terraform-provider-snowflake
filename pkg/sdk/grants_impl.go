@@ -374,12 +374,21 @@ func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectId
 }
 
 func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectIdentifier, opts *GrantOwnershipOptions) error {
-	currentGrants, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+	currentGrantsOnObject, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
 		On: &ShowGrantsOn{
 			Object: &Object{
 				ObjectType: ObjectTypeTask,
 				Name:       taskId,
 			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	currentGrantsOnAccount, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+		On: &ShowGrantsOn{
+			Account: Bool(true),
 		},
 	})
 	if err != nil {
@@ -397,18 +406,32 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 		return err
 	}
 
-	isGrantedWithPrivilege := func(privilege string) bool {
-		return slices.ContainsFunc(currentGrants, func(grant Grant) bool {
+	currentGrantsOnTaskWarehouse, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+		On: &ShowGrantsOn{
+			Object: &Object{
+				ObjectType: ObjectTypeWarehouse,
+				Name:       NewAccountObjectIdentifier(currentTask.Warehouse),
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	isGrantedWithPrivilege := func(collection []Grant, grantedOn ObjectType, privilege string) bool {
+		return slices.ContainsFunc(collection, func(grant Grant) bool {
 			return grant.GranteeName == currentRoleName &&
-				grant.GrantedOn == ObjectTypeTask &&
+				grant.GrantedOn == grantedOn &&
 				grant.Privilege == privilege
 		})
 	}
-	canOperateOnTask := isGrantedWithPrivilege(SchemaObjectPrivilegeOperate.String())
-	canExecuteTask := isGrantedWithPrivilege(GlobalPrivilegeExecuteTask.String())
+	canOperateOnTask := isGrantedWithPrivilege(currentGrantsOnObject, ObjectTypeTask, SchemaObjectPrivilegeOperate.String())
+	isGrantedWithWarehouseUsage := isGrantedWithPrivilege(currentGrantsOnTaskWarehouse, ObjectTypeWarehouse, AccountObjectPrivilegeUsage.String())
+	canSuspendTask := canOperateOnTask || isGrantedWithPrivilege(currentGrantsOnObject, ObjectTypeTask, "OWNERSHIP")
+	canResumeTask := isGrantedWithWarehouseUsage || canOperateOnTask || isGrantedWithPrivilege(currentGrantsOnAccount, ObjectTypeAccount, GlobalPrivilegeExecuteTask.String())
 
 	var tasksToResume []SchemaObjectIdentifier
-	if canOperateOnTask {
+	if canSuspendTask {
 		tasksToResume, err = v.client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
 		if err != nil {
 			return err
@@ -417,9 +440,15 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 		log.Printf("[WARN] Insufficient privileges to operate on task: %s (OPERATE privilege). Trying to proceed with ownership transfer...", taskId.FullyQualifiedName())
 	}
 
+	tasksBefore, _ := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(taskId.databaseName, taskId.schemaName)}))
+	_ = tasksBefore
+
 	if err := validateAndExec(v.client, ctx, opts); err != nil {
 		return err
 	}
+
+	tasksAfter, _ := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(&In{Schema: NewDatabaseObjectIdentifier(taskId.databaseName, taskId.schemaName)}))
+	_ = tasksAfter
 
 	if currentTask.State == TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(id SchemaObjectIdentifier) bool {
 		return id.FullyQualifiedName() == currentTask.ID().FullyQualifiedName()
@@ -428,7 +457,7 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 	}
 
 	if len(tasksToResume) > 0 {
-		if canExecuteTask {
+		if canResumeTask && ((opts.CurrentGrants != nil && opts.CurrentGrants.OutboundPrivileges == Copy) || (opts.To.AccountRoleName != nil && opts.To.AccountRoleName.Name() == currentRoleName.Name())) {
 			err = v.client.Tasks.ResumeTasks(ctx, tasksToResume)
 			if err != nil {
 				return err
