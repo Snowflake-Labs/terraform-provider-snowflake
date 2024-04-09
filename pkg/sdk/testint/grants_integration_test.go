@@ -1517,18 +1517,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 		require.NoError(t, err)
 
-		err = client.Grants.GrantPrivilegesToAccountRole(
-			ctx,
-			&sdk.AccountRoleGrantPrivileges{
-				GlobalPrivileges: []sdk.GlobalPrivilege{sdk.GlobalPrivilegeExecuteTask},
-			},
-			&sdk.AccountRoleGrantOn{
-				Account: sdk.Bool(true),
-			},
-			sdk.NewAccountObjectIdentifier(currentRole),
-			new(sdk.GrantPrivilegesToAccountRoleOptions),
-		)
-		require.NoError(t, err)
+		grantTaskRole(t, sdk.NewAccountObjectIdentifier(currentRole))
 
 		// Use a previously prepared role to create a task
 		usePreviousRole := useRole(t, client, taskRole.Name)
