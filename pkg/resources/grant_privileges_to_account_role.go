@@ -527,7 +527,9 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 				)
 
 				if !id.WithGrantOption {
-					if err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, new(sdk.RevokePrivilegesFromAccountRoleOptions)); err != nil {
+					if err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, &sdk.RevokePrivilegesFromAccountRoleOptions{
+						GrantOptionFor: sdk.Bool(true),
+					}); err != nil {
 						return diag.Diagnostics{
 							diag.Diagnostic{
 								Severity: diag.Error,

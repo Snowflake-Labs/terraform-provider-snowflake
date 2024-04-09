@@ -7,6 +7,8 @@ import (
 	"log"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
 
@@ -214,6 +216,10 @@ func (v *grants) GrantOwnership(ctx context.Context, on OwnershipGrantOn, to Own
 		return v.grantOwnershipOnPipe(ctx, on.Object.Name.(SchemaObjectIdentifier), opts)
 	}
 
+	if on.Object != nil && on.Object.ObjectType == ObjectTypeTask {
+		return v.grantOwnershipOnTask(ctx, on.Object.Name.(SchemaObjectIdentifier), opts)
+	}
+
 	// Snowflake doesn't allow bulk operations on Pipes. Because of that, when SDK user
 	// issues "grant x on all pipes" operation, we'll go and grant specified privileges
 	// to every Pipe one by one.
@@ -345,6 +351,99 @@ func (v *grants) grantOwnershipOnPipe(ctx context.Context, pipeId SchemaObjectId
 	return nil
 }
 
+func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectIdentifier, opts *GrantOwnershipOptions) error {
+	currentGrantsOnObject, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+		On: &ShowGrantsOn{
+			Object: &Object{
+				ObjectType: ObjectTypeTask,
+				Name:       taskId,
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	currentGrantsOnAccount, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+		On: &ShowGrantsOn{
+			Account: Bool(true),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	currentRole, err := v.client.ContextFunctions.CurrentRole(ctx)
+	if err != nil {
+		return err
+	}
+	currentRoleName := NewAccountObjectIdentifier(currentRole)
+
+	currentTask, err := v.client.Tasks.ShowByID(ctx, taskId)
+	if err != nil {
+		return err
+	}
+
+	currentGrantsOnTaskWarehouse, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
+		On: &ShowGrantsOn{
+			Object: &Object{
+				ObjectType: ObjectTypeWarehouse,
+				Name:       NewAccountObjectIdentifier(currentTask.Warehouse),
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	isGrantedWithPrivilege := func(collection []Grant, grantedOn ObjectType, privilege string) bool {
+		return slices.ContainsFunc(collection, func(grant Grant) bool {
+			return grant.GranteeName == currentRoleName &&
+				grant.GrantedOn == grantedOn &&
+				grant.Privilege == privilege
+		})
+	}
+	canOperateOnTask := isGrantedWithPrivilege(currentGrantsOnObject, ObjectTypeTask, SchemaObjectPrivilegeOperate.String())
+	isGrantedWithWarehouseUsage := isGrantedWithPrivilege(currentGrantsOnTaskWarehouse, ObjectTypeWarehouse, AccountObjectPrivilegeUsage.String())
+	canSuspendTask := canOperateOnTask || isGrantedWithPrivilege(currentGrantsOnObject, ObjectTypeTask, "OWNERSHIP")
+	canResumeTask := isGrantedWithWarehouseUsage && canOperateOnTask && isGrantedWithPrivilege(currentGrantsOnAccount, ObjectTypeAccount, GlobalPrivilegeExecuteTask.String())
+	canResumeTaskAfterOwnershipTransfer := canResumeTask && ((opts.CurrentGrants != nil && opts.CurrentGrants.OutboundPrivileges == Copy) || (opts.To.AccountRoleName != nil && opts.To.AccountRoleName.Name() == currentRoleName.Name()))
+
+	var tasksToResume []SchemaObjectIdentifier
+	if canSuspendTask {
+		tasksToResume, err = v.client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Printf("[WARN] Insufficient privileges to operate on task: %s (OPERATE privilege). Trying to proceed with ownership transfer...", taskId.FullyQualifiedName())
+	}
+
+	if err := validateAndExec(v.client, ctx, opts); err != nil {
+		return err
+	}
+
+	if currentTask.State == TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(id SchemaObjectIdentifier) bool {
+		return id.FullyQualifiedName() == currentTask.ID().FullyQualifiedName()
+	}) {
+		tasksToResume = append(tasksToResume, currentTask.ID())
+	}
+
+	if len(tasksToResume) > 0 {
+		if canResumeTaskAfterOwnershipTransfer {
+			err = v.client.Tasks.ResumeTasks(ctx, tasksToResume)
+			if err != nil {
+				return err
+			}
+		} else {
+			tasksToResumeString := collections.Map(tasksToResume, func(id SchemaObjectIdentifier) string { return id.FullyQualifiedName() })
+			log.Printf("[WARN] Insufficient privileges to resume tasks: %v (EXECUTE TASK privilege). Tasks have to be resumed manually.", tasksToResumeString)
+		}
+	}
+
+	return nil
+}
+
 func (v *grants) grantTemporarily(ctx context.Context, privileges *AccountRoleGrantPrivileges, on *AccountRoleGrantOn, accountRoleName AccountObjectIdentifier) (func() error, error) {
 	return func() error {
 			return v.client.Grants.RevokePrivilegesFromAccountRole(
@@ -382,6 +481,27 @@ func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIde
 	}
 
 	return runOnAll(pipes, command)
+}
+
+func (v *grants) runOnAllTasks(ctx context.Context, inDatabase *AccountObjectIdentifier, inSchema *DatabaseObjectIdentifier, command func(Task) error) error {
+	var in *In
+	switch {
+	case inDatabase != nil:
+		in = &In{
+			Database: *inDatabase,
+		}
+	case inSchema != nil:
+		in = &In{
+			Schema: *inSchema,
+		}
+	}
+
+	tasks, err := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(in))
+	if err != nil {
+		return err
+	}
+
+	return runOnAll(tasks, command)
 }
 
 func runOnAll[T any](collection []T, command func(T) error) error {
