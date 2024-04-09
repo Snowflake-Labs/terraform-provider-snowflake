@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.88.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.3-pre...v0.88.0) (2024-04-09)
+
+
+### 🎉 **What's new:**
+
+* Fix issues 2651 2656 ([#2659](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2659)) ([7fa09cc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7fa09cc8a296003a09c25a1e8b88f997f6307416))
+* Grant ownership follow up ([#2628](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2628)) ([d467e5b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d467e5bccfa5d8ee61482608d7e748320b9574e3))
+* grant ownership follow-up ([#2658](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2658)) ([bfa2317](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/bfa231742ae234a04f1b5759f45855554c971700))
+* grant ownership on tasks ([#2684](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2684)) ([2ba7889](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2ba7889206aa73014def4673266967cb2a5be6cc))
+* Introduce shared function to suspend task roots ([#2650](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2650)) ([d684b5d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d684b5d7b41aefef8a707d4983b9e1a5bcd01aef))
+* Redesign snowflake_grants datasource ([#2667](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2667)) ([918873d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/918873d19fff32f88acdce8e62e78fcbf24b244f))
+* user password policy attachment ([#2627](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2627)) ([382e49d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/382e49d7254e2422d64d00c51e341644ce614d70))
+
+
+### 🔧 **Misc**
+
+* release 0.88.0 ([02d60e0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/02d60e07dc928a8d7398ca54f0b91a259255fd99))
+* Update grant examples in all resources ([#2660](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2660)) ([b542b69](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b542b69b198dae06e71d16f8fbf3a13a30f72752))
+
+
+### 🐛 **Bug fixes:**
+
+* Adjust dynamic tables after BCR-1543 ([#2664](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2664)) ([cf32ceb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/cf32ceb9c6780ec39c14022b983d73afafbd1c84))
+* Fix handling secure views read and import ([#2655](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2655)) ([3c3ede6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3c3ede6b1a0e1c752c8435457c92db6200f0e7b6))
+* Fix issues 2606 2642 2652 2653 ([#2654](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2654)) ([4a73721](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4a73721ae890929032d70d3d831bb829711494ee))
+* Fix release workflow ([#2639](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2639)) ([dfd07e9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/dfd07e934c5c3d31f1aab211368f85c80068dad6))
+* Generate docs for dynamic table ([#2666](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2666)) ([16c75b0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/16c75b0053da0e52c779765665eb9361f4f32ef3))
+* grant read operation ([#2665](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2665)) ([0b947a5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0b947a54a7bd285a4eaa337b6efa69da66d42a17))
+* migration guide for databases created from share ([#2637](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2637)) ([f9651bc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f9651bcc9c0ec1afd6ec2e1ee258de1791a76b80))
+* with_grant_option diff drift ([#2608](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2608)) ([f0018c6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f0018c6c0d89a537b269696a59fe255a3c1a6f28))
+
 ## [0.87.3-pre](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.2...v0.87.3-pre) (2024-03-18)
 
 
