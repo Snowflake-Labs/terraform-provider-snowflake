@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"strings"
 	"testing"
 
@@ -132,6 +133,11 @@ func TestAcc_MaskingPolicyMultiColumns(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: maskingPolicyConfigMultiColumn(accName, accName, acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "database", acc.TestDatabaseName),
