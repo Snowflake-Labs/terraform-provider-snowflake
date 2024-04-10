@@ -2,10 +2,12 @@ package resources_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -53,6 +55,7 @@ func TestAcc_ObjectParameterAccount(t *testing.T) {
 }
 
 func TestAcc_UserParameter(t *testing.T) {
+	userName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -62,7 +65,7 @@ func TestAcc_UserParameter(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: userParameterConfigBasic("ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR", "true", acc.TestUserName),
+				Config: userParameterConfigBasic(userName, "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "true"),
@@ -98,16 +101,19 @@ resource "snowflake_object_parameter" "p" {
 	return fmt.Sprintf(s, key, value, databaseName)
 }
 
-func userParameterConfigBasic(key, value, username string) string {
+func userParameterConfigBasic(userName string, key string, value string) string {
 	s := `
+resource "snowflake_user" "user" {
+	name = "%s"
+}
 resource "snowflake_object_parameter" "p" {
 	key = "%s"
 	value = "%s"
 	object_type = "USER"
 	object_identifier {
-		name = "%s"
+		name = snowflake_user.user.name
 	}
 }
 `
-	return fmt.Sprintf(s, key, value, username)
+	return fmt.Sprintf(s, userName, key, value)
 }

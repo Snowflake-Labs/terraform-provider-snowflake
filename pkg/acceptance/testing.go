@@ -24,7 +24,6 @@ const (
 	TestSchemaName     = "terraform_test_schema"
 	TestWarehouseName  = "terraform_test_warehouse"
 	TestWarehouseName2 = "terraform_test_warehouse_2"
-	TestUserName       = "terraform_test_user"
 )
 
 var (
@@ -117,13 +116,6 @@ func TestAccPreCheck(t *testing.T) {
 
 		warehouseId2 := sdk.NewAccountObjectIdentifier(TestWarehouseName2)
 		if err := atc.client.Warehouses.Create(ctx, warehouseId2, &sdk.CreateWarehouseOptions{
-			IfNotExists: sdk.Bool(true),
-		}); err != nil {
-			t.Fatal(err)
-		}
-
-		userId := sdk.NewAccountObjectIdentifier(TestUserName)
-		if err := atc.client.Users.Create(ctx, userId, &sdk.CreateUserOptions{
 			IfNotExists: sdk.Bool(true),
 		}); err != nil {
 			t.Fatal(err)
