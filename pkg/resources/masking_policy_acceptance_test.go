@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"strings"
 	"testing"
 
@@ -117,4 +118,63 @@ func maskingPolicyConfigMultiline(n string, name string, databaseName string, sc
 		return_data_type = "VARCHAR"
 	}
 	`, name, databaseName, schemaName)
+}
+
+func TestAcc_MaskingPolicyMultiColumns(t *testing.T) {
+	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: maskingPolicyConfigMultiColumn(accName, accName, acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "return_data_type", "VARCHAR"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.0.name", "val"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.0.type", "VARCHAR"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.1.name", "val2"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.1.type", "VARCHAR"),
+				),
+			},
+		},
+	})
+}
+
+func maskingPolicyConfigMultiColumn(n string, name string, databaseName string, schemaName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_masking_policy" "test" {
+	name = "%s"
+	database = "%s"
+	schema = "%s"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
+
+		column {
+			name = "val2"
+			type = "VARCHAR"
+		}
+	}
+	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+	return_data_type = "VARCHAR"
+}
+`, name, databaseName, schemaName)
 }
