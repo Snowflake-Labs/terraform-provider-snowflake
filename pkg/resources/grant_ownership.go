@@ -368,7 +368,7 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		// grant_on is for future grants, granted_on is for current grants.
 		// They function the same way though in a test for matching the object type
-		if grantedOn != grant.GrantedOn && grantedOn != grant.GrantOn {
+		if !strings.Contains(grantedOn.String(), grant.GrantedOn.String()) && !strings.Contains(grantedOn.String(), grant.GrantOn.String()) {
 			continue
 		}
 
