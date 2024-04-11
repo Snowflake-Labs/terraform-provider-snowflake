@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -17,6 +18,68 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	snowflakeValidation "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/validation"
 )
+
+var (
+	// based on https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects
+	tagAssociationAllowedObjectTypes = []sdk.ObjectType{
+		sdk.ObjectTypeAccount,
+		sdk.ObjectTypeApplication,
+		sdk.ObjectTypeApplicationPackage,
+		sdk.ObjectTypeDatabase,
+		sdk.ObjectTypeIntegration,
+		sdk.ObjectTypeNetworkPolicy,
+		sdk.ObjectTypeRole,
+		sdk.ObjectTypeShare,
+		sdk.ObjectTypeUser,
+		sdk.ObjectTypeWarehouse,
+		sdk.ObjectTypeDatabaseRole,
+		sdk.ObjectTypeSchema,
+		sdk.ObjectTypeAlert,
+		sdk.ObjectTypeExternalFunction,
+		sdk.ObjectTypeExternalTable,
+		sdk.ObjectTypeGitRepository,
+		sdk.ObjectTypeIcebergTable,
+		sdk.ObjectTypeMaterializedView,
+		sdk.ObjectTypePipe,
+		sdk.ObjectTypeMaskingPolicy,
+		sdk.ObjectTypePasswordPolicy,
+		sdk.ObjectTypeRowAccessPolicy,
+		sdk.ObjectTypeSessionPolicy,
+		sdk.ObjectTypeProcedure,
+		sdk.ObjectTypeStage,
+		sdk.ObjectTypeStream,
+		sdk.ObjectTypeTable,
+		sdk.ObjectTypeTask,
+		sdk.ObjectTypeView,
+		sdk.ObjectTypeColumn,
+		sdk.ObjectTypeEventTable,
+	}
+	// TODO(SNOW-999049): Object types should be able tell their id structure and tagAssociationAllowedObjectTypes should be used to filter correct object types.
+	tagAssociationTagObjectTypeIsSchemaObjectType = []sdk.ObjectType{
+		sdk.ObjectTypeAlert,
+		sdk.ObjectTypeExternalFunction,
+		sdk.ObjectTypeExternalTable,
+		sdk.ObjectTypeGitRepository,
+		sdk.ObjectTypeIcebergTable,
+		sdk.ObjectTypeMaterializedView,
+		sdk.ObjectTypeColumn, // As a workaround for object_name can be specified as `table_name.column_name`
+		sdk.ObjectTypePipe,
+		sdk.ObjectTypeProcedure,
+		sdk.ObjectTypeStage,
+		sdk.ObjectTypeStream,
+		sdk.ObjectTypeTable,
+		sdk.ObjectTypeTask,
+		sdk.ObjectTypeView,
+		sdk.ObjectTypeEventTable,
+	}
+	tagAssociationAllowedObjectTypesString = make([]string, len(tagAssociationAllowedObjectTypes))
+)
+
+func init() {
+	for i, v := range tagAssociationAllowedObjectTypes {
+		tagAssociationAllowedObjectTypesString[i] = v.String()
+	}
+}
 
 var tagAssociationSchema = map[string]*schema.Schema{
 	"object_name": {
@@ -55,15 +118,11 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		},
 	},
 	"object_type": {
-		Type:     schema.TypeString,
-		Required: true,
-		Description: "Specifies the type of object to add a tag to. ex: 'ACCOUNT', 'COLUMN', 'DATABASE', etc. " +
-			"For more information: https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects",
-		ValidateFunc: validation.StringInSlice([]string{
-			"ACCOUNT", "COLUMN", "DATABASE", "INTEGRATION", "PIPE", "ROLE", "SCHEMA", "STREAM", "SHARE", "STAGE",
-			"TABLE", "TASK", "USER", "VIEW", "WAREHOUSE",
-		}, true),
-		ForceNew: true,
+		Type:         schema.TypeString,
+		Required:     true,
+		Description:  fmt.Sprintf("Specifies the type of object to add a tag. Allowed object types: %v.", tagAssociationAllowedObjectTypesString),
+		ValidateFunc: validation.StringInSlice(tagAssociationAllowedObjectTypesString, true),
+		ForceNew:     true,
 	},
 	"tag_id": {
 		Type:        schema.TypeString,
@@ -103,15 +162,6 @@ func TagAssociation() *schema.Resource {
 	}
 }
 
-func useTagDatabaseAndSchema(ot sdk.ObjectType) bool {
-	switch ot {
-	case sdk.ObjectTypeColumn, sdk.ObjectTypePipe, sdk.ObjectTypeStream, sdk.ObjectTypeStage, sdk.ObjectTypeTable, sdk.ObjectTypeTask, sdk.ObjectTypeView:
-		return true
-	default:
-		return false
-	}
-}
-
 func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectIdentifier, []sdk.ObjectIdentifier, sdk.ObjectType) {
 	tag := d.Get("tag_id").(string)
 	objectType := sdk.ObjectType(d.Get("object_type").(string))
@@ -119,20 +169,20 @@ func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectI
 	tagDatabase, tagSchema, tagName := snowflakeValidation.ParseFullyQualifiedObjectID(tag)
 	tid := sdk.NewSchemaObjectIdentifier(tagDatabase, tagSchema, tagName)
 
-	identifiers := []sdk.ObjectIdentifier{}
+	var identifiers []sdk.ObjectIdentifier
 	for _, item := range d.Get("object_identifier").([]interface{}) {
 		m := item.(map[string]interface{})
 		name := strings.Trim(m["name"].(string), `"`)
 		var databaseName, schemaName string
 		if v, ok := m["database"]; ok {
 			databaseName = strings.Trim(v.(string), `"`)
-			if databaseName == "" && useTagDatabaseAndSchema(objectType) {
+			if databaseName == "" && slices.Contains(tagAssociationTagObjectTypeIsSchemaObjectType, objectType) {
 				databaseName = tagDatabase
 			}
 		}
 		if v, ok := m["schema"]; ok {
 			schemaName = strings.Trim(v.(string), `"`)
-			if schemaName == "" && useTagDatabaseAndSchema(objectType) {
+			if schemaName == "" && slices.Contains(tagAssociationTagObjectTypeIsSchemaObjectType, objectType) {
 				schemaName = tagSchema
 			}
 		}

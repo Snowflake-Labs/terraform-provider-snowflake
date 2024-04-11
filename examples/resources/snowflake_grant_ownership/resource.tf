@@ -67,7 +67,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     all {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_database        = snowflake_database.test.name
     }
   }
@@ -94,7 +94,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     all {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
     }
   }
@@ -116,7 +116,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     future {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_database        = snowflake_database.test.name
     }
   }
@@ -143,7 +143,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     future {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
     }
   }

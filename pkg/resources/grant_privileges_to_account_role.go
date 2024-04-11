@@ -1075,6 +1075,7 @@ func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) *Gra
 		id.Privileges = expandStringList(p.(*schema.Set).List())
 	}
 	id.WithGrantOption = d.Get("with_grant_option").(bool)
+	id.AlwaysApply = d.Get("always_apply").(bool)
 
 	on := getAccountRoleGrantOn(d)
 	switch {

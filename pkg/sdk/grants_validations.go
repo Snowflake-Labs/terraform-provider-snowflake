@@ -99,7 +99,7 @@ var validGrantToObjectTypes = []ObjectType{
 	ObjectTypeTag,
 	ObjectTypeTask,
 	ObjectTypeView,
-	ObjectTypeStreamlit,
+	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
 }
 
 // based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#restrictions-and-limitations
@@ -114,7 +114,7 @@ var invalidGrantToFutureObjectTypes = []ObjectType{
 	ObjectTypeRowAccessPolicy,
 	ObjectTypeSessionPolicy,
 	ObjectTypeTag,
-	ObjectTypeStreamlit,
+	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
 }
 
 var (

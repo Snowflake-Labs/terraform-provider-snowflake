@@ -87,7 +87,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     all {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_database        = snowflake_database.test.name
     }
   }
@@ -114,7 +114,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     all {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
     }
   }
@@ -136,7 +136,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     future {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_database        = snowflake_database.test.name
     }
   }
@@ -163,7 +163,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     future {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
     }
   }
@@ -315,18 +315,18 @@ It has varying number of parts, depending on grant_type. All the possible types 
 ### OnAll (contains inner types: InDatabase | InSchema)
 
 #### InDatabase
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<plural_object_type>|InDatabase|<database_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<object_type_plural>|InDatabase|<database_name>"`
 
 #### InSchema
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<plural_object_type>|InSchema|<schema_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<object_type_plural>|InSchema|<schema_name>"`
 
 ### OnFuture (contains inner types: InDatabase | InSchema)
 
 #### InDatabase
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<plural_object_type>|InDatabase|<database_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<object_type_plural>|InDatabase|<database_name>"`
 
 #### InSchema
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<plural_object_type>|InSchema|<schema_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<object_type_plural>|InSchema|<schema_name>"`
 
 ### Import examples
 

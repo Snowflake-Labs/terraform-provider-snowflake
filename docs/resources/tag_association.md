@@ -81,7 +81,7 @@ resource "snowflake_tag_association" "column_association" {
 ### Required
 
 - `object_identifier` (Block List, Min: 1) Specifies the object identifier for the tag association. (see [below for nested schema](#nestedblock--object_identifier))
-- `object_type` (String) Specifies the type of object to add a tag to. ex: 'ACCOUNT', 'COLUMN', 'DATABASE', etc. For more information: https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects
+- `object_type` (String) Specifies the type of object to add a tag. Allowed object types: [                              ].
 - `tag_id` (String) Specifies the identifier for the tag. Note: format must follow: "databaseName"."schemaName"."tagName" or "databaseName.schemaName.tagName" or "databaseName|schemaName.tagName" (snowflake_tag.tag.id)
 - `tag_value` (String) Specifies the value of the tag, (e.g. 'finance' or 'engineering')
 
