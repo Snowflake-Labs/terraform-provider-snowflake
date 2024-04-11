@@ -273,6 +273,97 @@ func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
 	})
 }
 
+func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValuePresent(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.85.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfigWithReturnNullAllowed(acc.TestDatabaseName, acc.TestSchemaName, name, sdk.Bool(true)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "return_null_allowed", "true"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "return_null_allowed", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValueRemoved(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.85.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfigWithReturnNullAllowed(acc.TestDatabaseName, acc.TestSchemaName, name, sdk.Bool(true)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "return_null_allowed", "true"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.85.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr(resourceName, "return_null_allowed"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "return_null_allowed", "true"),
+				),
+			},
+		},
+	})
+}
+
 // Proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2528.
 // The problem originated from ShowById without IN clause. There was no IN clause in the docs at the time.
 // It was raised with the appropriate team in Snowflake.
@@ -301,6 +392,15 @@ func TestAcc_ExternalFunction_issue2528(t *testing.T) {
 }
 
 func externalFunctionConfig(database string, schema string, name string) string {
+	return externalFunctionConfigWithReturnNullAllowed(database, schema, name, nil)
+}
+
+func externalFunctionConfigWithReturnNullAllowed(database string, schema string, name string, returnNullAllowed *bool) string {
+	returnNullAllowedText := ""
+	if returnNullAllowed != nil {
+		returnNullAllowedText = fmt.Sprintf("return_null_allowed = \"%t\"", *returnNullAllowed)
+	}
+
 	return fmt.Sprintf(`
 resource "snowflake_api_integration" "test_api_int" {
   name                 = "%[3]s"
@@ -326,9 +426,10 @@ resource "snowflake_external_function" "f" {
   return_behavior           = "IMMUTABLE"
   api_integration           = snowflake_api_integration.test_api_int.name
   url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+  %[4]s
 }
 
-`, database, schema, name)
+`, database, schema, name, returnNullAllowedText)
 }
 
 func externalFunctionConfigIssue2528(database string, schema string, name string, schema2 string) string {
