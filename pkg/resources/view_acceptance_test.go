@@ -184,6 +184,7 @@ func TestAcc_View_Tags(t *testing.T) {
 	})
 }
 
+// TODO: Tescik check
 func TestAcc_View_Rename(t *testing.T) {
 	viewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	newViewName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

@@ -374,13 +374,17 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("name") {
-		_, n := d.GetChange("name")
-		constraintRequest := sdk.NewTableConstraintRenameActionRequest().WithOldName(tc.name).WithNewName(n.(string))
+		newName := d.Get("name").(string)
+		constraintRequest := sdk.NewTableConstraintRenameActionRequest().WithOldName(tc.name).WithNewName(newName)
 		alterStatement := sdk.NewAlterTableRequest(*tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithRename(constraintRequest))
+
 		err = client.Tables.Alter(ctx, alterStatement)
 		if err != nil {
 			return fmt.Errorf("error renaming table constraint %s err = %w", tc.name, err)
 		}
+
+		tc.name = newName
+		d.SetId(tc.String())
 	}
 
 	return ReadTableConstraint(d, meta)

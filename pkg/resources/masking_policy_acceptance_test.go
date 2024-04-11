@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -73,6 +75,8 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 		},
 	})
 }
+
+// TODO: Tescik
 
 func maskingPolicyConfig(n string, name string, comment string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`

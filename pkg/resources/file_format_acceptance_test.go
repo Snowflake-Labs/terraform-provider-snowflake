@@ -446,6 +446,8 @@ func TestAcc_FileFormat_issue1947(t *testing.T) {
 	})
 }
 
+// TODO: Tescik
+
 func fileFormatConfigCSV(n string, databaseName string, schemaName string, fieldDelimiter string, fieldOptionallyEnclosedBy string, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {

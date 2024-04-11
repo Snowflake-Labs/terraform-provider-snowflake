@@ -69,6 +69,7 @@ func TestAcc_Schema(t *testing.T) {
 	})
 }
 
+// TODO: Rename + param change
 func TestAcc_Schema_Rename(t *testing.T) {
 	oldSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	newSchemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

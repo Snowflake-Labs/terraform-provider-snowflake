@@ -660,16 +660,17 @@ func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
-		name := d.Get("name")
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name.(string)))))
+		newId := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), d.Get("name").(string), id.Arguments())
+
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(newId.WithoutArguments())))
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		id = sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name.(string), id.Arguments())
-		if err := d.Set("name", name); err != nil {
-			return diag.FromErr(err)
-		}
+
+		d.SetId(newId.FullyQualifiedName())
+		id = newId
 	}
+
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if comment != "" {
@@ -682,6 +683,7 @@ func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 	}
+
 	if d.HasChange("execute_as") {
 		req := sdk.NewAlterProcedureRequest(id.WithoutArguments(), id.Arguments())
 		executeAs := d.Get("execute_as").(string)
@@ -694,6 +696,7 @@ func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 			return diag.FromErr(err)
 		}
 	}
+
 	return ReadContextProcedure(ctx, d, meta)
 }
 

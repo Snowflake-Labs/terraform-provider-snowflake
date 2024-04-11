@@ -131,6 +131,8 @@ func TestAcc_WarehousePattern(t *testing.T) {
 	})
 }
 
+// TODO: Tescik (rename + param change)
+
 func wConfig(prefix string) string {
 	return fmt.Sprintf(`
 resource "snowflake_warehouse" "w" {

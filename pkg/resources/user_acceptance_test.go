@@ -170,6 +170,8 @@ resource "snowflake_user" "test" {
 	})
 }
 
+// TODO: Tescik (rename + param change)
+
 func removeUserOutsideOfTerraform(t *testing.T, name sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	return func() {

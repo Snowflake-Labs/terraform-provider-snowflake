@@ -230,6 +230,8 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 	})
 }
 
+// TODO: Tescik
+
 func functionConfig(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_function" "f" {

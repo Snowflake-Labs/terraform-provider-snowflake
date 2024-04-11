@@ -42,6 +42,8 @@ func TestAcc_TableConstraint_fk(t *testing.T) {
 	})
 }
 
+// TODO: Tescik
+
 func tableConstraintFKConfig(n string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "t" {
