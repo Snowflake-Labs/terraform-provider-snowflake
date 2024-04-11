@@ -18,16 +18,19 @@ import (
 )
 
 func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
-	applicationName := "int_test_app"
-	applicationRoleName := "app_role_1"
-	applicationRoleNameFullyQualified := fmt.Sprintf("\"%s\".\"%s\"", applicationName, applicationRoleName)
+	applicationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	parentRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_grant_application_role.g"
-
+	applicationRoleName := "app_role_1"
+	applicationRoleNameFullyQualified := fmt.Sprintf("\"%s\".\"%s\"", applicationName, applicationRoleName)
+	randomName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":             config.StringVariable(applicationRoleNameFullyQualified),
+			"database_name":    config.StringVariable(acc.TestDatabaseName),
+			"schema_name":      config.StringVariable(acc.TestSchemaName),
 			"parent_role_name": config.StringVariable(parentRoleName),
+			"application_name": config.StringVariable(applicationName),
+			"random_name":      config.StringVariable(randomName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -60,16 +63,20 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 }
 
 func TestAcc_GrantApplicationRole_application(t *testing.T) {
-	applicationName := "int_test_app"
+	applicationName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	applicationName2 := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_grant_application_role.g"
 	applicationRoleName := "app_role_1"
 	applicationRoleNameFullyQualified := fmt.Sprintf("\"%s\".\"%s\"", applicationName, applicationRoleName)
-	secondApplicationName := "int_test_other_app"
-	resourceName := "snowflake_grant_application_role.g"
+	randomName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":             config.StringVariable(applicationRoleNameFullyQualified),
-			"application_name": config.StringVariable(secondApplicationName),
+			"database_name":     config.StringVariable(acc.TestDatabaseName),
+			"schema_name":       config.StringVariable(acc.TestSchemaName),
+			"application_name":  config.StringVariable(applicationName),
+			"application_name2": config.StringVariable(applicationName2),
+			"random_name": config.StringVariable(randomName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -85,8 +92,8 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", applicationRoleNameFullyQualified),
-					resource.TestCheckResourceAttr(resourceName, "application_name", secondApplicationName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|APPLICATION|"%v"`, applicationName, applicationRoleName, secondApplicationName)),
+					resource.TestCheckResourceAttr(resourceName, "application_name", applicationName2),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|APPLICATION|"%v"`, applicationName, applicationRoleName, applicationName2)),
 				),
 			},
 			// test import
