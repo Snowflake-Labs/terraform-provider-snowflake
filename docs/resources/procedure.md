@@ -90,6 +90,6 @@ Required:
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | stored procedure name | <list of arg types, separated with '-'>
-terraform import snowflake_procedure.example 'dbName|schemaName|procedureName|varchar-varchar-varchar'
+# format is <database_name>.<schema_name>.<procedure_name>(<arg types, separated with ','>)
+terraform import snowflake_procedure.example 'dbName.schemaName.procedureName(varchar, varchar, varchar)'
 ```

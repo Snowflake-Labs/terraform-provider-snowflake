@@ -13,3 +13,7 @@ variable "name" {
 variable "comment" {
   type = string
 }
+
+variable "allowed_values" {
+  type = list(string)
+}

@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"strings"
 	"testing"
 
@@ -10,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
