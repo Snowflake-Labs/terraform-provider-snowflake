@@ -1403,6 +1403,8 @@ resource "snowflake_table" "test_table" {
 func TestAcc_TableRename(t *testing.T) {
 	oldTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	newTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	oldComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1413,11 +1415,12 @@ func TestAcc_TableRename(t *testing.T) {
 		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: tableConfigWithName(oldTableName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfigWithName(oldTableName, acc.TestDatabaseName, acc.TestSchemaName, oldComment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", oldTableName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", oldComment),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
@@ -1426,11 +1429,17 @@ func TestAcc_TableRename(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfigWithName(newTableName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfigWithName(newTableName, acc.TestDatabaseName, acc.TestSchemaName, newComment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", newTableName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
@@ -1442,19 +1451,20 @@ func TestAcc_TableRename(t *testing.T) {
 	})
 }
 
-func tableConfigWithName(tableName string, databaseName string, schemaName string) string {
+func tableConfigWithName(tableName string, databaseName string, schemaName string, comment string) string {
 	s := `
 resource "snowflake_table" "test_table" {
 	name     = "%s"
 	database = "%s"
 	schema   = "%s"
+    comment  = "%s"
 	column {
 		name = "column1"
 		type = "VARIANT"
 	}
 }
 `
-	return fmt.Sprintf(s, tableName, databaseName, schemaName)
+	return fmt.Sprintf(s, tableName, databaseName, schemaName, comment)
 }
 
 func TestAcc_Table_MaskingPolicy(t *testing.T) {

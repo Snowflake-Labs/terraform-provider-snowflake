@@ -658,14 +658,14 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	id := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Id())
 	if d.HasChange("name") {
 		name := d.Get("name").(string)
-		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), name)
+		newId := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name, id.Arguments())
 
-		if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(&newId)); err != nil {
+		if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id.WithoutArguments(), id.Arguments()).WithRenameTo(sdk.Pointer(newId.WithoutArguments()))); err != nil {
 			return diag.FromErr(err)
 		}
 
-		d.SetId(id.FullyQualifiedName())
-		id = sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), name, id.Arguments())
+		d.SetId(newId.FullyQualifiedName())
+		id = newId
 	}
 
 	if d.HasChange("is_secure") {

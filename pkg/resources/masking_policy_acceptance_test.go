@@ -11,7 +11,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -43,19 +42,17 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.0.type", "VARCHAR"),
 				),
 			},
-			// change comment
-			{
-				Config: maskingPolicyConfig(accName, accName, comment2, acc.TestDatabaseName, acc.TestSchemaName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", comment2),
-				),
-			},
-			// rename
+			// rename + change comment
 			{
 				Config: maskingPolicyConfig(accName, accName2, comment2, acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_masking_policy.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName2),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "comment", comment2),
 				),
 			},
 			// change body and unset comment
@@ -75,8 +72,6 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 		},
 	})
 }
-
-// TODO: Tescik
 
 func maskingPolicyConfig(n string, name string, comment string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`

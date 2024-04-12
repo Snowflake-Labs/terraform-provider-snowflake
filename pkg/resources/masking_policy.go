@@ -35,7 +35,6 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the identifier for the masking policy; must be unique for the database and schema in which the masking policy is created.",
-		ForceNew:    true,
 	},
 	"database": {
 		Type:        schema.TypeString,

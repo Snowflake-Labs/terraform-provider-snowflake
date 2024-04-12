@@ -76,6 +76,11 @@ func TestAcc_User(t *testing.T) {
 			// RENAME
 			{
 				Config: uConfig(prefix2, sshkey1, sshkey2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_user.w", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
@@ -169,8 +174,6 @@ resource "snowflake_user" "test" {
 		},
 	})
 }
-
-// TODO: Tescik (rename + param change)
 
 func removeUserOutsideOfTerraform(t *testing.T, name sdk.AccountObjectIdentifier) func() {
 	t.Helper()
