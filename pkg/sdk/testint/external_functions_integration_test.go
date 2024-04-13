@@ -18,7 +18,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
 
-	integration, integrationCleanup := createApiIntegration(t,client)
+	integration, integrationCleanup := createApiIntegration(t, client)
 	t.Cleanup(integrationCleanup)
 
 	cleanupExternalFuncionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {

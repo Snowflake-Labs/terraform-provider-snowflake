@@ -781,8 +781,7 @@ func createApiIntegration(t *testing.T, client *sdk.Client) (sdk.AccountObjectId
 	}
 }
 
-
-func createExternalFunction(t *testing.T, client *sdk.Client, schema *sdk.Schema) (sdk.SchemaObjectIdentifier, func()){
+func createExternalFunction(t *testing.T, client *sdk.Client, schema *sdk.Schema) (sdk.SchemaObjectIdentifier, func()) {
 	t.Helper()
 	ctx := context.Background()
 	apiIntegration, cleanupApiIntegration := createApiIntegration(t, client)
@@ -791,13 +790,13 @@ func createExternalFunction(t *testing.T, client *sdk.Client, schema *sdk.Schema
 	argumentsRequest := []sdk.ExternalFunctionArgumentRequest{*argument}
 	as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
 	request := sdk.NewCreateExternalFunctionRequest(id, sdk.DataTypeVariant, &apiIntegration, as).
-			WithOrReplace(sdk.Bool(true)).
-			WithArguments(argumentsRequest)
+		WithOrReplace(sdk.Bool(true)).
+		WithArguments(argumentsRequest)
 	err := client.ExternalFunctions.Create(ctx, request)
 	require.NoError(t, err)
 	return id, func() {
 		cleanupApiIntegration()
-		err = client.Functions.Drop(ctx,sdk.NewDropFunctionRequest(id,[]sdk.DataType{sdk.DataTypeVARCHAR}))
+		err = client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, []sdk.DataType{sdk.DataTypeVARCHAR}))
 		require.NoError(t, err)
 	}
 }
