@@ -122,7 +122,7 @@ func TestInt_NetworkPolicies(t *testing.T) {
 
 		np, err := client.NetworkPolicies.ShowByID(ctx, req.GetName())
 		require.NoError(t, err)
-		assert.Equal(t, 1, np.EntriesInAllowedNetworkRules)
+		assert.Equal(t, 2, np.EntriesInAllowedNetworkRules)
 	})
 
 	t.Run("Alter - set blocked network rule list", func(t *testing.T) {
