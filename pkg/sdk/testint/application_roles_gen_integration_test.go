@@ -2,10 +2,12 @@ package testint
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +23,7 @@ import (
 func TestInt_ApplicationRoles(t *testing.T) {
 	client := testClient(t)
 
-	stageName := "stage_name"
+	stageName := random.AlphaN(8)
 	stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, stageName))
 	t.Cleanup(cleanupStage)
 
@@ -78,5 +80,80 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 		assertApplicationRoles(t, appRoles, "app_role_1", "some comment")
 		assertApplicationRoles(t, appRoles, "app_role_2", "some comment2")
+	})
+
+	t.Run("show grants to application role", func(t *testing.T) {
+		name := "app_role_1"
+		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		ctx := context.Background()
+
+		opts := new(sdk.ShowGrantOptions)
+		opts.To = &sdk.ShowGrantsTo{
+			ApplicationRole: id,
+		}
+		grants, err := client.Grants.Show(ctx, opts)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, grants)
+		require.NotEmpty(t, grants[0].CreatedOn)
+		require.Equal(t, sdk.ObjectPrivilegeUsage.String(), grants[0].Privilege)
+		require.Equal(t, sdk.ObjectTypeDatabase, grants[0].GrantedOn)
+		require.Equal(t, sdk.ObjectTypeApplicationRole, grants[0].GrantedTo)
+	})
+
+	t.Run("show grants of application role", func(t *testing.T) {
+		name := "app_role_1"
+		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		ctx := context.Background()
+
+		opts := new(sdk.ShowGrantOptions)
+		opts.Of = &sdk.ShowGrantsOf{
+			ApplicationRole: id,
+		}
+		grants, err := client.Grants.Show(ctx, opts)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, grants)
+		require.NotEmpty(t, grants[0].CreatedOn)
+		require.Equal(t, sdk.ObjectTypeRole, grants[0].GrantedTo)
+		require.Equal(t, sdk.NewAccountObjectIdentifier(appName), grants[0].GrantedBy)
+	})
+
+	t.Run("show grants to application", func(t *testing.T) {
+		// Need second app to be able to grant application role to it. Cannot grant to parent application (098806 (0A000): Cannot grant an APPLICATION ROLE to the parent APPLICATION).
+		stageName2 := random.AlphaN(8)
+		stage2, cleanupStage2 := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, stageName2))
+		t.Cleanup(cleanupStage2)
+
+		putOnStage(t, client, stage2, "manifest2.yml")
+		putOnStage(t, client, stage2, "setup.sql")
+
+		appName2 := "snowflake_app_2"
+		cleanupApp2 := createApplication(t, client, appName2, appPackageName, versionName)
+		t.Cleanup(cleanupApp2)
+
+		name := "app_role_1"
+		id := sdk.NewDatabaseObjectIdentifier(appName, name)
+		ctx := context.Background()
+
+		_, err := client.ExecForTests(ctx, fmt.Sprintf(`GRANT APPLICATION ROLE %s TO APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(appName2).FullyQualifiedName()))
+		require.NoError(t, err)
+		defer func() {
+			_, err := client.ExecForTests(ctx, fmt.Sprintf(`REVOKE APPLICATION ROLE %s FROM APPLICATION %s`, id.FullyQualifiedName(), sdk.NewAccountObjectIdentifier(appName2).FullyQualifiedName()))
+			require.NoError(t, err)
+		}()
+
+		opts := new(sdk.ShowGrantOptions)
+		opts.To = &sdk.ShowGrantsTo{
+			Application: sdk.NewAccountObjectIdentifier(appName2),
+		}
+		grants, err := client.Grants.Show(ctx, opts)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, grants)
+		require.NotEmpty(t, grants[0].CreatedOn)
+		require.Equal(t, sdk.ObjectPrivilegeUsage.String(), grants[0].Privilege)
+		require.Equal(t, sdk.ObjectTypeApplicationRole, grants[0].GrantedOn)
+		require.Equal(t, sdk.ObjectTypeApplication, grants[0].GrantedTo)
 	})
 }

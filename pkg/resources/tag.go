@@ -92,7 +92,7 @@ func Tag() *schema.Resource {
 	}
 }
 
-func CreateContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func CreateContextTag(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
 	schema := d.Get("schema").(string)
@@ -104,7 +104,7 @@ func CreateContextTag(ctx context.Context, d *schema.ResourceData, meta interfac
 		request.WithComment(sdk.String(v.(string)))
 	}
 	if v, ok := d.GetOk("allowed_values"); ok {
-		request.WithAllowedValues(expandStringList(v.([]interface{})))
+		request.WithAllowedValues(expandStringListAllowEmpty(v.([]any)))
 	}
 	if err := client.Tags.Create(ctx, request); err != nil {
 		return diag.FromErr(err)
@@ -113,7 +113,7 @@ func CreateContextTag(ctx context.Context, d *schema.ResourceData, meta interfac
 	return ReadContextTag(ctx, d, meta)
 }
 
-func ReadContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextTag(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
@@ -140,7 +140,7 @@ func ReadContextTag(ctx context.Context, d *schema.ResourceData, meta interface{
 	return diags
 }
 
-func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	if d.HasChange("comment") {
@@ -158,9 +158,9 @@ func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 	}
 	if d.HasChange("allowed_values") {
-		old, new := d.GetChange("allowed_values")
-		oldAllowedValues := expandStringList(old.([]interface{}))
-		newAllowedValues := expandStringList(new.([]interface{}))
+		o, n := d.GetChange("allowed_values")
+		oldAllowedValues := expandStringListAllowEmpty(o.([]any))
+		newAllowedValues := expandStringListAllowEmpty(n.([]any))
 		var allowedValuesToAdd, allowedValuesToRemove []string
 
 		for _, oldAllowedValue := range oldAllowedValues {
@@ -182,8 +182,7 @@ func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 
 		if len(allowedValuesToRemove) > 0 {
-			req := sdk.NewAlterTagRequest(id).WithUnset(sdk.NewTagUnsetRequest().WithAllowedValues(true))
-			if err := client.Tags.Alter(ctx, req); err != nil {
+			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithDrop(allowedValuesToRemove)); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -191,7 +190,7 @@ func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta interfac
 	return ReadContextTag(ctx, d, meta)
 }
 
-func DeleteContextTag(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextTag(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	if err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id)); err != nil {
@@ -202,8 +201,8 @@ func DeleteContextTag(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 // Returns the slice of strings for inputed allowed values.
-func expandAllowedValues(avChangeSet interface{}) []string {
-	avList := avChangeSet.([]interface{})
+func expandAllowedValues(avChangeSet any) []string {
+	avList := avChangeSet.([]any)
 	newAvs := make([]string, len(avList))
 	for idx, value := range avList {
 		newAvs[idx] = fmt.Sprintf("%v", value)

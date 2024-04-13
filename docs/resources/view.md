@@ -41,7 +41,7 @@ SQL
 
 - `comment` (String) Specifies a comment for the view.
 - `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause. OR REPLACE must be set when COPY GRANTS is set.
-- `is_secure` (Boolean) Specifies that the view is secure.
+- `is_secure` (Boolean) Specifies that the view is secure. By design, the Snowflake's `SHOW VIEWS` command does not provide information about secure views (consult [view usage notes](https://docs.snowflake.com/en/sql-reference/sql/create-view#usage-notes)) which is essential to manage/import view with Terraform. Use the role owning the view while managing secure views.
 - `or_replace` (Boolean) Overwrites the View if it exists.
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
 

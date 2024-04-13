@@ -69,7 +69,7 @@ func v085ExternalFunctionStateUpgrader(ctx context.Context, rawState map[string]
 	rawState["database"] = strings.Trim(oldDatabase, "\"")
 	rawState["schema"] = strings.Trim(oldSchema, "\"")
 
-	if old, isPresent := rawState["return_null_allowed"]; !isPresent || old == nil || old.(string) == "" {
+	if old, isPresent := rawState["return_null_allowed"]; !isPresent || old == nil {
 		rawState["return_null_allowed"] = "true"
 	}
 

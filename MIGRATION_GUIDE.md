@@ -4,6 +4,87 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.87.0 ➞ v0.88.0
+### snowflake_procedure resource changes
+#### *(behavior change)* Execute as validation added
+From now on, the `snowflake_procedure`'s `execute_as` parameter allows only two values: OWNER and CALLER (case-insensitive). Setting other values earlier resulted in falling back to the Snowflake default (currently OWNER) and creating a permadiff.
+
+### snowflake_grants datasource changes
+`snowflake_grants` datasource was refreshed as part of the ongoing [Grants Redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#redesigning-grants).
+
+#### *(behavior change)* role fields renames
+To be aligned with the convention in other grant resources, `role` was renamed to `account_role` for the following fields:
+- `grants_to.role`
+- `grants_of.role`
+- `future_grants_to.role`.
+
+To migrate simply change `role` to `account_role` in the aforementioned fields.
+
+#### *(behavior change)* grants_to.share type change
+`grants_to.share` was a text field. Because Snowflake introduced new syntax `SHOW GRANTS TO SHARE <share_name> IN APPLICATION PACKAGE <app_package_name>` (check more in the [docs](https://docs.snowflake.com/en/sql-reference/sql/show-grants#variants)) the type was changed to object. To migrate simply change:
+```terraform
+data "snowflake_grants" "example_to_share" {
+  grants_to {
+    share = "some_share"
+  }
+}
+```
+to
+```terraform
+data "snowflake_grants" "example_to_share" {
+  grants_to {
+    share {
+      share_name = "some_share"
+    }
+  }
+}
+```
+Note: `in_application_package` is not yet supported.
+
+#### *(behavior change)* future_grants_in.schema type change
+`future_grants_in.schema` was an object field allowing to set required `schema_name` and optional `database_name`. Our strategy is to be explicit, so the schema field was changed to string and fully qualified name is expected. To migrate change:
+```terraform
+data "snowflake_grants" "example_future_in_schema" {
+  future_grants_in {
+    schema {
+      database_name = "some_database"
+      schema_name   = "some_schema"
+    }
+  }
+}
+```
+to
+```terraform
+data "snowflake_grants" "example_future_in_schema" {
+  future_grants_in {
+    schema = "\"some_database\".\"some_schema\""
+  }
+}
+```
+#### *(new feature)* grants_to new options
+`grants_to` was enriched with three new options:
+- `application`
+- `application_role`
+- `database_role`
+
+No migration work is needed here.
+
+#### *(new feature)* grants_of new options
+`grants_to` was enriched with two new options:
+- `database_role`
+- `application_role`
+
+No migration work is needed here.
+
+#### *(new feature)* future_grants_to new options
+`future_grants_to` was enriched with one new option:
+- `database_role`
+
+No migration work is needed here.
+
+#### *(documentation)* improvements
+Descriptions of attributes were altered. More examples were added (both for old and new features).
+
 ## v0.86.0 ➞ v0.87.0
 ### snowflake_database resource changes
 #### *(behavior change)* External object identifier changes

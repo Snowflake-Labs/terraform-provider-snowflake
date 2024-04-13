@@ -64,6 +64,14 @@ func TestWarehouseSizing(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount"))
 	})
 
+	t.Run("validation: only min set", func(t *testing.T) {
+		opts := &CreateWarehouseOptions{
+			name:            NewAccountObjectIdentifier("mywarehouse"),
+			MinClusterCount: Int(2),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE WAREHOUSE \"mywarehouse\" MIN_CLUSTER_COUNT = 2")
+	})
+
 	t.Run("Max equal Min", func(t *testing.T) {
 		opts := &CreateWarehouseOptions{
 			name:            NewAccountObjectIdentifier("mywarehouse"),

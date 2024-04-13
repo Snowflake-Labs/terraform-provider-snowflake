@@ -15,7 +15,7 @@ resource "snowflake_procedure" "p" {
   runtime_version = "3.8"
   packages        = ["snowflake-snowpark-python"]
   handler         = "filter_by_role"
-  execute_as      = "CALLER"
+  execute_as      = var.execute_as
   comment         = var.comment
   statement       = <<EOT
 from snowflake.snowpark.functions import col

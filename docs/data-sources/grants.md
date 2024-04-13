@@ -12,56 +12,154 @@ description: |-
 ## Example Usage
 
 ```terraform
-# list all grants on account
-data "snowflake_grants" "grants" {
+##################################
+### SHOW GRANTS ON ...
+##################################
+
+# account
+data "snowflake_grants" "example_on_account" {
   grants_on {
     account = true
   }
 }
 
-# list all grants in database with name "tst"
-data "snowflake_grants" "grants2" {
+# account object (e.g. database)
+data "snowflake_grants" "example_on_account_object" {
   grants_on {
-    object_name = "\"tst\""
+    object_name = "some_database"
     object_type = "DATABASE"
   }
 }
 
-# list all grants to role with name "ACCOUNTADMIN"
-data "snowflake_grants" "grants3" {
+# database object (e.g. schema)
+data "snowflake_grants" "example_on_database_object" {
+  grants_on {
+    object_name = "\"some_database\".\"some_schema\""
+    object_type = "SCHEMA"
+  }
+}
+
+# schema object (e.g. table)
+data "snowflake_grants" "example_on_schema_object" {
+  grants_on {
+    object_name = "\"some_database\".\"some_schema\".\"some_table\""
+    object_type = "TABLE"
+  }
+}
+
+##################################
+### SHOW GRANTS TO ...
+##################################
+
+# application
+data "snowflake_grants" "example_to_application" {
   grants_to {
-    role = "ACCOUNTADMIN"
+    application = "some_application"
   }
 }
 
-# list all grants of role with name "ACCOUNTADMIN"
-data "snowflake_grants" "grants4" {
-  grants_of {
-    role = "ACCOUNTADMIN"
+# application role
+data "snowflake_grants" "example_to_application_role" {
+  grants_to {
+    application_role = "\"some_application\".\"some_application_role\""
   }
 }
 
-# list all grants in database with name "tst"
-data "snowflake_grants" "grants5" {
-  future_grants_in {
-    database = "\"tst\""
+# account role
+data "snowflake_grants" "example_to_role" {
+  grants_to {
+    account_role = "some_role"
   }
 }
 
-# list all future grants in schema with name "mydatabase" and database with name "myschema"
-data "snowflake_grants" "grants6" {
-  future_grants_in {
-    schema {
-      database_name = "\"mydatabase\""
-      schema_name   = "\"myschema\""
+# database role
+data "snowflake_grants" "example_to_database_role" {
+  grants_to {
+    database_role = "\"some_database\".\"some_database_role\""
+  }
+}
+
+# share
+data "snowflake_grants" "example_to_share" {
+  grants_to {
+    share {
+      share_name = "some_share"
     }
   }
 }
 
-# list all future grants to role with name "ACCOUNTADMIN"
-data "snowflake_grants" "grants7" {
+# user
+data "snowflake_grants" "example_to_user" {
+  grants_to {
+    user = "some_user"
+  }
+}
+
+##################################
+### SHOW GRANTS OF ...
+##################################
+
+# application role
+data "snowflake_grants" "example_of_application_role" {
+  grants_of {
+    application_role = "\"some_application\".\"some_application_role\""
+  }
+}
+
+# database role
+data "snowflake_grants" "example_of_database_role" {
+  grants_of {
+    database_role = "\"some_database\".\"some_database_role\""
+  }
+}
+
+# account role
+data "snowflake_grants" "example_of_role" {
+  grants_of {
+    account_role = "some_role"
+  }
+}
+
+# share
+data "snowflake_grants" "example_of_share" {
+  grants_of {
+    share = "some_share"
+  }
+}
+
+##################################
+### SHOW FUTURE GRANTS IN ...
+##################################
+
+# database
+data "snowflake_grants" "example_future_in_database" {
+  future_grants_in {
+    database = "some_database"
+  }
+}
+
+# schema
+data "snowflake_grants" "example_future_in_schema" {
+  future_grants_in {
+    schema = "\"some_database\".\"some_schema\""
+  }
+}
+
+##################################
+### SHOW FUTURE GRANTS TO ...
+##################################
+
+# account role
+data "snowflake_grants" "example_future_to_role" {
   future_grants_to {
-    role = "ACCOUNTADMIN"
+    account_role = "some_role"
+  }
+}
+
+# database role
+data "snowflake_grants" "example_future_to_database_role" {
+  future_grants_to {
+    database_role = "\"some_database\".\"some_database_role\""
   }
 }
 ```
@@ -71,11 +169,11 @@ data "snowflake_grants" "grants7" {
 
 ### Optional
 
-- `future_grants_in` (Block List, Max: 1) Lists all privileges on new (i.e. future) objects (see [below for nested schema](#nestedblock--future_grants_in))
-- `future_grants_to` (Block List, Max: 1) Lists all privileges granted to the object on new (i.e. future) objects (see [below for nested schema](#nestedblock--future_grants_to))
-- `grants_of` (Block List, Max: 1) Lists all objects to which the given object has been granted (see [below for nested schema](#nestedblock--grants_of))
-- `grants_on` (Block List, Max: 1) Lists all privileges that have been granted on an object or account (see [below for nested schema](#nestedblock--grants_on))
-- `grants_to` (Block List, Max: 1) Lists all privileges granted to the object (see [below for nested schema](#nestedblock--grants_to))
+- `future_grants_in` (Block List, Max: 1) Lists all privileges on new (i.e. future) objects. (see [below for nested schema](#nestedblock--future_grants_in))
+- `future_grants_to` (Block List, Max: 1) Lists all privileges granted to the object on new (i.e. future) objects. (see [below for nested schema](#nestedblock--future_grants_to))
+- `grants_of` (Block List, Max: 1) Lists all objects to which the given object has been granted. (see [below for nested schema](#nestedblock--grants_of))
+- `grants_on` (Block List, Max: 1) Lists all privileges that have been granted on an object or on an account. (see [below for nested schema](#nestedblock--grants_on))
+- `grants_to` (Block List, Max: 1) Lists all privileges granted to the object. (see [below for nested schema](#nestedblock--grants_to))
 
 ### Read-Only
 
@@ -88,27 +186,16 @@ data "snowflake_grants" "grants7" {
 Optional:
 
 - `database` (String) Lists all privileges on new (i.e. future) objects of a specified type in the database granted to a role.
-- `schema` (Block List, Max: 1) Lists all privileges on new (i.e. future) objects of a specified type in the schema granted to a role. (see [below for nested schema](#nestedblock--future_grants_in--schema))
-
-<a id="nestedblock--future_grants_in--schema"></a>
-### Nested Schema for `future_grants_in.schema`
-
-Required:
-
-- `schema_name` (String) The name of the schema to list all privileges of new (ie. future) objects granted to
-
-Optional:
-
-- `database_name` (String) The database in which the scehma resides. Optional when querying a schema in the current database.
-
+- `schema` (String) Lists all privileges on new (i.e. future) objects of a specified type in the schema granted to a role. Schema must be a fully qualified name ("&lt;db_name&gt;"."&lt;schema_name&gt;").
 
 
 <a id="nestedblock--future_grants_to"></a>
 ### Nested Schema for `future_grants_to`
 
-Required:
+Optional:
 
-- `role` (String) Lists all privileges on new (i.e. future) objects of a specified type in a database or schema granted to the role.
+- `account_role` (String) Lists all privileges on new (i.e. future) objects of a specified type in a database or schema granted to the account role.
+- `database_role` (String) Lists all privileges on new (i.e. future) objects granted to the database role. Must be a fully qualified name ("&lt;db_name&gt;"."&lt;database_role_name&gt;").
 
 
 <a id="nestedblock--grants_of"></a>
@@ -116,7 +203,9 @@ Required:
 
 Optional:
 
-- `role` (String) Lists all users and roles to which the role has been granted
+- `account_role` (String) Lists all users and roles to which the account role has been granted.
+- `application_role` (String) Lists all the users and roles to which the application role has been granted. Must be a fully qualified name ("&lt;db_name&gt;"."&lt;database_role_name&gt;").
+- `database_role` (String) Lists all users and roles to which the database role has been granted. Must be a fully qualified name ("&lt;db_name&gt;"."&lt;database_role_name&gt;").
 - `share` (String) Lists all the accounts for the share and indicates the accounts that are using the share.
 
 
@@ -126,7 +215,7 @@ Optional:
 Optional:
 
 - `account` (Boolean) Object hierarchy to list privileges on. The only valid value is: ACCOUNT. Setting this attribute lists all the account-level (i.e. global) privileges that have been granted to roles.
-- `object_name` (String) Name of object to list privileges on
+- `object_name` (String) Name of object to list privileges on.
 - `object_type` (String) Type of object to list privileges on.
 
 
@@ -135,9 +224,20 @@ Optional:
 
 Optional:
 
-- `role` (String) Lists all privileges and roles granted to the role
-- `share` (String) Lists all the privileges granted to the share
-- `user` (String) Lists all the roles granted to the user. Note that the PUBLIC role, which is automatically available to every user, is not listed
+- `account_role` (String) Lists all privileges and roles granted to the role.
+- `application` (String) Lists all the privileges and roles granted to the application.
+- `application_role` (String) Lists all the privileges and roles granted to the application role. Must be a fully qualified name ("&lt;app_name&gt;"."&lt;app_role_name&gt;").
+- `database_role` (String) Lists all privileges and roles granted to the database role. Must be a fully qualified name ("&lt;db_name&gt;"."&lt;database_role_name&gt;").
+- `share` (Block List, Max: 1) Lists all the privileges granted to the share. (see [below for nested schema](#nestedblock--grants_to--share))
+- `user` (String) Lists all the roles granted to the user. Note that the PUBLIC role, which is automatically available to every user, is not listed.
+
+<a id="nestedblock--grants_to--share"></a>
+### Nested Schema for `grants_to.share`
+
+Required:
+
+- `share_name` (String) Lists all of the privileges and roles granted to the specified share.
+
 
 
 <a id="nestedatt--grants"></a>

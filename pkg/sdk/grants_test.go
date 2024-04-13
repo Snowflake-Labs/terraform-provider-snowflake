@@ -1041,10 +1041,26 @@ func TestGrantShow(t *testing.T) {
 		shareID := RandomAccountObjectIdentifier()
 		opts := &ShowGrantOptions{
 			To: &ShowGrantsTo{
-				Share: shareID,
+				Share: &ShowGrantsToShare{
+					Name: shareID,
+				},
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW GRANTS TO SHARE %s", shareID.FullyQualifiedName())
+	})
+
+	t.Run("to share in application package", func(t *testing.T) {
+		shareID := RandomAccountObjectIdentifier()
+		packageId := RandomAccountObjectIdentifier()
+		opts := &ShowGrantOptions{
+			To: &ShowGrantsTo{
+				Share: &ShowGrantsToShare{
+					Name:                 shareID,
+					InApplicationPackage: &packageId,
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW GRANTS TO SHARE %s IN APPLICATION PACKAGE %s", shareID.FullyQualifiedName(), packageId.FullyQualifiedName())
 	})
 
 	t.Run("of role", func(t *testing.T) {

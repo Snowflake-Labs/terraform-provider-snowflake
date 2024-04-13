@@ -6,6 +6,9 @@ import (
 	"slices"
 	"testing"
 
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -549,5 +552,23 @@ func updateAccountParameter(t *testing.T, client *sdk.Client, parameter sdk.Acco
 	return func() {
 		err = client.Parameters.SetAccountParameter(ctx, parameter, newValue)
 		require.NoError(t, err)
+	}
+}
+
+type planCheck func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse)
+
+func (fn planCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	fn(ctx, req, resp)
+}
+
+func expectsCreatePlan(resourceAddress string) planCheck {
+	return func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+		for _, rc := range req.Plan.ResourceChanges {
+			if rc.Address == resourceAddress && rc.Change != nil && slices.Contains(rc.Change.Actions, tfjson.ActionCreate) {
+				return
+			}
+		}
+
+		resp.Error = fmt.Errorf("expected plan to contain create request for %s", resourceAddress)
 	}
 }
