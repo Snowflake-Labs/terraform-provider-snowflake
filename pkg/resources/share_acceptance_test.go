@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+// TODO [SNOW-1284394]: Unskip the test
 func TestAcc_Share(t *testing.T) {
 	t.Skip("second and third account must be set for Share acceptance tests")
 	var account2 string

@@ -32,6 +32,7 @@ func TestSessionParameters_setParam(t *testing.T) {
 		{parameter: SessionParameterQueryTag, value: "some", expectedValue: "some", accessor: func(sp *SessionParameters) any { return *sp.QueryTag }},
 		{parameter: SessionParameterQuotedIdentifiersIgnoreCase, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.QuotedIdentifiersIgnoreCase }},
 		{parameter: SessionParameterRowsPerResultset, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.RowsPerResultset }},
+		{parameter: SessionParameterS3StageVpceDnsName, value: "some", expectedValue: "some", accessor: func(sp *SessionParameters) any { return *sp.S3StageVpceDnsName }},
 		{parameter: SessionParameterSimulatedDataSharingConsumer, value: "some", expectedValue: "some", accessor: func(sp *SessionParameters) any { return *sp.SimulatedDataSharingConsumer }},
 		{parameter: SessionParameterStatementTimeoutInSeconds, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.StatementTimeoutInSeconds }},
 		{parameter: SessionParameterStrictJSONOutput, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.StrictJSONOutput }},

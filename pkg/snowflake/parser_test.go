@@ -31,6 +31,7 @@ from bar;`
 	identifier := `create view "foo"."bar"."bam" comment='asdf\'s are fun' as select * from bar;`
 
 	full := `CREATE SECURE VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" COMMENT = 'Terraform test resource' AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	issue2640 := `CREATE OR REPLACE SECURE VIEW "CLASSIFICATION" comment = 'Classification View of the union of classification tables' AS select * from AB1_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION    union   select * from AB2_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION`
 
 	type args struct {
 		input string
@@ -55,6 +56,7 @@ from bar;`
 		{"commentEscape", args{commentEscape}, "select * from bar;", false},
 		{"identifier", args{identifier}, "select * from bar;", false},
 		{"full", args{full}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
+		{"issue2640", args{issue2640}, "select * from AB1_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION    union   select * from AB2_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION", false},
 	}
 	for _, tt := range tests {
 		tt := tt

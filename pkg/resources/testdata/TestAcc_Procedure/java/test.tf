@@ -15,7 +15,7 @@ resource "snowflake_procedure" "p" {
   runtime_version = "11"
   packages        = ["com.snowflake:snowpark:1.9.0"]
   handler         = "Filter.filterByRole"
-  execute_as      = "CALLER"
+  execute_as      = var.execute_as
   comment         = var.comment
   statement       = <<EOT
     import com.snowflake.snowpark_java.*;

@@ -5,6 +5,7 @@ resource "snowflake_procedure" "p" {
   language    = "JAVASCRIPT"
   return_type = "VARCHAR"
   comment     = var.comment
+  execute_as  = var.execute_as
   statement   = <<EOT
     return "Hi"
   EOT

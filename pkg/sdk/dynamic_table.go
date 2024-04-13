@@ -98,7 +98,7 @@ var AllDynamicTableInitializes = []DynamicTableInitialize{DynamicTableInitialize
 type DynamicTableSchedulingState string
 
 const (
-	DynamicTableSchedulingStateRunning   DynamicTableSchedulingState = "RUNNING"
+	DynamicTableSchedulingStateActive    DynamicTableSchedulingState = "ACTIVE"
 	DynamicTableSchedulingStateSuspended DynamicTableSchedulingState = "SUSPENDED"
 )
 

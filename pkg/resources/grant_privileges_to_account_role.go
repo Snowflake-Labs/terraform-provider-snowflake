@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -196,7 +197,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					ForceNew:    true,
-					Description: "The object type of the schema object on which privileges will be granted. Valid values are: ALERT | DYNAMIC TABLE | EVENT TABLE | FILE FORMAT | FUNCTION | PROCEDURE | SECRET | SEQUENCE | PIPE | MASKING POLICY | PASSWORD POLICY | ROW ACCESS POLICY | SESSION POLICY | TAG | STAGE | STREAM | TABLE | EXTERNAL TABLE | TASK | VIEW | MATERIALIZED VIEW | NETWORK RULE | PACKAGES POLICY | ICEBERG TABLE",
+					Description: fmt.Sprintf("The object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToObjectTypesString, " | ")),
 					RequiredWith: []string{
 						"on_schema_object.0.object_name",
 					},
@@ -204,7 +205,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.all",
 						"on_schema_object.0.future",
 					},
-					ValidateDiagFunc: ValidGrantedObjectType(),
+					ValidateDiagFunc: StringInSlice(sdk.ValidGrantToObjectTypesString, true),
 				},
 				"object_name": {
 					Type:        schema.TypeString,
@@ -228,7 +229,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantPrivilegesOnAccountRoleBulkOperationSchema,
+						Schema: getGrantPrivilegesOnAccountRoleBulkOperationSchema(sdk.ValidGrantToPluralObjectTypesString),
 					},
 					ConflictsWith: []string{
 						"on_schema_object.0.object_type",
@@ -243,10 +244,10 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeList,
 					Optional:    true,
 					ForceNew:    true,
-					Description: "Configures the privilege to be granted on all objects in either a database or schema.",
+					Description: "Configures the privilege to be granted on future objects in either a database or schema.",
 					MaxItems:    1,
 					Elem: &schema.Resource{
-						Schema: grantPrivilegesOnAccountRoleBulkOperationSchema,
+						Schema: getGrantPrivilegesOnAccountRoleBulkOperationSchema(sdk.ValidGrantToFuturePluralObjectTypesString),
 					},
 					ConflictsWith: []string{
 						"on_schema_object.0.object_type",
@@ -262,26 +263,28 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 	},
 }
 
-var grantPrivilegesOnAccountRoleBulkOperationSchema = map[string]*schema.Schema{
-	"object_type_plural": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		Description:      "The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | DYNAMIC TABLES | EVENT TABLES | FILE FORMATS | FUNCTIONS | PROCEDURES | SECRETS | SEQUENCES | PIPES | MASKING POLICIES | PASSWORD POLICIES | ROW ACCESS POLICIES | SESSION POLICIES | TAGS | STAGES | STREAMS | TABLES | EXTERNAL TABLES | TASKS | VIEWS | MATERIALIZED VIEWS | NETWORK RULES | PACKAGES POLICIES | ICEBERG TABLES",
-		ValidateDiagFunc: ValidGrantedPluralObjectType(),
-	},
-	"in_database": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
-	},
-	"in_schema": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
-	},
+func getGrantPrivilegesOnAccountRoleBulkOperationSchema(validGrantToObjectTypes []string) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"object_type_plural": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s.", strings.Join(validGrantToObjectTypes, " | ")),
+			ValidateDiagFunc: StringInSlice(validGrantToObjectTypes, true),
+		},
+		"in_database": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		},
+		"in_schema": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+		},
+	}
 }
 
 func GrantPrivilegesToAccountRole() *schema.Resource {
@@ -446,6 +449,10 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	}
 	logging.DebugLogger.Printf("[DEBUG] Parsed identifier to %s", id.String())
 
+	if d.HasChange("with_grant_option") {
+		id.WithGrantOption = d.Get("with_grant_option").(bool)
+	}
+
 	// handle all_privileges -> privileges change (revoke all privileges)
 	if d.HasChange("all_privileges") {
 		_, allPrivileges := d.GetChange("all_privileges")
@@ -510,20 +517,30 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 			if len(privilegesToAdd) > 0 {
 				logging.DebugLogger.Printf("[DEBUG] Granting privileges: %v", privilegesToAdd)
-				err = client.Grants.GrantPrivilegesToAccountRole(
-					ctx,
-					getAccountRolePrivileges(
-						false,
-						privilegesToAdd,
-						id.Kind == OnAccountAccountRoleGrantKind,
-						id.Kind == OnAccountObjectAccountRoleGrantKind,
-						id.Kind == OnSchemaAccountRoleGrantKind,
-						id.Kind == OnSchemaObjectAccountRoleGrantKind,
-					),
-					grantOn,
-					id.RoleName,
-					new(sdk.GrantPrivilegesToAccountRoleOptions),
+				privilegesToGrant := getAccountRolePrivileges(
+					false,
+					privilegesToAdd,
+					id.Kind == OnAccountAccountRoleGrantKind,
+					id.Kind == OnAccountObjectAccountRoleGrantKind,
+					id.Kind == OnSchemaAccountRoleGrantKind,
+					id.Kind == OnSchemaObjectAccountRoleGrantKind,
 				)
+
+				if !id.WithGrantOption {
+					if err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, &sdk.RevokePrivilegesFromAccountRoleOptions{
+						GrantOptionFor: sdk.Bool(true),
+					}); err != nil {
+						return diag.Diagnostics{
+							diag.Diagnostic{
+								Severity: diag.Error,
+								Summary:  "Failed to revoke privileges to add",
+								Detail:   fmt.Sprintf("Id: %s\nPrivileges to add: %v\nError: %s", d.Id(), privilegesToAdd, err.Error()),
+							},
+						}
+					}
+				}
+
+				err = client.Grants.GrantPrivilegesToAccountRole(ctx, privilegesToGrant, grantOn, id.RoleName, &sdk.GrantPrivilegesToAccountRoleOptions{WithGrantOption: sdk.Bool(id.WithGrantOption)})
 				if err != nil {
 					return diag.Diagnostics{
 						diag.Diagnostic{
@@ -724,9 +741,31 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 
 	client := meta.(*provider.Context).Client
 
+	// TODO(SNOW-891217): Use custom error. Right now, "object does not exist" error is hidden in sdk/internal/collections package
+	if _, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(id.RoleName)); err != nil && err.Error() == "object does not exist" {
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Failed to retrieve account role. Marking the resource as removed.",
+				Detail:   fmt.Sprintf("Id: %s", d.Id()),
+			},
+		}
+	}
+
 	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve grants. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s", d.Id()),
+				},
+			}
+		}
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,

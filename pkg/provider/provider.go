@@ -468,6 +468,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_function":                                resources.Function(),
 		"snowflake_grant_account_role":                      resources.GrantAccountRole(),
 		"snowflake_grant_database_role":                     resources.GrantDatabaseRole(),
+		"snowflake_grant_ownership":                         resources.GrantOwnership(),
 		"snowflake_grant_privileges_to_role":                resources.GrantPrivilegesToRole(),
 		"snowflake_grant_privileges_to_account_role":        resources.GrantPrivilegesToAccountRole(),
 		"snowflake_grant_privileges_to_database_role":       resources.GrantPrivilegesToDatabaseRole(),
@@ -719,7 +720,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 			redirectURI := tokenAccessor["redirect_uri"].(string)
 			accessToken, err := GetAccessTokenWithRefreshToken(tokenEndpoint, clientID, clientSecret, refreshToken, redirectURI)
 			if err != nil {
-				return nil, fmt.Errorf("could not retrieve access token from refresh token")
+				return nil, fmt.Errorf("could not retrieve access token from refresh token, err = %w", err)
 			}
 			config.Token = accessToken
 			config.Authenticator = gosnowflake.AuthTypeOAuth

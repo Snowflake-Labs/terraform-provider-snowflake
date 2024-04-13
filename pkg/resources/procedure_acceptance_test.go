@@ -22,14 +22,16 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":     config.StringVariable(name),
-			"database": config.StringVariable(acc.TestDatabaseName),
-			"schema":   config.StringVariable(acc.TestSchemaName),
-			"comment":  config.StringVariable("Terraform acceptance test"),
+			"name":       config.StringVariable(name),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"comment":    config.StringVariable("Terraform acceptance test"),
+			"execute_as": config.StringVariable("CALLER"),
 		}
 	}
 	variableSet2 := m()
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
+	variableSet2["execute_as"] = config.StringVariable("OWNER")
 
 	ignoreDuringImport := []string{"null_input_behavior"}
 	if strings.Contains(configDirectory, "/sql") {
@@ -53,16 +55,16 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr(resourceName, "return_behavior", "VOLATILE"),
+					resource.TestCheckResourceAttr(resourceName, "execute_as", "CALLER"),
 
 					// computed attributes
 					resource.TestCheckResourceAttrSet(resourceName, "return_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "statement"),
-					resource.TestCheckResourceAttrSet(resourceName, "execute_as"),
 					resource.TestCheckResourceAttrSet(resourceName, "secure"),
 				),
 			},
 
-			// test - change comment
+			// test - change comment and caller (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2642)
 			{
 				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
 				ConfigVariables: variableSet2,
@@ -71,6 +73,7 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
+					resource.TestCheckResourceAttr(resourceName, "execute_as", "OWNER"),
 				),
 			},
 
@@ -115,10 +118,11 @@ func TestAcc_Procedure_complex(t *testing.T) {
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":     config.StringVariable(name),
-			"database": config.StringVariable(acc.TestDatabaseName),
-			"schema":   config.StringVariable(acc.TestSchemaName),
-			"comment":  config.StringVariable("Terraform acceptance test"),
+			"name":       config.StringVariable(name),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"comment":    config.StringVariable("Terraform acceptance test"),
+			"execute_as": config.StringVariable("CALLER"),
 		}
 	}
 	variableSet2 := m()

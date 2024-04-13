@@ -521,6 +521,45 @@ func TestAcc_GrantPrivilegesToShare_NoOnOption(t *testing.T) {
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
+func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	configVariables := config.Variables{
+		"to_share": config.StringVariable(shareName),
+		"database": config.StringVariable(databaseName),
+		"privileges": config.ListVariable(
+			config.StringVariable(sdk.ObjectPrivilegeUsage.String()),
+		),
+	}
+
+	var shareCleanup func()
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					shareCleanup = createShareOutsideTerraform(t, shareName)
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnCustomShare"),
+				ConfigVariables: configVariables,
+			},
+			{
+				PreConfig:       func() { shareCleanup() },
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnCustomShare"),
+				ConfigVariables: configVariables,
+				// The error occurs in the Create operation, indicating the Read operation removed the resource from the state in the previous step.
+				ExpectError: regexp.MustCompile("An error occurred when granting privileges to share"),
+			},
+		},
+	})
+}
+
 func testAccCheckSharePrivilegesRevoked() func(*terraform.State) error {
 	return func(state *terraform.State) error {
 		for _, rs := range state.RootModule().Resources {
@@ -533,7 +572,9 @@ func testAccCheckSharePrivilegesRevoked() func(*terraform.State) error {
 			id := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["to_share"])
 			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 				To: &sdk.ShowGrantsTo{
-					Share: sdk.NewAccountObjectIdentifier(id.Name()),
+					Share: &sdk.ShowGrantsToShare{
+						Name: sdk.NewAccountObjectIdentifier(id.Name()),
+					},
 				},
 			})
 			if err != nil {
@@ -548,5 +589,28 @@ func testAccCheckSharePrivilegesRevoked() func(*terraform.State) error {
 			}
 		}
 		return nil
+	}
+}
+
+func createShareOutsideTerraform(t *testing.T, name string) func() {
+	t.Helper()
+	client, err := sdk.NewDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+
+	if err := client.Shares.Create(ctx, sdk.NewAccountObjectIdentifier(name), new(sdk.CreateShareOptions)); err != nil {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return func() {
+		if err := client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(name)); err != nil {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
 	}
 }

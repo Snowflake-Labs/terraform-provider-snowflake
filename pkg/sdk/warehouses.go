@@ -223,14 +223,9 @@ type WarehouseSet struct {
 }
 
 func (v *WarehouseSet) validate() error {
-	if v.MinClusterCount != nil {
-		var max int
-		if valueSet(v.MaxClusterCount) {
-			max = *v.MaxClusterCount
-		} else {
-			max = 1
-		}
-		if ok := validateIntInRange(*v.MinClusterCount, 1, max); !ok {
+	// we validate only the case then both are set together, if only MinClusterCount is set, we leave it for Snowflake to validate
+	if v.MinClusterCount != nil && valueSet(v.MaxClusterCount) {
+		if ok := validateIntInRange(*v.MinClusterCount, 1, *v.MaxClusterCount); !ok {
 			return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
 		}
 	}
