@@ -1004,6 +1004,8 @@ func (v *parameters) ShowObjectParameter(ctx context.Context, parameter ObjectPa
 		opts.In.Task = object.Name.(SchemaObjectIdentifier)
 	case ObjectTypeTable:
 		opts.In.Table = object.Name.(SchemaObjectIdentifier)
+	case ObjectTypeUser:
+		opts.In.User = object.Name.(AccountObjectIdentifier)
 	default:
 		return nil, fmt.Errorf("unsupported object type %s", object.Name)
 	}

@@ -6,14 +6,10 @@ description: |-
   
 ---
 
-
-!> **Warning** We're in a process of implementing this resource, so it's not available yet.
-
 ~> **Note** This is a preview resource. It's ready for general use. In case of any errors, please file an issue in our GitHub repository.
 ~> **Note** For more details about granting ownership, please visit [`GRANT OWNERSHIP` Snowflake documentation page](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership).
 
-
-
+!> **Warning** Grant ownership resource still has some limitations. Delete operation is not implemented for on_future grants (you have to remove the config and then revoke ownership grant on future X manually).
 
 # snowflake_grant_ownership (Resource)
 
@@ -226,8 +222,18 @@ To transfer ownership of a pipe(s) **semi-automatically** you have to:
 2. Create Terraform configuration with the `snowflake_grant_ownership` resource and perform ownership transfer with the `terraform apply`.
 3. To resume the pipe(s) after ownership transfer use [PIPE_FORCE_RESUME system function](https://docs.snowflake.com/en/sql-reference/functions/system_pipe_force_resume).
 
+## Granting ownership on task
+Granting ownership on single task requires:
+- Either OWNERSHIP or OPERATE privilege to suspend the task (and its root)
+- Role that will be granted ownership has to have USAGE granted on the warehouse assigned to the task, as well as EXECUTE TASK granted globally
+- The outbound privileges set to `outbound_privileges = "COPY"` if you want to move grants automatically to the owner (also enables the provider to resume the task automatically)
+If originally the first owner won't be granted with OPERATE, USAGE (on the warehouse), EXECUTE TASK (on the account), and outbound privileges won't be set to `COPY`, then you have to resume suspended tasks manually.
 
-
+## Granting ownership on all tasks in database/schema
+Granting ownership on all tasks requires less privileges than granting ownership on one task, because it does a little bit less and requires additional work to be done after.
+The only thing you have to take care of is to resume tasks after grant ownership transfer. If all of your tasks are managed by the Snowflake Terraform Plugin, this should
+be as simple as running `terraform apply` second time (assuming the currently used role is privileged enough to be able to resume the tasks).
+If your tasks are not managed by the Snowflake Terraform Plugin, you should resume them yourself manually.
 
 ## Granting ownership on external tables
 Transferring ownership on an external table or its parent database blocks automatic refreshes of the table metadata by setting the `AUTO_REFRESH` property to `FALSE`.

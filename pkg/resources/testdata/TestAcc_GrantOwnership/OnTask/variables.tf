@@ -1,3 +1,7 @@
+variable "account_role_name" {
+  type = string
+}
+
 variable "database" {
   type = string
 }
@@ -6,14 +10,10 @@ variable "schema" {
   type = string
 }
 
-variable "name" {
+variable "task" {
   type = string
 }
 
-variable "comment" {
+variable "warehouse" {
   type = string
-}
-
-variable "allowed_values" {
-  type = list(string)
 }
