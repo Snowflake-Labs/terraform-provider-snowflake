@@ -1,4 +1,4 @@
-variable "parent_role_name" {
+variable "parent_account_role_name" {
   type = string
 }
 

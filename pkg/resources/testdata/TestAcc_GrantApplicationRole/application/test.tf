@@ -6,7 +6,7 @@ resource "snowflake_stage" "stage" {
 
 locals {
   stage_identifier            = "\"${var.database_name}\".\"${var.schema_name}\".\"${snowflake_stage.stage.name}\""
-  file_prefix                 = abspath("${path.root}/testdata")
+  file_prefix                 = abspath(path.root)
   application_role_identifier = "\"${var.application_name}\".\"app_role_1\""
 }
 
@@ -46,6 +46,7 @@ resource "snowflake_unsafe_execute" "application2" {
 }
 
 resource "snowflake_grant_application_role" "g" {
-  name             = local.application_role_identifier
-  application_name = var.application_name2
+  depends_on            = [snowflake_unsafe_execute.application2]
+  application_role_name = local.application_role_identifier
+  application_name      = var.application_name2
 }
