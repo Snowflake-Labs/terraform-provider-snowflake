@@ -9,12 +9,11 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,7 +50,7 @@ func TestAcc_View(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
@@ -148,7 +147,7 @@ func TestAcc_View_Tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			// create tags
 			{
@@ -211,7 +210,7 @@ func TestAcc_View_Rename(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
@@ -260,7 +259,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
@@ -321,7 +320,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
@@ -362,7 +361,7 @@ func TestAcc_ViewStatementUpdate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				Config: viewConfigWithGrants(acc.TestDatabaseName, acc.TestSchemaName, tableName, viewName, `\"name\"`),
@@ -393,7 +392,7 @@ func TestAcc_View_copyGrants(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				Config:      viewConfigWithCopyGrants(acc.TestDatabaseName, acc.TestSchemaName, accName, query, true),
@@ -427,7 +426,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
 				Config: viewConfigWithMultilineUnionStatement(acc.TestDatabaseName, acc.TestSchemaName, viewName, part1, part2),
@@ -562,22 +561,6 @@ SQL
   is_secure = true
 }
 	`, databaseName, schemaName, name, part1, part2)
-}
-
-func testAccCheckViewDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_view" {
-			continue
-		}
-		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-		existingView, err := client.Views.ShowByID(ctx, id)
-		if err == nil {
-			return fmt.Errorf("view %v still exists", existingView.ID().FullyQualifiedName())
-		}
-	}
-	return nil
 }
 
 func alterViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string) {
