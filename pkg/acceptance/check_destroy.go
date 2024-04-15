@@ -78,6 +78,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.ExternalTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ExternalTables.ShowByID)
 	},
+	resources.FailoverGroup: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.FailoverGroups.ShowByID)
+	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
 	},
