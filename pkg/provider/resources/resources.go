@@ -3,8 +3,11 @@ package resources
 type resource string
 
 const (
-	View   resource = "snowflake_view"
-	Schema resource = "snowflake_schema"
+	Account        resource = "snowflake_account"
+	Alert          resource = "snowflake_alert"
+	ApiIntegration resource = "snowflake_api_integration"
+	View           resource = "snowflake_view"
+	Schema         resource = "snowflake_schema"
 )
 
 type Resource interface {

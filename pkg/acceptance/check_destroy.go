@@ -42,11 +42,20 @@ func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.Sta
 type showByIdFunc func(context.Context, *sdk.Client, sdk.ObjectIdentifier) error
 
 var showByIdFunctions = map[resources.Resource]showByIdFunc{
-	resources.View: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
-		return runShowById(ctx, id, client.Views.ShowByID)
+	resources.Account: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Accounts.ShowByID)
+	},
+	resources.Alert: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Alerts.ShowByID)
+	},
+	resources.ApiIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Applications.ShowByID)
 	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
+	},
+	resources.View: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Views.ShowByID)
 	},
 }
 

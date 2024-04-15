@@ -1,20 +1,15 @@
 package resources_test
 
 import (
-	"context"
-	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -58,7 +53,7 @@ func TestAcc_ApiIntegration_aws(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckApiIntegrationDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiIntegration),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -151,7 +146,7 @@ func TestAcc_ApiIntegration_azure(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckApiIntegrationDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiIntegration),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -241,7 +236,7 @@ func TestAcc_ApiIntegration_google(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckApiIntegrationDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiIntegration),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -342,7 +337,7 @@ func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckApiIntegrationDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -384,20 +379,4 @@ func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckApiIntegrationDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_api_integration" {
-			continue
-		}
-		ctx := context.Background()
-		id := sdk.NewAccountObjectIdentifier(rs.Primary.Attributes["name"])
-		existingApiIntegration, err := client.ApiIntegrations.ShowByID(ctx, id)
-		if err == nil {
-			return fmt.Errorf("api integration %v still exists", existingApiIntegration.ID().FullyQualifiedName())
-		}
-	}
-	return nil
 }
