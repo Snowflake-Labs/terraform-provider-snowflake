@@ -43,6 +43,8 @@ func decodeSnowflakeId(rs *terraform.ResourceState, resource resources.Resource)
 	switch resource {
 	case resources.ExternalFunction:
 		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["id"])
+	case resources.Function:
+		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["id"])
 	default:
 		return helpers.DecodeSnowflakeID(rs.Primary.Attributes["id"])
 	}
@@ -83,6 +85,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	},
 	resources.FileFormat: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.FileFormats.ShowByID)
+	},
+	resources.Function: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
 	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)

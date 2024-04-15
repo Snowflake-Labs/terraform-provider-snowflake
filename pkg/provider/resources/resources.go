@@ -14,6 +14,7 @@ const (
 	ExternalTable                resource = "snowflake_external_table"
 	FailoverGroup                resource = "snowflake_failover_group"
 	FileFormat                   resource = "snowflake_file_format"
+	Function                     resource = "snowflake_function"
 	Schema                       resource = "snowflake_schema"
 	Stage                        resource = "snowflake_stage"
 	View                         resource = "snowflake_view"
