@@ -1310,12 +1310,9 @@ func revokeAndGrantPrivilegesOnTableToAccountRole(
 	withGrantOption bool,
 ) {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	ctx := context.Background()
-	err = client.Grants.RevokePrivilegesFromAccountRole(
+	err := client.Grants.RevokePrivilegesFromAccountRole(
 		ctx,
 		&sdk.AccountRoleGrantPrivileges{
 			SchemaObjectPrivileges: privileges,
@@ -1459,10 +1456,7 @@ func getSecondaryAccountName(t *testing.T) (string, error) {
 
 func getAccountName(t *testing.T) (string, error) {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	return client.ContextFunctions.CurrentAccount(context.Background())
 }
 
@@ -1508,10 +1502,7 @@ func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, sha
 
 func createAccountRoleOutsideTerraform(t *testing.T, name string) func() {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	ctx := context.Background()
 	roleId := sdk.NewAccountObjectIdentifier(name)
 	if err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId).WithOrReplace(true)); err != nil {
@@ -1589,11 +1580,9 @@ func queriedAccountRolePrivilegesContainAtLeast(roleName sdk.AccountObjectIdenti
 func createExternalVolume(t *testing.T, externalVolumeName string) func() {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-
+	client := acc.Client(t)
 	ctx := context.Background()
-	_, err = client.ExecForTests(ctx, fmt.Sprintf(`create external volume "%s" storage_locations = (
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`create external volume "%s" storage_locations = (
     (
         name = 'test' 
         storage_provider = 's3' 

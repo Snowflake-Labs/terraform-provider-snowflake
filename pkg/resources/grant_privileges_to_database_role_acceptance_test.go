@@ -1115,10 +1115,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t 
 
 func createDatabaseRoleOutsideTerraform(t *testing.T, databaseName string, name string) func() {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	ctx := context.Background()
 	databaseRoleId := sdk.NewDatabaseObjectIdentifier(databaseName, name)
 	if err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(databaseRoleId).WithOrReplace(true)); err != nil {
@@ -1191,12 +1188,9 @@ func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 	withGrantOption bool,
 ) {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	ctx := context.Background()
-	err = client.Grants.RevokePrivilegesFromDatabaseRole(
+	err := client.Grants.RevokePrivilegesFromDatabaseRole(
 		ctx,
 		&sdk.DatabaseRoleGrantPrivileges{
 			DatabasePrivileges: privileges,

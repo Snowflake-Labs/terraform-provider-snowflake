@@ -373,10 +373,7 @@ func TestAcc_Grants_Of_Share(t *testing.T) {
 	getSecondaryAccountIdentifier := func(t *testing.T) *sdk.AccountIdentifier {
 		t.Helper()
 
-		client, err := sdk.NewDefaultClient()
-		if err != nil {
-			t.Fatal(err)
-		}
+		client := acc.Client(t)
 		cfg, err := sdk.ProfileConfig(testprofiles.Secondary)
 		if err != nil {
 			t.Fatal(err)
@@ -688,10 +685,7 @@ func checkAtLeastOneGrantPresentLimited() resource.TestCheckFunc {
 
 func getCurrentUser(t *testing.T) string {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	user, err := client.ContextFunctions.CurrentUser(context.Background())
 	if err != nil {
 		t.Fatal(err)

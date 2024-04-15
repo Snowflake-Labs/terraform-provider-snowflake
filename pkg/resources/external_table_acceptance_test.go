@@ -73,7 +73,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					publishExternalTablesTestData(sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name), data)
+					publishExternalTablesTestData(t, sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, name), data)
 				},
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: configVariables,
@@ -344,14 +344,12 @@ func externalTableContainsData(name string, contains func(rows []map[string]*any
 	}
 }
 
-func publishExternalTablesTestData(stageName sdk.SchemaObjectIdentifier, data []byte) {
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		log.Fatal(err)
-	}
+func publishExternalTablesTestData(t *testing.T, stageName sdk.SchemaObjectIdentifier, data []byte) {
+	t.Helper()
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	_, err = client.ExecForTests(ctx, fmt.Sprintf(`copy into @%s/external_tables_test_data/test_data from (select parse_json('%s')) overwrite = true`, stageName.FullyQualifiedName(), string(data)))
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`copy into @%s/external_tables_test_data/test_data from (select parse_json('%s')) overwrite = true`, stageName.FullyQualifiedName(), string(data)))
 	if err != nil {
 		log.Fatal(err)
 	}

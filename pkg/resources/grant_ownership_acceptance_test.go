@@ -1078,14 +1078,12 @@ func TestAcc_GrantOwnership_OnAllTasks(t *testing.T) {
 
 func createDatabaseWithRoleAsOwner(t *testing.T, roleName string, databaseName string) func() {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	assert.NoError(t, err)
-
+	client := acc.Client(t)
 	ctx := context.Background()
 	databaseId := sdk.NewAccountObjectIdentifier(databaseName)
 	assert.NoError(t, client.Databases.Create(ctx, databaseId, &sdk.CreateDatabaseOptions{}))
 
-	err = client.Grants.GrantOwnership(
+	err := client.Grants.GrantOwnership(
 		ctx,
 		sdk.OwnershipGrantOn{
 			Object: &sdk.Object{
@@ -1108,11 +1106,9 @@ func createDatabaseWithRoleAsOwner(t *testing.T, roleName string, databaseName s
 func moveResourceOwnershipToAccountRole(t *testing.T, objectType sdk.ObjectType, objectName sdk.ObjectIdentifier, accountRoleName sdk.AccountObjectIdentifier) {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	assert.NoError(t, err)
-
+	client := acc.Client(t)
 	ctx := context.Background()
-	err = client.Grants.GrantOwnership(
+	err := client.Grants.GrantOwnership(
 		ctx,
 		sdk.OwnershipGrantOn{
 			Object: &sdk.Object{
@@ -1158,9 +1154,7 @@ func checkResourceOwnershipIsGranted(opts *sdk.ShowGrantOptions, grantOn sdk.Obj
 
 func createAccountRole(t *testing.T, name string) func() {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	assert.NoError(t, err)
-
+	client := acc.Client(t)
 	ctx := context.Background()
 	roleId := sdk.NewAccountObjectIdentifier(name)
 	assert.NoError(t, client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId)))
@@ -1172,8 +1166,7 @@ func createAccountRole(t *testing.T, name string) func() {
 
 func createDatabase(t *testing.T, name string) func() {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	assert.NoError(t, err)
+	client := acc.Client(t)
 
 	ctx := context.Background()
 	roleId := sdk.NewAccountObjectIdentifier(name)
@@ -1186,8 +1179,7 @@ func createDatabase(t *testing.T, name string) func() {
 
 func grantOwnershipToTheCurrentRole(t *testing.T, on sdk.OwnershipGrantOn) {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	assert.NoError(t, err)
+	client := acc.Client(t)
 
 	ctx := context.Background()
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
@@ -1206,8 +1198,7 @@ func grantOwnershipToTheCurrentRole(t *testing.T, on sdk.OwnershipGrantOn) {
 
 func getCurrentUser(t *testing.T) string {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	assert.NoError(t, err)
+	client := acc.Client(t)
 	currentUser, err := client.ContextFunctions.CurrentUser(context.Background())
 	assert.NoError(t, err)
 	return currentUser
