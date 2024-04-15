@@ -153,7 +153,7 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),

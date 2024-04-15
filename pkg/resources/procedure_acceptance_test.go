@@ -44,7 +44,7 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
@@ -135,7 +135,7 @@ func TestAcc_Procedure_complex(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Procedure/complex"),

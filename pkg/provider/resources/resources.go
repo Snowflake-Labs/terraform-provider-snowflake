@@ -3,12 +3,15 @@ package resources
 type resource string
 
 const (
-	Account        resource = "snowflake_account"
-	Alert          resource = "snowflake_alert"
-	ApiIntegration resource = "snowflake_api_integration"
-	Database       resource = "snowflake_database"
-	View           resource = "snowflake_view"
-	Schema         resource = "snowflake_schema"
+	Account                      resource = "snowflake_account"
+	Alert                        resource = "snowflake_alert"
+	ApiIntegration               resource = "snowflake_api_integration"
+	Database                     resource = "snowflake_database"
+	DatabaseRole                 resource = "snowflake_database_role"
+	DynamicTable                 resource = "snowflake_dynamic_table"
+	EmailNotificationIntegration resource = "snowflake_email_notification_integration"
+	View                         resource = "snowflake_view"
+	Schema                       resource = "snowflake_schema"
 )
 
 type Resource interface {
