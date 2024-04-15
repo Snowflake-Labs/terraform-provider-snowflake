@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -114,5 +115,47 @@ func asId[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.Sch
 		return nil, fmt.Errorf("expected %s identifier type, but got: %T", reflect.TypeOf(new(T)).Elem().Name(), id)
 	} else {
 		return &idCast, nil
+	}
+}
+
+// CheckGrantAccountRoleDestroy is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckGrantAccountRoleDestroy(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	client := Client(t)
+
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_grant_account_role" {
+				continue
+			}
+			ctx := context.Background()
+			parts := strings.Split(rs.Primary.ID, "|")
+			roleName := parts[0]
+			roleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(roleName)
+			objectType := parts[1]
+			targetIdentifier := parts[2]
+			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+				Of: &sdk.ShowGrantsOf{
+					Role: roleIdentifier,
+				},
+			})
+			if err != nil {
+				return nil
+			}
+
+			var found bool
+			for _, grant := range grants {
+				if grant.GrantedTo == sdk.ObjectType(objectType) {
+					if grant.GranteeName.FullyQualifiedName() == targetIdentifier {
+						found = true
+						break
+					}
+				}
+			}
+			if found {
+				return fmt.Errorf("role grant %v still exists", rs.Primary.ID)
+			}
+		}
+		return nil
 	}
 }
