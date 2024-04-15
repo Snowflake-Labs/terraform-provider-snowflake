@@ -159,3 +159,39 @@ func CheckGrantAccountRoleDestroy(t *testing.T) func(*terraform.State) error {
 		return nil
 	}
 }
+
+// CheckGrantDatabaseRoleDestroy is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckGrantDatabaseRoleDestroy(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	client := Client(t)
+
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_grant_database_role" {
+				continue
+			}
+			ctx := context.Background()
+			id := rs.Primary.ID
+			ids := strings.Split(id, "|")
+			databaseRoleName := ids[0]
+			objectType := ids[1]
+			parentRoleName := ids[2]
+			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+				Of: &sdk.ShowGrantsOf{
+					DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName),
+				},
+			})
+			if err != nil {
+				continue
+			}
+			for _, grant := range grants {
+				if grant.GrantedTo == sdk.ObjectType(objectType) {
+					if grant.GranteeName.FullyQualifiedName() == parentRoleName {
+						return fmt.Errorf("database role grant %v still exists", grant)
+					}
+				}
+			}
+		}
+		return nil
+	}
+}

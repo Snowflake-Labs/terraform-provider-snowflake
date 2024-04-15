@@ -1,12 +1,9 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -14,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -35,7 +31,7 @@ func TestAcc_GrantDatabaseRole_databaseRole(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckGrantDatabaseRoleDestroy,
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/database_role"),
@@ -77,7 +73,7 @@ func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckGrantDatabaseRoleDestroy,
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantDatabaseRole/issue2402"),
@@ -109,7 +105,7 @@ func TestAcc_GrantDatabaseRole_accountRole(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckGrantDatabaseRoleDestroy,
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/account_role"),
@@ -153,7 +149,7 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckGrantDatabaseRoleDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestAcc_GrantDatabaseRole/share"),
@@ -174,35 +170,4 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckGrantDatabaseRoleDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_grant_database_role" {
-			continue
-		}
-		ctx := context.Background()
-		id := rs.Primary.ID
-		ids := strings.Split(id, "|")
-		databaseRoleName := ids[0]
-		objectType := ids[1]
-		parentRoleName := ids[2]
-		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			Of: &sdk.ShowGrantsOf{
-				DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName),
-			},
-		})
-		if err != nil {
-			continue
-		}
-		for _, grant := range grants {
-			if grant.GrantedTo == sdk.ObjectType(objectType) {
-				if grant.GranteeName.FullyQualifiedName() == parentRoleName {
-					return fmt.Errorf("database role grant %v still exists", grant)
-				}
-			}
-		}
-	}
-	return nil
 }
