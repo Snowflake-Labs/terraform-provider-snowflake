@@ -8,7 +8,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -374,14 +373,7 @@ func TestAcc_Grants_Of_Share(t *testing.T) {
 		t.Helper()
 
 		client := acc.Client(t)
-		cfg, err := sdk.ProfileConfig(testprofiles.Secondary)
-		if err != nil {
-			t.Fatal(err)
-		}
-		secondaryClient, err := sdk.NewClient(cfg)
-		if err != nil {
-			t.Fatal(err)
-		}
+		secondaryClient := acc.SecondaryClient(t)
 		ctx := context.Background()
 
 		replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)

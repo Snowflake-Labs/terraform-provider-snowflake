@@ -62,11 +62,22 @@ func init() {
 		log.Panicf("Cannot instantiate new client, err: %v", err)
 	}
 	atc.client = client
+
+	cfg, err := sdk.ProfileConfig(testprofiles.Secondary)
+	if err != nil {
+		log.Panicf("Config for the secondary client is needed to run acceptance tests, err: %v", err)
+	}
+	secondaryClient, err := sdk.NewClient(cfg)
+	if err != nil {
+		log.Panicf("Cannot instantiate new secondary client, err: %v", err)
+	}
+	atc.secondaryClient = secondaryClient
 }
 
 type acceptanceTestContext struct {
-	config *gosnowflake.Config
-	client *sdk.Client
+	config          *gosnowflake.Config
+	client          *sdk.Client
+	secondaryClient *sdk.Client
 }
 
 var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
@@ -140,6 +151,11 @@ func ConfigurationDirectory(directory string) func(config.TestStepConfigRequest)
 }
 
 func Client(t *testing.T) *sdk.Client {
+	t.Helper()
+	return atc.client
+}
+
+func SecondaryClient(t *testing.T) *sdk.Client {
 	t.Helper()
 	return atc.client
 }

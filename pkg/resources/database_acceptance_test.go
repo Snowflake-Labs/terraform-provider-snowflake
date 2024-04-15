@@ -11,7 +11,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -390,12 +389,7 @@ func dropDatabaseOutsideTerraform(t *testing.T, id string) {
 func getSecondaryAccount(t *testing.T) string {
 	t.Helper()
 
-	secondaryConfig, err := sdk.ProfileConfig(testprofiles.Secondary)
-	require.NoError(t, err)
-
-	secondaryClient, err := sdk.NewClient(secondaryConfig)
-	require.NoError(t, err)
-
+	secondaryClient := acc.SecondaryClient(t)
 	ctx := context.Background()
 
 	account, err := secondaryClient.ContextFunctions.CurrentAccount(ctx)
