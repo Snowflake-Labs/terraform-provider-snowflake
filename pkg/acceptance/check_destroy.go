@@ -81,6 +81,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.FailoverGroup: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.FailoverGroups.ShowByID)
 	},
+	resources.FileFormat: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.FileFormats.ShowByID)
+	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
 	},
