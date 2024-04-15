@@ -157,7 +157,7 @@ func Client(t *testing.T) *sdk.Client {
 
 func SecondaryClient(t *testing.T) *sdk.Client {
 	t.Helper()
-	return atc.client
+	return atc.secondaryClient
 }
 
 func DefaultConfig(t *testing.T) *gosnowflake.Config {
