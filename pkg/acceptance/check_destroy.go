@@ -24,7 +24,7 @@ func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.Sta
 			}
 			t.Logf("found resource %s in state", resource)
 			ctx := context.Background()
-			id := helpers.DecodeSnowflakeID(rs.Primary.Attributes["id"])
+			id := decodeSnowflakeId(rs, resource)
 			showById, ok := showByIdFunctions[resource]
 			if !ok {
 				return fmt.Errorf("unsupported show by id in cleanup for %s, with id %v", resource, id.FullyQualifiedName())
@@ -36,6 +36,15 @@ func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.Sta
 			}
 		}
 		return nil
+	}
+}
+
+func decodeSnowflakeId(rs *terraform.ResourceState, resource resources.Resource) sdk.ObjectIdentifier {
+	switch resource {
+	case resources.ExternalFunction:
+		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["id"])
+	default:
+		return helpers.DecodeSnowflakeID(rs.Primary.Attributes["id"])
 	}
 }
 
@@ -62,6 +71,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	},
 	resources.EmailNotificationIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.NotificationIntegrations.ShowByID)
+	},
+	resources.ExternalFunction: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.ExternalFunctions.ShowByID)
 	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
