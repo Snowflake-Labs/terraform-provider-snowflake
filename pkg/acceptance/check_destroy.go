@@ -75,8 +75,14 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.ExternalFunction: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ExternalFunctions.ShowByID)
 	},
+	resources.ExternalTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.ExternalTables.ShowByID)
+	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
+	},
+	resources.Stage: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Stages.ShowByID)
 	},
 	resources.View: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Views.ShowByID)

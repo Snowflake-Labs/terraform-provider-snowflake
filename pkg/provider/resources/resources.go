@@ -11,8 +11,10 @@ const (
 	DynamicTable                 resource = "snowflake_dynamic_table"
 	EmailNotificationIntegration resource = "snowflake_email_notification_integration"
 	ExternalFunction             resource = "snowflake_external_function"
-	View                         resource = "snowflake_view"
+	ExternalTable                resource = "snowflake_external_table"
 	Schema                       resource = "snowflake_schema"
+	Stage                        resource = "snowflake_stage"
+	View                         resource = "snowflake_view"
 )
 
 type Resource interface {
