@@ -47,11 +47,13 @@ func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.Sta
 func decodeSnowflakeId(rs *terraform.ResourceState, resource resources.Resource) sdk.ObjectIdentifier {
 	switch resource {
 	case resources.ExternalFunction:
-		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["id"])
+		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID)
 	case resources.Function:
-		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["id"])
+		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID)
+	case resources.Procedure:
+		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID)
 	default:
-		return helpers.DecodeSnowflakeID(rs.Primary.Attributes["id"])
+		return helpers.DecodeSnowflakeID(rs.Primary.ID)
 	}
 }
 
@@ -108,6 +110,18 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	},
 	resources.NotificationIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.NotificationIntegrations.ShowByID)
+	},
+	resources.PasswordPolicy: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.PasswordPolicies.ShowByID)
+	},
+	resources.Pipe: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Pipes.ShowByID)
+	},
+	resources.Procedure: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ResourceMonitor: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.ResourceMonitors.ShowByID)
 	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
