@@ -44,7 +44,7 @@ var databaseSchema = map[string]*schema.Schema{
 	"from_share": {
 		Type:          schema.TypeMap,
 		Elem:          &schema.Schema{Type: schema.TypeString},
-		Description:   "Specify a provider and a share in this map to create a database from a share.",
+		Description:   "Specify a provider and a share in this map to create a database from a share. As of version 0.87.0, the provider field requires the format of account_locator.",
 		Optional:      true,
 		ForceNew:      true,
 		ConflictsWith: []string{"from_database", "from_replica"},
