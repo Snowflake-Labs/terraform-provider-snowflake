@@ -25,7 +25,7 @@ func TestInt_Roles(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		role, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(roleID))
+		role, err := client.Roles.ShowByID(ctx, roleID)
 		require.NoError(t, err)
 
 		assert.Equal(t, roleID.Name(), role.Name)
@@ -40,7 +40,7 @@ func TestInt_Roles(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		role, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(roleID))
+		role, err := client.Roles.ShowByID(ctx, roleID)
 		require.NoError(t, err)
 		assert.Equal(t, roleID.Name(), role.Name)
 	})
@@ -68,7 +68,7 @@ func TestInt_Roles(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		role, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(roleID))
+		role, err := client.Roles.ShowByID(ctx, roleID)
 		require.NoError(t, err)
 		assert.Equal(t, roleID.Name(), role.Name)
 		assert.Equal(t, comment, role.Comment)
@@ -97,7 +97,7 @@ func TestInt_Roles(t *testing.T) {
 		err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithRenameTo(newName))
 		require.NoError(t, err)
 
-		r, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(newName))
+		r, err := client.Roles.ShowByID(ctx, newName)
 		require.NoError(t, err)
 		assert.Equal(t, newName.Name(), r.Name)
 	})
@@ -154,7 +154,7 @@ func TestInt_Roles(t *testing.T) {
 		err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithSetComment(comment))
 		require.NoError(t, err)
 
-		r, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(role.ID()))
+		r, err := client.Roles.ShowByID(ctx, role.ID())
 		require.NoError(t, err)
 		assert.Equal(t, comment, r.Comment)
 	})
@@ -168,7 +168,7 @@ func TestInt_Roles(t *testing.T) {
 		err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithUnsetComment(true))
 		require.NoError(t, err)
 
-		r, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(role.ID()))
+		r, err := client.Roles.ShowByID(ctx, role.ID())
 		require.NoError(t, err)
 		assert.Equal(t, "", r.Comment)
 	})
@@ -178,7 +178,7 @@ func TestInt_Roles(t *testing.T) {
 		err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(role.ID()))
 		require.NoError(t, err)
 
-		r, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(role.ID()))
+		r, err := client.Roles.ShowByID(ctx, role.ID())
 		require.Nil(t, r)
 		require.Error(t, err)
 	})
@@ -225,7 +225,7 @@ func TestInt_Roles(t *testing.T) {
 		role, cleanup := createRole(t, client)
 		t.Cleanup(cleanup)
 
-		r, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(role.ID()))
+		r, err := client.Roles.ShowByID(ctx, role.ID())
 		require.NoError(t, err)
 		require.NotNil(t, r)
 		assert.Equal(t, role.Name, r.Name)
@@ -242,14 +242,14 @@ func TestInt_Roles(t *testing.T) {
 		err := client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{User: &userID}))
 		require.NoError(t, err)
 
-		roleBefore, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(role.ID()))
+		roleBefore, err := client.Roles.ShowByID(ctx, role.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 1, roleBefore.AssignedToUsers)
 
 		err = client.Roles.Revoke(ctx, sdk.NewRevokeRoleRequest(role.ID(), sdk.RevokeRole{User: &userID}))
 		require.NoError(t, err)
 
-		roleAfter, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(role.ID()))
+		roleAfter, err := client.Roles.ShowByID(ctx, role.ID())
 		require.NoError(t, err)
 		assert.Equal(t, 0, roleAfter.AssignedToUsers)
 	})
@@ -265,10 +265,10 @@ func TestInt_Roles(t *testing.T) {
 		err := client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{Role: &parentRoleID}))
 		require.NoError(t, err)
 
-		roleBefore, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(role.ID()))
+		roleBefore, err := client.Roles.ShowByID(ctx, role.ID())
 		require.NoError(t, err)
 
-		parentRoleBefore, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(parentRole.ID()))
+		parentRoleBefore, err := client.Roles.ShowByID(ctx, parentRole.ID())
 		require.NoError(t, err)
 
 		require.Equal(t, 1, roleBefore.GrantedToRoles)
@@ -277,10 +277,10 @@ func TestInt_Roles(t *testing.T) {
 		err = client.Roles.Revoke(ctx, sdk.NewRevokeRoleRequest(role.ID(), sdk.RevokeRole{Role: &parentRoleID}))
 		require.NoError(t, err)
 
-		roleAfter, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(role.ID()))
+		roleAfter, err := client.Roles.ShowByID(ctx, role.ID())
 		require.NoError(t, err)
 
-		parentRoleAfter, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(parentRole.ID()))
+		parentRoleAfter, err := client.Roles.ShowByID(ctx, parentRole.ID())
 		require.NoError(t, err)
 
 		assert.Equal(t, 0, roleAfter.GrantedToRoles)

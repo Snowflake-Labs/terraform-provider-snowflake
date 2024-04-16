@@ -36,12 +36,12 @@ func (v *roles) Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error) 
 	return resultList, nil
 }
 
-func (v *roles) ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, error) {
-	roleList, err := v.client.Roles.Show(ctx, NewShowRoleRequest().WithLike(NewLikeRequest(req.id.Name())))
+func (v *roles) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role, error) {
+	roleList, err := v.client.Roles.Show(ctx, NewShowRoleRequest().WithLike(NewLikeRequest(id.Name())))
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(roleList, func(r Role) bool { return r.ID().name == req.id.Name() })
+	return collections.FindOne(roleList, func(r Role) bool { return r.ID().name == id.Name() })
 }
 
 func (v *roles) Grant(ctx context.Context, req *GrantRoleRequest) error {

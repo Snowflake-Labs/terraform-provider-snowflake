@@ -24,6 +24,7 @@ const (
 	Pipe                         resource = "snowflake_pipe"
 	Procedure                    resource = "snowflake_procedure"
 	ResourceMonitor              resource = "snowflake_resource_monitor"
+	Role                         resource = "snowflake_role"
 	Schema                       resource = "snowflake_schema"
 	Stage                        resource = "snowflake_stage"
 	View                         resource = "snowflake_view"
