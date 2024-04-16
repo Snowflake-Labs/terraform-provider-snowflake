@@ -94,6 +94,10 @@ type NetworkRule struct {
 	OwnerRoleType      string
 }
 
+func (v *NetworkRule) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
 // DescribeNetworkRuleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-network-rule.
 type DescribeNetworkRuleOptions struct {
 	describe    bool                   `ddl:"static" sql:"DESCRIBE"`

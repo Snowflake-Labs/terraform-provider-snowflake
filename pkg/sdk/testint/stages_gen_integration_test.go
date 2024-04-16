@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -552,5 +553,49 @@ func TestInt_Stages(t *testing.T) {
 		assert.Nil(t, stage.StorageIntegration)
 		assert.Nil(t, stage.Endpoint)
 		assert.True(t, stage.DirectoryEnabled)
+	})
+}
+
+func TestInt_StagesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupStageHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+	createStageHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(cleanupStageHandle(id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createStageHandle(t, id1)
+		createStageHandle(t, id2)
+
+		e1, err := client.Stages.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Stages.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

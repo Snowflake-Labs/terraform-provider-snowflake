@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -133,5 +134,52 @@ func TestInt_NetworkRules(t *testing.T) {
 		assert.Empty(t, ruleDetails.ValueList)
 		assert.Equal(t, sdk.NetworkRuleModeIngress, ruleDetails.Mode)
 		assert.Equal(t, sdk.NetworkRuleTypeIpv4, ruleDetails.Type)
+	})
+}
+
+func TestInt_NetworkRulesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupNetworkRuleHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.NetworkRules.Drop(ctx, sdk.NewDropNetworkRuleRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createNetworkRuleHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		request := sdk.NewCreateNetworkRuleRequest(id, sdk.NetworkRuleTypeIpv4, []sdk.NetworkRuleValue{}, sdk.NetworkRuleModeIngress)
+		err := client.NetworkRules.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupNetworkRuleHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createNetworkRuleHandle(t, id1)
+		createNetworkRuleHandle(t, id2)
+
+		e1, err := client.NetworkRules.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.NetworkRules.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

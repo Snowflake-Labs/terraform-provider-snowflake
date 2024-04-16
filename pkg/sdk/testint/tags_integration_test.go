@@ -277,3 +277,47 @@ func TestInt_Tags(t *testing.T) {
 		assert.Equal(t, 0, len(tags))
 	})
 }
+
+func TestInt_TagsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupTagHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+	createTagHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.Tags.Create(ctx, sdk.NewCreateTagRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTagHandle(id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createTagHandle(t, id1)
+		createTagHandle(t, id2)
+
+		e1, err := client.Tags.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Tags.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
+	})
+}

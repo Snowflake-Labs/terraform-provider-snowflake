@@ -76,7 +76,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		require.Equal(t, grantee.FullyQualifiedName(), grant.GranteeName.FullyQualifiedName())
 	}
 
-	t.Run("Show by id", func(t *testing.T) {
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		name := "app_role_1"
 		id := sdk.NewDatabaseObjectIdentifier(appName, name)
 

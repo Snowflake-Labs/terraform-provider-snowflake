@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -519,5 +520,51 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 		assert.Equal(t, testDb(t).Name, fileFormat.Name.DatabaseName())
 		assert.Equal(t, testSchema(t).Name, fileFormat.Name.SchemaName())
 		assert.Equal(t, fileFormatTest.Name.Name(), fileFormat.Name.Name())
+	})
+}
+
+func TestInt_FileFormatsShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupFileFormatHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.FileFormats.Drop(ctx, id, nil)
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createFileFormatHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.FileFormats.Create(ctx, id, &sdk.CreateFileFormatOptions{Type: sdk.FileFormatTypeCSV})
+		require.NoError(t, err)
+		t.Cleanup(cleanupFileFormatHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createFileFormatHandle(t, id1)
+		createFileFormatHandle(t, id2)
+
+		e1, err := client.FileFormats.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.FileFormats.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

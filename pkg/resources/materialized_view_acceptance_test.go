@@ -277,11 +277,10 @@ func testAccCheckMaterializedViewDestroy(s *terraform.State) error {
 func alterMaterializedViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string, warehouse string) {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	err = client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(warehouse))
+	err := client.Sessions.UseWarehouse(ctx, sdk.NewAccountObjectIdentifier(warehouse))
 	require.NoError(t, err)
 
 	err = client.MaterializedViews.Create(ctx, sdk.NewCreateMaterializedViewRequest(id, query).WithOrReplace(sdk.Bool(true)))

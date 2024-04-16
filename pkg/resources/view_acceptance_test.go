@@ -583,11 +583,10 @@ func testAccCheckViewDestroy(s *terraform.State) error {
 func alterViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string) {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	err = client.Views.Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
+	err := client.Views.Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
 	require.NoError(t, err)
 }
 
@@ -596,14 +595,13 @@ func registerAccountRoleCleanup(t *testing.T, roleName string) {
 
 	roleId := sdk.NewAccountObjectIdentifier(roleName)
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
 	t.Cleanup(func() {
 		t.Logf("dropping account role (%s)", roleName)
 		// We remove the role, so the ownership will be changed back. The view will be deleted with db cleanup.
-		err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId).WithIfExists(true))
+		err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId).WithIfExists(true))
 		if err != nil {
 			t.Logf("failed to drop account role (%s), err = %s\n", roleName, err.Error())
 		}
@@ -617,8 +615,7 @@ func alterViewOwnershipExternally(t *testing.T, viewName string, roleName string
 	viewId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, viewName)
 	roleId := sdk.NewAccountObjectIdentifier(roleName)
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
 	on := sdk.OwnershipGrantOn{
@@ -633,6 +630,6 @@ func alterViewOwnershipExternally(t *testing.T, viewName string, roleName string
 	currentGrants := sdk.OwnershipCurrentGrants{
 		OutboundPrivileges: sdk.Revoke,
 	}
-	err = client.Grants.GrantOwnership(ctx, on, to, &sdk.GrantOwnershipOptions{CurrentGrants: &currentGrants})
+	err := client.Grants.GrantOwnership(ctx, on, to, &sdk.GrantOwnershipOptions{CurrentGrants: &currentGrants})
 	require.NoError(t, err)
 }
