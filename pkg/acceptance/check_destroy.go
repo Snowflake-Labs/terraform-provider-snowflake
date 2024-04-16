@@ -103,6 +103,12 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.MaterializedView: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.MaterializedViews.ShowByID)
 	},
+	resources.NetworkPolicy: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.NetworkPolicies.ShowByID)
+	},
+	resources.NotificationIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.NotificationIntegrations.ShowByID)
+	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
 	},

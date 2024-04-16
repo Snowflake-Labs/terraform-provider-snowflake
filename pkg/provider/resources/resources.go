@@ -18,6 +18,8 @@ const (
 	ManagedAccount               resource = "snowflake_managed_account"
 	MaskingPolicy                resource = "snowflake_masking_policy"
 	MaterializedView             resource = "snowflake_materialized_view"
+	NetworkPolicy                resource = "snowflake_network_policy"
+	NotificationIntegration      resource = "snowflake_notification_integration"
 	Schema                       resource = "snowflake_schema"
 	Stage                        resource = "snowflake_stage"
 	View                         resource = "snowflake_view"
