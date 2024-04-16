@@ -32,6 +32,9 @@ const (
 	Stage                        resource = "snowflake_stage"
 	StorageIntegration           resource = "snowflake_storage_integration"
 	Stream                       resource = "snowflake_stream"
+	Table                        resource = "snowflake_table"
+	Tag                          resource = "snowflake_tag"
+	Task                         resource = "snowflake_task"
 	View                         resource = "snowflake_view"
 )
 
