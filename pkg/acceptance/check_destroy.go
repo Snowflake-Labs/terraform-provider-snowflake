@@ -94,6 +94,15 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Function: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Functions.ShowByID)
 	},
+	resources.ManagedAccount: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.ManagedAccounts.ShowByID)
+	},
+	resources.MaskingPolicy: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.MaskingPolicies.ShowByID)
+	},
+	resources.MaterializedView: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.MaterializedViews.ShowByID)
+	},
 	resources.Schema: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Schemas.ShowByID)
 	},

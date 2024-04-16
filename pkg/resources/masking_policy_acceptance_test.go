@@ -7,6 +7,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -24,7 +25,7 @@ func TestAcc_MaskingPolicy(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.MaskingPolicy),
 		Steps: []resource.TestStep{
 			{
 				Config: maskingPolicyConfig(accName, accName, comment, acc.TestDatabaseName, acc.TestSchemaName),
@@ -129,7 +130,7 @@ func TestAcc_MaskingPolicyMultiColumns(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.MaskingPolicy),
 		Steps: []resource.TestStep{
 			{
 				Config: maskingPolicyConfigMultiColumn(accName, accName, acc.TestDatabaseName, acc.TestSchemaName),
