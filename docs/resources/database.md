@@ -38,7 +38,7 @@ resource "snowflake_database" "from_share" {
   name    = "testing_4"
   comment = "test comment"
   from_share = {
-    provider = "account_locator"
+    provider = "account1_locator"
     share    = "share1"
   }
 }
