@@ -50,17 +50,19 @@ func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifi
 	opts := &DescribeNetworkPolicyOptions{
 		name: id,
 	}
-	s, err := validateAndQuery[describeNetworkPolicyDBRow](v.client, ctx, opts)
+	rows, err := validateAndQuery[describeNetworkPolicyDBRow](v.client, ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	return convertRows[describeNetworkPolicyDBRow, NetworkPolicyDescription](s), nil
+	return convertRows[describeNetworkPolicyDBRow, NetworkPolicyDescription](rows), nil
 }
 
 func (r *CreateNetworkPolicyRequest) toOpts() *CreateNetworkPolicyOptions {
 	opts := &CreateNetworkPolicyOptions{
-		OrReplace: r.OrReplace,
-		name:      r.name,
+		OrReplace:              r.OrReplace,
+		name:                   r.name,
+		AllowedNetworkRuleList: r.AllowedNetworkRuleList,
+		BlockedNetworkRuleList: r.BlockedNetworkRuleList,
 
 		Comment: r.Comment,
 	}
@@ -91,6 +93,9 @@ func (r *AlterNetworkPolicyRequest) toOpts() *AlterNetworkPolicyOptions {
 	}
 	if r.Set != nil {
 		opts.Set = &NetworkPolicySet{
+			AllowedNetworkRuleList: r.Set.AllowedNetworkRuleList,
+			BlockedNetworkRuleList: r.Set.BlockedNetworkRuleList,
+
 			Comment: r.Set.Comment,
 		}
 		if r.Set.AllowedIpList != nil {
@@ -106,6 +111,18 @@ func (r *AlterNetworkPolicyRequest) toOpts() *AlterNetworkPolicyOptions {
 				s[i] = IP(v)
 			}
 			opts.Set.BlockedIpList = s
+		}
+	}
+	if r.Add != nil {
+		opts.Add = &AddNetworkRule{
+			AllowedNetworkRuleList: r.Add.AllowedNetworkRuleList,
+			BlockedNetworkRuleList: r.Add.BlockedNetworkRuleList,
+		}
+	}
+	if r.Remove != nil {
+		opts.Remove = &RemoveNetworkRule{
+			AllowedNetworkRuleList: r.Remove.AllowedNetworkRuleList,
+			BlockedNetworkRuleList: r.Remove.BlockedNetworkRuleList,
 		}
 	}
 	return opts
@@ -126,11 +143,13 @@ func (r *ShowNetworkPolicyRequest) toOpts() *ShowNetworkPolicyOptions {
 
 func (r showNetworkPolicyDBRow) convert() *NetworkPolicy {
 	return &NetworkPolicy{
-		CreatedOn:              r.CreatedOn,
-		Name:                   r.Name,
-		Comment:                r.Comment,
-		EntriesInAllowedIpList: r.EntriesInAllowedIpList,
-		EntriesInBlockedIpList: r.EntriesInBlockedIpList,
+		CreatedOn:                    r.CreatedOn,
+		Name:                         r.Name,
+		Comment:                      r.Comment,
+		EntriesInAllowedIpList:       r.EntriesInAllowedIpList,
+		EntriesInBlockedIpList:       r.EntriesInBlockedIpList,
+		EntriesInAllowedNetworkRules: r.EntriesInAllowedNetworkRules,
+		EntriesInBlockedNetworkRules: r.EntriesInBlockedNetworkRules,
 	}
 }
 

@@ -718,11 +718,10 @@ func generateUnsafeExecuteTestRoleName(t *testing.T) string {
 func createResourcesForExecuteUnsafeTestCaseForGrants(t *testing.T, dbId string, roleId string) {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	err = client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(dbId), &sdk.CreateDatabaseOptions{})
+	err := client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(dbId), &sdk.CreateDatabaseOptions{})
 	require.NoError(t, err)
 
 	err = client.Roles.Create(ctx, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier(roleId)))
@@ -732,11 +731,10 @@ func createResourcesForExecuteUnsafeTestCaseForGrants(t *testing.T, dbId string,
 func dropResourcesForUnsafeExecuteTestCaseForGrants(t *testing.T, dbId string, roleId string) {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	err = client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(dbId), &sdk.DropDatabaseOptions{})
+	err := client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(dbId), &sdk.DropDatabaseOptions{})
 	assert.NoError(t, err)
 
 	err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(sdk.NewAccountObjectIdentifier(roleId)))
@@ -746,8 +744,7 @@ func dropResourcesForUnsafeExecuteTestCaseForGrants(t *testing.T, dbId string, r
 func verifyGrantExists(t *testing.T, roleId string, privilege sdk.AccountObjectPrivilege, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		client, err := sdk.NewDefaultClient()
-		require.NoError(t, err)
+		client := acc.Client(t)
 		ctx := context.Background()
 
 		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{

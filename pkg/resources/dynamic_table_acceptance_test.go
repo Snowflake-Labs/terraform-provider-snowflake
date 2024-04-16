@@ -446,10 +446,7 @@ func testAccCheckDynamicTableDestroy(s *terraform.State) error {
 // TODO [SNOW-926148]: currently this dynamic table is not cleaned in the test; it is removed when the whole database is removed - this currently happens in a sweeper
 func createDynamicTableOutsideTerraform(t *testing.T, schemaName string, dynamicTableName string, query string) {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	ctx := context.Background()
 
 	dynamicTableId := sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, schemaName, dynamicTableName)

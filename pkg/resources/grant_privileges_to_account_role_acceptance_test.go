@@ -13,7 +13,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -1310,12 +1309,9 @@ func revokeAndGrantPrivilegesOnTableToAccountRole(
 	withGrantOption bool,
 ) {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	ctx := context.Background()
-	err = client.Grants.RevokePrivilegesFromAccountRole(
+	err := client.Grants.RevokePrivilegesFromAccountRole(
 		ctx,
 		&sdk.AccountRoleGrantPrivileges{
 			SchemaObjectPrivileges: privileges,
@@ -1446,44 +1442,27 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *t
 
 func getSecondaryAccountName(t *testing.T) (string, error) {
 	t.Helper()
-	config, err := sdk.ProfileConfig(testprofiles.Secondary)
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err := sdk.NewClient(config)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return client.ContextFunctions.CurrentAccount(context.Background())
+	secondaryClient := acc.SecondaryClient(t)
+	return secondaryClient.ContextFunctions.CurrentAccount(context.Background())
 }
 
 func getAccountName(t *testing.T) (string, error) {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	return client.ContextFunctions.CurrentAccount(context.Background())
 }
 
 func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
 	t.Helper()
-	config, err := sdk.ProfileConfig(testprofiles.Secondary)
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err := sdk.NewClient(config)
-	if err != nil {
-		t.Fatal(err)
-	}
+	secondaryClient := acc.SecondaryClient(t)
 	ctx := context.Background()
 	accountName, err := getAccountName(t)
 	return errors.Join(
 		err,
-		client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.CreateDatabaseOptions{}),
-		client.Shares.Create(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.CreateShareOptions{}),
-		client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeReferenceUsage}, &sdk.ShareGrantOn{Database: sdk.NewAccountObjectIdentifier(databaseName)}, sdk.NewAccountObjectIdentifier(shareName)),
-		client.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.AlterShareOptions{Set: &sdk.ShareSet{
+		secondaryClient.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.CreateDatabaseOptions{}),
+		secondaryClient.Shares.Create(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.CreateShareOptions{}),
+		secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeReferenceUsage}, &sdk.ShareGrantOn{Database: sdk.NewAccountObjectIdentifier(databaseName)}, sdk.NewAccountObjectIdentifier(shareName)),
+		secondaryClient.Shares.Alter(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.AlterShareOptions{Set: &sdk.ShareSet{
 			Accounts: []sdk.AccountIdentifier{sdk.NewAccountIdentifierFromAccountLocator(accountName)},
 		}}),
 	)
@@ -1491,27 +1470,17 @@ func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, s
 
 func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
 	t.Helper()
-	config, err := sdk.ProfileConfig(testprofiles.Secondary)
-	if err != nil {
-		t.Fatal(err)
-	}
-	client, err := sdk.NewClient(config)
-	if err != nil {
-		t.Fatal(err)
-	}
+	secondaryClient := acc.SecondaryClient(t)
 	ctx := context.Background()
 	return errors.Join(
-		client.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(shareName)),
-		client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.DropDatabaseOptions{}),
+		secondaryClient.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(shareName)),
+		secondaryClient.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.DropDatabaseOptions{}),
 	)
 }
 
 func createAccountRoleOutsideTerraform(t *testing.T, name string) func() {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	ctx := context.Background()
 	roleId := sdk.NewAccountObjectIdentifier(name)
 	if err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId).WithOrReplace(true)); err != nil {
@@ -1589,11 +1558,9 @@ func queriedAccountRolePrivilegesContainAtLeast(roleName sdk.AccountObjectIdenti
 func createExternalVolume(t *testing.T, externalVolumeName string) func() {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
-
+	client := acc.Client(t)
 	ctx := context.Background()
-	_, err = client.ExecForTests(ctx, fmt.Sprintf(`create external volume "%s" storage_locations = (
+	_, err := client.ExecForTests(ctx, fmt.Sprintf(`create external volume "%s" storage_locations = (
     (
         name = 'test' 
         storage_provider = 's3' 
