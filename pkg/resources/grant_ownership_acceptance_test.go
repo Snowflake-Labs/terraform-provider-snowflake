@@ -1076,6 +1076,51 @@ func TestAcc_GrantOwnership_OnAllTasks(t *testing.T) {
 	})
 }
 
+func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
+	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	databaseRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	databaseRoleFullyQualifiedName := sdk.NewDatabaseObjectIdentifier(databaseName, databaseRoleName).FullyQualifiedName()
+
+	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
+
+	configVariables := config.Variables{
+		"account_role_name":  config.StringVariable(accountRoleName),
+		"database_name":      config.StringVariable(databaseName),
+		"database_role_name": config.StringVariable(databaseRoleName),
+	}
+	resourceName := "snowflake_grant_ownership.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_DatabaseRole_ToAccountRole"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", "DATABASE ROLE"),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", databaseRoleFullyQualifiedName),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|DATABASE ROLE|%s", accountRoleFullyQualifiedName, databaseRoleFullyQualifiedName)),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						On: &sdk.ShowGrantsOn{
+							Object: &sdk.Object{
+								ObjectType: sdk.ObjectTypeDatabaseRole,
+								Name:       sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleFullyQualifiedName),
+							},
+						},
+					}, sdk.ObjectTypeRole, accountRoleName, fmt.Sprintf("%s.%s", databaseName, databaseRoleName)),
+				),
+			},
+		},
+	})
+}
+
 func createDatabaseWithRoleAsOwner(t *testing.T, roleName string, databaseName string) func() {
 	t.Helper()
 	client := acc.Client(t)
