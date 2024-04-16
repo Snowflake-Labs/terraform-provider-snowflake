@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -412,5 +413,56 @@ func TestInt_ExternalTables(t *testing.T) {
 			PropertyValue:   "AUTO",
 			PropertyDefault: "AUTO",
 		})
+	})
+}
+
+func TestInt_ExternalTablesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+	stage := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(6))
+	_, stageCleanup := createStageWithURL(t, client, stage, nycWeatherDataURL)
+	t.Cleanup(stageCleanup)
+
+	stageLocation := fmt.Sprintf("@%s", stage.FullyQualifiedName())
+	cleanupExternalTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.ExternalTables.Drop(ctx, sdk.NewDropExternalTableRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createExternalTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		request := sdk.NewCreateExternalTableRequest(id, stageLocation).WithFileFormat(sdk.NewExternalTableFileFormatRequest().WithFileFormatType(&sdk.ExternalTableFileFormatTypeJSON))
+		err := client.ExternalTables.Create(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupExternalTableHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createExternalTableHandle(t, id1)
+		createExternalTableHandle(t, id2)
+
+		e1, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id1))
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id2))
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }
