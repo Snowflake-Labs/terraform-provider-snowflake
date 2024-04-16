@@ -36,6 +36,9 @@ func (opts *AlterSequenceOptions) validate() error {
 	if !exactlyOneValueSet(opts.RenameTo, opts.SetIncrement, opts.Set, opts.UnsetComment) {
 		errs = append(errs, errExactlyOneOf("AlterSequenceOptions", "RenameTo", "SetIncrement", "Set", "UnsetComment"))
 	}
+	if valueSet(opts.Set) && everyValueNil(opts.Set.ValuesBehavior, opts.Set.Comment) {
+		errs = append(errs, errAtLeastOneOf("AlterSequenceOptions.Set", "ValuesBehavior", "Comment"))
+	}
 	return JoinErrors(errs...)
 }
 

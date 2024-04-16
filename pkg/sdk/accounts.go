@@ -90,7 +90,7 @@ type AlterAccountOptions struct {
 	alter   bool `ddl:"static" sql:"ALTER"`
 	account bool `ddl:"static" sql:"ACCOUNT"`
 
-	Set      *AccountSet        `ddl:"keyword" sql:"SET"`
+	Set      *AccountSet        `ddl:"list,no_parentheses" sql:"SET"`
 	Unset    *AccountUnset      `ddl:"list,no_parentheses" sql:"UNSET"`
 	SetTag   []TagAssociation   `ddl:"keyword" sql:"SET TAG"`
 	UnsetTag []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`

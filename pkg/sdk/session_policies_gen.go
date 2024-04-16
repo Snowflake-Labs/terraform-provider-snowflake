@@ -33,10 +33,10 @@ type AlterSessionPolicyOptions struct {
 	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name          SchemaObjectIdentifier  `ddl:"identifier"`
 	RenameTo      *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set           *SessionPolicySet       `ddl:"keyword" sql:"SET"`
+	Set           *SessionPolicySet       `ddl:"list,no_parentheses" sql:"SET"`
 	SetTags       []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags     []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
-	Unset         *SessionPolicyUnset     `ddl:"keyword" sql:"UNSET"`
+	Unset         *SessionPolicyUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type SessionPolicySet struct {

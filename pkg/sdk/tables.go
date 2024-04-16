@@ -215,10 +215,10 @@ type alterTableOptions struct {
 	ConstraintAction          *TableConstraintAction          `ddl:"keyword"`
 	ExternalTableAction       *TableExternalTableAction       `ddl:"keyword"`
 	SearchOptimizationAction  *TableSearchOptimizationAction  `ddl:"keyword"`
-	Set                       *TableSet                       `ddl:"keyword" sql:"SET"`
+	Set                       *TableSet                       `ddl:"list,no_parentheses" sql:"SET"`
 	SetTags                   []TagAssociation                `ddl:"parameter,no_equals" sql:"SET TAG"`
 	UnsetTags                 []ObjectIdentifier              `ddl:"keyword" sql:"UNSET TAG"`
-	Unset                     *TableUnset                     `ddl:"keyword" sql:"UNSET"`
+	Unset                     *TableUnset                     `ddl:"list,no_parentheses" sql:"UNSET"`
 	AddRowAccessPolicy        *TableAddRowAccessPolicy        `ddl:"keyword"`
 	DropRowAccessPolicy       *TableDropRowAccessPolicy       `ddl:"keyword"`
 	DropAndAddRowAccessPolicy *TableDropAndAddRowAccessPolicy `ddl:"list,no_parentheses"`

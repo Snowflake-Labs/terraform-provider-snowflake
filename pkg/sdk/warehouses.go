@@ -165,7 +165,7 @@ type AlterWarehouseOptions struct {
 	AbortAllQueries *bool                    `ddl:"keyword" sql:"ABORT ALL QUERIES"`
 	NewName         *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 
-	Set      *WarehouseSet      `ddl:"keyword" sql:"SET"`
+	Set      *WarehouseSet      `ddl:"list,no_parentheses" sql:"SET"`
 	Unset    *WarehouseUnset    `ddl:"list,no_parentheses" sql:"UNSET"`
 	SetTag   []TagAssociation   `ddl:"keyword" sql:"SET TAG"`
 	UnsetTag []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
@@ -239,8 +239,40 @@ func (v *WarehouseSet) validate() error {
 			return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
 		}
 	}
-	if everyValueNil(v.WarehouseType, v.WarehouseSize, v.WaitForCompletion, v.MaxClusterCount, v.MinClusterCount, v.ScalingPolicy, v.AutoSuspend, v.AutoResume, v.ResourceMonitor, v.Comment, v.EnableQueryAcceleration, v.QueryAccelerationMaxScaleFactor, v.MaxConcurrencyLevel, v.StatementQueuedTimeoutInSeconds, v.StatementTimeoutInSeconds) {
-		return errAtLeastOneOf("WarehouseSet", "WarehouseType", "WarehouseSize", "WaitForCompletion", "MaxClusterCount", "MinClusterCount", "ScalingPolicy", "AutoSuspend", "AutoResume", "ResourceMonitor", "Comment", "EnableQueryAcceleration", "QueryAccelerationMaxScaleFactor", "MaxConcurrencyLevel", "StatementQueuedTimeoutInSeconds", "StatementTimeoutInSeconds")
+	if everyValueNil(
+		v.WarehouseType,
+		v.WarehouseSize,
+		v.WaitForCompletion,
+		v.MaxClusterCount,
+		v.MinClusterCount,
+		v.ScalingPolicy,
+		v.AutoSuspend,
+		v.AutoResume,
+		v.ResourceMonitor,
+		v.Comment,
+		v.EnableQueryAcceleration,
+		v.QueryAccelerationMaxScaleFactor,
+		v.MaxConcurrencyLevel,
+		v.StatementQueuedTimeoutInSeconds,
+		v.StatementTimeoutInSeconds,
+	) {
+		return errAtLeastOneOf("WarehouseSet",
+			"WarehouseType",
+			"WarehouseSize",
+			"WaitForCompletion",
+			"MaxClusterCount",
+			"MinClusterCount",
+			"ScalingPolicy",
+			"AutoSuspend",
+			"AutoResume",
+			"ResourceMonitor",
+			"Comment",
+			"EnableQueryAcceleration",
+			"QueryAccelerationMaxScaleFactor",
+			"MaxConcurrencyLevel",
+			"StatementQueuedTimeoutInSeconds",
+			"StatementTimeoutInSeconds",
+		)
 	}
 	return nil
 }
@@ -266,8 +298,38 @@ type WarehouseUnset struct {
 }
 
 func (v *WarehouseUnset) validate() error {
-	if everyValueNil(v.WarehouseType, v.WaitForCompletion, v.MaxClusterCount, v.MinClusterCount, v.ScalingPolicy, v.AutoSuspend, v.AutoResume, v.ResourceMonitor, v.Comment, v.EnableQueryAcceleration, v.QueryAccelerationMaxScaleFactor, v.MaxConcurrencyLevel, v.StatementQueuedTimeoutInSeconds, v.StatementTimeoutInSeconds) {
-		return errAtLeastOneOf("WarehouseUnset", "WarehouseType", "WaitForCompletion", "MaxClusterCount", "MinClusterCount", "ScalingPolicy", "AutoSuspend", "AutoResume", "ResourceMonitor", "Comment", "EnableQueryAcceleration", "QueryAccelerationMaxScaleFactor", "MaxConcurrencyLevel", "StatementQueuedTimeoutInSeconds", "StatementTimeoutInSeconds")
+	if everyValueNil(
+		v.WarehouseType,
+		v.WaitForCompletion,
+		v.MaxClusterCount,
+		v.MinClusterCount,
+		v.ScalingPolicy,
+		v.AutoSuspend,
+		v.AutoResume,
+		v.ResourceMonitor,
+		v.Comment,
+		v.EnableQueryAcceleration,
+		v.QueryAccelerationMaxScaleFactor,
+		v.MaxConcurrencyLevel,
+		v.StatementQueuedTimeoutInSeconds,
+		v.StatementTimeoutInSeconds,
+	) {
+		return errAtLeastOneOf("WarehouseUnset",
+			"WarehouseType",
+			"WaitForCompletion",
+			"MaxClusterCount",
+			"MinClusterCount",
+			"ScalingPolicy",
+			"AutoSuspend",
+			"AutoResume",
+			"ResourceMonitor",
+			"Comment",
+			"EnableQueryAcceleration",
+			"QueryAccelerationMaxScaleFactor",
+			"MaxConcurrencyLevel",
+			"StatementQueuedTimeoutInSeconds",
+			"StatementTimeoutInSeconds",
+		)
 	}
 	return nil
 }

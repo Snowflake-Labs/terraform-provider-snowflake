@@ -33,7 +33,7 @@ type AlterApplicationPackageOptions struct {
 	applicationPackage         bool                        `ddl:"static" sql:"APPLICATION PACKAGE"`
 	IfExists                   *bool                       `ddl:"keyword" sql:"IF EXISTS"`
 	name                       AccountObjectIdentifier     `ddl:"identifier"`
-	Set                        *ApplicationPackageSet      `ddl:"keyword" sql:"SET"`
+	Set                        *ApplicationPackageSet      `ddl:"list,no_parentheses" sql:"SET"`
 	Unset                      *ApplicationPackageUnset    `ddl:"list,no_parentheses" sql:"UNSET"`
 	ModifyReleaseDirective     *ModifyReleaseDirective     `ddl:"keyword" sql:"MODIFY RELEASE DIRECTIVE"`
 	SetDefaultReleaseDirective *SetDefaultReleaseDirective `ddl:"keyword" sql:"SET DEFAULT RELEASE DIRECTIVE"`

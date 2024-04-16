@@ -287,7 +287,7 @@ type AlterResourceMonitorOptions struct {
 	resourceMonitor bool                    `ddl:"static" sql:"RESOURCE MONITOR"`
 	IfExists        *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name            AccountObjectIdentifier `ddl:"identifier"`
-	Set             *ResourceMonitorSet     `ddl:"keyword" sql:"SET"`
+	Set             *ResourceMonitorSet     `ddl:"list,no_parentheses" sql:"SET"`
 	Triggers        []TriggerDefinition     `ddl:"keyword,no_comma" sql:"TRIGGERS"`
 }
 

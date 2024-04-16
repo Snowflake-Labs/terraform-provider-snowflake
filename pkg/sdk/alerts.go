@@ -110,8 +110,8 @@ type AlterAlertOptions struct {
 
 	// One of
 	Action          *AlertAction `ddl:"keyword"`
-	Set             *AlertSet    `ddl:"keyword" sql:"SET"`
-	Unset           *AlertUnset  `ddl:"keyword" sql:"UNSET"`
+	Set             *AlertSet    `ddl:"list,no_parentheses" sql:"SET"`
+	Unset           *AlertUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
 	ModifyCondition *[]string    `ddl:"keyword,parentheses,no_comma" sql:"MODIFY CONDITION EXISTS"`
 	ModifyAction    *string      `ddl:"parameter,no_equals" sql:"MODIFY ACTION"`
 }
@@ -126,6 +126,12 @@ func (opts *AlterAlertOptions) validate() error {
 	}
 	if !exactlyOneValueSet(opts.Action, opts.Set, opts.Unset, opts.ModifyCondition, opts.ModifyAction) {
 		errs = append(errs, errExactlyOneOf("AlterAlertOptions", "Action", "Set", "Unset", "ModifyCondition", "ModifyAction"))
+	}
+	if valueSet(opts.Set) && everyValueNil(opts.Set.Warehouse, opts.Set.Schedule, opts.Set.Comment) {
+		errs = append(errs, errAtLeastOneOf("AlterAlertOptions.Set", "Warehouse", "Schedule", "Comment"))
+	}
+	if valueSet(opts.Unset) && everyValueNil(opts.Unset.Warehouse, opts.Unset.Schedule, opts.Unset.Comment) {
+		errs = append(errs, errAtLeastOneOf("AlterAlertOptions.Unset", "Warehouse", "Schedule", "Comment"))
 	}
 	return errors.Join(errs...)
 }

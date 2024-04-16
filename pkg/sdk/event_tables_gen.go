@@ -98,8 +98,8 @@ type AlterEventTableOptions struct {
 	table                     bool                                 `ddl:"static" sql:"TABLE"`
 	IfNotExists               *bool                                `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                      SchemaObjectIdentifier               `ddl:"identifier"`
-	Set                       *EventTableSet                       `ddl:"keyword" sql:"SET"`
-	Unset                     *EventTableUnset                     `ddl:"keyword" sql:"UNSET"`
+	Set                       *EventTableSet                       `ddl:"list,no_parentheses" sql:"SET"`
+	Unset                     *EventTableUnset                     `ddl:"list,no_parentheses" sql:"UNSET"`
 	AddRowAccessPolicy        *EventTableAddRowAccessPolicy        `ddl:"keyword"`
 	DropRowAccessPolicy       *EventTableDropRowAccessPolicy       `ddl:"keyword"`
 	DropAndAddRowAccessPolicy *EventTableDropAndAddRowAccessPolicy `ddl:"list,no_parentheses"`

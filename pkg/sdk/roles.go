@@ -97,11 +97,12 @@ type AlterRoleOptions struct {
 	name     AccountObjectIdentifier `ddl:"identifier"`
 
 	// One of
-	RenameTo     *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	SetComment   *string                  `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
-	SetTags      []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
-	UnsetComment *bool                    `ddl:"keyword" sql:"UNSET COMMENT"`
-	UnsetTags    []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
+	RenameTo   *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	SetComment *string                  `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
+	SetTags    []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
+	// TODO: Not grouped Sets (+ SetTags)
+	UnsetComment *bool              `ddl:"keyword" sql:"UNSET COMMENT"`
+	UnsetTags    []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 // DropRoleOptions based on https://docs.snowflake.com/en/sql-reference/sql/drop-role

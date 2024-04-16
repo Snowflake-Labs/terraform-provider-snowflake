@@ -131,6 +131,7 @@ type TagSet struct {
 }
 
 type TagUnset struct {
+	// TODO: Not allowed here
 	MaskingPolicies *TagUnsetMaskingPolicies `ddl:"keyword"`
 	AllowedValues   *bool                    `ddl:"keyword" sql:"ALLOWED_VALUES"`
 	Comment         *bool                    `ddl:"keyword" sql:"COMMENT"`
@@ -158,7 +159,7 @@ type alterTagOptions struct {
 	Add    *TagAdd    `ddl:"keyword" sql:"ADD"`
 	Drop   *TagDrop   `ddl:"keyword" sql:"DROP"`
 	Set    *TagSet    `ddl:"keyword" sql:"SET"`
-	Unset  *TagUnset  `ddl:"keyword" sql:"UNSET"`
+	Unset  *TagUnset  `ddl:"list,no_parentheses" sql:"UNSET"`
 	Rename *TagRename `ddl:"keyword" sql:"RENAME TO"`
 }
 

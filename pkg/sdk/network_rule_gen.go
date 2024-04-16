@@ -36,8 +36,8 @@ type AlterNetworkRuleOptions struct {
 	networkRule bool                   `ddl:"static" sql:"NETWORK RULE"`
 	IfExists    *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
-	Set         *NetworkRuleSet        `ddl:"list" sql:"SET"`
-	Unset       *NetworkRuleUnset      `ddl:"list" sql:"UNSET"`
+	Set         *NetworkRuleSet        `ddl:"list,no_parentheses" sql:"SET"`
+	Unset       *NetworkRuleUnset      `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type NetworkRuleSet struct {

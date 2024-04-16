@@ -347,6 +347,7 @@ func (opts *RemoveDelegatedAuthorization) validate() error {
 }
 
 type UserSet struct {
+	// TODO: Allowed, but not all of them
 	PasswordPolicy    *SchemaObjectIdentifier `ddl:"identifier" sql:"PASSWORD POLICY"`
 	SessionPolicy     *string                 `ddl:"parameter" sql:"SESSION POLICY"`
 	ObjectProperties  *UserObjectProperties   `ddl:"keyword"`

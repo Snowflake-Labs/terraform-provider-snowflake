@@ -57,7 +57,7 @@ type AlterExternalFunctionOptions struct {
 	IfExists          *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name              SchemaObjectIdentifier `ddl:"identifier"`
 	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
-	Set               *ExternalFunctionSet   `ddl:"keyword" sql:"SET"`
+	Set               *ExternalFunctionSet   `ddl:"list,no_parentheses" sql:"SET"`
 	Unset             *ExternalFunctionUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 

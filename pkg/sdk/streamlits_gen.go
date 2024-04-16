@@ -33,7 +33,7 @@ type AlterStreamlitOptions struct {
 	streamlit bool                    `ddl:"static" sql:"STREAMLIT"`
 	IfExists  *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name      SchemaObjectIdentifier  `ddl:"identifier"`
-	Set       *StreamlitSet           `ddl:"keyword" sql:"SET"`
+	Set       *StreamlitSet           `ddl:"list,no_parentheses" sql:"SET"`
 	RenameTo  *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 }
 

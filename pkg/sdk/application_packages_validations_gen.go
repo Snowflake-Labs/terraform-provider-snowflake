@@ -29,8 +29,13 @@ func (opts *AlterApplicationPackageOptions) validate() error {
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.ModifyReleaseDirective, opts.SetDefaultReleaseDirective, opts.SetReleaseDirective, opts.UnsetReleaseDirective, opts.AddVersion, opts.DropVersion, opts.AddPatchForVersion, opts.SetTags, opts.UnsetTags) {
 		errs = append(errs, errExactlyOneOf("AlterApplicationPackageOptions", "Set", "Unset", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"))
 	}
+	if valueSet(opts.Set) {
+		if everyValueNil(opts.Set.DataRetentionTimeInDays, opts.Set.MaxDataExtensionTimeInDays, opts.Set.DefaultDdlCollation, opts.Set.Comment, opts.Set.Distribution) {
+			errs = append(errs, errAtLeastOneOf("AlterApplicationPackageOptions.Set", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution"))
+		}
+	}
 	if valueSet(opts.Unset) {
-		if !anyValueSet(opts.Unset.DataRetentionTimeInDays, opts.Unset.MaxDataExtensionTimeInDays, opts.Unset.DefaultDdlCollation, opts.Unset.Comment, opts.Unset.Distribution) {
+		if everyValueNil(opts.Unset.DataRetentionTimeInDays, opts.Unset.MaxDataExtensionTimeInDays, opts.Unset.DefaultDdlCollation, opts.Unset.Comment, opts.Unset.Distribution) {
 			errs = append(errs, errAtLeastOneOf("AlterApplicationPackageOptions.Unset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution"))
 		}
 	}

@@ -308,6 +308,9 @@ type DatabaseSet struct {
 }
 
 func (v *DatabaseSet) validate() error {
+	if everyValueNil(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
+		return errAtLeastOneOf("DatabaseSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDDLCollation", "Comment")
+	}
 	return nil
 }
 
@@ -320,10 +323,8 @@ type DatabaseUnset struct {
 }
 
 func (v *DatabaseUnset) validate() error {
-	if valueSet(v.Tag) {
-		if anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-			return errors.New("tag cannot be set with other options")
-		}
+	if everyValueNil(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment, v.Tag) {
+		return errAtLeastOneOf("DatabaseUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDDLCollation", "Comment", "Tag")
 	}
 	return nil
 }

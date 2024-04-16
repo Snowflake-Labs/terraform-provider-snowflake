@@ -32,7 +32,7 @@ type AlterSequenceOptions struct {
 	name         SchemaObjectIdentifier  `ddl:"identifier"`
 	RenameTo     *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 	SetIncrement *int                    `ddl:"parameter,no_quotes" sql:"SET INCREMENT"`
-	Set          *SequenceSet            `ddl:"keyword" sql:"SET"`
+	Set          *SequenceSet            `ddl:"list,no_parentheses" sql:"SET"`
 	UnsetComment *bool                   `ddl:"keyword" sql:"UNSET COMMENT"`
 }
 

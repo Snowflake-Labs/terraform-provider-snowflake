@@ -85,5 +85,11 @@ func (opts *AlterEventTableOptions) validate() error {
 			}
 		}
 	}
+	if valueSet(opts.Set) && everyValueNil(opts.Set.DataRetentionTimeInDays, opts.Set.MaxDataExtensionTimeInDays, opts.Set.ChangeTracking, opts.Set.Comment) {
+		errs = append(errs, errAtLeastOneOf("AlterEventTableOptions.Set", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ChangeTracking", "Comment"))
+	}
+	if valueSet(opts.Unset) && everyValueNil(opts.Unset.DataRetentionTimeInDays, opts.Unset.MaxDataExtensionTimeInDays, opts.Unset.ChangeTracking, opts.Unset.Comment) {
+		errs = append(errs, errAtLeastOneOf("AlterEventTableOptions.Unset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ChangeTracking", "Comment"))
+	}
 	return JoinErrors(errs...)
 }

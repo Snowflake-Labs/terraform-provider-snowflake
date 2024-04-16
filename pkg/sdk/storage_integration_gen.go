@@ -57,8 +57,8 @@ type AlterStorageIntegrationOptions struct {
 	storageIntegration bool                     `ddl:"static" sql:"STORAGE INTEGRATION"`
 	IfExists           *bool                    `ddl:"keyword" sql:"IF EXISTS"`
 	name               AccountObjectIdentifier  `ddl:"identifier"`
-	Set                *StorageIntegrationSet   `ddl:"keyword" sql:"SET"`
-	Unset              *StorageIntegrationUnset `ddl:"list" sql:"UNSET"`
+	Set                *StorageIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset              *StorageIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 	SetTags            []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags          []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
 }

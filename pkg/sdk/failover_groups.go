@@ -141,7 +141,7 @@ type AlterSourceFailoverGroupOptions struct {
 	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier `ddl:"identifier"`
 	NewName       AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set           *FailoverGroupSet       `ddl:"keyword" sql:"SET"`
+	Set           *FailoverGroupSet       `ddl:"list,no_parentheses" sql:"SET"`
 	Add           *FailoverGroupAdd       `ddl:"keyword" sql:"ADD"`
 	Move          *FailoverGroupMove      `ddl:"keyword" sql:"MOVE"`
 	Remove        *FailoverGroupRemove    `ddl:"keyword" sql:"REMOVE"`
@@ -188,6 +188,9 @@ type FailoverGroupSet struct {
 }
 
 func (v *FailoverGroupSet) validate() error {
+	if everyValueNil(v.ReplicationSchedule, v.AllowedIntegrationTypes, v.ObjectTypes) {
+		return errAtLeastOneOf("FailoverGroupSet", "ReplicationSchedule", "AllowedIntegrationTypes", "ObjectTypes")
+	}
 	if len(v.AllowedIntegrationTypes) > 0 {
 		// INTEGRATIONS must be set in object types
 		if !slices.Contains(v.ObjectTypes, PluralObjectTypeIntegrations) {

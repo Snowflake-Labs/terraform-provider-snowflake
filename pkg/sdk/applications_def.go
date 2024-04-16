@@ -74,7 +74,7 @@ var ApplicationsDef = g.NewInterface(
 		OptionalQueryStructField(
 			"Set",
 			applicationSet,
-			g.KeywordOptions().SQL("SET"),
+			g.ListOptions().NoParentheses().SQL("SET"),
 		).
 		OptionalQueryStructField(
 			"Unset",

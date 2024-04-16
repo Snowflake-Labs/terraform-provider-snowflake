@@ -50,7 +50,7 @@ func (opts *AlterNotificationIntegrationOptions) validate() error {
 		if everyValueSet(opts.Set.SetPushParams, opts.Set.SetEmailParams) {
 			errs = append(errs, errOneOf("AlterNotificationIntegrationOptions.Set", "SetPushParams", "SetEmailParams"))
 		}
-		if !anyValueSet(opts.Set.Enabled, opts.Set.SetPushParams, opts.Set.SetEmailParams, opts.Set.Comment) {
+		if everyValueNil(opts.Set.Enabled, opts.Set.SetPushParams, opts.Set.SetEmailParams, opts.Set.Comment) {
 			errs = append(errs, errAtLeastOneOf("AlterNotificationIntegrationOptions.Set", "Enabled", "SetPushParams", "SetEmailParams", "Comment"))
 		}
 		if valueSet(opts.Set.SetPushParams) {

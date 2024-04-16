@@ -265,6 +265,44 @@ func (opts *alterTableOptions) validate() error {
 			errs = append(errs, errExactlyOneOf("TableSearchOptimizationAction", "Add", "Drop"))
 		}
 	}
+	if valueSet(opts.Set) && everyValueNil(
+		opts.Set.EnableSchemaEvolution,
+		opts.Set.StageFileFormat,
+		opts.Set.StageCopyOptions,
+		opts.Set.DataRetentionTimeInDays,
+		opts.Set.MaxDataExtensionTimeInDays,
+		opts.Set.ChangeTracking,
+		opts.Set.DefaultDDLCollation,
+		opts.Set.Comment,
+	) {
+		errs = append(errs, errExactlyOneOf("alterTableOptions.Set",
+			"EnableSchemaEvolution",
+			"StageFileFormat",
+			"StageCopyOptions",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ChangeTracking",
+			"DefaultDDLCollation",
+			"Comment",
+		))
+	}
+	if valueSet(opts.Unset) && everyValueNil(
+		opts.Unset.DataRetentionTimeInDays,
+		opts.Unset.MaxDataExtensionTimeInDays,
+		opts.Unset.ChangeTracking,
+		opts.Unset.DefaultDDLCollation,
+		opts.Unset.EnableSchemaEvolution,
+		opts.Unset.Comment,
+	) {
+		errs = append(errs, errExactlyOneOf("alterTableOptions.Unset",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ChangeTracking",
+			"DefaultDDLCollation",
+			"EnableSchemaEvolution",
+			"Comment",
+		))
+	}
 	return errors.Join(errs...)
 }
 

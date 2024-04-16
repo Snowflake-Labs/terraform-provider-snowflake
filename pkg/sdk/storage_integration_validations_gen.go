@@ -39,6 +39,12 @@ func (opts *AlterStorageIntegrationOptions) validate() error {
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
 		errs = append(errs, errExactlyOneOf("AlterStorageIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
+	if valueSet(opts.Set) && everyValueNil(opts.Set.S3Params, opts.Set.AzureParams, opts.Set.Enabled, opts.Set.StorageAllowedLocations, opts.Set.StorageBlockedLocations, opts.Set.Comment) {
+		errs = append(errs, errAtLeastOneOf("AlterStorageIntegrationOptions.Set", "S3Params", "AzureParams", "Enabled", "StorageAllowedLocations", "StorageBlockedLocations", "Comment"))
+	}
+	if valueSet(opts.Unset) && everyValueNil(opts.Unset.StorageBlockedLocations, opts.Unset.StorageAwsObjectAcl, opts.Unset.Enabled, opts.Unset.Comment) {
+		errs = append(errs, errAtLeastOneOf("AlterStorageIntegrationOptions.Unset", "StorageBlockedLocations", "StorageAwsObjectAcl", "Enabled", "Comment"))
+	}
 	return JoinErrors(errs...)
 }
 

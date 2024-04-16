@@ -62,6 +62,12 @@ func (opts *AlterApplicationOptions) validate() error {
 			errs = append(errs, NewError("AlterApplicationOptions.IfExists can be set only when AlterApplicationOptions.Set or AlterApplicationOptions.Unset is set"))
 		}
 	}
+	if valueSet(opts.Set) && everyValueNil(opts.Set.Comment, opts.Set.ShareEventsWithProvider, opts.Set.DebugMode) {
+		errs = append(errs, errAtLeastOneOf("AlterApplicationOptions.Set", "Comment", "ShareEventsWithProvider", "DebugMode"))
+	}
+	if valueSet(opts.Unset) && everyValueNil(opts.Unset.Comment, opts.Unset.ShareEventsWithProvider, opts.Unset.DebugMode) {
+		errs = append(errs, errAtLeastOneOf("AlterApplicationOptions.Unset", "Comment", "ShareEventsWithProvider", "DebugMode"))
+	}
 	return JoinErrors(errs...)
 }
 

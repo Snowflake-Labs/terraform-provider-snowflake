@@ -32,7 +32,7 @@ type AlterNetworkPolicyOptions struct {
 	networkPolicy bool                     `ddl:"static" sql:"NETWORK POLICY"`
 	IfExists      *bool                    `ddl:"keyword" sql:"IF EXISTS"`
 	name          AccountObjectIdentifier  `ddl:"identifier"`
-	Set           *NetworkPolicySet        `ddl:"keyword" sql:"SET"`
+	Set           *NetworkPolicySet        `ddl:"list,no_parentheses" sql:"SET"`
 	UnsetComment  *bool                    `ddl:"keyword" sql:"UNSET COMMENT"`
 	RenameTo      *AccountObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 }

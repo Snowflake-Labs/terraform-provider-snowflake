@@ -86,7 +86,8 @@ type TaskSet struct {
 	SuspendTaskAfterNumFailures         *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
 	ErrorIntegration                    *string                  `ddl:"parameter,no_quotes" sql:"ERROR_INTEGRATION"`
 	Comment                             *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	SessionParameters                   *SessionParameters       `ddl:"list,no_parentheses"`
+	// TODO: Not allowed here
+	SessionParameters *SessionParameters `ddl:"list,no_parentheses"`
 }
 
 type TaskUnset struct {

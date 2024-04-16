@@ -48,7 +48,7 @@ type alterDynamicTableOptions struct {
 	Suspend *bool            `ddl:"keyword" sql:"SUSPEND"`
 	Resume  *bool            `ddl:"keyword" sql:"RESUME"`
 	Refresh *bool            `ddl:"keyword" sql:"REFRESH"`
-	Set     *DynamicTableSet `ddl:"keyword" sql:"SET"`
+	Set     *DynamicTableSet `ddl:"list,no_parentheses" sql:"SET"`
 }
 
 // dropDynamicTableOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-dynamic-table

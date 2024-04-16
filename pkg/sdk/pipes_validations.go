@@ -44,12 +44,12 @@ func (opts *AlterPipeOptions) validate() error {
 		errs = append(errs, errExactlyOneOf("AlterPipeOptions", "Set", "Unset", "SetTag", "UnsetTag", "Refresh"))
 	}
 	if set := opts.Set; valueSet(set) {
-		if !anyValueSet(set.ErrorIntegration, set.PipeExecutionPaused, set.Comment) {
+		if everyValueNil(set.ErrorIntegration, set.PipeExecutionPaused, set.Comment) {
 			errs = append(errs, errAtLeastOneOf("AlterPipeOptions.Set", "ErrorIntegration", "PipeExecutionPaused", "Comment"))
 		}
 	}
 	if unset := opts.Unset; valueSet(unset) {
-		if !anyValueSet(unset.ErrorIntegration, unset.PipeExecutionPaused, unset.Comment) {
+		if everyValueNil(unset.ErrorIntegration, unset.PipeExecutionPaused, unset.Comment) {
 			errs = append(errs, errAtLeastOneOf("AlterPipeOptions.Unset", "ErrorIntegration", "PipeExecutionPaused", "Comment"))
 		}
 	}

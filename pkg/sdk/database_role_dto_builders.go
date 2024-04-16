@@ -1,8 +1,6 @@
 package sdk
 
-func NewCreateDatabaseRoleRequest(
-	name DatabaseObjectIdentifier,
-) *CreateDatabaseRoleRequest {
+func NewCreateDatabaseRoleRequest(name DatabaseObjectIdentifier) *CreateDatabaseRoleRequest {
 	s := CreateDatabaseRoleRequest{}
 	s.name = name
 	return &s

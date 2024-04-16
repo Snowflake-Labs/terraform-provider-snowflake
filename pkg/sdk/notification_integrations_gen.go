@@ -86,7 +86,7 @@ type AlterNotificationIntegrationOptions struct {
 	notificationIntegration bool                                     `ddl:"static" sql:"NOTIFICATION INTEGRATION"`
 	IfExists                *bool                                    `ddl:"keyword" sql:"IF EXISTS"`
 	name                    AccountObjectIdentifier                  `ddl:"identifier"`
-	Set                     *NotificationIntegrationSet              `ddl:"keyword" sql:"SET"`
+	Set                     *NotificationIntegrationSet              `ddl:"list,no_parentheses" sql:"SET"`
 	UnsetEmailParams        *NotificationIntegrationUnsetEmailParams `ddl:"list,no_parentheses" sql:"UNSET"`
 	SetTags                 []TagAssociation                         `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags               []ObjectIdentifier                       `ddl:"keyword" sql:"UNSET TAG"`

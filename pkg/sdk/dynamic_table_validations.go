@@ -55,8 +55,13 @@ func (opts *alterDynamicTableOptions) validate() error {
 	if ok := exactlyOneValueSet(opts.Suspend, opts.Resume, opts.Refresh, opts.Set); !ok {
 		errs = append(errs, errExactlyOneOf("alterDynamicTableOptions", "Suspend", "Resume", "Refresh", "Set"))
 	}
-	if valueSet(opts.Set) && valueSet(opts.Set.TargetLag) {
-		errs = append(errs, opts.Set.TargetLag.validate())
+	if valueSet(opts.Set) {
+		if valueSet(opts.Set.TargetLag) {
+			errs = append(errs, opts.Set.TargetLag.validate())
+		}
+		if everyValueNil(opts.Set.TargetLag, opts.Set.Warehouse) {
+			errs = append(errs, errAtLeastOneOf("alterDynamicTableOptions.Set", "TargetLag", "Warehouse"))
+		}
 	}
 	return JoinErrors(errs...)
 }

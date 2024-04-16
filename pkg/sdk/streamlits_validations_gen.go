@@ -40,6 +40,10 @@ func (opts *AlterStreamlitOptions) validate() error {
 		errs = append(errs, errExactlyOneOf("AlterStreamlitOptions", "RenameTo", "Set"))
 	}
 	if valueSet(opts.Set) {
+		if everyValueNil(opts.Set.RootLocation, opts.Set.MainFile, opts.Set.Warehouse, opts.Set.Comment) {
+			errs = append(errs, errAtLeastOneOf("AlterStreamlitOptions.Set", "RootLocation", "MainFile", "Warehouse", "Comment"))
+		}
+
 		if opts.Set.Warehouse != nil && !ValidObjectIdentifier(opts.Set.Warehouse) {
 			errs = append(errs, ErrInvalidObjectIdentifier)
 		}

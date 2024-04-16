@@ -59,10 +59,11 @@ type AlterApiIntegrationOptions struct {
 	apiIntegration bool                    `ddl:"static" sql:"API INTEGRATION"`
 	IfExists       *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name           AccountObjectIdentifier `ddl:"identifier"`
-	Set            *ApiIntegrationSet      `ddl:"keyword" sql:"SET"`
-	Unset          *ApiIntegrationUnset    `ddl:"list,no_parentheses" sql:"UNSET"`
-	SetTags        []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags      []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
+	// TODO: Set and SetTags is possible, but with the current structure it's not
+	Set       *ApiIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset     *ApiIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTags   []TagAssociation     `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags []ObjectIdentifier   `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 type ApiIntegrationSet struct {

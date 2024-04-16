@@ -33,8 +33,8 @@ type sessions struct {
 type AlterSessionOptions struct {
 	alter   bool          `ddl:"static" sql:"ALTER"`
 	session bool          `ddl:"static" sql:"SESSION"`
-	Set     *SessionSet   `ddl:"keyword" sql:"SET"`
-	Unset   *SessionUnset `ddl:"keyword" sql:"UNSET"`
+	Set     *SessionSet   `ddl:"list,no_parentheses" sql:"SET"`
+	Unset   *SessionUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 func (opts *AlterSessionOptions) validate() error {
