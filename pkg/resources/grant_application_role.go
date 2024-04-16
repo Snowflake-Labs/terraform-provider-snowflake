@@ -63,17 +63,11 @@ func GrantApplicationRole() *schema.Resource {
 				}
 				switch parts[1] {
 				case "ACCOUNT_ROLE":
-					p := parts[2]
-					p = strings.Trim(p, "\"")
-					if err := d.Set("parent_account_role_name", p); err != nil {
+					if err := d.Set("parent_account_role_name", sdk.NewAccountObjectIdentifier(parts[2]).FullyQualifiedName()); err != nil {
 						return nil, err
 					}
 				case "APPLICATION":
-					p := parts[2]
-					if strings.HasPrefix(p, "\"\"") && strings.HasSuffix(p, "\"\"") {
-						p = strings.Trim(p, "\"")
-					}
-					if err := d.Set("application_name", p); err != nil {
+					if err := d.Set("application_name", sdk.NewAccountObjectIdentifier(parts[2]).FullyQualifiedName()); err != nil {
 						return nil, err
 					}
 				default:
@@ -94,14 +88,14 @@ func CreateContextGrantApplicationRole(ctx context.Context, d *schema.ResourceDa
 	var snowflakeResourceID string
 	if parentRoleName, ok := d.GetOk("parent_account_role_name"); ok && parentRoleName.(string) != "" {
 		parentRoleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parentRoleName.(string))
-		snowflakeResourceID = helpers.EncodeSnowflakeID(applicationRoleIdentifier.FullyQualifiedName(), "ACCOUNT_ROLE", parentRoleIdentifier.FullyQualifiedName())
+		snowflakeResourceID = strings.Join([]string{applicationRoleIdentifier.FullyQualifiedName(), "ACCOUNT_ROLE", parentRoleIdentifier.FullyQualifiedName()}, helpers.IDDelimiter)
 		req := sdk.NewGrantApplicationRoleRequest(applicationRoleIdentifier).WithTo(*sdk.NewKindOfRoleRequest().WithRoleName(&parentRoleIdentifier))
 		if err := client.ApplicationRoles.Grant(ctx, req); err != nil {
 			return diag.FromErr(err)
 		}
 	} else if applicationName, ok := d.GetOk("application_name"); ok && applicationName.(string) != "" {
 		applicationIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(applicationName.(string))
-		snowflakeResourceID = helpers.EncodeSnowflakeID(applicationRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeApplication.String(), applicationIdentifier.FullyQualifiedName())
+		snowflakeResourceID = strings.Join([]string{applicationRoleIdentifier.FullyQualifiedName(), sdk.ObjectTypeApplication.String(), applicationIdentifier.FullyQualifiedName()}, helpers.IDDelimiter)
 		req := sdk.NewGrantApplicationRoleRequest(applicationRoleIdentifier).WithTo(*sdk.NewKindOfRoleRequest().WithApplicationName(&applicationIdentifier))
 		if err := client.ApplicationRoles.Grant(ctx, req); err != nil {
 			return diag.FromErr(err)
@@ -156,14 +150,18 @@ func ReadContextGrantApplicationRole(ctx context.Context, d *schema.ResourceData
 			ApplicationRole: applicationRoleIdentifier,
 		},
 	})
-	if err != nil && errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-		d.SetId("")
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Failed to retrieve application role. Marking the resource as removed.",
-				Detail:   fmt.Sprintf("Id: %s", d.Id()),
-			},
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve application role. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Id: %s", d.Id()),
+				},
+			}
+		} else {
+			return diag.FromErr(err)
 		}
 	}
 

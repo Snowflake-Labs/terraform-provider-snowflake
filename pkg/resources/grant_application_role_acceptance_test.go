@@ -46,7 +46,7 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "application_role_name", applicationRoleNameFullyQualified),
-					resource.TestCheckResourceAttr(resourceName, "parent_account_role_name", parentAccountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "parent_account_role_name", fmt.Sprintf("\"%s\"", parentAccountRoleName)),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|ACCOUNT_ROLE|"%v"`, applicationName, applicationRoleName, parentAccountRoleName)),
 				),
 			},
@@ -92,7 +92,7 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "application_role_name", applicationRoleNameFullyQualified),
-					resource.TestCheckResourceAttr(resourceName, "application_name", applicationName2),
+					resource.TestCheckResourceAttr(resourceName, "application_name", fmt.Sprintf("\"%s\"", applicationName2)),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%v"."%v"|APPLICATION|"%v"`, applicationName, applicationRoleName, applicationName2)),
 				),
 			},

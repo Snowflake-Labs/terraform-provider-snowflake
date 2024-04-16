@@ -46,5 +46,5 @@ resource "snowflake_role" "role" {
 resource "snowflake_grant_application_role" "g" {
   depends_on               = [snowflake_unsafe_execute.application]
   application_role_name    = local.application_role_identifier
-  parent_account_role_name = snowflake_role.role.name
+  parent_account_role_name = "\"${snowflake_role.role.name}\""
 }

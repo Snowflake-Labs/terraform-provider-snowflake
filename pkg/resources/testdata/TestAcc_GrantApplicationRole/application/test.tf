@@ -48,5 +48,5 @@ resource "snowflake_unsafe_execute" "application2" {
 resource "snowflake_grant_application_role" "g" {
   depends_on            = [snowflake_unsafe_execute.application2]
   application_role_name = local.application_role_identifier
-  application_name      = var.application_name2
+  application_name      = "\"${var.application_name2}\""
 }
