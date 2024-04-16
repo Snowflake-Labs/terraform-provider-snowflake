@@ -205,8 +205,8 @@ func CheckAccountRolePrivilegesRevoked(t *testing.T) func(*terraform.State) erro
 	t.Helper()
 	client := Client(t)
 
-	return func(state *terraform.State) error {
-		for _, rs := range state.RootModule().Resources {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_grant_privileges_to_account_role" {
 				continue
 			}
@@ -230,6 +230,42 @@ func CheckAccountRolePrivilegesRevoked(t *testing.T) func(*terraform.State) erro
 			}
 			if len(grantedPrivileges) > 0 {
 				return fmt.Errorf("account role (%s) is still granted, granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
+			}
+		}
+		return nil
+	}
+}
+
+// CheckDatabaseRolePrivilegesRevoked is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckDatabaseRolePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	client := Client(t)
+
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_grant_privileges_to_database_role" {
+				continue
+			}
+			ctx := context.Background()
+
+			id := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["database_role_name"])
+			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+				To: &sdk.ShowGrantsTo{
+					DatabaseRole: id,
+				},
+			})
+			if err != nil {
+				return err
+			}
+			var grantedPrivileges []string
+			for _, grant := range grants {
+				// usage is the default privilege available after creation (it won't be revoked)
+				if grant.Privilege != "USAGE" {
+					grantedPrivileges = append(grantedPrivileges, grant.Privilege)
+				}
+			}
+			if len(grantedPrivileges) > 0 {
+				return fmt.Errorf("database role (%s) is still granted, granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
 			}
 		}
 		return nil
