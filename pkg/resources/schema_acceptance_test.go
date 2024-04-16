@@ -424,11 +424,10 @@ func setSchemaDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, d
 	t.Helper()
 
 	return func() {
-		client, err := sdk.NewDefaultClient()
-		require.NoError(t, err)
+		client := acc.Client(t)
 		ctx := context.Background()
 
-		err = client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
+		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
 			Set: &sdk.SchemaSet{
 				DataRetentionTimeInDays: sdk.Int(days),
 			},
@@ -456,10 +455,9 @@ func testAccCheckSchemaDestroy(s *terraform.State) error {
 func removeSchemaOutsideOfTerraform(t *testing.T, databaseName string, schemaName string) {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	err = client.Schemas.Drop(ctx, sdk.NewDatabaseObjectIdentifier(databaseName, schemaName), new(sdk.DropSchemaOptions))
+	err := client.Schemas.Drop(ctx, sdk.NewDatabaseObjectIdentifier(databaseName, schemaName), new(sdk.DropSchemaOptions))
 	require.NoError(t, err)
 }

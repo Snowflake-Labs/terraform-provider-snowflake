@@ -20,19 +20,14 @@ func testClient(t *testing.T) *Client {
 func testSecondaryClient(t *testing.T) *Client {
 	t.Helper()
 
-	client, err := testClientFromProfile(t, testprofiles.Secondary)
+	config, err := ProfileConfig(testprofiles.Secondary)
+	if err != nil {
+		t.Skipf("Snowflake secondary account not configured. Must be set in ~./snowflake/config.yml with profile name: %s", testprofiles.Secondary)
+	}
+	client, err := NewClient(config)
 	if err != nil {
 		t.Skipf("Snowflake secondary account not configured. Must be set in ~./snowflake/config.yml with profile name: %s", testprofiles.Secondary)
 	}
 
 	return client
-}
-
-func testClientFromProfile(t *testing.T, profile string) (*Client, error) {
-	t.Helper()
-	config, err := ProfileConfig(profile)
-	if err != nil {
-		return nil, err
-	}
-	return NewClient(config)
 }
