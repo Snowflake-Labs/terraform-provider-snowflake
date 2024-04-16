@@ -25,7 +25,10 @@ const (
 	Procedure                    resource = "snowflake_procedure"
 	ResourceMonitor              resource = "snowflake_resource_monitor"
 	Role                         resource = "snowflake_role"
+	RowAccessPolicy              resource = "snowflake_row_access_policy"
 	Schema                       resource = "snowflake_schema"
+	Sequence                     resource = "snowflake_sequence"
+	Share                        resource = "snowflake_share"
 	Stage                        resource = "snowflake_stage"
 	View                         resource = "snowflake_view"
 )
