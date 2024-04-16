@@ -141,6 +141,12 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Stage: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Stages.ShowByID)
 	},
+	resources.StorageIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.StorageIntegrations.ShowByID)
+	},
+	resources.Stream: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Streams.ShowByID)
+	},
 	resources.View: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Views.ShowByID)
 	},

@@ -47,7 +47,7 @@ func TestInt_Streams(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
 		assert.Equal(t, table.ID().FullyQualifiedName(), *s.TableName)
@@ -77,7 +77,7 @@ func TestInt_Streams(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
 		assert.Equal(t, externalTableId.FullyQualifiedName(), *s.TableName)
@@ -98,7 +98,7 @@ func TestInt_Streams(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
 		assertStream(t, s, id, "Stage", "DEFAULT")
@@ -122,7 +122,7 @@ func TestInt_Streams(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
 		assertStream(t, s, id, "View", "DEFAULT")
@@ -149,7 +149,7 @@ func TestInt_Streams(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(cloneId))
+		s, err := client.Streams.ShowByID(ctx, cloneId)
 		require.NoError(t, err)
 
 		assertStream(t, s, cloneId, "Table", "DEFAULT")
@@ -193,7 +193,7 @@ func TestInt_Streams(t *testing.T) {
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStream)
 		require.Error(t, err)
 
-		_, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		_, err = client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 	})
 
@@ -210,25 +210,25 @@ func TestInt_Streams(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		s, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, "", *s.Comment)
 
 		err = client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithSetComment(sdk.String("some_comment")))
 		require.NoError(t, err)
 
-		s, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		s, err = client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, "some_comment", *s.Comment)
 
 		err = client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithUnsetComment(sdk.Bool(true)))
 		require.NoError(t, err)
 
-		s, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		s, err = client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, "", *s.Comment)
 
-		_, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		_, err = client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 	})
 
@@ -241,13 +241,13 @@ func TestInt_Streams(t *testing.T) {
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
 
-		_, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		_, err = client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
 		err = client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
 		require.NoError(t, err)
 
-		_, err = client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+		_, err = client.Streams.ShowByID(ctx, id)
 		require.Error(t, err)
 	})
 
