@@ -7,7 +7,7 @@ resource "snowflake_database" "test" {
 }
 
 resource "snowflake_database_role" "test" {
-  name = var.database_role_name
+  name     = var.database_role_name
   database = snowflake_database.test.name
 }
 
