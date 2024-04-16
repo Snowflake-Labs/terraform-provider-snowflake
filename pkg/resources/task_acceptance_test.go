@@ -428,7 +428,7 @@ todo: this test is failing due to error message below. Need to figure out why th
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 			PreCheck:     func() { acc.TestAccPreCheck(t) },
-			CheckDestroy: nil,
+			CheckDestroy: acc.CheckDestroy(t, resources.Task),
 			Steps: []resource.TestStep{
 				{
 					Config: taskConfigManaged1(accName, acc.TestDatabaseName, acc.TestSchemaName),

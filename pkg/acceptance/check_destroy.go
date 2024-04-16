@@ -156,8 +156,14 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Task: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Tasks.ShowByID)
 	},
+	resources.User: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Users.ShowByID)
+	},
 	resources.View: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Views.ShowByID)
+	},
+	resources.Warehouse: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Warehouses.ShowByID)
 	},
 }
 
@@ -322,6 +328,36 @@ func CheckDatabaseRolePrivilegesRevoked(t *testing.T) func(*terraform.State) err
 			}
 			if len(grantedPrivileges) > 0 {
 				return fmt.Errorf("database role (%s) is still granted, granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
+			}
+		}
+		return nil
+	}
+}
+
+// CheckUserPasswordPolicyAttachmentDestroy is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	client := Client(t)
+
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_user_password_policy_attachment" {
+				continue
+			}
+			ctx := context.Background()
+			policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(
+				sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]),
+				sdk.PolicyEntityDomainUser,
+			))
+			if err != nil {
+				if strings.Contains(err.Error(), "does not exist or not authorized") {
+					// Note: this can happen if the Policy Reference or the User has been deleted as well; in this case, ignore the error
+					continue
+				}
+				return err
+			}
+			if len(policyReferences) > 0 {
+				return fmt.Errorf("user password policy attachment %v still exists", policyReferences[0].PolicyName)
 			}
 		}
 		return nil

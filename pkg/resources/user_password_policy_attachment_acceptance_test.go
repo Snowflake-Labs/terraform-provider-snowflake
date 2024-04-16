@@ -1,19 +1,15 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
@@ -25,7 +21,7 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		CheckDestroy:             testAccCheckUserPasswordPolicyAttachmentDestroy,
+		CheckDestroy:             acc.CheckUserPasswordPolicyAttachmentDestroy(t),
 		Steps: []resource.TestStep{
 			// CREATE
 			{
@@ -53,31 +49,6 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckUserPasswordPolicyAttachmentDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	ctx := context.Background()
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_user_password_policy_attachment" {
-			continue
-		}
-		policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(
-			sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]),
-			sdk.PolicyEntityDomainUser,
-		))
-		if err != nil {
-			if strings.Contains(err.Error(), "does not exist or not authorized") {
-				// Note: this can happen if the Policy Reference or the User has been deleted as well; in this case, ignore the error
-				continue
-			}
-			return err
-		}
-		if len(policyReferences) > 0 {
-			return fmt.Errorf("user password policy attachment %v still exists", policyReferences[0].PolicyName)
-		}
-	}
-	return nil
 }
 
 func userPasswordPolicyAttachmentConfig(userName, databaseName, schemaName, passwordPolicyName string) string {

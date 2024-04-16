@@ -35,7 +35,9 @@ const (
 	Table                        resource = "snowflake_table"
 	Tag                          resource = "snowflake_tag"
 	Task                         resource = "snowflake_task"
+	User                         resource = "snowflake_user"
 	View                         resource = "snowflake_view"
+	Warehouse                    resource = "snowflake_warehouse"
 )
 
 type Resource interface {
