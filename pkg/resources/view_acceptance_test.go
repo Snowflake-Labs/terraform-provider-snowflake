@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -440,8 +439,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 			// try to import secure view without being its owner (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2640)
 			{
 				PreConfig: func() {
-					createAccountRoleOutsideTerraform(t, roleName)
-					registerAccountRoleCleanup(t, roleName)
+					t.Cleanup(createAccountRoleOutsideTerraform(t, roleName))
 					alterViewOwnershipExternally(t, viewName, roleName)
 				},
 				ResourceName: "snowflake_view.test",
@@ -571,25 +569,6 @@ func alterViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query
 
 	err := client.Views.Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
 	require.NoError(t, err)
-}
-
-func registerAccountRoleCleanup(t *testing.T, roleName string) {
-	t.Helper()
-
-	roleId := sdk.NewAccountObjectIdentifier(roleName)
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	t.Cleanup(func() {
-		t.Logf("dropping account role (%s)", roleName)
-		// We remove the role, so the ownership will be changed back. The view will be deleted with db cleanup.
-		err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId).WithIfExists(true))
-		if err != nil {
-			t.Logf("failed to drop account role (%s), err = %s\n", roleName, err.Error())
-		}
-		assert.Nil(t, err)
-	})
 }
 
 func alterViewOwnershipExternally(t *testing.T, viewName string, roleName string) {

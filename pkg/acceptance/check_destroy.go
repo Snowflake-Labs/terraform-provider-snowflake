@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -26,6 +27,9 @@ func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.Sta
 			t.Logf("found resource %s in state", resource)
 			ctx := context.Background()
 			id := decodeSnowflakeId(rs, resource)
+			if id == nil {
+				return fmt.Errorf("could not get the id of %s", resource)
+			}
 			showById, ok := showByIdFunctions[resource]
 			if !ok {
 				return fmt.Errorf("unsupported show by id in cleanup for %s, with id %v", resource, id.FullyQualifiedName())
@@ -190,6 +194,42 @@ func CheckGrantDatabaseRoleDestroy(t *testing.T) func(*terraform.State) error {
 						return fmt.Errorf("database role grant %v still exists", grant)
 					}
 				}
+			}
+		}
+		return nil
+	}
+}
+
+// CheckAccountRolePrivilegesRevoked is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckAccountRolePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	client := Client(t)
+
+	return func(state *terraform.State) error {
+		for _, rs := range state.RootModule().Resources {
+			if rs.Type != "snowflake_grant_privileges_to_account_role" {
+				continue
+			}
+			ctx := context.Background()
+
+			id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["account_role_name"])
+			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+				To: &sdk.ShowGrantsTo{
+					Role: id,
+				},
+			})
+			if err != nil {
+				if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+					continue
+				}
+				return err
+			}
+			var grantedPrivileges []string
+			for _, grant := range grants {
+				grantedPrivileges = append(grantedPrivileges, grant.Privilege)
+			}
+			if len(grantedPrivileges) > 0 {
+				return fmt.Errorf("account role (%s) is still granted, granted privileges %v", id.FullyQualifiedName(), grantedPrivileges)
 			}
 		}
 		return nil

@@ -587,7 +587,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDat
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
@@ -902,7 +902,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		CheckDestroy: testAccCheckDatabaseRolePrivilegesRevoked,
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },

@@ -874,10 +874,8 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					createAccountRoleOutsideTerraform(t, accountRoleName)
-					registerAccountRoleCleanup(t, accountRoleName)
-					createAccountRoleOutsideTerraform(t, newDatabaseOwningAccountRoleName)
-					registerAccountRoleCleanup(t, newDatabaseOwningAccountRoleName)
+					t.Cleanup(createAccountRoleOutsideTerraform(t, accountRoleName))
+					t.Cleanup(createAccountRoleOutsideTerraform(t, newDatabaseOwningAccountRoleName))
 					t.Cleanup(createDatabaseWithRoleAsOwner(t, accountRoleName, databaseName))
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/ForceOwnershipTransferOnCreate"),
