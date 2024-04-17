@@ -102,6 +102,53 @@ func TestWarehouseSizing(t *testing.T) {
 
 // TODO: add validation tests
 func TestWarehouseAlter(t *testing.T) {
+	t.Run("validation: with empty set", func(t *testing.T) {
+		opts := &AlterWarehouseOptions{
+			name: NewAccountObjectIdentifier("mywarehouse"),
+			Set:  new(WarehouseSet),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("WarehouseSet",
+			"WarehouseType",
+			"WarehouseSize",
+			"WaitForCompletion",
+			"MaxClusterCount",
+			"MinClusterCount",
+			"ScalingPolicy",
+			"AutoSuspend",
+			"AutoResume",
+			"ResourceMonitor",
+			"Comment",
+			"EnableQueryAcceleration",
+			"QueryAccelerationMaxScaleFactor",
+			"MaxConcurrencyLevel",
+			"StatementQueuedTimeoutInSeconds",
+			"StatementTimeoutInSeconds",
+		))
+	})
+
+	t.Run("validation: with empty unset", func(t *testing.T) {
+		opts := &AlterWarehouseOptions{
+			name:  NewAccountObjectIdentifier("mywarehouse"),
+			Unset: new(WarehouseUnset),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("WarehouseUnset",
+			"WarehouseType",
+			"WaitForCompletion",
+			"MaxClusterCount",
+			"MinClusterCount",
+			"ScalingPolicy",
+			"AutoSuspend",
+			"AutoResume",
+			"ResourceMonitor",
+			"Comment",
+			"EnableQueryAcceleration",
+			"QueryAccelerationMaxScaleFactor",
+			"MaxConcurrencyLevel",
+			"StatementQueuedTimeoutInSeconds",
+			"StatementTimeoutInSeconds",
+		))
+	})
+
 	t.Run("with set params", func(t *testing.T) {
 		opts := &AlterWarehouseOptions{
 			name: NewAccountObjectIdentifier("mywarehouse"),
@@ -116,7 +163,7 @@ func TestWarehouseAlter(t *testing.T) {
 				StatementQueuedTimeoutInSeconds: Int(1200),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SET WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED' WAIT_FOR_COMPLETION = false MAX_CLUSTER_COUNT = 5 MIN_CLUSTER_COUNT = 4 AUTO_SUSPEND = 200 RESOURCE_MONITOR = "resmon" ENABLE_QUERY_ACCELERATION = false STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 1200`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER WAREHOUSE "mywarehouse" SET WAREHOUSE_TYPE = 'SNOWPARK-OPTIMIZED', WAIT_FOR_COMPLETION = false, MAX_CLUSTER_COUNT = 5, MIN_CLUSTER_COUNT = 4, AUTO_SUSPEND = 200, RESOURCE_MONITOR = "resmon", ENABLE_QUERY_ACCELERATION = false, STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 1200`)
 	})
 
 	t.Run("with set tag", func(t *testing.T) {

@@ -82,6 +82,31 @@ func TestAlertAlter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s SET COMMENT = '%s'", id.FullyQualifiedName(), newComment)
 	})
 
+	t.Run("with set - multiple options", func(t *testing.T) {
+		newComment := random.String()
+		warehouseId := RandomAccountObjectIdentifier()
+
+		opts := &AlterAlertOptions{
+			name: id,
+			Set: &AlertSet{
+				Warehouse: &warehouseId,
+				Schedule:  String("1 minute"),
+				Comment:   String(newComment),
+			},
+		}
+
+		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s SET WAREHOUSE = %s, SCHEDULE = '1 minute', COMMENT = '%s'", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), newComment)
+	})
+
+	t.Run("validation: with set - no option", func(t *testing.T) {
+		opts := &AlterAlertOptions{
+			name: id,
+			Set:  &AlertSet{},
+		}
+
+		assertOptsInvalid(t, opts, errAtLeastOneOf("AlterAlertOptions.Set", "Warehouse", "Schedule", "Comment"))
+	})
+
 	t.Run("with unset", func(t *testing.T) {
 		opts := &AlterAlertOptions{
 			name: id,
@@ -91,6 +116,28 @@ func TestAlertAlter(t *testing.T) {
 		}
 
 		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s UNSET COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("with unset - multiple options", func(t *testing.T) {
+		opts := &AlterAlertOptions{
+			name: id,
+			Unset: &AlertUnset{
+				Warehouse: Bool(true),
+				Schedule:  Bool(true),
+				Comment:   Bool(true),
+			},
+		}
+
+		assertOptsValidAndSQLEquals(t, opts, "ALTER ALERT %s UNSET WAREHOUSE, SCHEDULE, COMMENT", id.FullyQualifiedName())
+	})
+
+	t.Run("validation: with unset - no option", func(t *testing.T) {
+		opts := &AlterAlertOptions{
+			name:  id,
+			Unset: &AlertUnset{},
+		}
+
+		assertOptsInvalid(t, opts, errAtLeastOneOf("AlterAlertOptions.Unset", "Warehouse", "Schedule", "Comment"))
 	})
 
 	t.Run("with modify condition", func(t *testing.T) {

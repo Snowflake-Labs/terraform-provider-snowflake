@@ -64,8 +64,8 @@ type AlterStorageIntegrationOptions struct {
 }
 
 type StorageIntegrationSet struct {
-	S3Params                *SetS3StorageParams    `ddl:"keyword"`
-	AzureParams             *SetAzureStorageParams `ddl:"keyword"`
+	S3Params                *SetS3StorageParams    `ddl:"list,no_parentheses"`
+	AzureParams             *SetAzureStorageParams `ddl:"list,no_parentheses"`
 	Enabled                 *bool                  `ddl:"parameter" sql:"ENABLED"`
 	StorageAllowedLocations []StorageLocation      `ddl:"parameter,parentheses" sql:"STORAGE_ALLOWED_LOCATIONS"`
 	StorageBlockedLocations []StorageLocation      `ddl:"parameter,parentheses" sql:"STORAGE_BLOCKED_LOCATIONS"`

@@ -136,6 +136,18 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterStorageIntegrationOptions", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
+	t.Run("validation: empty set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = new(StorageIntegrationSet)
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterStorageIntegrationOptions.Set", "S3Params", "AzureParams", "Enabled", "StorageAllowedLocations", "StorageBlockedLocations", "Comment"))
+	})
+
+	t.Run("validation: empty unset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = new(StorageIntegrationUnset)
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterStorageIntegrationOptions.Unset", "StorageBlockedLocations", "StorageAwsObjectAcl", "Enabled", "Comment"))
+	})
+
 	t.Run("set - s3", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &StorageIntegrationSet{
@@ -148,7 +160,7 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 			StorageBlockedLocations: []StorageLocation{{Path: "new-blocked-location"}},
 			Comment:                 String("changed comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER STORAGE INTEGRATION %s SET STORAGE_AWS_ROLE_ARN = 'new-aws-role-arn' STORAGE_AWS_OBJECT_ACL = 'new-aws-object-acl' ENABLED = false STORAGE_ALLOWED_LOCATIONS = ('new-allowed-location') STORAGE_BLOCKED_LOCATIONS = ('new-blocked-location') COMMENT = 'changed comment'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER STORAGE INTEGRATION %s SET STORAGE_AWS_ROLE_ARN = 'new-aws-role-arn', STORAGE_AWS_OBJECT_ACL = 'new-aws-object-acl', ENABLED = false, STORAGE_ALLOWED_LOCATIONS = ('new-allowed-location'), STORAGE_BLOCKED_LOCATIONS = ('new-blocked-location'), COMMENT = 'changed comment'", id.FullyQualifiedName())
 	})
 
 	t.Run("set - azure", func(t *testing.T) {
@@ -162,7 +174,7 @@ func TestStorageIntegrations_Alter(t *testing.T) {
 			StorageBlockedLocations: []StorageLocation{{Path: "new-blocked-location"}},
 			Comment:                 String("changed comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER STORAGE INTEGRATION %s SET AZURE_TENANT_ID = 'new-azure-tenant-id' ENABLED = false STORAGE_ALLOWED_LOCATIONS = ('new-allowed-location') STORAGE_BLOCKED_LOCATIONS = ('new-blocked-location') COMMENT = 'changed comment'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER STORAGE INTEGRATION %s SET AZURE_TENANT_ID = 'new-azure-tenant-id', ENABLED = false, STORAGE_ALLOWED_LOCATIONS = ('new-allowed-location'), STORAGE_BLOCKED_LOCATIONS = ('new-blocked-location'), COMMENT = 'changed comment'", id.FullyQualifiedName())
 	})
 
 	t.Run("set tags", func(t *testing.T) {

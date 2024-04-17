@@ -229,7 +229,7 @@ func TestApiIntegrations_Alter(t *testing.T) {
 			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: azureAllowedPrefix}, {Path: googleAllowedPrefix}},
 			Comment:            String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET API_AWS_ROLE_ARN = 'new-aws-role-arn' API_KEY = 'key' ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), awsAllowedPrefix, azureAllowedPrefix, googleAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET API_AWS_ROLE_ARN = 'new-aws-role-arn', API_KEY = 'key', ENABLED = true, API_ALLOWED_PREFIXES = ('%s'), API_BLOCKED_PREFIXES = ('%s', '%s'), COMMENT = 'comment'", id.FullyQualifiedName(), awsAllowedPrefix, azureAllowedPrefix, googleAllowedPrefix)
 	})
 
 	t.Run("set - azure", func(t *testing.T) {
@@ -244,7 +244,7 @@ func TestApiIntegrations_Alter(t *testing.T) {
 			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: awsAllowedPrefix}, {Path: googleAllowedPrefix}},
 			Comment:            String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET AZURE_AD_APPLICATION_ID = 'new-azure-ad-application-id' API_KEY = 'key' ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), azureAllowedPrefix, awsAllowedPrefix, googleAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET AZURE_AD_APPLICATION_ID = 'new-azure-ad-application-id', API_KEY = 'key', ENABLED = true, API_ALLOWED_PREFIXES = ('%s'), API_BLOCKED_PREFIXES = ('%s', '%s'), COMMENT = 'comment'", id.FullyQualifiedName(), azureAllowedPrefix, awsAllowedPrefix, googleAllowedPrefix)
 	})
 
 	t.Run("set - google", func(t *testing.T) {
@@ -255,7 +255,7 @@ func TestApiIntegrations_Alter(t *testing.T) {
 			ApiBlockedPrefixes: []ApiIntegrationEndpointPrefix{{Path: awsAllowedPrefix}, {Path: azureAllowedPrefix}},
 			Comment:            String("comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET ENABLED = true API_ALLOWED_PREFIXES = ('%s') API_BLOCKED_PREFIXES = ('%s', '%s') COMMENT = 'comment'", id.FullyQualifiedName(), googleAllowedPrefix, awsAllowedPrefix, azureAllowedPrefix)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER API INTEGRATION %s SET ENABLED = true, API_ALLOWED_PREFIXES = ('%s'), API_BLOCKED_PREFIXES = ('%s', '%s'), COMMENT = 'comment'", id.FullyQualifiedName(), googleAllowedPrefix, awsAllowedPrefix, azureAllowedPrefix)
 	})
 
 	t.Run("unset single", func(t *testing.T) {

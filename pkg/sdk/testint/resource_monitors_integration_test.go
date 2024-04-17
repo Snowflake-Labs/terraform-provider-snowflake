@@ -189,13 +189,15 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		assert.ElementsMatch(t, newTriggers, allTriggers)
 	})
 
-	t.Run("when setting credit quota", func(t *testing.T) {
+	t.Run("when setting credit quota and frequency", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := createResourceMonitor(t, client)
 		t.Cleanup(resourceMonitorCleanup)
 		creditQuota := 100
 		alterOptions := &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{
-				CreditQuota: &creditQuota,
+				CreditQuota:    &creditQuota,
+				StartTimestamp: sdk.String("IMMEDIATELY"), // has to be set with frequency
+				Frequency:      sdk.Pointer(sdk.FrequencyWeekly),
 			},
 		}
 		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), alterOptions)
@@ -209,6 +211,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		assert.Equal(t, 1, len(resourceMonitors))
 		resourceMonitor = &resourceMonitors[0]
 		assert.Equal(t, creditQuota, int(resourceMonitor.CreditQuota))
+		assert.Equal(t, sdk.FrequencyWeekly, resourceMonitor.Frequency)
 	})
 
 	t.Run("when changing notify users", func(t *testing.T) {

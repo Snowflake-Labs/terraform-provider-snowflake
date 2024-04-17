@@ -143,6 +143,7 @@ type AlertSet struct {
 }
 
 type AlertUnset struct {
+	// TODO(): No such options for unset as WAREHOUSE and SCHEDULE (to remove)
 	Warehouse *bool `ddl:"keyword" sql:"WAREHOUSE"`
 	Schedule  *bool `ddl:"keyword" sql:"SCHEDULE"`
 	Comment   *bool `ddl:"keyword" sql:"COMMENT"`

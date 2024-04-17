@@ -103,7 +103,7 @@ func TestUserAlter(t *testing.T) {
 				ObjectProperties: &objectProperties,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD = '%s' DEFAULT_SECONDARY_ROLES = ( 'ALL' )", id.FullyQualifiedName(), password)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD = '%s', DEFAULT_SECONDARY_ROLES = ( 'ALL' )", id.FullyQualifiedName(), password)
 
 		objectParameters := UserObjectParameters{
 			EnableUnredactedQuerySyntaxError: Bool(true),

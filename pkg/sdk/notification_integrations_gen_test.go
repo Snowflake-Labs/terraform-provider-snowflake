@@ -265,7 +265,7 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 			Enabled: Bool(true),
 			Comment: String("some comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true COMMENT = 'some comment'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true, COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
 	t.Run("set - push amazon", func(t *testing.T) {
@@ -280,7 +280,7 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 			},
 			Comment: String("some comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true AWS_SNS_TOPIC_ARN = '%s' AWS_SNS_ROLE_ARN = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), awsSnsTopicArn, apiAwsRoleArn)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true, AWS_SNS_TOPIC_ARN = '%s', AWS_SNS_ROLE_ARN = '%s', COMMENT = 'some comment'", id.FullyQualifiedName(), awsSnsTopicArn, apiAwsRoleArn)
 	})
 
 	t.Run("set - push google", func(t *testing.T) {
@@ -294,7 +294,7 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 			},
 			Comment: String("some comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true GCP_PUBSUB_SUBSCRIPTION_NAME = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), gcpPubsubSubscriptionName)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true, GCP_PUBSUB_SUBSCRIPTION_NAME = '%s', COMMENT = 'some comment'", id.FullyQualifiedName(), gcpPubsubSubscriptionName)
 	})
 
 	t.Run("set - push azure", func(t *testing.T) {
@@ -309,7 +309,7 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 			},
 			Comment: String("some comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true AZURE_STORAGE_QUEUE_PRIMARY_URI = '%s' AZURE_TENANT_ID = '%s' COMMENT = 'some comment'", id.FullyQualifiedName(), azureStorageQueuePrimaryUri, azureTenantId)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true, AZURE_STORAGE_QUEUE_PRIMARY_URI = '%s', AZURE_TENANT_ID = '%s', COMMENT = 'some comment'", id.FullyQualifiedName(), azureStorageQueuePrimaryUri, azureTenantId)
 	})
 
 	t.Run("set - email", func(t *testing.T) {
@@ -327,7 +327,7 @@ func TestNotificationIntegrations_Alter(t *testing.T) {
 			},
 			Comment: String("some comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true ALLOWED_RECIPIENTS = ('%s', '%s') COMMENT = 'some comment'", id.FullyQualifiedName(), email, otherEmail)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NOTIFICATION INTEGRATION %s SET ENABLED = true, ALLOWED_RECIPIENTS = ('%s', '%s'), COMMENT = 'some comment'", id.FullyQualifiedName(), email, otherEmail)
 	})
 
 	t.Run("unset single", func(t *testing.T) {

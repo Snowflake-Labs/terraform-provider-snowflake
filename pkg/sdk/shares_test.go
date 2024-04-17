@@ -26,6 +26,15 @@ func TestSharesCreate(t *testing.T) {
 }
 
 func TestShareAlter(t *testing.T) {
+	t.Run("validate: with empty set", func(t *testing.T) {
+		opts := &AlterShareOptions{
+			IfExists: Bool(true),
+			name:     NewAccountObjectIdentifier("myshare"),
+			Set:      &ShareSet{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("ShareSet", "Accounts", "Comment"))
+	})
+
 	t.Run("only name", func(t *testing.T) {
 		opts := &AlterShareOptions{
 			name: NewAccountObjectIdentifier("myshare"),
@@ -69,7 +78,7 @@ func TestShareAlter(t *testing.T) {
 				Comment:  &comment,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" SET ACCOUNTS = "my-org"."myaccount" COMMENT = '%s'`, comment)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER SHARE IF EXISTS "myshare" SET ACCOUNTS = "my-org"."myaccount", COMMENT = '%s'`, comment)
 	})
 
 	t.Run("with set tag", func(t *testing.T) {

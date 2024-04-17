@@ -63,6 +63,14 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" RENAME TO "myfg1"`)
 	})
 
+	t.Run("validate: empty set", func(t *testing.T) {
+		opts := &AlterSourceFailoverGroupOptions{
+			name: id,
+			Set:  new(FailoverGroupSet),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("FailoverGroupSet", "ReplicationSchedule", "AllowedIntegrationTypes", "ObjectTypes"))
+	})
+
 	t.Run("set object types and replication schedule", func(t *testing.T) {
 		opts := &AlterSourceFailoverGroupOptions{
 			name: id,
@@ -71,7 +79,7 @@ func TestFailoverGroupAlterSource(t *testing.T) {
 				ReplicationSchedule: String("10 MINUTE"),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" SET OBJECT_TYPES = SHARES REPLICATION_SCHEDULE = '10 MINUTE'`)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FAILOVER GROUP "fg1" SET OBJECT_TYPES = SHARES, REPLICATION_SCHEDULE = '10 MINUTE'`)
 	})
 
 	t.Run("add database account object", func(t *testing.T) {

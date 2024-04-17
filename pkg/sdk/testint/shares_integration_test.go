@@ -182,7 +182,7 @@ func TestInt_SharesAlter(t *testing.T) {
 		assert.Equal(t, 0, len(share.To))
 	})
 
-	t.Run("set accounts", func(t *testing.T) {
+	t.Run("set accounts and comment", func(t *testing.T) {
 		db, dbCleanup := createDatabase(t, secondaryClient)
 		t.Cleanup(dbCleanup)
 
@@ -209,6 +209,7 @@ func TestInt_SharesAlter(t *testing.T) {
 			IfExists: sdk.Bool(true),
 			Set: &sdk.ShareSet{
 				Accounts: accountsToSet,
+				Comment:  sdk.String("some comment"),
 			},
 		})
 		require.NoError(t, err)
@@ -223,6 +224,7 @@ func TestInt_SharesAlter(t *testing.T) {
 		assert.Equal(t, 1, len(shares))
 		share := shares[0]
 		assert.Equal(t, accountsToSet, share.To)
+		assert.Equal(t, "some comment", share.Comment)
 	})
 
 	t.Run("set and unset comment", func(t *testing.T) {

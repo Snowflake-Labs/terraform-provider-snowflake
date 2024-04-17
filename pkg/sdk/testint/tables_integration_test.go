@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -897,7 +898,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	// TODO [SNOW-1007542]: try to check more sets (ddl collation, max data extension time in days, etc.)
-	t.Run("set: with complete options", func(t *testing.T) {
+	t.Run("set and unset: with complete options", func(t *testing.T) {
 		name := random.String()
 		id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
 		comment := random.String()
@@ -936,6 +937,25 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, table.RetentionTime, 30)
 		assert.Equal(t, table.ChangeTracking, false)
 		assert.Equal(t, table.EnableSchemaEvolution, true)
+
+		err = client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).
+			WithUnset(sdk.NewTableUnsetRequest().
+				WithDataRetentionTimeInDays(true).
+				WithEnableSchemaEvolution(true).
+				WithMaxDataExtensionTimeInDays(true).
+				WithChangeTracking(true).
+				WithDefaultDDLCollation(true).
+				WithComment(true),
+			))
+		require.NoError(t, err)
+
+		table, err = client.Tables.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Empty(t, table.Comment)
+		assert.Equal(t, schema.RetentionTime, strconv.FormatInt(int64(table.RetentionTime), 10))
+		assert.False(t, table.ChangeTracking)
+		assert.False(t, table.EnableSchemaEvolution)
 	})
 
 	t.Run("drop table", func(t *testing.T) {

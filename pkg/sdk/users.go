@@ -347,12 +347,11 @@ func (opts *RemoveDelegatedAuthorization) validate() error {
 }
 
 type UserSet struct {
-	// TODO: Allowed, but not all of them
 	PasswordPolicy    *SchemaObjectIdentifier `ddl:"identifier" sql:"PASSWORD POLICY"`
 	SessionPolicy     *string                 `ddl:"parameter" sql:"SESSION POLICY"`
-	ObjectProperties  *UserObjectProperties   `ddl:"keyword"`
-	ObjectParameters  *UserObjectParameters   `ddl:"keyword"`
-	SessionParameters *SessionParameters      `ddl:"keyword"`
+	ObjectProperties  *UserObjectProperties   `ddl:"list,no_parentheses"`
+	ObjectParameters  *UserObjectParameters   `ddl:"list,no_parentheses"`
+	SessionParameters *SessionParameters      `ddl:"list,no_parentheses"`
 }
 
 func (opts *UserSet) validate() error {
@@ -365,9 +364,9 @@ func (opts *UserSet) validate() error {
 type UserUnset struct {
 	PasswordPolicy    *bool                      `ddl:"keyword" sql:"PASSWORD POLICY"`
 	SessionPolicy     *bool                      `ddl:"keyword" sql:"SESSION POLICY"`
-	ObjectProperties  *UserObjectPropertiesUnset `ddl:"list"`
-	ObjectParameters  *UserObjectParametersUnset `ddl:"list"`
-	SessionParameters *SessionParametersUnset    `ddl:"list"`
+	ObjectProperties  *UserObjectPropertiesUnset `ddl:"list,no_parentheses"`
+	ObjectParameters  *UserObjectParametersUnset `ddl:"list,no_parentheses"`
+	SessionParameters *SessionParametersUnset    `ddl:"list,no_parentheses"`
 }
 
 func (opts *UserUnset) validate() error {

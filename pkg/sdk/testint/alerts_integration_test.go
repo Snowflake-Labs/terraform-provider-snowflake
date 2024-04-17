@@ -247,19 +247,18 @@ func TestInt_AlertAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	t.Run("when setting and unsetting a value", func(t *testing.T) {
+	t.Run("when setting a value", func(t *testing.T) {
 		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
 		t.Cleanup(alertCleanup)
 		newSchedule := "USING CRON * * * * TUE,FRI GMT"
 
-		alterOptions := &sdk.AlterAlertOptions{
+		err := client.Alerts.Alter(ctx, alert.ID(), &sdk.AlterAlertOptions{
 			Set: &sdk.AlertSet{
-				Schedule: &newSchedule,
+				Comment: sdk.String("some comment"),
 			},
-		}
-
-		err := client.Alerts.Alter(ctx, alert.ID(), alterOptions)
+		})
 		require.NoError(t, err)
+
 		alerts, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String(alert.Name),
@@ -271,6 +270,42 @@ func TestInt_AlertAlter(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(alerts))
 		assert.Equal(t, newSchedule, alerts[0].Schedule)
+		assert.NotNil(t, alerts[0].Comment)
+		assert.Equal(t, "some comment", *alerts[0].Comment)
+
+	})
+
+	t.Run("when unsetting a value", func(t *testing.T) {
+		t.Skip("TODO(): unset comment doesn't work on Snowflake side")
+
+		alert, alertCleanup := createAlert(t, client, testDb(t), testSchema(t), testWarehouse(t))
+		t.Cleanup(alertCleanup)
+
+		err := client.Alerts.Alter(ctx, alert.ID(), &sdk.AlterAlertOptions{
+			Set: &sdk.AlertSet{
+				Comment: sdk.String("some comment"),
+			},
+		})
+		require.NoError(t, err)
+
+		err = client.Alerts.Alter(ctx, alert.ID(), &sdk.AlterAlertOptions{
+			Unset: &sdk.AlertUnset{
+				Comment: sdk.Bool(true),
+			},
+		})
+		require.NoError(t, err)
+
+		alerts, err := client.Alerts.Show(ctx, &sdk.ShowAlertOptions{
+			Like: &sdk.Like{
+				Pattern: sdk.String(alert.Name),
+			},
+			In: &sdk.In{
+				Schema: testSchema(t).ID(),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(alerts))
+		assert.Nil(t, alerts[0].Comment)
 	})
 
 	t.Run("when modifying condition and action", func(t *testing.T) {

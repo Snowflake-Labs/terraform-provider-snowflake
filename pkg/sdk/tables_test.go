@@ -887,6 +887,36 @@ func TestTableAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TableSearchOptimizationAction", "Add", "Drop"))
 	})
 
+	t.Run("empty set options", func(t *testing.T) {
+		opts := &alterTableOptions{
+			Set: new(TableSet),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterTableOptions.Set",
+			"EnableSchemaEvolution",
+			"StageFileFormat",
+			"StageCopyOptions",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ChangeTracking",
+			"DefaultDDLCollation",
+			"Comment",
+		))
+	})
+
+	t.Run("empty unset options", func(t *testing.T) {
+		opts := &alterTableOptions{
+			Unset: new(TableUnset),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterTableOptions.Unset",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ChangeTracking",
+			"DefaultDDLCollation",
+			"EnableSchemaEvolution",
+			"Comment",
+		))
+	})
+
 	t.Run("empty options", func(t *testing.T) {
 		opts := &alterTableOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("alterTableOptions", "name"))
@@ -1333,7 +1363,7 @@ func TestTableAlter(t *testing.T) {
 				Comment:                    &comment,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s SET ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 30 MAX_DATA_EXTENSION_TIME_IN_DAYS = 90 CHANGE_TRACKING = false DEFAULT_DDL_COLLATION = 'us' COMMENT = '%s'`, id.FullyQualifiedName(), comment)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s SET ENABLE_SCHEMA_EVOLUTION = true, STAGE_FILE_FORMAT = (TYPE = CSV), STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE), DATA_RETENTION_TIME_IN_DAYS = 30, MAX_DATA_EXTENSION_TIME_IN_DAYS = 90, CHANGE_TRACKING = false, DEFAULT_DDL_COLLATION = 'us', COMMENT = '%s'`, id.FullyQualifiedName(), comment)
 	})
 
 	t.Run("set tags", func(t *testing.T) {
@@ -1376,7 +1406,7 @@ func TestTableAlter(t *testing.T) {
 				Comment:                    Bool(true),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s UNSET DATA_RETENTION_TIME_IN_DAYS MAX_DATA_EXTENSION_TIME_IN_DAYS CHANGE_TRACKING DEFAULT_DDL_COLLATION ENABLE_SCHEMA_EVOLUTION COMMENT`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TABLE %s UNSET DATA_RETENTION_TIME_IN_DAYS, MAX_DATA_EXTENSION_TIME_IN_DAYS, CHANGE_TRACKING, DEFAULT_DDL_COLLATION, ENABLE_SCHEMA_EVOLUTION, COMMENT`, id.FullyQualifiedName())
 	})
 
 	t.Run("add row access policy", func(t *testing.T) {

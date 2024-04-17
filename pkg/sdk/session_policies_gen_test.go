@@ -97,17 +97,21 @@ func TestSessionPolicies_Alter(t *testing.T) {
 	t.Run("alter set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &SessionPolicySet{
-			Comment: String("some comment"),
+			SessionIdleTimeoutMins:   Int(10),
+			SessionUiIdleTimeoutMins: Int(20),
+			Comment:                  String("some comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SESSION POLICY %s SET COMMENT = 'some comment'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SESSION POLICY %s SET SESSION_IDLE_TIMEOUT_MINS = 10, SESSION_UI_IDLE_TIMEOUT_MINS = 20, COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
 	t.Run("alter unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &SessionPolicyUnset{
-			Comment: Bool(true),
+			SessionIdleTimeoutMins:   Bool(true),
+			SessionUiIdleTimeoutMins: Bool(true),
+			Comment:                  Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SESSION POLICY %s UNSET COMMENT", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SESSION POLICY %s UNSET SESSION_IDLE_TIMEOUT_MINS, SESSION_UI_IDLE_TIMEOUT_MINS, COMMENT", id.FullyQualifiedName())
 	})
 
 	t.Run("alter rename", func(t *testing.T) {

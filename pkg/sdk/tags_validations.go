@@ -56,7 +56,6 @@ func (v *TagSet) validate() error {
 
 func (v *TagUnset) validate() error {
 	var errs []error
-	// TODO: Adjust
 	if !exactlyOneValueSet(v.MaskingPolicies, v.AllowedValues, v.Comment) {
 		errs = append(errs, errExactlyOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
 	}

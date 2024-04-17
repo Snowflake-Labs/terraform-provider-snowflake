@@ -121,6 +121,12 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterExternalFunctionOptions.Unset", "Comment", "Headers", "ContextHeaders", "MaxBatchRows", "Compression", "Secure", "RequestTranslator", "ResponseTranslator"))
 	})
 
+	t.Run("validation: at least one of the fields for Set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ExternalFunctionSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterExternalFunctionOptions.Set", "ApiIntegration", "Headers", "ContextHeaders", "MaxBatchRows", "Compression", "RequestTranslator", "ResponseTranslator"))
+	})
+
 	t.Run("validation: exactly one field from [opts.Set opts.Unset] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ExternalFunctionSet{
@@ -132,7 +138,7 @@ func TestExternalFunctions_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalFunctionOptions", "Set", "Unset"))
 	})
 
-	t.Run("validation: exactly one field from [opts.Set.ApiIntegration opts.Set.Headers opts.Set.ContextHeaders opts.Set.MaxBatchRows opts.Set.Compression opts.Set.RequestTranslator opts.Set.ResponseTranslator] should be present", func(t *testing.T) {
+	t.Run("alter: set max batch rows and headers", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &ExternalFunctionSet{
 			MaxBatchRows: Int(100),
@@ -147,16 +153,17 @@ func TestExternalFunctions_Alter(t *testing.T) {
 				},
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterExternalFunctionOptions.Set", "ApiIntegration", "Headers", "ContextHeaders", "MaxBatchRows", "Compression", "RequestTranslator", "ResponseTranslator"))
+		assertOptsValid(t, opts)
 	})
 
-	t.Run("alter: set api integration", func(t *testing.T) {
+	t.Run("alter: set api integration and max batch rows", func(t *testing.T) {
 		opts := defaultOpts()
 		integration := NewAccountObjectIdentifier("api_integration")
 		opts.Set = &ExternalFunctionSet{
 			ApiIntegration: &integration,
+			MaxBatchRows:   Int(10),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET API_INTEGRATION = "api_integration"`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s (VARCHAR, NUMBER) SET API_INTEGRATION = "api_integration", MAX_BATCH_ROWS = 10`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set headers", func(t *testing.T) {

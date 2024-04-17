@@ -376,7 +376,7 @@ type AlterFileFormatOptions struct {
 	name       SchemaObjectIdentifier `ddl:"identifier"`
 
 	Rename *AlterFileFormatRenameOptions
-	Set    *FileFormatTypeOptions `ddl:"list,no_comma" sql:"SET"`
+	Set    *FileFormatTypeOptions `ddl:"list,no_parentheses" sql:"SET"`
 }
 
 func (opts *AlterFileFormatOptions) validate() error {

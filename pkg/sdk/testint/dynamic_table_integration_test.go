@@ -178,7 +178,10 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 
 		targetLagCases := []string{"10 minutes", "DOWNSTREAM"}
 		for _, value := range targetLagCases {
-			err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSet(sdk.NewDynamicTableSetRequest().WithTargetLag(sdk.TargetLag{MaximumDuration: sdk.String(value)})))
+			setRequest := sdk.NewDynamicTableSetRequest().
+				WithWarehouse(testWarehouse(t).ID()).
+				WithTargetLag(sdk.TargetLag{MaximumDuration: sdk.String(value)})
+			err := client.DynamicTables.Alter(ctx, sdk.NewAlterDynamicTableRequest(dynamicTable.ID()).WithSet(setRequest))
 			require.NoError(t, err)
 			entities, err := client.DynamicTables.Show(ctx, sdk.NewShowDynamicTableRequest().WithLike(&sdk.Like{Pattern: sdk.String(dynamicTable.Name)}))
 			require.NoError(t, err)

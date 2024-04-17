@@ -67,6 +67,12 @@ func TestStreamlits_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterStreamlitOptions", "RenameTo", "Set"))
 	})
 
+	t.Run("validation: empty set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = new(StreamlitSet)
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterStreamlitOptions.Set", "RootLocation", "MainFile", "Warehouse", "Comment"))
+	})
+
 	t.Run("alter: set options", func(t *testing.T) {
 		warehouse := NewAccountObjectIdentifier("test_warehouse")
 
@@ -77,7 +83,7 @@ func TestStreamlits_Alter(t *testing.T) {
 			Warehouse:    &warehouse,
 			Comment:      String("test"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER STREAMLIT IF EXISTS %s SET ROOT_LOCATION = '@test' MAIN_FILE = 'manifest.yml' QUERY_WAREHOUSE = %s COMMENT = 'test'`, id.FullyQualifiedName(), warehouse.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER STREAMLIT IF EXISTS %s SET ROOT_LOCATION = '@test', MAIN_FILE = 'manifest.yml', QUERY_WAREHOUSE = %s, COMMENT = 'test'`, id.FullyQualifiedName(), warehouse.FullyQualifiedName())
 	})
 }
 

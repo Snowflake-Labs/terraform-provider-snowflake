@@ -132,6 +132,18 @@ func TestApplications_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, NewError("AlterApplicationOptions.IfExists can be set only when AlterApplicationOptions.Set or AlterApplicationOptions.Unset is set"))
 	})
 
+	t.Run("validation: no set option", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = new(ApplicationSet)
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApplicationOptions.Set", "Comment", "ShareEventsWithProvider", "DebugMode"))
+	})
+
+	t.Run("validation: no unset option", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = new(ApplicationUnset)
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApplicationOptions.Unset", "Comment", "ShareEventsWithProvider", "DebugMode"))
+	})
+
 	t.Run("alter: set options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
@@ -140,30 +152,18 @@ func TestApplications_Alter(t *testing.T) {
 			DebugMode:               Bool(true),
 			Comment:                 String("test"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION IF EXISTS %s SET COMMENT = 'test' SHARE_EVENTS_WITH_PROVIDER = true DEBUG_MODE = true`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION IF EXISTS %s SET COMMENT = 'test', SHARE_EVENTS_WITH_PROVIDER = true, DEBUG_MODE = true`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		opts.Unset = &ApplicationUnset{
-			Comment: Bool(true),
-		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION IF EXISTS %s UNSET COMMENT`, id.FullyQualifiedName())
-
-		opts = defaultOpts()
-		opts.IfExists = Bool(true)
-		opts.Unset = &ApplicationUnset{
+			Comment:                 Bool(true),
 			ShareEventsWithProvider: Bool(true),
+			DebugMode:               Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION IF EXISTS %s UNSET SHARE_EVENTS_WITH_PROVIDER`, id.FullyQualifiedName())
-
-		opts = defaultOpts()
-		opts.IfExists = Bool(true)
-		opts.Unset = &ApplicationUnset{
-			DebugMode: Bool(true),
-		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION IF EXISTS %s UNSET DEBUG_MODE`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION IF EXISTS %s UNSET COMMENT, SHARE_EVENTS_WITH_PROVIDER, DEBUG_MODE`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set tags", func(t *testing.T) {

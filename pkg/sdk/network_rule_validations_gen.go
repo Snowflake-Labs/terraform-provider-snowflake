@@ -30,15 +30,11 @@ func (opts *AlterNetworkRuleOptions) validate() error {
 	if !anyValueSet(opts.Set, opts.Unset) {
 		errs = append(errs, errAtLeastOneOf("AlterNetworkRuleOptions", "Set", "Unset"))
 	}
-	if valueSet(opts.Set) {
-		if !anyValueSet(opts.Set.ValueList, opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterNetworkRuleOptions.Set", "ValueList", "Comment"))
-		}
+	if valueSet(opts.Set) && everyValueNil(opts.Set.ValueList, opts.Set.Comment) {
+		errs = append(errs, errAtLeastOneOf("AlterNetworkRuleOptions.Set", "ValueList", "Comment"))
 	}
-	if valueSet(opts.Unset) {
-		if !anyValueSet(opts.Unset.ValueList, opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterNetworkRuleOptions.Unset", "ValueList", "Comment"))
-		}
+	if valueSet(opts.Unset) && everyValueNil(opts.Unset.ValueList, opts.Unset.Comment) {
+		errs = append(errs, errAtLeastOneOf("AlterNetworkRuleOptions.Unset", "ValueList", "Comment"))
 	}
 	return JoinErrors(errs...)
 }

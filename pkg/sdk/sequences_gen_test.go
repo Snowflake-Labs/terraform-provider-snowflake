@@ -77,6 +77,12 @@ func TestSequences_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSequenceOptions", "RenameTo", "SetIncrement", "Set", "UnsetComment"))
 	})
 
+	t.Run("validation: empty set options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &SequenceSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSequenceOptions.Set", "ValuesBehavior", "Comment"))
+	})
+
 	t.Run("alter: rename to", func(t *testing.T) {
 		opts := defaultOpts()
 		target := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), random.StringN(12))

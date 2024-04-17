@@ -111,7 +111,7 @@ func TestResourceMonitorAlter(t *testing.T) {
 				StartTimestamp: &newStartTimeStamp,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = '%s'", id.FullyQualifiedName(), *newCreditQuota, newFrequency, newStartTimeStamp)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d, FREQUENCY = %s, START_TIMESTAMP = '%s'", id.FullyQualifiedName(), *newCreditQuota, newFrequency, newStartTimeStamp)
 	})
 }
 

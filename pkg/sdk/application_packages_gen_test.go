@@ -79,10 +79,16 @@ func TestApplicationPackages_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterApplicationPackageOptions", "Set", "Unset", "ModifyReleaseDirective", "SetDefaultReleaseDirective", "SetReleaseDirective", "UnsetReleaseDirective", "AddVersion", "DropVersion", "AddPatchForVersion", "SetTags", "UnsetTags"))
 	})
 
-	t.Run("validation: set options at least one field should be present", func(t *testing.T) {
+	t.Run("validation: unset options at least one field should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &ApplicationPackageUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApplicationPackageOptions.Unset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution"))
+	})
+
+	t.Run("validation: set options at least one field should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ApplicationPackageSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterApplicationPackageOptions.Set", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDdlCollation", "Comment", "Distribution"))
 	})
 
 	t.Run("alter: set options", func(t *testing.T) {
@@ -94,7 +100,7 @@ func TestApplicationPackages_Alter(t *testing.T) {
 			Comment:                    String("comment"),
 			Distribution:               DistributionPointer(DistributionInternal),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s SET DATA_RETENTION_TIME_IN_DAYS = 1 MAX_DATA_EXTENSION_TIME_IN_DAYS = 1 DEFAULT_DDL_COLLATION = 'en_US' COMMENT = 'comment' DISTRIBUTION = INTERNAL`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER APPLICATION PACKAGE IF EXISTS %s SET DATA_RETENTION_TIME_IN_DAYS = 1, MAX_DATA_EXTENSION_TIME_IN_DAYS = 1, DEFAULT_DDL_COLLATION = 'en_US', COMMENT = 'comment', DISTRIBUTION = INTERNAL`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset options", func(t *testing.T) {

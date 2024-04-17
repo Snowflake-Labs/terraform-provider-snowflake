@@ -115,12 +115,12 @@ func TestInt_EventTables(t *testing.T) {
 		assert.NotEmpty(t, details.Kind)
 	})
 
-	t.Run("alter event table: set and unset comment", func(t *testing.T) {
+	t.Run("alter event table: set and unset max_data_extension_time_in_days and comment", func(t *testing.T) {
 		dt := createEventTableHandle(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, dt.Name)
 
 		comment := random.Comment()
-		set := sdk.NewEventTableSetRequest().WithComment(&comment)
+		set := sdk.NewEventTableSetRequest().WithMaxDataExtensionTimeInDays(sdk.Int(10)).WithComment(&comment)
 		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSet(set))
 		require.NoError(t, err)
 
@@ -128,7 +128,7 @@ func TestInt_EventTables(t *testing.T) {
 		require.NoError(t, err)
 		assertEventTableHandle(t, et, dt.Name, comment, nil)
 
-		unset := sdk.NewEventTableUnsetRequest().WithComment(sdk.Bool(true))
+		unset := sdk.NewEventTableUnsetRequest().WithMaxDataExtensionTimeInDays(sdk.Bool(true)).WithComment(sdk.Bool(true))
 		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithUnset(unset))
 		require.NoError(t, err)
 

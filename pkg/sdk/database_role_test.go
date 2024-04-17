@@ -111,9 +111,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 
 	t.Run("validation: no property to unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &DatabaseRoleUnset{
-			Comment: false,
-		}
+		opts.Unset = &DatabaseRoleUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("alterDatabaseRoleOptions.Unset", "Comment"))
 	})
 

@@ -94,15 +94,15 @@ type AlterNotificationIntegrationOptions struct {
 
 type NotificationIntegrationSet struct {
 	Enabled        *bool           `ddl:"parameter" sql:"ENABLED"`
-	SetPushParams  *SetPushParams  `ddl:"keyword"`
-	SetEmailParams *SetEmailParams `ddl:"keyword"`
+	SetPushParams  *SetPushParams  `ddl:"list,no_parentheses"`
+	SetEmailParams *SetEmailParams `ddl:"list,no_parentheses"`
 	Comment        *string         `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 type SetPushParams struct {
-	SetAmazonPush *SetAmazonPush `ddl:"keyword"`
-	SetGooglePush *SetGooglePush `ddl:"keyword"`
-	SetAzurePush  *SetAzurePush  `ddl:"keyword"`
+	SetAmazonPush *SetAmazonPush `ddl:"list,no_parentheses"`
+	SetGooglePush *SetGooglePush `ddl:"list,no_parentheses"`
+	SetAzurePush  *SetAzurePush  `ddl:"list,no_parentheses"`
 }
 
 type SetAmazonPush struct {

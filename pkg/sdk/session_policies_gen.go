@@ -34,9 +34,9 @@ type AlterSessionPolicyOptions struct {
 	name          SchemaObjectIdentifier  `ddl:"identifier"`
 	RenameTo      *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 	Set           *SessionPolicySet       `ddl:"list,no_parentheses" sql:"SET"`
+	Unset         *SessionPolicyUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
 	SetTags       []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags     []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
-	Unset         *SessionPolicyUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
 }
 
 type SessionPolicySet struct {

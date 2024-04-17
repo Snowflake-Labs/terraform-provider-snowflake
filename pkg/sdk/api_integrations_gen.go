@@ -59,17 +59,16 @@ type AlterApiIntegrationOptions struct {
 	apiIntegration bool                    `ddl:"static" sql:"API INTEGRATION"`
 	IfExists       *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name           AccountObjectIdentifier `ddl:"identifier"`
-	// TODO: Set and SetTags is possible, but with the current structure it's not
-	Set       *ApiIntegrationSet   `ddl:"list,no_parentheses" sql:"SET"`
-	Unset     *ApiIntegrationUnset `ddl:"list,no_parentheses" sql:"UNSET"`
-	SetTags   []TagAssociation     `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags []ObjectIdentifier   `ddl:"keyword" sql:"UNSET TAG"`
+	Set            *ApiIntegrationSet      `ddl:"list,no_parentheses" sql:"SET"`
+	Unset          *ApiIntegrationUnset    `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTags        []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags      []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 type ApiIntegrationSet struct {
-	AwsParams          *SetAwsApiParams               `ddl:"keyword"`
-	AzureParams        *SetAzureApiParams             `ddl:"keyword"`
-	GoogleParams       *SetGoogleApiParams            `ddl:"keyword"`
+	AwsParams          *SetAwsApiParams               `ddl:"list,no_parentheses"`
+	AzureParams        *SetAzureApiParams             `ddl:"list,no_parentheses"`
+	GoogleParams       *SetGoogleApiParams            `ddl:"list,no_parentheses"`
 	Enabled            *bool                          `ddl:"parameter" sql:"ENABLED"`
 	ApiAllowedPrefixes []ApiIntegrationEndpointPrefix `ddl:"parameter,parentheses" sql:"API_ALLOWED_PREFIXES"`
 	ApiBlockedPrefixes []ApiIntegrationEndpointPrefix `ddl:"parameter,parentheses" sql:"API_BLOCKED_PREFIXES"`

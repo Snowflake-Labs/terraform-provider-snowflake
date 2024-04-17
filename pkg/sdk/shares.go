@@ -177,8 +177,8 @@ type AlterShareOptions struct {
 	name     AccountObjectIdentifier `ddl:"identifier"`
 	Add      *ShareAdd               `ddl:"keyword" sql:"ADD"`
 	Remove   *ShareRemove            `ddl:"keyword" sql:"REMOVE"`
-	Set      *ShareSet               `ddl:"keyword" sql:"SET"`
-	Unset    *ShareUnset             `ddl:"keyword" sql:"UNSET"`
+	Set      *ShareSet               `ddl:"list,no_parentheses" sql:"SET"`
+	Unset    *ShareUnset             `ddl:"list,no_parentheses" sql:"UNSET"`
 	SetTag   []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
 	UnsetTag []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
@@ -246,7 +246,7 @@ type ShareSet struct {
 }
 
 func (v *ShareSet) validate() error {
-	if !anyValueSet(v.Accounts, v.Comment) {
+	if everyValueNil(v.Accounts, v.Comment) {
 		return errAtLeastOneOf("ShareSet", "Accounts", "Comment")
 	}
 	return nil

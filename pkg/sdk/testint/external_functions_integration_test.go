@@ -148,6 +148,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
 		set := sdk.NewExternalFunctionSetRequest().
+			WithMaxBatchRows(sdk.Int(10)).
 			WithApiIntegration(&integration)
 		request := sdk.NewAlterExternalFunctionRequest(id, defaultDataTypes).WithSet(set)
 		err := client.ExternalFunctions.Alter(ctx, request)

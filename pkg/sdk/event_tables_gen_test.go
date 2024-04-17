@@ -153,6 +153,18 @@ func TestEventTables_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterEventTableOptions", "RenameTo", "Set", "Unset", "SetTags", "UnsetTags", "AddRowAccessPolicy", "DropRowAccessPolicy", "DropAndAddRowAccessPolicy", "DropAllRowAccessPolicies", "ClusteringAction", "SearchOptimizationAction"))
 	})
 
+	t.Run("validation: empty set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = new(EventTableSet)
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterEventTableOptions.Set", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ChangeTracking", "Comment"))
+	})
+
+	t.Run("validation: empty unset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = new(EventTableUnset)
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterEventTableOptions.Unset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "ChangeTracking", "Comment"))
+	})
+
 	t.Run("alter: rename to", func(t *testing.T) {
 		opts := defaultOpts()
 		target := NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), random.StringN(12))

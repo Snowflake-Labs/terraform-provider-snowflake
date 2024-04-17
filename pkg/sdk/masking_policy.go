@@ -97,8 +97,8 @@ type AlterMaskingPolicyOptions struct {
 	IfExists      *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name          SchemaObjectIdentifier  `ddl:"identifier"`
 	NewName       *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	Set           *MaskingPolicySet       `ddl:"list,no_parentheses" sql:"SET"`
-	Unset         *MaskingPolicyUnset     `ddl:"list,no_parentheses" sql:"UNSET"`
+	Set           *MaskingPolicySet       `ddl:"keyword" sql:"SET"`
+	Unset         *MaskingPolicyUnset     `ddl:"keyword" sql:"UNSET"`
 	SetTag        []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
 	UnsetTag      []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
 }
@@ -136,8 +136,8 @@ type MaskingPolicySet struct {
 }
 
 func (v *MaskingPolicySet) validate() error {
-	if everyValueNil(v.Body, v.Comment) {
-		return errAtLeastOneOf("MaskingPolicySet", "Body", "Comment")
+	if !exactlyOneValueSet(v.Body, v.Comment) {
+		return errExactlyOneOf("MaskingPolicySet", "Body", "Comment")
 	}
 	return nil
 }

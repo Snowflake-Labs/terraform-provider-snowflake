@@ -93,6 +93,16 @@ func TestNetworkPolicies_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET COMMENT = 'some_comment'", id.FullyQualifiedName())
 	})
 
+	t.Run("set multiple options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &NetworkPolicySet{
+			AllowedIpList: []IP{{IP: "123.0.0.1"}},
+			BlockedIpList: []IP{{IP: "123.0.0.1"}},
+			Comment:       String("some_comment"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER NETWORK POLICY IF EXISTS %s SET ALLOWED_IP_LIST = ('123.0.0.1'), BLOCKED_IP_LIST = ('123.0.0.1'), COMMENT = 'some_comment'", id.FullyQualifiedName())
+	})
+
 	t.Run("unset comment", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.UnsetComment = Bool(true)
