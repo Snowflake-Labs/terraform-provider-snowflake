@@ -8,19 +8,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/stretchr/testify/require"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *testing.T) {
@@ -32,7 +31,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -81,7 +80,7 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -149,7 +148,7 @@ func TestAcc_Table(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -893,7 +892,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableColumnWithDefaults(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1034,7 +1033,7 @@ func TestAcc_TableTags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableWithTags(accName, tagName, tag2Name, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1112,7 +1111,7 @@ func TestAcc_TableIdentity(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableColumnWithIdentityDefault(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1249,7 +1248,7 @@ func TestAcc_TableCollate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableColumnWithCollate(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1411,7 +1410,7 @@ func TestAcc_TableRename(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfigWithName(oldTableName, acc.TestDatabaseName, acc.TestSchemaName, oldComment),
@@ -1475,7 +1474,7 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy1"),
@@ -1530,7 +1529,7 @@ func TestAcc_Table_DefaultDataRetentionTime(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithDatabaseDataRetentionSet"),
@@ -1629,7 +1628,7 @@ func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithDatabaseDataRetentionSet"),
@@ -1699,7 +1698,7 @@ func TestAcc_Table_DefaultDataRetentionTimeSettingUnsetting(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
@@ -1791,22 +1790,6 @@ resource "snowflake_table" "test_table" {
 	return fmt.Sprintf(s, name, databaseName, schemaName, policy)
 }
 
-func testAccCheckTableDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_table" {
-			continue
-		}
-		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-		existingTable, err := client.Tables.ShowByID(ctx, id)
-		if err == nil {
-			return fmt.Errorf("table %v still exists", existingTable.ID().FullyQualifiedName())
-		}
-	}
-	return nil
-}
-
 // proves issues https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2110 and https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2495
 func TestAcc_Table_ClusterBy(t *testing.T) {
 	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
@@ -1817,7 +1800,7 @@ func TestAcc_Table_ClusterBy(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfigWithComplexClusterBy(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -1864,7 +1847,7 @@ func TestAcc_ColumnTypeChangeWithNonTextType(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
 				Config: tableConfigWithNumberColumnType(accName, acc.TestDatabaseName, acc.TestSchemaName, "NUMBER(38,0)"),

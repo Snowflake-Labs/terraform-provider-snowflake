@@ -984,10 +984,10 @@ func TestAcc_GrantPrivilegesToRole_OnAllPipes(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/OnAllPipes"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -1104,7 +1104,7 @@ func TestAcc_GrantPrivilegesToRole_ImportedPrivileges(t *testing.T) {
 		},
 		CheckDestroy: func(state *terraform.State) error {
 			return errors.Join(
-				testAccCheckAccountRolePrivilegesRevoked(roleName)(state),
+				acc.CheckAccountRolePrivilegesRevoked(t)(state),
 				dropSharedDatabaseOnSecondaryAccount(t, sharedDatabaseName, shareName),
 			)
 		},
@@ -1155,10 +1155,10 @@ func TestAcc_GrantPrivilegesToRole_MultiplePartsInRoleName(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createAccountRoleOutsideTerraform(t, name) },
+				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(

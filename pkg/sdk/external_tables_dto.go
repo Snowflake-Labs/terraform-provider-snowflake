@@ -680,10 +680,6 @@ func (v *ShowExternalTableRequest) toOpts() *ShowExternalTableOptions {
 	}
 }
 
-type ShowExternalTableByIDRequest struct {
-	id SchemaObjectIdentifier // required
-}
-
 type DescribeExternalTableColumnsRequest struct {
 	id SchemaObjectIdentifier // required
 }

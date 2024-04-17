@@ -223,7 +223,7 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	stream, err := client.Streams.ShowByID(ctx, sdk.NewShowByIdStreamRequest(id))
+	stream, err := client.Streams.ShowByID(ctx, id)
 	if err != nil {
 		log.Printf("[DEBUG] stream (%s) not found", d.Id())
 		d.SetId("")

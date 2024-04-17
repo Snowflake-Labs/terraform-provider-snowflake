@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -10,11 +9,11 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -45,7 +44,7 @@ func testAccFunction(t *testing.T, configDirectory string) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy(t),
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
@@ -132,7 +131,7 @@ func TestAcc_Function_complex(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy(t),
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Function/complex"),
@@ -196,7 +195,7 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy(t),
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
 
 		// Using the string config because of the validation in teststep_validate.go:
 		// teststep.Config.HasConfigurationFiles() returns true both for ConfigFile and ConfigDirectory.
@@ -290,23 +289,4 @@ resource "snowflake_function" "f" {
   }
 }
 `, database, schema, name, comment)
-}
-
-func testAccCheckFunctionDestroy(t *testing.T) func(s *terraform.State) error {
-	t.Helper()
-	client := acc.Client(t)
-	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "snowflake_function" {
-				continue
-			}
-			ctx := context.Background()
-			id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-			function, err := client.Functions.ShowByID(ctx, id)
-			if err == nil {
-				return fmt.Errorf("function %v still exists", function.Name)
-			}
-		}
-		return nil
-	}
 }

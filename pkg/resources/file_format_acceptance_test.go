@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -21,7 +23,7 @@ func TestAcc_FileFormatCSV(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigCSV(accName, acc.TestDatabaseName, acc.TestSchemaName, ";", "'", "Terraform acceptance test"),
@@ -89,7 +91,7 @@ func TestAcc_FileFormatJSON(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigJSON(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -129,7 +131,7 @@ func TestAcc_FileFormatAvro(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigAvro(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -158,7 +160,7 @@ func TestAcc_FileFormatORC(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigORC(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -186,7 +188,7 @@ func TestAcc_FileFormatParquet(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigParquet(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -216,7 +218,7 @@ func TestAcc_FileFormatXML(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigXML(accName, acc.TestDatabaseName, acc.TestSchemaName),
@@ -249,7 +251,7 @@ func TestAcc_FileFormatCSVDefaults(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigFullDefaults(accName, "CSV", acc.TestDatabaseName, acc.TestSchemaName),
@@ -278,7 +280,7 @@ func TestAcc_FileFormatJSONDefaults(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigFullDefaults(accName, "JSON", acc.TestDatabaseName, acc.TestSchemaName),
@@ -307,7 +309,7 @@ func TestAcc_FileFormatAVRODefaults(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigFullDefaults(accName, "AVRO", acc.TestDatabaseName, acc.TestSchemaName),
@@ -336,7 +338,7 @@ func TestAcc_FileFormatORCDefaults(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigFullDefaults(accName, "ORC", acc.TestDatabaseName, acc.TestSchemaName),
@@ -365,7 +367,7 @@ func TestAcc_FileFormatPARQUETDefaults(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigFullDefaults(accName, "PARQUET", acc.TestDatabaseName, acc.TestSchemaName),
@@ -394,7 +396,7 @@ func TestAcc_FileFormatXMLDefaults(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigFullDefaults(accName, "XML", acc.TestDatabaseName, acc.TestSchemaName),
@@ -424,7 +426,7 @@ func TestAcc_FileFormat_issue1947(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigFullDefaults(name, "XML", acc.TestDatabaseName, acc.TestSchemaName),

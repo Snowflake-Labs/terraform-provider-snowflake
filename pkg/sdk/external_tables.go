@@ -22,7 +22,7 @@ type ExternalTables interface {
 	AlterPartitions(ctx context.Context, req *AlterExternalTablePartitionRequest) error
 	Drop(ctx context.Context, req *DropExternalTableRequest) error
 	Show(ctx context.Context, req *ShowExternalTableRequest) ([]ExternalTable, error)
-	ShowByID(ctx context.Context, req *ShowExternalTableByIDRequest) (*ExternalTable, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalTable, error)
 	DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error)
 	DescribeStage(ctx context.Context, req *DescribeExternalTableStageRequest) ([]ExternalTableStageDetails, error)
 }

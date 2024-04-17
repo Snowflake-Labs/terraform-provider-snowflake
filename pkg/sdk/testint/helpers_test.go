@@ -608,7 +608,7 @@ func createRoleWithRequest(t *testing.T, client *sdk.Client, req *sdk.CreateRole
 	ctx := context.Background()
 	err := client.Roles.Create(ctx, req)
 	require.NoError(t, err)
-	role, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(req.GetName()))
+	role, err := client.Roles.ShowByID(ctx, req.GetName())
 	require.NoError(t, err)
 	return role, func() {
 		err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(req.GetName()))

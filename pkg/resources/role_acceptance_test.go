@@ -1,21 +1,17 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Role(t *testing.T) {
@@ -28,7 +24,7 @@ func TestAcc_Role(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.Role),
 		Steps: []resource.TestStep{
 			{
 				Config: roleBasicConfig(name, "test comment"),
@@ -78,7 +74,7 @@ func TestAcc_AccountRole_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRoleDestroy(name),
+		CheckDestroy: acc.CheckDestroy(t, resources.Role),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestNameDirectory(),
@@ -121,7 +117,7 @@ func TestAcc_AccountRole_updates(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRoleDestroy(name),
+		CheckDestroy: acc.CheckDestroy(t, resources.Role),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestNameDirectory(),
@@ -151,24 +147,6 @@ func TestAcc_AccountRole_updates(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckAccountRoleDestroy(accountRoleName string) func(state *terraform.State) error {
-	return func(state *terraform.State) error {
-		client := acc.TestAccProvider.Meta().(*provider.Context).Client
-		for _, rs := range state.RootModule().Resources {
-			if rs.Type != "snowflake_role" {
-				continue
-			}
-			ctx := context.Background()
-			id := sdk.NewAccountObjectIdentifier(rs.Primary.Attributes["name"])
-			_, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(id))
-			if err == nil {
-				return fmt.Errorf("account role %v still exists", accountRoleName)
-			}
-		}
-		return nil
-	}
 }
 
 func roleBasicConfig(name, comment string) string {
