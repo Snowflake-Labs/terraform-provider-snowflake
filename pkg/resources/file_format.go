@@ -778,7 +778,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error renaming file format: %w", err)
 		}
 
-		d.SetId(helpers.EncodeSnowflakeID(id))
+		d.SetId(helpers.EncodeSnowflakeID(newId))
 		id = newId
 	}
 

@@ -463,6 +463,7 @@ func TestAcc_FileFormat_Rename(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
 		Steps: []resource.TestStep{
 			{
 				Config: fileFormatConfigWithComment(name, acc.TestDatabaseName, acc.TestSchemaName, comment),

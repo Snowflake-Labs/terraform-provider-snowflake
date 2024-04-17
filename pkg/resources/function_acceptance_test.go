@@ -244,7 +244,7 @@ func TestAcc_Function_Rename(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy(t),
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
 		Steps: []resource.TestStep{
 			{
 				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name, comment),
