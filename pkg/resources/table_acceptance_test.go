@@ -1399,7 +1399,6 @@ resource "snowflake_table" "test_table" {
 	return fmt.Sprintf(s, name, databaseName, schemaName)
 }
 
-// TODO: Tescik
 func TestAcc_TableRename(t *testing.T) {
 	oldTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	newTableName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))

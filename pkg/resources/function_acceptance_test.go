@@ -245,7 +245,7 @@ func TestAcc_Function_Rename(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name, comment),
@@ -279,7 +279,7 @@ resource "snowflake_function" "f" {
   database        = "%[1]s"
   schema          = "%[2]s"
   name            = "%[3]s"
-  comment 		  = "%[4]s"
+  comment         = "%[4]s"
   return_type     = "VARCHAR"
   return_behavior = "IMMUTABLE"
   statement       = "SELECT PARAM"
