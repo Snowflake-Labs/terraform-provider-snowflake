@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_user_ownership_grant (Resource)
 
-
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use [snowflake_grant_ownership](./grant_ownership) instead. <deprecation>
 
 
 

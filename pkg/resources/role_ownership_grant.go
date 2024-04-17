@@ -59,11 +59,12 @@ var roleOwnershipGrantSchema = map[string]*schema.Schema{
 
 func RoleOwnershipGrant() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateRoleOwnershipGrant,
-		Read:   ReadRoleOwnershipGrant,
-		Delete: DeleteRoleOwnershipGrant,
-		Update: UpdateRoleOwnershipGrant,
-		Schema: roleOwnershipGrantSchema,
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_ownership instead.",
+		Create:             CreateRoleOwnershipGrant,
+		Read:               ReadRoleOwnershipGrant,
+		Delete:             DeleteRoleOwnershipGrant,
+		Update:             UpdateRoleOwnershipGrant,
+		Schema:             roleOwnershipGrantSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

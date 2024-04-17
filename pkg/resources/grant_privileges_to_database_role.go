@@ -917,6 +917,7 @@ func createGrantPrivilegesToDatabaseRoleIdFromSchema(d *schema.ResourceData) *Gr
 		id.Privileges = expandStringList(p.(*schema.Set).List())
 	}
 	id.WithGrantOption = d.Get("with_grant_option").(bool)
+	id.AlwaysApply = d.Get("always_apply").(bool)
 
 	on := getDatabaseRoleGrantOn(d)
 	switch {
