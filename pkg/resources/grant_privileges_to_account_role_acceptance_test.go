@@ -1459,7 +1459,7 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply_SetAfterCreate(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckAccountRolePrivilegesRevoked(name),
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:          func() { createAccountRoleOutsideTerraform(t, name) },
