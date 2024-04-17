@@ -223,10 +223,7 @@ func CreateResourceMonitor(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := ReadResourceMonitor(d, meta); err != nil {
-		return err
-	}
-	return nil
+	return ReadResourceMonitor(d, meta)
 }
 
 // ReadResourceMonitor implements schema.ReadFunc.

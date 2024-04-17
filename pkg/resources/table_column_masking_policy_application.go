@@ -67,7 +67,7 @@ func CreateTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta inte
 
 	d.SetId(TableColumnMaskingPolicyApplicationID(&input.TableColumnMaskingPolicyApplication))
 
-	return nil
+	return ReadTableColumnMaskingPolicyApplication(d, meta)
 }
 
 // ReadTableColumnMaskingPolicyApplication implements schema.ReadFunc.
