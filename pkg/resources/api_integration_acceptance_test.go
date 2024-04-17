@@ -337,7 +337,7 @@ func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Account),
+		CheckDestroy: acc.CheckDestroy(t, resources.ApiIntegration),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),

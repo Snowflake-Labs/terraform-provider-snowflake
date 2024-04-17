@@ -67,7 +67,7 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 		return runShowById(ctx, id, client.Alerts.ShowByID)
 	},
 	resources.ApiIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
-		return runShowById(ctx, id, client.Applications.ShowByID)
+		return runShowById(ctx, id, client.ApiIntegrations.ShowByID)
 	},
 	resources.Database: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Databases.ShowByID)

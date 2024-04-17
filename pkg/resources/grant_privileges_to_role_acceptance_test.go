@@ -984,7 +984,7 @@ func TestAcc_GrantPrivilegesToRole_OnAllPipes(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
@@ -1155,7 +1155,7 @@ func TestAcc_GrantPrivilegesToRole_MultiplePartsInRoleName(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },

@@ -490,7 +490,9 @@ func createDatabaseOutsideTerraform(t *testing.T, name string) func() {
 	}
 
 	return func() {
-		if err := client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(name), new(sdk.DropDatabaseOptions)); err != nil {
+		opts := new(sdk.DropDatabaseOptions)
+		opts.IfExists = sdk.Bool(true)
+		if err := client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(name), opts); err != nil {
 			if err != nil {
 				t.Fatal(err)
 			}
