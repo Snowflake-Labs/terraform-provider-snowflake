@@ -11,7 +11,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -198,8 +197,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 		return vars
 	}
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -288,8 +286,7 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 		return vars
 	}
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -310,7 +307,7 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 			},
 			{
 				PreConfig: func() {
-					err = client.Databases.Alter(context.Background(), id, &sdk.AlterDatabaseOptions{
+					err := client.Databases.Alter(context.Background(), id, &sdk.AlterDatabaseOptions{
 						Set: &sdk.DatabaseSet{
 							DataRetentionTimeInDays: sdk.Int(20),
 						},
@@ -382,23 +379,17 @@ resource "snowflake_database" "db" {
 func dropDatabaseOutsideTerraform(t *testing.T, id string) {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	err = client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(id), &sdk.DropDatabaseOptions{})
+	err := client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(id), &sdk.DropDatabaseOptions{})
 	require.NoError(t, err)
 }
 
 func getSecondaryAccount(t *testing.T) string {
 	t.Helper()
 
-	secondaryConfig, err := sdk.ProfileConfig(testprofiles.Secondary)
-	require.NoError(t, err)
-
-	secondaryClient, err := sdk.NewClient(secondaryConfig)
-	require.NoError(t, err)
-
+	secondaryClient := acc.SecondaryClient(t)
 	ctx := context.Background()
 
 	account, err := secondaryClient.ContextFunctions.CurrentAccount(ctx)
@@ -410,11 +401,10 @@ func getSecondaryAccount(t *testing.T) string {
 func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		client, err := sdk.NewDefaultClient()
-		require.NoError(t, err)
+		client := acc.Client(t)
 		ctx := context.Background()
 
-		_, err = client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id))
+		_, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id))
 		if shouldExist {
 			if err != nil {
 				return fmt.Errorf("error while retrieving database %s, err = %w", id, err)
@@ -431,10 +421,7 @@ func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) fu
 func testAccCheckIfDatabaseIsReplicated(t *testing.T, id string) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		client, err := sdk.NewDefaultClient()
-		if err != nil {
-			return err
-		}
+		client := acc.Client(t)
 
 		ctx := context.Background()
 		replicationDatabases, err := client.ReplicationFunctions.ShowReplicationDatabases(ctx, nil)
@@ -492,10 +479,7 @@ func checkAccountAndDatabaseDataRetentionTime(id sdk.AccountObjectIdentifier, ex
 
 func createDatabaseOutsideTerraform(t *testing.T, name string) func() {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	ctx := context.Background()
 
 	if err := client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(name), new(sdk.CreateDatabaseOptions)); err != nil {

@@ -4,18 +4,18 @@
 ### OnAll (contains inner types: InDatabase | InSchema)
 
 #### InDatabase
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<plural_object_type>|InDatabase|<database_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<object_type_plural>|InDatabase|<database_name>"`
 
 #### InSchema
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<plural_object_type>|InSchema|<schema_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<object_type_plural>|InSchema|<schema_name>"`
 
 ### OnFuture (contains inner types: InDatabase | InSchema)
 
 #### InDatabase
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<plural_object_type>|InDatabase|<database_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<object_type_plural>|InDatabase|<database_name>"`
 
 #### InSchema
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<plural_object_type>|InSchema|<schema_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<object_type_plural>|InSchema|<schema_name>"`
 
 ### Import examples
 

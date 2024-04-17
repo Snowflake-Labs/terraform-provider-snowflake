@@ -1960,11 +1960,10 @@ func setTableDataRetentionTime(t *testing.T, id sdk.SchemaObjectIdentifier, days
 	t.Helper()
 
 	return func() {
-		client, err := sdk.NewDefaultClient()
-		require.NoError(t, err)
+		client := acc.Client(t)
 		ctx := context.Background()
 
-		err = client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(sdk.NewTableSetRequest().WithDataRetentionTimeInDays(sdk.Int(days))))
+		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(sdk.NewTableSetRequest().WithDataRetentionTimeInDays(sdk.Int(days))))
 		require.NoError(t, err)
 	}
 }

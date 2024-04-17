@@ -8,7 +8,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -373,18 +372,8 @@ func TestAcc_Grants_Of_Share(t *testing.T) {
 	getSecondaryAccountIdentifier := func(t *testing.T) *sdk.AccountIdentifier {
 		t.Helper()
 
-		client, err := sdk.NewDefaultClient()
-		if err != nil {
-			t.Fatal(err)
-		}
-		cfg, err := sdk.ProfileConfig(testprofiles.Secondary)
-		if err != nil {
-			t.Fatal(err)
-		}
-		secondaryClient, err := sdk.NewClient(cfg)
-		if err != nil {
-			t.Fatal(err)
-		}
+		client := acc.Client(t)
+		secondaryClient := acc.SecondaryClient(t)
 		ctx := context.Background()
 
 		replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
@@ -688,10 +677,7 @@ func checkAtLeastOneGrantPresentLimited() resource.TestCheckFunc {
 
 func getCurrentUser(t *testing.T) string {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	user, err := client.ContextFunctions.CurrentUser(context.Background())
 	if err != nil {
 		t.Fatal(err)

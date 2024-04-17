@@ -594,10 +594,7 @@ func testAccCheckSharePrivilegesRevoked() func(*terraform.State) error {
 
 func createShareOutsideTerraform(t *testing.T, name string) func() {
 	t.Helper()
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := acc.Client(t)
 	ctx := context.Background()
 
 	if err := client.Shares.Create(ctx, sdk.NewAccountObjectIdentifier(name), new(sdk.CreateShareOptions)); err != nil {

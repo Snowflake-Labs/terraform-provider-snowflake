@@ -188,10 +188,9 @@ resource "snowflake_warehouse" "w2" {
 func alterWarehouseMaxConcurrencyLevelExternally(t *testing.T, warehouseId string, level int) {
 	t.Helper()
 
-	client, err := sdk.NewDefaultClient()
-	require.NoError(t, err)
+	client := acc.Client(t)
 	ctx := context.Background()
 
-	err = client.Warehouses.Alter(ctx, sdk.NewAccountObjectIdentifier(warehouseId), &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{MaxConcurrencyLevel: sdk.Int(level)}})
+	err := client.Warehouses.Alter(ctx, sdk.NewAccountObjectIdentifier(warehouseId), &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{MaxConcurrencyLevel: sdk.Int(level)}})
 	require.NoError(t, err)
 }

@@ -17,11 +17,13 @@ var (
 	_ validatable = new(ShowGrantOptions)
 )
 
+// based on https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters
 var validGrantOwnershipObjectTypes = []ObjectType{
 	ObjectTypeAggregationPolicy,
 	ObjectTypeAlert,
 	ObjectTypeAuthenticationPolicy,
 	ObjectTypeComputePool,
+	ObjectTypeDataMetricFunction,
 	ObjectTypeDatabase,
 	ObjectTypeDatabaseRole,
 	ObjectTypeDynamicTable,
@@ -31,6 +33,7 @@ var validGrantOwnershipObjectTypes = []ObjectType{
 	ObjectTypeFailoverGroup,
 	ObjectTypeFileFormat,
 	ObjectTypeFunction,
+	ObjectTypeGitRepository,
 	ObjectTypeHybridTable,
 	ObjectTypeIcebergTable,
 	ObjectTypeImageRepository,
@@ -61,36 +64,57 @@ var validGrantOwnershipObjectTypes = []ObjectType{
 	ObjectTypeWarehouse,
 }
 
+// based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#required-parameters
 var validGrantToObjectTypes = []ObjectType{
+	ObjectTypeAggregationPolicy,
 	ObjectTypeAlert,
+	ObjectTypeAuthenticationPolicy,
+	ObjectTypeDataMetricFunction,
 	ObjectTypeDynamicTable,
 	ObjectTypeEventTable,
+	ObjectTypeExternalTable,
 	ObjectTypeFileFormat,
 	ObjectTypeFunction,
-	ObjectTypeProcedure,
-	ObjectTypeSecret,
-	ObjectTypeSequence,
-	ObjectTypePipe,
+	ObjectTypeGitRepository,
+	ObjectTypeHybridTable,
+	ObjectTypeImageRepository,
+	ObjectTypeIcebergTable,
 	ObjectTypeMaskingPolicy,
+	ObjectTypeMaterializedView,
+	ObjectTypeModel,
+	ObjectTypeNetworkRule,
+	ObjectTypePackagesPolicy,
 	ObjectTypePasswordPolicy,
+	ObjectTypePipe,
+	ObjectTypeProcedure,
+	ObjectTypeProjectionPolicy,
 	ObjectTypeRowAccessPolicy,
+	ObjectTypeSecret,
+	ObjectTypeService,
 	ObjectTypeSessionPolicy,
-	ObjectTypeTag,
+	ObjectTypeSequence,
 	ObjectTypeStage,
 	ObjectTypeStream,
 	ObjectTypeTable,
-	ObjectTypeExternalTable,
+	ObjectTypeTag,
 	ObjectTypeTask,
 	ObjectTypeView,
-	ObjectTypeMaterializedView,
-	ObjectTypeNetworkRule,
-	ObjectTypePackagesPolicy,
-	ObjectTypeStreamlit,
-	ObjectTypeIcebergTable,
+	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
 }
 
+// based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#restrictions-and-limitations
 var invalidGrantToFutureObjectTypes = []ObjectType{
-	ObjectTypeStreamlit,
+	ObjectTypeComputePool,
+	ObjectTypeExternalFunction,
+	ObjectTypeImageRepository,
+	ObjectTypeAggregationPolicy,
+	ObjectTypeMaskingPolicy,
+	ObjectTypePackagesPolicy,
+	ObjectTypeProjectionPolicy,
+	ObjectTypeRowAccessPolicy,
+	ObjectTypeSessionPolicy,
+	ObjectTypeTag,
+	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
 }
 
 var (

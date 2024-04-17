@@ -19,7 +19,7 @@ func TestInt_EventTables(t *testing.T) {
 	tagTest, tagCleaup := createTag(t, client, databaseTest, schemaTest)
 	t.Cleanup(tagCleaup)
 
-	assertEventTableHandle := func(t *testing.T, et *sdk.EventTable, expectedName string, expectedComment string, expectedAllowedValues []string) {
+	assertEventTableHandle := func(t *testing.T, et *sdk.EventTable, expectedName string, expectedComment string, _ []string) {
 		t.Helper()
 		assert.NotEmpty(t, et.CreatedOn)
 		assert.Equal(t, expectedName, et.Name)
@@ -273,5 +273,48 @@ func TestInt_EventTables(t *testing.T) {
 
 		_, err = getRowAccessPolicyFor(t, client, table.ID(), sdk.ObjectTypeView)
 		require.Error(t, err, "no rows in result set")
+	})
+}
+
+func TestInt_EventTableShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupEventTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+		t.Helper()
+		return func() {
+			err := client.EventTables.Drop(ctx, sdk.NewDropEventTableRequest(id).WithIfExists(sdk.Bool(true)))
+			require.NoError(t, err)
+		}
+	}
+
+	createEventTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		err := client.EventTables.Create(ctx, sdk.NewCreateEventTableRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(cleanupEventTableHandle(t, id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createEventTableHandle(t, id1)
+		createEventTableHandle(t, id2)
+
+		e1, err := client.EventTables.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.EventTables.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }

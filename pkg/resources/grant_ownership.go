@@ -334,7 +334,7 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 	}
 
-	opts, grantedOn := prepareShowGrantsRequestForGrantOwnership(id)
+	opts, expectedGrantedOn := prepareShowGrantsRequestForGrantOwnership(id)
 	if opts == nil {
 		return nil
 	}
@@ -368,7 +368,7 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		// grant_on is for future grants, granted_on is for current grants.
 		// They function the same way though in a test for matching the object type
-		if grantedOn != grant.GrantedOn && grantedOn != grant.GrantOn {
+		if expectedGrantedOn != grant.GrantedOn && expectedGrantedOn != grant.GrantOn {
 			continue
 		}
 
@@ -425,11 +425,13 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 	case sdk.ObjectTypeAggregationPolicy,
 		sdk.ObjectTypeAlert,
 		sdk.ObjectTypeAuthenticationPolicy,
+		sdk.ObjectTypeDataMetricFunction,
 		sdk.ObjectTypeDynamicTable,
 		sdk.ObjectTypeEventTable,
 		sdk.ObjectTypeExternalTable,
 		sdk.ObjectTypeFileFormat,
 		sdk.ObjectTypeFunction,
+		sdk.ObjectTypeGitRepository,
 		sdk.ObjectTypeHybridTable,
 		sdk.ObjectTypeIcebergTable,
 		sdk.ObjectTypeImageRepository,
@@ -521,12 +523,17 @@ func getOwnershipGrantOpts(id *GrantOwnershipId) *sdk.GrantOwnershipOptions {
 
 func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowGrantOptions, sdk.ObjectType) {
 	opts := new(sdk.ShowGrantOptions)
-	var grantedOn sdk.ObjectType
+	var expectedGrantedOn sdk.ObjectType
 
 	switch id.Kind {
 	case OnObjectGrantOwnershipKind:
 		data := id.Data.(*OnObjectGrantOwnershipData)
-		grantedOn = data.ObjectType
+		switch data.ObjectType {
+		case sdk.ObjectTypeDatabaseRole:
+			expectedGrantedOn = sdk.ObjectTypeRole
+		default:
+			expectedGrantedOn = data.ObjectType
+		}
 		opts.On = &sdk.ShowGrantsOn{
 			Object: &sdk.Object{
 				ObjectType: data.ObjectType,
@@ -543,7 +550,7 @@ func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowG
 		return nil, ""
 	case OnFutureGrantOwnershipKind:
 		data := id.Data.(*BulkOperationGrantData)
-		grantedOn = data.ObjectNamePlural.Singular()
+		expectedGrantedOn = data.ObjectNamePlural.Singular()
 		opts.Future = sdk.Bool(true)
 
 		switch data.Kind {
@@ -558,7 +565,7 @@ func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowG
 		}
 	}
 
-	return opts, grantedOn
+	return opts, expectedGrantedOn
 }
 
 func createGrantOwnershipIdFromSchema(d *schema.ResourceData) (*GrantOwnershipId, error) {

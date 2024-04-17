@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -46,7 +45,7 @@ func testAccFunction(t *testing.T, configDirectory string) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
@@ -133,7 +132,7 @@ func TestAcc_Function_complex(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Function/complex"),
@@ -197,7 +196,7 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy(t),
 
 		// Using the string config because of the validation in teststep_validate.go:
 		// teststep.Config.HasConfigurationFiles() returns true both for ConfigFile and ConfigDirectory.
@@ -293,22 +292,21 @@ resource "snowflake_function" "f" {
 `, database, schema, name, comment)
 }
 
-func testAccCheckFunctionDestroy(s *terraform.State) error {
-	client, err := sdk.NewDefaultClient()
-	if err != nil {
-		return errors.New("client could not be instantiated")
-	}
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_function" {
-			continue
+func testAccCheckFunctionDestroy(t *testing.T) func(s *terraform.State) error {
+	t.Helper()
+	client := acc.Client(t)
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_function" {
+				continue
+			}
+			ctx := context.Background()
+			id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
+			function, err := client.Functions.ShowByID(ctx, id)
+			if err == nil {
+				return fmt.Errorf("function %v still exists", function.Name)
+			}
 		}
-		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-		function, err := client.Functions.ShowByID(ctx, id)
-		if err == nil {
-			return fmt.Errorf("function %v still exists", function.Name)
-		}
+		return nil
 	}
-	return nil
 }

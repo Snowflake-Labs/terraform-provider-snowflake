@@ -178,10 +178,7 @@ resource "snowflake_user" "test" {
 func removeUserOutsideOfTerraform(t *testing.T, name sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	return func() {
-		client, err := sdk.NewDefaultClient()
-		if err != nil {
-			t.Fatal(err)
-		}
+		client := acc.Client(t)
 		ctx := context.Background()
 		if err := client.Users.Drop(ctx, name); err != nil {
 			t.Fatalf("failed to drop user: %s", name.FullyQualifiedName())

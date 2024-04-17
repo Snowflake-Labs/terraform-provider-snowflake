@@ -53,7 +53,7 @@ func TestAcc_TagMaskingPolicyAssociationsystem_functions_integration_testComplet
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagMaskingPolicyAssociation/basic"),
