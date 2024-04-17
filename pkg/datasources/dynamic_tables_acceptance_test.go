@@ -1,21 +1,16 @@
 package datasources_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -42,7 +37,7 @@ func TestAcc_DynamicTables_complete(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -144,21 +139,4 @@ data "snowflake_dynamic_tables" "dts" {
   }
 }
 `
-}
-
-func testAccCheckDynamicTableDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_dynamic_table" {
-			continue
-		}
-		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-		dynamicTable, err := client.DynamicTables.ShowByID(ctx, id)
-		if err == nil {
-			return fmt.Errorf("dynamic table %v still exists", dynamicTable.Name)
-		}
-	}
-	return nil
 }

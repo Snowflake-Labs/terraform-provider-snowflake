@@ -6,14 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +31,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckMaterializedViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.MaterializedView),
 		Steps: []resource.TestStep{
 			{
 				Config: materializedViewConfig(acc.TestWarehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "Terraform test resource", true, false),
@@ -114,7 +112,7 @@ func TestAcc_MaterializedView_Tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckMaterializedViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.MaterializedView),
 		Steps: []resource.TestStep{
 			// create tags
 			{
@@ -158,7 +156,7 @@ func TestAcc_MaterializedView_Rename(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckMaterializedViewDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.MaterializedView),
 		Steps: []resource.TestStep{
 			{
 				Config: materializedViewConfig(acc.TestWarehouseName, tableName, viewName, queryEscaped, acc.TestDatabaseName, acc.TestSchemaName, "Terraform test resource", true, false),
@@ -256,22 +254,6 @@ resource "snowflake_materialized_view" "test" {
 	]
 }
 `, tableName, databaseName, schemaName, viewName, warehouseName, q, tag, tag1Name, tag2Name)
-}
-
-func testAccCheckMaterializedViewDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_materialized_view" {
-			continue
-		}
-		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-		existingMaterializedView, err := client.MaterializedViews.ShowByID(ctx, id)
-		if err == nil {
-			return fmt.Errorf("materialized view %v still exists", existingMaterializedView.ID().FullyQualifiedName())
-		}
-	}
-	return nil
 }
 
 func alterMaterializedViewQueryExternally(t *testing.T, id sdk.SchemaObjectIdentifier, query string, warehouse string) {

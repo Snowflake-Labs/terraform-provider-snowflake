@@ -176,16 +176,6 @@ func (s *ShowRoleRequest) toOpts() *ShowRoleOptions {
 	}
 }
 
-type ShowRoleByIdRequest struct {
-	id AccountObjectIdentifier // required
-}
-
-func NewShowByIdRoleRequest(id AccountObjectIdentifier) *ShowRoleByIdRequest {
-	return &ShowRoleByIdRequest{
-		id: id,
-	}
-}
-
 type GrantRoleRequest struct {
 	name  AccountObjectIdentifier // required
 	Grant GrantRole               // required

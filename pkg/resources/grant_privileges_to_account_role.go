@@ -742,7 +742,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	client := meta.(*provider.Context).Client
 
 	// TODO(SNOW-891217): Use custom error. Right now, "object does not exist" error is hidden in sdk/internal/collections package
-	if _, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(id.RoleName)); err != nil && err.Error() == "object does not exist" {
+	if _, err := client.Roles.ShowByID(ctx, id.RoleName); err != nil && err.Error() == "object does not exist" {
 		d.SetId("")
 		return diag.Diagnostics{
 			diag.Diagnostic{

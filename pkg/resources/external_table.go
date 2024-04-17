@@ -256,7 +256,7 @@ func ReadExternalTable(d *schema.ResourceData, meta any) error {
 	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id))
+	externalTable, err := client.ExternalTables.ShowByID(ctx, id)
 	if err != nil {
 		log.Printf("[DEBUG] external table (%s) not found", d.Id())
 		d.SetId("")

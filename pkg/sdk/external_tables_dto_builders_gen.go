@@ -674,14 +674,6 @@ func (s *ShowExternalTableInRequest) WithSchema(schema DatabaseObjectIdentifier)
 	return s
 }
 
-func NewShowExternalTableByIDRequest(
-	id SchemaObjectIdentifier,
-) *ShowExternalTableByIDRequest {
-	s := ShowExternalTableByIDRequest{}
-	s.id = id
-	return &s
-}
-
 func NewDescribeExternalTableColumnsRequest(
 	id SchemaObjectIdentifier,
 ) *DescribeExternalTableColumnsRequest {

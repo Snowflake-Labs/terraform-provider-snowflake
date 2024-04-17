@@ -6,16 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -54,7 +52,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.DynamicTable),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -183,7 +181,7 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.DynamicTable),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -257,7 +255,7 @@ func TestAcc_DynamicTable_issue2134(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.DynamicTable),
 		Steps: []resource.TestStep{
 			/*
 			 * Before the fix the first step resulted in not empty plan (as expected)
@@ -320,7 +318,7 @@ func TestAcc_DynamicTable_issue2276(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.DynamicTable),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -366,7 +364,7 @@ func TestAcc_DynamicTable_issue2329(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.DynamicTable),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestStepDirectory(),
@@ -412,7 +410,7 @@ func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: testAccCheckDynamicTableDestroy,
+		CheckDestroy: acc.CheckDestroy(t, resources.DynamicTable),
 		Steps: []resource.TestStep{
 			// If we match more than one time (in this case in comment) we raise an explanation error.
 			{
@@ -425,22 +423,6 @@ func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckDynamicTableDestroy(s *terraform.State) error {
-	client := acc.TestAccProvider.Meta().(*provider.Context).Client
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "snowflake_dynamic_table" {
-			continue
-		}
-		ctx := context.Background()
-		id := sdk.NewSchemaObjectIdentifier(rs.Primary.Attributes["database"], rs.Primary.Attributes["schema"], rs.Primary.Attributes["name"])
-		dynamicTable, err := client.DynamicTables.ShowByID(ctx, id)
-		if err == nil {
-			return fmt.Errorf("dynamic table %v still exists", dynamicTable.Name)
-		}
-	}
-	return nil
 }
 
 // TODO [SNOW-926148]: currently this dynamic table is not cleaned in the test; it is removed when the whole database is removed - this currently happens in a sweeper

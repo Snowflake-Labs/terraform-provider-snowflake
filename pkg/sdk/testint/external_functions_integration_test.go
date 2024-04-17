@@ -21,17 +21,17 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	integration, integrationCleanup := createApiIntegration(t, client)
 	t.Cleanup(integrationCleanup)
 
-	cleanupExternalFuncionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
+	cleanupExternalFunctionHandle := func(id sdk.SchemaObjectIdentifier, dts []sdk.DataType) func() {
 		return func() {
-			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id, dts).WithIfExists(sdk.Bool(true)))
+			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id.WithoutArguments(), dts).WithIfExists(sdk.Bool(true)))
 			require.NoError(t, err)
 		}
 	}
 
-	createExternalFunction := func(t *testing.T, dt sdk.DataType) *sdk.ExternalFunction {
+	createExternalFunction := func(t *testing.T) *sdk.ExternalFunction {
 		t.Helper()
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
-		argument := sdk.NewExternalFunctionArgumentRequest("x", dt)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, random.StringN(4), defaultDataTypes)
+		argument := sdk.NewExternalFunctionArgumentRequest("x", defaultDataTypes[0])
 		as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
 		request := sdk.NewCreateExternalFunctionRequest(id, sdk.DataTypeVariant, &integration, as).
 			WithOrReplace(sdk.Bool(true)).
@@ -39,17 +39,18 @@ func TestInt_ExternalFunctions(t *testing.T) {
 			WithArguments([]sdk.ExternalFunctionArgumentRequest{*argument})
 		err := client.ExternalFunctions.Create(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupExternalFuncionHandle(id, []sdk.DataType{sdk.DataTypeVariant}))
+		t.Cleanup(cleanupExternalFunctionHandle(id.WithoutArguments(), []sdk.DataType{sdk.DataTypeVariant}))
 
-		e, err := client.ExternalFunctions.ShowByID(ctx, id, defaultDataTypes)
+		e, err := client.ExternalFunctions.ShowByID(ctx, id)
 		require.NoError(t, err)
 		return e
 	}
 
-	assertExternalFunction := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool, dts []sdk.DataType) {
+	assertExternalFunction := func(t *testing.T, id sdk.SchemaObjectIdentifier, secure bool) {
 		t.Helper()
+		dts := id.Arguments()
 
-		e, err := client.ExternalFunctions.ShowByID(ctx, id, dts)
+		e, err := client.ExternalFunctions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
 		require.NotEmpty(t, e.CreatedOn)
@@ -78,7 +79,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	}
 
 	t.Run("create external function", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, random.StringN(4), defaultDataTypes)
 		argument := sdk.NewExternalFunctionArgumentRequest("x", sdk.DataTypeVARCHAR)
 		headers := []sdk.ExternalFunctionHeaderRequest{
 			{
@@ -106,38 +107,38 @@ func TestInt_ExternalFunctions(t *testing.T) {
 			WithCompression(sdk.String("GZIP"))
 		err := client.ExternalFunctions.Create(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupExternalFuncionHandle(id, []sdk.DataType{sdk.DataTypeVariant}))
+		t.Cleanup(cleanupExternalFunctionHandle(id.WithoutArguments(), []sdk.DataType{sdk.DataTypeVariant}))
 
-		assertExternalFunction(t, id, true, defaultDataTypes)
+		assertExternalFunction(t, id, true)
 	})
 
 	t.Run("create external function without arguments", func(t *testing.T) {
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.StringN(4))
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, random.StringN(4), nil)
 		as := "https://xyz.execute-api.us-west-2.amazonaws.com/production/remote_echo"
 		request := sdk.NewCreateExternalFunctionRequest(id, sdk.DataTypeVariant, &integration, as)
 		err := client.ExternalFunctions.Create(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupExternalFuncionHandle(id, nil))
+		t.Cleanup(cleanupExternalFunctionHandle(id, nil))
 
-		assertExternalFunction(t, id, false, nil)
+		assertExternalFunction(t, id, false)
 	})
 
 	t.Run("alter external function: set api integration", func(t *testing.T) {
-		e := createExternalFunction(t, sdk.DataTypeVARCHAR)
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		e := createExternalFunction(t)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, e.Name, defaultDataTypes)
 		set := sdk.NewExternalFunctionSetRequest().
 			WithApiIntegration(&integration)
 		request := sdk.NewAlterExternalFunctionRequest(id, defaultDataTypes).WithSet(set)
 		err := client.ExternalFunctions.Alter(ctx, request)
 		require.NoError(t, err)
 
-		assertExternalFunction(t, id, true, defaultDataTypes)
+		assertExternalFunction(t, id, true)
 	})
 
 	t.Run("alter external function: set headers", func(t *testing.T) {
-		e := createExternalFunction(t, sdk.DataTypeVARCHAR)
+		e := createExternalFunction(t)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, e.Name, defaultDataTypes)
 		headers := []sdk.ExternalFunctionHeaderRequest{
 			{
 				Name:  "measure",
@@ -148,13 +149,13 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		request := sdk.NewAlterExternalFunctionRequest(id, defaultDataTypes).WithSet(set)
 		err := client.ExternalFunctions.Alter(ctx, request)
 		require.NoError(t, err)
-		assertExternalFunction(t, id, true, defaultDataTypes)
+		assertExternalFunction(t, id, true)
 	})
 
 	t.Run("alter external function: set context headers", func(t *testing.T) {
-		e := createExternalFunction(t, sdk.DataTypeVARCHAR)
+		e := createExternalFunction(t)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, e.Name, defaultDataTypes)
 		ch := []sdk.ExternalFunctionContextHeaderRequest{
 			{
 				ContextFunction: "CURRENT_DATE",
@@ -167,35 +168,35 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		request := sdk.NewAlterExternalFunctionRequest(id, defaultDataTypes).WithSet(set)
 		err := client.ExternalFunctions.Alter(ctx, request)
 		require.NoError(t, err)
-		assertExternalFunction(t, id, true, defaultDataTypes)
+		assertExternalFunction(t, id, true)
 	})
 
 	t.Run("alter external function: set compression", func(t *testing.T) {
-		e := createExternalFunction(t, sdk.DataTypeVARCHAR)
+		e := createExternalFunction(t)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, e.Name, defaultDataTypes)
 		set := sdk.NewExternalFunctionSetRequest().WithCompression(sdk.String("AUTO"))
 		request := sdk.NewAlterExternalFunctionRequest(id, defaultDataTypes).WithSet(set)
 		err := client.ExternalFunctions.Alter(ctx, request)
 		require.NoError(t, err)
-		assertExternalFunction(t, id, true, defaultDataTypes)
+		assertExternalFunction(t, id, true)
 	})
 
 	t.Run("alter external function: set max batch rows", func(t *testing.T) {
-		e := createExternalFunction(t, sdk.DataTypeVARCHAR)
+		e := createExternalFunction(t)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, e.Name, defaultDataTypes)
 		set := sdk.NewExternalFunctionSetRequest().WithMaxBatchRows(sdk.Int(20))
 		request := sdk.NewAlterExternalFunctionRequest(id, defaultDataTypes).WithSet(set)
 		err := client.ExternalFunctions.Alter(ctx, request)
 		require.NoError(t, err)
-		assertExternalFunction(t, id, true, defaultDataTypes)
+		assertExternalFunction(t, id, true)
 	})
 
 	t.Run("alter external function: unset", func(t *testing.T) {
-		e := createExternalFunction(t, sdk.DataTypeVARCHAR)
+		e := createExternalFunction(t)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, e.Name, defaultDataTypes)
 		unset := sdk.NewExternalFunctionUnsetRequest().
 			WithComment(sdk.Bool(true)).
 			WithHeaders(sdk.Bool(true))
@@ -203,12 +204,12 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		err := client.ExternalFunctions.Alter(ctx, request)
 		require.NoError(t, err)
 
-		assertExternalFunction(t, id, true, defaultDataTypes)
+		assertExternalFunction(t, id, true)
 	})
 
 	t.Run("show external function: with like", func(t *testing.T) {
-		e1 := createExternalFunction(t, sdk.DataTypeVARCHAR)
-		e2 := createExternalFunction(t, sdk.DataTypeVARCHAR)
+		e1 := createExternalFunction(t)
+		e2 := createExternalFunction(t)
 
 		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithLike(&sdk.Like{Pattern: sdk.String(e1.Name)}))
 		require.NoError(t, err)
@@ -222,7 +223,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		otherDb, otherDbCleanup := createDatabase(t, testClient(t))
 		t.Cleanup(otherDbCleanup)
 
-		e1 := createExternalFunction(t, sdk.DataTypeVARCHAR)
+		e1 := createExternalFunction(t)
 
 		es, err := client.ExternalFunctions.Show(ctx, sdk.NewShowExternalFunctionRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseTest.Name, schemaTest.Name)}))
 		require.NoError(t, err)
@@ -247,19 +248,19 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	})
 
 	t.Run("show external function by id", func(t *testing.T) {
-		e := createExternalFunction(t, sdk.DataTypeVARCHAR)
+		e := createExternalFunction(t)
 
-		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
-		es, err := client.ExternalFunctions.ShowByID(ctx, id, []sdk.DataType{sdk.DataTypeVARCHAR})
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, e.Name, defaultDataTypes)
+		es, err := client.ExternalFunctions.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Equal(t, *e, *es)
 
-		_, err = client.ExternalFunctions.ShowByID(ctx, id, nil)
+		_, err = client.ExternalFunctions.ShowByID(ctx, id.WithoutArguments())
 		require.Error(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("describe external function", func(t *testing.T) {
-		e := createExternalFunction(t, sdk.DataTypeVARCHAR)
+		e := createExternalFunction(t)
 		id := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, e.Name)
 
 		request := sdk.NewDescribeExternalFunctionRequest(id, []sdk.DataType{sdk.DataTypeVARCHAR})
