@@ -1055,7 +1055,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t
 				PreConfig: func() {
 					databaseCleanup = createDatabaseOutsideTerraform(t, databaseName)
 					t.Cleanup(databaseCleanup)
-					t.Cleanup(createDatabaseRoleOutsideTerraform(t, databaseName, name))
+					// no need to clean the role, because database will be dropped
+					createDatabaseRoleOutsideTerraform(t, databaseName, name)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
