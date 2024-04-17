@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -55,15 +56,11 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		},
 	},
 	"object_type": {
-		Type:     schema.TypeString,
-		Required: true,
-		Description: "Specifies the type of object to add a tag to. ex: 'ACCOUNT', 'COLUMN', 'DATABASE', etc. " +
-			"For more information: https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects",
-		ValidateFunc: validation.StringInSlice([]string{
-			"ACCOUNT", "COLUMN", "DATABASE", "INTEGRATION", "PIPE", "ROLE", "SCHEMA", "STREAM", "SHARE", "STAGE",
-			"TABLE", "TASK", "USER", "VIEW", "WAREHOUSE",
-		}, true),
-		ForceNew: true,
+		Type:         schema.TypeString,
+		Required:     true,
+		Description:  fmt.Sprintf("Specifies the type of object to add a tag. Allowed object types: %v.", sdk.TagAssociationAllowedObjectTypesString),
+		ValidateFunc: validation.StringInSlice(sdk.TagAssociationAllowedObjectTypesString, true),
+		ForceNew:     true,
 	},
 	"tag_id": {
 		Type:        schema.TypeString,
@@ -103,15 +100,6 @@ func TagAssociation() *schema.Resource {
 	}
 }
 
-func useTagDatabaseAndSchema(ot sdk.ObjectType) bool {
-	switch ot {
-	case sdk.ObjectTypeColumn, sdk.ObjectTypePipe, sdk.ObjectTypeStream, sdk.ObjectTypeStage, sdk.ObjectTypeTable, sdk.ObjectTypeTask, sdk.ObjectTypeView:
-		return true
-	default:
-		return false
-	}
-}
-
 func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectIdentifier, []sdk.ObjectIdentifier, sdk.ObjectType) {
 	tag := d.Get("tag_id").(string)
 	objectType := sdk.ObjectType(d.Get("object_type").(string))
@@ -119,20 +107,20 @@ func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectI
 	tagDatabase, tagSchema, tagName := snowflakeValidation.ParseFullyQualifiedObjectID(tag)
 	tid := sdk.NewSchemaObjectIdentifier(tagDatabase, tagSchema, tagName)
 
-	identifiers := []sdk.ObjectIdentifier{}
+	var identifiers []sdk.ObjectIdentifier
 	for _, item := range d.Get("object_identifier").([]interface{}) {
 		m := item.(map[string]interface{})
 		name := strings.Trim(m["name"].(string), `"`)
 		var databaseName, schemaName string
 		if v, ok := m["database"]; ok {
 			databaseName = strings.Trim(v.(string), `"`)
-			if databaseName == "" && useTagDatabaseAndSchema(objectType) {
+			if databaseName == "" && slices.Contains(sdk.TagAssociationTagObjectTypeIsSchemaObjectType, objectType) {
 				databaseName = tagDatabase
 			}
 		}
 		if v, ok := m["schema"]; ok {
 			schemaName = strings.Trim(v.(string), `"`)
-			if schemaName == "" && useTagDatabaseAndSchema(objectType) {
+			if schemaName == "" && slices.Contains(sdk.TagAssociationTagObjectTypeIsSchemaObjectType, objectType) {
 				schemaName = tagSchema
 			}
 		}

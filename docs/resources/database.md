@@ -38,7 +38,7 @@ resource "snowflake_database" "from_share" {
   name    = "testing_4"
   comment = "test comment"
   from_share = {
-    provider = "org1.account1"
+    provider = "account1_locator"
     share    = "share1"
   }
 }
@@ -57,7 +57,7 @@ resource "snowflake_database" "from_share" {
 - `data_retention_time_in_days` (Number) Number of days for which Snowflake retains historical data for performing Time Travel actions (SELECT, CLONE, UNDROP) on the object. A value of 0 effectively disables Time Travel for the specified database. Default value for this field is set to -1, which is a fallback to use Snowflake default. For more information, see [Understanding & Using Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel).
 - `from_database` (String) Specify a database to create a clone from.
 - `from_replica` (String) Specify a fully-qualified path to a database to create a replica from. A fully qualified path follows the format of `"<organization_name>"."<account_name>"."<db_name>"`. An example would be: `"myorg1"."account1"."db1"`
-- `from_share` (Map of String) Specify a provider and a share in this map to create a database from a share.
+- `from_share` (Map of String) Specify a provider and a share in this map to create a database from a share. As of version 0.87.0, the provider field is the account locator.
 - `is_transient` (Boolean) Specifies a database as transient. Transient databases do not have a Fail-safe period so they do not incur additional storage costs once they leave Time Travel; however, this means they are also not protected by Fail-safe in the event of a data loss.
 - `replication_configuration` (Block List, Max: 1) When set, specifies the configurations for database replication. (see [below for nested schema](#nestedblock--replication_configuration))
 

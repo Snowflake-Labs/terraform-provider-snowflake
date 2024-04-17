@@ -1112,6 +1112,44 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t 
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2689 is fixed
+func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply_SetAfterCreate(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	configVariables := func(alwaysApply bool) config.Variables {
+		return config.Variables{
+			"name":           config.StringVariable(name),
+			"all_privileges": config.BoolVariable(true),
+			"database":       config.StringVariable(acc.TestDatabaseName),
+			"always_apply":   config.BoolVariable(alwaysApply),
+		}
+	}
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
+
+	databaseRoleName := sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, name).FullyQualifiedName()
+	databaseName := sdk.NewAccountObjectIdentifier(acc.TestDatabaseName).FullyQualifiedName()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig:          func() { createDatabaseRoleOutsideTerraform(t, acc.TestDatabaseName, name) },
+				ConfigDirectory:    acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
+				ConfigVariables:    configVariables(true),
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleName, databaseName)),
+				),
+			},
+		},
+	})
+}
+
 func createDatabaseRoleOutsideTerraform(t *testing.T, databaseName string, name string) func() {
 	t.Helper()
 	client := acc.Client(t)

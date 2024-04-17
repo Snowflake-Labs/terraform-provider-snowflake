@@ -171,6 +171,10 @@ type Stream struct {
 	OwnerRoleType *string
 }
 
+func (v *Stream) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
 // DescribeStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-stream.
 type DescribeStreamOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"`

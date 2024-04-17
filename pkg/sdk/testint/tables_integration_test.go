@@ -2,6 +2,7 @@ package testint
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -994,5 +995,52 @@ func TestInt_Table(t *testing.T) {
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithLikePattern("non-existent"))
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(tables))
+	})
+}
+
+func TestInt_TablesShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	databaseTest, schemaTest := testDb(t), testSchema(t)
+
+	cleanupTableHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+	createTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		columns := []sdk.TableColumnRequest{
+			*sdk.NewTableColumnRequest("c1", sdk.DataTypeNumber).WithDefaultValue(sdk.NewColumnDefaultValueRequest().WithIdentity(sdk.NewColumnIdentityRequest(1, 1))),
+		}
+		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, columns))
+		require.NoError(t, err)
+		t.Cleanup(cleanupTableHandle(id))
+	}
+
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		t.Cleanup(schemaCleanup)
+
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+		id2 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schema.Name, name)
+
+		createTableHandle(t, id1)
+		createTableHandle(t, id2)
+
+		e1, err := client.Tables.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
+
+		e2, err := client.Tables.ShowByID(ctx, id2)
+		require.NoError(t, err)
+		require.Equal(t, id2, e2.ID())
 	})
 }
