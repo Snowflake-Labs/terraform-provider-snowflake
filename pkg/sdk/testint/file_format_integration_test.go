@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
@@ -504,7 +506,7 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 	t.Cleanup(cleanupFileFormat)
 
 	// new database and schema created on purpose
-	databaseTest2, cleanupDatabase2 := createDatabase(t, client)
+	databaseTest2, cleanupDatabase2 := acc.TestClient().Database.CreateDatabase(t)
 	t.Cleanup(cleanupDatabase2)
 	schemaTest2, cleanupSchema2 := createSchema(t, client, databaseTest2)
 	t.Cleanup(cleanupSchema2)

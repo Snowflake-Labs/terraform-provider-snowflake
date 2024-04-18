@@ -3,6 +3,8 @@ package testint
 import (
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -66,7 +68,7 @@ func TestInt_CurrentSessionDetails(t *testing.T) {
 func TestInt_CurrentDatabase(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 	err := client.Sessions.UseDatabase(ctx, databaseTest.ID())
 	require.NoError(t, err)
@@ -80,7 +82,7 @@ func TestInt_CurrentSchema(t *testing.T) {
 	ctx := testContext(t)
 
 	// new database and schema created on purpose
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)

@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +56,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		databaseID := sdk.RandomAccountObjectIdentifier()
 
 		// new database and schema created on purpose
-		databaseTest, databaseCleanup := createDatabase(t, client)
+		databaseTest, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
 		t.Cleanup(databaseCleanup)
 		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 		t.Cleanup(schemaCleanup)
@@ -113,7 +115,7 @@ func TestInt_CreateShared(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := createDatabase(t, secondaryClient)
+	databaseTest, databaseCleanup := acc.SecondaryTestClient().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 
 	shareTest, shareCleanup := createShare(t, secondaryClient)
@@ -164,7 +166,7 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 func TestInt_DatabasesDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, _ := createDatabase(t, client)
+	databaseTest, _ := acc.TestClient().Database.CreateDatabase(t)
 	databaseID := databaseTest.ID()
 	t.Run("drop with nil options", func(t *testing.T) {
 		err := client.Databases.Drop(ctx, databaseID, nil)
@@ -196,7 +198,7 @@ func TestInt_DatabasesDescribe(t *testing.T) {
 	client := testClient(t)
 
 	// new database and schema created on purpose
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)
@@ -218,7 +220,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("renaming", func(t *testing.T) {
-		databaseTest, _ := createDatabase(t, client)
+		databaseTest, _ := acc.TestClient().Database.CreateDatabase(t)
 		newName := sdk.RandomAccountObjectIdentifier()
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			NewName: newName,
@@ -233,9 +235,9 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	})
 
 	t.Run("swap with another database", func(t *testing.T) {
-		databaseTest, databaseCleanup := createDatabase(t, client)
+		databaseTest, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
 		t.Cleanup(databaseCleanup)
-		databaseTest2, databaseCleanup2 := createDatabase(t, client)
+		databaseTest2, databaseCleanup2 := acc.TestClient().Database.CreateDatabase(t)
 		t.Cleanup(databaseCleanup2)
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			SwapWith: databaseTest2.ID(),
@@ -244,7 +246,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	})
 
 	t.Run("setting and unsetting retention time + comment ", func(t *testing.T) {
-		databaseTest, _ := createDatabase(t, client)
+		databaseTest, _ := acc.TestClient().Database.CreateDatabase(t)
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			Set: &sdk.DatabaseSet{
 				DataRetentionTimeInDays: sdk.Int(42),
@@ -279,7 +281,7 @@ func TestInt_AlterFailover(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := createDatabase(t, secondaryClient)
+	databaseTest, databaseCleanup := acc.SecondaryTestClient().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 
 	toAccounts := []sdk.AccountIdentifier{
@@ -315,10 +317,10 @@ func TestInt_AlterFailover(t *testing.T) {
 func TestInt_DatabasesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 
-	databaseTest2, databaseCleanup2 := createDatabase(t, client)
+	databaseTest2, databaseCleanup2 := acc.TestClient().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup2)
 	t.Run("without show options", func(t *testing.T) {
 		databases, err := client.Databases.Show(ctx, nil)

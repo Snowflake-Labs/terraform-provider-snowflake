@@ -75,13 +75,15 @@ func init() {
 	atc.secondaryClient = secondaryClient
 
 	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName)
+	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName)
 }
 
 type acceptanceTestContext struct {
-	config          *gosnowflake.Config
-	client          *sdk.Client
-	secondaryClient *sdk.Client
-	testClient      *helpers.TestClient
+	config              *gosnowflake.Config
+	client              *sdk.Client
+	secondaryClient     *sdk.Client
+	testClient          *helpers.TestClient
+	secondaryTestClient *helpers.TestClient
 }
 
 var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
@@ -170,5 +172,9 @@ func DefaultConfig(t *testing.T) *gosnowflake.Config {
 }
 
 func TestClient() *helpers.TestClient {
+	return atc.testClient
+}
+
+func SecondaryTestClient() *helpers.TestClient {
 	return atc.testClient
 }

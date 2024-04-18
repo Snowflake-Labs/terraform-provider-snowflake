@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/require"
@@ -45,31 +47,6 @@ func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjec
 		err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
 		require.NoError(t, err)
 	}
-}
-
-func createDatabase(t *testing.T, client *sdk.Client) (*sdk.Database, func()) {
-	t.Helper()
-	return createDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
-}
-
-func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Databases.Create(ctx, id, opts)
-	require.NoError(t, err)
-	database, err := client.Databases.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return database, func() {
-		err := client.Databases.Drop(ctx, id, nil)
-		require.NoError(t, err)
-		err = client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName))
-		require.NoError(t, err)
-	}
-}
-
-func createSecondaryDatabase(t *testing.T, client *sdk.Client, externalId sdk.ExternalObjectIdentifier) (*sdk.Database, func()) {
-	t.Helper()
-	return createSecondaryDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), externalId, &sdk.CreateSecondaryDatabaseOptions{})
 }
 
 func createSecondaryDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, externalId sdk.ExternalObjectIdentifier, opts *sdk.CreateSecondaryDatabaseOptions) (*sdk.Database, func()) {
@@ -203,7 +180,7 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	}
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
+		database, databaseCleanup = acc.TestClient().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
@@ -338,7 +315,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *sdk.Client, database 
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
+		database, databaseCleanup = acc.TestClient().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
@@ -475,7 +452,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *sdk.Client, database *
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
+		database, databaseCleanup = acc.TestClient().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
@@ -522,7 +499,7 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
+		database, databaseCleanup = acc.TestClient().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
