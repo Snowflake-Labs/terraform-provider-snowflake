@@ -392,7 +392,7 @@ func TestInt_WarehouseAlter(t *testing.T) {
 		warehouse, warehouseCleanup := createWarehouse(t, client)
 		t.Cleanup(warehouseCleanup)
 
-		resetWarehouse := useWarehouse(t, client, warehouse.ID())
+		resetWarehouse := testClientHelper().Warehouse.UseWarehouse(t, warehouse.ID())
 		t.Cleanup(resetWarehouse)
 
 		// Start a long query

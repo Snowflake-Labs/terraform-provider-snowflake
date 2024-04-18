@@ -34,17 +34,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Sessions.UseWarehouse(ctx, warehouseID)
-	require.NoError(t, err)
-	return func() {
-		err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
-		require.NoError(t, err)
-	}
-}
-
 func createWarehouse(t *testing.T, client *sdk.Client) (*sdk.Warehouse, func()) {
 	t.Helper()
 	return createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{})
