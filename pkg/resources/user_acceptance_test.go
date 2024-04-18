@@ -60,7 +60,7 @@ func TestAcc_User(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix, comment, sshkey1, sshkey2),
+				Config: uConfig(prefix, sshkey1, sshkey2, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 					resource.TestCheckResourceAttr("snowflake_user.w", "comment", comment),
@@ -80,7 +80,7 @@ func TestAcc_User(t *testing.T) {
 			},
 			// RENAME
 			{
-				Config: uConfig(prefix2, newComment, sshkey1, sshkey2),
+				Config: uConfig(prefix2, sshkey1, sshkey2, newComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_user.w", plancheck.ResourceActionUpdate),
@@ -262,7 +262,7 @@ func TestAcc_User_issue2058(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix, "test_comment", sshkey1, sshkey2),
+				Config: uConfig(prefix, sshkey1, sshkey2, "test_comment"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 				),
