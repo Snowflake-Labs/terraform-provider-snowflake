@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +25,7 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "tcK1>AJ+")
 
 	// creating a new schema on purpose
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
@@ -383,7 +384,7 @@ func TestInt_PipesShowByID(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, databaseTest, random.AlphaN(8))
 		t.Cleanup(schemaCleanup)
 
 		name := random.AlphaN(4)

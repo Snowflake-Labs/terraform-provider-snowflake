@@ -3,14 +3,13 @@ package testint
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,30 +41,6 @@ func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjec
 	require.NoError(t, err)
 	return func() {
 		err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
-		require.NoError(t, err)
-	}
-}
-
-func createSchema(t *testing.T, client *sdk.Client, database *sdk.Database) (*sdk.Schema, func()) {
-	t.Helper()
-	return createSchemaWithIdentifier(t, client, database, random.StringRange(8, 28))
-}
-
-func createSchemaWithIdentifier(t *testing.T, client *sdk.Client, database *sdk.Database, name string) (*sdk.Schema, func()) {
-	t.Helper()
-	ctx := context.Background()
-	schemaID := sdk.NewDatabaseObjectIdentifier(database.Name, name)
-	err := client.Schemas.Create(ctx, schemaID, nil)
-	require.NoError(t, err)
-	schema, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(database.Name, name))
-	require.NoError(t, err)
-	return schema, func() {
-		err := client.Schemas.Drop(ctx, schemaID, nil)
-		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-			return
-		}
-		require.NoError(t, err)
-		err = client.Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)
 	}
 }
@@ -162,7 +137,7 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchema(t, database)
 	}
 	var tableCleanup func()
 	if table == nil {
@@ -297,7 +272,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *sdk.Client, database 
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchema(t, database)
 	}
 	name := random.UUID()
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
@@ -434,7 +409,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *sdk.Client, database *
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchema(t, database)
 	}
 	name := random.String()
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
@@ -481,7 +456,7 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchema(t, database)
 	}
 	var warehouseCleanup func()
 	if warehouse == nil {

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -340,7 +340,7 @@ func TestInt_RowAccessPoliciesShowByID(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, databaseTest, random.AlphaN(8))
 		t.Cleanup(schemaCleanup)
 
 		name := random.AlphaN(4)

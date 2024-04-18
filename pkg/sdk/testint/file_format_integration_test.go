@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -506,7 +506,7 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 	// new database and schema created on purpose
 	databaseTest2, cleanupDatabase2 := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(cleanupDatabase2)
-	schemaTest2, cleanupSchema2 := createSchema(t, client, databaseTest2)
+	schemaTest2, cleanupSchema2 := testClientHelper().Schema.CreateSchema(t, databaseTest2)
 	t.Cleanup(cleanupSchema2)
 
 	t.Run("show format in different schema", func(t *testing.T) {
@@ -549,7 +549,7 @@ func TestInt_FileFormatsShowByID(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, databaseTest, random.AlphaN(8))
 		t.Cleanup(schemaCleanup)
 
 		name := random.AlphaN(4)

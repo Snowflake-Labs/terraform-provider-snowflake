@@ -213,7 +213,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 5, 5),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 5, 5),
 				),
 			},
 			{
@@ -222,7 +222,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 10),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 10),
 				),
 			},
 			{
@@ -230,7 +230,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "5"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 5),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 5),
 				),
 			},
 			{
@@ -238,7 +238,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(15),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "15"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 15),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 15),
 				),
 			},
 			{
@@ -246,7 +246,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 10),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 10),
 				),
 			},
 			{
@@ -254,7 +254,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "0"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 0),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 0),
 				),
 			},
 			{
@@ -262,7 +262,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "3"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 3),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 3),
 				),
 			},
 		},
@@ -302,23 +302,16 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 5, 5),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 5, 5),
 				),
 			},
 			{
-				PreConfig: func() {
-					err := client.Databases.Alter(context.Background(), id, &sdk.AlterDatabaseOptions{
-						Set: &sdk.DatabaseSet{
-							DataRetentionTimeInDays: sdk.Int(20),
-						},
-					})
-					require.NoError(t, err)
-				},
+				PreConfig:       acc.TestClient().Database.UpdateDataRetentionTime(t, id, 20),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 5, 5),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 5, 5),
 				),
 			},
 			{
@@ -327,7 +320,7 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "3"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 3),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 3),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -392,10 +385,7 @@ func getSecondaryAccount(t *testing.T) string {
 func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		client := acc.Client(t)
-		ctx := context.Background()
-
-		_, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id))
+		_, err := acc.TestClient().Database.Show(t, sdk.NewAccountObjectIdentifier(id))
 		if shouldExist {
 			if err != nil {
 				return fmt.Errorf("error while retrieving database %s, err = %w", id, err)
@@ -436,13 +426,14 @@ func testAccCheckIfDatabaseIsReplicated(t *testing.T, id string) func(state *ter
 	}
 }
 
-func checkAccountAndDatabaseDataRetentionTime(id sdk.AccountObjectIdentifier, expectedAccountRetentionDays int, expectedDatabaseRetentionsDays int) func(state *terraform.State) error {
+func checkAccountAndDatabaseDataRetentionTime(t *testing.T, id sdk.AccountObjectIdentifier, expectedAccountRetentionDays int, expectedDatabaseRetentionsDays int) func(state *terraform.State) error {
+	t.Helper()
 	return func(state *terraform.State) error {
 		providerContext := acc.TestAccProvider.Meta().(*provider.Context)
 		client := providerContext.Client
 		ctx := context.Background()
 
-		database, err := client.Databases.ShowByID(ctx, id)
+		database, err := acc.TestClient().Database.Show(t, id)
 		if err != nil {
 			return err
 		}
