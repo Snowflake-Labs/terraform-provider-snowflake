@@ -56,7 +56,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		// new database and schema created on purpose
 		databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchema(t, databaseTest)
 		t.Cleanup(schemaCleanup)
 		tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup)
@@ -198,7 +198,7 @@ func TestInt_DatabasesDescribe(t *testing.T) {
 	// new database and schema created on purpose
 	databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchema(t, databaseTest)
 	t.Cleanup(schemaCleanup)
 	ctx := testContext(t)
 	databaseDetails, err := client.Databases.Describe(ctx, databaseTest.ID())

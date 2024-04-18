@@ -18,7 +18,7 @@ func TestInt_Streams(t *testing.T) {
 
 	db := testDb(t)
 
-	schema, cleanupSchema := createSchema(t, client, db)
+	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t, db)
 	t.Cleanup(cleanupSchema)
 
 	assertStream := func(t *testing.T, s *sdk.Stream, id sdk.SchemaObjectIdentifier, sourceType string, mode string) {
@@ -450,7 +450,7 @@ func TestInt_StreamsShowByID(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, databaseTest, random.AlphaN(8))
 		t.Cleanup(schemaCleanup)
 
 		name := random.AlphaN(4)

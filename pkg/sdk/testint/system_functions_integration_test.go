@@ -50,7 +50,7 @@ func TestInt_GetTag(t *testing.T) {
 func TestInt_PipeStatus(t *testing.T) {
 	client := testClient(t)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), random.AlphaN(20))
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
@@ -99,7 +99,7 @@ func TestInt_PipeForceResume(t *testing.T) {
 	role, roleCleanup := createRole(t, client)
 	t.Cleanup(roleCleanup)
 
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), random.AlphaN(20))
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)

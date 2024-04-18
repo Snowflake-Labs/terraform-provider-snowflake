@@ -306,14 +306,7 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 				),
 			},
 			{
-				PreConfig: func() {
-					err := client.Databases.Alter(context.Background(), id, &sdk.AlterDatabaseOptions{
-						Set: &sdk.DatabaseSet{
-							DataRetentionTimeInDays: sdk.Int(20),
-						},
-					})
-					require.NoError(t, err)
-				},
+				PreConfig:       acc.TestClient().Database.UpdateDataRetentionTime(t, id, 20),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(

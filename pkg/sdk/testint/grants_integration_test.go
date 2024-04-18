@@ -235,7 +235,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes", func(t *testing.T) {
-		schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), random.AlphaN(20))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 		t.Cleanup(schemaCleanup)
 
 		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
@@ -295,7 +295,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes with multiple errors", func(t *testing.T) {
-		schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), random.AlphaN(20))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 		t.Cleanup(schemaCleanup)
 
 		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
@@ -580,7 +580,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes", func(t *testing.T) {
-		schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), random.AlphaN(20))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 		t.Cleanup(schemaCleanup)
 
 		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
@@ -640,7 +640,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes with multiple errors", func(t *testing.T) {
-		schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), random.AlphaN(20))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 		t.Cleanup(schemaCleanup)
 
 		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)

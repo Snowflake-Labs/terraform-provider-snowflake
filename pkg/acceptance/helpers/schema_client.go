@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -37,13 +36,31 @@ func (c *SchemaClient) CreateSchemaWithIdentifier(t *testing.T, database *sdk.Da
 	require.NoError(t, err)
 	schema, err := c.client().ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(database.Name, name))
 	require.NoError(t, err)
-	return schema, func() {
-		err := c.client().Drop(ctx, schemaID, nil)
-		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-			return
-		}
+	return schema, c.DropSchemaFunc(t, schemaID)
+}
+
+func (c *SchemaClient) DropSchemaFunc(t *testing.T, id sdk.DatabaseObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	return func() {
+		err := c.client().Drop(ctx, id, &sdk.DropSchemaOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
 		err = c.context.client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(c.context.database, c.context.schema))
+		require.NoError(t, err)
+	}
+}
+
+func (c *SchemaClient) UpdateDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, days int) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	return func() {
+		err := c.client().Alter(ctx, id, &sdk.AlterSchemaOptions{
+			Set: &sdk.SchemaSet{
+				DataRetentionTimeInDays: sdk.Int(days),
+			},
+		})
 		require.NoError(t, err)
 	}
 }

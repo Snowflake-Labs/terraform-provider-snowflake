@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Schema(t *testing.T) {
@@ -289,7 +288,7 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 				),
 			},
 			{
-				PreConfig:       setSchemaDataRetentionTime(t, id, 20),
+				PreConfig:       acc.TestClient().Schema.UpdateDataRetentionTime(t, id, 20),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
@@ -335,7 +334,7 @@ func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					removeSchemaOutsideOfTerraform(t, acc.TestDatabaseName, schemaName)
+					acc.TestClient().Schema.DropSchemaFunc(t, sdk.NewDatabaseObjectIdentifier(acc.TestDatabaseName, schemaName))()
 				},
 				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
@@ -424,30 +423,4 @@ func checkDatabaseAndSchemaDataRetentionTime(id sdk.DatabaseObjectIdentifier, ex
 
 		return nil
 	}
-}
-
-func setSchemaDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, days int) func() {
-	t.Helper()
-
-	return func() {
-		client := acc.Client(t)
-		ctx := context.Background()
-
-		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			Set: &sdk.SchemaSet{
-				DataRetentionTimeInDays: sdk.Int(days),
-			},
-		})
-		require.NoError(t, err)
-	}
-}
-
-func removeSchemaOutsideOfTerraform(t *testing.T, databaseName string, schemaName string) {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	err := client.Schemas.Drop(ctx, sdk.NewDatabaseObjectIdentifier(databaseName, schemaName), new(sdk.DropSchemaOptions))
-	require.NoError(t, err)
 }
