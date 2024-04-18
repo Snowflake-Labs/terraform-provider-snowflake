@@ -11,7 +11,7 @@ type Roles interface {
 	Alter(ctx context.Context, req *AlterRoleRequest) error
 	Drop(ctx context.Context, req *DropRoleRequest) error
 	Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error)
-	ShowByID(ctx context.Context, req *ShowRoleByIdRequest) (*Role, error)
+	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role, error)
 	Grant(ctx context.Context, req *GrantRoleRequest) error
 	Revoke(ctx context.Context, req *RevokeRoleRequest) error
 	Use(ctx context.Context, req *UseRoleRequest) error

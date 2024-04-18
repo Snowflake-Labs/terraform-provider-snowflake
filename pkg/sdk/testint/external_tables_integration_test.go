@@ -64,7 +64,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(name))
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
@@ -78,7 +78,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
@@ -105,7 +105,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
@@ -130,7 +130,7 @@ func TestInt_ExternalTables(t *testing.T) {
 				WithAutoRefresh(sdk.Bool(false)))
 		require.NoError(t, err)
 
-		_, err = client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id))
+		_, err = client.ExternalTables.ShowByID(ctx, id)
 		require.NoError(t, err)
 	})
 
@@ -140,7 +140,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		err := client.ExternalTables.CreateWithManualPartitioning(ctx, createExternalTableWithManualPartitioningReq(name))
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
@@ -166,7 +166,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		externalTable, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.NoError(t, err)
 		assert.Equal(t, name, externalTable.Name)
 	})
@@ -347,7 +347,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		_, err = client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(externalTableID))
+		_, err = client.ExternalTables.ShowByID(ctx, externalTableID)
 		require.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
@@ -457,11 +457,11 @@ func TestInt_ExternalTablesShowByID(t *testing.T) {
 		createExternalTableHandle(t, id1)
 		createExternalTableHandle(t, id2)
 
-		e1, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id1))
+		e1, err := client.ExternalTables.ShowByID(ctx, id1)
 		require.NoError(t, err)
 		require.Equal(t, id1, e1.ID())
 
-		e2, err := client.ExternalTables.ShowByID(ctx, sdk.NewShowExternalTableByIDRequest(id2))
+		e2, err := client.ExternalTables.ShowByID(ctx, id2)
 		require.NoError(t, err)
 		require.Equal(t, id2, e2.ID())
 	})

@@ -55,11 +55,12 @@ var userOwnershipGrantSchema = map[string]*schema.Schema{
 
 func UserOwnershipGrant() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateUserOwnershipGrant,
-		Read:   ReadUserOwnershipGrant,
-		Delete: DeleteUserOwnershipGrant,
-		Update: UpdateUserOwnershipGrant,
-		Schema: userOwnershipGrantSchema,
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_grant_ownership instead.",
+		Create:             CreateUserOwnershipGrant,
+		Read:               ReadUserOwnershipGrant,
+		Delete:             DeleteUserOwnershipGrant,
+		Update:             UpdateUserOwnershipGrant,
+		Schema:             userOwnershipGrantSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

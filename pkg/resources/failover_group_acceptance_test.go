@@ -8,6 +8,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -26,7 +27,7 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
 				Config: failoverGroupBasic(randomCharacters, accountName, acc.TestDatabaseName),
@@ -64,7 +65,7 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
 				Config: failoverGroupWithInterval(randomCharacters, accountName, 20, acc.TestDatabaseName),
@@ -105,7 +106,7 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
 				Config: failoverGroupWithInterval(randomCharacters, accountName, 10, acc.TestDatabaseName),
@@ -204,7 +205,7 @@ func TestAcc_FailoverGroup_issue2517(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
 				Config: failoverGroupWithAccountParameters(randomCharacters, accountName, acc.TestDatabaseName),
@@ -235,7 +236,7 @@ func TestAcc_FailoverGroup_issue2544(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
 				Config: failoverGroupBasic(randomCharacters, accountName, acc.TestDatabaseName),

@@ -87,7 +87,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     all {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_database        = snowflake_database.test.name
     }
   }
@@ -114,7 +114,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     all {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
     }
   }
@@ -136,7 +136,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     future {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_database        = snowflake_database.test.name
     }
   }
@@ -163,7 +163,7 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     future {
-      plural_object_type = "TABLES"
+      object_type_plural = "TABLES"
       in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
     }
   }
@@ -265,14 +265,14 @@ Optional:
 - `all` (Block List, Max: 1) Configures the privilege to be granted on all objects in either a database or schema. (see [below for nested schema](#nestedblock--on--all))
 - `future` (Block List, Max: 1) Configures the privilege to be granted on all objects in either a database or schema. (see [below for nested schema](#nestedblock--on--future))
 - `object_name` (String) Specifies the identifier for the object on which you are transferring ownership.
-- `object_type` (String) Specifies the type of object on which you are transferring ownership. Available values are: AGGREGATION POLICY | ALERT | AUTHENTICATION POLICY | COMPUTE POOL | DATABASE | DATABASE ROLE | DYNAMIC TABLE | EVENT TABLE | EXTERNAL TABLE | EXTERNAL VOLUME | FAILOVER GROUP | FILE FORMAT | FUNCTION | HYBRID TABLE | ICEBERG TABLE | IMAGE REPOSITORY | INTEGRATION | MATERIALIZED VIEW | NETWORK POLICY | NETWORK RULE | PACKAGES POLICY | PIPE | PROCEDURE | MASKING POLICY | PASSWORD POLICY | PROJECTION POLICY | REPLICATION GROUP | ROLE | ROW ACCESS POLICY | SCHEMA | SESSION POLICY | SECRET | SEQUENCE | STAGE | STREAM | TABLE | TAG | TASK | USER | VIEW | WAREHOUSE
+- `object_type` (String) Specifies the type of object on which you are transferring ownership. Available values are: AGGREGATION POLICY | ALERT | AUTHENTICATION POLICY | COMPUTE POOL | DATA METRIC FUNCTION | DATABASE | DATABASE ROLE | DYNAMIC TABLE | EVENT TABLE | EXTERNAL TABLE | EXTERNAL VOLUME | FAILOVER GROUP | FILE FORMAT | FUNCTION | GIT REPOSITORY | HYBRID TABLE | ICEBERG TABLE | IMAGE REPOSITORY | INTEGRATION | MATERIALIZED VIEW | NETWORK POLICY | NETWORK RULE | PACKAGES POLICY | PIPE | PROCEDURE | MASKING POLICY | PASSWORD POLICY | PROJECTION POLICY | REPLICATION GROUP | ROLE | ROW ACCESS POLICY | SCHEMA | SESSION POLICY | SECRET | SEQUENCE | STAGE | STREAM | TABLE | TAG | TASK | USER | VIEW | WAREHOUSE
 
 <a id="nestedblock--on--all"></a>
 ### Nested Schema for `on.all`
 
 Required:
 
-- `object_type_plural` (String) Specifies the type of object in plural form on which you are transferring ownership. Available values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | COMPUTE POOLS | DATABASES | DATABASE ROLES | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | EXTERNAL VOLUMES | FAILOVER GROUPS | FILE FORMATS | FUNCTIONS | HYBRID TABLES | ICEBERG TABLES | IMAGE REPOSITORIES | INTEGRATIONS | MATERIALIZED VIEWS | NETWORK POLICIES | NETWORK RULES | PACKAGES POLICIES | PIPES | PROCEDURES | MASKING POLICIES | PASSWORD POLICIES | PROJECTION POLICIES | REPLICATION GROUPS | ROLES | ROW ACCESS POLICIES | SCHEMAS | SESSION POLICIES | SECRETS | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | USERS | VIEWS | WAREHOUSES. For more information head over to [Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters).
+- `object_type_plural` (String) Specifies the type of object in plural form on which you are transferring ownership. Available values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | COMPUTE POOLS | DATA METRIC FUNCTIONS | DATABASES | DATABASE ROLES | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | EXTERNAL VOLUMES | FAILOVER GROUPS | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | ICEBERG TABLES | IMAGE REPOSITORIES | INTEGRATIONS | MATERIALIZED VIEWS | NETWORK POLICIES | NETWORK RULES | PACKAGES POLICIES | PIPES | PROCEDURES | MASKING POLICIES | PASSWORD POLICIES | PROJECTION POLICIES | REPLICATION GROUPS | ROLES | ROW ACCESS POLICIES | SCHEMAS | SESSION POLICIES | SECRETS | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | USERS | VIEWS | WAREHOUSES. For more information head over to [Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters).
 
 Optional:
 
@@ -285,7 +285,7 @@ Optional:
 
 Required:
 
-- `object_type_plural` (String) Specifies the type of object in plural form on which you are transferring ownership. Available values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | COMPUTE POOLS | DATABASES | DATABASE ROLES | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | EXTERNAL VOLUMES | FAILOVER GROUPS | FILE FORMATS | FUNCTIONS | HYBRID TABLES | ICEBERG TABLES | IMAGE REPOSITORIES | INTEGRATIONS | MATERIALIZED VIEWS | NETWORK POLICIES | NETWORK RULES | PACKAGES POLICIES | PIPES | PROCEDURES | MASKING POLICIES | PASSWORD POLICIES | PROJECTION POLICIES | REPLICATION GROUPS | ROLES | ROW ACCESS POLICIES | SCHEMAS | SESSION POLICIES | SECRETS | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | USERS | VIEWS | WAREHOUSES. For more information head over to [Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters).
+- `object_type_plural` (String) Specifies the type of object in plural form on which you are transferring ownership. Available values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | COMPUTE POOLS | DATA METRIC FUNCTIONS | DATABASES | DATABASE ROLES | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | EXTERNAL VOLUMES | FAILOVER GROUPS | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | ICEBERG TABLES | IMAGE REPOSITORIES | INTEGRATIONS | MATERIALIZED VIEWS | NETWORK POLICIES | NETWORK RULES | PACKAGES POLICIES | PIPES | PROCEDURES | MASKING POLICIES | PASSWORD POLICIES | PROJECTION POLICIES | REPLICATION GROUPS | ROLES | ROW ACCESS POLICIES | SCHEMAS | SESSION POLICIES | SECRETS | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | USERS | VIEWS | WAREHOUSES. For more information head over to [Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters).
 
 Optional:
 
@@ -315,18 +315,18 @@ It has varying number of parts, depending on grant_type. All the possible types 
 ### OnAll (contains inner types: InDatabase | InSchema)
 
 #### InDatabase
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<plural_object_type>|InDatabase|<database_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<object_type_plural>|InDatabase|<database_name>"`
 
 #### InSchema
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<plural_object_type>|InSchema|<schema_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnAll|<object_type_plural>|InSchema|<schema_name>"`
 
 ### OnFuture (contains inner types: InDatabase | InSchema)
 
 #### InDatabase
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<plural_object_type>|InDatabase|<database_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<object_type_plural>|InDatabase|<database_name>"`
 
 #### InSchema
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<plural_object_type>|InSchema|<schema_name>"`
+`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|OnFuture|<object_type_plural>|InSchema|<schema_name>"`
 
 ### Import examples
 

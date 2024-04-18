@@ -42,7 +42,7 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 
 	roleName := d.Get("name").(string)
 
-	role, err := client.Roles.ShowByID(ctx, sdk.NewShowByIdRoleRequest(sdk.NewAccountObjectIdentifier(roleName)))
+	role, err := client.Roles.ShowByID(ctx, sdk.NewAccountObjectIdentifier(roleName))
 	if err != nil {
 		log.Printf("[DEBUG] role (%s) not found", roleName)
 		d.SetId("")

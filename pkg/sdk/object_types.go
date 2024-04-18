@@ -68,6 +68,10 @@ const (
 	ObjectTypeHybridTable          ObjectType = "HYBRID TABLE"
 	ObjectTypeImageRepository      ObjectType = "IMAGE REPOSITORY"
 	ObjectTypeProjectionPolicy     ObjectType = "PROJECTION POLICY"
+	ObjectTypeDataMetricFunction   ObjectType = "DATA METRIC FUNCTION"
+	ObjectTypeGitRepository        ObjectType = "GIT REPOSITORY"
+	ObjectTypeModel                ObjectType = "MODEL"
+	ObjectTypeService              ObjectType = "SERVICE"
 )
 
 func (o ObjectType) String() string {
@@ -128,6 +132,10 @@ func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 		ObjectTypeHybridTable:          PluralObjectTypeHybridTables,
 		ObjectTypeImageRepository:      PluralObjectTypeImageRepositories,
 		ObjectTypeProjectionPolicy:     PluralObjectTypeProjectionPolicies,
+		ObjectTypeDataMetricFunction:   PluralObjectTypeDataMetricFunctions,
+		ObjectTypeGitRepository:        PluralObjectTypeGitRepositories,
+		ObjectTypeModel:                PluralObjectTypeModels,
+		ObjectTypeService:              PluralObjectTypeServices,
 	}
 }
 
@@ -228,6 +236,10 @@ const (
 	PluralObjectTypeHybridTables           PluralObjectType = "HYBRID TABLES"
 	PluralObjectTypeImageRepositories      PluralObjectType = "IMAGE REPOSITORIES"
 	PluralObjectTypeProjectionPolicies     PluralObjectType = "PROJECTION POLICIES"
+	PluralObjectTypeDataMetricFunctions    PluralObjectType = "DATA METRIC FUNCTIONS"
+	PluralObjectTypeGitRepositories        PluralObjectType = "GIT REPOSITORIES"
+	PluralObjectTypeModels                 PluralObjectType = "MODELS"
+	PluralObjectTypeServices               PluralObjectType = "SERVICES"
 )
 
 func (p PluralObjectType) String() string {

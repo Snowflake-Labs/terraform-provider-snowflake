@@ -49,19 +49,19 @@ func (v *externalTables) Show(ctx context.Context, req *ShowExternalTableRequest
 	return resultList, nil
 }
 
-func (v *externalTables) ShowByID(ctx context.Context, req *ShowExternalTableByIDRequest) (*ExternalTable, error) {
-	if !ValidObjectIdentifier(req.id) {
+func (v *externalTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalTable, error) {
+	if !ValidObjectIdentifier(id) {
 		return nil, ErrInvalidObjectIdentifier
 	}
 
 	externalTables, err := v.client.ExternalTables.Show(ctx, NewShowExternalTableRequest().
-		WithIn(NewShowExternalTableInRequest().WithSchema(NewDatabaseObjectIdentifier(req.id.DatabaseName(), req.id.SchemaName()))).
-		WithLike(String(req.id.Name())))
+		WithIn(NewShowExternalTableInRequest().WithSchema(NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))).
+		WithLike(String(id.Name())))
 	if err != nil {
 		return nil, err
 	}
 
-	return collections.FindOne(externalTables, func(t ExternalTable) bool { return t.ID().FullyQualifiedName() == req.id.FullyQualifiedName() })
+	return collections.FindOne(externalTables, func(t ExternalTable) bool { return t.ID().FullyQualifiedName() == id.FullyQualifiedName() })
 }
 
 func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error) {
