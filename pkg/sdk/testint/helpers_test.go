@@ -34,28 +34,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createWarehouse(t *testing.T, client *sdk.Client) (*sdk.Warehouse, func()) {
-	t.Helper()
-	return createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{})
-}
-
-func createWarehouseWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateWarehouseOptions) (*sdk.Warehouse, func()) {
-	t.Helper()
-	name := random.StringRange(8, 28)
-	id := sdk.NewAccountObjectIdentifier(name)
-	ctx := context.Background()
-	err := client.Warehouses.Create(ctx, id, opts)
-	require.NoError(t, err)
-	return &sdk.Warehouse{
-			Name: name,
-		}, func() {
-			err := client.Warehouses.Drop(ctx, id, nil)
-			require.NoError(t, err)
-			err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
-			require.NoError(t, err)
-		}
-}
-
 func createUser(t *testing.T, client *sdk.Client) (*sdk.User, func()) {
 	t.Helper()
 	name := random.StringRange(8, 28)
@@ -118,7 +96,7 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	t.Helper()
 	var warehouseCleanup func()
 	if warehouse == nil {
-		warehouse, warehouseCleanup = createWarehouse(t, client)
+		warehouse, warehouseCleanup = testClientHelper().Warehouse.CreateWarehouse(t)
 	}
 	var databaseCleanup func()
 	if database == nil {
@@ -449,7 +427,7 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 	}
 	var warehouseCleanup func()
 	if warehouse == nil {
-		warehouse, warehouseCleanup = createWarehouse(t, client)
+		warehouse, warehouseCleanup = testClientHelper().Warehouse.CreateWarehouse(t)
 	}
 
 	name := random.String()

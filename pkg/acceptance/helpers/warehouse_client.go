@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -36,17 +35,15 @@ func (c *WarehouseClient) UseWarehouse(t *testing.T, id sdk.AccountObjectIdentif
 
 func (c *WarehouseClient) CreateWarehouse(t *testing.T) (*sdk.Warehouse, func()) {
 	t.Helper()
-	return c.CreateWarehouseWithOptions(t, &sdk.CreateWarehouseOptions{})
+	return c.CreateWarehouseWithOptions(t, sdk.RandomAccountObjectIdentifier(), &sdk.CreateWarehouseOptions{})
 }
 
-func (c *WarehouseClient) CreateWarehouseWithOptions(t *testing.T, opts *sdk.CreateWarehouseOptions) (*sdk.Warehouse, func()) {
+func (c *WarehouseClient) CreateWarehouseWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateWarehouseOptions) (*sdk.Warehouse, func()) {
 	t.Helper()
-	name := random.StringRange(8, 28)
-	id := sdk.NewAccountObjectIdentifier(name)
 	ctx := context.Background()
 	err := c.client().Create(ctx, id, opts)
 	require.NoError(t, err)
-	return &sdk.Warehouse{Name: name}, c.DropWarehouseFunc(t, id)
+	return &sdk.Warehouse{Name: id.Name()}, c.DropWarehouseFunc(t, id)
 }
 
 func (c *WarehouseClient) DropWarehouseFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {

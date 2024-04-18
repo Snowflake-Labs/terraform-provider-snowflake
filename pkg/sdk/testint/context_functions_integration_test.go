@@ -96,7 +96,7 @@ func TestInt_CurrentWarehouse(t *testing.T) {
 	ctx := testContext(t)
 
 	// new warehouse created on purpose
-	warehouseTest, warehouseCleanup := createWarehouse(t, client)
+	warehouseTest, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 	err := client.Sessions.UseWarehouse(ctx, warehouseTest.ID())
 	require.NoError(t, err)
