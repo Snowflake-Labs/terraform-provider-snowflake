@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.89.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.88.0...v0.89.0) (2024-04-18)
+
+
+### 🎉 **What's new:**
+
+* Update target objects for privilege-granting resources ([#2688](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2688)) ([74e2b6b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/74e2b6bafb6e5a347b6bfc9b1b3e7283a5ad06b4))
+
+
+### 🔧 **Misc**
+
+* Handle generic check destroy in acceptance tests ([#2716](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2716)) ([63a5324](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/63a53247fb3a52fbc66206813900f6006205322c))
+* Initialize the SDK client in fewer places ([#2710](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2710)) ([382bfc1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/382bfc1f805851b3b944437128cdf9da74e8d6f2))
+
+
+### 🐛 **Bug fixes:**
+
+* Adds case statement for ObjectTypeUser in ShowObjectParameter. ([#2675](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2675)) ([23a3341](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/23a3341ab416e291fe617888ef09e94b9e69247d))
+* diffs always occurring when multiple columns exist ([#2686](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2686)) ([3275ad4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3275ad47747ad556faa5043eebf1295f11ae5bcc))
+* Fix issues [#2679](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2679) [#2721](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2721) ([#2723](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2723)) ([b0c9dd4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b0c9dd42221e50e931324fbc85ad69f890b2d874))
+* Fix several small issues ([#2697](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2697)) ([e3f6a15](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e3f6a154fc92b1bfd47fb68ae5ec6478aa971437))
+* granting ownership on database roles ([#2703](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2703)) ([88944e7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/88944e7a02b1ff930e1a39bc519780c124bdf4b2))
+* network policy update ([#2647](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2647)) ([8126b28](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8126b2872d2dfec4814dfb06141c0aa3284799e4))
+* Rename grants_redesign_desgin_decisions.md to grants_redesign_design_… ([#2691](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2691)) ([5000b2b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5000b2b5bb845751eb10de890892deadb8df8bdd))
+* renames in update operations ([#2702](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2702)) ([793c879](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/793c879b31b0a5ac4fc25d34eae495b6e0446daf))
+* showbyid method tests ([#2648](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2648)) ([ff5e617](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ff5e617bc91fb35a7b95fe59aa1c12972f99790e))
+
 ## [0.88.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.87.3-pre...v0.88.0) (2024-04-09)
 
 
