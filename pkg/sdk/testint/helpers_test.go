@@ -55,7 +55,7 @@ func createUserWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjec
 	user, err := client.Users.ShowByID(ctx, id)
 	require.NoError(t, err)
 	return user, func() {
-		err := client.Users.Drop(ctx, id)
+		err := client.Users.Drop(ctx, id, nil)
 		require.NoError(t, err)
 	}
 }

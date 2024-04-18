@@ -222,7 +222,7 @@ func TestInt_UserDrop(t *testing.T) {
 	t.Run("when user exists", func(t *testing.T) {
 		user, _ := createUser(t, client)
 		id := user.ID()
-		err := client.Users.Drop(ctx, id)
+		err := client.Users.Drop(ctx, id, &sdk.DropUserOptions{})
 		require.NoError(t, err)
 		_, err = client.Users.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -230,7 +230,7 @@ func TestInt_UserDrop(t *testing.T) {
 
 	t.Run("when user does not exist", func(t *testing.T) {
 		id := sdk.NewAccountObjectIdentifier("does_not_exist")
-		err := client.Users.Drop(ctx, id)
+		err := client.Users.Drop(ctx, id, &sdk.DropUserOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

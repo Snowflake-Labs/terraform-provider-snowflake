@@ -19,7 +19,7 @@ var (
 type Users interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateUserOptions) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterUserOptions) error
-	Drop(ctx context.Context, id AccountObjectIdentifier) error
+	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropUserOptions) error
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*UserDetails, error)
 	Show(ctx context.Context, opts *ShowUserOptions) ([]User, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User, error)
@@ -378,9 +378,10 @@ func (opts *UserUnset) validate() error {
 
 // DropUserOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-user.
 type DropUserOptions struct {
-	drop bool                    `ddl:"static" sql:"DROP"`
-	user bool                    `ddl:"static" sql:"USER"`
-	name AccountObjectIdentifier `ddl:"identifier"`
+	drop     bool                    `ddl:"static" sql:"DROP"`
+	user     bool                    `ddl:"static" sql:"USER"`
+	IfExists *bool                   `ddl:"keyword" sql:"IF EXISTS"`
+	name     AccountObjectIdentifier `ddl:"identifier"`
 }
 
 func (opts *DropUserOptions) validate() error {
@@ -393,8 +394,10 @@ func (opts *DropUserOptions) validate() error {
 	return nil
 }
 
-func (v *users) Drop(ctx context.Context, id AccountObjectIdentifier) error {
-	opts := &DropUserOptions{}
+func (v *users) Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropUserOptions) error {
+	if opts == nil {
+		opts = &DropUserOptions{}
+	}
 	opts.name = id
 	if err := opts.validate(); err != nil {
 		return fmt.Errorf("validate drop options: %w", err)

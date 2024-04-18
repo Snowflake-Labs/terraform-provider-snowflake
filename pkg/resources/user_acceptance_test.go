@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -157,7 +156,7 @@ resource "snowflake_user" "test" {
 				},
 			},
 			{
-				PreConfig: removeUserOutsideOfTerraform(t, userName),
+				PreConfig: acc.TestClient().User.DropUserFunc(t, userName),
 				Config:    config,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -178,17 +177,6 @@ resource "snowflake_user" "test" {
 			},
 		},
 	})
-}
-
-func removeUserOutsideOfTerraform(t *testing.T, name sdk.AccountObjectIdentifier) func() {
-	t.Helper()
-	return func() {
-		client := acc.Client(t)
-		ctx := context.Background()
-		if err := client.Users.Drop(ctx, name); err != nil {
-			t.Fatalf("failed to drop user: %s", name.FullyQualifiedName())
-		}
-	}
 }
 
 func uConfig(prefix, key1, key2, comment string) string {
