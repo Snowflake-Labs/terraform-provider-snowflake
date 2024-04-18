@@ -2,7 +2,6 @@ package testint
 
 import (
 	"testing"
-	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -48,15 +47,8 @@ func TestInt_ShowReplicationDatabases(t *testing.T) {
 	err = client.Databases.AlterReplication(ctx, db2.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
 	require.NoError(t, err)
 
-	// TODO [926148]: make this wait better with tests stabilization
-	// waiting because sometimes creating secondary db right after primary creation resulted in error
-	time.Sleep(1 * time.Second)
-	db3, dbCleanup3 := createSecondaryDatabaseWithOptions(t, secondaryClient, sdk.NewAccountObjectIdentifier(db3Name), sdk.NewExternalObjectIdentifier(accountId, db.ID()), &sdk.CreateSecondaryDatabaseOptions{})
+	db3, dbCleanup3 := acc.SecondaryTestClient().Database.CreateSecondaryDatabaseWithOptions(t, sdk.NewAccountObjectIdentifier(db3Name), sdk.NewExternalObjectIdentifier(accountId, db.ID()), &sdk.CreateSecondaryDatabaseOptions{})
 	t.Cleanup(dbCleanup3)
-
-	// TODO [926148]: make this wait better with tests stabilization
-	// waiting because sometimes secondary database is not shown as SHOW REPLICATION DATABASES results right after creation
-	time.Sleep(1 * time.Second)
 
 	getByName := func(replicationDatabases []sdk.ReplicationDatabase, name sdk.AccountObjectIdentifier) *sdk.ReplicationDatabase {
 		for _, rdb := range replicationDatabases {

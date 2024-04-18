@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -45,25 +44,6 @@ func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjec
 	require.NoError(t, err)
 	return func() {
 		err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
-		require.NoError(t, err)
-	}
-}
-
-func createSecondaryDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, externalId sdk.ExternalObjectIdentifier, opts *sdk.CreateSecondaryDatabaseOptions) (*sdk.Database, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Databases.CreateSecondary(ctx, id, externalId, opts)
-	require.NoError(t, err)
-	database, err := client.Databases.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return database, func() {
-		err := client.Databases.Drop(ctx, id, nil)
-		require.NoError(t, err)
-
-		// TODO [926148]: make this wait better with tests stabilization
-		// waiting because sometimes dropping primary db right after dropping the secondary resulted in error
-		time.Sleep(1 * time.Second)
-		err = client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName))
 		require.NoError(t, err)
 	}
 }
