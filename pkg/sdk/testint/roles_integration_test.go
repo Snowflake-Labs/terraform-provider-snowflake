@@ -235,7 +235,7 @@ func TestInt_Roles(t *testing.T) {
 		role, cleanup := createRole(t, client)
 		t.Cleanup(cleanup)
 
-		user, cleanupUser := createUser(t, client)
+		user, cleanupUser := testClientHelper().User.CreateUser(t)
 		t.Cleanup(cleanupUser)
 
 		userID := user.ID()

@@ -34,32 +34,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createUser(t *testing.T, client *sdk.Client) (*sdk.User, func()) {
-	t.Helper()
-	name := random.StringRange(8, 28)
-	id := sdk.NewAccountObjectIdentifier(name)
-	return createUserWithOptions(t, client, id, &sdk.CreateUserOptions{})
-}
-
-func createUserWithName(t *testing.T, client *sdk.Client, name string) (*sdk.User, func()) {
-	t.Helper()
-	id := sdk.NewAccountObjectIdentifier(name)
-	return createUserWithOptions(t, client, id, &sdk.CreateUserOptions{})
-}
-
-func createUserWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateUserOptions) (*sdk.User, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Users.Create(ctx, id, opts)
-	require.NoError(t, err)
-	user, err := client.Users.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return user, func() {
-		err := client.Users.Drop(ctx, id, nil)
-		require.NoError(t, err)
-	}
-}
-
 func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
 	t.Helper()
 	columns := []sdk.TableColumnRequest{
