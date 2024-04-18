@@ -5,8 +5,9 @@ import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 type TestClient struct {
 	context *TestClientContext
 
-	Database *DatabaseClient
-	Schema   *SchemaClient
+	Database  *DatabaseClient
+	Schema    *SchemaClient
+	Warehouse *WarehouseClient
 }
 
 func NewTestClient(c *sdk.Client, database string, schema string, warehouse string) *TestClient {
@@ -17,9 +18,10 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		warehouse: warehouse,
 	}
 	return &TestClient{
-		context:  context,
-		Database: NewDatabaseClient(context),
-		Schema:   NewSchemaClient(context),
+		context:   context,
+		Database:  NewDatabaseClient(context),
+		Schema:    NewSchemaClient(context),
+		Warehouse: NewWarehouseClient(context),
 	}
 }
 
