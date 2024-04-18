@@ -57,3 +57,12 @@ func (c *WarehouseClient) DropWarehouseFunc(t *testing.T, id sdk.AccountObjectId
 		require.NoError(t, err)
 	}
 }
+
+func (c *WarehouseClient) UpdateMaxConcurrencyLevel(t *testing.T, name string, level int) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, sdk.NewAccountObjectIdentifier(name), &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{MaxConcurrencyLevel: sdk.Int(level)}})
+	require.NoError(t, err)
+}

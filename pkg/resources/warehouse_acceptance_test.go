@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -9,12 +8,10 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Warehouse(t *testing.T) {
@@ -85,7 +82,7 @@ func TestAcc_Warehouse(t *testing.T) {
 			},
 			// CHANGE max_concurrency_level EXTERNALLY (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2318)
 			{
-				PreConfig: func() { alterWarehouseMaxConcurrencyLevelExternally(t, prefix2, 10) },
+				PreConfig: func() { acc.TestClient().Warehouse.UpdateMaxConcurrencyLevel(t, prefix2, 10) },
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
@@ -184,14 +181,4 @@ resource "snowflake_warehouse" "w2" {
 }
 `
 	return fmt.Sprintf(s, prefix, prefix)
-}
-
-func alterWarehouseMaxConcurrencyLevelExternally(t *testing.T, warehouseId string, level int) {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	err := client.Warehouses.Alter(ctx, sdk.NewAccountObjectIdentifier(warehouseId), &sdk.AlterWarehouseOptions{Set: &sdk.WarehouseSet{MaxConcurrencyLevel: sdk.Int(level)}})
-	require.NoError(t, err)
 }
