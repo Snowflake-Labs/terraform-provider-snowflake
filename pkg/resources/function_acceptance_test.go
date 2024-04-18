@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -185,6 +187,7 @@ func TestAcc_Function_complex(t *testing.T) {
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2490
 func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	resourceName := "snowflake_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -206,7 +209,7 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|%s|%s|VARCHAR", acc.TestDatabaseName, acc.TestSchemaName, name)),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -216,7 +219,7 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Config:                   functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", sdk.NewSchemaObjectIdentifierWithArguments(acc.TestDatabaseName, acc.TestSchemaName, name, []sdk.DataType{sdk.DataTypeVARCHAR}).FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -228,12 +231,54 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 	})
 }
 
-func functionConfig(database string, schema string, name string) string {
+func TestAcc_Function_Rename(t *testing.T) {
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	resourceName := "snowflake_function.f"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
+		Steps: []resource.TestStep{
+			{
+				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, name, comment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "comment", comment),
+				),
+			},
+			{
+				Config: functionConfig(acc.TestDatabaseName, acc.TestSchemaName, newName, newComment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", newName),
+					resource.TestCheckResourceAttr(resourceName, "comment", newComment),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func functionConfig(database string, schema string, name string, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_function" "f" {
   database        = "%[1]s"
   schema          = "%[2]s"
   name            = "%[3]s"
+  comment         = "%[4]s"
   return_type     = "VARCHAR"
   return_behavior = "IMMUTABLE"
   statement       = "SELECT PARAM"
@@ -243,5 +288,5 @@ resource "snowflake_function" "f" {
     type = "VARCHAR"
   }
 }
-`, database, schema, name)
+`, database, schema, name, comment)
 }

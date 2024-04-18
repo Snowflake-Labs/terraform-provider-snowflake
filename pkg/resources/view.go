@@ -223,9 +223,7 @@ func UpdateView(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("name") {
-		newName := d.Get("name").(string)
-
-		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), newName)
+		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), d.Get("name").(string))
 
 		err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithRenameTo(&newId))
 		if err != nil {

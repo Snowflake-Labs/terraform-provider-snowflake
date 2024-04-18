@@ -104,6 +104,11 @@ func TestAcc_Schema_Rename(t *testing.T) {
 					"database": config.StringVariable(acc.TestDatabaseName),
 					"comment":  config.StringVariable(comment),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", newSchemaName),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", acc.TestDatabaseName),
@@ -336,7 +341,7 @@ func TestAcc_Schema_RemoveDatabaseOutsideOfTerraform(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				RefreshPlanChecks: resource.RefreshPlanChecks{
 					PostRefresh: []plancheck.PlanCheck{
-						expectsCreatePlan("snowflake_schema.test"),
+						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
 					},
 				},
 			},

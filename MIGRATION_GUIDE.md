@@ -4,6 +4,13 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.88.0 ➞ v0.89.0
+#### *(behavior change)* ForceNew removed
+The `ForceNew` field was removed in favor of in-place Update for `name` parameter in:
+- `snowflake_file_format`
+- `snowflake_masking_policy`
+So from now, these objects won't be re-created when the `name` changes, but instead only the name will be updated with `ALTER .. RENAME TO` statements.
+
 ## v0.87.0 ➞ v0.88.0
 ### snowflake_procedure resource changes
 #### *(behavior change)* Execute as validation added

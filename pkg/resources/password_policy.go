@@ -266,6 +266,20 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
+	if d.HasChange("name") {
+		newId := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), d.Get("name").(string))
+
+		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, &sdk.AlterPasswordPolicyOptions{
+			NewName: &newId,
+		})
+		if err != nil {
+			return err
+		}
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		objectIdentifier = newId
+	}
+
 	if d.HasChange("min_length") {
 		alterOptions := &sdk.AlterPasswordPolicyOptions{
 			Set: &sdk.PasswordPolicySet{
@@ -410,20 +424,6 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-	}
-
-	if d.HasChange("name") {
-		_, n := d.GetChange("name")
-		newName := n.(string)
-		newID := sdk.NewSchemaObjectIdentifier(objectIdentifier.DatabaseName(), objectIdentifier.SchemaName(), newName)
-		alterOptions := &sdk.AlterPasswordPolicyOptions{
-			NewName: &newID,
-		}
-		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
-		if err != nil {
-			return err
-		}
-		d.SetId(helpers.EncodeSnowflakeID(newID))
 	}
 
 	return ReadPasswordPolicy(d, meta)
