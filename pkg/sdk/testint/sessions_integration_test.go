@@ -124,7 +124,7 @@ func TestInt_UseDatabase(t *testing.T) {
 		require.NoError(t, err)
 	})
 	// new database created on purpose
-	database, databaseCleanup := createDatabase(t, client)
+	database, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 	err := client.Sessions.UseDatabase(ctx, database.ID())
 	require.NoError(t, err)
@@ -143,7 +143,7 @@ func TestInt_UseSchema(t *testing.T) {
 		require.NoError(t, err)
 	})
 	// new database and schema created on purpose
-	database, databaseCleanup := createDatabase(t, client)
+	database, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 	schema, schemaCleanup := createSchema(t, client, database)
 	t.Cleanup(schemaCleanup)

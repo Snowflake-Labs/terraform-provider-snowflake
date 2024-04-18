@@ -154,7 +154,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("alter database_role: rename to other database", func(t *testing.T) {
-		secondDatabase, secondDatabaseCleanup := createDatabase(t, client)
+		secondDatabase, secondDatabaseCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(secondDatabaseCleanup)
 
 		name := random.String()

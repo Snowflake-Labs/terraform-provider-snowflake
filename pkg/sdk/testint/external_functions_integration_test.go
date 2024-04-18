@@ -220,7 +220,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	})
 
 	t.Run("show external function: with in", func(t *testing.T) {
-		otherDb, otherDbCleanup := createDatabase(t, testClient(t))
+		otherDb, otherDbCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(otherDbCleanup)
 
 		e1 := createExternalFunction(t)

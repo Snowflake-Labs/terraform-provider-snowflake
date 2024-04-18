@@ -1377,7 +1377,7 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t 
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					databaseCleanup = createDatabaseOutsideTerraform(t, databaseName)
+					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
 					t.Cleanup(createAccountRoleOutsideTerraform(t, name))
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
@@ -1420,7 +1420,8 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *t
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Cleanup(createDatabaseOutsideTerraform(t, databaseName))
+					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					t.Cleanup(dbCleanup)
 					roleCleanup = createAccountRoleOutsideTerraform(t, name)
 					t.Cleanup(roleCleanup)
 				},

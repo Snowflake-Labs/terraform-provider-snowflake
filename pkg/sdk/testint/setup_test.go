@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -83,6 +84,9 @@ type integrationTestContext struct {
 	secondarySchemaCleanup    func()
 	secondaryWarehouse        *sdk.Warehouse
 	secondaryWarehouseCleanup func()
+
+	testClient          *helpers.TestClient
+	secondaryTestClient *helpers.TestClient
 }
 
 func (itc *integrationTestContext) initialize() error {
@@ -157,6 +161,9 @@ func (itc *integrationTestContext) initialize() error {
 	}
 	itc.secondaryWarehouse = secondaryWarehouse
 	itc.secondaryWarehouseCleanup = secondaryWarehouseCleanup
+
+	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName)
+	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName)
 
 	return nil
 }
@@ -261,4 +268,12 @@ func testSecondaryWarehouse(t *testing.T) *sdk.Warehouse {
 func testConfig(t *testing.T) *gosnowflake.Config {
 	t.Helper()
 	return itc.config
+}
+
+func testClientHelper() *helpers.TestClient {
+	return itc.testClient
+}
+
+func secondaryTestClientHelper() *helpers.TestClient {
+	return itc.secondaryTestClient
 }

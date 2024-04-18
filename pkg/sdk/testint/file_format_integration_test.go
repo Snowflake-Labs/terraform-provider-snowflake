@@ -504,7 +504,7 @@ func TestInt_FileFormatsShowById(t *testing.T) {
 	t.Cleanup(cleanupFileFormat)
 
 	// new database and schema created on purpose
-	databaseTest2, cleanupDatabase2 := createDatabase(t, client)
+	databaseTest2, cleanupDatabase2 := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(cleanupDatabase2)
 	schemaTest2, cleanupSchema2 := createSchema(t, client, databaseTest2)
 	t.Cleanup(cleanupSchema2)

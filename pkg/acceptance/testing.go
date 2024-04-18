@@ -8,6 +8,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -72,12 +73,17 @@ func init() {
 		log.Panicf("Cannot instantiate new secondary client, err: %v", err)
 	}
 	atc.secondaryClient = secondaryClient
+
+	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName)
+	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName)
 }
 
 type acceptanceTestContext struct {
-	config          *gosnowflake.Config
-	client          *sdk.Client
-	secondaryClient *sdk.Client
+	config              *gosnowflake.Config
+	client              *sdk.Client
+	secondaryClient     *sdk.Client
+	testClient          *helpers.TestClient
+	secondaryTestClient *helpers.TestClient
 }
 
 var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
@@ -163,4 +169,12 @@ func SecondaryClient(t *testing.T) *sdk.Client {
 func DefaultConfig(t *testing.T) *gosnowflake.Config {
 	t.Helper()
 	return atc.config
+}
+
+func TestClient() *helpers.TestClient {
+	return atc.testClient
+}
+
+func SecondaryTestClient() *helpers.TestClient {
+	return atc.secondaryTestClient
 }

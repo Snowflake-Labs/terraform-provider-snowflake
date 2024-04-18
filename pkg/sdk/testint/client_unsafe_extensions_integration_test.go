@@ -30,11 +30,11 @@ func TestInt_Client_UnsafeQuery(t *testing.T) {
 	})
 
 	t.Run("test more results", func(t *testing.T) {
-		db1, db1Cleanup := createDatabase(t, client)
+		db1, db1Cleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(db1Cleanup)
-		db2, db2Cleanup := createDatabase(t, client)
+		db2, db2Cleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(db2Cleanup)
-		db3, db3Cleanup := createDatabase(t, client)
+		db3, db3Cleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(db3Cleanup)
 
 		sql := "SHOW DATABASES"
