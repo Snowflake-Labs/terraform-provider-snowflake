@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -54,17 +55,19 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	url := "s3://foo/"
 	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	storageIntegration := ""
+	initialStorageIntegration := ""
 	credentials := fmt.Sprintf("AWS_KEY_ID = '%s' AWS_SECRET_KEY = '%s'", awsKeyId, awsSecretKey)
 	encryption := "TYPE = 'NONE'"
+	copyOptionsWithQuotes := "ON_ERROR = 'CONTINUE'"
 
 	changedUrl := awsBucketUrl + "/some-path"
 	changedStorageIntegration := "S3_STORAGE_INTEGRATION"
 	changedEncryption := "TYPE = 'AWS_SSE_S3'"
 	changedFileFormat := "TYPE = JSON NULL_IF = []"
 	changedComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	copyOptionsWithoutQuotes := "ON_ERROR = CONTINUE"
 
-	configVariables := func(url string, storageIntegration string, credentials string, encryption string, fileFormat string, comment string) config.Variables {
+	configVariables := func(url string, storageIntegration string, credentials string, encryption string, fileFormat string, comment string, copyOptions string) config.Variables {
 		return config.Variables{
 			"database":            config.StringVariable(databaseName),
 			"schema":              config.StringVariable(schemaName),
@@ -75,6 +78,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 			"encryption":          config.StringVariable(encryption),
 			"file_format":         config.StringVariable(fileFormat),
 			"comment":             config.StringVariable(comment),
+			"copy_options":        config.StringVariable(copyOptions),
 		}
 	}
 
@@ -89,22 +93,26 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(url, storageIntegration, credentials, encryption, "", comment),
+				ConfigVariables: configVariables(url, initialStorageIntegration, credentials, encryption, "", comment, copyOptionsWithQuotes),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "storage_integration", storageIntegration),
+					resource.TestCheckResourceAttr(resourceName, "storage_integration", initialStorageIntegration),
 					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "encryption", encryption),
 					resource.TestCheckResourceAttr(resourceName, "file_format", ""),
+					resource.TestCheckResourceAttr(resourceName, "copy_options", copyOptionsWithoutQuotes),
 					resource.TestCheckResourceAttr(resourceName, "url", url),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
 			},
 			{
 				ConfigDirectory: config.TestNameDirectory(),
-				ConfigVariables: configVariables(changedUrl, changedStorageIntegration, credentials, changedEncryption, changedFileFormat, changedComment),
+				ConfigVariables: configVariables(changedUrl, changedStorageIntegration, credentials, changedEncryption, changedFileFormat, changedComment, copyOptionsWithoutQuotes),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
@@ -113,32 +121,58 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "encryption", changedEncryption),
 					resource.TestCheckResourceAttr(resourceName, "file_format", changedFileFormat),
+					resource.TestCheckResourceAttr(resourceName, "copy_options", copyOptionsWithoutQuotes),
 					resource.TestCheckResourceAttr(resourceName, "url", changedUrl),
 					resource.TestCheckResourceAttr(resourceName, "comment", changedComment),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: configVariables(changedUrl, changedStorageIntegration, credentials, changedEncryption, changedFileFormat, changedComment, copyOptionsWithoutQuotes),
+				Destroy:         true,
+			},
+			{
+				ConfigDirectory: config.TestNameDirectory(),
+				ConfigVariables: configVariables(url, initialStorageIntegration, credentials, encryption, "", comment, copyOptionsWithoutQuotes),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "storage_integration", initialStorageIntegration),
+					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
+					resource.TestCheckResourceAttr(resourceName, "encryption", encryption),
+					resource.TestCheckResourceAttr(resourceName, "file_format", ""),
+					resource.TestCheckResourceAttr(resourceName, "copy_options", copyOptionsWithoutQuotes),
+					resource.TestCheckResourceAttr(resourceName, "url", url),
+					resource.TestCheckResourceAttr(resourceName, "comment", comment),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
 			},
 		},
 	})
 }
 
 func stageIntegrationConfig(name string, siNameSuffix string, url string, databaseName string, schemaName string) string {
-	resources := `
+	return fmt.Sprintf(`
 resource "snowflake_storage_integration" "test" {
-	name = "%s%s"
-	storage_allowed_locations = ["%s"]
+	name = "%[1]s%[2]s"
+	storage_allowed_locations = ["%[3]s"]
 	storage_provider = "S3"
 
   	storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
 }
 
 resource "snowflake_stage" "test" {
-	name = "%s"
-	url = "%s"
+	name = "%[1]s"
+	url = "%[3]s"
 	storage_integration = snowflake_storage_integration.test.name
-	database = "%s"
-	schema = "%s"
+	database = "%[4]s"
+	schema = "%[5]s"
 }
-`
-
-	return fmt.Sprintf(resources, name, siNameSuffix, url, name, url, databaseName, schemaName)
+`, name, siNameSuffix, url, databaseName, schemaName)
 }

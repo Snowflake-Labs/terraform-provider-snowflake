@@ -26,7 +26,7 @@ func normalizeQuery(str string) string {
 }
 
 // TODO [SNOW-999049]: address during identifiers rework
-func suppressIdentifierQuoting(k, oldValue, newValue string, d *schema.ResourceData) bool {
+func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 	if oldValue == "" || newValue == "" {
 		return false
 	} else {
@@ -39,5 +39,16 @@ func suppressIdentifierQuoting(k, oldValue, newValue string, d *schema.ResourceD
 			return false
 		}
 		return oldId.FullyQualifiedName() == newId.FullyQualifiedName()
+	}
+}
+
+// TODO [SNOW-1325214]: address during stage resource rework
+func suppressCopyOptionsQuoting(_, oldValue, newValue string, _ *schema.ResourceData) bool {
+	if oldValue == "" || newValue == "" {
+		return false
+	} else {
+		oldWithoutQuotes := strings.ReplaceAll(oldValue, "'", "")
+		newWithoutQuotes := strings.ReplaceAll(newValue, "'", "")
+		return oldWithoutQuotes == newWithoutQuotes
 	}
 }
