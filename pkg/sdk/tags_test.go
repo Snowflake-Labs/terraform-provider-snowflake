@@ -44,6 +44,14 @@ func TestTagCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: allowed values count", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AllowedValues = &AllowedValues{
+			Values: []AllowedValue{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("AllowedValues", "Values", 1, 300))
+	})
+
 	t.Run("validation: both ifNotExists and orReplace present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
@@ -295,6 +303,16 @@ func TestTagAlter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TagUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
+	})
+
+	t.Run("validation: allowed values count", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Add = &TagAdd{
+			AllowedValues: &AllowedValues{
+				Values: []AllowedValue{},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("AllowedValues", "Values", 1, 300))
 	})
 }
 

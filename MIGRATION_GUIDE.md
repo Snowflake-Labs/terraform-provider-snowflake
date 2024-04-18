@@ -181,6 +181,11 @@ As the guide is more general and applies to every version (and provider), we mov
 
 ## v0.84.0 ➞ v0.85.0
 
+### snowflake_stage resource changes
+
+#### *(behavior change/regression)* copy_options
+Setting `copy_options` to `ON_ERROR = 'CONTINUE'` would result in a permadiff. Use `ON_ERROR = CONTINUE` (without single quotes) or bump to v0.89.0 in which the behavior was fixed.
+
 ### snowflake_notification_integration resource changes
 #### *(behavior change)* notification_provider
 `notification_provider` becomes required and has three possible values `AZURE_STORAGE_QUEUE`, `AWS_SNS`, and `GCP_PUBSUB`.

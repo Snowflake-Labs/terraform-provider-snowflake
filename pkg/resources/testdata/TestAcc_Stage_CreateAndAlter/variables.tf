@@ -33,3 +33,7 @@ variable "encryption" {
 variable "file_format" {
   type = string
 }
+
+variable "copy_options" {
+  type = string
+}
