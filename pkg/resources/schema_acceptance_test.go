@@ -357,7 +357,7 @@ func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
 		"database_name": config.StringVariable(databaseName),
 	}
 
-	cleanupDatabase := createDatabaseOutsideTerraform(t, databaseName)
+	_, cleanupDatabase := acc.TestClient().Database.CreateDatabaseWithOptions(t, sdk.NewAccountObjectIdentifier(databaseName), &sdk.CreateDatabaseOptions{})
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

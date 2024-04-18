@@ -28,7 +28,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	})
 
 	t.Run("as clone", func(t *testing.T) {
-		cloneDatabase, cloneDatabaseCleanup := createDatabase(t, client)
+		cloneDatabase, cloneDatabaseCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(cloneDatabaseCleanup)
 		databaseID := sdk.RandomAccountObjectIdentifier()
 		opts := &sdk.CreateDatabaseOptions{
