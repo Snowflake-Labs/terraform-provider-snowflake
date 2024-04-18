@@ -64,3 +64,10 @@ func (c *SchemaClient) UpdateDataRetentionTime(t *testing.T, id sdk.DatabaseObje
 		require.NoError(t, err)
 	}
 }
+
+func (c *SchemaClient) Show(t *testing.T, id sdk.DatabaseObjectIdentifier) (*sdk.Schema, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}

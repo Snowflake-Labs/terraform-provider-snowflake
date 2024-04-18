@@ -97,3 +97,10 @@ func (d *DatabaseClient) UpdateDataRetentionTime(t *testing.T, id sdk.AccountObj
 		require.NoError(t, err)
 	}
 }
+
+func (d *DatabaseClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Database, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return d.client().ShowByID(ctx, id)
+}
