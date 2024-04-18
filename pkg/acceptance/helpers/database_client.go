@@ -40,7 +40,14 @@ func (d *DatabaseClient) CreateDatabaseWithOptions(t *testing.T, id sdk.AccountO
 	require.NoError(t, err)
 	database, err := d.client().ShowByID(ctx, id)
 	require.NoError(t, err)
-	return database, func() {
+	return database, d.DropDatabaseFunc(t, id)
+}
+
+func (d *DatabaseClient) DropDatabaseFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	return func() {
 		err := d.client().Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
 		err = d.context.client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(d.context.database, d.context.schema))

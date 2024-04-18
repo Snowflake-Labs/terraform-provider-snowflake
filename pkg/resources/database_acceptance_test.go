@@ -109,7 +109,7 @@ func TestAcc_Database(t *testing.T) {
 }
 
 func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
+	name := generateUnsafeExecuteTestDatabaseName(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -122,30 +122,30 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 			{
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: map[string]config.Variable{
-					"db": config.StringVariable(id),
+					"db": config.StringVariable(name),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.db", "name", id),
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", name),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					testAccCheckDatabaseExistence(t, id, true),
+					testAccCheckDatabaseExistence(t, name, true),
 				),
 			},
 			{
-				PreConfig:       func() { dropDatabaseOutsideTerraform(t, id) },
+				PreConfig:       func() { acc.TestClient().Database.DropDatabaseFunc(t, sdk.NewAccountObjectIdentifier(name))() },
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: map[string]config.Variable{
-					"db": config.StringVariable(id),
+					"db": config.StringVariable(name),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.db", "name", id),
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", name),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					testAccCheckDatabaseExistence(t, id, true),
+					testAccCheckDatabaseExistence(t, name, true),
 				),
 			},
 		},
@@ -374,16 +374,6 @@ resource "snowflake_database" "db" {
 }
 `
 	return fmt.Sprintf(s, prefix, secondaryAccountName)
-}
-
-func dropDatabaseOutsideTerraform(t *testing.T, id string) {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	err := client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(id), &sdk.DropDatabaseOptions{})
-	require.NoError(t, err)
 }
 
 func getSecondaryAccount(t *testing.T) string {
