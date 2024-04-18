@@ -6,6 +6,7 @@ type TestClient struct {
 	context *TestClientContext
 
 	Database *DatabaseClient
+	Schema   *SchemaClient
 }
 
 func NewTestClient(c *sdk.Client, database string, schema string, warehouse string) *TestClient {
@@ -18,6 +19,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 	return &TestClient{
 		context:  context,
 		Database: NewDatabaseClient(context),
+		Schema:   NewSchemaClient(context),
 	}
 }
 

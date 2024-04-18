@@ -1,7 +1,7 @@
 package sdk
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 // Helper methods in this file are used both in SDK tests and also in integration tests.
