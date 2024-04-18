@@ -85,7 +85,8 @@ type integrationTestContext struct {
 	secondaryWarehouse        *sdk.Warehouse
 	secondaryWarehouseCleanup func()
 
-	testClient *helpers.TestClient
+	testClient          *helpers.TestClient
+	secondaryTestClient *helpers.TestClient
 }
 
 func (itc *integrationTestContext) initialize() error {
@@ -162,6 +163,7 @@ func (itc *integrationTestContext) initialize() error {
 	itc.secondaryWarehouseCleanup = secondaryWarehouseCleanup
 
 	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName)
+	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName)
 
 	return nil
 }
@@ -270,4 +272,8 @@ func testConfig(t *testing.T) *gosnowflake.Config {
 
 func testClientHelper() *helpers.TestClient {
 	return itc.testClient
+}
+
+func secondaryTestClientHelper() *helpers.TestClient {
+	return itc.secondaryTestClient
 }

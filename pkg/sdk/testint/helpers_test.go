@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/require"
@@ -160,7 +158,7 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	}
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = acc.TestClient().Database.CreateDatabase(t)
+		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
@@ -295,7 +293,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *sdk.Client, database 
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = acc.TestClient().Database.CreateDatabase(t)
+		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
@@ -432,7 +430,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *sdk.Client, database *
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = acc.TestClient().Database.CreateDatabase(t)
+		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
@@ -479,7 +477,7 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = acc.TestClient().Database.CreateDatabase(t)
+		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {

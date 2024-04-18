@@ -3,8 +3,6 @@ package testint
 import (
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -156,7 +154,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("alter database_role: rename to other database", func(t *testing.T) {
-		secondDatabase, secondDatabaseCleanup := acc.TestClient().Database.CreateDatabase(t)
+		secondDatabase, secondDatabaseCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(secondDatabaseCleanup)
 
 		name := random.String()

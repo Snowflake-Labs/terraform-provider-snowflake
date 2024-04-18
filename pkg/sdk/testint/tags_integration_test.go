@@ -5,8 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -18,7 +16,7 @@ func TestInt_Tags(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	databaseTest, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
+	databaseTest, databaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
 	t.Cleanup(schemaCleanup)

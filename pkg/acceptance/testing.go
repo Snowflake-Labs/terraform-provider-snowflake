@@ -176,5 +176,5 @@ func TestClient() *helpers.TestClient {
 }
 
 func SecondaryTestClient() *helpers.TestClient {
-	return atc.testClient
+	return atc.secondaryTestClient
 }

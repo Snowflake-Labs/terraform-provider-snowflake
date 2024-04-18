@@ -3,8 +3,6 @@ package testint
 import (
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
@@ -37,9 +35,9 @@ func TestInt_ShowReplicationDatabases(t *testing.T) {
 	db1Name := random.AlphaN(10)
 	db2Name := random.AlphaN(10)
 	db3Name := random.AlphaN(10)
-	db, dbCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, db1Name)
+	db, dbCleanup := testClientHelper().Database.CreateDatabaseWithName(t, db1Name)
 	t.Cleanup(dbCleanup)
-	db2, dbCleanup2 := acc.TestClient().Database.CreateDatabaseWithName(t, db2Name)
+	db2, dbCleanup2 := testClientHelper().Database.CreateDatabaseWithName(t, db2Name)
 	t.Cleanup(dbCleanup2)
 
 	err = client.Databases.AlterReplication(ctx, db.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
@@ -47,7 +45,7 @@ func TestInt_ShowReplicationDatabases(t *testing.T) {
 	err = client.Databases.AlterReplication(ctx, db2.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
 	require.NoError(t, err)
 
-	db3, dbCleanup3 := acc.SecondaryTestClient().Database.CreateSecondaryDatabaseWithOptions(t, sdk.NewAccountObjectIdentifier(db3Name), sdk.NewExternalObjectIdentifier(accountId, db.ID()), &sdk.CreateSecondaryDatabaseOptions{})
+	db3, dbCleanup3 := testClientHelper().Database.CreateSecondaryDatabaseWithOptions(t, sdk.NewAccountObjectIdentifier(db3Name), sdk.NewExternalObjectIdentifier(accountId, db.ID()), &sdk.CreateSecondaryDatabaseOptions{})
 	t.Cleanup(dbCleanup3)
 
 	getByName := func(replicationDatabases []sdk.ReplicationDatabase, name sdk.AccountObjectIdentifier) *sdk.ReplicationDatabase {

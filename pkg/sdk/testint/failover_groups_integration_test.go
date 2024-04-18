@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
@@ -615,7 +613,7 @@ func TestInt_FailoverGroupsAlterSource(t *testing.T) {
 		require.NoError(t, err)
 
 		// create a temp database
-		databaseTest, cleanupDatabase := acc.TestClient().Database.CreateDatabase(t)
+		databaseTest, cleanupDatabase := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(cleanupDatabase)
 
 		// now add database to allowed databases of failover group 1
@@ -664,7 +662,7 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 	secondaryClientID := getAccountIdentifier(t, secondaryClient)
 
 	// create a temp database
-	databaseTest, cleanupDatabase := acc.TestClient().Database.CreateDatabase(t)
+	databaseTest, cleanupDatabase := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(cleanupDatabase)
 
 	// create a failover group in primary account and share with target account

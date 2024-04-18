@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -32,11 +30,11 @@ func TestInt_Client_UnsafeQuery(t *testing.T) {
 	})
 
 	t.Run("test more results", func(t *testing.T) {
-		db1, db1Cleanup := acc.TestClient().Database.CreateDatabase(t)
+		db1, db1Cleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(db1Cleanup)
-		db2, db2Cleanup := acc.TestClient().Database.CreateDatabase(t)
+		db2, db2Cleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(db2Cleanup)
-		db3, db3Cleanup := acc.TestClient().Database.CreateDatabase(t)
+		db3, db3Cleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(db3Cleanup)
 
 		sql := "SHOW DATABASES"

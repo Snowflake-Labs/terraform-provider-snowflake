@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/require"
@@ -222,7 +220,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 	})
 
 	t.Run("show external function: with in", func(t *testing.T) {
-		otherDb, otherDbCleanup := acc.TestClient().Database.CreateDatabase(t)
+		otherDb, otherDbCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(otherDbCleanup)
 
 		e1 := createExternalFunction(t)
