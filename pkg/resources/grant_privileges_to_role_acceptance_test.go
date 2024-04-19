@@ -987,7 +987,10 @@ func TestAcc_GrantPrivilegesToRole_OnAllPipes(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/OnAllPipes"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -1158,7 +1161,10 @@ func TestAcc_GrantPrivilegesToRole_MultiplePartsInRoleName(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(

@@ -43,6 +43,11 @@ func (c *RoleClient) CreateRole(t *testing.T) (*sdk.Role, func()) {
 	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
 }
 
+func (c *RoleClient) CreateRoleWithName(t *testing.T, name string) (*sdk.Role, func()) {
+	t.Helper()
+	return c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(sdk.NewAccountObjectIdentifier(name)))
+}
+
 func (c *RoleClient) CreateRoleGrantedToCurrentUser(t *testing.T) (*sdk.Role, func()) {
 	t.Helper()
 

@@ -43,7 +43,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -89,7 +92,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_PrivilegesReversed(t *testin
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -137,7 +143,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -185,7 +194,10 @@ func TestAcc_GrantPrivilegesToApplicationRole_OnAccountObject_InfinitePlan(t *te
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject_InfinitePlan"),
 				ConfigVariables: config.Variables{
 					"name":     config.StringVariable(name),
@@ -227,7 +239,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchema"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -263,7 +278,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchema_ExactlyOneOf(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchema_ExactlyOneOf"),
 				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
@@ -296,7 +314,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAllSchemasInDatabase(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAllSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -345,7 +366,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnFutureSchemasInDatabase(t *testing.T
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnFutureSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -397,7 +421,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject(t *testing.T) 
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -446,7 +473,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnObject_OwnershipPrivi
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				ExpectError:     regexp.MustCompile("Unsupported privilege 'OWNERSHIP'"),
@@ -480,7 +510,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_InDatabase(t *tes
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -530,7 +563,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAllPipes(t *testing.T
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAllPipes"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -581,7 +617,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_InDatabase(t *
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -633,7 +672,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnFuture_Streamlits_InD
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables: configVariables,
 				ExpectError:     regexp.MustCompile("Unsupported feature 'STREAMLIT'"),
@@ -666,7 +708,10 @@ func TestAcc_GrantPrivilegesToAccountRole_OnSchemaObject_OnAll_Streamlits_InData
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -717,7 +762,10 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/UpdatePrivileges/privileges"),
 				ConfigVariables: configVariables(false, []sdk.AccountObjectPrivilege{
 					sdk.AccountObjectPrivilegeCreateSchema,
@@ -808,7 +856,10 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/UpdatePrivileges_SnowflakeChecked/privileges"),
 				ConfigVariables: configVariables(false, []string{
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
@@ -883,7 +934,10 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/AlwaysApply"),
 				ConfigVariables: configVariables(false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1025,7 +1079,10 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivilegesOnSnowflakeDatabase(
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/ImportedPrivilegesOnSnowflakeDatabase"),
 				ConfigVariables: configVariables,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1077,7 +1134,10 @@ func TestAcc_GrantPrivilegesToAccountRole_MultiplePartsInRoleName(t *testing.T) 
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -1113,7 +1173,8 @@ func TestAcc_GrantPrivilegesToAccountRole_OnExternalVolume(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Cleanup(createAccountRoleOutsideTerraform(t, name))
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
 					cleanupExternalVolume := createExternalVolume(t, externalVolumeName)
 					t.Cleanup(cleanupExternalVolume)
 				},
@@ -1162,7 +1223,10 @@ func TestAcc_GrantPrivilegesToAccountRole_MLPrivileges(t *testing.T) {
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchema"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -1212,7 +1276,10 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1268,7 +1335,10 @@ func TestAcc_GrantPrivilegesToAccountRole_ChangeWithGrantOptionsOutsideOfTerrafo
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1378,7 +1448,8 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveGrantedObjectOutsideTerraform(t 
 			{
 				PreConfig: func() {
 					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
-					t.Cleanup(createAccountRoleOutsideTerraform(t, name))
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
 				ConfigVariables: configVariables,
@@ -1422,7 +1493,7 @@ func TestAcc_GrantPrivilegesToAccountRole_RemoveAccountRoleOutsideTerraform(t *t
 				PreConfig: func() {
 					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
 					t.Cleanup(dbCleanup)
-					roleCleanup = createAccountRoleOutsideTerraform(t, name)
+					_, roleCleanup = acc.TestClient().Role.CreateRoleWithName(t, name)
 					t.Cleanup(roleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccountObject"),
@@ -1463,7 +1534,10 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply_SetAfterCreate(t *testing.
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig:          func() { createAccountRoleOutsideTerraform(t, name) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory:    acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/AlwaysApply"),
 				ConfigVariables:    configVariables(true),
 				ExpectNonEmptyPlan: true,
@@ -1512,22 +1586,6 @@ func dropSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, sha
 		secondaryClient.Shares.Drop(ctx, sdk.NewAccountObjectIdentifier(shareName)),
 		secondaryClient.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.DropDatabaseOptions{}),
 	)
-}
-
-func createAccountRoleOutsideTerraform(t *testing.T, name string) func() {
-	t.Helper()
-	client := acc.Client(t)
-	ctx := context.Background()
-	roleId := sdk.NewAccountObjectIdentifier(name)
-	if err := client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId).WithOrReplace(true)); err != nil {
-		t.Fatal(fmt.Errorf("error account role (%s): %w", roleId.FullyQualifiedName(), err))
-	}
-
-	return func() {
-		if err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId).WithIfExists(true)); err != nil {
-			t.Errorf("error dropping account role (%s): %v", roleId.FullyQualifiedName(), err)
-		}
-	}
 }
 
 func queriedAccountRolePrivilegesEqualTo(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
