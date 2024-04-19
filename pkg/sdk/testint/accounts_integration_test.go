@@ -59,8 +59,7 @@ func TestInt_AccountCreate(t *testing.T) {
 	}
 	t.Run("complete case", func(t *testing.T) {
 		accountID := sdk.NewAccountObjectIdentifier("TF_" + strings.ToUpper(gofakeit.Fruit()) + "_" + fmt.Sprintf("%d", random.IntRange(100, 999)))
-		region, err := client.ContextFunctions.CurrentRegion(ctx)
-		require.NoError(t, err)
+		region := testClientHelper().Context.CurrentRegion(t)
 
 		opts := &sdk.CreateAccountOptions{
 			AdminName:          "someadmin",

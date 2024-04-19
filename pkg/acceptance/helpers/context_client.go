@@ -41,3 +41,13 @@ func (c *ContextClient) CurrentRole(t *testing.T) string {
 
 	return currentRole
 }
+
+func (c *ContextClient) CurrentRegion(t *testing.T) string {
+	t.Helper()
+	ctx := context.Background()
+
+	currentRegion, err := c.client().CurrentRegion(ctx)
+	require.NoError(t, err)
+
+	return currentRegion
+}
