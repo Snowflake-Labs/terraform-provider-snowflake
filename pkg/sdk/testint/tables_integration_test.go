@@ -101,7 +101,7 @@ func TestInt_Table(t *testing.T) {
 				Type: sdk.DataTypeVARCHAR,
 			},
 		}, sdk.DataTypeVARCHAR, "REPLACE('X', 1, 2)", nil)
-		table2, _ := testClientHelper().Table.CreateTable(t, schema.ID())
+		table2, _ := testClientHelper().Table.CreateTable(t)
 		name := random.String()
 		comment := random.String()
 
@@ -942,7 +942,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("drop table", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(table.ID()).WithIfExists(sdk.Bool(true)))
 		if err != nil {
 			t.Cleanup(tableCleanup)
@@ -954,9 +954,9 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("show tables", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
-		table2, table2Cleanup := testClientHelper().Table.CreateTable(t, schema.ID())
+		table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(table2Cleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest())
@@ -972,7 +972,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("with terse", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithTerse(sdk.Bool(true)).WithLikePattern(table.ID().Name()))
@@ -983,7 +983,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("with starts with", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithStartsWith(sdk.String(table.Name)))

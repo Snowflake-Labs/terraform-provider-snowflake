@@ -18,7 +18,7 @@ func TestInt_Views(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	table, tableCleanup := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
@@ -537,7 +537,7 @@ func TestInt_ViewsShowByID(t *testing.T) {
 	ctx := testContext(t)
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	table, tableCleanup := testClientHelper().Table.CreateTable(t, schemaTest.ID())
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())

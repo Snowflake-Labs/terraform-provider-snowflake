@@ -220,7 +220,7 @@ func TestInt_EventTables(t *testing.T) {
 		rowAccessPolicy2Id, rowAccessPolicy2Cleanup := createRowAccessPolicy(t, client, schemaTest)
 		t.Cleanup(rowAccessPolicy2Cleanup)
 
-		table, tableCleanup := testClientHelper().Table.CreateTable(t, schemaTest.ID())
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 		id := sdk.NewSchemaObjectIdentifier(table.DatabaseName, table.SchemaName, table.Name)
 

@@ -56,7 +56,7 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	}
 	var tableCleanup func()
 	if table == nil {
-		table, tableCleanup = testClientHelper().Table.CreateTable(t, schema.ID())
+		table, tableCleanup = testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 	}
 	name := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.String())
 	targetLag := sdk.TargetLag{

@@ -34,7 +34,7 @@ func TestInt_Streams(t *testing.T) {
 	}
 
 	t.Run("CreateOnTable", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
@@ -104,7 +104,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnView", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		tableId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, table.Name)
 		t.Cleanup(cleanupTable)
 
@@ -128,7 +128,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Clone", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
@@ -156,7 +156,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Alter tags", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
@@ -197,7 +197,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Alter comment", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
@@ -232,7 +232,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
@@ -251,7 +251,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Show terse", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
@@ -280,7 +280,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Show single with options", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
@@ -314,7 +314,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Show multiple", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
@@ -350,7 +350,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Show multiple with options", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		idPrefix := "stream_show_"
@@ -396,7 +396,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Describe", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTable(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(cleanupTable)
 
 		id := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, random.AlphanumericN(32))
@@ -428,7 +428,7 @@ func TestInt_StreamsShowByID(t *testing.T) {
 	ctx := testContext(t)
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	table, cleanupTable := testClientHelper().Table.CreateTable(t, schemaTest.ID())
+	table, cleanupTable := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(cleanupTable)
 
 	cleanupStreamHandle := func(id sdk.SchemaObjectIdentifier) func() {
