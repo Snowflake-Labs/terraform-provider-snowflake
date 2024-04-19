@@ -1171,11 +1171,11 @@ func TestInt_GrantOwnership(t *testing.T) {
 		require.NoError(t, err)
 
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
-		usePreviousRole := useRole(t, client, pipeRole.Name)
+		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
 
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
 		t.Cleanup(func() {
-			usePreviousRole = useRole(t, client, role.Name)
+			usePreviousRole = testClientHelper().Role.UseRole(t, role.Name)
 			defer usePreviousRole()
 			pipeCleanup()
 		})
@@ -1234,11 +1234,11 @@ func TestInt_GrantOwnership(t *testing.T) {
 		require.NoError(t, err)
 
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
-		usePreviousRole := useRole(t, client, pipeRole.Name)
+		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
 
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
 		t.Cleanup(func() {
-			usePreviousRole = useRole(t, client, role.Name)
+			usePreviousRole = testClientHelper().Role.UseRole(t, role.Name)
 			defer usePreviousRole()
 			pipeCleanup()
 		})
@@ -1294,11 +1294,11 @@ func TestInt_GrantOwnership(t *testing.T) {
 		grantPipeRole(t, pipeRole, table, stage)
 
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
-		usePreviousRole := useRole(t, client, pipeRole.Name)
+		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
 
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
 		t.Cleanup(func() {
-			usePreviousRole = useRole(t, client, pipeRole.Name)
+			usePreviousRole = testClientHelper().Role.UseRole(t, pipeRole.Name)
 			defer usePreviousRole()
 			pipeCleanup()
 		})
@@ -1340,11 +1340,11 @@ func TestInt_GrantOwnership(t *testing.T) {
 		grantPipeRole(t, pipeRole, table, stage)
 
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
-		usePreviousRole := useRole(t, client, pipeRole.Name)
+		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
 
 		pipe, pipeCleanup := createPipe(t, client, testDb(t), testSchema(t), random.AlphaN(20), copyStatement)
 		t.Cleanup(func() {
-			usePreviousRole = useRole(t, client, role.Name)
+			usePreviousRole = testClientHelper().Role.UseRole(t, role.Name)
 			defer usePreviousRole()
 			pipeCleanup()
 		})
@@ -1470,13 +1470,13 @@ func TestInt_GrantOwnership(t *testing.T) {
 		grantTaskRole(t, taskRole.ID())
 
 		// Use a previously prepared role to create a task
-		usePreviousRole := useRole(t, client, taskRole.Name)
+		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
 
 		taskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
 		withWarehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
 		task, taskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(taskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq).WithSchedule(sdk.String("60 minutes")))
 		t.Cleanup(func() {
-			usePreviousRole := useRole(t, client, taskRole.Name)
+			usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
 			defer usePreviousRole()
 			taskCleanup()
 		})
@@ -1520,7 +1520,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		grantTaskRole(t, sdk.NewAccountObjectIdentifier(currentRole))
 
 		// Use a previously prepared role to create a task
-		usePreviousRole := useRole(t, client, taskRole.Name)
+		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
 
 		taskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
 		withWarehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
@@ -1653,7 +1653,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		grantTaskRole(t, sdk.NewAccountObjectIdentifier(currentRole))
 
 		// Use a previously prepared role to create a task
-		usePreviousRole := useRole(t, client, taskRole.Name)
+		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.Name)
 
 		taskId := sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(20))
 		withWarehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))
@@ -1712,13 +1712,13 @@ func TestInt_GrantOwnership(t *testing.T) {
 			currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 			require.NoError(t, err)
 
-			usePreviousRole := useRole(t, client, role.Name)
+			usePreviousRole := testClientHelper().Role.UseRole(t, role.Name)
 			grantOwnershipToRole(t, currentRole, ownershipGrantOnTask(task), sdk.Pointer(sdk.Revoke))
 			grantOwnershipToRole(t, currentRole, ownershipGrantOnTask(secondTask), sdk.Pointer(sdk.Revoke))
 			usePreviousRole()
 		})
 
-		usePreviousRole = useRole(t, client, taskRole.Name)
+		usePreviousRole = testClientHelper().Role.UseRole(t, taskRole.Name)
 		currentTask, err := client.Tasks.ShowByID(ctx, task.ID())
 		require.NoError(t, err)
 		require.Equal(t, sdk.TaskStateStarted, currentTask.State)
@@ -1751,7 +1751,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(task), role.ID().Name())
 		checkOwnershipOnObjectToRole(t, ownershipGrantOnTask(secondTask), role.ID().Name())
 
-		usePreviousRole = useRole(t, client, role.Name)
+		usePreviousRole = testClientHelper().Role.UseRole(t, role.Name)
 		currentTask, err = client.Tasks.ShowByID(ctx, task.ID())
 		require.NoError(t, err)
 		require.Equal(t, sdk.TaskStateSuspended, currentTask.State)
