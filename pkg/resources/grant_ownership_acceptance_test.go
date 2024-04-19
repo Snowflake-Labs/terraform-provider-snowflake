@@ -563,7 +563,8 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
-	cleanupDatabase := createDatabase(t, databaseName)
+	_, cleanupDatabase := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+	t.Cleanup(cleanupDatabase)
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleName),
@@ -1170,19 +1171,6 @@ func checkResourceOwnershipIsGranted(opts *sdk.ShowGrantOptions, grantOn sdk.Obj
 		}
 
 		return nil
-	}
-}
-
-func createDatabase(t *testing.T, name string) func() {
-	t.Helper()
-	client := acc.Client(t)
-
-	ctx := context.Background()
-	roleId := sdk.NewAccountObjectIdentifier(name)
-	assert.NoError(t, client.Databases.Create(ctx, roleId, new(sdk.CreateDatabaseOptions)))
-
-	return func() {
-		assert.NoError(t, client.Databases.Drop(ctx, roleId, new(sdk.DropDatabaseOptions)))
 	}
 }
 
