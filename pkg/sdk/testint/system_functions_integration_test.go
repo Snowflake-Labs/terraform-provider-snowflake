@@ -96,7 +96,7 @@ func TestInt_PipeStatus(t *testing.T) {
 func TestInt_PipeForceResume(t *testing.T) {
 	client := testClient(t)
 
-	role, roleCleanup := createRole(t, client)
+	role, roleCleanup := testClientHelper().Role.CreateRole(t)
 	t.Cleanup(roleCleanup)
 
 	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))

@@ -436,41 +436,6 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 	}
 }
 
-func createRole(t *testing.T, client *sdk.Client) (*sdk.Role, func()) {
-	t.Helper()
-	return createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
-}
-
-func createRoleGrantedToCurrentUser(t *testing.T, client *sdk.Client) (*sdk.Role, func()) {
-	t.Helper()
-	role, roleCleanup := createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
-
-	ctx := context.Background()
-	currentUser, err := client.ContextFunctions.CurrentUser(ctx)
-	require.NoError(t, err)
-
-	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{
-		User: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentUser)),
-	}))
-	require.NoError(t, err)
-
-	return role, roleCleanup
-}
-
-func createRoleWithRequest(t *testing.T, client *sdk.Client, req *sdk.CreateRoleRequest) (*sdk.Role, func()) {
-	t.Helper()
-	require.True(t, sdk.ValidObjectIdentifier(req.GetName()))
-	ctx := context.Background()
-	err := client.Roles.Create(ctx, req)
-	require.NoError(t, err)
-	role, err := client.Roles.ShowByID(ctx, req.GetName())
-	require.NoError(t, err)
-	return role, func() {
-		err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(req.GetName()))
-		require.NoError(t, err)
-	}
-}
-
 func createDatabaseRole(t *testing.T, client *sdk.Client, database *sdk.Database) (*sdk.DatabaseRole, func()) {
 	t.Helper()
 	name := random.String()

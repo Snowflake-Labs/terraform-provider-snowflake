@@ -122,7 +122,7 @@ func TestInt_RolesUse(t *testing.T) {
 	currentRoleID := sdk.NewAccountObjectIdentifier(currentRole)
 	require.NoError(t, err)
 
-	role, cleanup := createRole(t, client)
+	role, cleanup := testClientHelper().Role.CreateRole(t)
 	t.Cleanup(cleanup)
 	require.NotEqual(t, currentRole, role.Name)
 
@@ -147,7 +147,7 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
 	require.NoError(t, err)
 
-	role, cleanup := createRole(t, client)
+	role, cleanup := testClientHelper().Role.CreateRole(t)
 	t.Cleanup(cleanup)
 	require.NotEqual(t, currentRole, role.Name)
 

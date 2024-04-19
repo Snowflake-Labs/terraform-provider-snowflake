@@ -76,7 +76,7 @@ func TestInt_Streamlits(t *testing.T) {
 		stage, cleanupStage := createStage(t, client, sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, random.AlphaN(4)))
 		t.Cleanup(cleanupStage)
 
-		role, roleCleanup := createRole(t, client)
+		role, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
 
 		comment := random.StringN(4)
