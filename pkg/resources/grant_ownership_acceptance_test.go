@@ -874,11 +874,13 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, accountRoleName)
+					role, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, accountRoleName)
 					t.Cleanup(roleCleanup)
 					_, newRoleCleanup := acc.TestClient().Role.CreateRoleWithName(t, newDatabaseOwningAccountRoleName)
 					t.Cleanup(newRoleCleanup)
-					t.Cleanup(createDatabaseWithRoleAsOwner(t, accountRoleName, databaseName))
+					database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					t.Cleanup(databaseCleanup)
+					acc.TestClient().Role.GrantOwnershipOnAccountObject(t, role.ID(), database.ID(), sdk.ObjectTypeDatabase)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/ForceOwnershipTransferOnCreate"),
 				ConfigVariables: configVariables,
@@ -1119,34 +1121,6 @@ func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
 			},
 		},
 	})
-}
-
-// TODO
-func createDatabaseWithRoleAsOwner(t *testing.T, roleName string, databaseName string) func() {
-	t.Helper()
-	client := acc.Client(t)
-	ctx := context.Background()
-	databaseId := sdk.NewAccountObjectIdentifier(databaseName)
-	assert.NoError(t, client.Databases.Create(ctx, databaseId, &sdk.CreateDatabaseOptions{}))
-
-	err := client.Grants.GrantOwnership(
-		ctx,
-		sdk.OwnershipGrantOn{
-			Object: &sdk.Object{
-				ObjectType: sdk.ObjectTypeDatabase,
-				Name:       databaseId,
-			},
-		},
-		sdk.OwnershipGrantTo{
-			AccountRoleName: sdk.Pointer(sdk.NewAccountObjectIdentifier(roleName)),
-		},
-		new(sdk.GrantOwnershipOptions),
-	)
-	assert.NoError(t, err)
-
-	return func() {
-		assert.NoError(t, client.Databases.Drop(ctx, databaseId, &sdk.DropDatabaseOptions{}))
-	}
 }
 
 func moveResourceOwnershipToAccountRole(t *testing.T, objectType sdk.ObjectType, objectName sdk.ObjectIdentifier, accountRoleName sdk.AccountObjectIdentifier) {

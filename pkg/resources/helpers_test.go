@@ -60,15 +60,6 @@ func TestGetPropertyAsPointer(t *testing.T) {
 	assert.Nil(t, resources.GetPropertyAsPointer[bool](d, "invalid"))
 }
 
-func database(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
-	t.Helper()
-	r := require.New(t)
-	d := schema.TestResourceDataRaw(t, resources.Database().Schema, params)
-	r.NotNil(d)
-	d.SetId(id)
-	return d
-}
-
 func databaseGrant(t *testing.T, id string, params map[string]interface{}) *schema.ResourceData {
 	t.Helper()
 	r := require.New(t)
