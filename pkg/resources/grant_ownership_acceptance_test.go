@@ -723,7 +723,7 @@ func TestAcc_GrantOwnership_RoleBasedAccessControlUseCase(t *testing.T) {
 	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	databaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	schemaName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	userName := getCurrentUser(t)
+	userName := acc.TestClient().Context.CurrentUser(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1190,12 +1190,4 @@ func grantOwnershipToTheCurrentRole(t *testing.T, on sdk.OwnershipGrantOn) {
 		new(sdk.GrantOwnershipOptions),
 	)
 	assert.NoError(t, err)
-}
-
-func getCurrentUser(t *testing.T) string {
-	t.Helper()
-	client := acc.Client(t)
-	currentUser, err := client.ContextFunctions.CurrentUser(context.Background())
-	assert.NoError(t, err)
-	return currentUser
 }

@@ -51,3 +51,13 @@ func (c *ContextClient) CurrentRegion(t *testing.T) string {
 
 	return currentRegion
 }
+
+func (c *ContextClient) CurrentUser(t *testing.T) string {
+	t.Helper()
+	ctx := context.Background()
+
+	currentUser, err := c.client().CurrentUser(ctx)
+	require.NoError(t, err)
+
+	return currentUser
+}
