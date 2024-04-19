@@ -140,8 +140,7 @@ func TestInt_PipeForceResume(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-	require.NoError(t, err)
+	currentRole := testClientHelper().Context.CurrentRole(t)
 
 	err = client.Grants.GrantOwnership(
 		ctx,

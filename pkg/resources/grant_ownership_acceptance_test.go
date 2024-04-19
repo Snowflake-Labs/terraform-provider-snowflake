@@ -1179,10 +1179,9 @@ func grantOwnershipToTheCurrentRole(t *testing.T, on sdk.OwnershipGrantOn) {
 	client := acc.Client(t)
 
 	ctx := context.Background()
-	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-	assert.NoError(t, err)
+	currentRole := acc.TestClient().Context.CurrentRole(t)
 
-	err = client.Grants.GrantOwnership(
+	err := client.Grants.GrantOwnership(
 		ctx,
 		on,
 		sdk.OwnershipGrantTo{

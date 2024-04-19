@@ -1154,8 +1154,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		require.NoError(t, err)
 		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID().Name())
 
-		currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-		require.NoError(t, err)
+		currentRole := testClientHelper().Context.CurrentRole(t)
 
 		grantOwnershipToRole(t, currentRole, ownershipGrantOnPipe(pipe), nil)
 		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), currentRole)
@@ -1177,8 +1176,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// grantPipeRole grants the necessary privileges to a role to be able to create pipe
 		grantPipeRole(t, pipeRole, table, stage)
 
-		previousRole, err := client.ContextFunctions.CurrentRole(ctx)
-		require.NoError(t, err)
+		previousRole := testClientHelper().Context.CurrentRole(t)
 
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
 		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
@@ -1195,7 +1193,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 
 		usePreviousRole()
 
-		err = client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
+		err := client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
 			Set: &sdk.PipeSet{
 				PipeExecutionPaused: sdk.Bool(false),
 			},
@@ -1240,8 +1238,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// grantPipeRole grants the necessary privileges to a role to be able to create pipe
 		grantPipeRole(t, pipeRole, table, stage)
 
-		previousRole, err := client.ContextFunctions.CurrentRole(ctx)
-		require.NoError(t, err)
+		previousRole := testClientHelper().Context.CurrentRole(t)
 
 		// Use a previously prepared role to create a pipe and grant MONITOR + OPERATE to the previously used role (ACCOUNTADMIN).
 		usePreviousRole := testClientHelper().Role.UseRole(t, pipeRole.Name)
@@ -1258,7 +1255,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 
 		usePreviousRole()
 
-		err = client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
+		err := client.Pipes.Alter(ctx, pipe.ID(), &sdk.AlterPipeOptions{
 			Set: &sdk.PipeSet{
 				PipeExecutionPaused: sdk.Bool(false),
 			},
@@ -1421,8 +1418,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), role.ID().Name())
 		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(secondPipe), role.ID().Name())
 
-		currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-		require.NoError(t, err)
+		currentRole := testClientHelper().Context.CurrentRole(t)
 		grantOwnershipToRole(t, currentRole, onAllPipesInSchema, nil)
 		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(pipe), currentRole)
 		checkOwnershipOnObjectToRole(t, ownershipGrantOnPipe(secondPipe), currentRole)
@@ -1524,9 +1520,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// grantTaskRole grants the necessary privileges to a role to be able to create task
 		grantTaskRole(t, taskRole.ID())
 
-		currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-		require.NoError(t, err)
-
+		currentRole := testClientHelper().Context.CurrentRole(t)
 		grantTaskRole(t, sdk.NewAccountObjectIdentifier(currentRole))
 
 		// Use a previously prepared role to create a task
@@ -1537,7 +1531,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		task, taskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(taskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq).WithSchedule(sdk.String("60 minutes")))
 		t.Cleanup(taskCleanup)
 
-		err = client.Grants.GrantPrivilegesToAccountRole(
+		err := client.Grants.GrantPrivilegesToAccountRole(
 			ctx,
 			&sdk.AccountRoleGrantPrivileges{
 				SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeOperate},
@@ -1561,9 +1555,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		usePreviousRole()
 
 		t.Cleanup(func() {
-			currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-			require.NoError(t, err)
-
+			currentRole := testClientHelper().Context.CurrentRole(t)
 			grantOwnershipToRole(t, currentRole, ownershipGrantOnTask(task), sdk.Pointer(sdk.Revoke))
 		})
 
@@ -1656,8 +1648,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// grantTaskRole grants the necessary privileges to a role to be able to create task
 		grantTaskRole(t, taskRole.ID())
 
-		currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-		require.NoError(t, err)
+		currentRole := testClientHelper().Context.CurrentRole(t)
 
 		grantTaskRole(t, role.ID())
 		grantTaskRole(t, sdk.NewAccountObjectIdentifier(currentRole))
@@ -1674,7 +1665,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		secondTask, secondTaskCleanup := createTaskWithRequest(t, client, sdk.NewCreateTaskRequest(secondTaskId, "SELECT CURRENT_TIMESTAMP").WithWarehouse(withWarehouseReq).WithAfter([]sdk.SchemaObjectIdentifier{task.ID()}))
 		t.Cleanup(secondTaskCleanup)
 
-		err = client.Grants.GrantPrivilegesToAccountRole(
+		err := client.Grants.GrantPrivilegesToAccountRole(
 			ctx,
 			&sdk.AccountRoleGrantPrivileges{
 				SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeOperate},
@@ -1719,9 +1710,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		require.NoError(t, err)
 
 		t.Cleanup(func() {
-			currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-			require.NoError(t, err)
-
+			currentRole := testClientHelper().Context.CurrentRole(t)
 			usePreviousRole := testClientHelper().Role.UseRole(t, role.Name)
 			grantOwnershipToRole(t, currentRole, ownershipGrantOnTask(task), sdk.Pointer(sdk.Revoke))
 			grantOwnershipToRole(t, currentRole, ownershipGrantOnTask(secondTask), sdk.Pointer(sdk.Revoke))

@@ -31,3 +31,13 @@ func (c *ContextClient) CurrentAccount(t *testing.T) string {
 
 	return currentAccount
 }
+
+func (c *ContextClient) CurrentRole(t *testing.T) string {
+	t.Helper()
+	ctx := context.Background()
+
+	currentRole, err := c.client().CurrentRole(ctx)
+	require.NoError(t, err)
+
+	return currentRole
+}
