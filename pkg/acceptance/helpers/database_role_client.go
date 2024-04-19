@@ -24,12 +24,22 @@ func (c *DatabaseRoleClient) client() sdk.DatabaseRoles {
 	return c.context.client.DatabaseRoles
 }
 
-func (c *DatabaseRoleClient) CreateDatabaseRole(t *testing.T, databaseId sdk.AccountObjectIdentifier) (*sdk.DatabaseRole, func()) {
+func (c *DatabaseRoleClient) CreateDatabaseRole(t *testing.T) (*sdk.DatabaseRole, func()) {
 	t.Helper()
-	return c.CreateDatabaseRoleWithName(t, databaseId, random.String())
+	return c.CreateDatabaseRoleInDatabase(t, sdk.NewAccountObjectIdentifier(c.context.database))
 }
 
-func (c *DatabaseRoleClient) CreateDatabaseRoleWithName(t *testing.T, databaseId sdk.AccountObjectIdentifier, name string) (*sdk.DatabaseRole, func()) {
+func (c *DatabaseRoleClient) CreateDatabaseRoleInDatabase(t *testing.T, databaseId sdk.AccountObjectIdentifier) (*sdk.DatabaseRole, func()) {
+	t.Helper()
+	return c.CreateDatabaseRoleInDatabaseWithName(t, databaseId, random.String())
+}
+
+func (c *DatabaseRoleClient) CreateDatabaseRoleWithName(t *testing.T, name string) (*sdk.DatabaseRole, func()) {
+	t.Helper()
+	return c.CreateDatabaseRoleInDatabaseWithName(t, sdk.NewAccountObjectIdentifier(c.context.database), name)
+}
+
+func (c *DatabaseRoleClient) CreateDatabaseRoleInDatabaseWithName(t *testing.T, databaseId sdk.AccountObjectIdentifier, name string) (*sdk.DatabaseRole, func()) {
 	t.Helper()
 	ctx := context.Background()
 

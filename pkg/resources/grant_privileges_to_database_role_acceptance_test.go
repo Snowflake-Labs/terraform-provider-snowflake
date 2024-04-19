@@ -45,7 +45,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
@@ -99,7 +99,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
@@ -153,7 +153,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
@@ -224,7 +224,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllSchemasInDatabase"),
@@ -277,7 +277,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnFutureSchemasInDatabase"),
@@ -333,7 +333,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
@@ -385,7 +385,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPriv
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
@@ -423,7 +423,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
@@ -477,7 +477,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllPipes"),
@@ -532,7 +532,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
@@ -585,7 +585,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_Streamlits_In
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
@@ -622,7 +622,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDat
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
@@ -677,7 +677,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges/privileges"),
@@ -772,7 +772,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/privileges"),
@@ -851,7 +851,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
@@ -949,7 +949,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
@@ -997,7 +997,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1051,7 +1051,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1109,7 +1109,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t
 				PreConfig: func() {
 					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
 					t.Cleanup(databaseCleanup)
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(databaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, sdk.NewAccountObjectIdentifier(databaseName), name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
@@ -1152,7 +1152,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t 
 				PreConfig: func() {
 					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
 					t.Cleanup(dbCleanup)
-					_, databaseRoleCleanup = acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(databaseName), name)
+					_, databaseRoleCleanup = acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, sdk.NewAccountObjectIdentifier(databaseName), name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
@@ -1195,7 +1195,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply_SetAfterCreate(t *testing
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), name)
+					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
 					t.Cleanup(databaseRoleCleanup)
 				},
 				ConfigDirectory:    acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
