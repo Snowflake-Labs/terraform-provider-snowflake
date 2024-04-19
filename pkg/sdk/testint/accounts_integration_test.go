@@ -18,8 +18,7 @@ import (
 func TestInt_AccountShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
-	require.NoError(t, err)
+	ok := testClientHelper().Context.IsRoleInSession(t, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
@@ -39,21 +38,18 @@ func TestInt_AccountShow(t *testing.T) {
 func TestInt_AccountShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
-	require.NoError(t, err)
+	ok := testClientHelper().Context.IsRoleInSession(t, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
-	require.NoError(t, err)
-	_, err = client.Accounts.ShowByID(ctx, sdk.NewAccountObjectIdentifier("NOT_EXISTING_ACCOUNT"))
+	_, err := client.Accounts.ShowByID(ctx, sdk.NewAccountObjectIdentifier("NOT_EXISTING_ACCOUNT"))
 	require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 }
 
 func TestInt_AccountCreate(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ORGADMIN"))
-	require.NoError(t, err)
+	ok := testClientHelper().Context.IsRoleInSession(t, sdk.NewAccountObjectIdentifier("ORGADMIN"))
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
@@ -72,7 +68,7 @@ func TestInt_AccountCreate(t *testing.T) {
 			Comment:            sdk.String("Please delete me!"),
 			Region:             sdk.String(region),
 		}
-		err = client.Accounts.Create(ctx, accountID, opts)
+		err := client.Accounts.Create(ctx, accountID, opts)
 		require.NoError(t, err)
 
 		var account *sdk.Account
@@ -162,8 +158,7 @@ func TestInt_AccountCreate(t *testing.T) {
 func TestInt_AccountAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	ok, err := client.ContextFunctions.IsRoleInSession(ctx, sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"))
-	require.NoError(t, err)
+	ok := testClientHelper().Context.IsRoleInSession(t, sdk.NewAccountObjectIdentifier("ACCOUNTADMIN"))
 	if !ok {
 		t.Skip("ACCOUNTADMIN role is not in current session")
 	}
@@ -227,7 +222,7 @@ func TestInt_AccountAlter(t *testing.T) {
 				ResourceMonitor: resourceMonitorTest.ID(),
 			},
 		}
-		err = client.Accounts.Alter(ctx, opts)
+		err := client.Accounts.Alter(ctx, opts)
 		require.NoError(t, err)
 	})
 
@@ -239,7 +234,7 @@ func TestInt_AccountAlter(t *testing.T) {
 				PasswordPolicy: passwordPolicyTest.ID(),
 			},
 		}
-		err = client.Accounts.Alter(ctx, opts)
+		err := client.Accounts.Alter(ctx, opts)
 		require.NoError(t, err)
 
 		// now unset
@@ -260,7 +255,7 @@ func TestInt_AccountAlter(t *testing.T) {
 				SessionPolicy: sessionPolicyTest.ID(),
 			},
 		}
-		err = client.Accounts.Alter(ctx, opts)
+		err := client.Accounts.Alter(ctx, opts)
 		require.NoError(t, err)
 
 		// now unset
@@ -291,7 +286,7 @@ func TestInt_AccountAlter(t *testing.T) {
 				},
 			},
 		}
-		err = client.Accounts.Alter(ctx, opts)
+		err := client.Accounts.Alter(ctx, opts)
 		require.NoError(t, err)
 		currentAccount := testClientHelper().Context.CurrentAccount(t)
 		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest1.ID(), sdk.NewAccountObjectIdentifier(currentAccount), sdk.ObjectTypeAccount)
