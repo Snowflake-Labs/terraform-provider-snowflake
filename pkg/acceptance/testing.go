@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,11 +21,11 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-const (
-	TestDatabaseName   = "terraform_test_database"
-	TestSchemaName     = "terraform_test_schema"
-	TestWarehouseName  = "terraform_test_warehouse"
-	TestWarehouseName2 = "terraform_test_warehouse_2"
+var (
+	TestDatabaseName   = "acc_test_db_" + random.AcceptanceTestsSuffix
+	TestSchemaName     = "acc_test_sc_" + random.AcceptanceTestsSuffix
+	TestWarehouseName  = "acc_test_wh_" + random.AcceptanceTestsSuffix
+	TestWarehouseName2 = "acc_test_wh2_" + random.AcceptanceTestsSuffix
 )
 
 var (

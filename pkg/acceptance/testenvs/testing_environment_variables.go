@@ -29,6 +29,7 @@ const (
 
 	EnableSweep         env = "TEST_SF_TF_ENABLE_SWEEP"
 	ConfigureClientOnce env = "SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE"
+	TestObjectsSuffix   env = "TEST_SF_TF_TEST_OBJECT_SUFFIX"
 )
 
 func GetOrSkipTest(t *testing.T, envName Env) string {
