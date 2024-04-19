@@ -9,26 +9,17 @@ import (
 
 func TestSweepAll(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableSweep)
-
-	t.Run("all sweepers in secondary account", func(t *testing.T) {
-		client := testSecondaryClient(t)
-		err := SweepAll(client)
-		require.NoError(t, err)
-	})
+	testenvs.AssertEnvSet(t, string(testenvs.TestObjectsSuffix))
 
 	t.Run("all sweepers in primary account", func(t *testing.T) {
 		client := testClient(t)
 		err := SweepAll(client)
 		require.NoError(t, err)
 	})
-}
 
-func TestSweep(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableSweep)
-
-	t.Run("sweepers", func(t *testing.T) {
-		client := testClient(t)
-		err := Sweep(client, "TEST_")
+	t.Run("all sweepers in secondary account", func(t *testing.T) {
+		client := testSecondaryClient(t)
+		err := SweepAll(client)
 		require.NoError(t, err)
 	})
 }

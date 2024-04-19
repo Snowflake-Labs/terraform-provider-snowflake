@@ -3,6 +3,7 @@ package testint
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/snowflakedb/gosnowflake"
@@ -41,7 +43,7 @@ func setup() {
 
 	err := itc.initialize()
 	if err != nil {
-		log.Printf("Integration test context initialisation failed with %s\n", err)
+		log.Printf("Integration test context initialisation failed with: `%s`\n", err)
 		cleanup()
 		os.Exit(1)
 	}
@@ -97,6 +99,12 @@ type integrationTestContext struct {
 
 func (itc *integrationTestContext) initialize() error {
 	log.Println("Initializing integration test context")
+
+	testObjectSuffix := os.Getenv(fmt.Sprintf("%v", testenvs.TestObjectsSuffix))
+	requireTestObjectSuffix := os.Getenv(fmt.Sprintf("%v", testenvs.RequireTestObjectsSuffix))
+	if requireTestObjectSuffix != "" && testObjectSuffix == "" {
+		return errors.New("test object suffix is required for this test run")
+	}
 
 	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default)
 	if err != nil {

@@ -2,7 +2,9 @@ package acceptance
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -10,6 +12,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -36,6 +39,13 @@ var (
 )
 
 func init() {
+	testObjectSuffix := os.Getenv(fmt.Sprintf("%v", testenvs.TestObjectsSuffix))
+	requireTestObjectSuffix := os.Getenv(fmt.Sprintf("%v", testenvs.RequireTestObjectsSuffix))
+	if requireTestObjectSuffix != "" && testObjectSuffix == "" {
+		log.Println("test object suffix is required for this test run")
+		os.Exit(1)
+	}
+
 	TestAccProvider = provider.Provider()
 	v5Server = TestAccProvider.GRPCProvider()
 	var err error
