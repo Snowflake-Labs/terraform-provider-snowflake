@@ -1008,8 +1008,7 @@ func TestAcc_GrantPrivilegesToAccountRole_ImportedPrivileges(t *testing.T) {
 	sharedDatabaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	secondaryAccountName, err := getSecondaryAccountName(t)
-	require.NoError(t, err)
+	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 	configVariables := config.Variables{
 		"role_name":            config.StringVariable(roleName),
 		"shared_database_name": config.StringVariable(sharedDatabaseName),
@@ -1550,25 +1549,12 @@ func TestAcc_GrantPrivilegesToAccountRole_AlwaysApply_SetAfterCreate(t *testing.
 	})
 }
 
-func getSecondaryAccountName(t *testing.T) (string, error) {
-	t.Helper()
-	secondaryClient := acc.SecondaryClient(t)
-	return secondaryClient.ContextFunctions.CurrentAccount(context.Background())
-}
-
-func getAccountName(t *testing.T) (string, error) {
-	t.Helper()
-	client := acc.Client(t)
-	return client.ContextFunctions.CurrentAccount(context.Background())
-}
-
 func createSharedDatabaseOnSecondaryAccount(t *testing.T, databaseName string, shareName string) error {
 	t.Helper()
 	secondaryClient := acc.SecondaryClient(t)
 	ctx := context.Background()
-	accountName, err := getAccountName(t)
+	accountName := acc.TestClient().Context.CurrentAccount(t)
 	return errors.Join(
-		err,
 		secondaryClient.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(databaseName), &sdk.CreateDatabaseOptions{}),
 		secondaryClient.Shares.Create(ctx, sdk.NewAccountObjectIdentifier(shareName), &sdk.CreateShareOptions{}),
 		secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeReferenceUsage}, &sdk.ShareGrantOn{Database: sdk.NewAccountObjectIdentifier(databaseName)}, sdk.NewAccountObjectIdentifier(shareName)),

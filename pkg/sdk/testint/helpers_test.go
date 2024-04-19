@@ -22,6 +22,7 @@ const (
 func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifier {
 	t.Helper()
 	ctx := context.Background()
+	// TODO: replace later (incoming clients differ)
 	currentAccountLocator, err := client.ContextFunctions.CurrentAccount(ctx)
 	require.NoError(t, err)
 	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
@@ -439,9 +440,7 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 func createFailoverGroup(t *testing.T, client *sdk.Client) (*sdk.FailoverGroup, func()) {
 	t.Helper()
 	objectTypes := []sdk.PluralObjectType{sdk.PluralObjectTypeRoles}
-	ctx := context.Background()
-	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
+	currentAccount := testClientHelper().Context.CurrentAccount(t)
 	accountID := sdk.NewAccountIdentifierFromAccountLocator(currentAccount)
 	allowedAccounts := []sdk.AccountIdentifier{accountID}
 	return createFailoverGroupWithOptions(t, client, objectTypes, allowedAccounts, nil)

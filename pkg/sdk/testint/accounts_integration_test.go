@@ -23,8 +23,7 @@ func TestInt_AccountShow(t *testing.T) {
 	if !ok {
 		t.Skip("ORGADMIN role is not in current session")
 	}
-	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
+	currentAccount := testClientHelper().Context.CurrentAccount(t)
 	opts := &sdk.ShowAccountOptions{
 		Like: &sdk.Like{
 			Pattern: sdk.String(currentAccount),
@@ -295,8 +294,7 @@ func TestInt_AccountAlter(t *testing.T) {
 		}
 		err = client.Accounts.Alter(ctx, opts)
 		require.NoError(t, err)
-		currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
-		require.NoError(t, err)
+		currentAccount := testClientHelper().Context.CurrentAccount(t)
 		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest1.ID(), sdk.NewAccountObjectIdentifier(currentAccount), sdk.ObjectTypeAccount)
 		require.NoError(t, err)
 		assert.Equal(t, "abc", tagValue)

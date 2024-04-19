@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_DatabaseWithUnderscore(t *testing.T) {
@@ -48,7 +47,7 @@ func TestAcc_Database(t *testing.T) {
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	secondaryAccountName := getSecondaryAccount(t)
+	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -156,7 +155,7 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 func TestAcc_Database_issue2021(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	secondaryAccountName := getSecondaryAccount(t)
+	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -367,18 +366,6 @@ resource "snowflake_database" "db" {
 }
 `
 	return fmt.Sprintf(s, prefix, secondaryAccountName)
-}
-
-func getSecondaryAccount(t *testing.T) string {
-	t.Helper()
-
-	secondaryClient := acc.SecondaryClient(t)
-	ctx := context.Background()
-
-	account, err := secondaryClient.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
-
-	return account
 }
 
 // TODO [SNOW-936093]: this is used mostly as check for unsafe execute, not as normal check destroy in other resources. Handle with the helpers cleanup.

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
@@ -1086,8 +1085,7 @@ func TestAcc_GrantPrivilegesToRole_ImportedPrivileges(t *testing.T) {
 	sharedDatabaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	secondaryAccountName, err := getSecondaryAccountName(t)
-	require.NoError(t, err)
+	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 	configVariables := config.Variables{
 		"role_name":            config.StringVariable(roleName),
 		"shared_database_name": config.StringVariable(sharedDatabaseName),
