@@ -619,7 +619,8 @@ func TestAcc_GrantOwnership_AccountRoleRemovedOutsideTerraform(t *testing.T) {
 	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
-	cleanupAccountRole := createAccountRole(t, accountRoleName)
+	_, cleanupAccountRole := acc.TestClient().Role.CreateRoleWithName(t, accountRoleName)
+	t.Cleanup(cleanupAccountRole)
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleName),
@@ -1169,18 +1170,6 @@ func checkResourceOwnershipIsGranted(opts *sdk.ShowGrantOptions, grantOn sdk.Obj
 		}
 
 		return nil
-	}
-}
-
-func createAccountRole(t *testing.T, name string) func() {
-	t.Helper()
-	client := acc.Client(t)
-	ctx := context.Background()
-	roleId := sdk.NewAccountObjectIdentifier(name)
-	assert.NoError(t, client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId)))
-
-	return func() {
-		assert.NoError(t, client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId)))
 	}
 }
 
