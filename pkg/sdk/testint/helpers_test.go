@@ -52,7 +52,7 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = testClientHelper().Schema.CreateSchema(t, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	}
 	var tableCleanup func()
 	if table == nil {
@@ -187,7 +187,7 @@ func createPasswordPolicyWithOptions(t *testing.T, client *sdk.Client, database 
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = testClientHelper().Schema.CreateSchema(t, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	}
 	name := random.UUID()
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
@@ -324,7 +324,7 @@ func createMaskingPolicyWithOptions(t *testing.T, client *sdk.Client, database *
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = testClientHelper().Schema.CreateSchema(t, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	}
 	name := random.String()
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
@@ -371,7 +371,7 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = testClientHelper().Schema.CreateSchema(t, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	}
 	var warehouseCleanup func()
 	if warehouse == nil {

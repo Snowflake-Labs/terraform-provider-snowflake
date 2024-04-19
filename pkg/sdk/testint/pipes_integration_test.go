@@ -25,7 +25,7 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "tcK1>AJ+")
 
 	// creating a new schema on purpose
-	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), schemaIdentifier.Name())
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithName(t, schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
 	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
@@ -384,7 +384,7 @@ func TestInt_PipesShowByID(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, databaseTest, random.AlphaN(8))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
 		name := random.AlphaN(4)

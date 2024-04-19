@@ -144,7 +144,7 @@ func TestInt_UseSchema(t *testing.T) {
 	// new database and schema created on purpose
 	database, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
-	schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t, database)
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	t.Cleanup(schemaCleanup)
 	err := client.Sessions.UseSchema(ctx, schema.ID())
 	require.NoError(t, err)
