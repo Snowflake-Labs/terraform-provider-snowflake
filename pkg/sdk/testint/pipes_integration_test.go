@@ -28,7 +28,7 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+	table, tableCleanup := testClientHelper().Table.CreateTable(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -67,10 +67,10 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 }
 
 func TestInt_PipesShowAndDescribe(t *testing.T) {
-	table1, table1Cleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table1, table1Cleanup := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 	t.Cleanup(table1Cleanup)
 
-	table2, table2Cleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table2, table2Cleanup := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 	t.Cleanup(table2Cleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -151,7 +151,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 }
 
 func TestInt_PipeCreate(t *testing.T) {
-	table, tableCleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table, tableCleanup := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -223,7 +223,7 @@ func TestInt_PipeCreate(t *testing.T) {
 }
 
 func TestInt_PipeDrop(t *testing.T) {
-	table, tableCleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table, tableCleanup := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -251,7 +251,7 @@ func TestInt_PipeDrop(t *testing.T) {
 }
 
 func TestInt_PipeAlter(t *testing.T) {
-	table, tableCleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table, tableCleanup := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -358,7 +358,7 @@ func TestInt_PipesShowByID(t *testing.T) {
 	ctx := testContext(t)
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	table, tableCleanup := createTable(t, client, databaseTest, schemaTest)
+	table, tableCleanup := testClientHelper().Table.CreateTable(t, schemaTest.ID())
 	t.Cleanup(tableCleanup)
 	stage, stageCleanup := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(6)))
 	t.Cleanup(stageCleanup)

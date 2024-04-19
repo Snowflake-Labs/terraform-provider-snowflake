@@ -159,7 +159,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on schema object", func(t *testing.T) {
 		roleTest, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
-		tableTest, tableTestCleanup := createTable(t, client, testDb(t), testSchema(t))
+		tableTest, tableTestCleanup := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 		t.Cleanup(tableTestCleanup)
 		privileges := &sdk.AccountRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
@@ -238,7 +238,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 		t.Cleanup(schemaCleanup)
 
-		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
 		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
@@ -298,7 +298,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 		t.Cleanup(schemaCleanup)
 
-		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
 		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
@@ -490,7 +490,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		t.Cleanup(databaseRoleCleanup)
 
 		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
-		table, _ := createTable(t, client, testDb(t), testSchema(t))
+		table, _ := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
@@ -591,7 +591,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 		t.Cleanup(schemaCleanup)
 
-		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
 		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
@@ -651,7 +651,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
 		t.Cleanup(schemaCleanup)
 
-		table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t, schema.ID())
 		t.Cleanup(tableCleanup)
 
 		stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
@@ -744,7 +744,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			assert.NoError(t, err)
 		})
 
-		table, tableCleanup := createTable(t, client, testDb(t), testSchema(t))
+		table, tableCleanup := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 		t.Cleanup(tableCleanup)
 
 		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
@@ -824,7 +824,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	table, tableCleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table, tableCleanup := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, testSchema(t).Name, random.AlphaN(20)))
@@ -1026,7 +1026,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		t.Cleanup(databaseRoleCleanup)
 
 		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
-		table, _ := createTable(t, client, testDb(t), testSchema(t))
+		table, _ := testClientHelper().Table.CreateTable(t, testSchema(t).ID())
 
 		on := sdk.OwnershipGrantOn{
 			Object: &sdk.Object{

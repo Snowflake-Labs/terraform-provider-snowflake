@@ -35,33 +35,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
-	t.Helper()
-	columns := []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
-	}
-	return createTableWithColumns(t, client, database, schema, columns)
-}
-
-func createTableWithColumns(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
-	t.Helper()
-	name := random.StringRange(8, 28)
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	ctx := context.Background()
-
-	dbCreateRequest := sdk.NewCreateTableRequest(id, columns)
-	err := client.Tables.Create(ctx, dbCreateRequest)
-	require.NoError(t, err)
-
-	table, err := client.Tables.ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return table, func() {
-		dropErr := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
-		require.NoError(t, dropErr)
-	}
-}
-
 func createDynamicTable(t *testing.T, client *sdk.Client) (*sdk.DynamicTable, func()) {
 	t.Helper()
 	return createDynamicTableWithOptions(t, client, nil, nil, nil, nil)
@@ -83,7 +56,7 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	}
 	var tableCleanup func()
 	if table == nil {
-		table, tableCleanup = createTable(t, client, database, schema)
+		table, tableCleanup = testClientHelper().Table.CreateTable(t, schema.ID())
 	}
 	name := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.String())
 	targetLag := sdk.TargetLag{

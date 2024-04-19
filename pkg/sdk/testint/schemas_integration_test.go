@@ -144,7 +144,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 		swapSchema, cleanupSwapSchema := testClientHelper().Schema.CreateSchema(t, testDb(t))
 		t.Cleanup(cleanupSwapSchema)
 
-		table, _ := createTable(t, client, testDb(t), schema)
+		table, _ := testClientHelper().Table.CreateTable(t, schema.ID())
 		t.Cleanup(func() {
 			newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, swapSchema.Name, table.Name)
 			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(newId))
