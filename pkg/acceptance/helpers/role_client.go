@@ -45,17 +45,9 @@ func (c *RoleClient) CreateRole(t *testing.T) (*sdk.Role, func()) {
 
 func (c *RoleClient) CreateRoleGrantedToCurrentUser(t *testing.T) (*sdk.Role, func()) {
 	t.Helper()
-	ctx := context.Background()
-	role, roleCleanup := c.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
 
-	currentUser, err := c.context.client.ContextFunctions.CurrentUser(ctx)
-	require.NoError(t, err)
-
-	err = c.client().Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{
-		User: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentUser)),
-	}))
-	require.NoError(t, err)
-
+	role, roleCleanup := c.CreateRole(t)
+	c.GrantRoleToCurrentUser(t, role.ID())
 	return role, roleCleanup
 }
 
@@ -63,16 +55,32 @@ func (c *RoleClient) CreateRoleWithRequest(t *testing.T, req *sdk.CreateRoleRequ
 	t.Helper()
 	ctx := context.Background()
 
-	require.True(t, sdk.ValidObjectIdentifier(req.GetName()))
 	err := c.client().Create(ctx, req)
 	require.NoError(t, err)
 	role, err := c.client().ShowByID(ctx, req.GetName())
 	require.NoError(t, err)
-	return role, func() {
-		err = c.client().Drop(ctx, sdk.NewDropRoleRequest(req.GetName()))
+	return role, c.DropRoleFunc(t, req.GetName())
+}
+
+func (c *RoleClient) DropRoleFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	return func() {
+		err := c.client().Drop(ctx, sdk.NewDropRoleRequest(id).WithIfExists(true))
 		require.NoError(t, err)
 	}
 }
 
-// TODO: drop role func
-// TODO: clean above methods
+func (c *RoleClient) GrantRoleToCurrentUser(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	currentUser, err := c.context.client.ContextFunctions.CurrentUser(ctx)
+	require.NoError(t, err)
+
+	err = c.client().Grant(ctx, sdk.NewGrantRoleRequest(id, sdk.GrantRole{
+		User: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentUser)),
+	}))
+	require.NoError(t, err)
+}
