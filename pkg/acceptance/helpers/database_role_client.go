@@ -26,9 +26,13 @@ func (c *DatabaseRoleClient) client() sdk.DatabaseRoles {
 
 func (c *DatabaseRoleClient) CreateDatabaseRole(t *testing.T, databaseId sdk.AccountObjectIdentifier) (*sdk.DatabaseRole, func()) {
 	t.Helper()
+	return c.CreateDatabaseRoleWithName(t, databaseId, random.String())
+}
+
+func (c *DatabaseRoleClient) CreateDatabaseRoleWithName(t *testing.T, databaseId sdk.AccountObjectIdentifier, name string) (*sdk.DatabaseRole, func()) {
+	t.Helper()
 	ctx := context.Background()
 
-	name := random.String()
 	id := sdk.NewDatabaseObjectIdentifier(databaseId.Name(), name)
 
 	err := c.client().Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
