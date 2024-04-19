@@ -10,6 +10,7 @@ type TestClient struct {
 	DatabaseRole *DatabaseRoleClient
 	Role         *RoleClient
 	Schema       *SchemaClient
+	Table        *TableClient
 	User         *UserClient
 	Warehouse    *WarehouseClient
 }
@@ -28,6 +29,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		DatabaseRole: NewDatabaseRoleClient(context),
 		Role:         NewRoleClient(context),
 		Schema:       NewSchemaClient(context),
+		Table:        NewTableClient(context),
 		User:         NewUserClient(context),
 		Warehouse:    NewWarehouseClient(context),
 	}
