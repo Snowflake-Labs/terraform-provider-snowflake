@@ -388,7 +388,9 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	}
 
 	t.Run("on database", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t, testDb(t).ID())
+		t.Cleanup(databaseRoleCleanup)
+
 		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
@@ -434,7 +436,9 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("on schema", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t, testDb(t).ID())
+		t.Cleanup(databaseRoleCleanup)
+
 		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
@@ -482,7 +486,9 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("on schema object", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t, testDb(t).ID())
+		t.Cleanup(databaseRoleCleanup)
+
 		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
 		table, _ := createTable(t, client, testDb(t), testSchema(t))
 
@@ -535,7 +541,9 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("on future schema object", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t, testDb(t).ID())
+		t.Cleanup(databaseRoleCleanup)
+
 		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
@@ -595,7 +603,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		secondPipe, secondPipeCleanup := createPipe(t, client, testDb(t), schema, random.StringN(20), createPipeCopyStatement(t, table, stage))
 		t.Cleanup(secondPipeCleanup)
 
-		role, roleCleanup := createDatabaseRole(t, client, testDb(t))
+		role, roleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t, testDb(t).ID())
 		t.Cleanup(roleCleanup)
 
 		err := client.Grants.GrantPrivilegesToDatabaseRole(
@@ -655,7 +663,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		_, secondPipeCleanup := createPipe(t, client, testDb(t), schema, random.AlphaN(20), createPipeCopyStatement(t, table, stage))
 		t.Cleanup(secondPipeCleanup)
 
-		role, roleCleanup := createDatabaseRole(t, client, testDb(t))
+		role, roleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t, testDb(t).ID())
 		t.Cleanup(roleCleanup)
 
 		err := client.Grants.GrantPrivilegesToDatabaseRole(
@@ -1014,7 +1022,9 @@ func TestInt_GrantOwnership(t *testing.T) {
 	}
 
 	t.Run("on schema object to database role", func(t *testing.T) {
-		databaseRole, _ := createDatabaseRole(t, client, testDb(t))
+		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t, testDb(t).ID())
+		t.Cleanup(databaseRoleCleanup)
+
 		databaseRoleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, databaseRole.Name)
 		table, _ := createTable(t, client, testDb(t), testSchema(t))
 
