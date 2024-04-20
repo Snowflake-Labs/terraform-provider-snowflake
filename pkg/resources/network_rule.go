@@ -164,34 +164,22 @@ func UpdateNetworkRule(d *schema.ResourceData, meta interface{}) error {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	baseReq := sdk.NewAlterNetworkRuleRequest(id)
 
-	// TODO
-	//if d.HasChange("comment") {
-	//	comment := d.Get("comment")
-	//
-	//	if c := comment.(string); c == "" {
-	//		err := client.NetworkRules.Alter(ctx, baseReq.WithSet())
-	//		if err != nil {
-	//			return fmt.Errorf("error unsetting comment for network rule %v err = %w", name, err)
-	//		}
-	//	} else {
-	//		setReq := sdk.NewNetworkRuleSetRequest().WithComment(sdk.String(comment.(string)))
-	//		err := client.NetworkRules.Alter(ctx, baseReq.WithSet(setReq))
-	//		if err != nil {
-	//			return fmt.Errorf("error updating comment for network rule %v err = %w", name, err)
-	//		}
-	//	}
-	//}
-
-	if d.HasChange("value_list") {
+	if d.HasChange("comment") || d.HasChange("value_list") {
 		valueList := expandStringList(d.Get("value_list").(*schema.Set).List())
 		networkRuleValues := make([]sdk.NetworkRuleValue, len(valueList))
 		for i, v := range valueList {
 			networkRuleValues[i] = sdk.NetworkRuleValue{Value: v}
 		}
+
 		setReq := sdk.NewNetworkRuleSetRequest(networkRuleValues)
+
+		if d.HasChange("comment") {
+			comment := d.Get("comment").(string)
+			setReq.WithComment(sdk.String(comment))
+		}
 		err := client.NetworkRules.Alter(ctx, baseReq.WithSet(setReq))
 		if err != nil {
-			return fmt.Errorf("error updating VALUE_LIST for network rule %v err = %w", id.FullyQualifiedName(), err)
+			return fmt.Errorf("error updating network rule %v err = %w", id.FullyQualifiedName(), err)
 		}
 	}
 
