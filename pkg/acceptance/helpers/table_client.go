@@ -60,14 +60,8 @@ func (c *TableClient) DropTableFunc(t *testing.T, id sdk.SchemaObjectIdentifier)
 	ctx := context.Background()
 
 	return func() {
-		// to prevent error when db was removed before the table
-		_, err := c.context.client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.DatabaseName()))
-		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-			return
-		}
-
 		// to prevent error when schema was removed before the table
-		_, err = c.context.client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))
+		_, err := c.context.client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))
 		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 			return
 		}
