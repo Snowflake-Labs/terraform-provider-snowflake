@@ -304,7 +304,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(account.AccountLocator))
-	return nil
+	return ReadAccount(d, meta)
 }
 
 // ReadAccount implements schema.ReadFunc.
