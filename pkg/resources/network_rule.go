@@ -2,9 +2,11 @@ package resources
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 
@@ -57,25 +59,58 @@ var networkRuleSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the network rule.",
 	},
+	"qualified_name": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Qualified name of the network rule.",
+	},
 }
 
 // NetworkRule returns a pointer to the resource representing a network rule.
 func NetworkRule() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateNetworkRule,
-		Read:   ReadNetworkRule,
-		Update: UpdateNetworkRule,
-		Delete: DeleteNetworkRule,
+		CreateContext: CreateContextNetworkRule,
+		ReadContext:   ReadContextNetworkRule,
+		UpdateContext: UpdateContextNetworkRule,
+		DeleteContext: DeleteContextNetworkRule,
 
 		Schema: networkRuleSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: customdiff.Sequence(
+			func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for az_mode
+				// InvalidParameterCombination: Must specify at least two cache nodes in order to specify AZ Mode of 'cross-az'.
+
+				ruleTypeRaw, ok := diff.GetOk("type")
+				if !ok {
+					return nil
+				}
+				ruleType := sdk.NetworkRuleType(ruleTypeRaw.(string))
+				ruleModeRaw, ok := diff.GetOk("mode")
+				if !ok {
+					return nil
+				}
+				ruleMode := sdk.NetworkRuleMode(ruleModeRaw.(string))
+				//valueListRaw, ok := diff.GetOk("value_list")
+				//if !ok {
+				//	return nil
+				//}
+				//
+				//valueList := expandStringList(valueListRaw.(*schema.Set).List())
+
+				if ruleType == sdk.NetworkRuleTypeIpv4 && ruleMode == sdk.NetworkRuleModeEgress {
+					return errors.New("the network rule mode EGRESS is not supported by the network rule type IPv4. The network rule mode must be one of [INGRESS].")
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
-// CreateNetworkRule implements schema.CreateFunc.
-func CreateNetworkRule(d *schema.ResourceData, meta interface{}) error {
+func CreateContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -83,6 +118,7 @@ func CreateNetworkRule(d *schema.ResourceData, meta interface{}) error {
 
 	ruleType := sdk.NetworkRuleType(d.Get("type").(string))
 	ruleMode := sdk.NetworkRuleMode(d.Get("mode").(string))
+
 	valueList := expandStringList(d.Get("value_list").(*schema.Set).List())
 	networkRuleValues := make([]sdk.NetworkRuleValue, len(valueList))
 	for i, v := range valueList {
@@ -102,20 +138,17 @@ func CreateNetworkRule(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	err := client.NetworkRules.Create(ctx, req)
-	if err != nil {
-		return fmt.Errorf("error creating network rule %v err = %w", name, err)
+	if err := client.NetworkRules.Create(ctx, req); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadNetworkRule(d, meta)
+	return ReadContextNetworkRule(ctx, d, meta)
 }
 
-// ReadNetworkRule implements schema.ReadFunc.
-func ReadNetworkRule(d *schema.ResourceData, meta interface{}) error {
+func ReadContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	networkRule, err := client.NetworkRules.ShowByID(ctx, id)
@@ -128,39 +161,39 @@ func ReadNetworkRule(d *schema.ResourceData, meta interface{}) error {
 
 	networkRuleDescriptions, err := client.NetworkRules.Describe(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-
 	if err = d.Set("name", networkRule.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err = d.Set("database", networkRule.DatabaseName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err = d.Set("schema", networkRule.SchemaName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err = d.Set("type", networkRule.Type); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err = d.Set("value_list", networkRuleDescriptions.ValueList); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err = d.Set("mode", networkRule.Mode); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err = d.Set("comment", networkRule.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
+	}
+	if err = d.Set("qualified_name", id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
 	}
 
-	return err
+	return diags
 }
 
-// UpdateNetworkRule implements schema.UpdateFunc.
-func UpdateNetworkRule(d *schema.ResourceData, meta interface{}) error {
+func UpdateContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	baseReq := sdk.NewAlterNetworkRuleRequest(id)
 
@@ -177,24 +210,20 @@ func UpdateNetworkRule(d *schema.ResourceData, meta interface{}) error {
 			comment := d.Get("comment").(string)
 			setReq.WithComment(sdk.String(comment))
 		}
-		err := client.NetworkRules.Alter(ctx, baseReq.WithSet(setReq))
-		if err != nil {
-			return fmt.Errorf("error updating network rule %v err = %w", id.FullyQualifiedName(), err)
+		if err := client.NetworkRules.Alter(ctx, baseReq.WithSet(setReq)); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
-	return ReadNetworkRule(d, meta)
+	return ReadContextNetworkRule(ctx, d, meta)
 }
 
-// DeleteNetworkRule implements schema.DeleteFunc.
-func DeleteNetworkRule(d *schema.ResourceData, meta interface{}) error {
+func DeleteContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	err := client.NetworkRules.Drop(ctx, sdk.NewDropNetworkRuleRequest(id))
-	if err != nil {
-		return fmt.Errorf("error deleting network rule %v err = %w", id.FullyQualifiedName(), err)
+	if err := client.NetworkRules.Drop(ctx, sdk.NewDropNetworkRuleRequest(id)); err != nil {
+		diag.FromErr(err)
 	}
 
 	d.SetId("")
