@@ -2,13 +2,17 @@ package acceptance
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,11 +24,11 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-const (
-	TestDatabaseName   = "terraform_test_database"
-	TestSchemaName     = "terraform_test_schema"
-	TestWarehouseName  = "terraform_test_warehouse"
-	TestWarehouseName2 = "terraform_test_warehouse_2"
+var (
+	TestDatabaseName   = "acc_test_db_" + random.AcceptanceTestsSuffix
+	TestSchemaName     = "acc_test_sc_" + random.AcceptanceTestsSuffix
+	TestWarehouseName  = "acc_test_wh_" + random.AcceptanceTestsSuffix
+	TestWarehouseName2 = "acc_test_wh2_" + random.AcceptanceTestsSuffix
 )
 
 var (
@@ -35,6 +39,13 @@ var (
 )
 
 func init() {
+	testObjectSuffix := os.Getenv(fmt.Sprintf("%v", testenvs.TestObjectsSuffix))
+	requireTestObjectSuffix := os.Getenv(fmt.Sprintf("%v", testenvs.RequireTestObjectsSuffix))
+	if requireTestObjectSuffix != "" && testObjectSuffix == "" {
+		log.Println("test object suffix is required for this test run")
+		os.Exit(1)
+	}
+
 	TestAccProvider = provider.Provider()
 	v5Server = TestAccProvider.GRPCProvider()
 	var err error
