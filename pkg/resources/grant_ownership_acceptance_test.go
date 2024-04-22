@@ -563,14 +563,12 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 	accountRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	accountRoleFullyQualifiedName := sdk.NewAccountObjectIdentifier(accountRoleName).FullyQualifiedName()
 
-	_, cleanupDatabase := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
-	t.Cleanup(cleanupDatabase)
-
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleName),
 		"database_name":     config.StringVariable(databaseName),
 	}
 	resourceName := "snowflake_grant_ownership.test"
+	var cleanupDatabase func()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -580,6 +578,10 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					_, cleanupDatabase = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					t.Cleanup(cleanupDatabase)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Database_ToAccountRole_NoDatabaseResource"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(

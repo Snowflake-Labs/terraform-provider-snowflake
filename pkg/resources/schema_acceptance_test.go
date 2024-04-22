@@ -354,8 +354,7 @@ func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
 		"database_name": config.StringVariable(databaseName),
 	}
 
-	_, cleanupDatabase := acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
-	t.Cleanup(cleanupDatabase)
+	var cleanupDatabase func()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -366,6 +365,10 @@ func TestAcc_Schema_RemoveSchemaOutsideOfTerraform(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					_, cleanupDatabase = acc.TestClient().Database.CreateDatabaseWithName(t, databaseName)
+					t.Cleanup(cleanupDatabase)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_RemoveOutsideOfTerraform"),
 				ConfigVariables: configVariables,
 			},
