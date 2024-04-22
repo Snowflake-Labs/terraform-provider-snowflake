@@ -23,18 +23,28 @@ func (c *SchemaClient) client() sdk.Schemas {
 	return c.context.client.Schemas
 }
 
-func (c *SchemaClient) CreateSchema(t *testing.T, database *sdk.Database) (*sdk.Schema, func()) {
+func (c *SchemaClient) CreateSchema(t *testing.T) (*sdk.Schema, func()) {
 	t.Helper()
-	return c.CreateSchemaWithIdentifier(t, database, random.StringRange(8, 28))
+	return c.CreateSchemaInDatabase(t, sdk.NewAccountObjectIdentifier(c.context.database))
 }
 
-func (c *SchemaClient) CreateSchemaWithIdentifier(t *testing.T, database *sdk.Database, name string) (*sdk.Schema, func()) {
+func (c *SchemaClient) CreateSchemaInDatabase(t *testing.T, databaseId sdk.AccountObjectIdentifier) (*sdk.Schema, func()) {
+	t.Helper()
+	return c.CreateSchemaInDatabaseWithIdentifier(t, databaseId, random.AlphaN(12))
+}
+
+func (c *SchemaClient) CreateSchemaWithName(t *testing.T, name string) (*sdk.Schema, func()) {
+	t.Helper()
+	return c.CreateSchemaInDatabaseWithIdentifier(t, sdk.NewAccountObjectIdentifier(c.context.database), name)
+}
+
+func (c *SchemaClient) CreateSchemaInDatabaseWithIdentifier(t *testing.T, databaseId sdk.AccountObjectIdentifier, name string) (*sdk.Schema, func()) {
 	t.Helper()
 	ctx := context.Background()
-	schemaID := sdk.NewDatabaseObjectIdentifier(database.Name, name)
+	schemaID := sdk.NewDatabaseObjectIdentifier(databaseId.Name(), name)
 	err := c.client().Create(ctx, schemaID, nil)
 	require.NoError(t, err)
-	schema, err := c.client().ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(database.Name, name))
+	schema, err := c.client().ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(databaseId.Name(), name))
 	require.NoError(t, err)
 	return schema, c.DropSchemaFunc(t, schemaID)
 }

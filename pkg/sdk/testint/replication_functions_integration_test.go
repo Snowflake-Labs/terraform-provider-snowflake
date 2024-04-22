@@ -21,15 +21,12 @@ func TestInt_ShowReplicationFunctions(t *testing.T) {
 
 func TestInt_ShowReplicationDatabases(t *testing.T) {
 	client := testClient(t)
-	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	account, err := client.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
+	account := testClientHelper().Context.CurrentAccount(t)
 	accountId := sdk.NewAccountIdentifierFromAccountLocator(account)
 
-	secondaryAccount, err := secondaryClient.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
+	secondaryAccount := secondaryTestClientHelper().Context.CurrentAccount(t)
 	secondaryAccountId := sdk.NewAccountIdentifierFromAccountLocator(secondaryAccount)
 
 	db1Name := random.AlphaN(10)
@@ -40,7 +37,7 @@ func TestInt_ShowReplicationDatabases(t *testing.T) {
 	db2, dbCleanup2 := testClientHelper().Database.CreateDatabaseWithName(t, db2Name)
 	t.Cleanup(dbCleanup2)
 
-	err = client.Databases.AlterReplication(ctx, db.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
+	err := client.Databases.AlterReplication(ctx, db.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
 	require.NoError(t, err)
 	err = client.Databases.AlterReplication(ctx, db2.ID(), &sdk.AlterDatabaseReplicationOptions{EnableReplication: &sdk.EnableReplication{ToAccounts: []sdk.AccountIdentifier{secondaryAccountId}}})
 	require.NoError(t, err)

@@ -15,7 +15,7 @@ func TestInt_SchemasCreate(t *testing.T) {
 	ctx := testContext(t)
 
 	// new schema created on purpose
-	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t, testDb(t))
+	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(cleanupSchema)
 
 	t.Run("replace", func(t *testing.T) {
@@ -118,7 +118,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 	t.Run("rename to", func(t *testing.T) {
 		// new schema created on purpose
-		schema, _ := testClientHelper().Schema.CreateSchema(t, testDb(t))
+		schema, _ := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(func() {
 			err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 			require.NoError(t, err)
@@ -139,12 +139,12 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 	t.Run("swap with", func(t *testing.T) {
 		// new schemas created on purpose
-		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t, testDb(t))
+		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
-		swapSchema, cleanupSwapSchema := testClientHelper().Schema.CreateSchema(t, testDb(t))
+		swapSchema, cleanupSwapSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSwapSchema)
 
-		table, _ := createTable(t, client, testDb(t), schema)
+		table, _ := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 		t.Cleanup(func() {
 			newId := sdk.NewSchemaObjectIdentifier(testDb(t).Name, swapSchema.Name, table.Name)
 			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(newId))
@@ -165,7 +165,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 	t.Run("set", func(t *testing.T) {
 		// new schema created on purpose
-		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t, testDb(t))
+		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
 
 		comment := random.Comment()
@@ -279,7 +279,7 @@ func TestInt_SchemasAlter(t *testing.T) {
 
 	t.Run("enable managed access", func(t *testing.T) {
 		// new schema created on purpose
-		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t, testDb(t))
+		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)
 
 		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
@@ -299,7 +299,7 @@ func TestInt_SchemasShow(t *testing.T) {
 	ctx := testContext(t)
 
 	// new schema created on purpose
-	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t, testDb(t))
+	schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(cleanupSchema)
 
 	t.Run("no options", func(t *testing.T) {
@@ -341,7 +341,7 @@ func TestInt_SchemasDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	// new schema created on purpose
-	schema, _ := testClientHelper().Schema.CreateSchema(t, testDb(t))
+	schema, _ := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(func() {
 		err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
 		require.NoError(t, err)

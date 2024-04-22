@@ -88,8 +88,7 @@ func TestInt_ShowObjectParameter(t *testing.T) {
 func TestInt_ShowUserParameter(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	user, err := client.ContextFunctions.CurrentUser(ctx)
-	require.NoError(t, err)
+	user := testClientHelper().Context.CurrentUser(t)
 	userID := sdk.NewAccountObjectIdentifier(user)
 	parameter, err := client.Parameters.ShowUserParameter(ctx, sdk.UserParameterAutocommit, userID)
 	require.NoError(t, err)
@@ -105,7 +104,7 @@ func TestInt_UseWarehouse(t *testing.T) {
 		require.NoError(t, err)
 	})
 	// new warehouse created on purpose
-	warehouse, warehouseCleanup := createWarehouse(t, client)
+	warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 	err := client.Sessions.UseWarehouse(ctx, warehouse.ID())
 	require.NoError(t, err)
@@ -145,7 +144,7 @@ func TestInt_UseSchema(t *testing.T) {
 	// new database and schema created on purpose
 	database, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
-	schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t, database)
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	t.Cleanup(schemaCleanup)
 	err := client.Sessions.UseSchema(ctx, schema.ID())
 	require.NoError(t, err)

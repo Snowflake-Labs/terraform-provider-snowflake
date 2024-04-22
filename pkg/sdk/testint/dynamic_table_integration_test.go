@@ -14,7 +14,7 @@ import (
 func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	client := testClient(t)
 
-	tableTest, tableCleanup := createTable(t, client, testDb(t), testSchema(t))
+	tableTest, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
 	ctx := context.Background()
@@ -209,7 +209,7 @@ func TestInt_DynamicTablesShowByID(t *testing.T) {
 	createDynamicTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
 
-		tableTest, tableCleanup := createTable(t, client, databaseTest, schemaTest)
+		tableTest, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 		targetLag := sdk.TargetLag{
 			MaximumDuration: sdk.String("2 minutes"),
@@ -221,7 +221,7 @@ func TestInt_DynamicTablesShowByID(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, databaseTest, random.AlphaN(8))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
 		name := random.AlphaN(4)

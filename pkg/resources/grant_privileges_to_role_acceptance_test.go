@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_GrantPrivilegesToRole_onAccount(t *testing.T) {
@@ -987,7 +986,10 @@ func TestAcc_GrantPrivilegesToRole_OnAllPipes(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/OnAllPipes"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -1083,8 +1085,7 @@ func TestAcc_GrantPrivilegesToRole_ImportedPrivileges(t *testing.T) {
 	sharedDatabaseName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	shareName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	roleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	secondaryAccountName, err := getSecondaryAccountName(t)
-	require.NoError(t, err)
+	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 	configVariables := config.Variables{
 		"role_name":            config.StringVariable(roleName),
 		"shared_database_name": config.StringVariable(sharedDatabaseName),
@@ -1158,7 +1159,10 @@ func TestAcc_GrantPrivilegesToRole_MultiplePartsInRoleName(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { t.Cleanup(createAccountRoleOutsideTerraform(t, name)) },
+				PreConfig: func() {
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, name)
+					t.Cleanup(roleCleanup)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToRole/OnAccount"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
