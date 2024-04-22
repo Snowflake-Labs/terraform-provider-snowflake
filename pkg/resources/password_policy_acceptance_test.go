@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -102,15 +104,20 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 }
 
 func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
-	accName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
 	m := func(maxAgeDays int) map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":         config.StringVariable(accName),
+			"name":         config.StringVariable(name),
 			"database":     config.StringVariable(acc.TestDatabaseName),
 			"schema":       config.StringVariable(acc.TestSchemaName),
 			"max_age_days": config.IntegerVariable(maxAgeDays),
 		}
 	}
+
+	configValueWithNewName := m(10)
+	configValueWithNewName["name"] = config.StringVariable(newName)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -143,22 +150,28 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
 				),
 			},
-			// Unsets properly
+			// Rename + Unsets properly
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_noOptionals"),
 				ConfigVariables: map[string]config.Variable{
-					"name":     config.StringVariable(accName),
+					"name":     config.StringVariable(newName),
 					"database": config.StringVariable(acc.TestDatabaseName),
 					"schema":   config.StringVariable(acc.TestSchemaName),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_password_policy.pa", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", newName),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "90"),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_noOptionals"),
 				ConfigVariables: map[string]config.Variable{
-					"name":     config.StringVariable(accName),
+					"name":     config.StringVariable(name),
 					"database": config.StringVariable(acc.TestDatabaseName),
 					"schema":   config.StringVariable(acc.TestSchemaName),
 				},

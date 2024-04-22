@@ -2,22 +2,41 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"slices"
 	"strings"
 )
 
-func Sweep(client *Client, prefix string) error {
+func SweepAfterIntegrationTests(client *Client, suffix string) error {
+	return sweep(client, suffix)
+}
+
+func SweepAfterAcceptanceTests(client *Client, suffix string) error {
+	return sweep(client, suffix)
+}
+
+// TODO [SNOW-955520]: create account-level objects with appropriate suffix during tests (only the sweeped ones for now?)
+// TODO [SNOW-955520]: move this to test code
+// TODO [SNOW-955520]: use if exists/use method from helper for dropping
+// TODO [SNOW-867247]: sweep all missing account-level objects (like users, integrations, replication groups, network policies, ...)
+// TODO [SNOW-867247]: extract sweepers to a separate dir
+// TODO [SNOW-867247]: rework the sweepers (funcs -> objects)
+// TODO [SNOW-867247]: consider generalization (almost all the sweepers follow the same pattern: show, drop if matches)
+// TODO [SNOW-867247]: consider failing after all sweepers and not with the first error
+// TODO [SNOW-867247]: consider showing only objects with the given suffix (in almost every sweeper)
+func sweep(client *Client, suffix string) error {
+	if suffix == "" {
+		return fmt.Errorf("suffix is required to run sweepers")
+	}
 	sweepers := []func() error{
-		getAccountPolicyAttachementsSweeper(client),
-		getResourceMonitorSweeper(client, prefix),
-		getFailoverGroupSweeper(client, prefix),
-		getShareSweeper(client, prefix),
-		getDatabaseSweeper(client, prefix),
-		getWarehouseSweeper(client, prefix),
-		getRoleSweeper(client, prefix),
-		// todo: users, integrations, replication groups, network policies
-		// getUserSweeper(client, prefix),
+		getAccountPolicyAttachmentsSweeper(client),
+		getResourceMonitorSweeper(client, suffix),
+		getFailoverGroupSweeper(client, suffix),
+		getShareSweeper(client, suffix),
+		getDatabaseSweeper(client, suffix),
+		getWarehouseSweeper(client, suffix),
+		getRoleSweeper(client, suffix),
 	}
 	for _, sweeper := range sweepers {
 		if err := sweeper(); err != nil {
@@ -27,192 +46,7 @@ func Sweep(client *Client, prefix string) error {
 	return nil
 }
 
-func SweepAll(client *Client) error {
-	return Sweep(client, "")
-}
-
-func getResourceMonitorSweeper(client *Client, prefix string) func() error {
-	return func() error {
-		if prefix == "" {
-			log.Printf("[DEBUG] Sweeping all resource monitors")
-		} else {
-			log.Printf("[DEBUG] Sweeping all resource monitors with prefix %s", prefix)
-		}
-		ctx := context.Background()
-		rms, err := client.ResourceMonitors.Show(ctx, nil)
-		if err != nil {
-			return err
-		}
-		for _, rm := range rms {
-			if prefix == "" || strings.HasPrefix(rm.Name, prefix) {
-				log.Printf("[DEBUG] Dropping resource monitor %s", rm.Name)
-				if err := client.ResourceMonitors.Drop(ctx, rm.ID()); err != nil {
-					return err
-				}
-			} else {
-				log.Printf("[DEBUG] Skipping resource monitor %s", rm.Name)
-			}
-		}
-		return nil
-	}
-}
-
-func getFailoverGroupSweeper(client *Client, prefix string) func() error {
-	return func() error {
-		if prefix == "" {
-			log.Printf("[DEBUG] Sweeping all failover groups")
-		} else {
-			log.Printf("[DEBUG] Sweeping all failover groups with prefix %s", prefix)
-		}
-		ctx := context.Background()
-		currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
-		if err != nil {
-			return err
-		}
-		opts := &ShowFailoverGroupOptions{
-			InAccount: NewAccountIdentifierFromAccountLocator(currentAccount),
-		}
-		fgs, err := client.FailoverGroups.Show(ctx, opts)
-		if err != nil {
-			return err
-		}
-		for _, fg := range fgs {
-			if (prefix == "" || strings.HasPrefix(fg.Name, prefix)) && fg.AccountLocator == currentAccount {
-				log.Printf("[DEBUG] Dropping failover group %s", fg.Name)
-				if err := client.FailoverGroups.Drop(ctx, fg.ID(), nil); err != nil {
-					return err
-				}
-			} else {
-				log.Printf("[DEBUG] Skipping failover group %s", fg.Name)
-			}
-		}
-		return nil
-	}
-}
-
-func getUserSweeper(client *Client, prefix string) func() error {
-	return func() error {
-		/*ctx := context.Background()
-		users, client.Users.Show(ctx,nil) // LIKE '%TEST_%'
-		for _, user := range users {
-			err := client.Users.Drop(ctx, user.ID(), nil)
-			if err != nil {
-				return err
-			}
-		}*/
-		return nil
-	}
-}
-
-func getRoleSweeper(client *Client, prefix string) func() error {
-	return func() error {
-		if prefix == "" {
-			log.Printf("[DEBUG] Sweeping all roles")
-		} else {
-			log.Printf("[DEBUG] Sweeping all roles with prefix %s", prefix)
-		}
-		ctx := context.Background()
-		roles, err := client.Roles.Show(ctx, NewShowRoleRequest())
-		if err != nil {
-			return err
-		}
-		for _, role := range roles {
-			if (prefix == "" || strings.HasPrefix(role.Name, prefix)) && !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "SYSADMIN", "ORGADMIN", "USERADMIN", "PUBLIC"}, role.Name) {
-				log.Printf("[DEBUG] Dropping role %s", role.Name)
-				if err := client.Roles.Drop(ctx, NewDropRoleRequest(role.ID())); err != nil {
-					return err
-				}
-			} else {
-				log.Printf("[DEBUG] Skipping role %s", role.Name)
-			}
-		}
-		return nil
-	}
-}
-
-func getShareSweeper(client *Client, prefix string) func() error {
-	return func() error {
-		if prefix == "" {
-			log.Printf("[DEBUG] Sweeping all shares")
-		} else {
-			log.Printf("[DEBUG] Sweeping all shares with prefix %s", prefix)
-		}
-		ctx := context.Background()
-		shares, err := client.Shares.Show(ctx, nil)
-		if err != nil {
-			return err
-		}
-		for _, share := range shares {
-			if (share.Kind == ShareKindOutbound) && (prefix == "" || strings.HasPrefix(share.Name.Name(), prefix)) {
-				log.Printf("[DEBUG] Dropping share %s", share.ID().Name())
-				if err := client.Shares.Drop(ctx, share.ID()); err != nil {
-					return err
-				}
-			} else {
-				log.Printf("[DEBUG] Skipping share %s", share.Name.Name())
-			}
-		}
-		return nil
-	}
-}
-
-func getDatabaseSweeper(client *Client, prefix string) func() error {
-	return func() error {
-		if prefix == "" {
-			log.Printf("[DEBUG] Sweeping all databases")
-		} else {
-			log.Printf("[DEBUG] Sweeping all databases with prefix %s", prefix)
-		}
-		ctx := context.Background()
-		dbs, err := client.Databases.Show(ctx, nil)
-		if err != nil {
-			return err
-		}
-		for _, db := range dbs {
-			if (prefix == "" || strings.HasPrefix(db.Name, prefix)) && db.Name != "SNOWFLAKE" && db.Name != "terraform_test_database" {
-				log.Printf("[DEBUG] Dropping database %s", db.Name)
-				if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
-					if strings.Contains(err.Error(), "Object found is of type 'APPLICATION', not specified type 'DATABASE'") {
-						log.Printf("[DEBUG] Skipping database %s", db.Name)
-					} else {
-						return err
-					}
-				}
-			} else {
-				log.Printf("[DEBUG] Skipping database %s", db.Name)
-			}
-		}
-		return nil
-	}
-}
-
-func getWarehouseSweeper(client *Client, prefix string) func() error {
-	return func() error {
-		if prefix == "" {
-			log.Printf("[DEBUG] Sweeping all warehouses")
-		} else {
-			log.Printf("[DEBUG] Sweeping all warehouses with prefix %s", prefix)
-		}
-		ctx := context.Background()
-		whs, err := client.Warehouses.Show(ctx, nil)
-		if err != nil {
-			return err
-		}
-		for _, wh := range whs {
-			if (prefix == "" || strings.HasPrefix(wh.Name, prefix)) && wh.Name != "SNOWFLAKE" && wh.Name != "terraform_test_warehouse" {
-				log.Printf("[DEBUG] Dropping warehouse %s", wh.Name)
-				if err := client.Warehouses.Drop(ctx, wh.ID(), nil); err != nil {
-					return err
-				}
-			} else {
-				log.Printf("[DEBUG] Skipping warehouse %s", wh.Name)
-			}
-		}
-		return nil
-	}
-}
-
-func getAccountPolicyAttachementsSweeper(client *Client) func() error {
+func getAccountPolicyAttachmentsSweeper(client *Client) func() error {
 	return func() error {
 		log.Printf("[DEBUG] Unsetting password and session policies set on the account level")
 		ctx := context.Background()
@@ -228,6 +62,157 @@ func getAccountPolicyAttachementsSweeper(client *Client) func() error {
 			},
 		}
 		_ = client.Accounts.Alter(ctx, opts)
+		return nil
+	}
+}
+
+func getResourceMonitorSweeper(client *Client, suffix string) func() error {
+	return func() error {
+		log.Printf("[DEBUG] Sweeping resource monitors with suffix %s", suffix)
+		ctx := context.Background()
+
+		rms, err := client.ResourceMonitors.Show(ctx, nil)
+		if err != nil {
+			return fmt.Errorf("sweeping resource monitor ended with error, err = %w", err)
+		}
+		for _, rm := range rms {
+			if strings.HasSuffix(rm.Name, suffix) {
+				log.Printf("[DEBUG] Dropping resource monitor %s", rm.ID().FullyQualifiedName())
+				if err := client.ResourceMonitors.Drop(ctx, rm.ID()); err != nil {
+					return fmt.Errorf("sweeping resource monitor %s ended with error, err = %w", rm.ID().FullyQualifiedName(), err)
+				}
+			} else {
+				log.Printf("[DEBUG] Skipping resource monitor %s", rm.ID().FullyQualifiedName())
+			}
+		}
+		return nil
+	}
+}
+
+func getFailoverGroupSweeper(client *Client, suffix string) func() error {
+	return func() error {
+		log.Printf("[DEBUG] Sweeping failover groups with suffix %s", suffix)
+		ctx := context.Background()
+
+		currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
+		if err != nil {
+			return fmt.Errorf("sweeping failover groups ended with error, err = %w", err)
+		}
+		opts := &ShowFailoverGroupOptions{
+			InAccount: NewAccountIdentifierFromAccountLocator(currentAccount),
+		}
+		fgs, err := client.FailoverGroups.Show(ctx, opts)
+		if err != nil {
+			return fmt.Errorf("sweeping failover groups ended with error, err = %w", err)
+		}
+		for _, fg := range fgs {
+			if strings.HasPrefix(fg.Name, suffix) && fg.AccountLocator == currentAccount {
+				log.Printf("[DEBUG] Dropping failover group %s", fg.ID().FullyQualifiedName())
+				if err := client.FailoverGroups.Drop(ctx, fg.ID(), nil); err != nil {
+					return fmt.Errorf("sweeping failover group %s ended with error, err = %w", fg.ID().FullyQualifiedName(), err)
+				}
+			} else {
+				log.Printf("[DEBUG] Skipping failover group %s", fg.ID().FullyQualifiedName())
+			}
+		}
+		return nil
+	}
+}
+
+func getShareSweeper(client *Client, suffix string) func() error {
+	return func() error {
+		log.Printf("[DEBUG] Sweeping shares with suffix %s", suffix)
+		ctx := context.Background()
+
+		shares, err := client.Shares.Show(ctx, nil)
+		if err != nil {
+			return fmt.Errorf("sweeping shares ended with error, err = %w", err)
+		}
+		for _, share := range shares {
+			if share.Kind == ShareKindOutbound && strings.HasPrefix(share.Name.Name(), suffix) {
+				log.Printf("[DEBUG] Dropping share %s", share.ID().FullyQualifiedName())
+				if err := client.Shares.Drop(ctx, share.ID()); err != nil {
+					return fmt.Errorf("sweeping share %s ended with error, err = %w", share.ID().FullyQualifiedName(), err)
+				}
+			} else {
+				log.Printf("[DEBUG] Skipping share %s", share.ID().FullyQualifiedName())
+			}
+		}
+		return nil
+	}
+}
+
+func getDatabaseSweeper(client *Client, suffix string) func() error {
+	return func() error {
+		log.Printf("[DEBUG] Sweeping databases with suffix %s", suffix)
+		ctx := context.Background()
+
+		dbs, err := client.Databases.Show(ctx, nil)
+		if err != nil {
+			return fmt.Errorf("sweeping databases ended with error, err = %w", err)
+		}
+		for _, db := range dbs {
+			// TODO [SNOW-955520]: remove "terraform_test_database" condition after this PR is merged
+			if strings.HasPrefix(db.Name, suffix) && db.Name != "SNOWFLAKE" && db.Name != "terraform_test_database" {
+				log.Printf("[DEBUG] Dropping database %s", db.ID().FullyQualifiedName())
+				if err := client.Databases.Drop(ctx, db.ID(), nil); err != nil {
+					if strings.Contains(err.Error(), "Object found is of type 'APPLICATION', not specified type 'DATABASE'") {
+						log.Printf("[DEBUG] Skipping database %s", db.ID().FullyQualifiedName())
+					} else {
+						return fmt.Errorf("sweeping database %s ended with error, err = %w", db.ID().FullyQualifiedName(), err)
+					}
+				}
+			} else {
+				log.Printf("[DEBUG] Skipping database %s", db.ID().FullyQualifiedName())
+			}
+		}
+		return nil
+	}
+}
+
+func getWarehouseSweeper(client *Client, suffix string) func() error {
+	return func() error {
+		log.Printf("[DEBUG] Sweeping warehouses with suffix %s", suffix)
+		ctx := context.Background()
+
+		whs, err := client.Warehouses.Show(ctx, nil)
+		if err != nil {
+			return fmt.Errorf("sweeping warehouses ended with error, err = %w", err)
+		}
+		for _, wh := range whs {
+			// TODO [SNOW-955520]: remove "terraform_test_database" condition after this PR is merged
+			if strings.HasPrefix(wh.Name, suffix) && wh.Name != "SNOWFLAKE" && wh.Name != "terraform_test_warehouse" {
+				log.Printf("[DEBUG] Dropping warehouse %s", wh.ID().FullyQualifiedName())
+				if err := client.Warehouses.Drop(ctx, wh.ID(), nil); err != nil {
+					return fmt.Errorf("sweeping warehouse %s ended with error, err = %w", wh.ID().FullyQualifiedName(), err)
+				}
+			} else {
+				log.Printf("[DEBUG] Skipping warehouse %s", wh.ID().FullyQualifiedName())
+			}
+		}
+		return nil
+	}
+}
+
+func getRoleSweeper(client *Client, suffix string) func() error {
+	return func() error {
+		log.Printf("[DEBUG] Sweeping roles with suffix %s", suffix)
+		ctx := context.Background()
+
+		roles, err := client.Roles.Show(ctx, NewShowRoleRequest())
+		if err != nil {
+			return fmt.Errorf("sweeping roles ended with error, err = %w", err)
+		}
+		for _, role := range roles {
+			if strings.HasPrefix(role.Name, suffix) && !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "SYSADMIN", "ORGADMIN", "USERADMIN", "PUBLIC"}, role.Name) {
+				log.Printf("[DEBUG] Dropping role %s", role.ID().FullyQualifiedName())
+				if err := client.Roles.Drop(ctx, NewDropRoleRequest(role.ID())); err != nil {
+					return fmt.Errorf("sweeping role %s ended with error, err = %w", role.ID().FullyQualifiedName(), err)
+				}
+			} else {
+				log.Printf("[DEBUG] Skipping role %s", role.ID().FullyQualifiedName())
+			}
+		}
 		return nil
 	}
 }

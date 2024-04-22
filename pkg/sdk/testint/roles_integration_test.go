@@ -3,8 +3,8 @@ package testint
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -84,18 +84,14 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("alter rename to", func(t *testing.T) {
-		role, _ := createRole(t, client)
+		role, roleCleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(roleCleanup)
+
 		newName := sdk.RandomAccountObjectIdentifier()
-		t.Cleanup(func() {
-			err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(newName))
-			if err != nil {
-				err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(role.ID()))
-				require.NoError(t, err)
-			}
-		})
 
 		err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithRenameTo(newName))
 		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Role.DropRoleFunc(t, newName))
 
 		r, err := client.Roles.ShowByID(ctx, newName)
 		require.NoError(t, err)
@@ -103,7 +99,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("alter set tags", func(t *testing.T) {
-		role, cleanup := createRole(t, client)
+		role, cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanup)
 
 		_, err := client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), "ROLE")
@@ -126,7 +122,7 @@ func TestInt_Roles(t *testing.T) {
 	t.Run("alter unset tags", func(t *testing.T) {
 		tagValue := "tag-value"
 		id := sdk.RandomAccountObjectIdentifier()
-		role, cleanup := createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(id).
+		role, cleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(id).
 			WithTag([]sdk.TagAssociation{
 				{
 					Name:  tag.ID(),
@@ -147,7 +143,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("alter set comment", func(t *testing.T) {
-		role, cleanupRole := createRole(t, client)
+		role, cleanupRole := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanupRole)
 
 		comment := random.Comment()
@@ -162,7 +158,7 @@ func TestInt_Roles(t *testing.T) {
 	t.Run("alter unset comment", func(t *testing.T) {
 		comment := random.Comment()
 		id := sdk.RandomAccountObjectIdentifier()
-		role, cleanup := createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(id).WithComment(comment))
+		role, cleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(id).WithComment(comment))
 		t.Cleanup(cleanup)
 
 		err := client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithUnsetComment(true))
@@ -174,7 +170,9 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("drop no options", func(t *testing.T) {
-		role, _ := createRole(t, client)
+		role, roleCleanup := testClientHelper().Role.CreateRole(t)
+		t.Cleanup(roleCleanup)
+
 		err := client.Roles.Drop(ctx, sdk.NewDropRoleRequest(role.ID()))
 		require.NoError(t, err)
 
@@ -184,10 +182,10 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("show no options", func(t *testing.T) {
-		role, cleanup := createRole(t, client)
+		role, cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanup)
 
-		role2, cleanup2 := createRole(t, client)
+		role2, cleanup2 := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanup2)
 
 		roles, err := client.Roles.Show(ctx, sdk.NewShowRoleRequest())
@@ -203,7 +201,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("show like", func(t *testing.T) {
-		role, cleanup := createRole(t, client)
+		role, cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanup)
 
 		roles, err := client.Roles.Show(ctx, sdk.NewShowRoleRequest().WithLike(sdk.NewLikeRequest(role.Name)))
@@ -222,7 +220,7 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		role, cleanup := createRole(t, client)
+		role, cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanup)
 
 		r, err := client.Roles.ShowByID(ctx, role.ID())
@@ -232,10 +230,10 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("grant and revoke role from user", func(t *testing.T) {
-		role, cleanup := createRole(t, client)
+		role, cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanup)
 
-		user, cleanupUser := createUser(t, client)
+		user, cleanupUser := testClientHelper().User.CreateUser(t)
 		t.Cleanup(cleanupUser)
 
 		userID := user.ID()
@@ -255,10 +253,10 @@ func TestInt_Roles(t *testing.T) {
 	})
 
 	t.Run("grant and revoke role from role", func(t *testing.T) {
-		parentRole, cleanupParentRole := createRole(t, client)
+		parentRole, cleanupParentRole := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanupParentRole)
 
-		role, cleanup := createRole(t, client)
+		role, cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanup)
 
 		parentRoleID := parentRole.ID()

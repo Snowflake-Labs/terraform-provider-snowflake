@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_DatabaseWithUnderscore(t *testing.T) {
@@ -48,7 +47,7 @@ func TestAcc_Database(t *testing.T) {
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	secondaryAccountName := getSecondaryAccount(t)
+	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -109,7 +108,7 @@ func TestAcc_Database(t *testing.T) {
 }
 
 func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
-	id := generateUnsafeExecuteTestDatabaseName(t)
+	name := generateUnsafeExecuteTestDatabaseName(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -122,30 +121,30 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 			{
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: map[string]config.Variable{
-					"db": config.StringVariable(id),
+					"db": config.StringVariable(name),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.db", "name", id),
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", name),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					testAccCheckDatabaseExistence(t, id, true),
+					testAccCheckDatabaseExistence(t, name, true),
 				),
 			},
 			{
-				PreConfig:       func() { dropDatabaseOutsideTerraform(t, id) },
+				PreConfig:       func() { acc.TestClient().Database.DropDatabaseFunc(t, sdk.NewAccountObjectIdentifier(name))() },
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: map[string]config.Variable{
-					"db": config.StringVariable(id),
+					"db": config.StringVariable(name),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.db", "name", id),
+					resource.TestCheckResourceAttr("snowflake_database.db", "name", name),
 					resource.TestCheckResourceAttr("snowflake_database.db", "comment", "test comment"),
-					testAccCheckDatabaseExistence(t, id, true),
+					testAccCheckDatabaseExistence(t, name, true),
 				),
 			},
 		},
@@ -156,7 +155,7 @@ func TestAcc_DatabaseRemovedOutsideOfTerraform(t *testing.T) {
 func TestAcc_Database_issue2021(t *testing.T) {
 	name := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
-	secondaryAccountName := getSecondaryAccount(t)
+	secondaryAccountName := acc.SecondaryTestClient().Context.CurrentAccount(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -213,7 +212,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 5, 5),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 5, 5),
 				),
 			},
 			{
@@ -222,7 +221,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 10),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 10),
 				),
 			},
 			{
@@ -230,7 +229,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "5"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 5),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 5),
 				),
 			},
 			{
@@ -238,7 +237,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(15),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "15"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 15),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 15),
 				),
 			},
 			{
@@ -246,7 +245,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 10),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 10),
 				),
 			},
 			{
@@ -254,7 +253,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "0"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 0),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 0),
 				),
 			},
 			{
@@ -262,7 +261,7 @@ func TestAcc_Database_DefaultDataRetentionTime(t *testing.T) {
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "3"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 3),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 3),
 				),
 			},
 		},
@@ -302,23 +301,16 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 5, 5),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 5, 5),
 				),
 			},
 			{
-				PreConfig: func() {
-					err := client.Databases.Alter(context.Background(), id, &sdk.AlterDatabaseOptions{
-						Set: &sdk.DatabaseSet{
-							DataRetentionTimeInDays: sdk.Int(20),
-						},
-					})
-					require.NoError(t, err)
-				},
+				PreConfig:       acc.TestClient().Database.UpdateDataRetentionTime(t, id, 20),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutDatabaseDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "-1"),
-					checkAccountAndDatabaseDataRetentionTime(id, 5, 5),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 5, 5),
 				),
 			},
 			{
@@ -327,7 +319,7 @@ func TestAcc_Database_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.
 				ConfigVariables: configVariablesWithDatabaseDataRetentionTime(3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "3"),
-					checkAccountAndDatabaseDataRetentionTime(id, 10, 3),
+					checkAccountAndDatabaseDataRetentionTime(t, id, 10, 3),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -376,36 +368,11 @@ resource "snowflake_database" "db" {
 	return fmt.Sprintf(s, prefix, secondaryAccountName)
 }
 
-func dropDatabaseOutsideTerraform(t *testing.T, id string) {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	err := client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(id), &sdk.DropDatabaseOptions{})
-	require.NoError(t, err)
-}
-
-func getSecondaryAccount(t *testing.T) string {
-	t.Helper()
-
-	secondaryClient := acc.SecondaryClient(t)
-	ctx := context.Background()
-
-	account, err := secondaryClient.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
-
-	return account
-}
-
 // TODO [SNOW-936093]: this is used mostly as check for unsafe execute, not as normal check destroy in other resources. Handle with the helpers cleanup.
 func testAccCheckDatabaseExistence(t *testing.T, id string, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		client := acc.Client(t)
-		ctx := context.Background()
-
-		_, err := client.Databases.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id))
+		_, err := acc.TestClient().Database.Show(t, sdk.NewAccountObjectIdentifier(id))
 		if shouldExist {
 			if err != nil {
 				return fmt.Errorf("error while retrieving database %s, err = %w", id, err)
@@ -446,13 +413,14 @@ func testAccCheckIfDatabaseIsReplicated(t *testing.T, id string) func(state *ter
 	}
 }
 
-func checkAccountAndDatabaseDataRetentionTime(id sdk.AccountObjectIdentifier, expectedAccountRetentionDays int, expectedDatabaseRetentionsDays int) func(state *terraform.State) error {
+func checkAccountAndDatabaseDataRetentionTime(t *testing.T, id sdk.AccountObjectIdentifier, expectedAccountRetentionDays int, expectedDatabaseRetentionsDays int) func(state *terraform.State) error {
+	t.Helper()
 	return func(state *terraform.State) error {
 		providerContext := acc.TestAccProvider.Meta().(*provider.Context)
 		client := providerContext.Client
 		ctx := context.Background()
 
-		database, err := client.Databases.ShowByID(ctx, id)
+		database, err := acc.TestClient().Database.Show(t, id)
 		if err != nil {
 			return err
 		}
@@ -475,27 +443,5 @@ func checkAccountAndDatabaseDataRetentionTime(id sdk.AccountObjectIdentifier, ex
 		}
 
 		return nil
-	}
-}
-
-func createDatabaseOutsideTerraform(t *testing.T, name string) func() {
-	t.Helper()
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	if err := client.Databases.Create(ctx, sdk.NewAccountObjectIdentifier(name), new(sdk.CreateDatabaseOptions)); err != nil {
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	return func() {
-		opts := new(sdk.DropDatabaseOptions)
-		opts.IfExists = sdk.Bool(true)
-		if err := client.Databases.Drop(ctx, sdk.NewAccountObjectIdentifier(name), opts); err != nil {
-			if err != nil {
-				t.Fatal(err)
-			}
-		}
 	}
 }

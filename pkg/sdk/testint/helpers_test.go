@@ -3,15 +3,13 @@ package testint
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,6 +22,7 @@ const (
 func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifier {
 	t.Helper()
 	ctx := context.Background()
+	// TODO: replace later (incoming clients differ)
 	currentAccountLocator, err := client.ContextFunctions.CurrentAccount(ctx)
 	require.NoError(t, err)
 	replicationAccounts, err := client.ReplicationFunctions.ShowReplicationAccounts(ctx)
@@ -36,160 +35,6 @@ func getAccountIdentifier(t *testing.T, client *sdk.Client) sdk.AccountIdentifie
 	return sdk.AccountIdentifier{}
 }
 
-func useWarehouse(t *testing.T, client *sdk.Client, warehouseID sdk.AccountObjectIdentifier) func() {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Sessions.UseWarehouse(ctx, warehouseID)
-	require.NoError(t, err)
-	return func() {
-		err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
-		require.NoError(t, err)
-	}
-}
-
-func createDatabase(t *testing.T, client *sdk.Client) (*sdk.Database, func()) {
-	t.Helper()
-	return createDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
-}
-
-func createDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateDatabaseOptions) (*sdk.Database, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Databases.Create(ctx, id, opts)
-	require.NoError(t, err)
-	database, err := client.Databases.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return database, func() {
-		err := client.Databases.Drop(ctx, id, nil)
-		require.NoError(t, err)
-		err = client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName))
-		require.NoError(t, err)
-	}
-}
-
-func createSecondaryDatabase(t *testing.T, client *sdk.Client, externalId sdk.ExternalObjectIdentifier) (*sdk.Database, func()) {
-	t.Helper()
-	return createSecondaryDatabaseWithOptions(t, client, sdk.RandomAccountObjectIdentifier(), externalId, &sdk.CreateSecondaryDatabaseOptions{})
-}
-
-func createSecondaryDatabaseWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, externalId sdk.ExternalObjectIdentifier, opts *sdk.CreateSecondaryDatabaseOptions) (*sdk.Database, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Databases.CreateSecondary(ctx, id, externalId, opts)
-	require.NoError(t, err)
-	database, err := client.Databases.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return database, func() {
-		err := client.Databases.Drop(ctx, id, nil)
-		require.NoError(t, err)
-
-		// TODO [926148]: make this wait better with tests stabilization
-		// waiting because sometimes dropping primary db right after dropping the secondary resulted in error
-		time.Sleep(1 * time.Second)
-		err = client.Sessions.UseSchema(ctx, sdk.NewDatabaseObjectIdentifier(TestDatabaseName, TestSchemaName))
-		require.NoError(t, err)
-	}
-}
-
-func createSchema(t *testing.T, client *sdk.Client, database *sdk.Database) (*sdk.Schema, func()) {
-	t.Helper()
-	return createSchemaWithIdentifier(t, client, database, random.StringRange(8, 28))
-}
-
-func createSchemaWithIdentifier(t *testing.T, client *sdk.Client, database *sdk.Database, name string) (*sdk.Schema, func()) {
-	t.Helper()
-	ctx := context.Background()
-	schemaID := sdk.NewDatabaseObjectIdentifier(database.Name, name)
-	err := client.Schemas.Create(ctx, schemaID, nil)
-	require.NoError(t, err)
-	schema, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(database.Name, name))
-	require.NoError(t, err)
-	return schema, func() {
-		err := client.Schemas.Drop(ctx, schemaID, nil)
-		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-			return
-		}
-		require.NoError(t, err)
-		err = client.Sessions.UseSchema(ctx, testSchema(t).ID())
-		require.NoError(t, err)
-	}
-}
-
-func createWarehouse(t *testing.T, client *sdk.Client) (*sdk.Warehouse, func()) {
-	t.Helper()
-	return createWarehouseWithOptions(t, client, &sdk.CreateWarehouseOptions{})
-}
-
-func createWarehouseWithOptions(t *testing.T, client *sdk.Client, opts *sdk.CreateWarehouseOptions) (*sdk.Warehouse, func()) {
-	t.Helper()
-	name := random.StringRange(8, 28)
-	id := sdk.NewAccountObjectIdentifier(name)
-	ctx := context.Background()
-	err := client.Warehouses.Create(ctx, id, opts)
-	require.NoError(t, err)
-	return &sdk.Warehouse{
-			Name: name,
-		}, func() {
-			err := client.Warehouses.Drop(ctx, id, nil)
-			require.NoError(t, err)
-			err = client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
-			require.NoError(t, err)
-		}
-}
-
-func createUser(t *testing.T, client *sdk.Client) (*sdk.User, func()) {
-	t.Helper()
-	name := random.StringRange(8, 28)
-	id := sdk.NewAccountObjectIdentifier(name)
-	return createUserWithOptions(t, client, id, &sdk.CreateUserOptions{})
-}
-
-func createUserWithName(t *testing.T, client *sdk.Client, name string) (*sdk.User, func()) {
-	t.Helper()
-	id := sdk.NewAccountObjectIdentifier(name)
-	return createUserWithOptions(t, client, id, &sdk.CreateUserOptions{})
-}
-
-func createUserWithOptions(t *testing.T, client *sdk.Client, id sdk.AccountObjectIdentifier, opts *sdk.CreateUserOptions) (*sdk.User, func()) {
-	t.Helper()
-	ctx := context.Background()
-	err := client.Users.Create(ctx, id, opts)
-	require.NoError(t, err)
-	user, err := client.Users.ShowByID(ctx, id)
-	require.NoError(t, err)
-	return user, func() {
-		err := client.Users.Drop(ctx, id)
-		require.NoError(t, err)
-	}
-}
-
-func createTable(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema) (*sdk.Table, func()) {
-	t.Helper()
-	columns := []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
-	}
-	return createTableWithColumns(t, client, database, schema, columns)
-}
-
-func createTableWithColumns(t *testing.T, client *sdk.Client, database *sdk.Database, schema *sdk.Schema, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
-	t.Helper()
-	name := random.StringRange(8, 28)
-	id := sdk.NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	ctx := context.Background()
-
-	dbCreateRequest := sdk.NewCreateTableRequest(id, columns)
-	err := client.Tables.Create(ctx, dbCreateRequest)
-	require.NoError(t, err)
-
-	table, err := client.Tables.ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return table, func() {
-		dropErr := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
-		require.NoError(t, dropErr)
-	}
-}
-
 func createDynamicTable(t *testing.T, client *sdk.Client) (*sdk.DynamicTable, func()) {
 	t.Helper()
 	return createDynamicTableWithOptions(t, client, nil, nil, nil, nil)
@@ -199,19 +44,19 @@ func createDynamicTableWithOptions(t *testing.T, client *sdk.Client, warehouse *
 	t.Helper()
 	var warehouseCleanup func()
 	if warehouse == nil {
-		warehouse, warehouseCleanup = createWarehouse(t, client)
+		warehouse, warehouseCleanup = testClientHelper().Warehouse.CreateWarehouse(t)
 	}
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
+		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	}
 	var tableCleanup func()
 	if table == nil {
-		table, tableCleanup = createTable(t, client, database, schema)
+		table, tableCleanup = testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 	}
 	name := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, random.String())
 	targetLag := sdk.TargetLag{
@@ -338,11 +183,11 @@ func createPasswordPolicyWithOptions(t *testing.T, client *sdk.Client, database 
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
+		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	}
 	name := random.UUID()
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
@@ -475,11 +320,11 @@ func createMaskingPolicyWithOptions(t *testing.T, client *sdk.Client, database *
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
+		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	}
 	name := random.String()
 	id := sdk.NewSchemaObjectIdentifier(schema.DatabaseName, schema.Name, name)
@@ -522,15 +367,15 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 	t.Helper()
 	var databaseCleanup func()
 	if database == nil {
-		database, databaseCleanup = createDatabase(t, client)
+		database, databaseCleanup = testClientHelper().Database.CreateDatabase(t)
 	}
 	var schemaCleanup func()
 	if schema == nil {
-		schema, schemaCleanup = createSchema(t, client, database)
+		schema, schemaCleanup = testClientHelper().Schema.CreateSchemaInDatabase(t, database.ID())
 	}
 	var warehouseCleanup func()
 	if warehouse == nil {
-		warehouse, warehouseCleanup = createWarehouse(t, client)
+		warehouse, warehouseCleanup = testClientHelper().Warehouse.CreateWarehouse(t)
 	}
 
 	name := random.String()
@@ -565,86 +410,10 @@ func createAlertWithOptions(t *testing.T, client *sdk.Client, database *sdk.Data
 	}
 }
 
-func useRole(t *testing.T, client *sdk.Client, roleName string) func() {
-	t.Helper()
-	ctx := context.Background()
-
-	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-	require.NoError(t, err)
-
-	err = client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(roleName))
-	require.NoError(t, err)
-
-	return func() {
-		err = client.Sessions.UseRole(ctx, sdk.NewAccountObjectIdentifier(currentRole))
-		require.NoError(t, err)
-	}
-}
-
-func createRole(t *testing.T, client *sdk.Client) (*sdk.Role, func()) {
-	t.Helper()
-	return createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
-}
-
-func createRoleGrantedToCurrentUser(t *testing.T, client *sdk.Client) (*sdk.Role, func()) {
-	t.Helper()
-	role, roleCleanup := createRoleWithRequest(t, client, sdk.NewCreateRoleRequest(sdk.RandomAccountObjectIdentifier()))
-
-	ctx := context.Background()
-	currentUser, err := client.ContextFunctions.CurrentUser(ctx)
-	require.NoError(t, err)
-
-	err = client.Roles.Grant(ctx, sdk.NewGrantRoleRequest(role.ID(), sdk.GrantRole{
-		User: sdk.Pointer(sdk.NewAccountObjectIdentifier(currentUser)),
-	}))
-	require.NoError(t, err)
-
-	return role, roleCleanup
-}
-
-func createRoleWithRequest(t *testing.T, client *sdk.Client, req *sdk.CreateRoleRequest) (*sdk.Role, func()) {
-	t.Helper()
-	require.True(t, sdk.ValidObjectIdentifier(req.GetName()))
-	ctx := context.Background()
-	err := client.Roles.Create(ctx, req)
-	require.NoError(t, err)
-	role, err := client.Roles.ShowByID(ctx, req.GetName())
-	require.NoError(t, err)
-	return role, func() {
-		err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(req.GetName()))
-		require.NoError(t, err)
-	}
-}
-
-func createDatabaseRole(t *testing.T, client *sdk.Client, database *sdk.Database) (*sdk.DatabaseRole, func()) {
-	t.Helper()
-	name := random.String()
-	id := sdk.NewDatabaseObjectIdentifier(database.Name, name)
-	ctx := context.Background()
-
-	err := client.DatabaseRoles.Create(ctx, sdk.NewCreateDatabaseRoleRequest(id))
-	require.NoError(t, err)
-
-	databaseRole, err := client.DatabaseRoles.ShowByID(ctx, id)
-	require.NoError(t, err)
-
-	return databaseRole, cleanupDatabaseRoleProvider(t, ctx, client, id)
-}
-
-func cleanupDatabaseRoleProvider(t *testing.T, ctx context.Context, client *sdk.Client, id sdk.DatabaseObjectIdentifier) func() {
-	t.Helper()
-	return func() {
-		err := client.DatabaseRoles.Drop(ctx, sdk.NewDropDatabaseRoleRequest(id))
-		require.NoError(t, err)
-	}
-}
-
 func createFailoverGroup(t *testing.T, client *sdk.Client) (*sdk.FailoverGroup, func()) {
 	t.Helper()
 	objectTypes := []sdk.PluralObjectType{sdk.PluralObjectTypeRoles}
-	ctx := context.Background()
-	currentAccount, err := client.ContextFunctions.CurrentAccount(ctx)
-	require.NoError(t, err)
+	currentAccount := testClientHelper().Context.CurrentAccount(t)
 	accountID := sdk.NewAccountIdentifierFromAccountLocator(currentAccount)
 	allowedAccounts := []sdk.AccountIdentifier{accountID}
 	return createFailoverGroupWithOptions(t, client, objectTypes, allowedAccounts, nil)

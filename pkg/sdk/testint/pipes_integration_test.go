@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,10 +25,10 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 	schemaIdentifier := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, "tcK1>AJ+")
 
 	// creating a new schema on purpose
-	schema, schemaCleanup := createSchemaWithIdentifier(t, itc.client, testDb(t), schemaIdentifier.Name())
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithName(t, schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -66,10 +67,10 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 }
 
 func TestInt_PipesShowAndDescribe(t *testing.T) {
-	table1, table1Cleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table1, table1Cleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(table1Cleanup)
 
-	table2, table2Cleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(table2Cleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -150,7 +151,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 }
 
 func TestInt_PipeCreate(t *testing.T) {
-	table, tableCleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -222,7 +223,7 @@ func TestInt_PipeCreate(t *testing.T) {
 }
 
 func TestInt_PipeDrop(t *testing.T) {
-	table, tableCleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -250,7 +251,7 @@ func TestInt_PipeDrop(t *testing.T) {
 }
 
 func TestInt_PipeAlter(t *testing.T) {
-	table, tableCleanup := createTable(t, itc.client, testDb(t), testSchema(t))
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 
 	stageName := random.AlphanumericN(20)
@@ -357,7 +358,7 @@ func TestInt_PipesShowByID(t *testing.T) {
 	ctx := testContext(t)
 
 	databaseTest, schemaTest := testDb(t), testSchema(t)
-	table, tableCleanup := createTable(t, client, databaseTest, schemaTest)
+	table, tableCleanup := testClientHelper().Table.CreateTable(t)
 	t.Cleanup(tableCleanup)
 	stage, stageCleanup := createStage(t, client, sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, random.AlphaN(6)))
 	t.Cleanup(stageCleanup)
@@ -383,7 +384,7 @@ func TestInt_PipesShowByID(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		schema, schemaCleanup := createSchemaWithIdentifier(t, client, databaseTest, random.AlphaN(8))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
 		name := random.AlphaN(4)

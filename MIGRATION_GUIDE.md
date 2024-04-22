@@ -4,6 +4,13 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.88.0 ➞ v0.89.0
+#### *(behavior change)* ForceNew removed
+The `ForceNew` field was removed in favor of in-place Update for `name` parameter in:
+- `snowflake_file_format`
+- `snowflake_masking_policy`
+So from now, these objects won't be re-created when the `name` changes, but instead only the name will be updated with `ALTER .. RENAME TO` statements.
+
 ## v0.87.0 ➞ v0.88.0
 ### snowflake_procedure resource changes
 #### *(behavior change)* Execute as validation added
@@ -173,6 +180,11 @@ As the guide is more general and applies to every version (and provider), we mov
 `return_type` has become force new because there is no way to alter it without dropping and recreating the function.
 
 ## v0.84.0 ➞ v0.85.0
+
+### snowflake_stage resource changes
+
+#### *(behavior change/regression)* copy_options
+Setting `copy_options` to `ON_ERROR = 'CONTINUE'` would result in a permadiff. Use `ON_ERROR = CONTINUE` (without single quotes) or bump to v0.89.0 in which the behavior was fixed.
 
 ### snowflake_notification_integration resource changes
 #### *(behavior change)* notification_provider

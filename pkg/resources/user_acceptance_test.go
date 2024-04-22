@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -41,8 +40,13 @@ func TestAcc_User(t *testing.T) {
 	r := require.New(t)
 	prefix := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 	prefix2 := "tst-terraform" + strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
+	comment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	newComment := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+
 	sshkey1, err := testhelpers.Fixture("userkey1")
 	r.NoError(err)
+
 	sshkey2, err := testhelpers.Fixture("userkey2")
 	r.NoError(err)
 
@@ -55,10 +59,10 @@ func TestAcc_User(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix, sshkey1, sshkey2),
+				Config: uConfig(prefix, sshkey1, sshkey2, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
-					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix))),
 					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
@@ -75,10 +79,15 @@ func TestAcc_User(t *testing.T) {
 			},
 			// RENAME
 			{
-				Config: uConfig(prefix2, sshkey1, sshkey2),
+				Config: uConfig(prefix2, sshkey1, sshkey2, newComment),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_user.w", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix2),
-					resource.TestCheckResourceAttr("snowflake_user.w", "comment", "test comment"),
+					resource.TestCheckResourceAttr("snowflake_user.w", "comment", newComment),
 					resource.TestCheckResourceAttr("snowflake_user.w", "login_name", strings.ToUpper(fmt.Sprintf("%s_login", prefix2))),
 					resource.TestCheckResourceAttr("snowflake_user.w", "display_name", "Display Name"),
 					resource.TestCheckResourceAttr("snowflake_user.w", "first_name", "Marcin"),
@@ -147,7 +156,7 @@ resource "snowflake_user" "test" {
 				},
 			},
 			{
-				PreConfig: removeUserOutsideOfTerraform(t, userName),
+				PreConfig: acc.TestClient().User.DropUserFunc(t, userName),
 				Config:    config,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -170,22 +179,11 @@ resource "snowflake_user" "test" {
 	})
 }
 
-func removeUserOutsideOfTerraform(t *testing.T, name sdk.AccountObjectIdentifier) func() {
-	t.Helper()
-	return func() {
-		client := acc.Client(t)
-		ctx := context.Background()
-		if err := client.Users.Drop(ctx, name); err != nil {
-			t.Fatalf("failed to drop user: %s", name.FullyQualifiedName())
-		}
-	}
-}
-
-func uConfig(prefix, key1, key2 string) string {
+func uConfig(prefix, key1, key2, comment string) string {
 	s := `
 resource "snowflake_user" "w" {
 	name = "%s"
-	comment = "test comment"
+	comment = "%s"
 	login_name = "%s_login"
 	display_name = "Display Name"
 	first_name = "Marcin"
@@ -205,7 +203,7 @@ KEY
 	must_change_password = true
 }
 `
-	s = fmt.Sprintf(s, prefix, prefix, key1, key2)
+	s = fmt.Sprintf(s, prefix, comment, prefix, key1, key2)
 	log.Printf("[DEBUG] s %s", s)
 	return s
 }
@@ -252,7 +250,7 @@ func TestAcc_User_issue2058(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: uConfig(prefix, sshkey1, sshkey2),
+				Config: uConfig(prefix, sshkey1, sshkey2, "test_comment"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user.w", "name", prefix),
 				),

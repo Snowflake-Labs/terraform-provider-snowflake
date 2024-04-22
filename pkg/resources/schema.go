@@ -17,10 +17,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-const (
-	schemaIDDelimiter = '|'
-)
-
 var schemaSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
@@ -185,14 +181,17 @@ func UpdateSchema(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 
 	if d.HasChange("name") {
-		newName := d.Get("name")
+		newId := sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), d.Get("name").(string))
+
 		err := client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
-			NewName: sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), newName.(string)),
+			NewName: newId,
 		})
 		if err != nil {
 			return fmt.Errorf("error updating schema name on %v err = %w", d.Id(), err)
 		}
-		d.SetId(helpers.EncodeSnowflakeID(id.DatabaseName(), newName))
+
+		d.SetId(helpers.EncodeSnowflakeID(newId))
+		id = newId
 	}
 
 	if d.HasChange("comment") {

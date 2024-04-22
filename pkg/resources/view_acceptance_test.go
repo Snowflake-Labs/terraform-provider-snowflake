@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -222,6 +224,11 @@ func TestAcc_View_Rename(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View_basic"),
 				ConfigVariables: m2,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", newViewName),
 					resource.TestCheckResourceAttr("snowflake_view.test", "comment", "new comment"),
@@ -439,7 +446,8 @@ func TestAcc_View_Issue2640(t *testing.T) {
 			// try to import secure view without being its owner (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2640)
 			{
 				PreConfig: func() {
-					t.Cleanup(createAccountRoleOutsideTerraform(t, roleName))
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					t.Cleanup(roleCleanup)
 					alterViewOwnershipExternally(t, viewName, roleName)
 				},
 				ResourceName: "snowflake_view.test",

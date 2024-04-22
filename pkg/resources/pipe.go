@@ -13,10 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	pipeIDDelimiter = '|'
-)
-
 var pipeSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,

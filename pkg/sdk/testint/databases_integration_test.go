@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +28,7 @@ func TestInt_DatabasesCreate(t *testing.T) {
 	})
 
 	t.Run("as clone", func(t *testing.T) {
-		cloneDatabase, cloneDatabaseCleanup := createDatabase(t, client)
+		cloneDatabase, cloneDatabaseCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(cloneDatabaseCleanup)
 		databaseID := sdk.RandomAccountObjectIdentifier()
 		opts := &sdk.CreateDatabaseOptions{
@@ -54,9 +54,9 @@ func TestInt_DatabasesCreate(t *testing.T) {
 		databaseID := sdk.RandomAccountObjectIdentifier()
 
 		// new database and schema created on purpose
-		databaseTest, databaseCleanup := createDatabase(t, client)
+		databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(databaseCleanup)
-		schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+		schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, databaseTest.ID())
 		t.Cleanup(schemaCleanup)
 		tagTest, tagCleanup := createTag(t, client, databaseTest, schemaTest)
 		t.Cleanup(tagCleanup)
@@ -113,7 +113,7 @@ func TestInt_CreateShared(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := createDatabase(t, secondaryClient)
+	databaseTest, databaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 
 	shareTest, shareCleanup := createShare(t, secondaryClient)
@@ -164,7 +164,7 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 func TestInt_DatabasesDrop(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, _ := createDatabase(t, client)
+	databaseTest, _ := testClientHelper().Database.CreateDatabase(t)
 	databaseID := databaseTest.ID()
 	t.Run("drop with nil options", func(t *testing.T) {
 		err := client.Databases.Drop(ctx, databaseID, nil)
@@ -196,9 +196,9 @@ func TestInt_DatabasesDescribe(t *testing.T) {
 	client := testClient(t)
 
 	// new database and schema created on purpose
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
-	schemaTest, schemaCleanup := createSchema(t, client, databaseTest)
+	schemaTest, schemaCleanup := testClientHelper().Schema.CreateSchemaInDatabase(t, databaseTest.ID())
 	t.Cleanup(schemaCleanup)
 	ctx := testContext(t)
 	databaseDetails, err := client.Databases.Describe(ctx, databaseTest.ID())
@@ -218,7 +218,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("renaming", func(t *testing.T) {
-		databaseTest, _ := createDatabase(t, client)
+		databaseTest, _ := testClientHelper().Database.CreateDatabase(t)
 		newName := sdk.RandomAccountObjectIdentifier()
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			NewName: newName,
@@ -233,9 +233,9 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	})
 
 	t.Run("swap with another database", func(t *testing.T) {
-		databaseTest, databaseCleanup := createDatabase(t, client)
+		databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(databaseCleanup)
-		databaseTest2, databaseCleanup2 := createDatabase(t, client)
+		databaseTest2, databaseCleanup2 := testClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(databaseCleanup2)
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			SwapWith: databaseTest2.ID(),
@@ -244,7 +244,7 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	})
 
 	t.Run("setting and unsetting retention time + comment ", func(t *testing.T) {
-		databaseTest, _ := createDatabase(t, client)
+		databaseTest, _ := testClientHelper().Database.CreateDatabase(t)
 		err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
 			Set: &sdk.DatabaseSet{
 				DataRetentionTimeInDays: sdk.Int(42),
@@ -279,7 +279,7 @@ func TestInt_AlterFailover(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	databaseTest, databaseCleanup := createDatabase(t, secondaryClient)
+	databaseTest, databaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 
 	toAccounts := []sdk.AccountIdentifier{
@@ -315,10 +315,10 @@ func TestInt_AlterFailover(t *testing.T) {
 func TestInt_DatabasesShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	databaseTest, databaseCleanup := createDatabase(t, client)
+	databaseTest, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)
 
-	databaseTest2, databaseCleanup2 := createDatabase(t, client)
+	databaseTest2, databaseCleanup2 := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup2)
 	t.Run("without show options", func(t *testing.T) {
 		databases, err := client.Databases.Show(ctx, nil)

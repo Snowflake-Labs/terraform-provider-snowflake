@@ -43,7 +43,6 @@ var tableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "A list of one or more table columns/expressions to be used as clustering key(s) for the table",
 	},
-
 	"column": {
 		Type:        schema.TypeList,
 		Required:    true,
@@ -688,9 +687,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("name") {
-		newName := d.Get("name").(string)
-
-		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), newName)
+		newId := sdk.NewSchemaObjectIdentifier(id.DatabaseName(), id.SchemaName(), d.Get("name").(string))
 
 		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithNewName(&newId))
 		if err != nil {

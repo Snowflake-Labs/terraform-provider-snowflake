@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,10 +14,10 @@ func TestInt_UsersShow(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	userTest, userCleanup := createUserWithName(t, client, "USER_FOO")
+	userTest, userCleanup := testClientHelper().User.CreateUserWithName(t, "USER_FOO")
 	t.Cleanup(userCleanup)
 
-	userTest2, user2Cleanup := createUserWithName(t, client, "USER_BAR")
+	userTest2, user2Cleanup := testClientHelper().User.CreateUserWithName(t, "USER_BAR")
 	t.Cleanup(user2Cleanup)
 
 	t.Run("with like options", func(t *testing.T) {
@@ -199,7 +199,7 @@ func TestInt_UserDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	user, userCleanup := createUser(t, client)
+	user, userCleanup := testClientHelper().User.CreateUser(t)
 	t.Cleanup(userCleanup)
 
 	t.Run("when user exists", func(t *testing.T) {
@@ -220,9 +220,11 @@ func TestInt_UserDrop(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("when user exists", func(t *testing.T) {
-		user, _ := createUser(t, client)
+		user, userCleanup := testClientHelper().User.CreateUser(t)
+		t.Cleanup(userCleanup)
+
 		id := user.ID()
-		err := client.Users.Drop(ctx, id)
+		err := client.Users.Drop(ctx, id, &sdk.DropUserOptions{})
 		require.NoError(t, err)
 		_, err = client.Users.Describe(ctx, id)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -230,7 +232,7 @@ func TestInt_UserDrop(t *testing.T) {
 
 	t.Run("when user does not exist", func(t *testing.T) {
 		id := sdk.NewAccountObjectIdentifier("does_not_exist")
-		err := client.Users.Drop(ctx, id)
+		err := client.Users.Drop(ctx, id, &sdk.DropUserOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }

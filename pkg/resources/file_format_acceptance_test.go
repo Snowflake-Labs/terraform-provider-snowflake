@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -448,6 +450,47 @@ func TestAcc_FileFormat_issue1947(t *testing.T) {
 	})
 }
 
+func TestAcc_FileFormat_Rename(t *testing.T) {
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	newName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	comment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	newComment := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	resourceName := "snowflake_file_format.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.FileFormat),
+		Steps: []resource.TestStep{
+			{
+				Config: fileFormatConfigWithComment(name, acc.TestDatabaseName, acc.TestSchemaName, comment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "comment", comment),
+				),
+			},
+			{
+				Config: fileFormatConfigWithComment(newName, acc.TestDatabaseName, acc.TestSchemaName, newComment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", newName),
+					resource.TestCheckResourceAttr(resourceName, "comment", newComment),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func fileFormatConfigCSV(n string, databaseName string, schemaName string, fieldDelimiter string, fieldOptionallyEnclosedBy string, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_file_format" "test" {
@@ -579,6 +622,18 @@ resource "snowflake_file_format" "test" {
 	format_type = "%s"
 }
 `, n, databaseName, schemaName, formatType)
+}
+
+func fileFormatConfigWithComment(n string, databaseName string, schemaName string, comment string) string {
+	return fmt.Sprintf(`
+resource "snowflake_file_format" "test" {
+	name = "%v"
+	database = "%s"
+	schema = "%s"
+	format_type = "XML"
+	comment = "%s"
+}
+`, n, databaseName, schemaName, comment)
 }
 
 func fileFormatConfigFullDefaultsWithAdditionalParam(n string, formatType string, databaseName string, schemaName string) string {

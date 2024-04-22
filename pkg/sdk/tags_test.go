@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
 func TestTagCreate(t *testing.T) {
@@ -42,6 +42,14 @@ func TestTagCreate(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = NewSchemaObjectIdentifier("", "", "")
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: allowed values count", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.AllowedValues = &AllowedValues{
+			Values: []AllowedValue{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("AllowedValues", "Values", 1, 300))
 	})
 
 	t.Run("validation: both ifNotExists and orReplace present", func(t *testing.T) {
@@ -295,6 +303,16 @@ func TestTagAlter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TagUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
+	})
+
+	t.Run("validation: allowed values count", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Add = &TagAdd{
+			AllowedValues: &AllowedValues{
+				Values: []AllowedValue{},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("AllowedValues", "Values", 1, 300))
 	})
 }
 

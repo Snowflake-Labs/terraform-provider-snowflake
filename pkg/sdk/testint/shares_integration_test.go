@@ -3,8 +3,8 @@ package testint
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -183,7 +183,7 @@ func TestInt_SharesAlter(t *testing.T) {
 	})
 
 	t.Run("set accounts", func(t *testing.T) {
-		db, dbCleanup := createDatabase(t, secondaryClient)
+		db, dbCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(dbCleanup)
 
 		shareTest, shareCleanup := createShare(t, secondaryClient)
@@ -372,7 +372,7 @@ func TestInt_ShareDescribeConsumer(t *testing.T) {
 	consumerClient := testClient(t)
 
 	t.Run("describe share", func(t *testing.T) {
-		db, dbCleanup := createDatabase(t, providerClient)
+		db, dbCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
 		t.Cleanup(dbCleanup)
 
 		shareTest, shareCleanup := createShare(t, providerClient)
