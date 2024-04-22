@@ -2,24 +2,30 @@ package random
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 )
 
-// TODO: test generation
+// TODO [SNOW-955520]: add generation tests
+// TODO [SNOW-955520]: use the same fallback suffix for acceptance and integration tests (now two different ones are generated if the env is missing)
 var (
 	AcceptanceTestsSuffix  = acceptanceTestsSuffix()
 	IntegrationTestsSuffix = integrationTestsSuffix()
 )
 
 func acceptanceTestsSuffix() string {
-	return "AT_" + objectSuffix()
+	suffix := "AT_" + objectSuffix()
+	log.Printf("[DEBUG] Suffix for the given test run is: %s", suffix)
+	return suffix
 }
 
 func integrationTestsSuffix() string {
-	return "IT_" + objectSuffix()
+	suffix := "IT_" + objectSuffix()
+	log.Printf("[DEBUG] Suffix for the given test run is: %s", suffix)
+	return suffix
 }
 
 func objectSuffix() string {
