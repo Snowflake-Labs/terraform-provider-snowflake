@@ -73,7 +73,8 @@ var SessionPoliciesDef = g.NewInterface(
 			Field("kind", "string").
 			Field("owner", "string").
 			Field("comment", "string").
-			Field("options", "string"),
+			Field("options", "string").
+			Field("owner_role_type", "string"),
 		g.PlainStruct("SessionPolicy").
 			Field("CreatedOn", "string").
 			Field("Name", "string").
@@ -82,7 +83,8 @@ var SessionPoliciesDef = g.NewInterface(
 			Field("Kind", "string").
 			Field("Owner", "string").
 			Field("Comment", "string").
-			Field("Options", "string"),
+			Field("Options", "string").
+			Field("OwnerRoleType", "string"),
 		g.NewQueryStruct("ShowSessionPolicies").
 			Show().
 			SQL("SESSION POLICIES"),

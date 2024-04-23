@@ -436,4 +436,15 @@ func TestInt_MaskingPoliciesShowByID(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, id2, e2.ID())
 	})
+
+	t.Run("show by id: check fields", func(t *testing.T) {
+		name := random.AlphaN(4)
+		id1 := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, name)
+
+		createMaskingPolicyHandle(t, id1)
+
+		sl, err := client.MaskingPolicies.ShowByID(ctx, id1)
+		require.NoError(t, err)
+		assert.Equal(t, "ROLE", sl.OwnerRoleType)
+	})
 }
