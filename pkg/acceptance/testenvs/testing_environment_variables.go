@@ -27,8 +27,10 @@ const (
 	SkipManagedAccountTest  env = "TEST_SF_TF_SKIP_MANAGED_ACCOUNT_TEST"
 	SkipSamlIntegrationTest env = "TEST_SF_TF_SKIP_SAML_INTEGRATION_TEST"
 
-	EnableSweep         env = "TEST_SF_TF_ENABLE_SWEEP"
-	ConfigureClientOnce env = "SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE"
+	EnableSweep              env = "TEST_SF_TF_ENABLE_SWEEP"
+	ConfigureClientOnce      env = "SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE"
+	TestObjectsSuffix        env = "TEST_SF_TF_TEST_OBJECT_SUFFIX"
+	RequireTestObjectsSuffix env = "TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX"
 )
 
 func GetOrSkipTest(t *testing.T, envName Env) string {

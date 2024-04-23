@@ -50,10 +50,10 @@ func TestInt_GetTag(t *testing.T) {
 func TestInt_PipeStatus(t *testing.T) {
 	client := testClient(t)
 
-	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
@@ -96,13 +96,13 @@ func TestInt_PipeStatus(t *testing.T) {
 func TestInt_PipeForceResume(t *testing.T) {
 	client := testClient(t)
 
-	role, roleCleanup := createRole(t, client)
+	role, roleCleanup := testClientHelper().Role.CreateRole(t)
 	t.Cleanup(roleCleanup)
 
-	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, testDb(t), random.AlphaN(20))
+	schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := createTable(t, itc.client, testDb(t), schema)
+	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := createStage(t, itc.client, sdk.NewSchemaObjectIdentifier(testDb(t).Name, schema.Name, random.AlphaN(20)))
@@ -140,8 +140,7 @@ func TestInt_PipeForceResume(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	currentRole, err := client.ContextFunctions.CurrentRole(ctx)
-	require.NoError(t, err)
+	currentRole := testClientHelper().Context.CurrentRole(t)
 
 	err = client.Grants.GrantOwnership(
 		ctx,

@@ -58,7 +58,7 @@ func CreateAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interfac
 
 	d.SetId(helpers.EncodeSnowflakeID(passwordPolicy))
 
-	return nil
+	return ReadAccountPasswordPolicyAttachment(d, meta)
 }
 
 func ReadAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {

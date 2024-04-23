@@ -237,7 +237,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role := createDatabaseRole(t)
 		roleId := sdk.NewDatabaseObjectIdentifier(testDb(t).Name, role.Name)
 
-		accountRole, accountRoleCleanup := createRole(t, client)
+		accountRole, accountRoleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(accountRoleCleanup)
 
 		grantRequest := sdk.NewGrantDatabaseRoleRequest(roleId).WithAccountRole(accountRole.ID())

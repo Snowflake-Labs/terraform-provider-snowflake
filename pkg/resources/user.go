@@ -410,7 +410,9 @@ func DeleteUser(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.Background()
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	err := client.Users.Drop(ctx, objectIdentifier)
+	err := client.Users.Drop(ctx, objectIdentifier, &sdk.DropUserOptions{
+		IfExists: sdk.Bool(true),
+	})
 	if err != nil {
 		return err
 	}

@@ -217,7 +217,7 @@ func UpdateAccountRole(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.SetId(helpers.EncodeSnowflakeID(newId))
 	}
 
-	return nil
+	return ReadAccountRole(ctx, d, meta)
 }
 
 func DeleteAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

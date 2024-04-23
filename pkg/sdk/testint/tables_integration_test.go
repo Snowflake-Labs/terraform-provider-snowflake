@@ -101,7 +101,7 @@ func TestInt_Table(t *testing.T) {
 				Type: sdk.DataTypeVARCHAR,
 			},
 		}, sdk.DataTypeVARCHAR, "REPLACE('X', 1, 2)", nil)
-		table2, _ := createTable(t, client, database, schema)
+		table2, _ := testClientHelper().Table.CreateTable(t)
 		name := random.String()
 		comment := random.String()
 
@@ -258,7 +258,8 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("col2", "VARCHAR"),
 			*sdk.NewTableColumnRequest("col3", "BOOLEAN"),
 		}
-		sourceTable, sourceTableCleanup := createTableWithColumns(t, client, database, schema, columns)
+		sourceTableName := random.StringRange(8, 28)
+		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, schema.ID(), sourceTableName, columns)
 		t.Cleanup(sourceTableCleanup)
 
 		name := random.String()
@@ -290,7 +291,8 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("col2", "VARCHAR"),
 			*sdk.NewTableColumnRequest("col3", "BOOLEAN"),
 		}
-		sourceTable, sourceTableCleanup := createTableWithColumns(t, client, database, schema, columns)
+		sourceTableName := random.StringRange(8, 28)
+		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, schema.ID(), sourceTableName, columns)
 		t.Cleanup(sourceTableCleanup)
 
 		name := random.String()
@@ -940,7 +942,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("drop table", func(t *testing.T) {
-		table, tableCleanup := createTable(t, client, database, schema)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(table.ID()).WithIfExists(sdk.Bool(true)))
 		if err != nil {
 			t.Cleanup(tableCleanup)
@@ -952,9 +954,9 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("show tables", func(t *testing.T) {
-		table, tableCleanup := createTable(t, client, database, schema)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
-		table2, table2Cleanup := createTable(t, client, database, schema)
+		table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(table2Cleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest())
@@ -970,7 +972,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("with terse", func(t *testing.T) {
-		table, tableCleanup := createTable(t, client, database, schema)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithTerse(sdk.Bool(true)).WithLikePattern(table.ID().Name()))
@@ -981,7 +983,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("with starts with", func(t *testing.T) {
-		table, tableCleanup := createTable(t, client, database, schema)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithStartsWith(sdk.String(table.Name)))
@@ -1025,7 +1027,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithIdentifier(t, databaseTest, random.AlphaN(8))
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
 		name := random.AlphaN(4)

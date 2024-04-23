@@ -446,7 +446,8 @@ func TestAcc_View_Issue2640(t *testing.T) {
 			// try to import secure view without being its owner (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2640)
 			{
 				PreConfig: func() {
-					t.Cleanup(createAccountRoleOutsideTerraform(t, roleName))
+					_, roleCleanup := acc.TestClient().Role.CreateRoleWithName(t, roleName)
+					t.Cleanup(roleCleanup)
 					alterViewOwnershipExternally(t, viewName, roleName)
 				},
 				ResourceName: "snowflake_view.test",

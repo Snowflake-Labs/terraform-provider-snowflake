@@ -192,7 +192,7 @@ func TestAcc_Grants_To_DatabaseRole(t *testing.T) {
 }
 
 func TestAcc_Grants_To_User(t *testing.T) {
-	user := getCurrentUser(t)
+	user := acc.TestClient().Context.CurrentUser(t)
 	configVariables := config.Variables{
 		"user": config.StringVariable(user),
 	}
@@ -673,14 +673,4 @@ func checkAtLeastOneGrantPresentLimited() resource.TestCheckFunc {
 		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.created_on"),
 		resource.TestCheckResourceAttrSet(datasourceName, "grants.0.granted_to"),
 	)
-}
-
-func getCurrentUser(t *testing.T) string {
-	t.Helper()
-	client := acc.Client(t)
-	user, err := client.ContextFunctions.CurrentUser(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	return user
 }
