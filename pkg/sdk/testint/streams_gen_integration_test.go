@@ -85,7 +85,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnDirectoryTable", func(t *testing.T) {
-		stage, cleanupStage := testClientHelper().Stage.CreateStageWithDirectory(t, schema, "test_stage")
+		stage, cleanupStage := testClientHelper().Stage.CreateStageWithDirectory(t, schema.ID(), "test_stage")
 		stageId := sdk.NewSchemaObjectIdentifier(db.Name, schema.Name, stage.Name)
 		t.Cleanup(cleanupStage)
 
